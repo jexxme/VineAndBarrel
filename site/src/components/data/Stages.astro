@@ -1,0 +1,59 @@
+---
+// A strip of isometric renders, one per state (growth age, bung, weathering...). Renders come from
+// scripts/render-scenes.mjs (public/renders/stages/<prefix>-<n>.png).
+import { renders, url } from '../../lib/data';
+interface Props {
+	prefix: string;
+	title: string;
+	labels?: string[];
+	only?: string[];
+}
+const { prefix, title, labels = [], only } = Astro.props;
+const keys = Object.keys(renders)
+	.filter((k) => k.startsWith(`stages/${prefix}-`) && (!only || only.includes(k.split('-').pop()!)))
+	.sort((a, b) => +a.split('-').pop()! - +b.split('-').pop()!);
+if (keys.length < 2) throw new Error(`No stage renders for ${prefix}`);
+---
+<figure class="fd-stages not-content">
+	<figcaption class="fd-kicker">{title}</figcaption>
+	<ol>
+		{keys.map((k, i) => (
+			<li>
+				<img src={url(`/renders/${k}.png`)} alt={labels[i] ?? k.split('-').pop()} width="96" height="96" loading="lazy" />
+				<span>{labels[i] ?? k.split('-').pop()}</span>
+			</li>
+		))}
+	</ol>
+</figure>
+<style>
+	.fd-stages {
+		padding: 0.6rem 0 0.4rem;
+		margin: 1.5rem 0;
+		border-top: 1px solid var(--fd-rule);
+		border-bottom: 1px solid var(--fd-border);
+	}
+	ol {
+		list-style: none;
+		padding: 0;
+		margin: 0.5rem 0 0;
+		display: flex;
+		gap: 0.25rem;
+		overflow-x: auto;
+	}
+	li {
+		flex: 1 0 5.5rem;
+		max-width: 8rem;
+		margin: 0 !important;
+		text-align: center;
+	}
+	img {
+		width: 100%;
+		height: auto;
+		max-width: 96px;
+	}
+	span {
+		display: block;
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+	}
+</style>

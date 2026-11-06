@@ -1,0 +1,49 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "minecraft:uniform",
+              "max": 3,
+              "min": 1
+            }
+          },
+          "name": "vineandbarrel:barley_seeds",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "minecraft:uniform",
+              "max": 3,
+              "min": 1
+            }
+          },
+          "name": "vineandbarrel:hops",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "vineandbarrel:barley_ale"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "vineandbarrel:sweet_berry_wine"
+        }
+      ],
+      "rolls": {
+        "type": "minecraft:uniform",
+        "max": 2,
+        "min": 1
+      }
+    }
+  ],
+  "random_sequence": "vineandbarrel:chests/village/village_taiga_house"
+}

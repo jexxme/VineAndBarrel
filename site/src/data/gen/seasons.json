@@ -1,0 +1,13 @@
+{
+	"spring": [
+		"vineandbarrel:barley_seeds"
+	],
+	"summer": [
+		"vineandbarrel:hops",
+		"vineandbarrel:barley_seeds"
+	],
+	"autumn": [
+		"vineandbarrel:red_grapes",
+		"vineandbarrel:hops"
+	]
+}

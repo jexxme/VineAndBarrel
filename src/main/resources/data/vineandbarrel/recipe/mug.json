@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "#c:glass_blocks/colorless"
+  },
+  "pattern": [
+    "G G",
+    "GGG"
+  ],
+  "result": {
+    "id": "vineandbarrel:mug",
+    "count": 3
+  }
+}

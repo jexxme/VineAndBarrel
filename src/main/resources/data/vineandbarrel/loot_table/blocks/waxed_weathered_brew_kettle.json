@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "modifier": {
+            "type": "minecraft:copy_components",
+            "include": [
+              "minecraft:custom_name",
+              "vineandbarrel:kettle_contents"
+            ],
+            "source": "block_entity"
+          },
+          "name": "vineandbarrel:waxed_weathered_brew_kettle"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "vineandbarrel:blocks/waxed_weathered_brew_kettle"
+}

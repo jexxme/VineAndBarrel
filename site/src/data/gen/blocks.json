@@ -1,0 +1,701 @@
+{
+	"vineandbarrel:grape_bush": {
+		"id": "vineandbarrel:grape_bush",
+		"name": "Grape Bush",
+		"item": "vineandbarrel:red_grapes",
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			]
+		},
+		"defaultState": {
+			"age": "0"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:washed_away_by_fluids",
+			"sereneseasons:autumn_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:hop_bush": {
+		"id": "vineandbarrel:hop_bush",
+		"name": "Hop Bush",
+		"item": "vineandbarrel:hops",
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			]
+		},
+		"defaultState": {
+			"age": "0"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:washed_away_by_fluids",
+			"sereneseasons:autumn_crops",
+			"sereneseasons:summer_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:grape_vine_on_rope": {
+		"id": "vineandbarrel:grape_vine_on_rope",
+		"name": "Grape Vine",
+		"item": null,
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			]
+		},
+		"defaultState": {
+			"age": "0"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:climbable",
+			"minecraft:fall_damage_resetting",
+			"sereneseasons:autumn_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:hop_vine_on_rope": {
+		"id": "vineandbarrel:hop_vine_on_rope",
+		"name": "Hop Bine",
+		"item": null,
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			]
+		},
+		"defaultState": {
+			"age": "0"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:climbable",
+			"minecraft:fall_damage_resetting",
+			"sereneseasons:autumn_crops",
+			"sereneseasons:summer_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:barley": {
+		"id": "vineandbarrel:barley",
+		"name": "Barley",
+		"item": "vineandbarrel:barley_seeds",
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7"
+			]
+		},
+		"defaultState": {
+			"age": "0"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:crops",
+			"minecraft:maintains_farmland",
+			"minecraft:washed_away_by_fluids",
+			"sereneseasons:spring_crops",
+			"sereneseasons:summer_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:wild_grapes": {
+		"id": "vineandbarrel:wild_grapes",
+		"name": "Wild Grapes",
+		"item": "vineandbarrel:wild_grapes",
+		"properties": {},
+		"defaultState": {},
+		"tags": [
+			"c:flowers",
+			"c:flowers/small",
+			"farmersdelight:wild_crops",
+			"minecraft:enderman_holdable",
+			"minecraft:flowers",
+			"minecraft:replaceable_by_mushrooms",
+			"minecraft:replaceable_by_trees",
+			"minecraft:small_flowers",
+			"minecraft:washed_away_by_fluids",
+			"vineandbarrel:wild_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:wild_hops": {
+		"id": "vineandbarrel:wild_hops",
+		"name": "Wild Hops",
+		"item": "vineandbarrel:wild_hops",
+		"properties": {},
+		"defaultState": {},
+		"tags": [
+			"c:flowers",
+			"c:flowers/small",
+			"farmersdelight:wild_crops",
+			"minecraft:enderman_holdable",
+			"minecraft:flowers",
+			"minecraft:replaceable_by_mushrooms",
+			"minecraft:replaceable_by_trees",
+			"minecraft:small_flowers",
+			"minecraft:washed_away_by_fluids",
+			"vineandbarrel:wild_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:wild_barley": {
+		"id": "vineandbarrel:wild_barley",
+		"name": "Wild Barley",
+		"item": "vineandbarrel:wild_barley",
+		"properties": {},
+		"defaultState": {},
+		"tags": [
+			"c:flowers",
+			"c:flowers/small",
+			"farmersdelight:wild_crops",
+			"minecraft:enderman_holdable",
+			"minecraft:flowers",
+			"minecraft:replaceable_by_mushrooms",
+			"minecraft:replaceable_by_trees",
+			"minecraft:small_flowers",
+			"minecraft:washed_away_by_fluids",
+			"vineandbarrel:wild_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:grape_crate": {
+		"id": "vineandbarrel:grape_crate",
+		"name": "Grape Crate",
+		"item": "vineandbarrel:grape_crate",
+		"properties": {},
+		"defaultState": {},
+		"tags": [
+			"c:storage_blocks",
+			"c:storage_blocks/grape",
+			"minecraft:mineable/axe"
+		],
+		"hardness": 2
+	},
+	"vineandbarrel:hops_crate": {
+		"id": "vineandbarrel:hops_crate",
+		"name": "Hops Crate",
+		"item": "vineandbarrel:hops_crate",
+		"properties": {},
+		"defaultState": {},
+		"tags": [
+			"c:storage_blocks",
+			"c:storage_blocks/hops",
+			"minecraft:mineable/axe"
+		],
+		"hardness": 2
+	},
+	"vineandbarrel:barley_bale": {
+		"id": "vineandbarrel:barley_bale",
+		"name": "Barley Bale",
+		"item": "vineandbarrel:barley_bale",
+		"properties": {
+			"axis": [
+				"x",
+				"y",
+				"z"
+			]
+		},
+		"defaultState": {
+			"axis": "y"
+		},
+		"tags": [
+			"c:storage_blocks",
+			"c:storage_blocks/barley",
+			"farmersdelight:campfire_signal_smoke",
+			"minecraft:mineable/hoe",
+			"vineandbarrel:campfire_signal_smoke"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:brew_kettle": {
+		"id": "vineandbarrel:brew_kettle",
+		"name": "Brew Kettle",
+		"item": "vineandbarrel:brew_kettle",
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"fill": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"open": [
+				"true",
+				"false"
+			],
+			"support": [
+				"none",
+				"tray",
+				"handle"
+			],
+			"waterlogged": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"fill": "0",
+			"open": "false",
+			"support": "none",
+			"waterlogged": "false"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_brew_kettle": {
+		"id": "vineandbarrel:waxed_brew_kettle",
+		"name": "Waxed Brew Kettle",
+		"item": "vineandbarrel:waxed_brew_kettle",
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"fill": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"open": [
+				"true",
+				"false"
+			],
+			"support": [
+				"none",
+				"tray",
+				"handle"
+			],
+			"waterlogged": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"fill": "0",
+			"open": "false",
+			"support": "none",
+			"waterlogged": "false"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:exposed_brew_kettle": {
+		"id": "vineandbarrel:exposed_brew_kettle",
+		"name": "Exposed Brew Kettle",
+		"item": "vineandbarrel:exposed_brew_kettle",
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"fill": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"open": [
+				"true",
+				"false"
+			],
+			"support": [
+				"none",
+				"tray",
+				"handle"
+			],
+			"waterlogged": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"fill": "0",
+			"open": "false",
+			"support": "none",
+			"waterlogged": "false"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_exposed_brew_kettle": {
+		"id": "vineandbarrel:waxed_exposed_brew_kettle",
+		"name": "Waxed Exposed Brew Kettle",
+		"item": "vineandbarrel:waxed_exposed_brew_kettle",
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"fill": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"open": [
+				"true",
+				"false"
+			],
+			"support": [
+				"none",
+				"tray",
+				"handle"
+			],
+			"waterlogged": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"fill": "0",
+			"open": "false",
+			"support": "none",
+			"waterlogged": "false"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:weathered_brew_kettle": {
+		"id": "vineandbarrel:weathered_brew_kettle",
+		"name": "Weathered Brew Kettle",
+		"item": "vineandbarrel:weathered_brew_kettle",
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"fill": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"open": [
+				"true",
+				"false"
+			],
+			"support": [
+				"none",
+				"tray",
+				"handle"
+			],
+			"waterlogged": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"fill": "0",
+			"open": "false",
+			"support": "none",
+			"waterlogged": "false"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_weathered_brew_kettle": {
+		"id": "vineandbarrel:waxed_weathered_brew_kettle",
+		"name": "Waxed Weathered Brew Kettle",
+		"item": "vineandbarrel:waxed_weathered_brew_kettle",
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"fill": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"open": [
+				"true",
+				"false"
+			],
+			"support": [
+				"none",
+				"tray",
+				"handle"
+			],
+			"waterlogged": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"fill": "0",
+			"open": "false",
+			"support": "none",
+			"waterlogged": "false"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:oxidized_brew_kettle": {
+		"id": "vineandbarrel:oxidized_brew_kettle",
+		"name": "Oxidized Brew Kettle",
+		"item": "vineandbarrel:oxidized_brew_kettle",
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"fill": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"open": [
+				"true",
+				"false"
+			],
+			"support": [
+				"none",
+				"tray",
+				"handle"
+			],
+			"waterlogged": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"fill": "0",
+			"open": "false",
+			"support": "none",
+			"waterlogged": "false"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_oxidized_brew_kettle": {
+		"id": "vineandbarrel:waxed_oxidized_brew_kettle",
+		"name": "Waxed Oxidized Brew Kettle",
+		"item": "vineandbarrel:waxed_oxidized_brew_kettle",
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"fill": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"open": [
+				"true",
+				"false"
+			],
+			"support": [
+				"none",
+				"tray",
+				"handle"
+			],
+			"waterlogged": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"fill": "0",
+			"open": "false",
+			"support": "none",
+			"waterlogged": "false"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:aging_barrel": {
+		"id": "vineandbarrel:aging_barrel",
+		"name": "Aging Barrel",
+		"item": "vineandbarrel:aging_barrel",
+		"properties": {
+			"bung": [
+				"cork",
+				"airlock",
+				"wax"
+			],
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"fill": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8"
+			],
+			"left": [
+				"true",
+				"false"
+			],
+			"right": [
+				"true",
+				"false"
+			],
+			"stacked": [
+				"true",
+				"false"
+			],
+			"tapping": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"bung": "cork",
+			"facing": "north",
+			"fill": "0",
+			"left": "false",
+			"right": "false",
+			"stacked": "false",
+			"tapping": "false"
+		},
+		"tags": [
+			"minecraft:mineable/axe"
+		],
+		"hardness": 2.5
+	},
+	"vineandbarrel:placed_drinks": {
+		"id": "vineandbarrel:placed_drinks",
+		"name": "Drinks",
+		"item": null,
+		"properties": {
+			"spot_0": [
+				"none",
+				"mug",
+				"mug_full",
+				"glass",
+				"glass_full",
+				"mug_aged",
+				"glass_aged"
+			],
+			"spot_1": [
+				"none",
+				"mug",
+				"mug_full",
+				"glass",
+				"glass_full",
+				"mug_aged",
+				"glass_aged"
+			],
+			"spot_2": [
+				"none",
+				"mug",
+				"mug_full",
+				"glass",
+				"glass_full",
+				"mug_aged",
+				"glass_aged"
+			],
+			"spot_3": [
+				"none",
+				"mug",
+				"mug_full",
+				"glass",
+				"glass_full",
+				"mug_aged",
+				"glass_aged"
+			]
+		},
+		"defaultState": {
+			"spot_0": "none",
+			"spot_1": "none",
+			"spot_2": "none",
+			"spot_3": "none"
+		},
+		"tags": [],
+		"hardness": 0.1
+	}
+}

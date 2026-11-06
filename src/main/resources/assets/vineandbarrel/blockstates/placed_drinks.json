@@ -1,0 +1,196 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "spot_0": "mug"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_0"
+      }
+    },
+    {
+      "when": {
+        "spot_0": "mug_full"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_full_0"
+      }
+    },
+    {
+      "when": {
+        "spot_0": "mug_aged"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_aged_0"
+      }
+    },
+    {
+      "when": {
+        "spot_0": "glass"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_0"
+      }
+    },
+    {
+      "when": {
+        "spot_0": "glass_full"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_full_0"
+      }
+    },
+    {
+      "when": {
+        "spot_0": "glass_aged"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_aged_0"
+      }
+    },
+    {
+      "when": {
+        "spot_1": "mug"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_1"
+      }
+    },
+    {
+      "when": {
+        "spot_1": "mug_full"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_full_1"
+      }
+    },
+    {
+      "when": {
+        "spot_1": "mug_aged"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_aged_1"
+      }
+    },
+    {
+      "when": {
+        "spot_1": "glass"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_1"
+      }
+    },
+    {
+      "when": {
+        "spot_1": "glass_full"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_full_1"
+      }
+    },
+    {
+      "when": {
+        "spot_1": "glass_aged"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_aged_1"
+      }
+    },
+    {
+      "when": {
+        "spot_2": "mug"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_2"
+      }
+    },
+    {
+      "when": {
+        "spot_2": "mug_full"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_full_2"
+      }
+    },
+    {
+      "when": {
+        "spot_2": "mug_aged"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_aged_2"
+      }
+    },
+    {
+      "when": {
+        "spot_2": "glass"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_2"
+      }
+    },
+    {
+      "when": {
+        "spot_2": "glass_full"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_full_2"
+      }
+    },
+    {
+      "when": {
+        "spot_2": "glass_aged"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_aged_2"
+      }
+    },
+    {
+      "when": {
+        "spot_3": "mug"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_3"
+      }
+    },
+    {
+      "when": {
+        "spot_3": "mug_full"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_full_3"
+      }
+    },
+    {
+      "when": {
+        "spot_3": "mug_aged"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_mug_aged_3"
+      }
+    },
+    {
+      "when": {
+        "spot_3": "glass"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_3"
+      }
+    },
+    {
+      "when": {
+        "spot_3": "glass_full"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_full_3"
+      }
+    },
+    {
+      "when": {
+        "spot_3": "glass_aged"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/placed_glass_aged_3"
+      }
+    }
+  ]
+}

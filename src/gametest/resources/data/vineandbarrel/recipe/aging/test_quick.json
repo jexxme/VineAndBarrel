@@ -1,0 +1,8 @@
+{
+  "type": "vineandbarrel:aging",
+  "base": "minecraft:honey_bottle",
+  "young": "vineandbarrel:barley_ale",
+  "aged": "vineandbarrel:aged_barley_ale",
+  "fermenting_time": 40,
+  "aging_time": 60
+}

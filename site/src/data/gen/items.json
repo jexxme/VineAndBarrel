@@ -1,0 +1,996 @@
+{
+	"vineandbarrel:red_grapes": {
+		"id": "vineandbarrel:red_grapes",
+		"name": "Red Grapes",
+		"slug": "red-grapes",
+		"category": "crops",
+		"stack": 64,
+		"food": {
+			"nutrition": 2,
+			"saturation": 0.4,
+			"alwaysEdible": false
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "eat",
+			"effects": []
+		},
+		"remainder": null,
+		"compost": 0.3,
+		"glint": false,
+		"block": "vineandbarrel:grape_bush",
+		"tags": [
+			"c:animal_foods",
+			"c:crops",
+			"c:crops/grape",
+			"c:foods",
+			"c:foods/fruit",
+			"c:nutrients/fruits",
+			"minecraft:fox_food",
+			"sereneseasons:autumn_crops"
+		]
+	},
+	"vineandbarrel:hops": {
+		"id": "vineandbarrel:hops",
+		"name": "Hops",
+		"slug": "hops",
+		"category": "crops",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": 0.3,
+		"glint": false,
+		"block": "vineandbarrel:hop_bush",
+		"tags": [
+			"c:crops",
+			"c:crops/hops",
+			"sereneseasons:autumn_crops",
+			"sereneseasons:summer_crops"
+		]
+	},
+	"vineandbarrel:barley_seeds": {
+		"id": "vineandbarrel:barley_seeds",
+		"name": "Barley Seeds",
+		"slug": "barley-seeds",
+		"category": "crops",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": 0.3,
+		"glint": false,
+		"block": "vineandbarrel:barley",
+		"tags": [
+			"c:animal_foods",
+			"c:seeds",
+			"c:seeds/barley",
+			"minecraft:chicken_food",
+			"minecraft:parrot_food",
+			"minecraft:villager_picks_up",
+			"minecraft:villager_plantable_seeds",
+			"sereneseasons:spring_crops",
+			"sereneseasons:summer_crops"
+		]
+	},
+	"vineandbarrel:barley": {
+		"id": "vineandbarrel:barley",
+		"name": "Barley",
+		"slug": "barley",
+		"category": "crops",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": 0.65,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:animal_foods",
+			"c:crops",
+			"c:crops/barley",
+			"c:nutrients/carbs",
+			"minecraft:cow_food",
+			"minecraft:goat_food",
+			"minecraft:horse_food",
+			"minecraft:llama_food",
+			"minecraft:sheep_food"
+		]
+	},
+	"vineandbarrel:wild_grapes": {
+		"id": "vineandbarrel:wild_grapes",
+		"name": "Wild Grapes",
+		"slug": "wild-grapes",
+		"category": "crops",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": 0.65,
+		"glint": false,
+		"block": "vineandbarrel:wild_grapes",
+		"tags": [
+			"farmersdelight:wild_crops",
+			"vineandbarrel:wild_crops"
+		]
+	},
+	"vineandbarrel:wild_hops": {
+		"id": "vineandbarrel:wild_hops",
+		"name": "Wild Hops",
+		"slug": "wild-hops",
+		"category": "crops",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": 0.65,
+		"glint": false,
+		"block": "vineandbarrel:wild_hops",
+		"tags": [
+			"farmersdelight:wild_crops",
+			"vineandbarrel:wild_crops"
+		]
+	},
+	"vineandbarrel:wild_barley": {
+		"id": "vineandbarrel:wild_barley",
+		"name": "Wild Barley",
+		"slug": "wild-barley",
+		"category": "crops",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": 0.65,
+		"glint": false,
+		"block": "vineandbarrel:wild_barley",
+		"tags": [
+			"farmersdelight:wild_crops",
+			"vineandbarrel:wild_crops"
+		]
+	},
+	"vineandbarrel:grape_crate": {
+		"id": "vineandbarrel:grape_crate",
+		"name": "Grape Crate",
+		"slug": "grape-crate",
+		"category": "storage",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:grape_crate",
+		"tags": [
+			"c:storage_blocks",
+			"c:storage_blocks/grape"
+		]
+	},
+	"vineandbarrel:hops_crate": {
+		"id": "vineandbarrel:hops_crate",
+		"name": "Hops Crate",
+		"slug": "hops-crate",
+		"category": "storage",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:hops_crate",
+		"tags": [
+			"c:storage_blocks",
+			"c:storage_blocks/hops"
+		]
+	},
+	"vineandbarrel:barley_bale": {
+		"id": "vineandbarrel:barley_bale",
+		"name": "Barley Bale",
+		"slug": "barley-bale",
+		"category": "storage",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": 0.85,
+		"glint": false,
+		"block": "vineandbarrel:barley_bale",
+		"tags": [
+			"c:animal_foods",
+			"c:storage_blocks",
+			"c:storage_blocks/barley",
+			"minecraft:horse_food",
+			"minecraft:llama_food",
+			"minecraft:llama_tempt_items"
+		]
+	},
+	"vineandbarrel:brew_kettle": {
+		"id": "vineandbarrel:brew_kettle",
+		"name": "Brew Kettle",
+		"slug": "brew-kettle",
+		"category": "workstations",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:brew_kettle",
+		"tags": []
+	},
+	"vineandbarrel:waxed_brew_kettle": {
+		"id": "vineandbarrel:waxed_brew_kettle",
+		"name": "Waxed Brew Kettle",
+		"slug": "waxed-brew-kettle",
+		"category": "workstations",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:waxed_brew_kettle",
+		"tags": []
+	},
+	"vineandbarrel:exposed_brew_kettle": {
+		"id": "vineandbarrel:exposed_brew_kettle",
+		"name": "Exposed Brew Kettle",
+		"slug": "exposed-brew-kettle",
+		"category": "workstations",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:exposed_brew_kettle",
+		"tags": []
+	},
+	"vineandbarrel:waxed_exposed_brew_kettle": {
+		"id": "vineandbarrel:waxed_exposed_brew_kettle",
+		"name": "Waxed Exposed Brew Kettle",
+		"slug": "waxed-exposed-brew-kettle",
+		"category": "workstations",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:waxed_exposed_brew_kettle",
+		"tags": []
+	},
+	"vineandbarrel:weathered_brew_kettle": {
+		"id": "vineandbarrel:weathered_brew_kettle",
+		"name": "Weathered Brew Kettle",
+		"slug": "weathered-brew-kettle",
+		"category": "workstations",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:weathered_brew_kettle",
+		"tags": []
+	},
+	"vineandbarrel:waxed_weathered_brew_kettle": {
+		"id": "vineandbarrel:waxed_weathered_brew_kettle",
+		"name": "Waxed Weathered Brew Kettle",
+		"slug": "waxed-weathered-brew-kettle",
+		"category": "workstations",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:waxed_weathered_brew_kettle",
+		"tags": []
+	},
+	"vineandbarrel:oxidized_brew_kettle": {
+		"id": "vineandbarrel:oxidized_brew_kettle",
+		"name": "Oxidized Brew Kettle",
+		"slug": "oxidized-brew-kettle",
+		"category": "workstations",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:oxidized_brew_kettle",
+		"tags": []
+	},
+	"vineandbarrel:waxed_oxidized_brew_kettle": {
+		"id": "vineandbarrel:waxed_oxidized_brew_kettle",
+		"name": "Waxed Oxidized Brew Kettle",
+		"slug": "waxed-oxidized-brew-kettle",
+		"category": "workstations",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:waxed_oxidized_brew_kettle",
+		"tags": []
+	},
+	"vineandbarrel:grape_juice": {
+		"id": "vineandbarrel:grape_juice",
+		"name": "Grape Juice",
+		"slug": "grape-juice",
+		"category": "bases",
+		"stack": 16,
+		"food": {
+			"nutrition": 2,
+			"saturation": 1.2,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 2,
+			"animation": "drink",
+			"effects": []
+		},
+		"remainder": "minecraft:glass_bottle",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:drink_containing/bottle",
+			"c:drinks",
+			"c:drinks/juice",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/50_hydration_drinks",
+			"toughasnails:thirst/7_thirst_drinks",
+			"vineandbarrel:sobering_drinks"
+		]
+	},
+	"vineandbarrel:grape_juice_bucket": {
+		"id": "vineandbarrel:grape_juice_bucket",
+		"name": "Bucket of Grape Juice",
+		"slug": "grape-juice-bucket",
+		"category": "bases",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": []
+	},
+	"vineandbarrel:sweet_berry_juice": {
+		"id": "vineandbarrel:sweet_berry_juice",
+		"name": "Sweet Berry Juice",
+		"slug": "sweet-berry-juice",
+		"category": "bases",
+		"stack": 16,
+		"food": {
+			"nutrition": 2,
+			"saturation": 1.2,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 2,
+			"animation": "drink",
+			"effects": []
+		},
+		"remainder": "minecraft:glass_bottle",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:drink_containing/bottle",
+			"c:drinks",
+			"c:drinks/juice",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/50_hydration_drinks",
+			"toughasnails:thirst/7_thirst_drinks"
+		]
+	},
+	"vineandbarrel:sweet_berry_juice_bucket": {
+		"id": "vineandbarrel:sweet_berry_juice_bucket",
+		"name": "Bucket of Sweet Berry Juice",
+		"slug": "sweet-berry-juice-bucket",
+		"category": "bases",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": []
+	},
+	"vineandbarrel:barley_wort_bottle": {
+		"id": "vineandbarrel:barley_wort_bottle",
+		"name": "Bottle of Barley Wort",
+		"slug": "barley-wort-bottle",
+		"category": "bases",
+		"stack": 16,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": []
+	},
+	"vineandbarrel:barley_wort_bucket": {
+		"id": "vineandbarrel:barley_wort_bucket",
+		"name": "Bucket of Barley Wort",
+		"slug": "barley-wort-bucket",
+		"category": "bases",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": []
+	},
+	"vineandbarrel:wheat_wort_bottle": {
+		"id": "vineandbarrel:wheat_wort_bottle",
+		"name": "Bottle of Wheat Wort",
+		"slug": "wheat-wort-bottle",
+		"category": "bases",
+		"stack": 16,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": []
+	},
+	"vineandbarrel:wheat_wort_bucket": {
+		"id": "vineandbarrel:wheat_wort_bucket",
+		"name": "Bucket of Wheat Wort",
+		"slug": "wheat-wort-bucket",
+		"category": "bases",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": []
+	},
+	"vineandbarrel:aging_barrel": {
+		"id": "vineandbarrel:aging_barrel",
+		"name": "Aging Barrel",
+		"slug": "aging-barrel",
+		"category": "workstations",
+		"stack": 1,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": "vineandbarrel:aging_barrel",
+		"tags": []
+	},
+	"vineandbarrel:mug": {
+		"id": "vineandbarrel:mug",
+		"name": "Mug",
+		"slug": "mug",
+		"category": "drinks",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"vineandbarrel:drink_vessels"
+		]
+	},
+	"vineandbarrel:wine_glass": {
+		"id": "vineandbarrel:wine_glass",
+		"name": "Wine Glass",
+		"slug": "wine-glass",
+		"category": "drinks",
+		"stack": 64,
+		"food": null,
+		"consumable": null,
+		"remainder": null,
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"vineandbarrel:drink_vessels"
+		]
+	},
+	"vineandbarrel:red_wine": {
+		"id": "vineandbarrel:red_wine",
+		"name": "Red Wine",
+		"slug": "red-wine",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:regeneration",
+					"name": "Regeneration",
+					"duration": 3600,
+					"amplifier": 0,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:wine_glass",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/10_hydration_drinks",
+			"toughasnails:thirst/2_thirst_drinks"
+		]
+	},
+	"vineandbarrel:aged_red_wine": {
+		"id": "vineandbarrel:aged_red_wine",
+		"name": "Aged Red Wine",
+		"slug": "aged-red-wine",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:regeneration",
+					"name": "Regeneration",
+					"duration": 6000,
+					"amplifier": 1,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:wine_glass",
+		"compost": null,
+		"glint": true,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/20_hydration_drinks",
+			"toughasnails:thirst/3_thirst_drinks"
+		]
+	},
+	"vineandbarrel:sweet_berry_wine": {
+		"id": "vineandbarrel:sweet_berry_wine",
+		"name": "Sweet Berry Wine",
+		"slug": "sweet-berry-wine",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:speed",
+					"name": "Speed",
+					"duration": 3600,
+					"amplifier": 0,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:wine_glass",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/10_hydration_drinks",
+			"toughasnails:thirst/2_thirst_drinks"
+		]
+	},
+	"vineandbarrel:aged_sweet_berry_wine": {
+		"id": "vineandbarrel:aged_sweet_berry_wine",
+		"name": "Aged Sweet Berry Wine",
+		"slug": "aged-sweet-berry-wine",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:speed",
+					"name": "Speed",
+					"duration": 6000,
+					"amplifier": 1,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:wine_glass",
+		"compost": null,
+		"glint": true,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/20_hydration_drinks",
+			"toughasnails:thirst/3_thirst_drinks"
+		]
+	},
+	"vineandbarrel:barley_ale": {
+		"id": "vineandbarrel:barley_ale",
+		"name": "Barley Ale",
+		"slug": "barley-ale",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:haste",
+					"name": "Haste",
+					"duration": 3600,
+					"amplifier": 0,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:mug",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/carbs",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/10_hydration_drinks",
+			"toughasnails:thirst/2_thirst_drinks"
+		]
+	},
+	"vineandbarrel:aged_barley_ale": {
+		"id": "vineandbarrel:aged_barley_ale",
+		"name": "Aged Barley Ale",
+		"slug": "aged-barley-ale",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:haste",
+					"name": "Haste",
+					"duration": 6000,
+					"amplifier": 1,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:mug",
+		"compost": null,
+		"glint": true,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/carbs",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/20_hydration_drinks",
+			"toughasnails:thirst/3_thirst_drinks"
+		]
+	},
+	"vineandbarrel:wheat_beer": {
+		"id": "vineandbarrel:wheat_beer",
+		"name": "Wheat Beer",
+		"slug": "wheat-beer",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:saturation",
+					"name": "Saturation",
+					"duration": 5,
+					"amplifier": 0,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:mug",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/carbs",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/10_hydration_drinks",
+			"toughasnails:thirst/2_thirst_drinks"
+		]
+	},
+	"vineandbarrel:aged_wheat_beer": {
+		"id": "vineandbarrel:aged_wheat_beer",
+		"name": "Aged Wheat Beer",
+		"slug": "aged-wheat-beer",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:saturation",
+					"name": "Saturation",
+					"duration": 4,
+					"amplifier": 1,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:mug",
+		"compost": null,
+		"glint": true,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/carbs",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/20_hydration_drinks",
+			"toughasnails:thirst/3_thirst_drinks"
+		]
+	},
+	"vineandbarrel:hard_cider": {
+		"id": "vineandbarrel:hard_cider",
+		"name": "Hard Cider",
+		"slug": "hard-cider",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:absorption",
+					"name": "Absorption",
+					"duration": 3600,
+					"amplifier": 0,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:mug",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/10_hydration_drinks",
+			"toughasnails:thirst/2_thirst_drinks"
+		]
+	},
+	"vineandbarrel:aged_hard_cider": {
+		"id": "vineandbarrel:aged_hard_cider",
+		"name": "Aged Hard Cider",
+		"slug": "aged-hard-cider",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:absorption",
+					"name": "Absorption",
+					"duration": 6000,
+					"amplifier": 1,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:mug",
+		"compost": null,
+		"glint": true,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/20_hydration_drinks",
+			"toughasnails:thirst/3_thirst_drinks"
+		]
+	},
+	"vineandbarrel:melon_wine": {
+		"id": "vineandbarrel:melon_wine",
+		"name": "Melon Wine",
+		"slug": "melon-wine",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:fire_resistance",
+					"name": "Fire Resistance",
+					"duration": 3600,
+					"amplifier": 0,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:wine_glass",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/10_hydration_drinks",
+			"toughasnails:thirst/2_thirst_drinks"
+		]
+	},
+	"vineandbarrel:aged_melon_wine": {
+		"id": "vineandbarrel:aged_melon_wine",
+		"name": "Aged Melon Wine",
+		"slug": "aged-melon-wine",
+		"category": "drinks",
+		"stack": 16,
+		"food": {
+			"nutrition": 0,
+			"saturation": 0,
+			"alwaysEdible": true
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "drink",
+			"effects": [
+				{
+					"id": "minecraft:fire_resistance",
+					"name": "Fire Resistance",
+					"duration": 6000,
+					"amplifier": 1,
+					"probability": 1
+				}
+			]
+		},
+		"remainder": "vineandbarrel:wine_glass",
+		"compost": null,
+		"glint": true,
+		"block": null,
+		"tags": [
+			"c:drinks",
+			"c:nutrients/fruits",
+			"farmersdelight:drinks",
+			"toughasnails:hydration/20_hydration_drinks",
+			"toughasnails:thirst/3_thirst_drinks"
+		]
+	},
+	"vineandbarrel:beer_battered_fish": {
+		"id": "vineandbarrel:beer_battered_fish",
+		"name": "Beer-Battered Fish",
+		"slug": "beer-battered-fish",
+		"category": "meals",
+		"stack": 16,
+		"food": {
+			"nutrition": 12,
+			"saturation": 19.2,
+			"alwaysEdible": false
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "eat",
+			"effects": []
+		},
+		"remainder": "minecraft:bowl",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:foods",
+			"c:nutrients/carbs",
+			"c:nutrients/proteins",
+			"farmersdelight:meals"
+		]
+	},
+	"vineandbarrel:wine_braised_beef": {
+		"id": "vineandbarrel:wine_braised_beef",
+		"name": "Wine-Braised Beef",
+		"slug": "wine-braised-beef",
+		"category": "meals",
+		"stack": 16,
+		"food": {
+			"nutrition": 14,
+			"saturation": 21,
+			"alwaysEdible": false
+		},
+		"consumable": {
+			"seconds": 1.6,
+			"animation": "eat",
+			"effects": []
+		},
+		"remainder": "minecraft:bowl",
+		"compost": null,
+		"glint": false,
+		"block": null,
+		"tags": [
+			"c:foods",
+			"c:foods/soup",
+			"c:nutrients/proteins",
+			"c:nutrients/vegetables",
+			"farmersdelight:meals"
+		]
+	}
+}

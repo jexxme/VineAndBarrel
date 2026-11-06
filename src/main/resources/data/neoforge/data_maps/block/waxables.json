@@ -1,0 +1,20 @@
+{
+  "values": {
+    "vineandbarrel:brew_kettle": {
+      "waxed": "vineandbarrel:waxed_brew_kettle",
+      "generate_block_transform": false
+    },
+    "vineandbarrel:exposed_brew_kettle": {
+      "waxed": "vineandbarrel:waxed_exposed_brew_kettle",
+      "generate_block_transform": false
+    },
+    "vineandbarrel:weathered_brew_kettle": {
+      "waxed": "vineandbarrel:waxed_weathered_brew_kettle",
+      "generate_block_transform": false
+    },
+    "vineandbarrel:oxidized_brew_kettle": {
+      "waxed": "vineandbarrel:waxed_oxidized_brew_kettle",
+      "generate_block_transform": false
+    }
+  }
+}

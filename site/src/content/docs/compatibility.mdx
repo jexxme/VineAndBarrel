@@ -1,0 +1,111 @@
+---
+title: Compatibility
+description: Which mods Vine & Barrel works with and what each one adds.
+---
+import Item from '../../components/mc/Item.astro';
+import { meta, worldgen, seasons, drinks, nameOf, list } from '../../lib/data';
+import compat from '../../data/gen/compat.json';
+
+export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
+export const seasonRows = Object.entries(seasons);
+export const v = compat.versions;
+// Wheat beer feeds through Saturation: (level + 1) food and twice that in saturation per tick it lasts
+export const beer = drinks.filter((d) => d.effect.id === 'minecraft:saturation').map((d) => ({ ...d, food: (d.effect.amplifier + 1) * d.effect.duration }));
+export const young = beer.find((d) => d.stage === 'young');
+export const aged = beer.find((d) => d.stage === 'aged');
+// A row of the thirst table is all young drinks, all aged drinks, or a few named items
+export const stageOf = (id) => drinks.find((d) => d.id === id)?.stage;
+export const rowLabel = (items) => {
+	const all = (stage) => items.every((id) => stageOf(id) === stage) && items.length === drinks.filter((d) => d.stage === stage).length;
+	return all('young') ? 'Every young drink' : all('aged') ? 'Every aged drink' : null;
+};
+export const groups = { fruits: 'Fruits', carbs: 'Carbs', proteins: 'Proteins', vegetables: 'Vegetables', sugars: 'Sugars' };
+
+Vine & Barrel {meta.modVersion} runs on **Minecraft {meta.minecraft}** with **NeoForge {meta.neoforge}** or newer. It needs no
+other mods. Everything below is optional and switches on by itself when the other mod is installed.
+
+## Farmer's Delight
+
+Stove heat, vines on ropes, rich soil, drinks from FD's bottles and two cooking pot meals. See [Farmer's Delight](/farmers-delight/).
+
+## JEI
+
+JEI shows a **Brew Kettle** and an **Aging Barrel** recipe category, with brewing times and the days each stage takes,
+plus info pages for the barrel and for the wild crops. Built against JEI {meta.jei}.
+
+## Jade
+
+Look at a kettle or barrel to see what's inside: the brew or drink, the servings left, how far the brew has got, whether the
+kettle is heated, and what stage the barrel is at. Built against Jade {meta.jade}.
+
+## AppleSkin
+
+AppleSkin's food tooltip and hunger bar preview work for everything you can eat or drink. Juices and the meals show their
+own food. <Item id={young.id} /> feeds through its Saturation buff, so AppleSkin shows what that buff fills: **{young.food}**
+hunger and **{young.food * 2}** saturation, or **{aged.food}** and **{aged.food * 2}** for <Item id={aged.id} />. The other
+wines, beers and ciders don't feed you, so they show no food. Built against AppleSkin {v.appleskin}.
+
+## Thirst
+
+With **Tough As Nails**, **Homeostatic** or **Thirst Was Taken 2**, the drinks quench thirst: juices a lot, wines, beers and
+ciders a little, aged ones a bit more than young ones. In the mods that count food too, Wine-Braised Beef counts like a
+stew and grapes like sweet berries.
+
+<table>
+	<thead>
+		<tr><th></th><th>Tough As Nails<br />thirst, hydration</th><th>Homeostatic<br />water, saturation</th><th>Thirst Was Taken 2<br />thirst, quenched</th></tr>
+	</thead>
+	<tbody>
+		{compat.thirst.map((row) => (
+			<tr>
+				<td>{rowLabel(row.items) ?? row.items.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</td>
+				<td>{row.tan ? `${row.tan.thirst}, ${row.tan.hydration}%` : '–'}</td>
+				<td>{row.homeostatic.amount}, {row.homeostatic.saturation.toFixed(1)}</td>
+				<td>{row.twt ? `${row.twt.thirst}, ${row.twt.quenched}` : '–'}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+Tough As Nails only counts drinks. Tested with Tough As Nails {v.toughasnails}, Homeostatic {v.homeostatic} and Thirst Was
+Taken 2 {v.thirstwastaken2}.
+
+## Nutritional Balance
+
+Each food and drink counts toward Nutritional Balance's food groups:
+
+<ul>
+	{Object.entries(compat.nutrients).map(([group, ids]) => (
+		<li><strong>{groups[group] ?? group}:</strong> {ids.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</li>
+	))}
+</ul>
+
+Wines, beers and ciders have no food value of their own (wheat beer fills you through its Saturation buff, which these mods don't count), so only the grapes, juices and meals fill your groups. Raw barley counts as
+carbs, so anything another mod makes from it does too. Tested with Nutritional Balance {v.nutritionalbalance}.
+
+Every drink and food also carries NeoForge's common tags (drinks, juices, fruit, soups), so other mods that read those see them
+as what they are.
+
+## Spice of Life Onion
+
+Works as it is. The meals count toward your food variety like any food. Drinks have no food value of their own (wheat beer's
+Saturation buff doesn't count), so like Farmer's Delight's drinks they add no variety. Tested with Spice of Life Onion {v.solonion}.
+
+## Biomes O' Plenty
+
+Wild crops grow in every biome tagged as a forest, plains, savanna or river (where the temperature suits them), so modded biomes with those tags get them automatically.
+With Biomes O' Plenty they also grow in a few biomes that suit them:
+
+<ul>
+	{bop.map((b) => <li><Item id={b.crop} />: {list(b.biomes)}</li>)}
+</ul>
+
+## Serene Seasons
+
+With Serene Seasons, each crop grows in its own seasons:
+
+<ul>
+	{['vineandbarrel:red_grapes', 'vineandbarrel:hops', 'vineandbarrel:barley_seeds'].map((id) => (
+		<li><Item id={id} />: {list(seasonRows.filter(([, ids]) => ids.includes(id)).map(([s]) => s))}</li>
+	))}
+</ul>

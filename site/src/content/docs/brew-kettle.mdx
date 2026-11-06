@@ -1,0 +1,104 @@
+---
+title: Brew Kettle
+description: How the Brew Kettle turns grapes, berries, barley and wheat into juice and wort, and how to heat, fill and automate it.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../components/mc/Item.astro';
+import Render from '../../components/mc/Render.astro';
+import Recipe from '../../components/recipes/Recipe.astro';
+import Stages from '../../components/data/Stages.astro';
+import KettleScreen from '../../components/brewing/KettleScreen.astro';
+import FoodStats from '../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../lib/data';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="A copper Brew Kettle on its iron tray over a campfire" />
+
+The <Item id="brew_kettle" /> is where every drink starts. Put it on a heat source, add the ingredients, and a few seconds
+later it holds a batch of juice or wort, ready to bottle. If you've ever cooked in Farmer's Delight's cooking pot, you
+already know how it works.
+
+## Heat
+
+The kettle only brews while the block right below it is hot:
+
+- **{heatNames(rules.heat.tray)}**: the kettle stands on an iron tray above them.
+- **{heatNames(direct)}**: it sits right on top.
+- **Through a {heatNames(rules.heat.conductors)}**: heat passes up through it, so a hopper can sit between the kettle and the
+  heat source and still feed it.
+- With Farmer's Delight, its **stove** heats the kettle too.
+
+A campfire has to be lit. The little flame in the kettle's screen lights up when it's heated.
+
+<Render name="scenes/kettle-on-magma" size={192} caption="On a magma block" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="Heat through a hopper" />
+<Render name="scenes/kettle-hanging" size={192} caption="Hanging from its handle" />
+
+**Hang it up:** sneak and right-click the kettle with an empty hand to swap the tray for an iron handle, or place it against
+the underside of a block. A hanging kettle still brews over a fire right below it, and looks great under a chain.
+
+## Brewing
+
+Open the kettle with a right-click and put the ingredients in. The gauge on the right shows the brew in its colour and how
+full the kettle is; hover it for the servings.
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+Each recipe makes **{rules.servingsPerBucket} servings** and takes **{seconds(brews[0].brewingTime)}**. While it brews, steam
+curls out from under the lid and the lid rattles; when it's done, it lets out a puff of steam. The kettle keeps brewing
+more batches as long as there are ingredients, up to {rules.kettleMaxServings} servings in total.
+
+Once a brew is done, the lid stays up and you can see it inside, sinking as you take servings out. While a batch brews, the
+lid is down; when the last serving is gone, it closes.
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="The kettle with its lid open, showing the brew" />
+
+## Bottling
+
+Like a cauldron: right-click the kettle with an empty container.
+
+- a <Item id="glass_bottle" /> takes **{rules.servingsPerBottle} serving**,
+- an empty <Item id="bucket" /> takes **{rules.servingsPerBucket} servings**, so the kettle needs at least that many.
+
+Buckets of juice and wort can't be poured out into the world, like milk.
+
+## Juice to drink
+
+<Item id="grape_juice" /> and <Item id="sweet_berry_juice" /> are drinks on their own: they take {juice.consumable.seconds} s to
+drink, you can always drink them, and they fill a little hunger.
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+Grape juice also lowers [Tipsy](/tipsy/) by one level. Wort has to ferment first; you can't drink it.
+
+## Automation
+
+Hoppers can run the kettle on their own:
+
+- **From above**, a hopper feeds ingredients in, and empty bottles or buckets.
+- **From the sides**, it feeds empty bottles or buckets.
+- The kettle fills them from the brew, and **a hopper below** pulls out the filled ones.
+
+Nothing pulls the ingredients or the brew itself out.
+
+A comparator next to the kettle reads how full it is.
+
+## Copper
+
+The kettle is copper, and it ages like copper.
+
+<Stages prefix="kettle-weathering" title="Weathering" labels={['Copper', 'Exposed', 'Weathered', 'Oxidized']} />
+
+- Over time it turns exposed, weathered and finally oxidized. It brews the same at every stage.
+- **Honeycomb** waxes it and stops the weathering. An **axe** scrapes off wax or one stage of weathering, and lightning cleans it.
+- **Break it full** and it keeps its contents: the item's tooltip shows the brew, and you can place it somewhere else and carry on.
+
+## Recipe
+
+<Recipe id="brew_kettle" />

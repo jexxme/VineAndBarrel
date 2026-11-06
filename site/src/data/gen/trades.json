@@ -1,0 +1,80 @@
+[
+	{
+		"profession": "wandering_trader",
+		"level": null,
+		"gives": {
+			"id": "vineandbarrel:barley_seeds",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 12
+	},
+	{
+		"profession": "wandering_trader",
+		"level": null,
+		"gives": {
+			"id": "vineandbarrel:hops",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 12
+	},
+	{
+		"profession": "wandering_trader",
+		"level": null,
+		"gives": {
+			"id": "vineandbarrel:red_grapes",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 12
+	},
+	{
+		"profession": "farmer",
+		"level": 1,
+		"gives": {
+			"id": "vineandbarrel:barley_seeds",
+			"count": 6
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 16
+	},
+	{
+		"profession": "farmer",
+		"level": 2,
+		"gives": {
+			"id": "vineandbarrel:hops",
+			"count": 3
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 16
+	},
+	{
+		"profession": "farmer",
+		"level": 2,
+		"gives": {
+			"id": "vineandbarrel:red_grapes",
+			"count": 3
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 16
+	}
+]

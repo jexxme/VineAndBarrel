@@ -1,0 +1,126 @@
+name: Release
+
+# Push a tag named <minecraft_version>-<mod_version> (e.g. 26.3-0.1.0) on the matching branch.
+# Publishes to GitHub Releases always, and to Modrinth / CurseForge once these are set up in the repository settings:
+#   Variables: MODRINTH_PROJECT_ID, CURSEFORGE_PROJECT_ID     Secrets: MODRINTH_TOKEN, CURSEFORGE_TOKEN
+on:
+  push:
+    tags:
+      - '*-*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version info and check the tag
+        id: info
+        run: |
+          prop() { grep -E "^$1=" gradle.properties | cut -d= -f2-; }
+          mc=$(prop minecraft_version); mod=$(prop mod_version); games=$(prop release_game_versions)
+          expected="${mc}-${mod}"
+          if [ "${GITHUB_REF_NAME}" != "${expected}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} doesn't match this commit's gradle.properties (${expected})."
+            exit 1
+          fi
+          if [ -z "${games}" ]; then
+            echo "::error::release_game_versions is missing in gradle.properties."
+            exit 1
+          fi
+          {
+            echo "version=${expected}"
+            echo "mod_version=${mod}"
+            echo "games_label=$(echo "${games}" | sed 's/,/, /g')"
+            echo "games<<EOF"; echo "${games}" | tr ',' '\n'; echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          # Release notes: the first section of changelog.md (up to the next "## " or "# " heading)
+          awk 'NR==1 && /^## /{next} /^#{1,2} /{exit} {print}' changelog.md > release-notes.md
+          echo "Release notes:"; cat release-notes.md
+          # Only builds for the newest Minecraft version (the default branch) are marked as the latest release
+          git fetch --depth=1 origin "${{ github.event.repository.default_branch }}"
+          newest=$(git show FETCH_HEAD:gradle.properties | grep -E '^minecraft_version=' | cut -d= -f2-)
+          if [ "${mc}" = "${newest}" ]; then echo "latest=true" >> "$GITHUB_OUTPUT"; else echo "latest=false" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build, check and test
+        run: |
+          set -o pipefail
+          ./gradlew build runGameTestServer --console=plain 2>&1 | tee release.log
+          if grep -E "/ERROR\]" release.log; then
+            echo "::error::Errors were logged while the GameTests ran."
+            exit 1
+          fi
+
+      - name: GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Vine & Barrel ${{ steps.info.outputs.mod_version }} for Minecraft ${{ steps.info.outputs.games_label }}
+          body_path: release-notes.md
+          files: build/libs/VineAndBarrel-${{ steps.info.outputs.version }}.jar
+          fail_on_unmatched_files: true
+          make_latest: ${{ steps.info.outputs.latest }}
+
+      - name: Modrinth
+        if: vars.MODRINTH_PROJECT_ID != ''
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ vars.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: build/libs/VineAndBarrel-${{ steps.info.outputs.version }}.jar
+          name: ${{ steps.info.outputs.mod_version }} for Minecraft ${{ steps.info.outputs.games_label }}
+          version: ${{ steps.info.outputs.version }}
+          version-type: release
+          changelog-file: release-notes.md
+          loaders: neoforge
+          game-versions: ${{ steps.info.outputs.games }}
+          game-version-filter: none
+          dependencies: |
+            farmers-delight-neoforged(optional){modrinth:8Vb5dzx9}{curseforge:1782500}
+            jei(optional){modrinth:u6dRKJwZ}{curseforge:238222}
+            jade(optional){modrinth:nvQzSEkH}{curseforge:324717}
+            appleskin(optional){modrinth:EsAfCjCV}{curseforge:248787}
+            tough-as-nails(optional){modrinth:ge1sOdFH}{curseforge:246391}
+            homeostatic(optional){modrinth:oDobngty}{curseforge:634466}
+            thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
+            nutritional-balance(optional){modrinth:OECzAr94}{curseforge:448222}
+          java: 25
+
+      - name: CurseForge
+        if: vars.CURSEFORGE_PROJECT_ID != ''
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: build/libs/VineAndBarrel-${{ steps.info.outputs.version }}.jar
+          name: Vine & Barrel ${{ steps.info.outputs.mod_version }} for Minecraft ${{ steps.info.outputs.games_label }}
+          version: ${{ steps.info.outputs.version }}
+          version-type: release
+          changelog-file: release-notes.md
+          loaders: neoforge
+          game-versions: ${{ steps.info.outputs.games }}
+          game-version-filter: none
+          dependencies: |
+            farmers-delight-neoforged(optional){modrinth:8Vb5dzx9}{curseforge:1782500}
+            jei(optional){modrinth:u6dRKJwZ}{curseforge:238222}
+            jade(optional){modrinth:nvQzSEkH}{curseforge:324717}
+            appleskin(optional){modrinth:EsAfCjCV}{curseforge:248787}
+            tough-as-nails(optional){modrinth:ge1sOdFH}{curseforge:246391}
+            homeostatic(optional){modrinth:oDobngty}{curseforge:634466}
+            thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
+            nutritional-balance(optional){modrinth:OECzAr94}{curseforge:448222}
+          java: 25

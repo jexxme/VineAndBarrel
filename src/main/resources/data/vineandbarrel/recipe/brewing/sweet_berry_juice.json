@@ -1,0 +1,20 @@
+{
+  "type": "vineandbarrel:brewing",
+  "recipe_book_tab": "juices",
+  "ingredients": [
+    "minecraft:sweet_berries",
+    "minecraft:sweet_berries",
+    "minecraft:sweet_berries",
+    "minecraft:sweet_berries",
+    "minecraft:sugar"
+  ],
+  "result": {
+    "id": "vineandbarrel:sweet_berry_juice",
+    "count": 4
+  },
+  "bucket": {
+    "id": "vineandbarrel:sweet_berry_juice_bucket"
+  },
+  "experience": 0.35,
+  "brewingtime": 200
+}

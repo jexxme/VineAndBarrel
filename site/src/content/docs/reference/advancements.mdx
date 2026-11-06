@@ -1,0 +1,12 @@
+---
+title: Advancements
+description: The Vine & Barrel advancement tab and how to earn each one.
+---
+import Advancements from '../../../components/data/Advancements.astro';
+import { advancements } from '../../../lib/data';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel has its own advancement tab, **{root.title}**: *{root.description}*
+
+<Advancements />

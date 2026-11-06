@@ -1,0 +1,23 @@
+---
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+<Default><slot /></Default>
+<div class="fd-footer">
+	<p>
+		Vine &amp; Barrel · MIT License · © 2026 Jexxme. Not an official Minecraft product; not approved by or associated with
+		Mojang or Microsoft. Minecraft textures © Mojang Studios. Farmer's Delight is vectorwing's mod; Vine &amp; Barrel is a
+		separate mod and is not affiliated with or endorsed by vectorwing.
+	</p>
+</div>
+<style>
+	.fd-footer {
+		margin-top: 2rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--fd-border);
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+	}
+	:global(main footer.sl-flex:not(:has(a))) {
+		display: none;
+	}
+</style>

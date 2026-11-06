@@ -1,0 +1,18 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+import { getImage } from 'astro:assets';
+import hero from '../../assets/shots/hero.jpg';
+import font from '../../assets/fonts/fd-pixel.otf?url';
+// Share image: the title-screen panorama as a 1200 px JPG (what social sites expect)
+const share = await getImage({ src: hero, width: 1200, format: 'jpg', quality: 82 });
+const og = Astro.site ? new URL(share.src, Astro.site).href : null;
+---
+<Default><slot /></Default>
+<link rel="preload" href={font} as="font" type="font/otf" crossorigin />
+<meta name="theme-color" content="#17140f" />
+{og && <meta property="og:image" content={og} />}
+{og && <meta name="twitter:image" content={og} />}
+<meta name="twitter:card" content="summary_large_image" />
+<script>
+	import '../../scripts/mc.ts';
+</script>

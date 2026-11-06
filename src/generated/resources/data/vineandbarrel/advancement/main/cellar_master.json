@@ -1,0 +1,35 @@
+{
+  "parent": "vineandbarrel:main/first_brew",
+  "criteria": {
+    "stacked_barrel": {
+      "conditions": {
+        "location": {
+          "type": "minecraft:match_block",
+          "blocks": "vineandbarrel:aging_barrel",
+          "state": {
+            "stacked": "true"
+          }
+        }
+      },
+      "trigger": "minecraft:placed_block"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.vineandbarrel.cellar_master.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "id": "vineandbarrel:aging_barrel"
+    },
+    "title": {
+      "translate": "advancements.vineandbarrel.cellar_master.title"
+    }
+  },
+  "requirements": [
+    [
+      "stacked_barrel"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

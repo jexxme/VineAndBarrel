@@ -1,0 +1,289 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "vineandbarrel:block/aging_barrel_side",
+    "end": "vineandbarrel:block/aging_barrel_end",
+    "side": "vineandbarrel:block/aging_barrel_side",
+    "top": "vineandbarrel:block/aging_barrel_side_rotated",
+    "cradle": "vineandbarrel:block/aging_barrel_cradle",
+    "tap": "vineandbarrel:block/aging_barrel_tap"
+  },
+  "elements": [
+    {
+      "name": "chock",
+      "from": [
+        4,
+        -1,
+        4
+      ],
+      "to": [
+        5.5,
+        2.5,
+        5.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "up": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            5.5
+          ],
+          "texture": "#cradle"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            5.5
+          ],
+          "texture": "#cradle"
+        }
+      }
+    },
+    {
+      "name": "chock",
+      "from": [
+        4,
+        -1,
+        10.5
+      ],
+      "to": [
+        5.5,
+        2.5,
+        12.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            5.5,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "up": {
+          "uv": [
+            4,
+            10.5,
+            5.5,
+            12.0
+          ],
+          "texture": "#cradle"
+        },
+        "down": {
+          "uv": [
+            4,
+            10.5,
+            5.5,
+            12.0
+          ],
+          "texture": "#cradle"
+        }
+      }
+    },
+    {
+      "name": "chock",
+      "from": [
+        10.5,
+        -1,
+        4
+      ],
+      "to": [
+        12.0,
+        2.5,
+        5.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "south": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "east": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "west": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "up": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            5.5
+          ],
+          "texture": "#cradle"
+        },
+        "down": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            5.5
+          ],
+          "texture": "#cradle"
+        }
+      }
+    },
+    {
+      "name": "chock",
+      "from": [
+        10.5,
+        -1,
+        10.5
+      ],
+      "to": [
+        12.0,
+        2.5,
+        12.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "south": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "east": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "west": {
+          "uv": [
+            10.5,
+            4,
+            12.0,
+            7.5
+          ],
+          "texture": "#cradle"
+        },
+        "up": {
+          "uv": [
+            10.5,
+            10.5,
+            12.0,
+            12.0
+          ],
+          "texture": "#cradle"
+        },
+        "down": {
+          "uv": [
+            10.5,
+            10.5,
+            12.0,
+            12.0
+          ],
+          "texture": "#cradle"
+        }
+      }
+    }
+  ]
+}

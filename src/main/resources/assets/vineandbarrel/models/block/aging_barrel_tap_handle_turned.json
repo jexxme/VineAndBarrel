@@ -1,0 +1,82 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "vineandbarrel:block/aging_barrel_side",
+    "end": "vineandbarrel:block/aging_barrel_end",
+    "side": "vineandbarrel:block/aging_barrel_side",
+    "top": "vineandbarrel:block/aging_barrel_side_rotated",
+    "cradle": "vineandbarrel:block/aging_barrel_cradle",
+    "tap": "vineandbarrel:block/aging_barrel_tap"
+  },
+  "elements": [
+    {
+      "name": "tap_handle",
+      "from": [
+        7.5,
+        6,
+        -0.5
+      ],
+      "to": [
+        8.5,
+        7.5,
+        0.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            7,
+            0,
+            8,
+            1.5
+          ],
+          "texture": "#tap"
+        },
+        "south": {
+          "uv": [
+            7,
+            0,
+            8,
+            1.5
+          ],
+          "texture": "#tap"
+        },
+        "east": {
+          "uv": [
+            7,
+            0,
+            8,
+            1.5
+          ],
+          "texture": "#tap"
+        },
+        "west": {
+          "uv": [
+            7,
+            0,
+            8,
+            1.5
+          ],
+          "texture": "#tap"
+        },
+        "up": {
+          "uv": [
+            7,
+            0,
+            8,
+            1.5
+          ],
+          "texture": "#tap"
+        }
+      },
+      "rotation": {
+        "angle": -45,
+        "axis": "z",
+        "origin": [
+          8,
+          6,
+          0
+        ]
+      }
+    }
+  ]
+}

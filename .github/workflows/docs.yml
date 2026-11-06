@@ -1,0 +1,67 @@
+# Builds the wiki in site/ on every change, and publishes it to GitHub Pages only on purpose: run the workflow by hand
+# (Actions → Docs → Run workflow) with "deploy" ticked. Pushes only build and check it.
+# To allow publishing at all: repository Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# The base path follows the repository's name (https://<owner>.github.io/<repo>/), so it works whatever the repo is called;
+# set the repository variable DOCS_BASE_PATH to override it (e.g. "/" for a custom domain).
+# The site's data (site/src/data, site/public/icons, site/public/renders) is generated locally and committed
+# (see site/README.md), so this workflow only builds the static site.
+name: Docs
+
+on:
+  push:
+    branches: [26.3]
+    paths:
+      - 'site/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Publish the built site to GitHub Pages
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    env:
+      SITE_URL: https://${{ github.repository_owner }}.github.io
+      BASE_PATH: ${{ vars.DOCS_BASE_PATH || format('/{0}', github.event.repository.name) }}
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+      REPO_BRANCH: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm run check   # no unrendered values, no broken internal links
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    # Explicit opt-in: only a manual run with "deploy" ticked publishes
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

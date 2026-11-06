@@ -1,0 +1,92 @@
+[
+	{
+		"id": "vineandbarrel:main/brewmaster",
+		"parent": "vineandbarrel:main/patience_pays",
+		"title": "Brewmaster",
+		"description": "Taste every beer, young and aged",
+		"icon": "vineandbarrel:aged_barley_ale",
+		"frame": "challenge",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/cellar_master",
+		"parent": "vineandbarrel:main/first_brew",
+		"title": "Cellar Master",
+		"description": "Stack one Aging Barrel on top of another",
+		"icon": "vineandbarrel:aging_barrel",
+		"frame": "goal",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/cheers",
+		"parent": "vineandbarrel:main/on_tap",
+		"title": "Cheers!",
+		"description": "Have a drink at the same time as a friend",
+		"icon": "vineandbarrel:wheat_beer",
+		"frame": "task",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/first_brew",
+		"parent": "vineandbarrel:main/root",
+		"title": "First Brew",
+		"description": "Brew a juice or wort in a heated Brew Kettle and bottle it up",
+		"icon": "vineandbarrel:brew_kettle",
+		"frame": "task",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/on_tap",
+		"parent": "vineandbarrel:main/root",
+		"title": "On Tap",
+		"description": "Find a village tavern and tap a drink from one of its barrels",
+		"icon": "vineandbarrel:mug",
+		"frame": "task",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/patience_pays",
+		"parent": "vineandbarrel:main/first_brew",
+		"title": "Patience Pays",
+		"description": "Let a batch ferment and age in an Aging Barrel, then tap the aged drink",
+		"icon": "vineandbarrel:aged_red_wine",
+		"frame": "goal",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/root",
+		"parent": null,
+		"title": "Vine & Barrel",
+		"description": "Grapes, hops and barley: a cellar full of patience awaits!",
+		"icon": "vineandbarrel:aging_barrel",
+		"frame": "task",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/sleep_it_off",
+		"parent": "vineandbarrel:main/cheers",
+		"title": "Sleep It Off",
+		"description": "Go to bed Tipsy and wake up fresh",
+		"icon": "minecraft:red_bed",
+		"frame": "task",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/vintner",
+		"parent": "vineandbarrel:main/patience_pays",
+		"title": "Vintner",
+		"description": "Taste every wine, young and aged",
+		"icon": "vineandbarrel:aged_sweet_berry_wine",
+		"frame": "challenge",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/where_am_i",
+		"parent": "vineandbarrel:main/sleep_it_off",
+		"title": "Where Am I?",
+		"description": "Have one drink too many",
+		"icon": "minecraft:compass",
+		"frame": "task",
+		"hidden": false
+	}
+]

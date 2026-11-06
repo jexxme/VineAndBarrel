@@ -1,0 +1,185 @@
+/* Minecraft-style UI pieces: inventory slots, GUI panels, tooltips. Sizes are in "GUI pixels" scaled by --s. */
+:root {
+	--mc-panel: #c6c6c6;
+	--mc-slot: #8b8b8b;
+	--mc-dark: #373737;
+	--mc-light: #ffffff;
+}
+
+.mc-panel {
+	--s: 2px;
+	position: relative;
+	display: inline-block;
+	background: var(--mc-panel);
+	padding: calc(4 * var(--s));
+	border-radius: calc(2 * var(--s));
+	box-shadow:
+		inset calc(1 * var(--s)) calc(1 * var(--s)) 0 var(--mc-light),
+		inset calc(-1 * var(--s)) calc(-1 * var(--s)) 0 #555,
+		0 0 0 calc(1 * var(--s)) #000;
+	image-rendering: pixelated;
+	color: #3f3f3f;
+	line-height: 1;
+}
+
+.mc-slot {
+	--s: 2px;
+	position: relative;
+	width: calc(18 * var(--s));
+	height: calc(18 * var(--s));
+	background: var(--mc-slot);
+	box-shadow:
+		inset var(--s) var(--s) 0 var(--mc-dark),
+		inset calc(-1 * var(--s)) calc(-1 * var(--s)) 0 var(--mc-light);
+	display: grid;
+	place-items: center;
+	flex: none;
+}
+.mc-slot.large {
+	width: calc(26 * var(--s));
+	height: calc(26 * var(--s));
+}
+.mc-slot.bare {
+	width: calc(16 * var(--s));
+	height: calc(16 * var(--s));
+	background: transparent;
+	box-shadow: none;
+}
+.mc-slot.bare:hover::after {
+	inset: 0;
+}
+.mc-slot > .mc-stack {
+	position: relative;
+	width: calc(16 * var(--s));
+	height: calc(16 * var(--s));
+	display: grid;
+	place-items: center;
+}
+.mc-slot img,
+.mc-icon {
+	image-rendering: pixelated;
+	display: block;
+}
+.mc-slot img {
+	width: calc(16 * var(--s));
+	height: calc(16 * var(--s));
+}
+.mc-slot:hover::after,
+.mc-slot:focus-visible::after {
+	content: '';
+	position: absolute;
+	inset: var(--s);
+	background: rgb(255 255 255 / 0.45);
+	pointer-events: none;
+}
+.mc-count {
+	position: absolute;
+	right: calc(-1 * var(--s));
+	bottom: calc(-2 * var(--s));
+	font-family: var(--fd-font-pixel);
+	font-size: calc(10 * var(--s));
+	line-height: 1;
+	color: #fff;
+	text-shadow: var(--s) var(--s) 0 #3f3f3f;
+	pointer-events: none;
+}
+.mc-chance {
+	position: absolute;
+	left: calc(-1 * var(--s));
+	top: calc(-2 * var(--s));
+	font-family: var(--fd-font-pixel);
+	font-size: calc(5 * var(--s));
+	color: #ffd34d;
+	text-shadow: calc(0.5 * var(--s)) calc(0.5 * var(--s)) 0 #3f2a00;
+	pointer-events: none;
+}
+.mc-cycle > img {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+}
+.mc-cycle > img.on {
+	opacity: 1;
+}
+
+/* Tooltip (shared, positioned by tooltip.ts) */
+#mc-tooltip {
+	position: fixed;
+	z-index: 1000;
+	pointer-events: none;
+	max-width: 22rem;
+	padding: 0.45rem 0.6rem 0.5rem;
+	background: rgb(16 0 16 / 0.94);
+	border: 2px solid transparent;
+	border-radius: 3px;
+	background-clip: padding-box;
+	outline: 2px solid rgb(16 0 16 / 0.94);
+	box-shadow: inset 0 0 0 1px #5000ff50, inset 0 0 0 2px #28007f40;
+	font-family: var(--fd-font-pixel);
+	color: #fff;
+	font-size: 20px;
+	line-height: 1.5;
+	text-shadow: 2px 2px 0 #3f3f3f;
+	opacity: 0;
+	transform: translateY(4px);
+	transition: opacity 0.08s, transform 0.08s;
+}
+#mc-tooltip.on {
+	opacity: 1;
+	transform: none;
+}
+#mc-tooltip .t-name {
+	color: #fff;
+}
+#mc-tooltip .t-sub {
+	color: #a8a8a8;
+}
+#mc-tooltip .t-blue {
+	color: #5555ff;
+}
+#mc-tooltip .t-gold {
+	color: #ffaa00;
+}
+#mc-tooltip .t-id {
+	color: #555;
+	text-shadow: 2px 2px 0 #151515;
+}
+
+/* Inline item chips */
+a.fd-item,
+span.fd-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+	vertical-align: -9px;
+	text-decoration: none;
+	font-weight: 550;
+	white-space: nowrap;
+	border-radius: 0;
+	padding: 0 0.25em 0 0.1em;
+	margin-inline: -0.1em;
+	transition: background 0.12s;
+}
+a.fd-item {
+	color: var(--sl-color-text-accent);
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 4px;
+}
+a.fd-item:hover {
+	background: var(--sl-color-accent-low);
+	text-decoration-color: var(--sl-color-accent);
+}
+.fd-item img {
+	width: 32px;
+	height: 32px;
+	image-rendering: pixelated;
+	flex: none;
+}
+
+/* Heat / sprite strip from a 256x256 GUI texture */
+.mc-sprite {
+	display: block;
+	image-rendering: pixelated;
+	background-repeat: no-repeat;
+}

@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_red_grapes": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "vineandbarrel:red_grapes"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipes": "vineandbarrel:brewing/grape_juice"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_red_grapes"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "vineandbarrel:brewing/grape_juice"
+    ]
+  }
+}

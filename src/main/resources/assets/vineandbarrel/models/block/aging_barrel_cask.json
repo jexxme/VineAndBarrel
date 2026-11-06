@@ -1,0 +1,280 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "vineandbarrel:block/aging_barrel_side",
+    "end": "vineandbarrel:block/aging_barrel_end",
+    "side": "vineandbarrel:block/aging_barrel_side",
+    "top": "vineandbarrel:block/aging_barrel_side_rotated",
+    "cradle": "vineandbarrel:block/aging_barrel_cradle",
+    "tap": "vineandbarrel:block/aging_barrel_tap"
+  },
+  "elements": [
+    {
+      "name": "cask_0",
+      "from": [
+        4,
+        2,
+        1
+      ],
+      "to": [
+        12,
+        15,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            1,
+            12,
+            14
+          ],
+          "texture": "#end"
+        },
+        "south": {
+          "uv": [
+            4,
+            1,
+            12,
+            14
+          ],
+          "texture": "#end"
+        },
+        "east": {
+          "uv": [
+            1,
+            1,
+            15,
+            14
+          ],
+          "texture": "#side"
+        },
+        "west": {
+          "uv": [
+            1,
+            1,
+            15,
+            14
+          ],
+          "texture": "#side"
+        },
+        "up": {
+          "uv": [
+            4,
+            1,
+            12,
+            15
+          ],
+          "texture": "#top"
+        },
+        "down": {
+          "uv": [
+            4,
+            1,
+            12,
+            15
+          ],
+          "texture": "#top"
+        }
+      }
+    },
+    {
+      "name": "cask_1",
+      "from": [
+        2,
+        3,
+        1
+      ],
+      "to": [
+        14,
+        14,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2,
+            2,
+            14,
+            13
+          ],
+          "texture": "#end"
+        },
+        "south": {
+          "uv": [
+            2,
+            2,
+            14,
+            13
+          ],
+          "texture": "#end"
+        },
+        "east": {
+          "uv": [
+            1,
+            2,
+            15,
+            13
+          ],
+          "texture": "#side"
+        },
+        "west": {
+          "uv": [
+            1,
+            2,
+            15,
+            13
+          ],
+          "texture": "#side"
+        },
+        "up": {
+          "uv": [
+            2,
+            1,
+            14,
+            15
+          ],
+          "texture": "#top"
+        },
+        "down": {
+          "uv": [
+            2,
+            1,
+            14,
+            15
+          ],
+          "texture": "#top"
+        }
+      }
+    },
+    {
+      "name": "cask_2",
+      "from": [
+        1,
+        5,
+        1
+      ],
+      "to": [
+        15,
+        12,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1,
+            4,
+            15,
+            11
+          ],
+          "texture": "#end"
+        },
+        "south": {
+          "uv": [
+            1,
+            4,
+            15,
+            11
+          ],
+          "texture": "#end"
+        },
+        "east": {
+          "uv": [
+            1,
+            4,
+            15,
+            11
+          ],
+          "texture": "#side"
+        },
+        "west": {
+          "uv": [
+            1,
+            4,
+            15,
+            11
+          ],
+          "texture": "#side"
+        },
+        "up": {
+          "uv": [
+            1,
+            1,
+            15,
+            15
+          ],
+          "texture": "#top"
+        },
+        "down": {
+          "uv": [
+            1,
+            1,
+            15,
+            15
+          ],
+          "texture": "#top"
+        }
+      }
+    },
+    {
+      "name": "tap_spout",
+      "from": [
+        7,
+        4,
+        -0.5
+      ],
+      "to": [
+        9,
+        6,
+        1
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            7,
+            5,
+            9,
+            11
+          ],
+          "texture": "#tap"
+        },
+        "east": {
+          "uv": [
+            7,
+            5,
+            9,
+            11
+          ],
+          "texture": "#tap"
+        },
+        "west": {
+          "uv": [
+            7,
+            5,
+            9,
+            11
+          ],
+          "texture": "#tap"
+        },
+        "up": {
+          "uv": [
+            7,
+            5,
+            9,
+            11
+          ],
+          "texture": "#tap"
+        },
+        "down": {
+          "uv": [
+            7,
+            5,
+            9,
+            11
+          ],
+          "texture": "#tap"
+        }
+      }
+    }
+  ]
+}

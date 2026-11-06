@@ -1,0 +1,29 @@
+{
+  "parent": "vineandbarrel:main/root",
+  "criteria": {
+    "tapped_village_barrel": {
+      "conditions": {
+        "in_village": true
+      },
+      "trigger": "vineandbarrel:tapped_barrel"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.vineandbarrel.on_tap.description"
+    },
+    "icon": {
+      "id": "vineandbarrel:mug"
+    },
+    "title": {
+      "translate": "advancements.vineandbarrel.on_tap.title"
+    }
+  },
+  "requirements": [
+    [
+      "tapped_village_barrel"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

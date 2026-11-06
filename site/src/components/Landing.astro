@@ -1,0 +1,392 @@
+---
+// Home page as a Minecraft title screen (panorama, logo, splash text, stone buttons), followed by the chapters on
+// canvas signs and the whole mod in a creative-inventory panel with one tab per category. Same layout as the FD
+// Neoforged docs; the panorama is an in-game shot of the showcase world (./gradlew runScreenshots, npm run shots).
+import { Picture } from 'astro:assets';
+import Slot from './mc/Slot.astro';
+import hero from '../assets/shots/hero.jpg';
+import banner from '../assets/ui/banner.png';
+import { meta, url, itemList, CATEGORIES, iconOf, rules, roman, duration } from '../lib/data';
+
+const cats = Object.entries(CATEGORIES)
+	.map(([key, v]) => ({ key, ...v, items: itemList.filter((i) => i.category === key) }))
+	.filter((c) => c.items.length);
+const tabIcon: Record<string, string> = {
+	workstations: 'vineandbarrel:aging_barrel', crops: 'vineandbarrel:red_grapes', storage: 'vineandbarrel:grape_crate',
+	bases: 'vineandbarrel:grape_juice', drinks: 'vineandbarrel:aged_red_wine', meals: 'vineandbarrel:wine_braised_beef',
+};
+// Splash texts, all true for this release
+const splashes = [
+	`${meta.counts.drinks} drinks!`,
+	`${meta.counts.brewing} brews, one kettle!`,
+	`Aged: level ${roman(rules.agedBuffAmplifier)} for ${duration(rules.agedBuffTicks)}!`,
+	'Cheers!',
+	'*hic*',
+	`Minecraft ${meta.minecraft}!`,
+	'Patience pays!',
+];
+const chapters = [
+	{ title: 'Start here', icon: 'vineandbarrel:wine_glass', pages: [['Getting started', 'getting-started']] },
+	{ title: 'Brewing', icon: 'vineandbarrel:brew_kettle', pages: [['Crops', 'crops'], ['Brew Kettle', 'brew-kettle'], ['Aging Barrel', 'aging-barrel'], ['Drinks', 'drinks'], ['Tipsy', 'tipsy']] },
+	{ title: 'The world', icon: 'vineandbarrel:grape_crate', pages: [['Interactions', 'interactions'], ['Villages & taverns', 'villages']] },
+	{ title: 'Reference', icon: 'vineandbarrel:aged_red_wine', pages: [['All items & blocks', 'items'], ['All recipes', 'reference/recipes'], ['Advancements', 'reference/advancements']] },
+	{ title: 'About', icon: 'vineandbarrel:mug', pages: [["Farmer's Delight", 'farmers-delight'], ['Compatibility', 'compatibility'], ['Changelog', 'changelog']] },
+];
+---
+<div class="landing not-content">
+	<section class="title-screen">
+		<Picture
+			class="panorama"
+			src={hero}
+			formats={['avif', 'webp']}
+			fallbackFormat="jpg"
+			widths={[640, 960, 1440, 1920]}
+			sizes="(max-width: 62rem) 100vw, 59rem"
+			alt=""
+			loading="eager"
+			fetchpriority="high"
+		/>
+		<div class="logo-wrap">
+			<img class="logo" src={banner.src} alt="Vine &amp; Barrel" width={banner.width * 2} height={banner.height * 2} />
+			<span class="splash" data-splashes={JSON.stringify(splashes)}>{splashes[0]}</span>
+		</div>
+		<nav class="menu" aria-label="Start">
+			<a class="mc-button wide" href={url('/getting-started/')}>Getting started</a>
+			<a class="mc-button wide" href={url('/items/')}>All {meta.counts.items} items &amp; blocks</a>
+			<div class="pair">
+				<a class="mc-button" href={url('/brew-kettle/')}>Brew Kettle</a>
+				<a class="mc-button" href={url('/aging-barrel/')}>Aging Barrel</a>
+			</div>
+		</nav>
+		<p class="corner left">Vine &amp; Barrel {meta.modVersion}</p>
+		<p class="corner right">Not an official Minecraft product</p>
+	</section>
+
+	<section class="chapters">
+		{chapters.map((c) => (
+			<div class="chapter fd-sign">
+				<h2>
+					<img src={iconOf(c.icon)?.src} alt="" width="32" height="32" />
+					{c.title}
+				</h2>
+				<ul>
+					{c.pages.map(([label, slug]) => (
+						<li>
+							<a href={url(`/${slug}/`)}>{label}</a>
+						</li>
+					))}
+				</ul>
+			</div>
+		))}
+	</section>
+
+	<section class="pantry-wrap">
+		<div class="pantry-head">
+			<div>
+				<h2>Everything in the mod</h2>
+				<p>All {meta.counts.items} items and blocks, one tab per category. Hover a slot to see what it is, click it to open its page.</p>
+			</div>
+			<a class="mc-button" href={url('/items/')}>Browse all items</a>
+		</div>
+		<div class="pantry" aria-label="All items by category">
+		<div class="tabs" role="tablist">
+			{cats.map((c, i) => (
+				<button type="button" role="tab" class="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`tab-${c.key}`} data-tab={c.key} title={c.label}>
+					<img src={iconOf(tabIcon[c.key] ?? c.items[0].id)?.src} alt={c.label} width="32" height="32" />
+				</button>
+			))}
+		</div>
+		<div class="inv mc-panel" style="--s:2px">
+			{cats.map((c, i) => (
+				<div class="inv-page" id={`tab-${c.key}`} role="tabpanel" hidden={i !== 0}>
+					<p class="inv-title">
+						{c.label} <span>({c.items.length})</span>
+						<a href={url(`/items/#${c.key}`)}>open list</a>
+					</p>
+					<div class="inv-grid">
+						{c.items.map((it) => (
+							<Slot id={it.id} scale={3} />
+						))}
+					</div>
+				</div>
+			))}
+		</div>
+		</div>
+	</section>
+
+</div>
+
+<script>
+	// Pick a splash text, like the title screen does
+	for (const el of document.querySelectorAll<HTMLElement>('.splash[data-splashes]')) {
+		const list = JSON.parse(el.dataset.splashes!);
+		el.textContent = list[Math.floor(Math.random() * list.length)];
+	}
+	// Creative-inventory tabs
+	for (const tab of document.querySelectorAll<HTMLButtonElement>('.pantry .tab')) {
+		tab.addEventListener('click', () => {
+			for (const t of document.querySelectorAll<HTMLButtonElement>('.pantry .tab')) t.setAttribute('aria-selected', String(t === tab));
+			for (const p of document.querySelectorAll<HTMLElement>('.pantry .inv-page')) p.hidden = p.id !== `tab-${tab.dataset.tab}`;
+		});
+	}
+</script>
+
+<style>
+	:global(body:has(.landing) .content-panel:has(h1#_top)) {
+		display: none;
+	}
+	.landing {
+		padding-top: 1rem;
+	}
+	.title-screen {
+		position: relative;
+		min-height: 560px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 44px;
+		padding: 60px 16px 70px;
+		border: 4px solid #000;
+		box-shadow: 6px 6px 0 #000;
+		isolation: isolate;
+	}
+	/* The panorama is a real <img> (not a CSS background) so the browser finds it early and picks the right size */
+	.title-screen :global(.panorama) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: 50% 40%;
+		z-index: -1;
+	}
+	.logo-wrap {
+		position: relative;
+	}
+	.logo {
+		display: block;
+		width: min(536px, 84vw);
+		height: auto;
+		image-rendering: pixelated;
+	}
+	/* Placed like the game's title screen: the splash is centred two thirds of the way from the wordmark's middle to its
+	   right end, on its bottom edge, so it just overlaps the last letters. Our wordmark is the right half of the logo. */
+	.splash {
+		position: absolute;
+		left: 89%;
+		top: 86%;
+		color: #ffff00;
+		font-size: 20px;
+		text-shadow: 2px 2px 0 #3f3f00;
+		white-space: nowrap;
+		transform: translate(-50%, -50%) rotate(-20deg);
+		animation: splash 0.5s ease-in-out infinite alternate;
+		pointer-events: none;
+	}
+	@keyframes splash {
+		from {
+			transform: translate(-50%, -50%) rotate(-20deg) scale(1);
+		}
+		to {
+			transform: translate(-50%, -50%) rotate(-20deg) scale(1.08);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.splash {
+			animation: none;
+		}
+	}
+	.menu {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		width: min(400px, 100%);
+	}
+	.menu .wide {
+		width: 100%;
+	}
+	.pair {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 8px;
+		margin-top: 16px;
+	}
+	.corner {
+		position: absolute;
+		bottom: 6px;
+		margin: 0;
+		color: #fff;
+		text-shadow: 2px 2px 0 #3f3f3f;
+		font-size: 20px;
+	}
+	.corner.left {
+		left: 10px;
+	}
+	.corner.right {
+		right: 10px;
+	}
+	/* Like the title screen: the right-hand line only fits when there's room for both */
+	@media (max-width: 75rem) {
+		.corner.right {
+			display: none;
+		}
+	}
+	.chapters {
+		margin-top: 48px;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 28px 24px;
+	}
+	.chapter {
+		margin: 0;
+	}
+	.chapter h2 {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin: 0 0 6px;
+		font-size: 20px;
+		font-weight: 400;
+		color: #483015;
+		text-shadow: 2px 0 0 currentColor;
+		letter-spacing: 2px;
+	}
+	.chapter h2 img {
+		image-rendering: pixelated;
+	}
+	.chapter ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.chapter li {
+		margin: 0;
+		line-height: 30px;
+	}
+	.chapter a {
+		color: #6e3214;
+		text-decoration: none;
+	}
+	.chapter a::before {
+		content: '> ';
+		color: #b18e65;
+	}
+	.chapter a:hover {
+		color: #000;
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 4px;
+	}
+	.pantry-wrap {
+		margin-top: 72px;
+	}
+	.pantry-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 16px 32px;
+		margin-bottom: 24px;
+	}
+	.pantry-head h2 {
+		margin: 0 0 8px;
+		font-size: 30px;
+		line-height: 40px;
+		font-weight: 400;
+		color: var(--fd-heading-ink);
+	}
+	.pantry-head p {
+		margin: 0;
+		max-width: 40rem;
+		color: var(--sl-color-gray-2);
+	}
+	.tabs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 2px;
+		padding-left: 4px;
+	}
+	.tab {
+		width: 56px;
+		height: 52px;
+		display: grid;
+		place-items: center;
+		background: #8b8b8b;
+		border: 0;
+		cursor: pointer;
+		box-shadow: inset 2px 2px 0 #aaa, inset -2px 0 0 #555, 0 -2px 0 #000, 2px 0 0 #000, -2px 0 0 #000;
+		margin-top: 6px;
+	}
+	.tab[aria-selected='true'] {
+		background: #c6c6c6;
+		height: 58px;
+		margin-top: 0;
+		box-shadow: inset 2px 2px 0 #fff, inset -2px 0 0 #555, 0 -2px 0 #000, 2px 0 0 #000, -2px 0 0 #000;
+		position: relative;
+		z-index: 1;
+	}
+	.tab img {
+		image-rendering: pixelated;
+	}
+	.inv {
+		display: block !important;
+		width: 100%;
+		box-sizing: border-box;
+		padding: 12px 16px 16px !important;
+	}
+	.inv-title {
+		margin: 0 0 8px;
+		color: #404040;
+		font-size: 20px;
+		display: flex;
+		gap: 10px;
+		align-items: baseline;
+		flex-wrap: wrap;
+	}
+	.inv-title span {
+		color: #707070;
+	}
+	.inv-title a {
+		margin-left: auto;
+		color: #404040;
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 4px;
+	}
+	/* As many columns as fit; the empty slots after the last item are a tiled slot background, so every row is full */
+	.inv-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, 54px);
+		grid-auto-rows: 54px;
+		width: round(down, 100%, 54px);
+		margin-inline: auto;
+		min-height: 108px;
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54' shape-rendering='crispEdges'%3E%3Crect width='54' height='54' fill='%238b8b8b'/%3E%3Crect y='51' width='54' height='3' fill='%23fff'/%3E%3Crect x='51' width='3' height='54' fill='%23fff'/%3E%3Crect width='54' height='3' fill='%23373737'/%3E%3Crect width='3' height='54' fill='%23373737'/%3E%3C/svg%3E") 0 0 / 54px 54px repeat;
+	}
+	@media (max-width: 40rem) {
+		.menu :global(.mc-button) {
+			white-space: normal;
+			padding-inline: 10px;
+		}
+	}
+	@media (max-width: 60rem) {
+		.chapters {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+	@media (max-width: 40rem) {
+		.chapters {
+			grid-template-columns: 1fr;
+		}
+		.title-screen {
+			min-height: 480px;
+		}
+		.corner.right {
+			display: none;
+		}
+		.splash {
+			right: 0;
+		}
+	}
+</style>
