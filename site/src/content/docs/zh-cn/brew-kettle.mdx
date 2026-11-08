@@ -1,0 +1,125 @@
+---
+title: 酿造锅
+description: 酿造锅如何把葡萄、浆果、苹果、蜂蜜、大麦和小麦变成果汁、蜂蜜汁和麦汁，以及怎样加热、装填和自动化。
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/zh-cn';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="营火上，铁托架上的一口铜制酿造锅" />
+
+<Item id="brew_kettle" />是每一种酒的起点。把它放在热源上，放入材料，几秒钟后它里面就有了一批果汁、蜂蜜汁或麦汁，
+可以装瓶了。如果你用过 Farmer's Delight 的厨锅，就已经知道怎么用了。
+
+## 热源
+
+酿造锅只有在正下方的方块是热的时才会酿造：
+
+- **{heatNames(rules.heat.tray)}**：酿造锅架在铁托架上，位于它们上方。
+- **{heatNames(direct)}**：酿造锅直接放在上面。
+- **隔着{heatNames(rules.heat.conductors)}**：热量会从中穿过，所以酿造锅和热源之间可以夹一个漏斗，
+  照样给它送料。
+- 装了 Farmer's Delight 的话，它的**炉灶**也能给酿造锅加热。
+
+营火必须是点燃的。酿造锅界面里的小火苗亮起，就说明它已经受热。
+
+<Render name="scenes/kettle-on-magma" size={192} caption="放在岩浆块上" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="热量穿过漏斗" />
+<Render name="scenes/kettle-hanging" size={192} caption="挂在把手上" />
+
+**把它吊起来**：空手潜行并右键酿造锅，就能把托架换成铁把手，或者把它贴在方块的下表面放置。吊起来的酿造锅
+仍然会在正下方的火上酿造，挂在链条下面也很好看。
+
+## 酿造
+
+右键打开酿造锅，放入材料。右侧的量表用酒的颜色显示酿出的东西，以及锅里装了多满；把鼠标悬停在上面可以看份数。
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+每个配方酿出 **{rules.servingsPerBucket} 份**，耗时 **{seconds(brews[0].brewingTime)}**。加热后的酿造锅里有酿造液或能酿的材料时才会冒蒸汽、冒泡（否则不出声）；
+酿造一批时，锅盖还会咔哒作响，酿好时会喷出一股蒸汽。只要还有材料，酿造锅就会接着酿下一批，
+总共最多 {rules.kettleMaxServings} 份。
+
+<BrewFlow />
+
+酿好之后，锅盖保持抬起，你能看到里面的酒，随着你取走份数而下沉。酿造一批时，
+锅盖是盖着的；取走最后一份后，锅盖会合上。
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="揭开锅盖的酿造锅，露出里面的酒" />
+
+## 装瓶
+
+和炼药锅一样：拿空容器右键酿造锅。
+
+- 一个<Item id="glass_bottle" />取走 **{rules.servingsPerBottle} 份**，
+- 一个空的<Item id="bucket" />取走 **{rules.servingsPerBucket} 份**，所以锅里至少要有这么多。
+
+一桶果汁和麦汁不能倒在世界里，和牛奶一样。
+
+## 可以直接喝的果汁
+
+<Item id="grape_juice" />、<Item id="white_grape_juice" />、<Item id="sweet_berry_juice" />和<Item id="apple_juice" />本身就是饮品：喝一次要 {juice.consumable.seconds} 秒，
+任何时候都能喝，还能稍微填饱肚子。
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+每种果汁都能让[微醺](/tipsy/)降低一级。麦汁和蜂蜜汁必须先发酵，不能直接喝。
+
+## 自动化
+
+漏斗可以让酿造锅自己运转：
+
+- **从上方**，漏斗送入材料，以及空瓶或空桶。
+- **从侧面**，漏斗送入空瓶或空桶。
+- 酿造锅用酿好的酒把它们装满，**下方的漏斗**则把装好的取走。
+
+材料和酿好的酒本身不会被取走。
+
+红石比较器放在酿造锅旁边，只要里面有东西（材料、酿好的酒或容器）就会输出信号，东西越满信号越强。
+单独的一份酒只会给出很弱的信号，所以用它来分辨“里面有东西”还是“空的”，不要拿它来数份数。
+
+## 铜
+
+酿造锅是铜制的，会像铜一样氧化。
+
+<Stages prefix="kettle-weathering" title="氧化过程" labels={['铜', '斑驳', '锈蚀', '氧化']} />
+
+- 随着时间推移，它会变得斑驳、锈蚀，最后氧化。每个阶段酿造效果都一样。
+- **蜜脾**可以给它涂蜡，停止氧化。**斧**可以刮掉蜡或一级氧化，闪电也能把它清理干净。
+- **装满时破坏**它，里面的酒会保留：物品的提示和填充条会显示出来，你可以把它放到别处继续用。
+  材料和等着装的瓶子、桶则会掉在地上。
+- 有人打开它的界面时，它不会氧化。
+
+## 小贴士
+
+- **火灭了？** 失去热量不会让这一批归零，但箭头倒退的速度是填充时的两倍。
+  材料只有在一批酿好时才会消耗，所以不会浪费。
+- **一次只酿一种。** 锅里还有没取完的酒时，酿造锅不会在上面再酿另一种酒：它会等着，
+  材料原封不动，直到你把旧的装瓶取走。到达 {rules.kettleMaxServings} 份时它也会等。
+- **保持格子干净。** 配方用不到的任何物品都会让酿造锅停下，别的配方剩下的也一样。
+  上方的漏斗会把手里的东西全送进去，所以只给它送材料。
+- **经验去哪了？** 每一批都会带来一点经验。酿造锅会把它攒起来，交给下一个徒手装瓶或装桶的玩家，
+  或者在它被破坏时掉落。
+- **不够装一桶？** 拿桶点击只会打开界面。潜行时拿瓶子或桶点击则没有任何反应。
+- **一个漏斗，两份工作**：酿造锅下方的漏斗既传递营火的热量，也收集装好的容器。
+- **空手潜行并右键**可以把酿造锅挂在把手上，再来一次则让它站回托架。
+- 酿造锅可以放在水里，用任何工具都能很快破坏（镐最快），会保留铁砧里的命名，而且不可堆叠。
+  爆炸可以把它连同里面的酒一起炸毁。
+- **配方书**：当你捡起它的主要作物时，酿造配方就会解锁，分类为果汁、麦汁和杂项。
+
+## 配方
+
+<Recipe id="brew_kettle" />

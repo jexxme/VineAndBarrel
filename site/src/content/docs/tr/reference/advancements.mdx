@@ -1,0 +1,12 @@
+---
+title: Gelişmeler
+description: Vine & Barrel gelişme sekmesi ve her birinin nasıl kazanıldığı.
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/tr';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel'ın kendi gelişme sekmesi var, <strong>{gameText(root.titleKey, root.title)}</strong>: <em>{gameText(root.descriptionKey, root.description)}</em>
+
+<Advancements />

@@ -1,0 +1,12 @@
+---
+title: Osiągnięcia
+description: Karta osiągnięć Vine & Barrel i jak zdobyć każde z nich.
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/pl';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel ma własną kartę osiągnięć, <strong>{gameText(root.titleKey, root.title)}</strong>: <em>{gameText(root.descriptionKey, root.description)}</em>
+
+<Advancements />

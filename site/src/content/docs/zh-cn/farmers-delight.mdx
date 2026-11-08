@@ -1,0 +1,92 @@
+---
+title: Farmer's Delight
+description: 同时安装 Farmer's Delight 时，Vine & Barrel 里有哪些变化。
+---
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, recipe, duration, FDN_WIKI } from '../../../lib/l10n/zh-cn';
+import { fd } from '../../../data/code/compat';
+
+export const meals = rules.fdMealNourishment;
+export const potMeals = ['beer_battered_fish', 'wine_braised_beef', 'cider_braised_pork', 'barley_mutton_broth', 'white_wine_risotto'];
+export const bread = items['vineandbarrel:beer_bread'];
+export const coq = items['vineandbarrel:coq_au_vin'];
+
+Vine & Barrel 是独立的模组：本维基里的一切，没有 Farmer's Delight 也能用。如果你同时装了 Farmer's Delight，两者会在几个地方配合起来。不需要任何设置。
+
+在 NeoForge 的 Minecraft 26.x 上，指的是 Farmer's Delight Neoforged，版本 {fd.minVersion} 或更新，它有自己的维基。在 Fabric 上，则是 <a href={fd.refabricated}>Farmer's Delight Refabricated</a>。
+
+<LinkCard title="Farmer's Delight Neoforged 维基" description="厨锅、炉灶、绳子、沃土和所有 FD 物品。" href={`${FDN_WIKI}/`} />
+
+## Farmer's Delight 带来的
+
+- **炉灶可以加热酿造锅**。Farmer's Delight 的炉灶可以作为[酿造锅](/brew-kettle/)的热源，FD 视为热源的其他东西也一样。FD 允许热量穿过的方块，也会把热量传到上面的酿造锅。
+- **藤蔓顺着绳子爬**。成熟的葡萄灌木（红或白）或啤酒花灌木，上面有 FD 的绳子时，会沿绳子向上爬至多 {rules.crops.climbMaxHeight} 格，并沿绳结果，和 FD 的番茄一样，就像在[棚架](/crops/#棚架)上那样。绳子和棚架可以在同一株植物上混用，折断一节藤会留下绳子。
+- **沃土**会加快葡萄、啤酒花和大麦的生长，就像对所有能用骨粉的作物一样。
+- **FD 的饮品也能发酵**。<Item id="farmersdelight:apple_cider" />和<Item id="farmersdelight:melon_juice" />的瓶子可以像我们自己的基底一样放进[陈酿桶](/aging-barrel/)，每瓶一份。FD 的苹果酒会变成和我们的<Item id="apple_juice" />酿出的同一种<Item id="hard_cider" />，所以只有一种苹果西打，两种入口。一个桶一次只能装一种基底，所以两者不会混在同一批里。FD 的饮品只有瓶装，所以满满一桶要 {rules.barrelCapacity} 瓶；发射器也可以把它们倒进去。
+- **厨锅菜肴、一道盛宴和一种面包**会用到我们的葡萄酒、苹果西打和啤酒。
+- **FD 的刀能从大麦上割下稻草**，就像从小麦和野生稻上一样。
+- 凡是 FD 要求饮品的地方，我们的饮品都算数。
+
+## 用 Farmer's Delight 的瓶子酿的饮品
+
+<DrinkTable fd />
+
+{[recipe('aging/hard_cider'), recipe('aging/melon_wine')].map((r) => <Recipe recipe={r} />)}
+
+## 厨锅菜肴
+
+在 Farmer's Delight 的厨锅里烹饪。和 FD 的菜肴一样，它们装在碗里，并给予滋养。身上带着对应的饮品（新酿或陈酿）后，每一道才会出现在厨锅的配方书里，肉汤则要带着大麦。
+
+{potMeals.map((id) => <Recipe id={`cooking/${id}`} />)}
+
+| 菜肴 | 食物 | 滋养 |
+|---|---|---|
+| <Item id="beer_battered_fish" /> | <FoodStats nutrition={items['vineandbarrel:beer_battered_fish'].food.nutrition} saturation={items['vineandbarrel:beer_battered_fish'].food.saturation} compact /> | {duration(meals['vineandbarrel:beer_battered_fish'])} |
+| <Item id="wine_braised_beef" /> | <FoodStats nutrition={items['vineandbarrel:wine_braised_beef'].food.nutrition} saturation={items['vineandbarrel:wine_braised_beef'].food.saturation} compact /> | {duration(meals['vineandbarrel:wine_braised_beef'])} |
+| <Item id="cider_braised_pork" /> | <FoodStats nutrition={items['vineandbarrel:cider_braised_pork'].food.nutrition} saturation={items['vineandbarrel:cider_braised_pork'].food.saturation} compact /> | {duration(meals['vineandbarrel:cider_braised_pork'])} |
+| <Item id="barley_mutton_broth" /> | <FoodStats nutrition={items['vineandbarrel:barley_mutton_broth'].food.nutrition} saturation={items['vineandbarrel:barley_mutton_broth'].food.saturation} compact /> | {duration(meals['vineandbarrel:barley_mutton_broth'])} |
+| <Item id="white_wine_risotto" /> | <FoodStats nutrition={items['vineandbarrel:white_wine_risotto'].food.nutrition} saturation={items['vineandbarrel:white_wine_risotto'].food.saturation} compact /> | {duration(meals['vineandbarrel:white_wine_risotto'])} |
+
+用饮品烹饪时，啤酒杯或高脚杯会还给你，烩饭用的<Item id="farmersdelight:bone_broth" />连同它的碗也一样。我们所有的果汁和饮品都算 Farmer's Delight 的饮品。
+
+## 红酒炖鸡
+
+和 Farmer's Delight 的一样是一道盛宴：不放碗直接在锅里烹饪，做好后是一锅<Item id="coq_au_vin_block" />，可以摆在桌上。
+拿碗对它使用，盛出一份<Item id="coq_au_vin" />，一共四份。最后一份之后，再用一次就能清掉骨头。带着红葡萄酒后，它才会出现在配方书里。
+
+<Recipe id="cooking/coq_au_vin_block" />
+
+| 一份 | 食物 | 滋养 |
+|---|---|---|
+| <Item id="coq_au_vin" /> | <FoodStats nutrition={coq.food.nutrition} saturation={coq.food.saturation} compact /> | {duration(meals['vineandbarrel:coq_au_vin'])} |
+
+还没人盛过就破坏，整锅会完好地掉出来；盛过之后，只剩骨头。
+
+## 啤酒面包
+
+三个小麦加一杯艾尔或小麦啤酒，合成两个面包。啤酒杯会留在合成格里。带着艾尔或小麦啤酒后，它才会出现在配方书里。
+
+<Recipe id="beer_bread" />
+
+| 面包 | 食物 |
+|---|---|
+| <Item id="beer_bread" /> | <FoodStats nutrition={bread.food.nutrition} saturation={bread.food.saturation} compact /> |
+
+## 大麦稻草
+
+用 Farmer's Delight 的刀收割成熟的大麦，也会得到一份<Item id="farmersdelight:straw" />，和小麦一样。
+在砧板上，刀能把<Item id="wild_barley" />切成大麦，一半的几率还多出一份稻草，和 FD 的野生稻一样。
+
+<Recipe id="cutting/wild_barley" />
+
+## 没有 Farmer's Delight 时
+
+这些菜、盛宴、面包和甜瓜酒仍然存在，所以世界和物品栏里的东西不会丢，但你做不出来它们，创造模式标签页和 JEI 里也看不到它们，菜肴也不会给予滋养。苹果西打仍然可以用我们的苹果汁酿造。拿掉 Farmer's Delight 时桶里还有苹果西打？这一批照常酿完；只是你再也取不出基底了。
+
+<Aside>
+Farmer's Delight 是 vectorwing 的模组。Vine & Barrel 是一个独立的模组，做出来是为了与它搭配；它不是 Farmer's Delight 的一部分，也没有得到 vectorwing 的认可。
+</Aside>

@@ -1,0 +1,187 @@
+---
+// Every drink's colour, on a shelf: each one in its own vessel, filled with the exact colour the mod gives it (the
+// colour in the barrel's sight glass and in the mugs and glasses set down on a table). Aged drinks
+// shimmer, as they do in the game. Hover for the name and colour, click to copy the colour.
+// The liquid's shape is read from the item textures: the pixels a full vessel has and the empty one doesn't.
+import fs from 'node:fs';
+import path from 'node:path';
+import sharp from 'sharp';
+import { drinks, iconOf, nameOf } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
+
+interface Props {
+	fd?: boolean;
+}
+const { fd } = Astro.props;
+const locale = localeOf(Astro.currentLocale);
+const ICONS = path.resolve('public/icons/vineandbarrel');
+async function pixels(file: string) {
+	const { data, info } = await sharp(fs.readFileSync(path.join(ICONS, file))).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+	return (x: number, y: number) => {
+		const i = (y * info.width + x) * 4;
+		return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+	};
+}
+/** The liquid (and foam) pixels of a vessel, from one full example of it */
+async function shape(vessel: string, example: string) {
+	const empty = await pixels(`${vessel.split(':')[1]}.png`);
+	const full = await pixels(`${example.split(':')[1]}.png`);
+	const liquid: [number, number][] = [];
+	const foam: [number, number][] = [];
+	for (let y = 0; y < 16; y++) {
+		for (let x = 0; x < 16; x++) {
+			if (full(x, y)[3] === 0 || empty(x, y)[3] > 0) continue;
+			const [r, g, b] = full(x, y);
+			// foam: light and nearly grey
+			(Math.min(r, g, b) > 200 && Math.max(r, g, b) - Math.min(r, g, b) < 40 ? foam : liquid).push([x, y]);
+		}
+	}
+	return { liquid, foam };
+}
+const list = drinks.filter((d) => !!d.fdOnly === !!fd);
+const shapes = new Map<string, Awaited<ReturnType<typeof shape>>>();
+for (const d of list) if (!shapes.has(d.vessel)) shapes.set(d.vessel, await shape(d.vessel, d.id));
+const pairs = list.filter((d) => d.stage === 'young').map((y) => [y, list.find((d) => d.aging === y.aging && d.stage === 'aged')!]);
+const rects = (pts: [number, number][]) => pts.map(([x, y]) => `M${x} ${y}h1v1h-1z`).join('');
+---
+<div class="vb-shelf not-content">
+	<div class="row">
+		{pairs.map((pair) => (
+			<div class="pair">
+				{pair.map((d) => {
+					const s = shapes.get(d.vessel)!;
+					const id = `liq-${d.id.split(':')[1]}`;
+					return (
+						<button
+							type="button"
+							class:list={['drink', { aged: d.stage === 'aged' }]}
+							data-copy={d.color}
+							data-tip-items={`${nameOf(d.id, locale)}~`}
+							data-tip-extra={d.color}
+							data-tip-sub={t('Click to copy the colour', locale)}
+							aria-label={t('{name}, colour {color}: copy', locale, { name: nameOf(d.id, locale), color: d.color })}
+						>
+							<svg viewBox="0 0 16 16" width="64" height="64" shape-rendering="crispEdges" aria-hidden="true">
+								<defs>
+									<clipPath id={id}><path d={rects(s.liquid)} /></clipPath>
+									<linearGradient id={`${id}-g`} x1="0" x2="1" y1="0" y2="1">
+										<stop offset="0.35" stop-color="#c9a6ff" stop-opacity="0" />
+										<stop offset="0.5" stop-color="#e2c8ff" stop-opacity="0.75" />
+										<stop offset="0.65" stop-color="#c9a6ff" stop-opacity="0" />
+									</linearGradient>
+								</defs>
+								<path d={rects(s.liquid)} fill={d.color} />
+								<path d={rects(s.foam)} fill="#f4efe2" />
+								{d.stage === 'aged' && (
+									<g clip-path={`url(#${id})`}>
+										<rect class="glint" x="-16" y="0" width="16" height="16" fill={`url(#${id}-g)`} />
+									</g>
+								)}
+								<image href={iconOf(d.vessel)?.src} x="0" y="0" width="16" height="16" style="image-rendering:pixelated" />
+							</svg>
+						</button>
+					);
+				})}
+				<span class="label">{nameOf(pair[0].id, locale)}</span>
+			</div>
+		))}
+	</div>
+</div>
+<style>
+	.vb-shelf {
+		margin: 28px 0 32px;
+	}
+	.row {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 24px 16px;
+	}
+	/* Each pair, young and aged, on its own little shelf board */
+	.pair {
+		display: grid;
+		grid-template-columns: auto auto;
+		justify-items: center;
+		column-gap: 0;
+		background: linear-gradient(var(--vb-oak-light) 0 4px, var(--vb-oak) 4px 10px, var(--vb-oak-dark) 10px 14px, #1a0f07 14px 16px) 0 calc(100% - 30px) / 100% 16px no-repeat;
+		padding: 0 4px;
+	}
+	.label {
+		grid-column: 1 / -1;
+		margin-top: 18px;
+		font-size: 20px;
+		line-height: 28px;
+		color: var(--sl-color-gray-3);
+		text-align: center;
+	}
+	.drink {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		padding: 6px 2px 0;
+		font: inherit;
+		background: none;
+		border: 0;
+		cursor: copy;
+		color: inherit;
+	}
+	.drink svg {
+		display: block;
+		image-rendering: pixelated;
+		transition: transform 0.15s cubic-bezier(0.3, 1.6, 0.5, 1);
+	}
+	.drink:hover svg,
+	.drink:focus-visible svg {
+		transform: translateY(-6px) rotate(-6deg);
+	}
+	.drink.copied svg {
+		animation: clink 0.4s ease-out;
+	}
+	@keyframes clink {
+		30% {
+			transform: translateY(-6px) rotate(8deg);
+		}
+		60% {
+			transform: translateY(-6px) rotate(-4deg);
+		}
+	}
+	.drink:focus-visible {
+		outline: 2px solid var(--sl-color-text-accent);
+		outline-offset: 2px;
+	}
+	code {
+		font-family: var(--sl-font);
+		font-size: 20px;
+		line-height: 24px;
+		color: var(--sl-color-gray-3);
+		background: none !important;
+		padding: 0 !important;
+		order: -1;
+		margin-bottom: 2px;
+	}
+	.drink:hover code,
+	.drink:focus-visible code {
+		color: var(--sl-color-white);
+	}
+	/* The enchantment-like shimmer of aged drinks */
+	.glint {
+		animation: glint 3.2s linear infinite;
+	}
+	@keyframes glint {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(32px);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.glint,
+		.drink.copied svg {
+			animation: none;
+		}
+		.drink:hover svg {
+			transform: none;
+		}
+	}
+</style>

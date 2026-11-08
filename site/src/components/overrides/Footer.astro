@@ -1,15 +1,33 @@
 ---
 import Default from '@astrojs/starlight/components/Footer.astro';
+import { FDN_WIKI } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
+import Tr from '../mc/Tr.astro';
+
+const locale = localeOf(Astro.currentLocale);
 ---
 <Default><slot /></Default>
 <div class="fd-footer">
+	<p class="sister">
+		<Tr k="Also by Jexxme: {link}, a NeoForge port of vectorwing's Farmer's Delight." locale={locale}><a slot="link" href={`${FDN_WIKI}/`}>{t("Farmer's Delight Neoforged", locale)}</a></Tr>
+	</p>
 	<p>
-		Vine &amp; Barrel · MIT License · © 2026 Jexxme. Not an official Minecraft product; not approved by or associated with
-		Mojang or Microsoft. Minecraft textures © Mojang Studios. Farmer's Delight is vectorwing's mod; Vine &amp; Barrel is a
-		separate mod and is not affiliated with or endorsed by vectorwing.
+		<Tr k="Vine & Barrel · MIT License · © 2026 Jexxme. Not an official Minecraft product; not approved by or associated with Mojang or Microsoft. Minecraft textures © Mojang Studios. Farmer's Delight is vectorwing's mod; Vine & Barrel is a separate mod and is not affiliated with or endorsed by vectorwing. Some art, sounds and code are adapted from Farmer's Delight under the {license}." locale={locale}><a slot="license" href="https://github.com/jexxme/VineAndBarrel/blob/26.3/NOTICE_farmersdelight.txt">{t('MIT License', locale)}</a></Tr>
 	</p>
 </div>
 <style>
+	.sister {
+		margin-bottom: 8px;
+	}
+	.sister a {
+		color: var(--sl-color-text-accent);
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 4px;
+	}
+	.sister a:hover {
+		color: var(--sl-color-white);
+	}
 	.fd-footer {
 		margin-top: 2rem;
 		padding-top: 1rem;

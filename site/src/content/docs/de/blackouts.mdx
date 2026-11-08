@@ -1,0 +1,72 @@
+---
+title: Filmrisse
+description: "Ein Drink zu viel: was bei einem Filmriss passiert, an welchen Orten du aufwachen kannst, wie wahrscheinlich jeder ist und welche Andenken du mitbringst."
+---
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
+import { rules, roman, seconds, gameText } from '../../../lib/l10n/de';
+
+export const t = rules.tipsy;
+export const b = t.blackout;
+export const count = b.endings.filter((e) => e.collectable).length;
+
+<Aside type="caution" title="Spoiler">
+Diese Seite verrät dir jedes Ende einer Nacht. Wenn du es lieber selbst herausfinden willst, hör hier auf: Die Seite
+[Schwips](/tipsy/#ein-drink-zu-viel) deutet es nur an.
+</Aside>
+
+Schon auf Schwips {roman(t.maxLevel - 1)} und trinkst weiter? Noch einer, und du hast einen **Filmriss**. Er ist harmlos: Verloren geht
+dir nie etwas, du wachst nie an einem unsicheren Ort auf, es vergeht keine Zeit, und niemand sonst ist betroffen. Serverbetreiber können
+ihn mit der Option `blackout` abschalten (siehe [Konfiguration](/reference/config/)).
+
+## Was passiert
+
+<Steps>
+
+1. **Du kippst um.** Deine Augen fallen zu und du kippst um. Alle um dich herum sehen dich liegen, Sterne kreisen um deinen Kopf.
+2. **Schwarz.** Ein paar Sekunden lang kannst du dich nicht bewegen, und Schwips lässt dich in Ruhe: kein Schwanken, kein Schluckauf, kein
+   Wirbeln. Auch dir kann niemand etwas tun, kein Mob und kein Spieler, und das Hinfallen auch nicht. Nur was jedem schaden würde, der da
+   liegt, zählt weiter, etwa Lava oder die Leere. Wo du umkippst, ist also wichtig; wo du *aufwachst*, ist immer sicher.
+3. **Du wachst irgendwo auf.** Solange der Bildschirm noch schwarz ist, sucht das Spiel aus, wo deine Nacht endete (siehe unten), und
+   setzt dich dorthin: liegend auf dem Boden, in einem Bett oder sitzend in einem Boot. Deine Augen öffnen sich langsam, dann stehst du auf.
+4. **Eine Zeile auf dem Bildschirm** sagt, wie es lief, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* oder eine von vielen anderen.
+
+</Steps>
+
+Das Ganze dauert etwa {seconds(b.ticks)}. Du wachst auf:
+
+- **wieder auf Schwips I** und ohne die Boni, die deine Getränke dir gegeben haben,
+- **hungrig:** {b.hungerLost / 2} Hungerkeulen weniger und nichts mehr in deiner Sättigung,
+- **zittrig** für {seconds(b.shakyTicks)}: ein bisschen schwindelig und langsam,
+- **mit einem Andenken** in den Taschen, etwas, das zu dem Ort passt, an dem du aufgewacht bist (zu deinen Füßen, wenn deine Taschen voll sind),
+- und einmal in {b.pumpkinOneIn} Fällen **mit einem geschnitzten Kürbis auf dem Kopf**, wenn du keinen Helm getragen hast.
+
+## Wo du aufwachst
+
+Es gibt {count} Orte, an denen eine Nacht enden kann, und einen für den Fall, dass keiner davon klappt. Jeder hat seine eigene Chance, aber nur
+die, die dort möglich sind, wo du umgekippt bist, kommen in die Auslosung: kein Wasser in der Nähe, kein Boot; kein Dorf, keine Taverne.
+
+- **Neue zuerst:** Ein Ende, das du noch nicht hattest, ist {b.unseenBonus}-mal so wahrscheinlich wie eines, das du schon hattest.
+- **Nie zweimal hintereinander,** außer es ist sonst nichts möglich.
+- **Immer sicher:** fester Boden, Platz zum Stehen, keine Lava, kein Wasser, nichts, was neben dir brennt oder sticht, kein Monster
+  im Umkreis von {b.ranges.monsterFree} Blöcken, innerhalb der Weltgrenze.
+- **Nie in fremden Bauten:** Die Enden im Freien brauchen offenen Himmel darüber, Glas und Laub eingeschlossen. Die beiden Enden
+  drinnen nutzen nur, was die Welt für alle gebaut hat, eine Dorftaverne und das Bett eines Dorfbewohners in einem Dorfhaus, und dein eigenes Bett.
+- **Im Nether und im Ende** gibt es keinen offenen Himmel, deshalb enden die meisten Nächte genau dort, wo du umgekippt bist.
+
+Die Chancen unten gelten für deinen ersten Filmriss, wenn jedes Ende möglich ist. Danach verschieben sie sich: Die Enden, die du noch
+nicht hattest, werden wahrscheinlicher, und das Ende, das du gerade hattest, tritt zurück.
+
+<BlackoutEndings />
+
+## Sammle sie alle
+
+Der erste Filmriss bringt *Wo bin ich?*. Wach an allen {count} Orten auf (*Genau hier* zählt nicht) für die Herausforderung
+*Verlorenes Wochenende*. Das Spiel merkt sich, welche du schon hattest, auch über den Tod hinaus.
+
+<Aside type="tip" title="Auf der Jagd nach einem bestimmten Ende?">
+Bereite alles vor dem letzten Drink vor: ein eigenes Bett in der Nähe für *Zuhause*, einen Heu- oder <Item id="barley_bale" />-Stapel im
+Freien für *Im Heu*, einen Teich für *Im Boot*, ein Dorf mit Taverne für die Enden drinnen. Enden, die du schon hattest, sind weniger
+wahrscheinlich, die seltenen kommen also früher, als du denkst.
+</Aside>

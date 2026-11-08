@@ -1,0 +1,14 @@
+{
+  "values": [
+    "minecraft:hay_block",
+    {
+      "id": "farmersdelight:straw_bale",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:rice_bale",
+      "required": false
+    },
+    "vineandbarrel:barley_bale"
+  ]
+}

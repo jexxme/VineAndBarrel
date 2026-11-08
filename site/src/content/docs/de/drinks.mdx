@@ -1,0 +1,84 @@
+---
+title: Getränke
+description: Jeder Wein, jedes Bier, jeder Cidre und jeder Met in Vine & Barrel, woraus er gemacht wird, worin er serviert wird und welchen Bonus er gibt.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/de';
+
+export const sample = items[drinks[0].id];
+
+Für jedes Getränk gelten dieselben Regeln:
+
+- Es gibt **einen Bonus** und eine Stufe [Schwips](/tipsy/). Ein Getränk, das dich auf Schwips {roman(rules.tipsy.noBuffLevel - 1)} oder höher bringt, gibt
+  gar keinen Bonus: Du bist zu betrunken, um es zu genießen.
+- Du kannst es immer trinken, auch wenn du satt bist. Es dauert {sample.consumable.seconds} s, und du bekommst den leeren
+  <Item id="mug" /> oder das leere <Item id="wine_glass" /> zurück.
+- Es stapelt sich bis **{sample.stack}**.
+- Der Bonus eines **jungen** Getränks hat Stufe {roman(rules.youngBuffAmplifier)} und hält **{duration(rules.youngBuffTicks)}**. Die **gereifte** Version hat eine tiefere
+  Farbe, schimmert wie ein verzauberter Gegenstand, und ihr Bonus hat Stufe **{roman(rules.agedBuffAmplifier)} und hält {duration(rules.agedBuffTicks)}**. Die Sättigung
+  vom Weizenbier wirkt dagegen sofort: ein paar Nahrungspunkte.
+- Auf einen Tisch gestellt, schimmert ein gereiftes Getränk wie ein verzauberter Gegenstand, so erkennst du es auf einen Blick von einem jungen.
+
+## Farben
+
+Jedes Getränk hat seine eigene Farbe: Du siehst sie im Schauglas des Fasses und in den Krügen und Gläsern auf einem Tisch. Gereifte
+Getränke sind einen Ton tiefer.
+
+<DrinkSwatches />
+
+## Weine, Biere, Cidre und Met
+
+<DrinkTable />
+
+Sättigung wirkt anders als die anderen Boni: Sie hält nicht an, jeder Tick davon füllt sofort einen Hungerpunkt (und etwas
+Sättigung). Deshalb zeigt das Weizenbier Nahrungspunkte statt einer Zeit.
+
+## Mit Farmer's Delight
+
+Auch die Flaschen von Farmer's Delight gären. Dessen Apfelwein wird zum selben Cidre wie unser Apfelsaft, und dessen Melonensaft
+wird zu Melonenwein, den du nur mit installiertem FD herstellen kannst (den Gegenstand gibt es immer). Siehe
+[Farmer's Delight](/farmers-delight/).
+
+<DrinkTable fd />
+
+## Trinkgefäße
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Krüge und Gläser auf einem Block" />
+
+Wein kommt in ein <Item id="wine_glass" />; Bier, Cidre und Met in einen <Item id="mug" />. Beide stapeln sich bis {items['vineandbarrel:mug'].stack}.
+
+**Abstellen:** Schleich und klick die Oberseite eines Blocks mit einem Krug oder Glas rechts an, voll oder leer, um es dort abzustellen. Bis zu vier
+teilen sich einen Block, jedes mit seinem eigenen Getränk, und das Getränk siehst du durch das Glas. Mit einem Rechtsklick mit leerer Hand nimmst du eines wieder auf.
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="Krüge und Gläser auf den Tischen abgestellt, bis zu vier auf einem Block." />
+
+## Einen Ansatz planen
+
+Wie viel brauchst du für eine Runde? Der Planer unter [Einen Keller bauen](/guides/cellar/#den-ansatz-planen) rechnet dir die Pflanzen,
+Kesselansätze, Eimer, Fässer und die Wartezeit für jede Anzahl Portionen aus.
+
+## Prost!
+
+Wenn zwei oder mehr Spieler ein Getränk innerhalb von {rules.cheersWindowTicks / 20} Sekunden und {rules.cheersRadius} Blöcken voneinander
+austrinken, klirren die Gläser, ein paar Funken steigen auf, und der Bonus von allen aus diesem Getränk hält **{rules.cheersBonusPercent} % länger**.
+
+Es zählt nur zwischen Spielern in derselben Welt, einmal pro Getränk, und deine eigenen zwei Getränke ergeben keine Runde. Der Bonus beträgt
+{rules.cheersBonusPercent} % der vollen Bonuszeit dieses Getränks und wird zur Restzeit addiert; ist der Bonus gerade abgelaufen, bekommst du ihn für diese Zeit zurück.
+
+## Gut zu wissen
+
+- **Zu viele?** Das Getränk, das dich auf Schwips {roman(rules.tipsy.noBuffLevel - 1)} bringt, gibt keinen Bonus, und es nimmt dir auch die
+  Boni weg, die dir deine früheren Getränke gegeben haben. Effekte von Tränken bleiben.
+- **Tische:** Ein Getränk kommt auf das Viertel des Blocks, auf das du zielst, oder auf das nächste freie, und nur auf eine stabile Oberseite.
+  Ein Rechtsklick mit leerer Hand nimmt das auf, auf das du zielst; hältst du etwas, benutzt du diesen Gegenstand wie gewohnt, du kannst also am Tisch
+  trinken. Baust du den Block ab, oder verlierst du ihn durch einen Kolben oder den Block darunter, fallen alle.
+- **Getränke als Zutaten** (im Kochtopf von Farmer's Delight) geben dir den Krug oder das Glas zurück.
+- **Voller Magen?** Egal: Du kannst immer trinken.

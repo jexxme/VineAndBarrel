@@ -27,12 +27,13 @@ for (const f of files) {
 }
 console.log(`${files.length} pages, ${bad} with leftovers`);
 
-// Internal links and images: every href/src under the base path must exist in dist
+// Internal links and images: every href/src (and <option value> link) under the base path must exist in dist
 const BASE = (process.env.BASE_PATH ?? '/vine-and-barrel').replace(/\/$/, '');
 const broken = new Map();
 for (const f of files) {
 	const html = fs.readFileSync(f, 'utf8');
-	for (const m of html.matchAll(/(?:href|src)="([^"#?]+)(?:[#?][^"]*)?"/g)) {
+	// href/src, and the language picker's <option value="/…">
+	for (const m of html.matchAll(/(?:href|src|<option[^>]*?\svalue)="([^"#?]+)(?:[#?][^"]*)?"/g)) {
 		const u = m[1];
 		if (!u.startsWith('/') || u.startsWith('//')) continue;
 		let target;
@@ -41,6 +42,8 @@ for (const f of files) {
 			const rel = decodeURIComponent(u.slice(BASE.length)) || '/';
 			const p = path.join(root, rel);
 			target = fs.existsSync(p) && fs.statSync(p).isFile() ? p : fs.existsSync(path.join(p, 'index.html')) ? p : null;
+			// The 404 page's language picker links to /404/ and /de/404/: Pages answers any missing path with 404.html
+			if (!target && /^\/([\w-]+\/)?404\/$/.test(rel) && fs.existsSync(path.join(root, '404.html'))) target = p;
 		}
 		if (!target) {
 			const k = `${u}`;
@@ -51,4 +54,34 @@ for (const f of files) {
 }
 for (const [u, pages] of broken) console.log('broken link', u, '←', [...pages].slice(0, 3).join(', '), pages.size > 3 ? `(+${pages.size - 3})` : '');
 console.log(`${broken.size} broken internal links`);
-process.exit(bad || broken.size ? 1 : 0);
+
+// Anchors: a link to "/page/#section" needs an element with id="section" on that page (translated pages map the
+// English anchors to their own headings; this catches a heading that drifted)
+const ids = new Map();
+const idsOf = (file) => {
+	if (!ids.has(file)) ids.set(file, new Set([...fs.readFileSync(file, 'utf8').matchAll(/\sid="([^"]+)"/g)].map((m) => m[1])));
+	return ids.get(file);
+};
+const missing = new Map();
+for (const f of files) {
+	const html = fs.readFileSync(f, 'utf8');
+	for (const m of html.matchAll(/href="([^"#?]*)#([^"]+)"/g)) {
+		const [, u, frag] = m;
+		let target;
+		if (u === '') target = f;
+		else if (u.startsWith(BASE + '/')) {
+			const p = path.join(root, decodeURIComponent(u.slice(BASE.length)));
+			target = fs.existsSync(path.join(p, 'index.html')) ? path.join(p, 'index.html') : null;
+		} else continue;
+		if (!target || /^_?top$/.test(frag)) continue;
+		const id = decodeURIComponent(frag.replace(/&amp;/g, '&'));
+		if (!idsOf(target).has(id)) {
+			const k = `${u}#${id}`;
+			if (!missing.has(k)) missing.set(k, new Set());
+			missing.get(k).add(path.relative(root, f).replaceAll('\\', '/'));
+		}
+	}
+}
+for (const [u, pages] of missing) console.log('missing anchor', u, '←', [...pages].slice(0, 3).join(', '), pages.size > 3 ? `(+${pages.size - 3})` : '');
+console.log(`${missing.size} missing anchors`);
+process.exit(bad || broken.size || missing.size ? 1 : 0);

@@ -1,6 +1,7 @@
 ---
 // A status effect with its real icon and duration.
-import { url, duration, roman } from '../../lib/data';
+import { url, pageUrl, duration, roman, gameText } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
 interface Props {
 	id: string;
 	name?: string;
@@ -9,18 +10,23 @@ interface Props {
 	note?: string;
 }
 const { id, name, ticks, amplifier = 0, note } = Astro.props;
-const p = id.split(':')[1];
+const locale = localeOf(Astro.currentLocale);
+const [ns, p] = id.split(':');
 // Effect icons copied by scripts/copy-gui.mjs
 const AVAILABLE = new Set(['tipsy', 'regeneration', 'speed', 'haste', 'saturation', 'absorption', 'fire_resistance', 'slowness', 'mining_fatigue', 'nausea']);
 const icon = AVAILABLE.has(p) ? url(`/gui/effect/${p}.png`) : null;
-const label = name ?? p.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+const label = gameText(`effect.${ns}.${p}`, name ?? p.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase()), locale);
+// The mod's own effect links to its page (except on that page); vanilla effects are plain badges
+const own = id.startsWith('vineandbarrel:');
+const href = own && p === 'tipsy' && !Astro.url.pathname.endsWith('/tipsy/') ? pageUrl('/tipsy/', locale) : null;
+const Tag = href ? 'a' : 'span';
 ---
-<span class="fd-effect">
+<Tag class:list={['fd-effect', { own }]} href={href ?? undefined}>
 	{icon && <img src={icon} alt="" width="18" height="18" />}
 	<span class="name">{label}{amplifier > 0 ? ` ${roman(amplifier)}` : ''}</span>
-	{ticks ? <span class="dur">{p === 'saturation' ? `${ticks * (amplifier + 1)} food points` : duration(ticks)}</span> : null}
+	{ticks ? <span class="dur">{p === 'saturation' ? t('{n} food points', locale, { n: ticks * (amplifier + 1) }) : duration(ticks, locale)}</span> : null}
 	{note ? <span class="dur">{note}</span> : null}
-</span>
+</Tag>
 <style>
 	.fd-effect {
 		display: inline-flex;
@@ -32,6 +38,19 @@ const label = name ?? p.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCa
 		color: var(--sl-color-white);
 		white-space: nowrap;
 		line-height: 1.4;
+	}
+	.own {
+		border-color: var(--vb-gilt-dark);
+	}
+	a.fd-effect {
+		text-decoration: none;
+		transition: border-color 0.1s, background-color 0.1s;
+	}
+	a.fd-effect:hover,
+	a.fd-effect:focus-visible {
+		border-color: var(--sl-color-accent);
+		background: var(--sl-color-accent-low);
+		outline: none;
 	}
 	img {
 		image-rendering: pixelated;

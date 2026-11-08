@@ -1,0 +1,128 @@
+---
+title: Cuve de brassage
+description: Comment la cuve de brassage transforme raisins, baies, pommes, miel, orge et blé en jus, en moût de miel et en moût, et comment la chauffer, la remplir et l'automatiser.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/fr';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="Une cuve de brassage en cuivre sur son plateau en fer au-dessus d'un feu de camp" />
+
+La <Item id="brew_kettle" /> est le point de départ de toute boisson. Pose-la sur une source de chaleur, ajoute les ingrédients, et quelques secondes
+plus tard elle contient un lot de jus ou de moût, prêt à être mis en fiole. Si tu as déjà cuisiné dans la marmite de Farmer's Delight, tu
+sais déjà comment ça marche.
+
+## Chaleur
+
+La cuve ne brasse que si le bloc juste en dessous est chaud :
+
+- **{heatNames(rules.heat.tray)}** : la cuve repose sur un plateau en fer au-dessus d'eux.
+- **{heatNames(direct)}** : elle est posée directement dessus.
+- **À travers : {heatNames(rules.heat.conductors)}** : la chaleur passe au travers, donc un entonnoir peut se trouver entre la cuve et la
+  source de chaleur et l'alimenter quand même.
+- Avec Farmer's Delight, son **four** chauffe aussi la cuve.
+
+Un feu de camp doit être allumé. La petite flamme sur l'écran de la cuve s'allume quand elle est chauffée.
+
+<Render name="scenes/kettle-on-magma" size={192} caption="Sur un bloc de magma" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="Chaleur à travers un entonnoir" />
+<Render name="scenes/kettle-hanging" size={192} caption="Suspendue par son anse" />
+
+**Suspends-la :** accroupis-toi et fais un clic droit sur la cuve à mains nues pour remplacer le plateau par une anse en fer, ou pose-la contre
+le dessous d'un bloc. Une cuve suspendue brasse toujours au-dessus d'un feu juste en dessous, et elle est superbe sous une chaîne.
+
+## Brassage
+
+Ouvre la cuve d'un clic droit et mets-y les ingrédients. La jauge de droite montre le brassage dans sa couleur et le remplissage de la
+cuve ; survole-la pour voir les portions.
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+Chaque recette donne **{rules.servingsPerBucket} portions** et prend **{seconds(brews[0].brewingTime)}**. Une cuve chauffée fume
+et bouillonne dès qu'elle contient un brassin ou de quoi en faire un (sinon, elle reste silencieuse) ; pendant qu'un lot brasse, le couvercle cliquette aussi, et à la fin elle lâche un nuage de vapeur. La cuve continue de brasser
+d'autres lots tant qu'il y a des ingrédients, jusqu'à {rules.kettleMaxServings} portions au total.
+
+<BrewFlow />
+
+Quand un brassage est terminé, le couvercle reste levé et tu le vois à l'intérieur, qui descend à mesure que tu sors des portions. Pendant qu'un lot brasse, le
+couvercle est baissé ; quand la dernière portion est partie, il se ferme.
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="La cuve avec son couvercle ouvert, montrant le brassage" />
+
+## Mise en fiole
+
+Comme un chaudron : fais un clic droit sur la cuve avec un récipient vide.
+
+- une <Item id="glass_bottle" /> prend **{rules.servingsPerBottle} portion**,
+- un <Item id="bucket" /> vide prend **{rules.servingsPerBucket} portions**, donc la cuve doit en contenir au moins autant.
+
+Les seaux de jus et de moût ne se vident pas dans le monde, comme le lait.
+
+## Jus à boire
+
+Le <Item id="grape_juice" />, le <Item id="white_grape_juice" />, le <Item id="sweet_berry_juice" /> et le <Item id="apple_juice" /> sont des
+boissons à part entière : on les boit en {juice.consumable.seconds} s, on peut toujours les boire, et ils calent un peu la faim.
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+Chaque jus fait aussi baisser [Pompette](/tipsy/) d'un niveau. Le moût et le moût de miel doivent d'abord fermenter ; tu ne peux pas les boire.
+
+## Automatisation
+
+Les entonnoirs peuvent faire tourner la cuve tout seuls :
+
+- **Par le dessus**, un entonnoir apporte les ingrédients, et les fioles ou seaux vides.
+- **Par les côtés**, il apporte les fioles ou seaux vides.
+- La cuve les remplit avec le brassage, et **un entonnoir en dessous** sort les pleins.
+
+Rien ne sort les ingrédients ni le brassage lui-même.
+
+Un comparateur à côté de la cuve donne un signal dès qu'il y a quelque chose dedans, ingrédients, brassage ou récipients, et un signal
+plus fort quand tout cela se remplit. Un brassage seul ne donne qu'un signal faible, donc sers-t'en pour distinguer « quelque chose
+dedans » de « vide » plutôt que pour compter les portions.
+
+## Cuivre
+
+La cuve est en cuivre, et elle vieillit comme le cuivre.
+
+<Stages prefix="kettle-weathering" title="Érosion" labels={['Cuivre', 'Exposée', 'Érodée', 'Oxydée']} />
+
+- Avec le temps, elle devient exposée, érodée puis oxydée. Elle brasse pareil à tous les stades.
+- Le **rayon de miel** la cire et arrête l'érosion. Une **hache** gratte la cire ou un stade d'érosion, et la foudre la nettoie.
+- **Casse-la pleine** et elle garde son brassage : l'infobulle de l'objet et sa barre de remplissage le montrent, et tu peux la poser ailleurs
+  et continuer. Les ingrédients et les fioles ou seaux en attente tombent par terre.
+- Elle ne s'érode pas tant que quelqu'un a son écran ouvert.
+
+## Bon à savoir
+
+- **Tu as perdu le feu ?** Retirer la chaleur ne réinitialise pas un lot, mais la flèche recule deux fois plus vite qu'elle ne s'est remplie.
+  Les ingrédients ne sont consommés qu'à la fin d'un lot, donc rien n'est perdu.
+- **Un brassage à la fois.** La cuve ne brasse pas une autre boisson par-dessus un brassage qui est encore dedans : elle attend, ingrédients
+  intacts, que tu aies mis l'ancien en fiole. À {rules.kettleMaxServings} portions, elle attend aussi.
+- **Garde la grille propre.** Tout objet que la recette n'utilise pas arrête la cuve, y compris les restes d'une autre recette. Un
+  entonnoir au-dessus pousse tout ce qu'il contient, alors ne lui donne que des ingrédients.
+- **Où est mon XP ?** Chaque lot rapporte un peu d'expérience. La cuve la met de côté et la donne au prochain joueur qui remplit
+  une fiole ou un seau à la main, ou la lâche quand elle est cassée.
+- **Pas assez pour un seau ?** Un clic avec un seau ouvre simplement l'écran. S'accroupir avec une fiole ou un seau ne fait rien.
+- **Un entonnoir, deux rôles :** un entonnoir sous la cuve fait passer la chaleur du feu de camp et récupère les récipients pleins.
+- **Accroupis-toi et fais un clic droit à mains nues** pour suspendre la cuve par son anse, et de nouveau pour la remettre debout.
+- La cuve peut se tenir dans l'eau, elle se casse vite avec n'importe quel outil (la pioche est la plus rapide), garde son nom d'enclume, et ne
+  s'empile pas. Une explosion peut la détruire, brassage compris.
+- **Livre de recettes :** les brassages se débloquent quand tu ramasses leur culture principale, classés en Jus, Moûts et Divers.
+
+## Recette
+
+<Recipe id="brew_kettle" />

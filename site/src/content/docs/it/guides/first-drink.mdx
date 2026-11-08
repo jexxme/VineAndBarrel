@@ -1,0 +1,99 @@
+---
+title: La tua prima bevanda
+description: Un inizio passo dopo passo con Vine & Barrel, dalla prima uva selvatica a un bicchiere di vino rosso invecchiato.
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/it';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="Un angolo di taverna con botti e bevande su un tavolo" />
+
+Questa guida ti porta da un mondo appena creato al tuo primo bicchiere di vino rosso, e poi a uno invecchiato. Per
+cominciare bastano materiali vanilla; l'uva arriva strada facendo. Ogni passaggio rimanda alla pagina con tutti i dettagli.
+
+<Steps>
+
+1. **Trova l'uva selvatica.** Le piante selvatiche crescono a macchie nel mondo, ognuna nel suo tipo di luogo. Per il vino ti serve
+   <Item id="wild_grapes" />: rompila a mano per ottenere <Item id="red_grapes" plural />.
+
+   <WildCrops />
+
+   Non ne trovi? I contadini dei villaggi e il mercante errante vendono uva, e le casse dei villaggi ne contengono spesso. Vedi
+   [Villaggi e taverne](/villages/).
+
+2. **Pianta qualche cespuglio.** Pianta l'uva su erba, terra o terreno coltivato, come le bacche dolci. Il cespuglio cresce da solo;
+   quando è maturo, clicca con il tasto destro per raccogliere da {h.grapes.count[0]} a {h.grapes.count[1]} acini. Torna indietro di uno stadio e
+   fruttifica di nuovo, quindi non devi mai ripiantare. La farina d'ossa lo accelera.
+
+   <Stages prefix="grape_bush" title="Un cespuglio d'uva che cresce" labels={['piantato', 'in crescita', 'semimaturo', 'maturo']} />
+
+   Una partita di succo richiede {grapesPerBatch} acini e uno zucchero, quindi per cominciare bastano pochi cespugli. Altro nelle
+   [Colture](/crops/).
+
+3. **Costruisci un Bollitore e mettilo sul fuoco.** Il <Item id="brew_kettle" /> è di rame. Prepara solo se il blocco
+   subito sotto è caldo: un falò acceso va bene fin dal primo giorno. Sta su un vassoio di ferro sopra le fiamme.
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **Prepara il succo d'uva.** Clicca con il tasto destro sul bollitore per aprirlo e inserisci {grapesPerBatch} acini e uno zucchero. La freccia
+   si riempie finché il bollitore è caldo, il vapore esce da sotto il coperchio e dopo {seconds(juice.brewingTime)} l'indicatore
+   mostra {juice.servings} porzioni di <Item id="grape_juice" />. Se ne inserisci di più, continua a preparare partite. Vedi
+   [Bollitore](/brew-kettle/).
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **Prelevalo.** Clicca con il tasto destro sul bollitore con un'ampolla per una porzione, o con un secchio per {rules.servingsPerBucket}.
+   Il succo d'uva è già una bevanda a sé: smorza un po' il [Brillo](/tipsy/).
+
+6. **Riempi una Botte d'invecchiamento.** Posiziona una <Item id="aging_barrel" /> e clicca con il tasto destro con il secchio o le ampolle. Contiene
+   {rules.barrelCapacity} porzioni: due secchi la riempiono fino all'orlo. Aggiungere altro succo dello stesso tipo
+   mentre fermenta va benissimo.
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **Aspetta che fermenti.** Dopo **{days(wine.fermentingTime)}** il succo è diventato <Item id="red_wine" />. La botte
+   ti dice come va: il gorgogliatore di vetro in cima fa bolle mentre fermenta, e un clic destro a mani vuote
+   mostra una riga di stato come *Vino rosso · 8 porzioni · in fermentazione, pronto domattina*. L'orologio segue il tempo
+   di gioco, quindi dormire per tutta la notte conta. Vedi [Botte d'invecchiamento](/aging-barrel/).
+
+8. **Spilla un bicchiere.** Clicca con il tasto destro sulla botte con un <Item id="wine_glass" /> vuoto per spillare una porzione. Il vino va in un calice,
+   la birra, l'idromele e il sidro in un <Item id="mug" />; la botte ti avvisa se tieni in mano quello sbagliato.
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **Bevilo.** <Item id="red_wine" /> ti dà <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> e un livello di
+   <EffectBadge id="vineandbarrel:tipsy" name="Brillo" />. Il bicchiere resta tuo. Se bevi nello stesso momento di un amico vicino
+   ottieni un **Cin cin!**: il bonus di tutti dura il {rules.cheersBonusPercent}% in più.
+
+10. **Lascia invecchiare il resto.** Non toccare la botte per altri **{days(wine.agingTime)}** e ciò che resta diventa
+    <Item id="aged_red_wine" />: un rosso più profondo che brilla, e <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
+    Un lieve schiocco di tappo e un sigillo di cera rossa in cima ti dicono che è pronto.
+
+</Steps>
+
+<Aside type="tip" title="Non resisti all'attesa?">
+Ogni bicchiere che spilli durante l'invecchiamento è uno in meno che invecchia. Riempi due botti: bevi da una e lascia l'altra
+in pace finché non è invecchiata. Oppure trova la taverna di un villaggio, le cui botti sono già piene, un paio anche invecchiate. Vedi
+[Villaggi e taverne](/villages/).
+</Aside>
+
+## Dove andare dopo
+
+- Prepara le altre bevande: uva bianca per il vino bianco, bacche dolci per il vino di bacche dolci, orzo e luppolo per la Pale Ale,
+  grano e luppolo per la birra di frumento, miele per l'idromele, mele per il sidro. Vedi
+  [Bevande](/drinks/) e [Colture](/crops/).
+- Metti qualche botte una accanto all'altra e costruisci una vera cantina: [Costruire una cantina](/guides/cellar/).
+- Conosci i tuoi limiti: cosa fa ogni livello di [Brillo](/tipsy/) e come smaltire la sbornia.
+- Con Farmer's Delight, prepara sui suoi fornelli e cucina con il tuo vino: [Farmer's Delight](/farmers-delight/).

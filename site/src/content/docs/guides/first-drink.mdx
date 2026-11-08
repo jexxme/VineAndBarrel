@@ -1,0 +1,99 @@
+---
+title: Your first drink
+description: A step-by-step start with Vine & Barrel, from the first wild grapes to a glass of aged red wine.
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../lib/data';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="A tavern corner with barrels and drinks on a table" />
+
+This guide takes you from a fresh world to your first glass of red wine, then on to an aged one. You need only vanilla
+materials to start; the grapes come in along the way. Each step links to the page with all the details.
+
+<Steps>
+
+1. **Find wild grapes.** Wild plants grow in patches out in the world, each in its own kind of place. For wine you want
+   <Item id="wild_grapes" />: break one by hand for <Item id="red_grapes" plural />.
+
+   <WildCrops />
+
+   Can't find any? Village farmers and the wandering trader sell grapes, and village chests often hold some. See
+   [Villages & taverns](/villages/).
+
+2. **Plant a few bushes.** Plant the grapes on grass, dirt or farmland, like sweet berries. A bush grows on its own;
+   once it's ripe, right-click it to pick {h.grapes.count[0]} to {h.grapes.count[1]} grapes. It drops back a stage and
+   fruits again, so you never need to replant. Bone meal speeds it up.
+
+   <Stages prefix="grape_bush" title="A grape bush growing" labels={['planted', 'growing', 'half-ripe', 'ripe']} />
+
+   One batch of juice takes {grapesPerBatch} grapes and a sugar, so a handful of bushes is plenty to start. More on
+   [Crops](/crops/).
+
+3. **Build a Brew Kettle and put it over a fire.** The <Item id="brew_kettle" /> is made of copper. It brews only while
+   the block right below it is hot: a lit campfire works from day one. It stands on an iron tray above the flames.
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **Brew grape juice.** Right-click the kettle to open it and put in {grapesPerBatch} grapes and a sugar. The arrow
+   fills while the kettle is hot, steam curls out from under the lid, and after {seconds(juice.brewingTime)} the gauge
+   shows {juice.servings} servings of <Item id="grape_juice" />. If you put in more, it keeps brewing batches. See
+   [Brew Kettle](/brew-kettle/).
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **Take it out.** Right-click the kettle with a glass bottle for one serving, or with a bucket for {rules.servingsPerBucket}.
+   Grape juice is already a drink of its own: it takes the edge off [Tipsy](/tipsy/).
+
+6. **Fill an Aging Barrel.** Place an <Item id="aging_barrel" /> and right-click it with the bucket or the bottles. It
+   holds {rules.barrelCapacity} servings: two buckets fill it to the brim. Topping it up with more of the same juice
+   while it ferments is fine.
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **Wait for it to ferment.** After **{days(wine.fermentingTime)}** the juice has become <Item id="red_wine" />. The barrel
+   tells you how it's doing: the glass airlock on top bubbles while it ferments, and a right-click with an empty hand
+   shows a status line such as *Red Wine · 8 servings · fermenting, ready tomorrow morning*. The clock runs on game
+   time, so sleeping through the night counts. See [Aging Barrel](/aging-barrel/).
+
+8. **Tap a glass.** Right-click the barrel with an empty <Item id="wine_glass" /> to tap one serving. Wine goes in a glass,
+   beer, mead and cider in a <Item id="mug" />; the barrel tells you if you hold the wrong one.
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **Drink it.** <Item id="red_wine" /> gives you <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> and one level of
+   <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />. You keep the glass. Drink at the same moment as a friend nearby
+   and you get a **Cheers!**: everyone's buff lasts {rules.cheersBonusPercent}% longer.
+
+10. **Let the rest age.** Leave the barrel alone for **{days(wine.agingTime)}** more and what's left becomes
+    <Item id="aged_red_wine" />: a deeper red that shimmers, and <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
+    A soft cork pop and a red wax seal on top tell you it's done.
+
+</Steps>
+
+<Aside type="tip" title="Can't wait?">
+Every glass you tap during the aging stage is one less that ages. Fill two barrels: drink from one, and leave the other
+alone until it's aged. Or find a village tavern, whose barrels are already full, a couple of them aged. See
+[Villages & taverns](/villages/).
+</Aside>
+
+## Where to go next
+
+- Brew the other drinks: white grapes for white wine, sweet berries for sweet berry wine, barley and hops for pale ale,
+  wheat and hops for wheat beer, honey for mead, apples for hard cider. See
+  [Drinks](/drinks/) and [Crops](/crops/).
+- Put a few barrels side by side and build a proper cellar: [Building a cellar](/guides/cellar/).
+- Mind your limits: what each level of [Tipsy](/tipsy/) does, and how to sober up.
+- With Farmer's Delight, brew over its stove and cook with your wine: [Farmer's Delight](/farmers-delight/).

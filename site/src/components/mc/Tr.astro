@@ -1,0 +1,21 @@
+---
+// A translated sentence with components inside, where word order differs by language:
+//   <Tr k="Plant {seed} on farmland, it ripens in {time}." vars={{ time: days(t, locale) }}><Item slot="seed" id="barley_seeds" /></Tr>
+// `k` is the English text and the key in src/i18n/strings/<code>.json (like t()). {name} is filled from vars (text) or
+// from the slot of that name (markup). Text is escaped; slots render as they are.
+import { t, localeOf } from '../../lib/i18n';
+interface Props {
+	k: string;
+	vars?: Record<string, string | number>;
+	locale?: string;
+}
+const { k, vars = {}, locale = localeOf(Astro.currentLocale) } = Astro.props;
+const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+const parts = t(k, locale, vars).split(/\{(\w+)\}/);
+let html = '';
+for (let i = 0; i < parts.length; i++) {
+	if (i % 2 === 0) html += esc(parts[i]);
+	else html += Astro.slots.has(parts[i]) ? await Astro.slots.render(parts[i]) : esc(`{${parts[i]}}`);
+}
+---
+<Fragment set:html={html} />

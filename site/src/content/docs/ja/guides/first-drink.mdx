@@ -1,0 +1,95 @@
+---
+title: はじめての一杯
+description: 最初の野生のブドウから熟成赤ワインの一杯まで、Vine & Barrel を順を追って始めるガイドです。
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/ja';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="樽と飲み物がテーブルに並ぶ酒場の一角" />
+
+新しいワールドから最初の赤ワイン、そして熟成した一杯まで、このガイドで進みます。始めるのにバニラの素材だけで足ります。
+ブドウは途中で手に入ります。各手順から、詳しいページへ飛べます。
+
+<Steps>
+
+1. **野生のブドウを探す。** 野生の植物は、それぞれ決まった場所に群生しています。ワインにはブドウが必要です。
+   <Item id="wild_grapes" />を素手で壊すと<Item id="red_grapes" plural />が手に入ります。
+
+   <WildCrops />
+
+   見つからないときは、村の農民や行商人がブドウを売っていて、村のチェストにも入っていることがよくあります。
+   [村と酒場](/villages/)をご覧ください。
+
+2. **低木を何本か植える。** スイートベリーと同じように、草ブロック、土、耕地にブドウを植えます。低木は勝手に育ち、
+   熟したら右クリックで{h.grapes.count[0]}〜{h.grapes.count[1]}個のブドウを摘めます。低木は1段階戻ってまた実をつけるので、
+   植え直す必要はありません。骨粉で成長が早まります。
+
+   <Stages prefix="grape_bush" title="育っていくブドウの低木" labels={['植え付け', '成長中', '半熟', '完熟']} />
+
+   ジュース1バッチにブドウ{grapesPerBatch}個と砂糖1個を使うので、最初は数本あれば十分です。詳しくは
+   [作物](/crops/)で。
+
+3. **醸造釜を作って火の上に置く。** <Item id="brew_kettle" />は銅でできています。すぐ下のブロックが熱いときだけ醸造します。
+   火をつけた焚き火なら最初から使えます。釜は炎の上の鉄のトレイに載ります。
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **ブドウジュースを醸造する。** 釜を右クリックして開き、ブドウ{grapesPerBatch}個と砂糖1個を入れます。釜が熱いあいだ矢印が伸び、
+   ふたの下から湯気が立ちのぼり、{seconds(juice.brewingTime)}たつとゲージに{juice.servings}杯分の<Item id="grape_juice" />が表示されます。
+   さらに材料を入れれば、続けて醸造します。[醸造釜](/brew-kettle/)をご覧ください。
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **取り出す。** ガラス瓶で釜を右クリックすると1杯分、バケツなら{rules.servingsPerBucket}杯分が取れます。
+   ブドウジュースはそれだけで飲み物で、[ほろ酔い](/tipsy/)を少し和らげます。
+
+6. **熟成樽に注ぐ。** <Item id="aging_barrel" />を置き、バケツか瓶で右クリックして注ぎます。
+   容量は{rules.barrelCapacity}杯分で、バケツ2つでいっぱいです。発酵中に同じジュースを足すのは問題ありません。
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **発酵を待つ。** **{days(wine.fermentingTime)}**たつと、ジュースは<Item id="red_wine" />になります。樽の様子は見て分かります。
+   上のガラスのエアロックは発酵中に泡立ち、素手で右クリックすると、*赤ワイン · 8杯分 · 発酵中、完成は明日の朝*
+   のような状態表示が出ます。時間はゲーム内時間で進むので、夜を寝て過ごしても数えられます。[熟成樽](/aging-barrel/)をご覧ください。
+
+8. **グラスに注ぐ。** 空の<Item id="wine_glass" />で樽を右クリックすると、1杯分を注げます。ワインはグラス、
+   ビール、ミード、サイダーは<Item id="mug" />に注ぎます。違う容器を持っていると、樽が教えてくれます。
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **飲む。** <Item id="red_wine" />を飲むと<EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} />と、
+   <EffectBadge id="vineandbarrel:tipsy" name="ほろ酔い" />が1レベル付きます。グラスは手元に残ります。近くにいる友達と同時に飲むと
+   **乾杯！**になり、全員の強化効果が{rules.cheersBonusPercent}%長く続きます。
+
+10. **残りを熟成させる。** 樽をさらに**{days(wine.agingTime)}**そのままにしておくと、残りは
+    <Item id="aged_red_wine" />になります。深い赤色できらめき、<EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />が付きます。
+    小さなコルクの音と上の赤い蝋の封が、できあがりの合図です。
+
+</Steps>
+
+<Aside type="tip" title="待ちきれない?">
+熟成中に注いだ1杯は、そのぶん熟成する量が減ります。樽を2つ用意して、片方から飲み、もう片方は熟成するまで放っておきましょう。
+あるいは村の酒場へ。樽はすでに満タンで、いくつかは熟成済みです。[村と酒場](/villages/)をご覧ください。
+</Aside>
+
+## 次に進むなら
+
+- ほかの飲み物を醸造する: 白ブドウで白ワイン、スイートベリーでスイートベリーワイン、大麦とホップでペールエール、
+  小麦とホップで小麦ビール、はちみつでミード、リンゴでハードサイダー。
+  [飲み物](/drinks/)と[作物](/crops/)をご覧ください。
+- 樽を何個か並べて、本格的なセラーを作る: [セラーを作る](/guides/cellar/)。
+- 飲みすぎに注意: [ほろ酔い](/tipsy/)の各レベルの効果と、酔いのさまし方。
+- Farmer's Delight があれば、そのコンロで醸造し、ワインで料理する: [Farmer's Delight](/farmers-delight/)。

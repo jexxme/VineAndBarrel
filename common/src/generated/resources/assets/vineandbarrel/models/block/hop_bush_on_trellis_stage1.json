@@ -1,0 +1,6 @@
+{
+  "parent": "vineandbarrel:block/template_bush_on_trellis",
+  "textures": {
+    "vine": "vineandbarrel:block/hop_bush_on_trellis_stage1"
+  }
+}

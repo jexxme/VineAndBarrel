@@ -1,0 +1,110 @@
+---
+title: Початок
+description: Встанови Vine & Barrel, дізнайся, що він додає і як працює цикл варіння, та обери, з чого почати.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import Loop from '../../../components/brewing/Loop.astro';
+import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/uk';
+import { downloads } from '../../../data/code/downloads';
+
+export const cells = { 'next release': 'у наступному релізі', planned: 'заплановано' };
+export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+
+export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
+export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
+
+Vine & Barrel дарує Minecraft виноградник, броварню й погріб. Ти вирощуєш виноград, хміль і ячмінь, вариш сік і сусло в
+мідному казані, даєш їм побродити й визріти в дубових діжках і пригощаєш друзів. Терпіння винагороджується: бонус
+від витриманого напою сильніший і діє довше, а ще він мерехтить у келиху.
+
+<Shot src="hero.jpg" caption="Садиба з Vine & Barrel: корчма з погребом і навісами, виноградник, хміль на жердинах і ячмінне поле." />
+
+## Встановлення
+
+Знайди свою версію Minecraft і свій завантажувач та завантаж файл із відповідної клітинки:
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{cell(r.neoforge)}</td>
+				<td>{cell(r.fabric)}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+- **NeoForge** потребує {downloads.map((r) => `NeoForge ${r.neoforgeNeeds ? r.neoforgeNeeds.replace(' or newer', ' або новішого') : `${meta.neoforge} або новішого`} для Minecraft ${r.minecraft}`).join('; ')}.
+- **Fabric** потребує Fabric Loader {meta.fabricLoader} або новішого та Fabric API {meta.fabricApi} або новішого.
+
+Назва файлу підкаже, який у тебе: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> — це NeoForge,
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> — Fabric. Поклади його в папку `mods` і на клієнті, і на сервері. Інші
+моди не потрібні. Усе, з чим він працює, необов'язкове й вмикається саме: див. [Сумісність](/compatibility/).
+
+<Aside type="tip" title="Граєш із Farmer's Delight?">
+Vine & Barrel — окремий мод, але він чудово вписується: його казан варить на плиті з FD, виноградні й хмелеві лози лізуть по мотузках FD,
+а кілька страв із каструлі, бенкет і хліб використовують його напої. Див. [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Як це працює
+
+Кожен напій проходить той самий шлях від поля до келиха. Клацни на крок, щоб побачити подробиці.
+
+<Loop />
+
+## Що додає мод
+
+<dl class="tour">
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:red_grapes')?.src} alt="" width="32" height="32" /> Нові культури</dt>
+		<dd>[Кущі винограду](/crops/), червоного й білого, кущі хмелю, які можна збирати знову й знову, шпалера, по якій вони в'ються (без Farmer's Delight), та ячмінь, що росте як пшениця. Спершу ти знайдеш їх дикорослими, на сільських фермах і в мандрівного торговця.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:brew_kettle')?.src} alt="" width="32" height="32" /> Броварня</dt>
+		<dd>Мідний [варильний казан](/brew-kettle/) над вогнем перетворює культури на сік і сусло. Він старіє, як будь-яка мідь, може висіти на ланцюгу, а лійки можуть працювати за тебе.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aging_barrel')?.src} alt="" width="32" height="32" /> Погріб</dt>
+		<dd>[Діжка для витримки](/aging-barrel/) не має екрана: ти наливаєш, чекаєш і цідиш, і все це прямо у світі. Діжки з'єднуються в стелажі й стають у стіни.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aged_red_wine')?.src} alt="" width="32" height="32" /> Напої: {meta.counts.drinks}</dt>
+		<dd>{list(young.map((d) => nameOf(d.id)))}, кожен молодий і витриманий{fdExtra.length > 0 && `, а з Farmer's Delight ще й ${list(fdExtra.map((d) => nameOf(d.id)))}`}. Кожен дає бонус: рівень {roman(rules.youngBuffAmplifier)} або, коли витримано, рівень {roman(rules.agedBuffAmplifier)}. Див. [Напої](/drinks/).</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> Напідпитку</dt>
+		<dd>Кожен напій додає рівень [Напідпитку](/tipsy/): спершу легке похитування, гикавка й трохи сміливості, згодом важкі очі й важкі ноги. Знай міру.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> Корчми</dt>
+		<dd>У селах з'являються [корчми](/villages/) з уже повними діжками, тож напій можна скуштувати ще до того, як звариш власний.</dd>
+	</div>
+</dl>
+
+## З чого почати
+
+- **Новачок у моді?** Іди за [Твоїм першим напоєм](/guides/first-drink/): від свіжого світу до першого келиха витриманого червоного вина, крок за кроком.
+- **Готовий варити багато?** [Будівництво погреба](/guides/cellar/) розповідає про стелажі з діжок, автоматизацію й планування партії.
+- **Поспішаєш?** Знайди сільську корчму: її діжки повні й чекають, щоб з них налили. Див. [Села й корчми](/villages/).
+- **Шукаєш щось конкретне?** Кожен предмет має свою сторінку у [Всіх предметах і блоках](/items/), кожен рецепт — у [Всіх рецептах](/reference/recipes/), а налаштування сервера й клієнта — у [Конфігурації](/reference/config/).
+
+## Основи крафту
+
+Обидва блоки й обидві посудини роблять із ванільних матеріалів:
+
+<Recipe id="brew_kettle" /> <Recipe id="aging_barrel" />
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<style>{`
+.tour { margin: 1rem 0 0; border-top: 2px solid var(--fd-border); }
+.tour > div { display: grid; align-items: start; grid-template-columns: 12rem 1fr; gap: 1rem; padding: .7rem 0; border-bottom: 2px solid var(--fd-border); margin: 0; }
+.tour dt { font-weight: 400; display: flex; align-items: center; gap: 10px; color: var(--vb-heading); }
+.tour dd { margin: 0; }
+@media (max-width: 40rem) { .tour > div { grid-template-columns: 1fr; gap: .2rem; } }
+`}</style>

@@ -1,0 +1,110 @@
+---
+title: 시작하기
+description: Vine & Barrel을 설치하고, 무엇이 추가되는지와 양조 과정을 살펴보고, 어디서부터 시작할지 골라 보세요.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import Loop from '../../../components/brewing/Loop.astro';
+import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/ko';
+import { downloads } from '../../../data/code/downloads';
+
+export const cells = { 'next release': '다음 릴리스', planned: '계획 중' };
+export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+
+export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
+export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
+
+Vine & Barrel은 포도밭과 양조장, 그리고 저장고를 Minecraft에 가져옵니다. 포도, 홉, 보리를 키우고, 구리 솥에서 주스와
+맥아즙을 만들고, 참나무 통에서 발효와 숙성을 시킨 다음, 친구들과 한 잔씩 나눠요. 기다린 만큼 보상이 있어요. 숙성된 술은
+버프가 더 강하고 더 오래 가며, 잔 속에서 반짝여요.
+
+<Shot src="hero.jpg" caption="Vine & Barrel 농장: 통 저장고와 퍼걸러가 있는 선술집, 포도밭, 지지대에 감긴 홉, 보리밭." />
+
+## 설치
+
+Minecraft 버전과 로더를 찾아서, 해당 칸에서 내려받으세요.
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{cell(r.neoforge)}</td>
+				<td>{cell(r.fabric)}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+- **NeoForge** 필요 버전: {downloads.map((r) => `Minecraft ${r.minecraft}에서 NeoForge ${(r.neoforgeNeeds ?? `${meta.neoforge} or newer`).replace(' or newer', ' 이상')}`).join('; ')}.
+- **Fabric** 필요 버전: Fabric Loader {meta.fabricLoader} 이상, Fabric API {meta.fabricApi} 이상.
+
+파일 이름을 보면 어느 쪽인지 알 수 있어요. <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code>은 NeoForge용,
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code>은 Fabric용입니다. 클라이언트와 서버 모두 `mods` 폴더에 넣으세요. 다른 모드는
+필요 없어요. 함께 쓸 수 있는 모드는 전부 선택 사항이고 알아서 켜집니다. [호환성](/compatibility/)을 참고하세요.
+
+<Aside type="tip" title="Farmer's Delight와 함께 하나요?">
+Vine & Barrel은 독립된 모드지만 FD와 잘 어울려요. 솥은 FD의 난로 위에서도 양조하고, 포도와 홉 덩굴은 FD의 밧줄을 타고 올라가고,
+조리용 냄비 요리 몇 가지와 잔치 요리, 빵에는 이 모드의 술이 들어갑니다. [Farmer's Delight](/farmers-delight/)를 참고하세요.
+</Aside>
+
+## 작동 방식
+
+모든 술은 밭에서 잔까지 같은 길을 걸어요. 단계를 클릭하면 자세히 볼 수 있어요.
+
+<Loop />
+
+## 모드가 추가하는 것
+
+<dl class="tour">
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:red_grapes')?.src} alt="" width="32" height="32" /> 새 작물</dt>
+		<dd>붉은색과 흰색 [포도 덤불](/crops/), 계속 따 먹을 수 있는 홉 덤불, 덤불이 타고 오르는 격자 지지대(Farmer's Delight 없이도 돼요), 밀처럼 자라는 보리가 있어요. 처음에는 야생 식물, 마을 농장, 떠돌이 상인에게서 만날 수 있어요.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:brew_kettle')?.src} alt="" width="32" height="32" /> 양조장</dt>
+		<dd>구리 [양조 솥](/brew-kettle/)은 불 위에서 작물을 주스와 맥아즙으로 바꿔요. 다른 구리처럼 녹이 슬고, 원하면 사슬에 매달 수 있고, 호퍼로 자동화할 수도 있어요.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aging_barrel')?.src} alt="" width="32" height="32" /> 저장고</dt>
+		<dd>[숙성 통](/aging-barrel/)에는 화면이 없어요. 붓고, 기다리고, 따르는 모든 일을 월드에서 직접 합니다. 통은 서로 이어져 선반이 되고, 쌓아서 벽도 만들 수 있어요.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aged_red_wine')?.src} alt="" width="32" height="32" /> 술 {meta.counts.drinks}종</dt>
+		<dd>{list(young.map((d) => nameOf(d.id)))}. 모두 어린 술과 숙성된 술이 있어요{fdExtra.length > 0 && `, Farmer's Delight를 쓰면 ${list(fdExtra.map((d) => nameOf(d.id)))}도 있어요`}. 술마다 버프가 하나씩 붙고, 레벨은 {roman(rules.youngBuffAmplifier)}, 숙성되면 레벨 {roman(rules.agedBuffAmplifier)}입니다. [술](/drinks/)을 참고하세요.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> 알딸딸함</dt>
+		<dd>술을 마실 때마다 [알딸딸함](/tipsy/)이 한 단계씩 올라가요. 처음에는 몸이 흔들리고, 딸꾹질이 나고, 용기가 조금 생기다가, 나중에는 눈꺼풀도 다리도 무거워져요. 멈출 때를 알아야 해요.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> 선술집</dt>
+		<dd>마을에는 통이 이미 가득 찬 [선술집](/villages/)이 있어서, 직접 양조하기 전에 먼저 맛볼 수 있어요.</dd>
+	</div>
+</dl>
+
+## 어디서 시작할까요
+
+- **모드가 처음인가요?** [첫 번째 술](/guides/first-drink/)을 따라 해 보세요. 새 월드에서 첫 숙성 레드 와인 한 잔까지 한 걸음씩 안내해요.
+- **한꺼번에 많이 만들 준비가 됐나요?** [저장고 짓기](/guides/cellar/)에서 통 선반, 자동화, 배치 계획을 다뤄요.
+- **급한가요?** 마을 선술집을 찾아가세요. 통이 가득 차서 따르기만 하면 돼요. [마을과 선술집](/villages/)을 참고하세요.
+- **뭔가 찾아보고 싶나요?** 모든 아이템은 [모든 아이템과 블록](/items/)에 각자의 페이지가 있고, 모든 레시피는 [모든 레시피](/reference/recipes/)에, 서버와 클라이언트 옵션은 [설정](/reference/config/)에 있어요.
+
+## 기본 재료 제작
+
+블록 두 개와 잔 두 개는 모두 바닐라 재료로 만들어요.
+
+<Recipe id="brew_kettle" /> <Recipe id="aging_barrel" />
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<style>{`
+.tour { margin: 1rem 0 0; border-top: 2px solid var(--fd-border); }
+.tour > div { display: grid; align-items: start; grid-template-columns: 12rem 1fr; gap: 1rem; padding: .7rem 0; border-bottom: 2px solid var(--fd-border); margin: 0; }
+.tour dt { font-weight: 400; display: flex; align-items: center; gap: 10px; color: var(--vb-heading); }
+.tour dd { margin: 0; }
+@media (max-width: 40rem) { .tour > div { grid-template-columns: 1fr; gap: .2rem; } }
+`}</style>

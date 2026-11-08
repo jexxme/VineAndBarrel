@@ -1,0 +1,62 @@
+---
+title: Aldeias e tavernas
+description: Tavernas de aldeia com barris prontos para servir, fazendas de aldeia que cultivam uvas, lúpulo e cevada, trocas de sementes e itens em baús.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import VillageInfo from '../../../components/data/VillageInfo.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, roman } from '../../../lib/l10n/pt-br';
+
+<Render name="scenes/tavern" float="right" size={256} alt="Um canto de taverna" />
+
+## Tavernas
+
+Todo tipo de aldeia pode ter uma **taverna**, construída no estilo dela, em um de dois layouts. Você encontra uma em cerca de uma
+aldeia a cada três, e de vez em quando uma aldeia tem duas. Não há duas exatamente iguais: o que há nos tonéis, as bebidas nas
+mesas, as flores, os estandartes e as velas mudam de taverna para taverna.
+
+Procure a placa pendurada sobre a porta. Lá dentro há espaço para circular: uma mesa junto ao fogo, bancos no balcão, a tina
+na fogueira atrás dele. Atrás do balcão, uma escada desce para a **adega de barris**, uma sala abobadada e iluminada por tochas sob o
+salão, cheia de tonéis enfileirados.
+
+Cada tipo de aldeia tem um destaque próprio:
+
+- **Planície:** um jardim de cerveja, mesas compridas sob um caramanchão de ramas de lúpulo.
+- **Deserto:** um terraço no telhado, subindo pela escada de fora.
+- **Savana:** um bar de varanda na sombra, com um balcão próprio.
+- **Nevada:** uma sala de lareira com uma lareira grande e tapetes de pele.
+- **Taiga:** um salão de hidromel com uma mesa comprida e uma pilha de lenha sob o beiral.
+
+Os barris dela já vêm **cheios**: entre, pegue uma caneca ou taça e sirva uma bebida. Alguns deles estão envelhecidos. O baú
+da taverna tem sementes, canecas e taças, e algumas bebidas da região, tudo o que você precisa para começar a brassar por conta própria.
+
+<Shot src="taverns/plains.jpg" caption="Planície: o jardim de cerveja, mesas compridas sob um caramanchão de ramas de lúpulo." />
+<Shot src="taverns/desert.jpg" caption="Deserto: o terraço no telhado, subindo pela escada de fora." />
+<Shot src="taverns/savanna.jpg" caption="Savana: o bar de varanda, um balcão sob as escotilhas abertas do salão." />
+<Shot src="taverns/snowy.jpg" caption="Nevada: a sala de lareira, três fogos de largura, tapetes de pele e poltronas." />
+<Shot src="taverns/taiga.jpg" caption="Taiga: a mesa comprida do salão de hidromel." />
+<Shot src="taverns/cellar.jpg" caption="A adega de barris sob o salão: tonéis enfileirados sob uma abóbada de pedra, tochas nas paredes." />
+
+### Bom saber
+
+- Os barris da taverna já passaram da fermentação, então não dá para completá-los. Esvazie um e encha com a sua própria infusão:
+  uma bebida envelhecida de um barril que você mesmo encheu é o que rende *Paciência Compensa*.
+- Os barris jovens da taverna continuam envelhecendo como qualquer barril, então uma taverna deixada em paz por alguns dias acaba com mais bebidas envelhecidas.
+- Servir de qualquer barril numa aldeia, da taverna ou seu, rende *Na Torneira*.
+- Faça suas trocas sóbrio: a partir do Alegrinho {roman(rules.tipsy.rowdyLevel - 1)}, aldeões e mercadores não negociam com você. Veja [Alegrinho](/tipsy/#arruaceiro).
+
+## Fazendas da aldeia
+
+As fazendas da aldeia cultivam as nossas plantações junto com as do vanilla, conforme o clima: uvas tintas onde é quente, uvas brancas
+em aldeias de planície e taiga, lúpulo onde é fresco, cevada quase em todo lugar.
+
+<VillageInfo show="farms" />
+
+## Trocas
+
+<VillageInfo show="trades" />
+
+## Itens em baús
+
+<VillageInfo show="loot" />

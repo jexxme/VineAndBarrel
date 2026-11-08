@@ -1,0 +1,12 @@
+---
+title: Logros
+description: La pestaña de logros de Vine & Barrel y cómo conseguir cada uno.
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/es';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel tiene su propia pestaña de logros, **{gameText(root.titleKey, root.title)}**: *{gameText(root.descriptionKey, root.description)}*
+
+<Advancements />

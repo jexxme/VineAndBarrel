@@ -1,0 +1,83 @@
+---
+title: Achispado
+description: Qué hace Achispado en cada nivel, qué pasa tras una copa de más, cómo espabilarte y cómo bajarlo o desactivarlo.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import TipsyLevels from '../../../components/data/TipsyLevels.astro';
+import EffectBadge from '../../../components/data/EffectBadge.astro';
+import { rules, nameOf, roman } from '../../../lib/l10n/es';
+
+export const t = rules.tipsy;
+export const cfg = t.config;
+export const rowdyLevel = t.rowdyLevel;
+export const punchHearts = t.rowdyPunchDamage / 2;
+
+Cada vino, cerveza, sidra e hidromiel te da su mejora **y un nivel de <EffectBadge id="vineandbarrel:tipsy" name="Achispado" />**. Al
+principio tiene su gracia: un balanceo, hipo, algo de valor líquido, y con Achispado {roman(t.slurLevel - 1)} estás en tu mejor
+momento (tu chat, no tanto), aunque los ojos empiezan a pesar. Si sigues, empieza a pasarte factura: náuseas, brazos flojos y, arriba del todo,
+piernas que apenas te llevan a casa. Llega como máximo al nivel {t.maxLevel}.
+
+## Niveles
+
+<TipsyLevels />
+
+Los demás jugadores también te ven balancearte, hipar, tambalearte y tropezar. Pasa el cursor sobre el efecto Achispado en
+tu inventario para ver qué hace tu nivel actual.
+
+## Una copa de más
+
+¿Ya estás en el nivel {t.maxLevel} y sigues bebiendo? Sufres una **laguna**. Se te cierran los ojos y te desplomas, con
+estrellas girando sobre tu cabeza para que todos las vean. Durante esos segundos nadie puede hacerte daño, ni mobs ni
+jugadores, y la caída tampoco; el resto del mundo sí cuenta, así que no te desmayes en lava. Luego despiertas. ¿Dónde? Eso
+depende de la noche, y hay más formas de despertar de las que imaginas…
+
+Tendrás hambre y temblores un rato, de vuelta en Achispado I, y puede que en tus bolsillos haya algo que no recuerdas haber
+cogido. Nunca pierdes nada de lo que llevabas.
+
+## Alborotador
+
+Desde Achispado {roman(rowdyLevel - 1)}, te vuelves alborotador. De vez en cuando tu brazo se mueve solo y lanza un puñetazo
+de verdad a lo que tengas justo delante: {punchHearts === 0.5 ? 'medio corazón' : `${punchHearts} corazones`} de daño y un
+empujón, lleves lo que lleves en la mano. Nunca golpea a mascotas domadas, gólems de hierro ni soportes para armadura, y solo
+golpea a otros jugadores donde el PvP está activado. Los aldeanos y los transeúntes, en cambio, son blanco fácil, y se
+acuerdan.
+
+También te quedas **sin más copas**: desde Achispado {roman(t.cutOffLevel - 1)}, los aldeanos y los vendedores ambulantes
+niegan con la cabeza y no comercian contigo hasta que te espabiles. Haz tus tratos antes de la {t.cutOffLevel === 4 ? 'cuarta' : `${t.cutOffLevel}.ª`} copa.
+
+## Espabilarse
+
+- **Espera:** cada nivel se pasa a los **{cfg.secondsPerLevel} segundos**, de uno en uno. Cada bebida nueva da a todos los
+  niveles un reloj nuevo, así que con Achispado {roman(t.maxLevel - 1)} estás sobrio otra vez tras unos {Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10} minutos
+  sin otra gota.
+- **La leche** lo quita del todo, como cualquier efecto. También quita las mejoras de tus bebidas.
+- **Un frasco de agua o cualquier zumo** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
+  <Item id="apple_juice" />) lo baja un nivel al instante. Solo vale un frasco de agua normal, ninguna otra poción.
+- **Dormir la mona:** ve a la cama y duerme toda la noche. Tiene que ser una noche que se salte de verdad: si te levantas
+  pronto, o te quedas despierto mientras los demás del servidor siguen en pie, despiertas tan achispado como te acostaste.
+
+## Para tener en cuenta
+
+- **Agáchate** con Achispado {roman(t.stumbleLevel - 1)} y tus piernas aguantan: sin deriva, sin tropiezos, sin caídas. Nadar,
+  montar y volar también son seguros.
+- **Una caída nunca duele** y nunca te lleva a un sitio por el que no hayas pasado. Solo te caes en terreno llano y
+  abierto, sin monstruos cerca, y no dos veces en menos de {Math.round(t.tripCooldownTicks / 20)} segundos; en cualquier otro
+  sitio se queda en un tropiezo.
+- **El agua te saca rápido de los niveles malos,** pero los niveles de abajo mantienen su propio tiempo, así que no te
+  espabila antes en total.
+- Achispado solo se ocupa de sus propios efectos secundarios: una Lentitud o una Náusea de una poción o de un comando se
+  dejan como están.
+- Los enlaces, comandos y @menciones del chat nunca se arrastran.
+- Los demás jugadores te ven balancearte, oyen tu hipo y ven tus tropiezos, caídas y puñetazos alborotados, pero no los
+  bordes oscuros de tu pantalla ni tus parpadeos.
+- **¿Quieres la historia completa de una laguna?** Todos los sitios donde puedes despertar, las probabilidades y los
+  recuerdos están en [Lagunas](/blackouts/). Con spoilers, claro.
+
+## Ajustes
+
+Los dueños del servidor pueden desactivar Achispado por completo (el modo sin alcohol) o ir apagando una a una el chat
+arrastrado, los tropiezos (con las caídas y la deriva), las lagunas, los puñetazos alborotados y el «no más copas». Cada
+jugador puede reducir cuánto mueve Achispado su pantalla, hasta nada, y desactivar los efectos de visión; los deslizadores
+de Efectos de distorsión, Efectos de campo de visión y Pulsación de oscuridad de vanilla también cuentan. Todas las opciones y sus valores por
+defecto están en [Configuración](/reference/config/).

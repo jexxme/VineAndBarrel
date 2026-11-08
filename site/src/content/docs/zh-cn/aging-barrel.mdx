@@ -1,0 +1,108 @@
+---
+title: 陈酿桶
+description: 倒入、发酵、陈酿、放酒。陈酿桶如何运作、要花多久，以及怎样用它们搭一座酒窖。
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import AgingTimeline from '../../../components/brewing/AgingTimeline.astro';
+import { rules, byType, days, list, nameOf } from '../../../lib/l10n/zh-cn';
+
+export const aging = byType('vineandbarrel:aging');
+export const a = aging[0];
+export const sameTimes = aging.every((r) => r.fermentingTime === a.fermentingTime && r.agingTime === a.agingTime);
+
+<Render name="scenes/barrel-rack" float="right" size={256} alt="三个并排的陈酿桶，连成一个酒架" />
+
+<Item id="aging_barrel" />是 Vine & Barrel 的核心。它没有界面：倒入、等待、放酒，全都在世界里完成。放置时，放酒口会朝向你。
+
+## 装填
+
+拿[酿造锅](/brew-kettle/)里的基底右键酒桶：
+
+- 一桶倒入 **{rules.servingsPerBucket} 份**，一瓶倒入 **{rules.servingsPerBottle} 份**，
+- 酒桶最多装 **{rules.barrelCapacity} 份**：两桶，或者八瓶。
+
+发酵期间，你还可以继续倒入同样的基底补满。倒错了？在这批酒变成酒之前，拿空桶或空瓶就能把它取出来。
+
+## 发酵与陈酿
+
+{sameTimes && <p>每一批酒都要经过同样的两个阶段：</p>}
+
+1. **发酵**，持续 **{days(a.fermentingTime)}**。这批酒变成*新酿*，比如<Item id="red_wine" />。
+2. **陈酿**，再持续 **{days(a.agingTime)}**。桶里剩下的就变成*陈酿*，比如<Item id="aged_red_wine" />，增益更强，持续时间也更长。
+
+<AgingTimeline />
+
+{aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
+
+计时按游戏内时间走，所以睡过一夜也算数。陈酿阶段你也可以放出新酿的酒，但每放出一份，能陈酿的就少一份。
+装了 Farmer's Delight 的话，它的苹果酒（变成同一种苹果西打）和西瓜汁也能发酵：详见
+[Farmer's Delight](/farmers-delight/)。
+
+<Shot src="cellar.jpg" caption="沿着酒馆墙边的酒窖：酒桶连成酒架，第二排堆在上面。其中一桶的水封在冒泡，蜡封则标出陈酿好的那批。" />
+
+## 观察进度
+
+不用打开任何东西，就能知道酒桶进行到哪一步：
+
+- **空手右键**会显示一行状态，例如 *淡色艾尔 · 5份 · 陈酿中，3天后酿成*。在铁砧里给酒桶重命名，
+  名字也会显示在那里。
+- **顶上的塞子**显示阶段：桶空着或新酿的酒已经就绪时是木塞，发酵时是会冒泡的玻璃水封，
+  陈酿完成后则是红色蜡封。
+- **正面的观察窗**用酒的颜色显示装了多满。
+- **声音与滴落**：发酵时有气泡声，放酒口时不时滴一滴，这批酒陈酿完成时会有一声轻轻的木塞*啵*。
+
+<Stages prefix="barrel-bung" title="塞子" labels={['木塞', '水封：发酵中', '蜡封：已陈酿']} />
+<Stages prefix="barrel-fill" title="观察窗" only={['0', '2', '4', '6', '8']} labels={['空', '2', '4', '6', '满']} />
+
+## 放酒
+
+拿空的<Item id="wine_glass" />（葡萄酒）或<Item id="mug" />（啤酒、蜂蜜酒和苹果西打）右键酒桶，放出一份。
+放酒口的把手转动，酒就落到你手里。
+
+- 拿错了容器？酒桶会告诉你该用哪个（*红葡萄酒要用高脚杯来盛*），什么也不会消耗。
+- 还在发酵？它会告诉你什么时候好。
+- 放出最后一份后，酒桶就空了，可以装新的一批。
+
+## 搭建酒窖
+
+<Render name="scenes/barrel-cellar" float="right" size={256} alt="两排酒桶，上面一排架在下面一排上" />
+
+- **酒桶架**：酒桶并排放置、朝向一致，托架会连成一条长长的酒架。
+- **叠放**：一个酒桶放在另一个上面时，会放弃托架，改为架在垫块上，所以你可以搭起一整面酒桶墙。
+- **红石比较器**：读取剩余份数，从 0（空）到 15（满 {rules.barrelCapacity} 份）。
+- **装满时破坏**它，这批酒和铁砧里的命名都会保留。物品的提示会显示酒的种类、份数和阶段。
+  它作为物品时陈酿会暂停，重新放下后继续。装满的酒桶不可与其他酒桶堆叠。
+- 酒桶是木制的：用斧挖掘。
+
+## 自动化
+
+- 从上方的**漏斗**倒入基底。从侧面和下方，漏斗会送入空啤酒杯和高脚杯，并取出放好的酒，
+  以及倒酒后剩下的空桶和空瓶。
+- 对着酒桶的**发射器**会用空啤酒杯或高脚杯放出一份，或者倒入一桶或一瓶基底。
+
+## 小贴士
+
+- **尽早补满。** 只有第一次倒入才会开始计时：之后加进去的基底会按这批酒当前的酒龄合并进来，
+  所以发酵用的时间更短。一旦这批酒变成了酒，酒桶就不再接受任何东西，直到放空为止。
+- **一个酒桶一种基底。** 倒入另一种基底会被拒绝（*这个桶里装着葡萄汁*），什么也不会消耗。
+- **快满了？** 一桶需要给全部 {rules.servingsPerBucket} 份留出空位，所以里面超过
+  {rules.barrelCapacity - rules.servingsPerBucket} 份时就倒不进去了。剩下的用瓶子。反过来也一样：
+  空桶只有在酒桶里至少有 {rules.servingsPerBucket} 份时，才能把基底取出来。
+- **你不在时它也在陈酿。** 酒桶按游戏时间运转，所以你走远或下线时它依然继续。你只会错过那一声木塞声。
+- **在主世界建你的酒窖。** 下界和末地没有昼夜可以睡过，所以睡觉不会加快那里的酒桶，
+  它的状态行也是按天数来算，而不是“明天早上”。
+- **物品栏满了？** 放出的酒会掉在你脚边。
+- **创造模式**：破坏装满的酒桶不会掉落任何东西。用中键取方块（按住 Ctrl 中键点击）可以连同这批酒一起复制。
+- **远离苦力怕。** 爆炸会把酒桶连同整批酒一起炸掉。
+- **漏斗小技巧**：上方的漏斗只会倒入酒桶能接受的，所以不对的基底会留在漏斗里，不会把它堵住。
+  放酒的装置下面留一个漏斗，这样成品酒就不会挡住后面的酒。
+- **没有火灾风险。** 酒桶永远不会着火。空的甚至可以当熔炉燃料烧；装了酒的则不行。
+
+## 配方
+
+<Recipe id="aging_barrel" />

@@ -1,0 +1,15 @@
+---
+title: 모든 레시피
+description: 게임에서 보이는 그대로의 모든 Vine & Barrel 레시피. 작업대별로 거르고 결과물이나 재료로 검색할 수 있어요.
+tableOfContents: false
+---
+import RecipeBrowser from '../../../../components/reference/RecipeBrowser.astro';
+import { playableRecipes, byType } from '../../../../lib/l10n/ko';
+
+export const fd = playableRecipes.filter((r) => r.fdOnly).length;
+
+게임이 보여 주는 모습 그대로 그린 전체 {playableRecipes.length}개의 레시피예요. [양조 솥](/brew-kettle/)용 {byType('vineandbarrel:brewing').length}개,
+[숙성 통](/aging-barrel/)용 {byType('vineandbarrel:aging').length}개, 나머지는 제작대용이에요. 그중 {fd}개는 [Farmer's Delight](/farmers-delight/)가 필요해요.
+결과물이나 재료로 검색하거나 작업대를 골라 보세요. 슬롯에 마우스를 올리면 아이템 이름이 보여요. 아이템이 계속 바뀌는 슬롯은 그중 아무거나 받아요.
+
+<RecipeBrowser />

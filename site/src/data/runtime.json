@@ -31,6 +31,47 @@
         "c:animal_foods",
         "c:crops",
         "c:crops/grape",
+        "c:foods",
+        "c:foods/fruit",
+        "c:nutrients/fruits",
+        "minecraft:fox_food",
+        "sereneseasons:autumn_crops"
+      ]
+    },
+    "vineandbarrel:white_grapes": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:compostable": {
+          "layers": "minecraft:compostable/low"
+        },
+        "minecraft:consumable": {},
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 2,
+          "saturation": 0.4
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:white_grapes",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.white_grapes"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 64,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.BlockItem",
+      "tags": [
+        "c:animal_foods",
+        "c:crops",
+        "c:crops/grape",
+        "c:foods",
+        "c:foods/fruit",
+        "c:nutrients/fruits",
         "minecraft:fox_food",
         "sereneseasons:autumn_crops"
       ]
@@ -124,12 +165,39 @@
         "c:animal_foods",
         "c:crops",
         "c:crops/barley",
+        "c:nutrients/carbs",
         "minecraft:cow_food",
         "minecraft:goat_food",
         "minecraft:horse_food",
         "minecraft:llama_food",
-        "minecraft:sheep_food"
+        "minecraft:sheep_food",
+        "minecraft:villager_picks_up"
       ]
+    },
+    "vineandbarrel:trellis": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:cooking_fuel": {
+          "burn_time": "minecraft:cooking/time_wood_blocks",
+          "speed_multiplier": "minecraft:cooking/speed_default"
+        },
+        "minecraft:enchantments": {},
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:trellis",
+        "minecraft:item_name": {
+          "translate": "block.vineandbarrel.trellis"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 64,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.BlockItem",
+      "tags": []
     },
     "vineandbarrel:wild_grapes": {
       "components": {
@@ -185,6 +253,33 @@
         "vineandbarrel:wild_crops"
       ]
     },
+    "vineandbarrel:wild_white_grapes": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:compostable": {
+          "layers": "minecraft:compostable/medium"
+        },
+        "minecraft:enchantments": {},
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:wild_white_grapes",
+        "minecraft:item_name": {
+          "translate": "block.vineandbarrel.wild_white_grapes"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 64,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.BlockItem",
+      "tags": [
+        "farmersdelight:wild_crops",
+        "vineandbarrel:wild_crops"
+      ]
+    },
     "vineandbarrel:wild_barley": {
       "components": {
         "minecraft:attack_animation": {},
@@ -222,6 +317,30 @@
         "minecraft:item_model": "vineandbarrel:grape_crate",
         "minecraft:item_name": {
           "translate": "block.vineandbarrel.grape_crate"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 64,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.BlockItem",
+      "tags": [
+        "c:storage_blocks",
+        "c:storage_blocks/grape"
+      ]
+    },
+    "vineandbarrel:white_grape_crate": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:enchantments": {},
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:white_grape_crate",
+        "minecraft:item_name": {
+          "translate": "block.vineandbarrel.white_grape_crate"
         },
         "minecraft:lore": [],
         "minecraft:max_stack_size": 64,
@@ -493,7 +612,13 @@
       },
       "class": "net.minecraft.world.item.Item",
       "tags": [
+        "c:drink_containing/bottle",
+        "c:drinks",
+        "c:drinks/juice",
+        "c:nutrients/fruits",
         "farmersdelight:drinks",
+        "toughasnails:hydration/50_hydration_drinks",
+        "toughasnails:thirst/7_thirst_drinks",
         "vineandbarrel:sobering_drinks"
       ]
     },
@@ -552,7 +677,14 @@
       },
       "class": "net.minecraft.world.item.Item",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drink_containing/bottle",
+        "c:drinks",
+        "c:drinks/juice",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/50_hydration_drinks",
+        "toughasnails:thirst/7_thirst_drinks",
+        "vineandbarrel:sobering_drinks"
       ]
     },
     "vineandbarrel:sweet_berry_juice_bucket": {
@@ -660,6 +792,178 @@
       "class": "net.minecraft.world.item.Item",
       "tags": []
     },
+    "vineandbarrel:white_grape_juice": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {
+          "consume_seconds": 2.0,
+          "animation": "drink",
+          "sound": "minecraft:entity.generic.drink",
+          "has_consume_particles": false
+        },
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 2,
+          "saturation": 1.2,
+          "can_always_eat": true
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:white_grape_juice",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.white_grape_juice"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "minecraft:glass_bottle"
+        }
+      },
+      "class": "net.minecraft.world.item.Item",
+      "tags": [
+        "c:drink_containing/bottle",
+        "c:drinks",
+        "c:drinks/juice",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/50_hydration_drinks",
+        "toughasnails:thirst/7_thirst_drinks",
+        "vineandbarrel:sobering_drinks"
+      ]
+    },
+    "vineandbarrel:white_grape_juice_bucket": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:enchantments": {},
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:white_grape_juice_bucket",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.white_grape_juice_bucket"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 1,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.Item",
+      "tags": []
+    },
+    "vineandbarrel:apple_juice": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {
+          "consume_seconds": 2.0,
+          "animation": "drink",
+          "sound": "minecraft:entity.generic.drink",
+          "has_consume_particles": false
+        },
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 2,
+          "saturation": 1.2,
+          "can_always_eat": true
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:apple_juice",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.apple_juice"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "minecraft:glass_bottle"
+        }
+      },
+      "class": "net.minecraft.world.item.Item",
+      "tags": [
+        "c:drink_containing/bottle",
+        "c:drinks",
+        "c:drinks/juice",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/50_hydration_drinks",
+        "toughasnails:thirst/7_thirst_drinks",
+        "vineandbarrel:sobering_drinks"
+      ]
+    },
+    "vineandbarrel:apple_juice_bucket": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:enchantments": {},
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:apple_juice_bucket",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.apple_juice_bucket"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 1,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.Item",
+      "tags": []
+    },
+    "vineandbarrel:honey_must_bottle": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:enchantments": {},
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:honey_must_bottle",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.honey_must_bottle"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.Item",
+      "tags": []
+    },
+    "vineandbarrel:honey_must_bucket": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:enchantments": {},
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:honey_must_bucket",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.honey_must_bucket"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 1,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.Item",
+      "tags": []
+    },
     "vineandbarrel:aging_barrel": {
       "components": {
         "minecraft:attack_animation": {},
@@ -738,14 +1042,14 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.wine_glass.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
               "effects": [
                 {
                   "id": "minecraft:regeneration",
-                  "duration": 3600,
+                  "duration": 900,
                   "show_icon": true
                 }
               ],
@@ -776,7 +1080,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/10_hydration_drinks",
+        "toughasnails:thirst/2_thirst_drinks"
       ]
     },
     "vineandbarrel:aged_red_wine": {
@@ -786,7 +1094,7 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.wine_glass.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
@@ -794,7 +1102,7 @@
                 {
                   "id": "minecraft:regeneration",
                   "amplifier": 1,
-                  "duration": 6000,
+                  "duration": 1800,
                   "show_icon": true
                 }
               ],
@@ -826,7 +1134,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/20_hydration_drinks",
+        "toughasnails:thirst/3_thirst_drinks"
       ]
     },
     "vineandbarrel:sweet_berry_wine": {
@@ -836,14 +1148,14 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.wine_glass.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
               "effects": [
                 {
                   "id": "minecraft:speed",
-                  "duration": 3600,
+                  "duration": 900,
                   "show_icon": true
                 }
               ],
@@ -874,7 +1186,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/10_hydration_drinks",
+        "toughasnails:thirst/2_thirst_drinks"
       ]
     },
     "vineandbarrel:aged_sweet_berry_wine": {
@@ -884,7 +1200,7 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.wine_glass.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
@@ -892,7 +1208,7 @@
                 {
                   "id": "minecraft:speed",
                   "amplifier": 1,
-                  "duration": 6000,
+                  "duration": 1800,
                   "show_icon": true
                 }
               ],
@@ -924,7 +1240,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/20_hydration_drinks",
+        "toughasnails:thirst/3_thirst_drinks"
       ]
     },
     "vineandbarrel:barley_ale": {
@@ -934,14 +1254,14 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.mug.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
               "effects": [
                 {
                   "id": "minecraft:haste",
-                  "duration": 3600,
+                  "duration": 900,
                   "show_icon": true
                 }
               ],
@@ -972,7 +1292,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/carbs",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/10_hydration_drinks",
+        "toughasnails:thirst/2_thirst_drinks"
       ]
     },
     "vineandbarrel:aged_barley_ale": {
@@ -982,7 +1306,7 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.mug.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
@@ -990,7 +1314,7 @@
                 {
                   "id": "minecraft:haste",
                   "amplifier": 1,
-                  "duration": 6000,
+                  "duration": 1800,
                   "show_icon": true
                 }
               ],
@@ -1022,7 +1346,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/carbs",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/20_hydration_drinks",
+        "toughasnails:thirst/3_thirst_drinks"
       ]
     },
     "vineandbarrel:wheat_beer": {
@@ -1032,7 +1360,7 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.mug.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
@@ -1070,7 +1398,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/carbs",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/10_hydration_drinks",
+        "toughasnails:thirst/2_thirst_drinks"
       ]
     },
     "vineandbarrel:aged_wheat_beer": {
@@ -1080,7 +1412,7 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.mug.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
@@ -1120,7 +1452,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/carbs",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/20_hydration_drinks",
+        "toughasnails:thirst/3_thirst_drinks"
       ]
     },
     "vineandbarrel:hard_cider": {
@@ -1130,14 +1466,14 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.mug.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
               "effects": [
                 {
                   "id": "minecraft:absorption",
-                  "duration": 3600,
+                  "duration": 900,
                   "show_icon": true
                 }
               ],
@@ -1168,7 +1504,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/10_hydration_drinks",
+        "toughasnails:thirst/2_thirst_drinks"
       ]
     },
     "vineandbarrel:aged_hard_cider": {
@@ -1178,7 +1518,7 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.mug.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
@@ -1186,7 +1526,7 @@
                 {
                   "id": "minecraft:absorption",
                   "amplifier": 1,
-                  "duration": 6000,
+                  "duration": 1800,
                   "show_icon": true
                 }
               ],
@@ -1218,7 +1558,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/20_hydration_drinks",
+        "toughasnails:thirst/3_thirst_drinks"
       ]
     },
     "vineandbarrel:melon_wine": {
@@ -1228,14 +1572,14 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.wine_glass.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
               "effects": [
                 {
                   "id": "minecraft:fire_resistance",
-                  "duration": 3600,
+                  "duration": 900,
                   "show_icon": true
                 }
               ],
@@ -1266,7 +1610,11 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/10_hydration_drinks",
+        "toughasnails:thirst/2_thirst_drinks"
       ]
     },
     "vineandbarrel:aged_melon_wine": {
@@ -1276,7 +1624,7 @@
         "minecraft:break_sound": "minecraft:entity.item.break",
         "minecraft:consumable": {
           "animation": "drink",
-          "sound": "minecraft:entity.generic.drink",
+          "sound": "vineandbarrel:item.wine_glass.drink",
           "has_consume_particles": false,
           "on_consume_effects": [
             {
@@ -1284,7 +1632,7 @@
                 {
                   "id": "minecraft:fire_resistance",
                   "amplifier": 1,
-                  "duration": 6000,
+                  "duration": 1800,
                   "show_icon": true
                 }
               ],
@@ -1316,7 +1664,223 @@
       },
       "class": "jexxme.vineandbarrel.drink.DrinkItem",
       "tags": [
-        "farmersdelight:drinks"
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/20_hydration_drinks",
+        "toughasnails:thirst/3_thirst_drinks"
+      ]
+    },
+    "vineandbarrel:white_wine": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {
+          "animation": "drink",
+          "sound": "vineandbarrel:item.wine_glass.drink",
+          "has_consume_particles": false,
+          "on_consume_effects": [
+            {
+              "effects": [
+                {
+                  "id": "minecraft:night_vision",
+                  "duration": 900,
+                  "show_icon": true
+                }
+              ],
+              "type": "minecraft:apply_effects"
+            }
+          ]
+        },
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 0,
+          "saturation": 0.0,
+          "can_always_eat": true
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:white_wine",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.white_wine"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "vineandbarrel:wine_glass"
+        }
+      },
+      "class": "jexxme.vineandbarrel.drink.DrinkItem",
+      "tags": [
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/10_hydration_drinks",
+        "toughasnails:thirst/2_thirst_drinks"
+      ]
+    },
+    "vineandbarrel:aged_white_wine": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {
+          "animation": "drink",
+          "sound": "vineandbarrel:item.wine_glass.drink",
+          "has_consume_particles": false,
+          "on_consume_effects": [
+            {
+              "effects": [
+                {
+                  "id": "minecraft:night_vision",
+                  "amplifier": 1,
+                  "duration": 1800,
+                  "show_icon": true
+                }
+              ],
+              "type": "minecraft:apply_effects"
+            }
+          ]
+        },
+        "minecraft:enchantment_glint_override": true,
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 0,
+          "saturation": 0.0,
+          "can_always_eat": true
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:aged_white_wine",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.aged_white_wine"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "vineandbarrel:wine_glass"
+        }
+      },
+      "class": "jexxme.vineandbarrel.drink.DrinkItem",
+      "tags": [
+        "c:drinks",
+        "c:nutrients/fruits",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/20_hydration_drinks",
+        "toughasnails:thirst/3_thirst_drinks"
+      ]
+    },
+    "vineandbarrel:mead": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {
+          "animation": "drink",
+          "sound": "vineandbarrel:item.mug.drink",
+          "has_consume_particles": false,
+          "on_consume_effects": [
+            {
+              "effects": [
+                {
+                  "id": "minecraft:resistance",
+                  "duration": 900,
+                  "show_icon": true
+                }
+              ],
+              "type": "minecraft:apply_effects"
+            }
+          ]
+        },
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 0,
+          "saturation": 0.0,
+          "can_always_eat": true
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:mead",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.mead"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "vineandbarrel:mug"
+        }
+      },
+      "class": "jexxme.vineandbarrel.drink.DrinkItem",
+      "tags": [
+        "c:drinks",
+        "c:nutrients/sugars",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/10_hydration_drinks",
+        "toughasnails:thirst/2_thirst_drinks"
+      ]
+    },
+    "vineandbarrel:aged_mead": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {
+          "animation": "drink",
+          "sound": "vineandbarrel:item.mug.drink",
+          "has_consume_particles": false,
+          "on_consume_effects": [
+            {
+              "effects": [
+                {
+                  "id": "minecraft:resistance",
+                  "amplifier": 1,
+                  "duration": 1800,
+                  "show_icon": true
+                }
+              ],
+              "type": "minecraft:apply_effects"
+            }
+          ]
+        },
+        "minecraft:enchantment_glint_override": true,
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 0,
+          "saturation": 0.0,
+          "can_always_eat": true
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:aged_mead",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.aged_mead"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "vineandbarrel:mug"
+        }
+      },
+      "class": "jexxme.vineandbarrel.drink.DrinkItem",
+      "tags": [
+        "c:drinks",
+        "c:nutrients/sugars",
+        "farmersdelight:drinks",
+        "toughasnails:hydration/20_hydration_drinks",
+        "toughasnails:thirst/3_thirst_drinks"
       ]
     },
     "vineandbarrel:beer_battered_fish": {
@@ -1347,6 +1911,9 @@
       },
       "class": "jexxme.vineandbarrel.compat.farmersdelight.MealItem",
       "tags": [
+        "c:foods",
+        "c:nutrients/carbs",
+        "c:nutrients/proteins",
         "farmersdelight:meals"
       ]
     },
@@ -1378,7 +1945,204 @@
       },
       "class": "jexxme.vineandbarrel.compat.farmersdelight.MealItem",
       "tags": [
+        "c:foods",
+        "c:foods/soup",
+        "c:nutrients/proteins",
+        "c:nutrients/vegetables",
         "farmersdelight:meals"
+      ]
+    },
+    "vineandbarrel:cider_braised_pork": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {},
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 14,
+          "saturation": 21.0
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:cider_braised_pork",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.cider_braised_pork"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "minecraft:bowl"
+        }
+      },
+      "class": "jexxme.vineandbarrel.compat.farmersdelight.MealItem",
+      "tags": [
+        "c:foods",
+        "c:foods/soup",
+        "c:nutrients/fruits",
+        "c:nutrients/proteins",
+        "farmersdelight:meals"
+      ]
+    },
+    "vineandbarrel:barley_mutton_broth": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {},
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 14,
+          "saturation": 21.0
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:barley_mutton_broth",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.barley_mutton_broth"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "minecraft:bowl"
+        }
+      },
+      "class": "jexxme.vineandbarrel.compat.farmersdelight.MealItem",
+      "tags": [
+        "c:foods",
+        "c:foods/soup",
+        "c:nutrients/carbs",
+        "c:nutrients/proteins",
+        "c:nutrients/vegetables",
+        "farmersdelight:meals"
+      ]
+    },
+    "vineandbarrel:white_wine_risotto": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {},
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 14,
+          "saturation": 21.0
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:white_wine_risotto",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.white_wine_risotto"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "minecraft:bowl"
+        }
+      },
+      "class": "jexxme.vineandbarrel.compat.farmersdelight.MealItem",
+      "tags": [
+        "c:foods",
+        "c:nutrients/carbs",
+        "c:nutrients/vegetables",
+        "farmersdelight:meals"
+      ]
+    },
+    "vineandbarrel:coq_au_vin": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {},
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 14,
+          "saturation": 21.0
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:coq_au_vin",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.coq_au_vin"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 16,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {},
+        "minecraft:use_remainder": {
+          "id": "minecraft:bowl"
+        }
+      },
+      "class": "jexxme.vineandbarrel.compat.farmersdelight.MealItem",
+      "tags": [
+        "c:foods",
+        "c:foods/soup",
+        "c:nutrients/proteins",
+        "c:nutrients/vegetables",
+        "farmersdelight:meals"
+      ]
+    },
+    "vineandbarrel:beer_bread": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:consumable": {},
+        "minecraft:enchantments": {},
+        "minecraft:food": {
+          "nutrition": 6,
+          "saturation": 7.2000003
+        },
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:beer_bread",
+        "minecraft:item_name": {
+          "translate": "item.vineandbarrel.beer_bread"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 64,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.Item",
+      "tags": [
+        "c:foods",
+        "c:foods/bread",
+        "c:nutrients/carbs"
+      ]
+    },
+    "vineandbarrel:coq_au_vin_block": {
+      "components": {
+        "minecraft:attack_animation": {},
+        "minecraft:attribute_modifiers": [],
+        "minecraft:break_sound": "minecraft:entity.item.break",
+        "minecraft:enchantments": {},
+        "minecraft:interact_animation": {},
+        "minecraft:item_model": "vineandbarrel:coq_au_vin_block",
+        "minecraft:item_name": {
+          "translate": "block.vineandbarrel.coq_au_vin_block"
+        },
+        "minecraft:lore": [],
+        "minecraft:max_stack_size": 1,
+        "minecraft:rarity": "common",
+        "minecraft:repair_cost": 0,
+        "minecraft:tooltip_display": {},
+        "minecraft:use_effects": {}
+      },
+      "class": "net.minecraft.world.item.BlockItem",
+      "tags": [
+        "farmersdelight:feasts"
       ]
     }
   },
@@ -1394,10 +2158,17 @@
           "1",
           "2",
           "3"
+        ],
+        "support": [
+          "none",
+          "trellis_x",
+          "trellis_z",
+          "rope"
         ]
       },
       "defaultState": {
-        "age": "0"
+        "age": "0",
+        "support": "none"
       },
       "tags": [
         "minecraft:bee_growables",
@@ -1416,10 +2187,17 @@
           "1",
           "2",
           "3"
+        ],
+        "support": [
+          "none",
+          "trellis_x",
+          "trellis_z",
+          "rope"
         ]
       },
       "defaultState": {
-        "age": "0"
+        "age": "0",
+        "support": "none"
       },
       "tags": [
         "minecraft:bee_growables",
@@ -1471,6 +2249,164 @@
         "minecraft:bee_growables",
         "minecraft:climbable",
         "minecraft:fall_damage_resetting",
+        "sereneseasons:autumn_crops",
+        "sereneseasons:summer_crops"
+      ]
+    },
+    "vineandbarrel:white_grape_bush": {
+      "class": "jexxme.vineandbarrel.block.ClimbingBushBlock",
+      "hardness": 0.0,
+      "blastResistance": 0.0,
+      "item": "vineandbarrel:white_grapes",
+      "properties": {
+        "age": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "support": [
+          "none",
+          "trellis_x",
+          "trellis_z",
+          "rope"
+        ]
+      },
+      "defaultState": {
+        "age": "0",
+        "support": "none"
+      },
+      "tags": [
+        "minecraft:bee_growables",
+        "minecraft:washed_away_by_fluids",
+        "sereneseasons:autumn_crops"
+      ]
+    },
+    "vineandbarrel:white_grape_vine_on_rope": {
+      "class": "jexxme.vineandbarrel.block.VineOnRopeBlock",
+      "hardness": 0.0,
+      "blastResistance": 0.0,
+      "item": "minecraft:air",
+      "properties": {
+        "age": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ]
+      },
+      "defaultState": {
+        "age": "0"
+      },
+      "tags": [
+        "minecraft:bee_growables",
+        "minecraft:climbable",
+        "minecraft:fall_damage_resetting",
+        "sereneseasons:autumn_crops"
+      ]
+    },
+    "vineandbarrel:trellis": {
+      "class": "jexxme.vineandbarrel.block.TrellisBlock",
+      "hardness": 0.4,
+      "blastResistance": 0.4,
+      "item": "vineandbarrel:trellis",
+      "properties": {
+        "axis": [
+          "x",
+          "z"
+        ],
+        "waterlogged": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "axis": "x",
+        "waterlogged": "false"
+      },
+      "tags": [
+        "minecraft:mineable/axe",
+        "vineandbarrel:vine_supports"
+      ]
+    },
+    "vineandbarrel:grape_vine_on_trellis": {
+      "class": "jexxme.vineandbarrel.block.VineOnTrellisBlock",
+      "hardness": 0.4,
+      "blastResistance": 0.4,
+      "item": "minecraft:air",
+      "properties": {
+        "age": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "axis": [
+          "x",
+          "z"
+        ]
+      },
+      "defaultState": {
+        "age": "0",
+        "axis": "x"
+      },
+      "tags": [
+        "minecraft:bee_growables",
+        "minecraft:mineable/axe",
+        "sereneseasons:autumn_crops"
+      ]
+    },
+    "vineandbarrel:white_grape_vine_on_trellis": {
+      "class": "jexxme.vineandbarrel.block.VineOnTrellisBlock",
+      "hardness": 0.4,
+      "blastResistance": 0.4,
+      "item": "minecraft:air",
+      "properties": {
+        "age": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "axis": [
+          "x",
+          "z"
+        ]
+      },
+      "defaultState": {
+        "age": "0",
+        "axis": "x"
+      },
+      "tags": [
+        "minecraft:bee_growables",
+        "minecraft:mineable/axe",
+        "sereneseasons:autumn_crops"
+      ]
+    },
+    "vineandbarrel:hop_vine_on_trellis": {
+      "class": "jexxme.vineandbarrel.block.VineOnTrellisBlock",
+      "hardness": 0.4,
+      "blastResistance": 0.4,
+      "item": "minecraft:air",
+      "properties": {
+        "age": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "axis": [
+          "x",
+          "z"
+        ]
+      },
+      "defaultState": {
+        "age": "0",
+        "axis": "x"
+      },
+      "tags": [
+        "minecraft:bee_growables",
+        "minecraft:mineable/axe",
         "sereneseasons:autumn_crops",
         "sereneseasons:summer_crops"
       ]
@@ -1544,6 +2480,26 @@
         "vineandbarrel:wild_crops"
       ]
     },
+    "vineandbarrel:wild_white_grapes": {
+      "class": "jexxme.vineandbarrel.block.WildCropBlock",
+      "hardness": 0.0,
+      "blastResistance": 0.0,
+      "item": "vineandbarrel:wild_white_grapes",
+      "properties": {},
+      "defaultState": {},
+      "tags": [
+        "c:flowers",
+        "c:flowers/small",
+        "farmersdelight:wild_crops",
+        "minecraft:enderman_holdable",
+        "minecraft:flowers",
+        "minecraft:replaceable_by_mushrooms",
+        "minecraft:replaceable_by_trees",
+        "minecraft:small_flowers",
+        "minecraft:washed_away_by_fluids",
+        "vineandbarrel:wild_crops"
+      ]
+    },
     "vineandbarrel:wild_barley": {
       "class": "jexxme.vineandbarrel.block.WildCropBlock",
       "hardness": 0.0,
@@ -1574,6 +2530,39 @@
       "tags": [
         "c:storage_blocks",
         "c:storage_blocks/grape",
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/axe"
+      ]
+    },
+    "vineandbarrel:white_grape_crate": {
+      "class": "net.minecraft.world.level.block.Block",
+      "hardness": 2.0,
+      "blastResistance": 3.0,
+      "item": "vineandbarrel:white_grape_crate",
+      "properties": {},
+      "defaultState": {},
+      "tags": [
+        "c:storage_blocks",
+        "c:storage_blocks/grape",
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/axe"
       ]
     },
@@ -1587,6 +2576,16 @@
       "tags": [
         "c:storage_blocks",
         "c:storage_blocks/hops",
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/axe"
       ]
     },
@@ -1609,8 +2608,19 @@
         "c:storage_blocks",
         "c:storage_blocks/barley",
         "farmersdelight:campfire_signal_smoke",
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/hoe",
-        "vineandbarrel:campfire_signal_smoke"
+        "vineandbarrel:campfire_signal_smoke",
+        "vineandbarrel:hay_bales"
       ]
     },
     "vineandbarrel:brew_kettle": {
@@ -1654,6 +2664,16 @@
         "waterlogged": "false"
       },
       "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/pickaxe",
         "vineandbarrel:brew_kettles"
       ]
@@ -1699,6 +2719,16 @@
         "waterlogged": "false"
       },
       "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/pickaxe",
         "vineandbarrel:brew_kettles"
       ]
@@ -1744,6 +2774,16 @@
         "waterlogged": "false"
       },
       "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/pickaxe",
         "vineandbarrel:brew_kettles"
       ]
@@ -1789,6 +2829,16 @@
         "waterlogged": "false"
       },
       "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/pickaxe",
         "vineandbarrel:brew_kettles"
       ]
@@ -1834,6 +2884,16 @@
         "waterlogged": "false"
       },
       "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/pickaxe",
         "vineandbarrel:brew_kettles"
       ]
@@ -1879,6 +2939,16 @@
         "waterlogged": "false"
       },
       "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/pickaxe",
         "vineandbarrel:brew_kettles"
       ]
@@ -1924,6 +2994,16 @@
         "waterlogged": "false"
       },
       "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/pickaxe",
         "vineandbarrel:brew_kettles"
       ]
@@ -1969,6 +3049,16 @@
         "waterlogged": "false"
       },
       "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/pickaxe",
         "vineandbarrel:brew_kettles"
       ]
@@ -2028,6 +3118,16 @@
         "tapping": "false"
       },
       "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
         "minecraft:mineable/axe"
       ]
     },
@@ -2072,15 +3172,48 @@
           "glass_full",
           "mug_aged",
           "glass_aged"
+        ],
+        "waterlogged": [
+          "true",
+          "false"
         ]
       },
       "defaultState": {
         "spot_0": "none",
         "spot_1": "none",
         "spot_2": "none",
-        "spot_3": "none"
+        "spot_3": "none",
+        "waterlogged": "false"
       },
       "tags": []
+    },
+    "vineandbarrel:coq_au_vin_block": {
+      "class": "jexxme.vineandbarrel.compat.farmersdelight.FeastBlock",
+      "hardness": 0.8,
+      "blastResistance": 0.8,
+      "item": "vineandbarrel:coq_au_vin_block",
+      "properties": {
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "servings": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "defaultState": {
+        "facing": "north",
+        "servings": "4"
+      },
+      "tags": [
+        "farmersdelight:feasts"
+      ]
     }
   },
   "effects": {
@@ -2095,7 +3228,7 @@
       "color": 9312814,
       "aged": false,
       "effect": "minecraft:regeneration",
-      "duration": 3600,
+      "duration": 900,
       "amplifier": 0
     },
     "vineandbarrel:aged_red_wine": {
@@ -2103,7 +3236,23 @@
       "color": 8195874,
       "aged": true,
       "effect": "minecraft:regeneration",
-      "duration": 6000,
+      "duration": 1800,
+      "amplifier": 1
+    },
+    "vineandbarrel:white_wine": {
+      "vessel": "vineandbarrel:wine_glass",
+      "color": 15128712,
+      "aged": false,
+      "effect": "minecraft:night_vision",
+      "duration": 900,
+      "amplifier": 0
+    },
+    "vineandbarrel:aged_white_wine": {
+      "vessel": "vineandbarrel:wine_glass",
+      "color": 14929231,
+      "aged": true,
+      "effect": "minecraft:night_vision",
+      "duration": 1800,
       "amplifier": 1
     },
     "vineandbarrel:sweet_berry_wine": {
@@ -2111,7 +3260,7 @@
       "color": 15891090,
       "aged": false,
       "effect": "minecraft:speed",
-      "duration": 3600,
+      "duration": 900,
       "amplifier": 0
     },
     "vineandbarrel:aged_sweet_berry_wine": {
@@ -2119,7 +3268,23 @@
       "color": 16136800,
       "aged": true,
       "effect": "minecraft:speed",
-      "duration": 6000,
+      "duration": 1800,
+      "amplifier": 1
+    },
+    "vineandbarrel:melon_wine": {
+      "vessel": "vineandbarrel:wine_glass",
+      "color": 10538076,
+      "aged": false,
+      "effect": "minecraft:fire_resistance",
+      "duration": 900,
+      "amplifier": 0
+    },
+    "vineandbarrel:aged_melon_wine": {
+      "vessel": "vineandbarrel:wine_glass",
+      "color": 9159987,
+      "aged": true,
+      "effect": "minecraft:fire_resistance",
+      "duration": 1800,
       "amplifier": 1
     },
     "vineandbarrel:barley_ale": {
@@ -2127,7 +3292,7 @@
       "color": 13397020,
       "aged": false,
       "effect": "minecraft:haste",
-      "duration": 3600,
+      "duration": 900,
       "amplifier": 0
     },
     "vineandbarrel:aged_barley_ale": {
@@ -2135,7 +3300,7 @@
       "color": 11819278,
       "aged": true,
       "effect": "minecraft:haste",
-      "duration": 6000,
+      "duration": 1800,
       "amplifier": 1
     },
     "vineandbarrel:wheat_beer": {
@@ -2154,12 +3319,28 @@
       "duration": 4,
       "amplifier": 1
     },
+    "vineandbarrel:mead": {
+      "vessel": "vineandbarrel:mug",
+      "color": 15641106,
+      "aged": false,
+      "effect": "minecraft:resistance",
+      "duration": 900,
+      "amplifier": 0
+    },
+    "vineandbarrel:aged_mead": {
+      "vessel": "vineandbarrel:mug",
+      "color": 13865731,
+      "aged": true,
+      "effect": "minecraft:resistance",
+      "duration": 1800,
+      "amplifier": 1
+    },
     "vineandbarrel:hard_cider": {
       "vessel": "vineandbarrel:mug",
       "color": 13920330,
       "aged": false,
       "effect": "minecraft:absorption",
-      "duration": 3600,
+      "duration": 900,
       "amplifier": 0
     },
     "vineandbarrel:aged_hard_cider": {
@@ -2167,27 +3348,26 @@
       "color": 13322533,
       "aged": true,
       "effect": "minecraft:absorption",
-      "duration": 6000,
-      "amplifier": 1
-    },
-    "vineandbarrel:melon_wine": {
-      "vessel": "vineandbarrel:wine_glass",
-      "color": 10538076,
-      "aged": false,
-      "effect": "minecraft:fire_resistance",
-      "duration": 3600,
-      "amplifier": 0
-    },
-    "vineandbarrel:aged_melon_wine": {
-      "vessel": "vineandbarrel:wine_glass",
-      "color": 9159987,
-      "aged": true,
-      "effect": "minecraft:fire_resistance",
-      "duration": 6000,
+      "duration": 1800,
       "amplifier": 1
     }
   },
   "brewing": [
+    {
+      "id": "vineandbarrel:brewing/apple_juice",
+      "ingredients": [
+        "minecraft:apple",
+        "minecraft:apple",
+        "minecraft:apple",
+        "minecraft:apple",
+        "minecraft:sugar"
+      ],
+      "result": "vineandbarrel:apple_juice",
+      "bucket": "vineandbarrel:apple_juice_bucket",
+      "servings": 4,
+      "brewingTime": 200,
+      "experience": 0.35
+    },
     {
       "id": "vineandbarrel:brewing/barley_wort",
       "ingredients": [
@@ -2213,6 +3393,19 @@
       ],
       "result": "vineandbarrel:grape_juice",
       "bucket": "vineandbarrel:grape_juice_bucket",
+      "servings": 4,
+      "brewingTime": 200,
+      "experience": 0.35
+    },
+    {
+      "id": "vineandbarrel:brewing/honey_must",
+      "ingredients": [
+        "minecraft:honey_bottle",
+        "minecraft:honey_bottle",
+        "minecraft:honey_bottle"
+      ],
+      "result": "vineandbarrel:honey_must_bottle",
+      "bucket": "vineandbarrel:honey_must_bucket",
       "servings": 4,
       "brewingTime": 200,
       "experience": 0.35
@@ -2245,6 +3438,21 @@
       "servings": 4,
       "brewingTime": 200,
       "experience": 0.35
+    },
+    {
+      "id": "vineandbarrel:brewing/white_grape_juice",
+      "ingredients": [
+        "vineandbarrel:white_grapes",
+        "vineandbarrel:white_grapes",
+        "vineandbarrel:white_grapes",
+        "vineandbarrel:white_grapes",
+        "minecraft:sugar"
+      ],
+      "result": "vineandbarrel:white_grape_juice",
+      "bucket": "vineandbarrel:white_grape_juice_bucket",
+      "servings": 4,
+      "brewingTime": 200,
+      "experience": 0.35
     }
   ],
   "aging": [
@@ -2254,6 +3462,24 @@
       "bucket": "vineandbarrel:barley_wort_bucket",
       "young": "vineandbarrel:barley_ale",
       "aged": "vineandbarrel:aged_barley_ale",
+      "fermentingTime": 24000,
+      "agingTime": 72000
+    },
+    {
+      "id": "vineandbarrel:aging/hard_cider_from_apple_juice",
+      "base": "vineandbarrel:apple_juice",
+      "bucket": "vineandbarrel:apple_juice_bucket",
+      "young": "vineandbarrel:hard_cider",
+      "aged": "vineandbarrel:aged_hard_cider",
+      "fermentingTime": 24000,
+      "agingTime": 72000
+    },
+    {
+      "id": "vineandbarrel:aging/mead",
+      "base": "vineandbarrel:honey_must_bottle",
+      "bucket": "vineandbarrel:honey_must_bucket",
+      "young": "vineandbarrel:mead",
+      "aged": "vineandbarrel:aged_mead",
       "fermentingTime": 24000,
       "agingTime": 72000
     },
@@ -2283,26 +3509,44 @@
       "aged": "vineandbarrel:aged_wheat_beer",
       "fermentingTime": 24000,
       "agingTime": 72000
+    },
+    {
+      "id": "vineandbarrel:aging/white_wine",
+      "base": "vineandbarrel:white_grape_juice",
+      "bucket": "vineandbarrel:white_grape_juice_bucket",
+      "young": "vineandbarrel:white_wine",
+      "aged": "vineandbarrel:aged_white_wine",
+      "fermentingTime": 24000,
+      "agingTime": 72000
     }
   ],
   "loadedRecipes": [
     "vineandbarrel:aging/barley_ale",
+    "vineandbarrel:aging/hard_cider_from_apple_juice",
+    "vineandbarrel:aging/mead",
     "vineandbarrel:aging/red_wine",
     "vineandbarrel:aging/sweet_berry_wine",
     "vineandbarrel:aging/wheat_beer",
+    "vineandbarrel:aging/white_wine",
     "vineandbarrel:aging_barrel",
     "vineandbarrel:barley_bale",
     "vineandbarrel:barley_from_bale",
     "vineandbarrel:brew_kettle",
+    "vineandbarrel:brewing/apple_juice",
     "vineandbarrel:brewing/barley_wort",
     "vineandbarrel:brewing/grape_juice",
+    "vineandbarrel:brewing/honey_must",
     "vineandbarrel:brewing/sweet_berry_juice",
     "vineandbarrel:brewing/wheat_wort",
+    "vineandbarrel:brewing/white_grape_juice",
     "vineandbarrel:grape_crate",
     "vineandbarrel:hops_crate",
     "vineandbarrel:hops_from_crate",
     "vineandbarrel:mug",
     "vineandbarrel:red_grapes_from_crate",
+    "vineandbarrel:trellis",
+    "vineandbarrel:white_grape_crate",
+    "vineandbarrel:white_grapes_from_crate",
     "vineandbarrel:wine_glass"
   ],
   "rules": {
@@ -2312,14 +3556,17 @@
     "kettleMaxServings": 64,
     "kettleLiquidColors": {
       "vineandbarrel:grape_juice": 7614586,
+      "vineandbarrel:white_grape_juice": 12896352,
       "vineandbarrel:sweet_berry_juice": 13122140,
+      "vineandbarrel:apple_juice": 13665888,
       "vineandbarrel:barley_wort_bottle": 9721374,
-      "vineandbarrel:wheat_wort_bottle": 13608012
+      "vineandbarrel:wheat_wort_bottle": 13608012,
+      "vineandbarrel:honey_must_bottle": 15711028
     },
     "barrelCapacity": 8,
     "drinkStackSize": 16,
-    "youngBuffTicks": 3600,
-    "agedBuffTicks": 6000,
+    "youngBuffTicks": 900,
+    "agedBuffTicks": 1800,
     "youngBuffAmplifier": 0,
     "agedBuffAmplifier": 1,
     "dayTicks": 24000,
@@ -2328,16 +3575,27 @@
     "cheersBonusPercent": 20,
     "fdMealNourishment": {
       "vineandbarrel:beer_battered_fish": 3600,
-      "vineandbarrel:wine_braised_beef": 6000
+      "vineandbarrel:wine_braised_beef": 6000,
+      "vineandbarrel:cider_braised_pork": 6000,
+      "vineandbarrel:barley_mutton_broth": 6000,
+      "vineandbarrel:white_wine_risotto": 6000,
+      "vineandbarrel:coq_au_vin": 6000
     }
   },
   "crops": {
     "bushMaxAge": 3,
     "bushPickedAge": 1,
-    "ropeMaxHeight": 3
+    "bushHalfRipeAge": 2,
+    "climbMaxHeight": 3
   },
   "villages": {
-    "tavernWeight": 3,
+    "tavernWeights": {
+      "desert": 52,
+      "plains": 90,
+      "savanna": 190,
+      "snowy": 51,
+      "taiga": 75
+    },
     "farmCrops": {
       "desert": [
         {
@@ -2361,6 +3619,10 @@
         {
           "block": "vineandbarrel:hop_bush",
           "chance": 0.05
+        },
+        {
+          "block": "vineandbarrel:white_grape_bush",
+          "chance": 0.03
         }
       ],
       "savanna": [
@@ -2391,52 +3653,369 @@
         {
           "block": "vineandbarrel:hop_bush",
           "chance": 0.08
+        },
+        {
+          "block": "vineandbarrel:white_grape_bush",
+          "chance": 0.04
         }
       ]
     }
   },
   "tipsy": {
     "maxLevel": 5,
-    "hiccupLevel": 3,
-    "slurLevel": 4,
-    "stumbleLevel": 5,
-    "heavyLevel": 5,
-    "nauseaLevel": 3,
+    "hiccupLevel": 2,
+    "slurLevel": 3,
+    "blinkLevel": 3,
+    "longBlinkLevel": 4,
+    "nauseaLevel": 4,
     "nauseaPulseTicks": 300,
     "weaknessLevel": 4,
-    "wobbleStrength": 1.3,
     "noBuffLevel": 4,
+    "slownessLevel": 5,
+    "miningFatigueLevel": 5,
+    "stumbleLevel": 5,
+    "cutOffLevel": 4,
+    "hiccupGapTicks": "40-80",
+    "tripCooldownTicks": 600,
+    "tripTicks": 49,
+    "tripDownTicks": 24,
+    "tripMonsterFree": 10.0,
+    "sprintTripOneIn": 5,
+    "levels": [
+      {
+        "level": 1,
+        "roll": 1.7,
+        "vignette": 0.16,
+        "blinkEveryTicks": 0,
+        "longBlinkOneIn": 0,
+        "knockbackResistance": 0.1,
+        "fallDamageReduction": 0.15,
+        "hiccupBoutOneIn": 0,
+        "hiccupsPerBoutMin": 0,
+        "hiccupsPerBoutMax": 0,
+        "slurs": false,
+        "nauseaOneIn": 0,
+        "weakness": false,
+        "slowness": -1,
+        "miningFatigue": -1,
+        "buffs": true,
+        "rowdySwingOneIn": 0,
+        "cutOff": false,
+        "legsOneIn": 0,
+        "tripOneIn": 0,
+        "drift": false,
+        "fovBreathing": false,
+        "tooltipGood": [
+          "+10% Knockback Resistance",
+          "-15% Fall Damage"
+        ],
+        "tooltipBad": []
+      },
+      {
+        "level": 2,
+        "roll": 3.0,
+        "vignette": 0.32,
+        "blinkEveryTicks": 0,
+        "longBlinkOneIn": 0,
+        "knockbackResistance": 0.2,
+        "fallDamageReduction": 0.25,
+        "hiccupBoutOneIn": 900,
+        "hiccupsPerBoutMin": 2,
+        "hiccupsPerBoutMax": 3,
+        "slurs": false,
+        "nauseaOneIn": 0,
+        "weakness": false,
+        "slowness": -1,
+        "miningFatigue": -1,
+        "buffs": true,
+        "rowdySwingOneIn": 0,
+        "cutOff": false,
+        "legsOneIn": 0,
+        "tripOneIn": 0,
+        "drift": false,
+        "fovBreathing": false,
+        "tooltipGood": [
+          "+20% Knockback Resistance",
+          "-25% Fall Damage"
+        ],
+        "tooltipBad": []
+      },
+      {
+        "level": 3,
+        "roll": 4.5,
+        "vignette": 0.4,
+        "blinkEveryTicks": 480,
+        "longBlinkOneIn": 0,
+        "knockbackResistance": 0.3,
+        "fallDamageReduction": 0.35,
+        "hiccupBoutOneIn": 700,
+        "hiccupsPerBoutMin": 3,
+        "hiccupsPerBoutMax": 5,
+        "slurs": true,
+        "nauseaOneIn": 0,
+        "weakness": false,
+        "slowness": -1,
+        "miningFatigue": -1,
+        "buffs": true,
+        "rowdySwingOneIn": 0,
+        "cutOff": false,
+        "legsOneIn": 0,
+        "tripOneIn": 0,
+        "drift": false,
+        "fovBreathing": false,
+        "tooltipGood": [
+          "+30% Knockback Resistance",
+          "-35% Fall Damage"
+        ],
+        "tooltipBad": [
+          "Slurring"
+        ]
+      },
+      {
+        "level": 4,
+        "roll": 7.8,
+        "vignette": 0.64,
+        "blinkEveryTicks": 320,
+        "longBlinkOneIn": 3,
+        "knockbackResistance": 0.0,
+        "fallDamageReduction": 0.0,
+        "hiccupBoutOneIn": 600,
+        "hiccupsPerBoutMin": 3,
+        "hiccupsPerBoutMax": 5,
+        "slurs": true,
+        "nauseaOneIn": 500,
+        "weakness": true,
+        "slowness": -1,
+        "miningFatigue": -1,
+        "buffs": false,
+        "rowdySwingOneIn": 600,
+        "cutOff": true,
+        "legsOneIn": 0,
+        "tripOneIn": 0,
+        "drift": false,
+        "fovBreathing": false,
+        "tooltipGood": [],
+        "tooltipBad": [
+          "Slurring",
+          "Weakness",
+          "Rowdy",
+          "No buffs",
+          "Cut off"
+        ]
+      },
+      {
+        "level": 5,
+        "roll": 15.6,
+        "vignette": 0.8,
+        "blinkEveryTicks": 140,
+        "longBlinkOneIn": 2,
+        "knockbackResistance": 0.0,
+        "fallDamageReduction": 0.0,
+        "hiccupBoutOneIn": 500,
+        "hiccupsPerBoutMin": 3,
+        "hiccupsPerBoutMax": 5,
+        "slurs": true,
+        "nauseaOneIn": 200,
+        "weakness": true,
+        "slowness": 1,
+        "miningFatigue": 0,
+        "buffs": false,
+        "rowdySwingOneIn": 300,
+        "cutOff": true,
+        "legsOneIn": 60,
+        "tripOneIn": 12,
+        "drift": true,
+        "fovBreathing": true,
+        "tooltipGood": [],
+        "tooltipBad": [
+          "Slurring",
+          "Weakness",
+          "Rowdy",
+          "No buffs",
+          "Cut off",
+          "Sluggish",
+          "Stumbling",
+          "Tripping"
+        ]
+      }
+    ],
     "vignette": [
       0.0,
       0.16,
       0.32,
-      0.48,
+      0.4,
       0.64,
       0.8
     ],
-    "blinkLevel": 3,
-    "longBlinkLevel": 4,
     "blackout": {
-      "ticks": 120,
-      "shakyTicks": 600
+      "ticks": 170,
+      "shakyTicks": 300,
+      "wakeAt": 100,
+      "unseenBonus": 3,
+      "pumpkinOneIn": 6,
+      "hungerLost": 6,
+      "ranges": {
+        "home": 128,
+        "openMin": 20,
+        "openMax": 60,
+        "animal": 64,
+        "hay": 40,
+        "tavern": 96,
+        "villager": 64,
+        "villagerNearBed": 16,
+        "roof": 32,
+        "roofMinHeight": 4,
+        "roofMaxHeight": 8,
+        "boat": 48,
+        "monsterFree": 8
+      },
+      "endings": [
+        {
+          "id": "home",
+          "weight": 30,
+          "pose": "bed",
+          "openSky": false,
+          "collectable": true,
+          "lines": 4,
+          "souvenirs": [
+            "minecraft:cornflower",
+            "minecraft:bone",
+            "minecraft:string",
+            "minecraft:sweet_berries"
+          ]
+        },
+        {
+          "id": "in_the_open",
+          "weight": 20,
+          "pose": "ground",
+          "openSky": true,
+          "collectable": true,
+          "lines": 4,
+          "souvenirs": [
+            "minecraft:stick",
+            "minecraft:dandelion",
+            "minecraft:poppy",
+            "minecraft:brown_mushroom"
+          ]
+        },
+        {
+          "id": "farmyard",
+          "weight": 20,
+          "pose": "ground",
+          "openSky": true,
+          "collectable": true,
+          "lines": 4,
+          "souvenirs": [
+            "minecraft:feather",
+            "minecraft:egg",
+            "minecraft:white_wool",
+            "minecraft:carrot",
+            "minecraft:lead"
+          ]
+        },
+        {
+          "id": "in_the_hay",
+          "weight": 15,
+          "pose": "ground",
+          "openSky": true,
+          "collectable": true,
+          "lines": 4,
+          "souvenirs": [
+            "minecraft:wheat",
+            "minecraft:wheat_seeds",
+            "vineandbarrel:barley_seeds"
+          ]
+        },
+        {
+          "id": "tavern",
+          "weight": 10,
+          "pose": "ground",
+          "openSky": false,
+          "collectable": true,
+          "lines": 4,
+          "souvenirs": [
+            "vineandbarrel:mug",
+            "vineandbarrel:wine_glass"
+          ]
+        },
+        {
+          "id": "someone_elses_bed",
+          "weight": 10,
+          "pose": "bed",
+          "openSky": false,
+          "collectable": true,
+          "lines": 4,
+          "souvenirs": [
+            "minecraft:bread",
+            "minecraft:potato",
+            "minecraft:flower_pot"
+          ]
+        },
+        {
+          "id": "on_the_roof",
+          "weight": 8,
+          "pose": "ground",
+          "openSky": true,
+          "collectable": true,
+          "lines": 4,
+          "souvenirs": [
+            "minecraft:feather",
+            "minecraft:stick",
+            "minecraft:vine"
+          ]
+        },
+        {
+          "id": "in_a_boat",
+          "weight": 8,
+          "pose": "seat",
+          "openSky": true,
+          "collectable": true,
+          "lines": 4,
+          "souvenirs": [
+            "minecraft:cod",
+            "minecraft:kelp",
+            "minecraft:lily_pad"
+          ]
+        },
+        {
+          "id": "right_here",
+          "weight": 0,
+          "pose": "ground",
+          "openSky": false,
+          "collectable": false,
+          "lines": 4,
+          "souvenirs": [
+            "minecraft:cornflower",
+            "minecraft:bone",
+            "minecraft:string",
+            "minecraft:sweet_berries",
+            "minecraft:stick",
+            "minecraft:dandelion",
+            "minecraft:poppy",
+            "minecraft:brown_mushroom",
+            "minecraft:feather",
+            "minecraft:egg",
+            "minecraft:white_wool",
+            "minecraft:carrot",
+            "minecraft:lead",
+            "minecraft:wheat",
+            "minecraft:wheat_seeds",
+            "vineandbarrel:barley_seeds",
+            "vineandbarrel:mug",
+            "vineandbarrel:wine_glass",
+            "minecraft:bread",
+            "minecraft:potato",
+            "minecraft:flower_pot",
+            "minecraft:vine",
+            "minecraft:cod",
+            "minecraft:kelp",
+            "minecraft:lily_pad"
+          ]
+        }
+      ]
     },
-    "courage": [
-      {
-        "level": 1,
-        "knockbackResistance": 0.05,
-        "fallDamageReduction": 0.1
-      },
-      {
-        "level": 2,
-        "knockbackResistance": 0.1,
-        "fallDamageReduction": 0.15
-      },
-      {
-        "level": 3,
-        "knockbackResistance": 0.15,
-        "fallDamageReduction": 0.2
-      }
-    ],
+    "rowdyLevel": 4,
+    "rowdyPunchDamage": 1.0,
     "config": {
       "enabled": true,
       "maxLevel": 5,
@@ -2444,9 +4023,13 @@
       "slurredChat": true,
       "stumbling": true,
       "blackout": true,
+      "rowdy": true,
+      "rowdyPunches": true,
+      "cutOff": true,
       "visionEffects": true,
       "wobbleIntensity": 1.0,
-      "otherPlayersSway": true
+      "otherPlayersSway": true,
+      "heartbeatVolume": 1.0
     }
   },
   "tags": {
@@ -2528,7 +4111,8 @@
         "vineandbarrel:barley",
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_seeds",
-        "vineandbarrel:red_grapes"
+        "vineandbarrel:red_grapes",
+        "vineandbarrel:white_grapes"
       ],
       "c:armors": [
         "minecraft:chainmail_boots",
@@ -2830,7 +4414,8 @@
         "minecraft:wheat",
         "vineandbarrel:barley",
         "vineandbarrel:hops",
-        "vineandbarrel:red_grapes"
+        "vineandbarrel:red_grapes",
+        "vineandbarrel:white_grapes"
       ],
       "c:crops/barley": [
         "vineandbarrel:barley"
@@ -2848,7 +4433,8 @@
         "minecraft:cocoa_beans"
       ],
       "c:crops/grape": [
-        "vineandbarrel:red_grapes"
+        "vineandbarrel:red_grapes",
+        "vineandbarrel:white_grapes"
       ],
       "c:crops/hops": [
         "vineandbarrel:hops"
@@ -2874,7 +4460,11 @@
       "c:drink_containing/bottle": [
         "minecraft:honey_bottle",
         "minecraft:ominous_bottle",
-        "minecraft:potion"
+        "minecraft:potion",
+        "vineandbarrel:apple_juice",
+        "vineandbarrel:grape_juice",
+        "vineandbarrel:sweet_berry_juice",
+        "vineandbarrel:white_grape_juice"
       ],
       "c:drink_containing/bucket": [
         "minecraft:milk_bucket"
@@ -2883,12 +4473,37 @@
         "minecraft:honey_bottle",
         "minecraft:milk_bucket",
         "minecraft:ominous_bottle",
-        "minecraft:potion"
+        "minecraft:potion",
+        "vineandbarrel:aged_barley_ale",
+        "vineandbarrel:aged_hard_cider",
+        "vineandbarrel:aged_mead",
+        "vineandbarrel:aged_melon_wine",
+        "vineandbarrel:aged_red_wine",
+        "vineandbarrel:aged_sweet_berry_wine",
+        "vineandbarrel:aged_wheat_beer",
+        "vineandbarrel:aged_white_wine",
+        "vineandbarrel:apple_juice",
+        "vineandbarrel:barley_ale",
+        "vineandbarrel:grape_juice",
+        "vineandbarrel:hard_cider",
+        "vineandbarrel:mead",
+        "vineandbarrel:melon_wine",
+        "vineandbarrel:red_wine",
+        "vineandbarrel:sweet_berry_juice",
+        "vineandbarrel:sweet_berry_wine",
+        "vineandbarrel:wheat_beer",
+        "vineandbarrel:white_grape_juice",
+        "vineandbarrel:white_wine"
       ],
       "c:drinks/honey": [
         "minecraft:honey_bottle"
       ],
-      "c:drinks/juice": [],
+      "c:drinks/juice": [
+        "vineandbarrel:apple_juice",
+        "vineandbarrel:grape_juice",
+        "vineandbarrel:sweet_berry_juice",
+        "vineandbarrel:white_grape_juice"
+      ],
       "c:drinks/magic": [
         "minecraft:ominous_bottle",
         "minecraft:potion"
@@ -4371,14 +5986,24 @@
         "minecraft:spider_eye",
         "minecraft:suspicious_stew",
         "minecraft:sweet_berries",
-        "minecraft:tropical_fish"
+        "minecraft:tropical_fish",
+        "vineandbarrel:barley_mutton_broth",
+        "vineandbarrel:beer_battered_fish",
+        "vineandbarrel:beer_bread",
+        "vineandbarrel:cider_braised_pork",
+        "vineandbarrel:coq_au_vin",
+        "vineandbarrel:red_grapes",
+        "vineandbarrel:white_grapes",
+        "vineandbarrel:white_wine_risotto",
+        "vineandbarrel:wine_braised_beef"
       ],
       "c:foods/berry": [
         "minecraft:glow_berries",
         "minecraft:sweet_berries"
       ],
       "c:foods/bread": [
-        "minecraft:bread"
+        "minecraft:bread",
+        "vineandbarrel:beer_bread"
       ],
       "c:foods/candy": [],
       "c:foods/cooked_fish": [
@@ -4411,7 +6036,9 @@
         "minecraft:chorus_fruit",
         "minecraft:enchanted_golden_apple",
         "minecraft:golden_apple",
-        "minecraft:melon_slice"
+        "minecraft:melon_slice",
+        "vineandbarrel:red_grapes",
+        "vineandbarrel:white_grapes"
       ],
       "c:foods/golden": [
         "minecraft:enchanted_golden_apple",
@@ -4438,7 +6065,11 @@
         "minecraft:beetroot_soup",
         "minecraft:mushroom_stew",
         "minecraft:rabbit_stew",
-        "minecraft:suspicious_stew"
+        "minecraft:suspicious_stew",
+        "vineandbarrel:barley_mutton_broth",
+        "vineandbarrel:cider_braised_pork",
+        "vineandbarrel:coq_au_vin",
+        "vineandbarrel:wine_braised_beef"
       ],
       "c:foods/vegetable": [
         "minecraft:beetroot",
@@ -4666,6 +6297,53 @@
       ],
       "c:nuggets/iron": [
         "minecraft:iron_nugget"
+      ],
+      "c:nutrients/carbs": [
+        "vineandbarrel:aged_barley_ale",
+        "vineandbarrel:aged_wheat_beer",
+        "vineandbarrel:barley",
+        "vineandbarrel:barley_ale",
+        "vineandbarrel:barley_mutton_broth",
+        "vineandbarrel:beer_battered_fish",
+        "vineandbarrel:beer_bread",
+        "vineandbarrel:wheat_beer",
+        "vineandbarrel:white_wine_risotto"
+      ],
+      "c:nutrients/fruits": [
+        "vineandbarrel:aged_hard_cider",
+        "vineandbarrel:aged_melon_wine",
+        "vineandbarrel:aged_red_wine",
+        "vineandbarrel:aged_sweet_berry_wine",
+        "vineandbarrel:aged_white_wine",
+        "vineandbarrel:apple_juice",
+        "vineandbarrel:cider_braised_pork",
+        "vineandbarrel:grape_juice",
+        "vineandbarrel:hard_cider",
+        "vineandbarrel:melon_wine",
+        "vineandbarrel:red_grapes",
+        "vineandbarrel:red_wine",
+        "vineandbarrel:sweet_berry_juice",
+        "vineandbarrel:sweet_berry_wine",
+        "vineandbarrel:white_grape_juice",
+        "vineandbarrel:white_grapes",
+        "vineandbarrel:white_wine"
+      ],
+      "c:nutrients/proteins": [
+        "vineandbarrel:barley_mutton_broth",
+        "vineandbarrel:beer_battered_fish",
+        "vineandbarrel:cider_braised_pork",
+        "vineandbarrel:coq_au_vin",
+        "vineandbarrel:wine_braised_beef"
+      ],
+      "c:nutrients/sugars": [
+        "vineandbarrel:aged_mead",
+        "vineandbarrel:mead"
+      ],
+      "c:nutrients/vegetables": [
+        "vineandbarrel:barley_mutton_broth",
+        "vineandbarrel:coq_au_vin",
+        "vineandbarrel:white_wine_risotto",
+        "vineandbarrel:wine_braised_beef"
       ],
       "c:obsidians": [
         "minecraft:crying_obsidian",
@@ -4998,7 +6676,8 @@
         "minecraft:slime_block",
         "vineandbarrel:barley_bale",
         "vineandbarrel:grape_crate",
-        "vineandbarrel:hops_crate"
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:white_grape_crate"
       ],
       "c:storage_blocks/barley": [
         "vineandbarrel:barley_bale"
@@ -5025,7 +6704,8 @@
         "minecraft:gold_block"
       ],
       "c:storage_blocks/grape": [
-        "vineandbarrel:grape_crate"
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:white_grape_crate"
       ],
       "c:storage_blocks/hops": [
         "vineandbarrel:hops_crate"
@@ -5230,27 +6910,41 @@
       "farmersdelight:drinks": [
         "vineandbarrel:aged_barley_ale",
         "vineandbarrel:aged_hard_cider",
+        "vineandbarrel:aged_mead",
         "vineandbarrel:aged_melon_wine",
         "vineandbarrel:aged_red_wine",
         "vineandbarrel:aged_sweet_berry_wine",
         "vineandbarrel:aged_wheat_beer",
+        "vineandbarrel:aged_white_wine",
+        "vineandbarrel:apple_juice",
         "vineandbarrel:barley_ale",
         "vineandbarrel:grape_juice",
         "vineandbarrel:hard_cider",
+        "vineandbarrel:mead",
         "vineandbarrel:melon_wine",
         "vineandbarrel:red_wine",
         "vineandbarrel:sweet_berry_juice",
         "vineandbarrel:sweet_berry_wine",
-        "vineandbarrel:wheat_beer"
+        "vineandbarrel:wheat_beer",
+        "vineandbarrel:white_grape_juice",
+        "vineandbarrel:white_wine"
+      ],
+      "farmersdelight:feasts": [
+        "vineandbarrel:coq_au_vin_block"
       ],
       "farmersdelight:meals": [
+        "vineandbarrel:barley_mutton_broth",
         "vineandbarrel:beer_battered_fish",
+        "vineandbarrel:cider_braised_pork",
+        "vineandbarrel:coq_au_vin",
+        "vineandbarrel:white_wine_risotto",
         "vineandbarrel:wine_braised_beef"
       ],
       "farmersdelight:wild_crops": [
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "minecraft:acacia_logs": [
         "minecraft:acacia_log",
@@ -6606,7 +8300,8 @@
       "minecraft:fox_food": [
         "minecraft:glow_berries",
         "minecraft:sweet_berries",
-        "vineandbarrel:red_grapes"
+        "vineandbarrel:red_grapes",
+        "vineandbarrel:white_grapes"
       ],
       "minecraft:freeze_immune_wearables": [
         "minecraft:leather_boots",
@@ -8424,6 +10119,7 @@
         "minecraft:torchflower_seeds",
         "minecraft:wheat",
         "minecraft:wheat_seeds",
+        "vineandbarrel:barley",
         "vineandbarrel:barley_seeds"
       ],
       "minecraft:villager_plantable_seeds": [
@@ -8745,7 +10441,8 @@
       ],
       "sereneseasons:autumn_crops": [
         "vineandbarrel:hops",
-        "vineandbarrel:red_grapes"
+        "vineandbarrel:red_grapes",
+        "vineandbarrel:white_grapes"
       ],
       "sereneseasons:spring_crops": [
         "vineandbarrel:barley_seeds"
@@ -8753,6 +10450,58 @@
       "sereneseasons:summer_crops": [
         "vineandbarrel:barley_seeds",
         "vineandbarrel:hops"
+      ],
+      "toughasnails:hydration/10_hydration_drinks": [
+        "vineandbarrel:barley_ale",
+        "vineandbarrel:hard_cider",
+        "vineandbarrel:mead",
+        "vineandbarrel:melon_wine",
+        "vineandbarrel:red_wine",
+        "vineandbarrel:sweet_berry_wine",
+        "vineandbarrel:wheat_beer",
+        "vineandbarrel:white_wine"
+      ],
+      "toughasnails:hydration/20_hydration_drinks": [
+        "vineandbarrel:aged_barley_ale",
+        "vineandbarrel:aged_hard_cider",
+        "vineandbarrel:aged_mead",
+        "vineandbarrel:aged_melon_wine",
+        "vineandbarrel:aged_red_wine",
+        "vineandbarrel:aged_sweet_berry_wine",
+        "vineandbarrel:aged_wheat_beer",
+        "vineandbarrel:aged_white_wine"
+      ],
+      "toughasnails:hydration/50_hydration_drinks": [
+        "vineandbarrel:apple_juice",
+        "vineandbarrel:grape_juice",
+        "vineandbarrel:sweet_berry_juice",
+        "vineandbarrel:white_grape_juice"
+      ],
+      "toughasnails:thirst/2_thirst_drinks": [
+        "vineandbarrel:barley_ale",
+        "vineandbarrel:hard_cider",
+        "vineandbarrel:mead",
+        "vineandbarrel:melon_wine",
+        "vineandbarrel:red_wine",
+        "vineandbarrel:sweet_berry_wine",
+        "vineandbarrel:wheat_beer",
+        "vineandbarrel:white_wine"
+      ],
+      "toughasnails:thirst/3_thirst_drinks": [
+        "vineandbarrel:aged_barley_ale",
+        "vineandbarrel:aged_hard_cider",
+        "vineandbarrel:aged_mead",
+        "vineandbarrel:aged_melon_wine",
+        "vineandbarrel:aged_red_wine",
+        "vineandbarrel:aged_sweet_berry_wine",
+        "vineandbarrel:aged_wheat_beer",
+        "vineandbarrel:aged_white_wine"
+      ],
+      "toughasnails:thirst/7_thirst_drinks": [
+        "vineandbarrel:apple_juice",
+        "vineandbarrel:grape_juice",
+        "vineandbarrel:sweet_berry_juice",
+        "vineandbarrel:white_grape_juice"
       ],
       "vineandbarrel:drink_vessels": [
         "vineandbarrel:mug",
@@ -8764,12 +10513,18 @@
       ],
       "vineandbarrel:sobering_drinks": [
         "minecraft:potion",
-        "vineandbarrel:grape_juice"
+        "vineandbarrel:apple_juice",
+        "vineandbarrel:grape_juice",
+        "vineandbarrel:sweet_berry_juice",
+        "vineandbarrel:white_grape_juice"
       ],
+      "vineandbarrel:straw": [],
+      "vineandbarrel:straw_harvesters": [],
       "vineandbarrel:wild_crops": [
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ]
     },
     "block": {
@@ -9878,7 +11633,8 @@
         "minecraft:wither_rose",
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "c:flowers/small": [
         "minecraft:allium",
@@ -9900,7 +11656,8 @@
         "minecraft:wither_rose",
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "c:flowers/tall": [
         "minecraft:lilac",
@@ -10314,7 +12071,8 @@
         "minecraft:slime_block",
         "vineandbarrel:barley_bale",
         "vineandbarrel:grape_crate",
-        "vineandbarrel:hops_crate"
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:white_grape_crate"
       ],
       "c:storage_blocks/barley": [
         "vineandbarrel:barley_bale"
@@ -10341,7 +12099,8 @@
         "minecraft:gold_block"
       ],
       "c:storage_blocks/grape": [
-        "vineandbarrel:grape_crate"
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:white_grape_crate"
       ],
       "c:storage_blocks/hops": [
         "vineandbarrel:hops_crate"
@@ -10426,10 +12185,14 @@
       "farmersdelight:campfire_signal_smoke": [
         "vineandbarrel:barley_bale"
       ],
+      "farmersdelight:feasts": [
+        "vineandbarrel:coq_au_vin_block"
+      ],
       "farmersdelight:wild_crops": [
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "minecraft:acacia_logs": [
         "minecraft:acacia_log",
@@ -10786,8 +12549,13 @@
         "vineandbarrel:barley",
         "vineandbarrel:grape_bush",
         "vineandbarrel:grape_vine_on_rope",
+        "vineandbarrel:grape_vine_on_trellis",
         "vineandbarrel:hop_bush",
-        "vineandbarrel:hop_vine_on_rope"
+        "vineandbarrel:hop_vine_on_rope",
+        "vineandbarrel:hop_vine_on_trellis",
+        "vineandbarrel:white_grape_bush",
+        "vineandbarrel:white_grape_vine_on_rope",
+        "vineandbarrel:white_grape_vine_on_trellis"
       ],
       "minecraft:beehives": [
         "minecraft:bee_nest",
@@ -11823,7 +13591,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:blocks_fluid_flow": [
         "minecraft:acacia_door",
@@ -12851,7 +14632,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:blocks_lava_fire_spread": [
         "minecraft:acacia_door",
@@ -13853,7 +15647,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:blocks_motion": [
         "minecraft:acacia_door",
@@ -14855,7 +16662,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:blocks_motion_in_heightmap": [
         "minecraft:acacia_door",
@@ -15857,7 +17677,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:blocks_motion_in_heightmap_no_leaves": [
         "minecraft:acacia_door",
@@ -16845,7 +18678,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:blocks_motion_no_leaves": [
         "minecraft:acacia_door",
@@ -17833,7 +19679,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:blocks_wind_charge_explosions": [
         "minecraft:barrier",
@@ -19029,7 +20888,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:cave_vines": [
         "minecraft:cave_vines",
@@ -19078,7 +20950,8 @@
         "minecraft:weeping_vines",
         "minecraft:weeping_vines_plant",
         "vineandbarrel:grape_vine_on_rope",
-        "vineandbarrel:hop_vine_on_rope"
+        "vineandbarrel:hop_vine_on_rope",
+        "vineandbarrel:white_grape_vine_on_rope"
       ],
       "minecraft:coal_ores": [
         "minecraft:coal_ore",
@@ -19620,7 +21493,8 @@
         "minecraft:wither_rose",
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "minecraft:entities_can_teleport_to": [
         "minecraft:acacia_door",
@@ -20622,7 +22496,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:fall_damage_resetting": [
         "minecraft:cave_vines",
@@ -20637,7 +22524,8 @@
         "minecraft:weeping_vines",
         "minecraft:weeping_vines_plant",
         "vineandbarrel:grape_vine_on_rope",
-        "vineandbarrel:hop_vine_on_rope"
+        "vineandbarrel:hop_vine_on_rope",
+        "vineandbarrel:white_grape_vine_on_rope"
       ],
       "minecraft:features_cannot_replace": [
         "minecraft:bedrock",
@@ -20759,7 +22647,8 @@
         "minecraft:wither_rose",
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "minecraft:forest_rock_can_place_on": [
         "minecraft:andesite",
@@ -21935,7 +23824,20 @@
         "minecraft:yellow_wall_banner",
         "minecraft:yellow_wool",
         "minecraft:yellow_wool_slab",
-        "minecraft:yellow_wool_stairs"
+        "minecraft:yellow_wool_stairs",
+        "vineandbarrel:aging_barrel",
+        "vineandbarrel:barley_bale",
+        "vineandbarrel:brew_kettle",
+        "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_crate",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:white_grape_crate"
       ],
       "minecraft:ice_spike_replaceable": [
         "minecraft:coarse_dirt",
@@ -22864,7 +24766,12 @@
         "minecraft:yellow_wall_banner",
         "vineandbarrel:aging_barrel",
         "vineandbarrel:grape_crate",
-        "vineandbarrel:hops_crate"
+        "vineandbarrel:grape_vine_on_trellis",
+        "vineandbarrel:hop_vine_on_trellis",
+        "vineandbarrel:hops_crate",
+        "vineandbarrel:trellis",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_vine_on_trellis"
       ],
       "minecraft:mineable/hoe": [
         "minecraft:acacia_leaves",
@@ -24027,7 +25934,8 @@
         "minecraft:yellow_poplar_leaves",
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "minecraft:replaceable_by_trees": [
         "minecraft:acacia_leaves",
@@ -24089,7 +25997,8 @@
         "minecraft:yellow_poplar_leaves",
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "minecraft:required_for_poplar_leaf_ambience": [
         "minecraft:acacia_log",
@@ -24492,7 +26401,8 @@
         "minecraft:wither_rose",
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "minecraft:smelts_to_glass": [
         "minecraft:red_sand",
@@ -25666,9 +27576,11 @@
         "vineandbarrel:barley",
         "vineandbarrel:grape_bush",
         "vineandbarrel:hop_bush",
+        "vineandbarrel:white_grape_bush",
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ],
       "minecraft:wither_immune": [
         "minecraft:barrier",
@@ -25904,8 +27816,13 @@
       "sereneseasons:autumn_crops": [
         "vineandbarrel:grape_bush",
         "vineandbarrel:grape_vine_on_rope",
+        "vineandbarrel:grape_vine_on_trellis",
         "vineandbarrel:hop_bush",
-        "vineandbarrel:hop_vine_on_rope"
+        "vineandbarrel:hop_vine_on_rope",
+        "vineandbarrel:hop_vine_on_trellis",
+        "vineandbarrel:white_grape_bush",
+        "vineandbarrel:white_grape_vine_on_rope",
+        "vineandbarrel:white_grape_vine_on_trellis"
       ],
       "sereneseasons:spring_crops": [
         "vineandbarrel:barley"
@@ -25913,7 +27830,8 @@
       "sereneseasons:summer_crops": [
         "vineandbarrel:barley",
         "vineandbarrel:hop_bush",
-        "vineandbarrel:hop_vine_on_rope"
+        "vineandbarrel:hop_vine_on_rope",
+        "vineandbarrel:hop_vine_on_trellis"
       ],
       "vineandbarrel:brew_kettles": [
         "vineandbarrel:brew_kettle",
@@ -25926,6 +27844,10 @@
         "vineandbarrel:weathered_brew_kettle"
       ],
       "vineandbarrel:campfire_signal_smoke": [
+        "vineandbarrel:barley_bale"
+      ],
+      "vineandbarrel:hay_bales": [
+        "minecraft:hay_block",
         "vineandbarrel:barley_bale"
       ],
       "vineandbarrel:heat_conductors": [
@@ -25947,10 +27869,14 @@
         "minecraft:soul_campfire",
         "minecraft:soul_fire"
       ],
+      "vineandbarrel:vine_supports": [
+        "vineandbarrel:trellis"
+      ],
       "vineandbarrel:wild_crops": [
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
-        "vineandbarrel:wild_hops"
+        "vineandbarrel:wild_hops",
+        "vineandbarrel:wild_white_grapes"
       ]
     },
     "worldgen/biome": {
@@ -27450,6 +29376,27 @@
         "minecraft:old_growth_birch_forest",
         "minecraft:pale_garden",
         "minecraft:river"
+      ],
+      "vineandbarrel:wild_white_grapes_blacklist": [
+        "minecraft:deep_dark",
+        "minecraft:dripstone_caves",
+        "minecraft:lush_caves",
+        "minecraft:mushroom_fields",
+        "minecraft:sulfur_caves"
+      ],
+      "vineandbarrel:wild_white_grapes_extra": [],
+      "vineandbarrel:wild_white_grapes_whitelist": [
+        "minecraft:birch_forest",
+        "minecraft:cherry_grove",
+        "minecraft:dappled_forest",
+        "minecraft:dark_forest",
+        "minecraft:flower_forest",
+        "minecraft:forest",
+        "minecraft:grove",
+        "minecraft:meadow",
+        "minecraft:old_growth_birch_forest",
+        "minecraft:pale_garden",
+        "minecraft:snowy_slopes"
       ]
     }
   }

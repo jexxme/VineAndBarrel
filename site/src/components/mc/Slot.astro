@@ -1,6 +1,7 @@
 ---
 // A Minecraft inventory slot. Shows one item, or cycles through every item of a tag/ingredient (like JEI).
-import { nameOf, iconOf, pageOf, short, type Ingredient } from '../../lib/data';
+import { nameOf as nameIn, iconOf, pageOf, short, type Ingredient } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
 interface Props {
 	id?: string;
 	ingredient?: Ingredient | null;
@@ -11,21 +12,25 @@ interface Props {
 	bare?: boolean;
 	note?: string;
 }
+const locale = localeOf(Astro.currentLocale);
+const nameOf = (i: string) => nameIn(i, locale);
 const { id, ingredient, count = 1, chance, scale = 2, large = false, bare = false, note } = Astro.props;
 // A slot cycles through at most 12 of an ingredient's items (the tooltip names the whole tag) to keep pages light
 const all = ingredient ? [...new Set(ingredient.items)] : id ? [id] : [];
 const list = all.slice(0, 12);
+// Tag labels ("Any copper") come from the data; scripts/i18n.mjs lists them as UI strings
+const tr = t;
 const tagLine = ingredient?.tag
-	? (ingredient.label ?? `Any #${short(ingredient.tag)}`)
+	? (ingredient.label ? tr(ingredient.label, locale) : t('Any #{tag}', locale, { tag: short(ingredient.tag) }))
 	: ingredient?.action
-		? `Any tool that can ${ingredient.action.replaceAll('_', ' ')}`
+		? t('Any tool that can {action}', locale, { action: ingredient.action.replaceAll('_', ' ') })
 		: ingredient && all.length > 1
-			? `Any of ${all.length} items`
+			? t('Any of {n} items', locale, { n: all.length })
 			: '';
 const first = list[0];
-const link = list.length === 1 && first ? pageOf(first) : null;
+const link = list.length === 1 && first ? pageOf(first, locale) : null;
 const Tag = link ? 'a' : 'div';
-const sub = [tagLine, chance !== undefined && chance < 1 ? `${+(chance * 100).toFixed(1)}% chance` : '', note ?? ''].filter(Boolean).join(' · ');
+const sub = [tagLine, chance !== undefined && chance < 1 ? t('{value}% chance', locale, { value: +(chance * 100).toFixed(1) }) : '', note ?? ''].filter(Boolean).join(' · ');
 // A valid 1x1 transparent GIF for cycling slots whose other items have no icon
 const blank = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 // Farmer's Delight's own items have no icon here (its textures aren't shown); the slot shows an "FD" mark instead
@@ -35,7 +40,7 @@ const noIcon = list.length === 1 && !iconOf(list[0]);
 	class:list={['mc-slot', { large, bare }]}
 	style={`--s:${scale}px`}
 	href={link ?? undefined}
-	tabindex={link ? undefined : list.length ? 0 : undefined}
+	tabindex={link ? undefined : list.length || ingredient?.label ? 0 : undefined}
 	data-tip-items={list.length ? list.map((i) => `${nameOf(i)}~${i}`).join('|') : ingredient?.label ? `${ingredient.label}~#${ingredient.tag}` : undefined}
 	data-tip-sub={sub || undefined}
 >

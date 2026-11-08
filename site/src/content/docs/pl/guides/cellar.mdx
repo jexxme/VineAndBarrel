@@ -1,0 +1,87 @@
+---
+title: Budowa piwnicy
+description: "Od jednej beczki do piwnicy: planowanie partii, warzelnia na lejach, regały i ściany z beczek, automatyczne nalewanie i stawianie kolejki."
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Shot from '../../../../components/mc/Shot.astro';
+import CellarPlanner from '../../../../components/brewing/CellarPlanner.astro';
+import { rules, recipe, days } from '../../../../lib/l10n/pl';
+
+export const wine = recipe('aging/red_wine');
+
+<Render name="scenes/barrel-cellar" float="right" size={230} alt="Dwa rzędy beczek do leżakowania, górny stoi na dolnym" />
+
+Jedna beczka to początek. Piwnica to rząd beczek, napełnianych z kotła, który działa sam, i napoje, które nalewasz bez
+zastanowienia. Ten poradnik buduje ją w takiej kolejności, w jakiej będzie ci potrzebna; każda część odsyła do strony ze wszystkimi szczegółami.
+
+## Zaplanuj partię
+
+Ile potrzebujesz? Wybierz napój i liczbę porcji, a dostaniesz całe zamówienie: co uprawiać, ile partii z kotła,
+ile wiader i butelek, ile beczek i jak długo czekać. Przyciski zmieniają liczbę o jedną beczkę.
+
+<CellarPlanner />
+
+## Warzelnia, która działa sama
+
+<Render name="scenes/kettle-on-hopper" float="right" size={192} alt="Kocioł warzelny stojący na leju nad ogniem" />
+
+[Kocioł warzelny](/brew-kettle/) współpracuje z lejami z każdej strony:
+
+- **Lej pod spodem robi dwie rzeczy.** Przekazuje ciepło ognia znajdującego się niżej w górę do kotła i wyciąga
+  napełnione butelki oraz wiadra. Czyli: ogień, lej, kocioł, jedno na drugim.
+- **Lej na górze podaje składniki** oraz puste butelki lub wiadra. Zostaw go tylko na składniki: wszystko,
+  czego przepis nie używa, nawet resztka z innego przepisu, zatrzymuje kocioł, dopóki tego nie wyjmiesz.
+- **Leje z boków podają** puste butelki lub wiadra.
+- Kocioł warzy dalej, dopóki wpadają składniki, do {rules.kettleMaxServings} porcji.
+
+<Aside type="tip" title="Odbierz swoje doświadczenie">
+Każda partia daje trochę PD, ale kocioł wypłaca je dopiero wtedy, gdy ktoś napełni butelkę lub wiadro ręcznie, albo gdy
+zostanie zniszczony. Napełnij jedno ręcznie od czasu do czasu.
+</Aside>
+
+## Regały i ściany
+
+<Shot src="cellar.jpg" caption="Piwnica wzdłuż ściany karczmy: beczki połączone w regał, drugi rząd ułożony na wierzchu." />
+
+- **Regały:** [Beczki do leżakowania](/aging-barrel/) postawione obok siebie na ziemi, zwrócone w tę samą stronę, łączą swoje kołyski w
+  jeden długi regał.
+- **Ściany:** beczka postawiona na innej opiera się na klinach zamiast na kołysce, więc możesz piętrzyć je w ścianę. Pierwsza
+  piętrowa beczka daje osiągnięcie *Pan piwnicy*.
+- **Nazwij je.** Zmień nazwę beczki na kowadle, a nazwa pojawi się w jej linii stanu, więc *Wino weselne* łatwo znaleźć.
+  Nazwa zostaje, gdy zniszczysz beczkę i postawisz ją ponownie.
+- **Odczytasz je jednym rzutem oka:** czop na górze mówi, jak daleko zaszła każda beczka (korek, bulgoczący korek fermentacyjny, czerwony wosk),
+  a wziernik z przodu, jak bardzo jest pełna, w kolorze napoju.
+- **Komparatory** odczytują porcje w beczce, od 1 przy jednej porcji do 15, gdy jest pełna.
+
+## Napełnianie i nalewanie maszynowo
+
+- **Lej na górze wlewa bazy.** Wlewa tylko to, co beczka właśnie przyjmie, więc niewłaściwa baza po prostu czeka w
+  leju.
+- **Leje z boków** podają puste kufle lub kieliszki; beczka napełnia je przy nalewaniu. Kufle na piwo, miód pitny i cydr, kieliszki na
+  wino: niewłaściwe utkną, dopóki nie zniszczysz beczki.
+- **Lej pod spodem** wyciąga nalane napoje oraz puste wiadra i butelki, które zostają po wlewaniu. Trzymaj tam jeden,
+  bo inaczej gotowe napoje zablokują następne.
+- **Dozowniki** skierowane na beczkę nalewają porcję do pustego kufla lub kieliszka albo wlewają wiadro lub butelkę bazy.
+
+## Gdzie to zbudować
+
+- **W Overworldzie.** Beczki chodzą według czasu gry, a przespana noc się liczy, ale w Netherze i Kresie
+  nie ma nocy do przespania.
+- **Z dala od creeperów.** Wybuch może zniszczyć beczkę razem z partią.
+- **Poza tym gdziekolwiek chcesz:** beczki leżakują dalej, gdy jesteś daleko lub offline, i nigdy się nie zapalają. Przegapisz
+  tylko cichy pstryk korka, gdy partia zmienia się w leżakowaną.
+- **Napełnij po dwie.** Fermentacja trwa {days(wine.fermentingTime)}, a leżakowanie kolejne {days(wine.agingTime)}, a każdy kieliszek
+  nalany po drodze to o jeden mniej do zleżakowania. Pij z jednej beczki, a drugą zostaw w spokoju.
+
+## Stawianie kolejki
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Kufle i kieliszki postawione na bloku" />
+
+- **Nakryj do stołu:** skradaj się i kliknij prawym przyciskiem górę bloku kuflem lub kieliszkiem, by go tam postawić, do czterech na blok.
+  Leżakowane napoje mienią się nawet na stole.
+- **Na zdrowie!** Skończ napój w tej samej chwili co przyjaciele w pobliżu, a bonus każdego z was trwa o
+  {rules.cheersBonusPercent}% dłużej. Zobacz [Napoje](/drinks/#na-zdrowie).
+- **Pilnuj poziomów.** Każdy napój dodaje poziom [Rauszyka](/tipsy/). Miej pod ręką <Item id="grape_juice" /> lub wodę:
+  każde zabiera jeden poziom.

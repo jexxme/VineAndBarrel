@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "vineandbarrel:block/white_grape_vine_on_rope_stage0"
+    },
+    "age=1": {
+      "model": "vineandbarrel:block/white_grape_vine_on_rope_stage1"
+    },
+    "age=2": {
+      "model": "vineandbarrel:block/white_grape_vine_on_rope_stage2"
+    },
+    "age=3": {
+      "model": "vineandbarrel:block/white_grape_vine_on_rope_stage3"
+    }
+  }
+}

@@ -1,0 +1,131 @@
+---
+title: Cultures
+description: Buissons de raisin rouge et blanc, buissons de houblon, treillis, orge, cultures sauvages et tout ce qui va autour, des abeilles au composteur.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../../lib/l10n/fr';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+// Qui mange quoi : les tags de nourriture de nos objets (animals.json), sous forme des animaux que ces tags nourrissent
+export const ANIMALS = { cow_food: 'les vaches', sheep_food: 'les moutons', goat_food: 'les chèvres', horse_food: 'les chevaux', llama_food: 'les lamas', chicken_food: 'les poules', parrot_food: 'les perroquets', fox_food: 'les renards' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const SEASON_PHRASE = { spring: 'au printemps', summer: 'en été', autumn: 'en automne', winter: 'en hiver' };
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)).map((s) => SEASON_PHRASE[s] ?? s));
+
+<Render name="scenes/garden" float="right" size={256} alt="Des buissons de raisin et de houblon derrière un champ d'orge" />
+
+Quatre de nos cultures nourrissent les boissons : les <Item id="red_grapes" plural /> pour le vin rouge, les <Item id="white_grapes" plural /> pour
+le vin blanc, le <Item id="hops" /> pour les deux bières, et l'<Item id="barley" /> pour la pale ale. Les autres ingrédients sont vanilla :
+les <Item id="sweet_berries" /> pour le vin de baies sucrées, le <Item id="wheat" /> pour la bière blanche, les <Item id="apple" plural /> pour le cidre brut
+et les <Item id="honey_bottle" plural /> pour l'hydromel.
+
+<Shot src="vineyard.jpg" caption="Un vignoble clôturé de buissons de raisin mûrs, avec des poteaux à lanterne en bout de rang." />
+
+## Buissons de raisin et de houblon
+
+Plante des <Item id="red_grapes" plural />, des <Item id="white_grapes" plural /> ou du <Item id="hops" /> sur de l'herbe, de la terre ou de la terre labourée,
+comme les baies sucrées. Le buisson passe par {c.bushMaxAge + 1} stades, au rythme du buisson de baies sucrées. Les raisins rouges et blancs
+poussent de la même façon ; seul le fruit mûr les distingue.
+
+<Stages prefix="grape_bush" title="Buisson de raisin rouge" labels={['planté', 'en croissance', 'mi-mûr', 'mûr']} />
+<Stages prefix="white_grape_bush" title="Buisson de raisin blanc" labels={['planté', 'en croissance', 'mi-mûr', 'mûr']} />
+<Stages prefix="hop_bush" title="Buisson de houblon" labels={['planté', 'en croissance', 'mi-mûr', 'mûr']} />
+
+- **Récolte** un buisson mûr d'un clic droit : il donne {h.grapes.count[0]} à {h.grapes.count[1]} raisins (ou
+  {h.hops.count[0]} à {h.hops.count[1]} de <Item id="hops" />) et revient à son deuxième stade, donc il continue de faire des fruits. Tu
+  n'as pas besoin de replanter.
+- **Pressé ?** Cueille-le mi-mûr, comme les baies sucrées : {h.grapes.halfRipe[0]} à {h.grapes.halfRipe[1]} à la place, et il revient
+  en arrière de la même façon.
+- **La poudre d'os** le fait avancer d'un stade.
+- Les buissons prennent feu aussi facilement que les buissons de baies sucrées, alors garde les feux de camp et la lave loin du vignoble.
+
+## Treillis
+
+<Render name="scenes/trellis" float="right" size={256} alt="Des vignes de raisin et de houblon sur des treillis, et un treillis nu" />
+
+Pose un <Item id="trellis" /> sur un buisson, et dès que le buisson est mûr il grimpe, jusqu'à {c.climbMaxHeight} blocs de haut,
+en donnant des fruits tout du long. Un treillis se tourne vers toi quand tu le poses et s'aligne sur celui du dessous, donc les rangs restent droits.
+
+- Chaque vigne pousse, fructifie et se cueille comme le buisson, mi-mûre aussi. La poudre d'os sur un buisson mûr lance la montée tout de suite.
+- Casser une vigne te donne son fruit et laisse le treillis debout.
+- Un treillis n'est pas une échelle : tout ce qui s'y trouve est à portée depuis le sol.
+
+<Recipe id="trellis" />
+
+<Aside title="Avec Farmer's Delight : les cordes marchent aussi">
+Une corde de Farmer's Delight au-dessus d'un buisson fonctionne comme un treillis, à la façon dont grimpent les tomates de FD. Voir [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Orge
+
+Sème des <Item id="barley_seeds" /> sur de la terre labourée. L'orge pousse exactement comme le blé, en {barleyStages} stades, et
+donne les mêmes récoltes : de l'<Item id="barley" /> quand elle est mûre, plus des graines en prime.
+
+<Stages prefix="barley" title="Orge" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', 'mûre']} />
+
+## Cultures sauvages
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="Des raisins rouges sauvages, des raisins blancs sauvages, du houblon sauvage et de l'orge sauvage dans l'herbe" />
+
+Tes premières graines viennent des plantes sauvages. Elles poussent en bouquets, selon le biome et la température, donc on en trouve aussi dans les
+biomes de mods étiquetés de la manière habituelle. Casse-en une pour récolter, ou utilise des cisailles pour emporter toute la plante chez toi en décoration.
+
+<WildCrops />
+
+Les fermiers et le marchand ambulant vendent aussi des graines, et les coffres de village en contiennent parfois. Voir [Villages et tavernes](/villages/).
+
+## La vie à la ferme
+
+- **Les abeilles** pollinisent les raisins, le houblon et l'orge et les aident à pousser, comme avec les cultures vanilla.
+- **Les animaux :** l'<Item id="barley" /> nourrit et fait se reproduire {list(eaters('vineandbarrel:barley').filter((a) => a !== 'les chevaux' && a !== 'les lamas'))} comme
+  le blé. Les chevaux et les lamas se soignent et grandissent avec comme avec le blé, et avec le <Item id="barley_bale" /> comme avec une botte de paille.
+  Les <Item id="barley_seeds" /> nourrissent {list(eaters('vineandbarrel:barley_seeds'))}, et tu peux faire se reproduire {list(eaters('vineandbarrel:red_grapes'))} avec des raisins.
+- **Les renards** adorent le raisin, rouge et blanc : ils les cueillent sur les buissons, comme ils pillent les buissons de baies sucrées. Les vignes
+  hautes sur un treillis ou une corde sont hors de leur portée, et ils arrêtent quand le vandalisme des mobs est désactivé.
+- **Les fermiers** plantent et récoltent l'orge dans leurs champs et compostent les graines en trop. Le raisin et le houblon, ils te les laissent.
+- **Composteur :** chaque culture se composte avec les probabilités vanilla.
+
+<table>
+	<thead><tr><th>Objet</th><th>Chance d'ajouter une couche</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="De l'orge sur une terre labourée irriguée, à côté du jardin de houblon, prête à être récoltée." />
+
+## Blocs de stockage
+
+<Render name="scenes/storage" float="right" size={256} alt="Caisse de raisins rouges, caisse de raisins blancs, caisse de houblon et ballot d'orge" />
+
+Range neuf exemplaires d'une culture dans une <Item id="grape_crate" />, une <Item id="white_grape_crate" />, une <Item id="hops_crate" /> ou un
+<Item id="barley_bale" />, et sors-les
+de nouveau dans la grille de fabrication. Le <Item id="barley_bale" /> est une botte de paille en tout point : il amortit une chute, un feu de camp posé dessus
+envoie sa fumée très haut, et les lamas et les chevaux le mangent.
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## Bon à savoir
+
+- **Cueille, ne casse pas.** Casser un jeune buisson ne donne rien, et la plante disparaît. Casser un buisson avec des fruits
+  les donne (plus avec Fortune), mais un clic droit les cueille et garde le buisson.
+- **Passe à travers.** Les buissons de raisin et de houblon ne piquent pas et ne ralentissent pas comme les buissons de baies sucrées.
+- **Lumière et eau :** un buisson ne pousse qu'avec une bonne lumière. L'eau emporte les buissons, et les pistons les font sauter.
+- **Les raisins se grignotent,** comme les baies sucrées.
+- **Plus de plantes sauvages :** la poudre d'os sur une culture sauvage en plante souvent une autre à côté, un moyen facile d'obtenir tes premières graines.
+  L'orge sauvage donne une orge et une graine.
+- **La terre labourée sous l'orge** ne redevient jamais de la terre, comme pour toute culture.
+- **Les vignes** ont aussi besoin de lumière : dans le noir, elles cassent, et le treillis ou la corde reste. La poudre d'os sur une plante arrivée
+  à maturité fait passer la pousse à la vigne du dessus. On peut grimper à une vigne sur corde comme à la corde.
+- **Les abeilles** ne font jamais grimper un buisson ; toi seul peux le déclencher.
+
+## Saisons
+
+Avec Serene Seasons installé, les cultures ont leurs saisons : les raisins, rouges et blancs, poussent {seasonsOf('vineandbarrel:red_grapes')}, le houblon {seasonsOf('vineandbarrel:hops')},
+et l'orge {seasonsOf('vineandbarrel:barley_seeds')}. Voir [Compatibilité](/compatibility/).

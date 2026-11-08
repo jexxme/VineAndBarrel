@@ -1,0 +1,87 @@
+---
+title: Einen Keller bauen
+description: "Vom einzelnen Fass zum Keller: einen Ansatz planen, eine Brauerei, die mit Trichtern läuft, Fassregale und -wände, automatisches Zapfen und eine Runde ausgeben."
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Shot from '../../../../components/mc/Shot.astro';
+import CellarPlanner from '../../../../components/brewing/CellarPlanner.astro';
+import { rules, recipe, days } from '../../../../lib/l10n/de';
+
+export const wine = recipe('aging/red_wine');
+
+<Render name="scenes/barrel-cellar" float="right" size={230} alt="Zwei Reihen Reifefässer, die obere ruht auf der unteren" />
+
+Ein Fass ist ein Anfang. Ein Keller ist eine Reihe davon, gefüllt aus einem Kessel, der von allein läuft, mit Getränken, die du
+ganz nebenbei zapfst. Dieser Guide baut ihn in der Reihenfolge auf, die du brauchst; jeder Teil verlinkt auf die Seite mit allen Einzelheiten.
+
+## Den Ansatz planen
+
+Wie viel brauchst du? Such ein Getränk und eine Anzahl Portionen aus, und du bekommst die ganze Bestellung: was du anbauen musst, wie viele Kesselansätze,
+wie viele Eimer und Flaschen, wie viele Fässer und wie lange du warten musst. Die Knöpfe schalten ein Fass nach dem anderen weiter.
+
+<CellarPlanner />
+
+## Eine Brauerei, die von allein läuft
+
+<Render name="scenes/kettle-on-hopper" float="right" size={192} alt="Ein Braukessel auf einem Trichter über einem Feuer" />
+
+Der [Braukessel](/brew-kettle/) arbeitet auf jeder Seite mit Trichtern zusammen:
+
+- **Darunter hat ein Trichter zwei Aufgaben.** Er leitet die Hitze des Feuers darunter an den Kessel weiter und zieht die
+  gefüllten Flaschen und Eimer heraus. Also: Feuer, Trichter, Kessel, übereinander.
+- **Darüber füttert ein Trichter die Zutaten** und leere Flaschen oder Eimer. Nimm ihn nur für Zutaten: Alles,
+  was das Rezept nicht braucht, auch ein Rest von einem anderen Rezept, hält den Kessel an, bis du es herausnimmst.
+- **Von den Seiten füttern Trichter** leere Flaschen oder Eimer.
+- Der Kessel braut weiter, solange Zutaten nachkommen, bis zu {rules.kettleMaxServings} Portionen.
+
+<Aside type="tip" title="Hol dir deine Erfahrung">
+Jeder Ansatz bringt ein bisschen Erfahrung, aber der Kessel zahlt sie nur aus, wenn jemand von Hand eine Flasche oder einen Eimer füllt oder wenn er
+abgebaut wird. Füll ab und zu eine von Hand.
+</Aside>
+
+## Regale und Wände
+
+<Shot src="cellar.jpg" caption="Ein Keller an der Taverne entlang: Fässer zu einem Regal verbunden, eine zweite Reihe obendrauf." />
+
+- **Regale:** [Reifefässer](/aging-barrel/), die nebeneinander auf dem Boden stehen und in dieselbe Richtung zeigen, verbinden ihre Gestelle zu
+  einem langen Regal.
+- **Wände:** Ein Fass auf einem anderen ruht auf Keilen statt auf einem Gestell, so kannst du sie zu einer Wand stapeln. Dein erstes
+  gestapeltes Fass bringt dir *Kellermeister*.
+- **Gib ihnen Namen.** Benenn ein Fass im Amboss um, und der Name steht in seiner Statuszeile, so ist *Hochzeitswein* leicht zu finden. Der
+  Name bleibt, wenn du das Fass abbaust und wieder aufstellst.
+- **Auf einen Blick lesen:** Der Spund oben zeigt, wie weit jedes Fass ist (Korken, blubberndes Gärröhrchen, rotes Wachs), und das
+  Schauglas vorn, wie voll es ist, in der Farbe des Getränks.
+- **Komparatoren** lesen die Portionen eines Fasses aus, von 1 bei einer Portion bis 15, wenn es voll ist.
+
+## Maschinell füllen und zapfen
+
+- **Ein Trichter oben gießt Ansätze ein.** Er gießt nur, was das Fass gerade annimmt, die falsche Grundlage wartet also einfach im
+  Trichter.
+- **Trichter an den Seiten** füttern leere Krüge oder Gläser; das Fass zapft sie voll. Krüge für Bier, Met und Cidre, Gläser für
+  Wein: Die falschen bleiben stecken, bis du das Fass abbaust.
+- **Ein Trichter unten** zieht die gezapften Getränke und die leeren Eimer und Flaschen heraus, die vom Eingießen übrig sind. Lass dort einen
+  hängen, sonst blockieren fertige Getränke die nächsten.
+- **Werfer**, die auf ein Fass zeigen, zapfen eine Portion mit einem leeren Krug oder Glas oder gießen einen Eimer oder eine Flasche Grundlage ein.
+
+## Wo du ihn baust
+
+- **In der Oberwelt.** Fässer laufen in Spielzeit, und das Verschlafen der Nacht zählt, aber im Nether und im Ende gibt es
+  keine Nacht zu überspringen.
+- **Weit weg von Creepern.** Eine Explosion kann ein Fass zerstören, samt Ansatz.
+- **Sonst überall:** Fässer reifen weiter, während du weit weg oder offline bist, und sie fangen nie Feuer. Du verpasst
+  nur das leise Korkenknallen, wenn ein Ansatz reift.
+- **Füll von allem zwei.** Es dauert {days(wine.fermentingTime)} zum Gären und {days(wine.agingTime)} länger zum Reifen, und jedes Glas,
+  das du dazwischen zapfst, reift nicht weiter. Trink aus einem Fass und lass das andere in Ruhe.
+
+## Eine Runde ausgeben
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Krüge und Gläser auf einen Block gestellt" />
+
+- **Den Tisch decken:** Schleich und klick die Oberseite eines Blocks mit einem Krug oder Glas rechts an, um es dort abzustellen, bis zu vier pro Block.
+  Gereifte Getränke schimmern auch auf dem Tisch.
+- **Prost!** Trink im selben Moment wie deine Freunde in der Nähe aus, und der Bonus von allen hält
+  {rules.cheersBonusPercent} % länger. Siehe [Getränke](/drinks/#prost).
+- **Achte auf die Stufen.** Jedes Getränk gibt dir eine Stufe [Schwips](/tipsy/). Halte etwas <Item id="grape_juice" /> oder Wasser bereit:
+  Jedes nimmt dir eine Stufe ab.

@@ -1,0 +1,95 @@
+{
+  "parent": "vineandbarrel:main/where_am_i",
+  "criteria": {
+    "farmyard": {
+      "conditions": {
+        "ending": "farmyard"
+      },
+      "trigger": "vineandbarrel:woke_up"
+    },
+    "home": {
+      "conditions": {
+        "ending": "home"
+      },
+      "trigger": "vineandbarrel:woke_up"
+    },
+    "in_a_boat": {
+      "conditions": {
+        "ending": "in_a_boat"
+      },
+      "trigger": "vineandbarrel:woke_up"
+    },
+    "in_the_hay": {
+      "conditions": {
+        "ending": "in_the_hay"
+      },
+      "trigger": "vineandbarrel:woke_up"
+    },
+    "in_the_open": {
+      "conditions": {
+        "ending": "in_the_open"
+      },
+      "trigger": "vineandbarrel:woke_up"
+    },
+    "on_the_roof": {
+      "conditions": {
+        "ending": "on_the_roof"
+      },
+      "trigger": "vineandbarrel:woke_up"
+    },
+    "someone_elses_bed": {
+      "conditions": {
+        "ending": "someone_elses_bed"
+      },
+      "trigger": "vineandbarrel:woke_up"
+    },
+    "tavern": {
+      "conditions": {
+        "ending": "tavern"
+      },
+      "trigger": "vineandbarrel:woke_up"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.vineandbarrel.lost_weekend.description"
+    },
+    "frame": "challenge",
+    "icon": {
+      "id": "minecraft:clock"
+    },
+    "title": {
+      "translate": "advancements.vineandbarrel.lost_weekend.title"
+    }
+  },
+  "requirements": [
+    [
+      "home"
+    ],
+    [
+      "in_the_open"
+    ],
+    [
+      "farmyard"
+    ],
+    [
+      "in_the_hay"
+    ],
+    [
+      "tavern"
+    ],
+    [
+      "someone_elses_bed"
+    ],
+    [
+      "on_the_roof"
+    ],
+    [
+      "in_a_boat"
+    ]
+  ],
+  "rewards": {
+    "experience": 100
+  },
+  "sends_telemetry_event": true
+}

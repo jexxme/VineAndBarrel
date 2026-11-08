@@ -1,0 +1,16 @@
+---
+title: Tüm tarifler
+description: Oyunda göründüğü gibi her Vine & Barrel tarifi; istasyona göre süzülebilir, sonuca ya da malzemeye göre aranabilir.
+tableOfContents: false
+---
+import RecipeBrowser from '../../../../components/reference/RecipeBrowser.astro';
+import { playableRecipes, byType } from '../../../../lib/l10n/tr';
+
+export const fd = playableRecipes.filter((r) => r.fdOnly).length;
+
+{playableRecipes.length} tarifin hepsi, oyunun gösterdiği gibi çizilmiş: {byType('vineandbarrel:brewing').length} tanesi
+[Kaynatma Kazanı](/brew-kettle/) için, {byType('vineandbarrel:aging').length} tanesi [Yıllandırma Fıçısı](/aging-barrel/) için, gerisi
+üretim masası için. Bunların {fd} tanesi [Farmer's Delight](/farmers-delight/) gerektirir. Bir sonucu ya da malzemeyi ara, ya da bir istasyon seç.
+Eşyanın adını görmek için bir yuvanın üstüne gel; eşyalar arasında dönen yuvalar hangisini koyarsan kabul eder.
+
+<RecipeBrowser />

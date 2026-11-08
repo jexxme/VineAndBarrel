@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "jexxme.vineandbarrel.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "BeeAccessor",
+    "BeeGrowCropGoalMixin",
+    "CampfireSignalSmokeMixin",
+    "CampfireUnderKettleMixin",
+    "HorseFoodMixin",
+    "SleepStatusMixin",
+    "ValidateNearbyPoiMixin"
+  ],
+  "client": [
+    "CameraMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}

@@ -1,0 +1,73 @@
+---
+title: Film Kopması
+description: "Bir kadeh fazla: film koptuğunda ne olur, uyanabileceğin her yer, her birinin ihtimali ve getirdiğin hatıralar."
+---
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
+import { rules, roman, seconds, gameText } from '../../../lib/l10n/tr';
+
+export const t = rules.tipsy;
+export const b = t.blackout;
+export const count = b.endings.filter((e) => e.collectable).length;
+
+<Aside type="caution" title="Spoiler">
+Bu sayfa bir gecenin bitebileceği her yolu anlatır. Kendin keşfetmek istiyorsan burada dur: [Çakırkeyif](/tipsy/#bir-kadeh-fazla)
+sayfası buna yalnızca ima eder.
+</Aside>
+
+Zaten Çakırkeyif {roman(t.maxLevel - 1)} seviyesindesin ve hâlâ içiyor musun? Bir tane daha ve **filmin kopar.** Zararsızdır: elindeki
+hiçbir şey kaybolmaz, güvenli olmayan bir yerde uyanmazsın, zaman geçmez ve başkası etkilenmez. Sunucu sahipleri bunu
+`blackout` seçeneğiyle kapatabilir ([Yapılandırma](/reference/config/) sayfasına bak).
+
+## Ne olur
+
+<Steps>
+
+1. **Yığılırsın.** Gözlerin kapanır ve yana devrilirsin. Etrafındaki herkes seni yatarken, kafanın çevresinde dönen
+   yıldızlarla görür.
+2. **Kara.** Birkaç saniye kımıldayamazsın ve Çakırkeyif seni rahat bırakır: sallanma, hıçkırık, dönme yok. Kimse sana
+   zarar da veremez; ne yaratık ne oyuncu, devrilmek de zarar vermez. Orada yatan herkese zarar verecek şeyler, mesela lav ya
+   da boşluk, yine de geçerlidir; yani nerede film koparttığın önemli, ama *uyandığın* yer her zaman güvenlidir.
+3. **Bir yerde uyanırsın.** Ekran hâlâ karaken oyun gecenin nerede bittiğini seçer (aşağıya bak) ve seni oraya koyar: yerde
+   yatarken, bir yatakta ya da teknede otururken. Gözlerin yavaşça açılır, sonra kalkarsın.
+4. **Ekranda bir satır** nasıl geçtiğini söyler, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* ya da başka bir sürü.
+
+</Steps>
+
+Hepsi yaklaşık {seconds(b.ticks)} sürer. Şöyle uyanırsın:
+
+- **yine Çakırkeyif I seviyesinde** ve içeceklerinin verdiği bonuslar olmadan,
+- **aç:** {b.hungerLost / 2} açlık kemiği eksik ve doygunluğun sıfır,
+- {seconds(b.shakyTicks)} boyunca **titrek:** biraz sersem ve yavaş,
+- cebinde **bir hatıra** ile, uyandığın yere uyan bir şey (cebin doluysa ayağının dibinde),
+- ve {b.pumpkinOneIn} seferde bir, miğferin yoksa **kafanda yontulmuş bir bal kabağı** ile.
+
+## Nerede uyanırsın
+
+Bir gecenin bitebileceği {count} yer var, bir de hiçbiri tutmazsa başvurulan bir yer. Her birinin kendi şansı var, ama
+yalnızca film koparttığın yerde mümkün olanlar çekilişe girer: yakında su yoksa tekne yok; köy yoksa meyhane yok.
+
+- **Yeniler önce:** henüz yaşamadığın bir son, yaşadığın bir sondan {b.unseenBonus} kat daha olası.
+- **Arka arkaya asla iki kez,** başka hiçbir şey mümkün değilse hariç.
+- **Her zaman güvenli:** sağlam zemin, ayakta durmaya yer, lav ya da su yok, yanında yakan ya da batan bir şey yok,
+  {b.ranges.monsterFree} blok içinde canavar yok, dünya sınırının içinde.
+- **Asla başkasının yapısının içinde değil:** açık havadaki sonlar için üstünün açık gökyüzü olması gerekir, cam ve yapraklar dahil.
+  İçerideki iki son yalnızca dünyanın herkes için kurduğu şeyleri kullanır: bir köy meyhanesi ve bir köy evindeki köylü yatağı, bir de kendi yatağın.
+- **Nether'da ve End'de** açık gökyüzü yok, bu yüzden çoğu gece düştüğün yerde biter.
+
+Aşağıdaki ihtimaller, her son mümkünken ilk film kopmanın içindir. Sonrasında kayarlar: henüz yaşamadığın sonlar daha
+olası olur ve az önce yaşadığın kenara çekilir.
+
+<BlackoutEndings />
+
+## Hepsini topla
+
+İlk film kopman *Ben Neredeyim?* kazandırır. {count} yerin hepsinde uyan (*Tam burada* sayılmaz) ve *Kayıp Hafta Sonu*
+görevini al. Oyun hangilerini yaşadığını, ölsen bile hatırlar.
+
+<Aside type="tip" title="Belli bir sonu mu arıyorsun?">
+Son içkiden önce sahneyi hazırla: *Ev* için yakında kendi yatağın, *Samanlıkta* için dışarıda bir saman ya da <Item id="barley_bale" /> yığını,
+*Teknede* için bir gölet, içerideki sonlar için meyhaneli bir köy. Zaten yaşadığın sonlar daha az olasıdır, yani nadir olanlar
+düşündüğünden çabuk çıkar.
+</Aside>

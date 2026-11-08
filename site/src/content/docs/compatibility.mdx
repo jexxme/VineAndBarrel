@@ -3,17 +3,37 @@ title: Compatibility
 description: Which mods Vine & Barrel works with and what each one adds.
 ---
 import Item from '../../components/mc/Item.astro';
-import { meta, worldgen, seasons, nameOf, list } from '../../lib/data';
+import { meta, worldgen, seasons, drinks, nameOf, list } from '../../lib/data';
+import compat from '../../data/gen/compat.json';
+import { optional } from '../../data/code/downloads';
 
 export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
 export const seasonRows = Object.entries(seasons);
+export const v = compat.versions;
+// Wheat beer feeds through Saturation: (level + 1) food and twice that in saturation per tick it lasts
+export const beer = drinks.filter((d) => d.effect.id === 'minecraft:saturation').map((d) => ({ ...d, food: (d.effect.amplifier + 1) * d.effect.duration }));
+export const young = beer.find((d) => d.stage === 'young');
+export const aged = beer.find((d) => d.stage === 'aged');
+// A row of the thirst table is all young drinks, all aged drinks, or a few named items
+export const stageOf = (id) => drinks.find((d) => d.id === id)?.stage;
+export const rowLabel = (items) => {
+	const all = (stage) => items.every((id) => stageOf(id) === stage) && items.length === drinks.filter((d) => d.stage === stage).length;
+	return all('young') ? 'Every young drink' : all('aged') ? 'Every aged drink' : null;
+};
+export const groups = { fruits: 'Fruits', carbs: 'Carbs', proteins: 'Proteins', vegetables: 'Vegetables', sugars: 'Sugars' };
 
-Vine & Barrel {meta.modVersion} runs on **Minecraft {meta.minecraft}** with **NeoForge {meta.neoforge}** or newer. It needs no
-other mods. Everything below is optional and switches on by itself when the other mod is installed.
+Vine & Barrel {meta.version} runs on **Minecraft {meta.minecraft}** with **NeoForge {meta.neoforge}** or newer, or with
+**Fabric Loader {meta.fabricLoader}** and **Fabric API {meta.fabricApi}** or newer. It needs no other mods.
+Everything below is optional and switches on by itself when the other mod is installed:
+
+- **NeoForge:** {optional.neoforge.join(', ')}.
+- **Fabric:** {optional.fabric.join(', ')}.
+
+Serene Seasons and Biomes O' Plenty work through tags.
 
 ## Farmer's Delight
 
-Stove heat, vines on ropes, rich soil, drinks from FD's bottles and two cooking pot meals. See [Farmer's Delight](/farmers-delight/).
+Stove heat, vines on ropes (as on a trellis), rich soil, drinks from FD's bottles, a handful of cooking pot meals, a feast and a bread. See [Farmer's Delight](/farmers-delight/).
 
 ## JEI
 
@@ -23,11 +43,64 @@ plus info pages for the barrel and for the wild crops. Built against JEI {meta.j
 ## Jade
 
 Look at a kettle or barrel to see what's inside: the brew or drink, the servings left, how far the brew has got, whether the
-kettle is heated, and what stage the barrel is at. Built against Jade {meta.jade}.
+kettle is heated, and what stage the barrel is at. Built against Jade {meta.jade.split('+')[0]}.
+
+## AppleSkin
+
+AppleSkin's food tooltip and hunger bar preview work for everything you can eat or drink. Juices and the meals show their
+own food. <Item id={young.id} /> feeds through its Saturation buff, so AppleSkin shows what that buff fills: **{young.food}**
+hunger and **{young.food * 2}** saturation, or **{aged.food}** and **{aged.food * 2}** for <Item id={aged.id} />. The other
+wines, beers, ciders and meads don't feed you, so they show no food. Built against AppleSkin {v.appleskin}.
+
+## Thirst
+
+With **Tough As Nails**, **Homeostatic** or **Thirst Was Taken 2**, the drinks quench thirst: juices a lot, wines, beers,
+ciders and mead a little, aged ones a bit more than young ones. In the mods that count food too, the braised meals, the broth and the coq au vin count
+like a stew and grapes, red or white, like sweet berries.
+
+<table>
+	<thead>
+		<tr><th></th><th>Tough As Nails<br />thirst, hydration</th><th>Homeostatic<br />water, saturation</th><th>Thirst Was Taken 2<br />thirst, quenched</th></tr>
+	</thead>
+	<tbody>
+		{compat.thirst.map((row) => (
+			<tr>
+				<td>{rowLabel(row.items) ?? row.items.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</td>
+				<td>{row.tan ? `${row.tan.thirst}, ${row.tan.hydration}%` : '–'}</td>
+				<td>{row.homeostatic.amount}, {row.homeostatic.saturation.toFixed(1)}</td>
+				<td>{row.twt ? `${row.twt.thirst}, ${row.twt.quenched}` : '–'}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+Tough As Nails only counts drinks. Tested with Tough As Nails {v.toughasnails}, Homeostatic {v.homeostatic} and Thirst Was
+Taken 2 {v.thirstwastaken2}.
+
+## Nutritional Balance
+
+NeoForge only. Each food and drink counts toward Nutritional Balance's food groups:
+
+<ul>
+	{Object.entries(compat.nutrients).map(([group, ids]) => (
+		<li><strong>{groups[group] ?? group}:</strong> {ids.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</li>
+	))}
+</ul>
+
+Wines, beers, ciders and mead have no food value of their own (wheat beer fills you through its Saturation buff, which these mods don't count), so only the grapes, juices and meals fill your groups. Raw barley counts as
+carbs, so anything another mod makes from it does too. Tested with Nutritional Balance {v.nutritionalbalance}.
+
+Every drink and food also carries the common tags both loaders share (drinks, juices, fruit, soups), so other mods that read those see them
+as what they are.
+
+## Spice of Life Onion
+
+Works as it is. The meals count toward your food variety like any food. Drinks have no food value of their own (wheat beer's
+Saturation buff doesn't count), so like Farmer's Delight's drinks they add no variety. Tested with Spice of Life Onion {v.solonion}.
 
 ## Biomes O' Plenty
 
-Wild crops grow in every biome tagged as a forest, plains, savanna or river (where the temperature suits them), so modded biomes with those tags get them automatically.
+Wild crops grow in every biome tagged as a forest, plains, savanna, river or mountain slope (where the temperature suits them), so modded biomes with those tags get them automatically.
 With Biomes O' Plenty they also grow in a few biomes that suit them:
 
 <ul>
@@ -39,7 +112,7 @@ With Biomes O' Plenty they also grow in a few biomes that suit them:
 With Serene Seasons, each crop grows in its own seasons:
 
 <ul>
-	{['vineandbarrel:red_grapes', 'vineandbarrel:hops', 'vineandbarrel:barley_seeds'].map((id) => (
+	{['vineandbarrel:red_grapes', 'vineandbarrel:white_grapes', 'vineandbarrel:hops', 'vineandbarrel:barley_seeds'].map((id) => (
 		<li><Item id={id} />: {list(seasonRows.filter(([, ids]) => ids.includes(id)).map(([s]) => s))}</li>
 	))}
 </ul>

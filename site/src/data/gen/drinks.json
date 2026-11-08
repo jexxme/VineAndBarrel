@@ -1,7 +1,7 @@
 [
 	{
 		"id": "vineandbarrel:barley_ale",
-		"name": "Barley Ale",
+		"name": "Pale Ale",
 		"stage": "young",
 		"base": "vineandbarrel:barley_wort_bottle",
 		"bucket": "vineandbarrel:barley_wort_bucket",
@@ -10,7 +10,7 @@
 		"effect": {
 			"id": "minecraft:haste",
 			"name": "Haste",
-			"duration": 3600,
+			"duration": 900,
 			"amplifier": 0
 		},
 		"fdOnly": false,
@@ -18,7 +18,7 @@
 	},
 	{
 		"id": "vineandbarrel:aged_barley_ale",
-		"name": "Aged Barley Ale",
+		"name": "Aged Pale Ale",
 		"stage": "aged",
 		"base": "vineandbarrel:barley_wort_bottle",
 		"bucket": "vineandbarrel:barley_wort_bucket",
@@ -27,7 +27,7 @@
 		"effect": {
 			"id": "minecraft:haste",
 			"name": "Haste",
-			"duration": 6000,
+			"duration": 1800,
 			"amplifier": 1
 		},
 		"fdOnly": false,
@@ -44,7 +44,7 @@
 		"effect": {
 			"id": "minecraft:absorption",
 			"name": "Absorption",
-			"duration": 3600,
+			"duration": 900,
 			"amplifier": 0
 		},
 		"fdOnly": true,
@@ -61,11 +61,79 @@
 		"effect": {
 			"id": "minecraft:absorption",
 			"name": "Absorption",
-			"duration": 6000,
+			"duration": 1800,
 			"amplifier": 1
 		},
 		"fdOnly": true,
 		"aging": "vineandbarrel:aging/hard_cider"
+	},
+	{
+		"id": "vineandbarrel:hard_cider",
+		"name": "Hard Cider",
+		"stage": "young",
+		"base": "vineandbarrel:apple_juice",
+		"bucket": "vineandbarrel:apple_juice_bucket",
+		"vessel": "vineandbarrel:mug",
+		"color": "#d4684a",
+		"effect": {
+			"id": "minecraft:absorption",
+			"name": "Absorption",
+			"duration": 900,
+			"amplifier": 0
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/hard_cider_from_apple_juice"
+	},
+	{
+		"id": "vineandbarrel:aged_hard_cider",
+		"name": "Aged Hard Cider",
+		"stage": "aged",
+		"base": "vineandbarrel:apple_juice",
+		"bucket": "vineandbarrel:apple_juice_bucket",
+		"vessel": "vineandbarrel:mug",
+		"color": "#cb4925",
+		"effect": {
+			"id": "minecraft:absorption",
+			"name": "Absorption",
+			"duration": 1800,
+			"amplifier": 1
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/hard_cider_from_apple_juice"
+	},
+	{
+		"id": "vineandbarrel:mead",
+		"name": "Mead",
+		"stage": "young",
+		"base": "vineandbarrel:honey_must_bottle",
+		"bucket": "vineandbarrel:honey_must_bucket",
+		"vessel": "vineandbarrel:mug",
+		"color": "#eeaa12",
+		"effect": {
+			"id": "minecraft:resistance",
+			"name": "Resistance",
+			"duration": 900,
+			"amplifier": 0
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/mead"
+	},
+	{
+		"id": "vineandbarrel:aged_mead",
+		"name": "Aged Mead",
+		"stage": "aged",
+		"base": "vineandbarrel:honey_must_bottle",
+		"bucket": "vineandbarrel:honey_must_bucket",
+		"vessel": "vineandbarrel:mug",
+		"color": "#d39303",
+		"effect": {
+			"id": "minecraft:resistance",
+			"name": "Resistance",
+			"duration": 1800,
+			"amplifier": 1
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/mead"
 	},
 	{
 		"id": "vineandbarrel:melon_wine",
@@ -78,7 +146,7 @@
 		"effect": {
 			"id": "minecraft:fire_resistance",
 			"name": "Fire Resistance",
-			"duration": 3600,
+			"duration": 900,
 			"amplifier": 0
 		},
 		"fdOnly": true,
@@ -95,7 +163,7 @@
 		"effect": {
 			"id": "minecraft:fire_resistance",
 			"name": "Fire Resistance",
-			"duration": 6000,
+			"duration": 1800,
 			"amplifier": 1
 		},
 		"fdOnly": true,
@@ -112,7 +180,7 @@
 		"effect": {
 			"id": "minecraft:regeneration",
 			"name": "Regeneration",
-			"duration": 3600,
+			"duration": 900,
 			"amplifier": 0
 		},
 		"fdOnly": false,
@@ -129,7 +197,7 @@
 		"effect": {
 			"id": "minecraft:regeneration",
 			"name": "Regeneration",
-			"duration": 6000,
+			"duration": 1800,
 			"amplifier": 1
 		},
 		"fdOnly": false,
@@ -146,7 +214,7 @@
 		"effect": {
 			"id": "minecraft:speed",
 			"name": "Speed",
-			"duration": 3600,
+			"duration": 900,
 			"amplifier": 0
 		},
 		"fdOnly": false,
@@ -163,7 +231,7 @@
 		"effect": {
 			"id": "minecraft:speed",
 			"name": "Speed",
-			"duration": 6000,
+			"duration": 1800,
 			"amplifier": 1
 		},
 		"fdOnly": false,
@@ -202,5 +270,39 @@
 		},
 		"fdOnly": false,
 		"aging": "vineandbarrel:aging/wheat_beer"
+	},
+	{
+		"id": "vineandbarrel:white_wine",
+		"name": "White Wine",
+		"stage": "young",
+		"base": "vineandbarrel:white_grape_juice",
+		"bucket": "vineandbarrel:white_grape_juice_bucket",
+		"vessel": "vineandbarrel:wine_glass",
+		"color": "#e6d888",
+		"effect": {
+			"id": "minecraft:night_vision",
+			"name": "Night Vision",
+			"duration": 900,
+			"amplifier": 0
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/white_wine"
+	},
+	{
+		"id": "vineandbarrel:aged_white_wine",
+		"name": "Aged White Wine",
+		"stage": "aged",
+		"base": "vineandbarrel:white_grape_juice",
+		"bucket": "vineandbarrel:white_grape_juice_bucket",
+		"vessel": "vineandbarrel:wine_glass",
+		"color": "#e3cd4f",
+		"effect": {
+			"id": "minecraft:night_vision",
+			"name": "Night Vision",
+			"duration": 1800,
+			"amplifier": 1
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/white_wine"
 	}
 ]

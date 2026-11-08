@@ -1,0 +1,617 @@
+// Vine & Barrel on Fabric: the common sources plus the Fabric glue (entry points, Fabric API events, transfer API,
+// data attachments, the config file). Minecraft 26.x is unobfuscated, so Loom needs no mappings and remaps nothing.
+plugins {
+    id 'vb-loader'
+    id 'net.fabricmc.fabric-loom'
+}
+
+sourceSets {
+    // The GameTest-only data (see neoforge/build.gradle), shared with NeoForge from common/src/gametest
+    gametest {
+        resources.srcDir project(':common').file('src/gametest/resources')
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+    }
+    // The client smoke test (src/smoketest): a dev-only helper mod that plays V&B in a hidden window. Never in the jar.
+    smoketest {
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+    }
+    // The other side of the cross-version smoke tests (src/bare): a dev-only mod WITHOUT Vine & Barrel, plain mixins only.
+    // bare runs without Fabric API too (a client that is vanilla on the wire); bareApi is the same mod with Fabric API (a
+    // Fabric server without Vine & Barrel). Neither has V&B, JEI, Jade or AppleSkin on its classpath. Never in the jar.
+    bare {
+        compileClasspath += sourceSets.main.compileClasspath
+    }
+    bareApi {
+        java.srcDirs = []
+        resources.srcDirs = []
+    }
+}
+def withoutVb = sourceSets.main.runtimeClasspath - sourceSets.main.output - configurations.localRuntime
+// Without Fabric API the project's Minecraft jar can't run (Loom injects Fabric API's interfaces and our class tweaker
+// into it), so the vanilla-on-the-wire client gets Loom's untouched one from the Gradle cache instead
+def plainMinecraft = new File(gradle.gradleUserHomeDir, "caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/${minecraft_version}/minecraft-merged-deobf-${minecraft_version}.jar")
+sourceSets.bare.runtimeClasspath = sourceSets.bare.output + files(plainMinecraft) + withoutVb.filter {
+    def path = it.path.replace('\\', '/')
+    !path.contains('net.fabricmc.fabric-api') && !path.contains('loom-cache/minecraftMaven/net/minecraft/')
+}
+sourceSets.bareApi.runtimeClasspath = sourceSets.bare.output + withoutVb
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+
+    // JEI and Jade: optional at runtime, compile-only APIs (the plugins are in common), both in every dev run
+    compileOnly "mezz.jei:jei-${jei_minecraft}-common-api:${jei_version}"
+    localRuntime "mezz.jei:jei-${jei_minecraft}-fabric:${jei_version}"
+    compileOnly "maven.modrinth:jade:${jade_fabric_version}"
+    localRuntime "maven.modrinth:jade:${jade_fabric_version}"
+    // Mod Menu: optional, only its API to offer our config screen (VBModMenu)
+    compileOnly "maven.modrinth:modmenu:${modmenu_version}"
+    smoketestCompileOnly "mezz.jei:jei-${jei_minecraft}-common-api:${jei_version}"
+
+    // AppleSkin: optional at runtime, set up like JEI and Jade (its Fabric hook is in compat/AppleSkinFabric)
+    compileOnly "squeek.appleskin:appleskin-fabric:${appleskin_version}:api"
+    localRuntime "squeek.appleskin:appleskin-fabric:${appleskin_version}"
+}
+
+def buildDir = project.layout.buildDirectory.get().asFile
+def smokePort = 25599
+
+// The smoke server's Tipsy decay speed (the default is 90): the joined client must show it, not its own file's value
+def SMOKE_SERVER_SETTING = 'tipsy.secondsPerLevel=97'
+
+loom {
+    accessWidenerPath = project(':common').file('src/main/resources/vineandbarrel.classtweaker')
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.gametest
+        }
+        "${mod_id}_smoke" {
+            sourceSet sourceSets.smoketest
+        }
+        "${mod_id}_bare" {
+            sourceSet sourceSets.bare
+        }
+    }
+
+    runs {
+        client {
+            client()
+            runDir 'run/client'
+            ideConfigGenerated true
+        }
+        server {
+            server()
+            runDir 'run/server'
+            ideConfigGenerated true
+        }
+        // Headless: a server that runs every GameTest of this mod and exits (Fabric API's GameTest runner).
+        // ./gradlew :fabric:runGameTest
+        gameTest {
+            server()
+            source sourceSets.gametest
+            runDir 'run/gametest'
+            property 'fabric-api.gametest'
+            property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest.xml" // for the parity checklist
+        }
+        // The same with Farmer's Delight Refabricated in run-fd/mods: ./gradlew :fabric:runGameTestFd
+        gameTestFd {
+            server()
+            source sourceSets.gametest
+            runDir 'run-fd'
+            property 'fabric-api.gametest'
+            property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest-fd.xml"
+            property 'vineandbarrel.expectFd', 'true'
+        }
+        // The compat GameTests with the Fabric builds of the thirst mods and Spice of Life Onion in run-compat/mods (see
+        // neoforge/build.gradle; Nutritional Balance has no Fabric build): ./gradlew :fabric:runGameTestCompat
+        gameTestCompat {
+            server()
+            source sourceSets.gametest
+            runDir 'run-compat'
+            property 'fabric-api.gametest'
+            property 'fabric-api.gametest.filter', "${mod_id}:compat_*"
+            property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest-compat.xml"
+            property 'vineandbarrel.expectCompat', 'true'
+        }
+
+        // The client smoke tests (see SmokeClient): a real client whose window never shows plays through V&B's main
+        // interactions, checks them and saves screenshots to run/smoke-*/smoke. Each fails on a failed check and on any
+        // error or exception in its log (checkSmoke*).
+        // ./gradlew :fabric:runSmokeClient (singleplayer), :fabric:runSmokeClientFd (with FD Refabricated),
+        // :fabric:runSmokeLan (a hidden host and a hidden client that joins it over 127.0.0.1), :fabric:smokeAll
+        smokeClient {
+            client()
+            source sourceSets.smoketest
+            runDir 'run/smoke-client'
+            property 'vineandbarrel.smoke', 'client'
+            programArgs '--width', '1280', '--height', '720'
+        }
+        smokeClientFd {
+            client()
+            source sourceSets.smoketest
+            runDir 'run/smoke-client-fd'
+            property 'vineandbarrel.smoke', 'client'
+            programArgs '--width', '1280', '--height', '720'
+        }
+        // The networked pairs (host + join), without and with FD Refabricated, each on its own port
+        [['', smokePort], ['Fd', smokePort - 1]].each { pair ->
+            def (suffix, port) = pair
+            def folder = suffix ? '-fd' : ''
+            "smokeHost${suffix}" {
+                client()
+                source sourceSets.smoketest
+                runDir "run/smoke-host${folder}"
+                property 'vineandbarrel.smoke', 'host'
+                property 'vineandbarrel.smokePort', "${port}"
+                programArgs '--width', '854', '--height', '480', '--username', 'SmokeHost'
+            }
+            "smokeJoin${suffix}" {
+                client()
+                source sourceSets.smoketest
+                runDir "run/smoke-join${folder}"
+                property 'vineandbarrel.smoke', 'join'
+                // Starts with its host and joins once the host is up (see runSmokeJoin)
+                property 'vineandbarrel.smokeConnect', "127.0.0.1:${port}"
+                property 'vineandbarrel.smokeReady', project.file("run/smoke-host${folder}/smoke/host-ready").absolutePath
+                programArgs '--width', '1280', '--height', '720', '--username', 'SmokeJoin'
+            }
+        }
+
+        // The dedicated-server smoke test: a real Fabric server (no client code at all, so client-only classes that
+        // leak into common code crash it) and a hidden client that joins it. Both server runs share run/server-smoke and
+        // its eula.txt; the FD run adds FD Refabricated through fabric.addMods. ./gradlew :fabric:runSmokeServer(Fd)
+        smokeDedicatedServer {
+            server()
+            source sourceSets.smoketest
+            runDir 'run/server-smoke'
+            property 'vineandbarrel.smoke', 'server'
+            programArgs '--nogui'
+        }
+        [['', smokePort - 2], ['Fd', smokePort - 3]].each { pair ->
+            def (suffix, port) = pair
+            "smokeJoinServer${suffix}" {
+                client()
+                source sourceSets.smoketest
+                runDir "run/smoke-join-server${suffix ? '-fd' : ''}"
+                property 'vineandbarrel.smoke', 'join'
+                // The server's own setting (see runSmokeJoinServer), which the client must use while it is connected
+                property 'vineandbarrel.smokeServerSetting', SMOKE_SERVER_SETTING
+                // Starts with the server and joins once it is up (see runSmokeJoinServer)
+                property 'vineandbarrel.smokeConnect', "127.0.0.1:${port}"
+                property 'vineandbarrel.smokeReady', project.file("run/server-smoke/smoke${suffix ? '-fd' : ''}/server-ready").absolutePath
+                programArgs '--width', '1280', '--height', '720', '--username', 'SmokeServerJoin'
+            }
+        }
+
+        // The cross-version smoke tests: this client (with V&B) on a Fabric server without V&B (only Fabric API), and a
+        // client without V&B and without Fabric API (vanilla on the wire) refused by the smoke server with V&B.
+        // ./gradlew :fabric:runSmokeForeign, :fabric:runSmokeRefusal
+        bareServer {
+            server()
+            source sourceSets.bareApi
+            runDir 'run/server-smoke'
+            property 'vineandbarrel.bare', 'server'
+            programArgs '--nogui'
+        }
+        smokeVisit {
+            client()
+            source sourceSets.smoketest
+            runDir 'run/smoke-visit'
+            property 'vineandbarrel.smoke', 'visit'
+            programArgs '--width', '854', '--height', '480', '--username', 'SmokeVisit', '--quickPlayMultiplayer', "127.0.0.1:${smokePort - 4}"
+        }
+        smokeRefused {
+            client()
+            source sourceSets.bare
+            runDir 'run/bare-refused'
+            property 'vineandbarrel.bare', 'refused'
+            programArgs '--width', '854', '--height', '480', '--username', 'SmokeRefused', '--quickPlayMultiplayer', "127.0.0.1:${smokePort - 5}"
+        }
+
+        configureEach {
+            // OSHI's Windows process query through the registry fails on non-English Windows and logs an ERROR while
+            // Minecraft writes its system report; the PDH query it falls back to works everywhere
+            property 'oshi.os.windows.hkeyperfdata', 'false'
+        }
+    }
+}
+
+// Farmer's Delight Refabricated (MIT) for the FD runs, from Modrinth's Maven. Like on NeoForge it is never on the
+// compile classpath: it is copied into the run's own mods folder.
+configurations {
+    fdRefabricated { canBeResolved = true; canBeConsumed = false; transitive = false }
+    // The mod jars for runGameTestCompat: resolved on their own, never on a classpath (the probes compile against them)
+    compatMods { canBeResolved = true; canBeConsumed = false; transitive = false }
+}
+dependencies {
+    fdRefabricated "maven.modrinth:farmers-delight-refabricated:${fd_refabricated_version}"
+    [
+        "maven.modrinth:tough-as-nails:${tough_as_nails_fabric_modrinth}",
+        "maven.modrinth:glitchcore:${glitchcore_fabric_modrinth}",
+        "maven.modrinth:homeostatic:${homeostatic_fabric_modrinth}",
+        "maven.modrinth:thirst-was-taken-2:${thirst_was_taken_fabric_modrinth}",
+    ].each { compileOnly it; compatMods it }
+    // 26.2: Spice of Life Onion has no Fabric build for this Minecraft version. Its 26.3 Fabric build only compiles the
+    // probe; the compat run doesn't install it (FabricCompatProbes#compatRunMods)
+    [
+        "maven.modrinth:spice-of-life-onion:${spice_of_life_fabric_modrinth}",
+        "maven.modrinth:creativecore:${creativecore_fabric_modrinth}",
+    ].each { compileOnly it }
+}
+def prepareCompatRun = tasks.register('prepareCompatRun', Sync) {
+    group = 'verification'
+    description = 'Copies the Fabric builds of the thirst mods and Spice of Life Onion into run-compat/mods for runGameTestCompat.'
+    from(configurations.compatMods)
+    into(layout.projectDirectory.dir('run-compat/mods'))
+}
+tasks.matching { it.name == 'runGameTestCompat' }.configureEach {
+    dependsOn prepareCompatRun
+    mustRunAfter 'runGameTest', 'runGameTestFd'
+}
+def prepareFdRun = tasks.register('prepareFdRun', Sync) {
+    group = 'verification'
+    description = "Copies Farmer's Delight Refabricated into run-fd/mods for runGameTestFd."
+    from(configurations.fdRefabricated)
+    into(layout.projectDirectory.dir('run-fd/mods'))
+}
+tasks.matching { it.name == 'runGameTestFd' }.configureEach {
+    dependsOn prepareFdRun
+    mustRunAfter 'runGameTest'
+}
+
+// A fresh run folder makes two ERROR lines on the first start, which the runs' log checks would count: vanilla's for a
+// missing server.properties, and Cardinal Components' (a library of the compat mods) for its missing config. They are
+// written when missing: server.properties empty (the defaults), Cardinal Components' config with its own defaults.
+['run/gametest', 'run-fd', 'run-compat'].each { folder ->
+    def dir = project.file(folder)
+    def name = 'prepare' + folder.split('[/-]').collect { it.capitalize() }.join('') + 'Folder'
+    def prepare = tasks.register(name) {
+        group = 'verification'
+        description = "Writes the empty settings files a fresh ${folder} needs."
+        doLast {
+            def files = [
+                (new File(dir, 'server.properties')): '',
+                (new File(dir, 'config/cardinal-components-api.properties')): [
+                    'log-deserialization-warnings = true', 'max-deserialization-warnings = 5', 'config-version = 2',
+                ].join(System.lineSeparator()) + System.lineSeparator(),
+            ]
+            files.each { file, text ->
+                if (!file.exists()) {
+                    file.parentFile.mkdirs()
+                    file.text = text
+                }
+            }
+        }
+    }
+    def run = folder == 'run/gametest' ? 'runGameTest' : folder == 'run-fd' ? 'runGameTestFd' : 'runGameTestCompat'
+    tasks.matching { it.name == run }.configureEach { dependsOn prepare }
+}
+
+tasks.register('gameTestsAll') {
+    group = 'verification'
+    description = "Runs the Fabric GameTests without and with Farmer's Delight Refabricated, then the compat run (runGameTest, runGameTestFd, runGameTestCompat)."
+    dependsOn 'runGameTest', 'runGameTestFd', 'runGameTestCompat'
+}
+
+//////////////// Client smoke tests
+
+// Each smoke client's folder: a muted options.txt that never pauses when unfocused (the window is hidden), and only
+// the mods it should have (FD Refabricated in the -fd folders, none elsewhere).
+def smokeDirs = ['smoke-client', 'smoke-client-fd', 'smoke-host', 'smoke-join', 'smoke-host-fd', 'smoke-join-fd', 'smoke-join-server', 'smoke-join-server-fd',
+                 'smoke-visit', 'bare-refused']
+smokeDirs.each { name ->
+    def dir = project.file("run/${name}")
+    def withFd = name.endsWith('-fd')
+    def fdJars = withFd ? configurations.fdRefabricated : files()
+    def prepare = tasks.register("prepare${name.split('-').collect { it.capitalize() }.join('')}") {
+        group = 'verification'
+        description = "Prepares run/${name} for its smoke test."
+        inputs.files(fdJars)
+        doLast {
+            def mods = new File(dir, 'mods')
+            mods.deleteDir()
+            mods.mkdirs()
+            fdJars.files.each { jar -> java.nio.file.Files.copy(jar.toPath(), new File(mods, jar.name).toPath()) }
+            new File(dir, 'options.txt').text = [
+                'pauseOnLostFocus:false', 'soundCategory_master:0.0', 'renderDistance:6', 'simulationDistance:6',
+                'onboardAccessibility:false', 'skipMultiplayerWarning:true', 'tutorialStep:none', 'joinedFirstServer:true',
+                'guiScale:2', 'bobView:false', 'inactivityFpsLimit:"afk"', 'maxFps:60', 'narrator:0',
+            ].join(System.lineSeparator()) + System.lineSeparator()
+        }
+    }
+    def runTask = 'runSmoke' + name.split('-').drop(1).collect { it.capitalize() }.join('')
+    def check = tasks.register("check${runTask.capitalize()}") {
+        group = 'verification'
+        description = "Fails unless the ${name} smoke test completed, every check passed and its log has no errors."
+        doLast {
+            def results = new File(dir, 'smoke/results.json')
+            if (!results.isFile()) {
+                throw new GradleException("No smoke test results in ${results} (the client crashed or timed out; see ${dir}/logs/latest.log)")
+            }
+            def report = new groovy.json.JsonSlurper().parse(results)
+            def failed = report.checks.findAll { !it.ok }
+            def log = new File(dir, 'logs/latest.log')
+            // A dev client has no Microsoft account, so Minecraft's own profile and Realms requests fail; those lines
+            // (and their exceptions) are the only ones allowed, everything else fails the test. This older Minecraft
+            // also asks for the profile's chat key pair, which fails the same way.
+            def devAccount = ~/Failed to retrieve profile key pair|Failed to fetch user properties|Couldn't look up profile properties|sessionserver.mojang.com|Failed to fetch Realms feature flags|Couldn't connect to realms|InvalidCredentialsException|RealmsServiceException/
+            def errors = log.isFile() ? log.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ devAccount) } : ['no log']
+            println "${name}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; screenshots in ${dir}/smoke"
+            failed.each { println "  FAILED ${it.check}: ${it.problem}" }
+            errors.take(20).each { println "  LOG ${it}" }
+            if (!report.completed || failed || errors) {
+                throw new GradleException("Smoke test ${name} failed")
+            }
+        }
+    }
+    tasks.matching { it.name == runTask }.configureEach {
+        dependsOn prepare
+        finalizedBy check
+    }
+}
+
+// Starts another game process (the LAN host, the dedicated server) with the command line Loom gives its run task.
+// Loom passes the classpath in an argument file it only writes when its own task runs, so it is given directly instead.
+def startGameProcess = { String runTask, File dir, File output, List extraJvmArgs, List extraArgs ->
+    def template = tasks.named(runTask, JavaExec).get()
+    def argFile = new File(buildDir, "${runTask}.args")
+    def arguments = template.allJvmArgs.findAll { !it.startsWith('@') } + extraJvmArgs + ['-cp', template.classpath.asPath, template.mainClass.get()] + template.args + extraArgs
+    argFile.text = arguments.collect { '"' + it.replace('\\', '\\\\').replace('"', '\\"') + '"' }.join(System.lineSeparator())
+    def java = template.javaLauncher.get().executablePath.asFile.absolutePath
+    dir.mkdirs()
+    return new ProcessBuilder(java, "@${argFile.absolutePath}").directory(dir).redirectErrorStream(true).redirectOutput(output).start()
+}
+// The joining client boots at the same time as its host or server and joins once that has written its ready file. If
+// the host stops before it is ready, this writes <ready file>.failed, and the client fails at once instead of waiting.
+def watchUntilReady = { Process process, File ready, String what, File output ->
+    new File(ready.path + '.failed').delete()
+    Thread.startDaemon("${what} watcher") {
+        process.waitFor()
+        if (!ready.isFile()) {
+            ready.parentFile.mkdirs()
+            new File(ready.path + '.failed').text = "The ${what} stopped before it was ready (exit code ${process.exitValue()}); see ${output}"
+        }
+    }
+}
+// The cross-version smoke tests wait for their server before the client starts (it joins with --quickPlayMultiplayer)
+def awaitReady = { Process process, File ready, String what, File output ->
+    long until = System.currentTimeMillis() + 5 * 60 * 1000
+    while (!ready.isFile()) {
+        if (!process.isAlive()) throw new GradleException("The ${what} stopped before it was ready; see ${output}")
+        if (System.currentTimeMillis() > until) { process.destroy(); throw new GradleException("The ${what} was not ready within 5 minutes") }
+        Thread.sleep(1000)
+    }
+}
+def awaitExit = { Process process, String what ->
+    if (process != null && !process.waitFor(3, java.util.concurrent.TimeUnit.MINUTES)) {
+        process.destroy()
+        throw new GradleException("The ${what} did not quit after the client left")
+    }
+}
+
+// The networked smoke tests: a hidden host client opens its world to LAN on 127.0.0.1, a second hidden client joins
+// it over a real connection (every packet encoded and decoded: registries, recipes, attachments, menus) and runs the
+// same checks; the host quits once the joined player has left. ./gradlew :fabric:runSmokeLan, :fabric:runSmokeLanFd
+['', 'Fd'].each { suffix ->
+    def folder = suffix ? '-fd' : ''
+    tasks.register("runSmokeLan${suffix}") {
+        group = 'verification'
+        description = "Runs the networked smoke test${suffix ? ' with FD Refabricated' : ''}: a hidden host and a hidden client that joins it over 127.0.0.1."
+        dependsOn "runSmokeJoin${suffix}"
+        finalizedBy "checkRunSmokeHost${suffix}"
+    }
+    tasks.matching { it.name == "checkRunSmokeHost${suffix}" }.configureEach { mustRunAfter "runSmokeJoin${suffix}" }
+    tasks.matching { it.name == "runSmokeJoin${suffix}" }.configureEach { JavaExec join ->
+        dependsOn "prepareSmokeHost${suffix}"
+        notCompatibleWithConfigurationCache('starts the smoke host as a second game process')
+        def hostDir = project.file("run/smoke-host${folder}")
+        def hostOut = new File(buildDir, "smoke-host${folder}.out")
+        Process[] host = new Process[1]
+        doFirst {
+            def ready = new File(hostDir, 'smoke/host-ready')
+            ready.delete()
+            host[0] = startGameProcess("runSmokeHost${suffix}", hostDir, hostOut, [], [])
+            watchUntilReady(host[0], ready, 'smoke host', hostOut)
+            println "Smoke host${folder} is starting; the client joins once it is up"
+        }
+        doLast { awaitExit(host[0], 'smoke host') }
+    }
+}
+
+// The dedicated-server smoke tests: a real Fabric server on 127.0.0.1 (offline mode, the smoke client made
+// an operator when it joins) and a hidden client that joins it and runs the same checks; the server stops once the
+// client has left. ./gradlew :fabric:runSmokeServer, :fabric:runSmokeServerFd
+//
+// A Minecraft server only starts once its eula.txt says eula=true, and accepting the Minecraft EULA is the player's
+// decision: this build never writes that file. Without it, checkSmokeServerEula stops and says what to do.
+def serverDir = project.file('run/server-smoke')
+def serverEula = new File(serverDir, 'eula.txt')
+// eula=true as Minecraft reads it (java.util.Properties, Boolean.parseBoolean): blanks before the key and around the
+// separator, any case of true, a CRLF line end; no trailing blanks (Properties keeps those, and "true " is not true)
+def eulaAccepted = { serverEula.isFile() && serverEula.readLines('UTF-8').any { it.replaceAll('\r$', '') ==~ /[ \t\f]*eula[ \t\f]*[=:][ \t\f]*(?i:true)/ } }
+tasks.register('checkSmokeServerEula') {
+    group = 'verification'
+    description = 'Fails unless the Minecraft EULA is accepted for the local smoke-test server (run/server-smoke/eula.txt).'
+    notCompatibleWithConfigurationCache('reads a file the player writes by hand')
+    doLast {
+        if (!eulaAccepted()) {
+            throw new GradleException("""The dedicated-server smoke test needs a Minecraft server, and a server only starts once its \
+eula.txt accepts the Minecraft EULA (https://aka.ms/MinecraftEULA). That is your decision, so this build never accepts it for you.
+To accept it for this local test server only, create ${serverEula} with the single line:
+    eula=true
+The folder is gitignored: never commit that file. Then run the test again.""")
+        }
+    }
+}
+[['', smokePort - 2], ['Fd', smokePort - 3]].each { pair ->
+    def (suffix, port) = pair
+    def folder = suffix ? '-fd' : ''
+    def out = new File(serverDir, "smoke${folder}")
+    def serverLog = new File(buildDir, "server-smoke${folder}.out")
+    tasks.register("runSmokeServer${suffix}") {
+        group = 'verification'
+        description = "Runs the dedicated-server smoke test${suffix ? ' with FD Refabricated' : ''}: a Fabric server on 127.0.0.1 and a hidden client that joins it."
+        dependsOn "runSmokeJoinServer${suffix}"
+        finalizedBy "checkSmokeServer${suffix}"
+    }
+    tasks.register("checkSmokeServer${suffix}") {
+        group = 'verification'
+        description = "Fails unless the dedicated server${suffix ? ' with FD Refabricated' : ''} saw the client join and leave, and its output has no errors."
+        mustRunAfter "runSmokeJoinServer${suffix}"
+        notCompatibleWithConfigurationCache('reads the server process output')
+        doLast {
+            def results = new File(out, 'results.json')
+            if (!results.isFile()) {
+                throw new GradleException("No results from the smoke server in ${results} (see ${serverLog})")
+            }
+            def report = new groovy.json.JsonSlurper().parse(results)
+            def failed = report.checks.findAll { !it.ok }
+            // The server's whole output, not only latest.log: a crash before logging starts shows only there
+            def errors = serverLog.readLines('UTF-8').findAll { it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/ }
+            println "server-smoke${folder}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; output in ${serverLog}"
+            failed.each { println "  FAILED ${it.check}: ${it.problem}" }
+            errors.take(20).each { println "  LOG ${it}" }
+            if (!report.completed || failed || errors) {
+                throw new GradleException("Smoke server${folder} failed")
+            }
+        }
+    }
+    tasks.matching { it.name == "runSmokeJoinServer${suffix}" }.configureEach { JavaExec join ->
+        dependsOn 'checkSmokeServerEula'
+        notCompatibleWithConfigurationCache('starts the smoke server as a second process')
+        Process[] server = new Process[1]
+        def fdJars = suffix ? configurations.fdRefabricated : files()
+        inputs.files(fdJars)
+        doFirst {
+            out.deleteDir()
+            new File(serverDir, "world${folder}").deleteDir()
+            new File(serverDir, 'server.properties').text = [
+                // white-list is on by default since 26.x; a normal world like the singleplayer run (the scene floats at y 140)
+                'online-mode=false', 'server-ip=127.0.0.1', "server-port=${port}", 'enforce-secure-profile=false',
+                'white-list=false', 'level-seed=20261107', 'difficulty=peaceful', 'allow-flight=true', 'spawn-protection=0',
+                'view-distance=6', 'simulation-distance=6', 'max-players=2', 'motd=Vine & Barrel smoke test',
+            ].join(System.lineSeparator()) + System.lineSeparator()
+            // A server setting that differs from the client's own default, for the client's server_settings_reach_the_client
+            def config = new File(serverDir, 'config/vineandbarrel-tipsy-server.properties')
+            config.parentFile.mkdirs()
+            config.text = SMOKE_SERVER_SETTING + System.lineSeparator()
+            def jvm = ["-Dvineandbarrel.smokeOut=smoke${folder}".toString()]
+            if (suffix) {
+                jvm << "-Dfabric.addMods=${fdJars.files*.absolutePath.join(File.pathSeparator)}".toString()
+            }
+            server[0] = startGameProcess('runSmokeDedicatedServer', serverDir, serverLog, jvm, ['--port', "${port}".toString(), '--world', "world${folder}".toString()])
+            watchUntilReady(server[0], new File(out, 'server-ready'), 'smoke server', serverLog)
+            println "Smoke server${folder} is starting on 127.0.0.1:${port}; the client joins once it is up"
+        }
+        doLast { awaitExit(server[0], 'smoke server') }
+    }
+}
+
+// The cross-version smoke tests. Foreign: this client with V&B joins a Fabric server without V&B (only Fabric API) and
+// stays connected, so nothing of ours changes vanilla's packets. Refusal: a client without V&B and without Fabric API
+// (vanilla on the wire) is refused by the server with V&B, with a reason on its disconnect screen, and nothing crashes.
+def crossRuns = [
+    [name: 'Foreign', client: 'runSmokeVisit', server: 'runBareServer', port: smokePort - 4, out: 'smoke-bare', world: 'world-bare', jvm: []],
+    [name: 'Refusal', client: 'runSmokeRefused', server: 'runSmokeDedicatedServer', port: smokePort - 5, out: 'smoke-refusal', world: 'world-refusal',
+     jvm: ['-Dvineandbarrel.smokeExpectRefusal=true']],
+]
+crossRuns.each { run ->
+    def out = new File(serverDir, run.out)
+    def serverLog = new File(buildDir, "server-${run.out}.out")
+    tasks.register("runSmoke${run.name}") {
+        group = 'verification'
+        description = run.name == 'Foreign' ? 'Runs the smoke client with V&B on a Fabric server without V&B (only Fabric API).'
+            : 'Runs a client without V&B and without Fabric API against the smoke server with V&B, which must refuse it.'
+        dependsOn run.client
+        finalizedBy "checkSmoke${run.name}"
+    }
+    tasks.register("checkSmoke${run.name}") {
+        group = 'verification'
+        description = "Fails unless the server of the ${run.name.toLowerCase()} smoke test passed its check and its output has no errors."
+        mustRunAfter run.client
+        notCompatibleWithConfigurationCache('reads the server process output')
+        doLast {
+            def results = new File(out, 'results.json')
+            if (!results.isFile()) {
+                throw new GradleException("No results from the ${run.name.toLowerCase()} smoke server in ${results} (see ${serverLog})")
+            }
+            def report = new groovy.json.JsonSlurper().parse(results)
+            def failed = report.checks.findAll { !it.ok }
+            def errors = serverLog.readLines('UTF-8').findAll { it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/ }
+            println "server-${run.out}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; output in ${serverLog}"
+            failed.each { println "  FAILED ${it.check}: ${it.problem}" }
+            errors.take(20).each { println "  LOG ${it}" }
+            if (!report.completed || failed || errors) {
+                throw new GradleException("Smoke ${run.name.toLowerCase()} server failed")
+            }
+        }
+    }
+    tasks.matching { it.name == run.client }.configureEach { JavaExec client ->
+        // The server is started here, not by its own run task, so its classes are built here too
+        dependsOn 'checkSmokeServerEula', 'bareClasses', 'smoketestClasses'
+        notCompatibleWithConfigurationCache('starts the smoke server as a second process')
+        // A failed client still stops its server first (doLast), then fails the task
+        client.ignoreExitValue = true
+        Process[] server = new Process[1]
+        doFirst {
+            out.deleteDir()
+            new File(serverDir, run.world).deleteDir()
+            new File(serverDir, 'server.properties').text = [
+                'online-mode=false', 'server-ip=127.0.0.1', "server-port=${run.port}", 'enforce-secure-profile=false',
+                'white-list=false', 'level-seed=20261107', 'difficulty=peaceful', 'allow-flight=true', 'spawn-protection=0',
+                'view-distance=4', 'simulation-distance=4', 'max-players=2', 'motd=Vine & Barrel cross-version smoke test',
+            ].join(System.lineSeparator()) + System.lineSeparator()
+            def jvm = ["-Dvineandbarrel.smokeOut=${run.out}".toString()] + run.jvm
+            server[0] = startGameProcess(run.server, serverDir, serverLog, jvm, ['--port', "${run.port}".toString(), '--world', run.world])
+            awaitReady(server[0], new File(out, 'server-ready'), "${run.name.toLowerCase()} smoke server", serverLog)
+            println "${run.name} smoke server is up on 127.0.0.1:${run.port}; joining"
+        }
+        doLast {
+            // The refusal server never sees a player leave: it is told to stop once the refused client has quit
+            if (run.name == 'Refusal') {
+                out.mkdirs()
+                new File(out, 'stop').text = 'stop'
+            }
+            awaitExit(server[0], "${run.name.toLowerCase()} smoke server")
+            client.executionResult.get().assertNormalExitValue()
+        }
+    }
+}
+
+// Loom runs a client under its own xvfb-run when CI is set on Linux (GitHub Actions), outside JavaExec, so the task's
+// executionResult stays empty and the cross-version runs can't read the exit code. verify.yml and the VPS runner give
+// the whole build an X display already.
+tasks.withType(net.fabricmc.loom.task.AbstractRunTask).configureEach { useXvfb = false }
+
+tasks.register('smokeAll') {
+    group = 'verification'
+    description = 'Runs every Fabric smoke test: singleplayer, LAN and dedicated server, each without and with FD Refabricated, then the cross-version runs (a server without V&B, a client without V&B).'
+    dependsOn 'runSmokeClient', 'runSmokeClientFd', 'runSmokeLan', 'runSmokeLanFd', 'runSmokeServer', 'runSmokeServerFd', 'runSmokeForeign', 'runSmokeRefusal'
+}
+tasks.matching { it.name == 'runSmokeVisit' }.configureEach { mustRunAfter 'checkSmokeServerFd' }
+tasks.matching { it.name == 'runSmokeRefused' }.configureEach { mustRunAfter 'checkSmokeForeign', 'checkRunSmokeVisit' }
+tasks.matching { it.name == 'runSmokeClientFd' }.configureEach { mustRunAfter 'runSmokeClient' }
+tasks.matching { it.name == 'runSmokeJoin' }.configureEach { mustRunAfter 'runSmokeClientFd' }
+tasks.matching { it.name == 'runSmokeJoinFd' }.configureEach { mustRunAfter 'checkRunSmokeHost' }
+tasks.matching { it.name == 'checkSmokeServerEula' }.configureEach { mustRunAfter 'checkRunSmokeHostFd' }
+tasks.matching { it.name == 'runSmokeJoinServer' }.configureEach { mustRunAfter 'checkRunSmokeHostFd' }
+tasks.matching { it.name == 'runSmokeJoinServerFd' }.configureEach { mustRunAfter 'checkSmokeServer' }
+// The networked smoke tests start two games each, so they wait for every other game run of the build (at most two games
+// run at once, see vb-loader.gradle)
+tasks.matching { it.name ==~ /runSmokeJoin(Server)?(Fd)?/ }.configureEach {
+    mustRunAfter 'runGameTest', 'runGameTestFd', 'runGameTestCompat', 'runSmokeClient', 'runSmokeClientFd',
+        ':neoforge:runGameTestServer', ':neoforge:runGameTestServerFd', ':neoforge:runGameTestServerCompat'
+}
+
+// Maintainer dev tooling isn't part of this repository. Where it is checked out as dev/, dev/fabric.gradle is applied
+// here, last, and may add its own source sets, mods, runs and tasks to this project.
+def devTooling = rootProject.file('dev/fabric.gradle')
+if (devTooling.isFile()) {
+    apply from: devTooling
+}

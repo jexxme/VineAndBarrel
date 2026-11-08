@@ -1,56 +1,109 @@
 ---
 title: Getting started
-description: From the first wild grape to your first glass of aged red wine, step by step.
+description: Install Vine & Barrel, see what it adds and how the brewing loop goes, and pick where to start.
 ---
-import { Steps, Aside } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 import Item from '../../components/mc/Item.astro';
-import Render from '../../components/mc/Render.astro';
 import Recipe from '../../components/recipes/Recipe.astro';
 import Shot from '../../components/mc/Shot.astro';
-import { rules, recipe, days, seconds, meta } from '../../lib/data';
+import Loop from '../../components/brewing/Loop.astro';
+import { meta, rules, drinks, iconOf, roman, list } from '../../lib/data';
+import { downloads } from '../../data/code/downloads';
 
-export const juice = recipe('brewing/grape_juice');
-export const wine = recipe('aging/red_wine');
+export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+
+export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
+export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
+
+Vine & Barrel brings a vineyard, a brewhouse and a cellar to Minecraft. You grow grapes, hops and barley, brew juice and
+wort in a copper kettle, let it ferment and age in oak barrels, and share a round with your friends. Patience pays: an
+aged drink's buff is stronger and lasts longer, and it shimmers in the glass.
 
 <Shot src="hero.jpg" caption="A Vine & Barrel homestead: the tavern with its barrel cellar and pergolas, a vineyard, hops on trellis poles and a barley field." />
 
-Vine & Barrel adds one loop: **grow → brew → age → serve**. You need two blocks for it, the
-<Item id="brew_kettle" /> and the <Item id="aging_barrel" />, and something to drink from: a <Item id="wine_glass" /> or a <Item id="mug" />.
+## Install
 
-<Render name="scenes/garden" float="right" size={256} alt="Grape and hop bushes next to a barley field" />
+Find your Minecraft version and your loader, and download from that cell:
 
-<Steps>
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{cell(r.neoforge)}</td>
+				<td>{cell(r.fabric)}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
 
-1. **Find seeds.** Wild grapes, hops and barley grow out in the world: grapes in warm forests and plains, hops in forests and
-   along rivers, barley on plains and savannas. Village farmers and the wandering trader sell them too, and village
-   chests often hold a few. See [Crops](/crops/).
+- **NeoForge** needs {downloads.map((r) => `NeoForge ${r.neoforgeNeeds ?? `${meta.neoforge} or newer`} on Minecraft ${r.minecraft}`).join('; ')}.
+- **Fabric** needs Fabric Loader {meta.fabricLoader} or newer and Fabric API {meta.fabricApi} or newer.
 
-2. **Plant and harvest.** Plant <Item id="red_grapes" plural /> or <Item id="hops" /> like sweet berries and pick them with
-   a right-click once ripe. Sow <Item id="barley_seeds" /> on farmland like wheat.
+The file name says which one you have: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> is NeoForge,
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> is Fabric. Put it in the `mods` folder on both the client and the server. It
+needs no other mod. Everything it works with is optional and switches on by itself: see [Compatibility](/compatibility/).
 
-3. **Build a kettle and heat it.** Put the <Item id="brew_kettle" /> on a campfire, fire, lava, a magma block or a lava
-   cauldron. With Farmer's Delight, its stove works too.
-
-4. **Brew.** Put the ingredients in and wait {seconds(juice.brewingTime)}. Then fill a glass bottle (1 serving) or a bucket
-   (all {juice.servings}). See [Brew Kettle](/brew-kettle/).
-
-   <Recipe id="brewing/grape_juice" />
-
-5. **Pour it into a barrel.** Right-click an <Item id="aging_barrel" /> with the bucket or bottles. It holds
-   {rules.barrelCapacity} servings. After **{days(wine.fermentingTime)}** it has fermented into <Item id="red_wine" />, and after
-   **{days(wine.agingTime)}** more, whatever is left becomes <Item id="aged_red_wine" />. See [Aging Barrel](/aging-barrel/).
-
-6. **Tap and share.** Right-click the barrel with an empty <Item id="wine_glass" /> (wine) or <Item id="mug" /> (beer) to
-   tap one serving. Drink it at the same time as a friend for a **Cheers!**, and mind the [Tipsy](/tipsy/) effect.
-
-</Steps>
-
-<Aside title="Don't want to wait four days?">
-Find a village tavern. Its barrels are already filled with drinks to tap, one of them aged. See [Villages & taverns](/villages/).
+<Aside type="tip" title="Playing with Farmer's Delight?">
+Vine & Barrel is a mod of its own, but it fits right in: its kettle brews on FD's stove, grape and hop vines climb FD's
+ropes, and a handful of cooking pot meals, a feast and a bread use its drinks. See [Farmer's Delight](/farmers-delight/).
 </Aside>
 
+## How it works
+
+Every drink goes the same way, from the field to the glass. Click a step for the details.
+
+<Loop />
+
+## What the mod adds
+
+<dl class="tour">
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:red_grapes')?.src} alt="" width="32" height="32" /> New crops</dt>
+		<dd>[Grape bushes](/crops/), red and white, and hop bushes you pick again and again, a trellis for them to climb (no Farmer's Delight needed), and barley that grows like wheat. You find them first as wild plants, in village farms and at the wandering trader.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:brew_kettle')?.src} alt="" width="32" height="32" /> A brewhouse</dt>
+		<dd>The copper [Brew Kettle](/brew-kettle/) turns crops into juice and wort over a fire. It weathers like any copper, hangs from a chain if you like, and hoppers can run it for you.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aging_barrel')?.src} alt="" width="32" height="32" /> A cellar</dt>
+		<dd>The [Aging Barrel](/aging-barrel/) has no screen: you pour in, wait and tap, all in the world. Barrels join into racks and stack into walls.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aged_red_wine')?.src} alt="" width="32" height="32" /> {meta.counts.drinks} drinks</dt>
+		<dd>{young.map((d) => d.name).join(', ').replace(/, ([^,]+)$/, ' and $1')}, each young and aged{fdExtra.length > 0 && `, plus ${list(fdExtra.map((d) => d.name))} with Farmer's Delight`}. Each gives a buff, level {roman(rules.youngBuffAmplifier)} or level {roman(rules.agedBuffAmplifier)} once aged. See [Drinks](/drinks/).</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> Tipsy</dt>
+		<dd>Every drink adds a level of [Tipsy](/tipsy/): a sway, hiccups and a little courage at first, heavy eyes and heavy legs later. Know when to stop.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> Taverns</dt>
+		<dd>Villages get a [tavern](/villages/) with barrels already full, so you can taste a drink before you've brewed one.</dd>
+	</div>
+</dl>
+
+## Where to start
+
+- **New to the mod?** Follow [Your first drink](/guides/first-drink/): from a fresh world to your first glass of aged red wine, step by step.
+- **Ready to brew in bulk?** [Building a cellar](/guides/cellar/) covers barrel racks, automation and planning a batch.
+- **In a hurry?** Find a village tavern: its barrels are full and waiting to be tapped. See [Villages & taverns](/villages/).
+- **Looking something up?** Every item has its own page in [All items & blocks](/items/), every recipe is in [All recipes](/reference/recipes/), and the server and client options are in [Configuration](/reference/config/).
+
 ## Crafting the basics
+
+The two blocks and the two vessels are all made from vanilla materials:
 
 <Recipe id="brew_kettle" /> <Recipe id="aging_barrel" />
 
 <Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<style>{`
+.tour { margin: 1rem 0 0; border-top: 2px solid var(--fd-border); }
+.tour > div { display: grid; align-items: start; grid-template-columns: 12rem 1fr; gap: 1rem; padding: .7rem 0; border-bottom: 2px solid var(--fd-border); margin: 0; }
+.tour dt { font-weight: 400; display: flex; align-items: center; gap: 10px; color: var(--vb-heading); }
+.tour dd { margin: 0; }
+@media (max-width: 40rem) { .tour > div { grid-template-columns: 1fr; gap: .2rem; } }
+`}</style>

@@ -1,0 +1,92 @@
+---
+title: Interazioni
+description: Tutte le piccole cose che blocchi e bevande fanno in Vine & Barrel, ognuna con lo stesso funzionamento di qualcosa che già esiste in vanilla o in Farmer's Delight.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Advancements from '../../../components/data/Advancements.astro';
+import { rules } from '../../../lib/l10n/it';
+
+Vine & Barrel cerca di sembrare parte del gioco. Quasi tutto qui sotto funziona come qualcosa che conosci già da
+vanilla o da Farmer's Delight, quindi puoi intuire i comandi senza leggere. Questa pagina li elenca tutti in un posto solo; le
+pagine sulle meccaniche li spiegano meglio.
+
+## Botte d'invecchiamento
+
+<Render name="scenes/barrel-cellar" float="right" size={224} alt="Una parete di botti impilate" />
+
+- **Si posiziona rivolta verso di te**, con lo spillo verso di te, come una fornace.
+- **File:** le botti affiancate con lo stesso orientamento uniscono le loro culle, come si collegano le recinzioni.
+- **Pile:** una botte sopra un'altra poggia su dei cunei invece che su una culla. Costruisci una parete da cantina.
+- **Il tappo mostra la fase:** sughero, sfiatatoio gorgogliante durante la fermentazione, ceralacca rossa quando è invecchiata.
+- **Si sente fermentare:** bollicine dallo sfiatatoio, sempre più rade verso la fine.
+- **Lo spillo gocciola** ogni tanto finché c'è bevanda dentro, del colore della bevanda, come il miele da un alveare.
+- **Il momento dell'invecchiamento:** un piccolo schiocco del tappo quando la partita diventa invecchiata.
+- **Versa** con un secchio o un'ampolla, come per riempire un calderone. Finché non è una bevanda, un secchio o un'ampolla vuoti la riprendono.
+- **Spilla** con un boccale o un calice vuoto, come per prendere una porzione da un banchetto di Farmer's Delight. Il contenitore sbagliato dà un suggerimento e non si consuma.
+- **Riga di stato** con il clic destro a mani vuote. Se l'hai rinominata con l'incudine, compare lì il nome.
+- **Il comparatore** legge le porzioni rimaste.
+- **Rompila piena** e conserva la sua partita, come una shulker box. L'invecchiamento si ferma finché non la riposizioni.
+- **I dispenser** spillano con un contenitore o versano una base. **Le tramogge** la riempiono e la svuotano.
+
+Vedi [Botte d'invecchiamento](/aging-barrel/).
+
+## Bollitore
+
+- **Appoggi, come la pentola:** un vassoio di ferro sopra un falò, un fuoco o la lava; a filo sulle altre fonti di calore; accovacciati e clicca con il
+  tasto destro a mani vuote per appenderlo a un manico.
+- **Il coperchio si solleva** finché qualcuno ha la schermata aperta, come un baule. Una preparazione finita lo tiene alzato, e vedi la
+  preparazione dentro, che scende man mano che prendi le porzioni.
+- **Durante la preparazione**, il vapore esce da sotto il coperchio e il coperchio sbatte. **A fine preparazione**, uno sbuffo di vapore.
+- **Clic destro con un'ampolla o un secchio** per riempirlo, come un calderone.
+- **Rompilo pieno** e conserva il suo contenuto.
+- **Il comparatore** dà un segnale finché c'è qualcosa dentro. **Le tramogge** inseriscono ingredienti e contenitori vuoti, ed estraggono da sotto quelli pieni.
+- **Rame:** si consuma col tempo; il favo lo cera, un'ascia lo raschia, il fulmine lo pulisce.
+- **Libro delle ricette** nella sua schermata.
+
+Vedi [Bollitore](/brew-kettle/).
+
+## Bevande e contenitori
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Boccali e calici su un blocco" />
+
+- **Posa le bevande:** accovacciati e clicca con il tasto destro sulla faccia superiore di un blocco con un boccale o un calice, pieno o vuoto. Fino a quattro per blocco,
+  come le candele. Clic destro a mani vuote per riprenderne uno.
+- **Cin cin!** Due o più giocatori che finiscono una bevanda entro {rules.cheersWindowTicks / 20} secondi e {rules.cheersRadius}
+  blocchi l'uno dall'altro brindano, e il bonus di tutti dura il {rules.cheersBonusPercent}% in più.
+- **Bere** suona e sembra come una pozione, e ti torna il contenitore vuoto.
+- **I secchi di succo e di mosto** non si possono versare come liquido, come il latte.
+
+## Brillo
+
+- **Gli altri giocatori ti vedono ondeggiare** e vedono singhiozzi, inciampi e capitomboli.
+- **Dormici sopra:** dormire fino al mattino toglie Brillo.
+- **Il latte** lo toglie; **l'acqua o un succo qualsiasi** lo abbassa di un livello.
+- **Passa il mouse sull'effetto** nell'inventario per vedere cosa fa il tuo livello.
+- **Un goccetto di troppo** al livello massimo e hai un vuoto di memoria. Dove ti svegli lo sa solo il caso.
+
+Vedi [Brillo](/tipsy/).
+
+## Colture e vita di campagna
+
+- I cespugli si raccolgono con un clic destro (anche semimaturi) e tornano indietro di una fase, come le bacche dolci. Un graticcio sopra un cespuglio lo fa arrampicare.
+- Le api aiutano uva, luppolo e orzo a crescere.
+- L'orzo nutre e fa riprodurre gli animali come il grano; i suoi semi nutrono galline e pappagalli.
+- I villici contadini piantano e raccolgono l'orzo.
+- Le volpi staccano l'uva dai cespugli, rossa e bianca, come fanno con le bacche dolci.
+- Ogni coltura si composta.
+- La <Item id="barley_bale" /> attutisce una caduta e alza il fumo dei falò come una balla di fieno.
+
+Vedi [Colture](/crops/).
+
+## Mondo
+
+- **Le taverne dei villaggi** hanno botti già piene, pronte da spillare. Vedi [Villaggi e taverne](/villages/).
+- **JEI** mostra le ricette di preparazione e di invecchiamento, più pagine informative per la botte e per le colture selvatiche. **Jade** mostra cosa c'è in un
+  bollitore o in una botte quando lo guardi. Vedi [Compatibilità](/compatibility/).
+
+## Progressi
+
+Vine & Barrel ha una sua scheda di progressi:
+
+<Advancements />

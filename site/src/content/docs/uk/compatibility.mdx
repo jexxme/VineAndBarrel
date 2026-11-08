@@ -1,0 +1,120 @@
+---
+title: Сумісність
+description: З якими модами працює Vine & Barrel і що додає кожен із них.
+---
+import Item from '../../../components/mc/Item.astro';
+import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/uk';
+import compat from '../../../data/gen/compat.json';
+import { optional } from '../../../data/code/downloads';
+
+export const bopNames = { 'biomesoplenty:field': 'Поле', 'biomesoplenty:pasture': 'Пасовище', 'biomesoplenty:prairie': 'Прерія', 'biomesoplenty:mediterranean_forest': 'Середземноморський ліс', 'biomesoplenty:orchard': 'Сад', 'biomesoplenty:woodland': 'Лісисті землі', 'biomesoplenty:seasonal_forest': 'Сезонний ліс', 'biomesoplenty:lavender_field': 'Лавандове поле', 'biomesoplenty:lavender_forest': 'Лавандовий ліс' };
+export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => bopNames[b.id] ?? b.name) }));
+export const seasonNames = { spring: 'весна', summer: 'літо', autumn: 'осінь', winter: 'зима' };
+export const seasonRows = Object.entries(seasons);
+export const v = compat.versions;
+// Wheat beer feeds through Saturation: (level + 1) food and twice that in saturation per tick it lasts
+export const beer = drinks.filter((d) => d.effect.id === 'minecraft:saturation').map((d) => ({ ...d, food: (d.effect.amplifier + 1) * d.effect.duration }));
+export const young = beer.find((d) => d.stage === 'young');
+export const aged = beer.find((d) => d.stage === 'aged');
+// A row of the thirst table is all young drinks, all aged drinks, or a few named items
+export const stageOf = (id) => drinks.find((d) => d.id === id)?.stage;
+export const rowLabel = (items) => {
+	const all = (stage) => items.every((id) => stageOf(id) === stage) && items.length === drinks.filter((d) => d.stage === stage).length;
+	return all('young') ? 'Кожен молодий напій' : all('aged') ? 'Кожен витриманий напій' : null;
+};
+export const groups = { fruits: 'Фрукти', carbs: 'Вуглеводи', proteins: 'Білки', vegetables: 'Овочі', sugars: 'Цукри' };
+
+Vine & Barrel {meta.version} працює на **Minecraft {meta.minecraft}** із **NeoForge {meta.neoforge}** або новішим, чи з
+**Fabric Loader {meta.fabricLoader}** і **Fabric API {meta.fabricApi}** або новішим. Інші моди йому не потрібні.
+Усе нижче необов'язкове й вмикається саме, коли встановлено відповідний мод:
+
+- **NeoForge:** {optional.neoforge.join(', ')}.
+- **Fabric:** {optional.fabric.join(', ')}.
+
+Serene Seasons і Biomes O' Plenty працюють через теги.
+
+## Farmer's Delight
+
+Тепло плити, лози на мотузках (як на шпалері), родючий ґрунт, напої з пляшок FD, кілька страв із каструлі, бенкет і хліб. Дивись [Farmer's Delight](/farmers-delight/).
+
+## JEI
+
+JEI показує категорії рецептів **Варильний казан** і **Діжка для витримки**, з часом варіння та днями, які займає кожен етап,
+а також сторінки з описом діжки й диких культур. Зібрано під JEI {meta.jei}.
+
+## Jade
+
+Подивись на казан чи діжку, щоб побачити, що всередині: варево чи напій, скільки порцій лишилося, наскільки просунулося варіння, чи
+нагрітий казан і на якому етапі діжка. Зібрано під Jade {meta.jade.split('+')[0]}.
+
+## AppleSkin
+
+Підказка про їжу та попередній перегляд шкали голоду з AppleSkin працюють для всього, що можна з'їсти чи випити. Соки й страви показують
+власну поживність. <Item id={young.id} /> годує через свій бонус насичення, тож AppleSkin показує, що цей бонус заповнює: **{young.food}**
+голоду і **{young.food * 2}** насичення, або **{aged.food}** і **{aged.food * 2}** для <Item id={aged.id} />. Решта
+вин, пив, сидрів і медовух не годує, тож їжі вони не показують. Зібрано під AppleSkin {v.appleskin}.
+
+## Спрага
+
+З **Tough As Nails**, **Homeostatic** чи **Thirst Was Taken 2** напої втамовують спрагу: соки багато, вина, пиво,
+сидри й медовуха трохи, витримані трохи більше, ніж молоді. У модах, що враховують і їжу, тушковані страви, юшка й півень у вині рахуються
+як рагу, а виноград, червоний чи білий, як солодкі ягоди.
+
+<table>
+	<thead>
+		<tr><th></th><th>Tough As Nails<br />спрага, зволоження</th><th>Homeostatic<br />вода, насичення</th><th>Thirst Was Taken 2<br />спрага, втамування</th></tr>
+	</thead>
+	<tbody>
+		{compat.thirst.map((row) => (
+			<tr>
+				<td>{rowLabel(row.items) ?? row.items.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</td>
+				<td>{row.tan ? `${row.tan.thirst}, ${row.tan.hydration}%` : '–'}</td>
+				<td>{row.homeostatic.amount}, {row.homeostatic.saturation.toFixed(1)}</td>
+				<td>{row.twt ? `${row.twt.thirst}, ${row.twt.quenched}` : '–'}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+Tough As Nails враховує лише напої. Перевірено з Tough As Nails {v.toughasnails}, Homeostatic {v.homeostatic} і Thirst Was
+Taken 2 {v.thirstwastaken2}.
+
+## Nutritional Balance
+
+Лише NeoForge. Кожна їжа й кожен напій зараховується до харчових груп Nutritional Balance:
+
+<ul>
+	{Object.entries(compat.nutrients).map(([group, ids]) => (
+		<li><strong>{groups[group] ?? group}:</strong> {ids.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</li>
+	))}
+</ul>
+
+Вина, пиво, сидри й медовуха самі по собі не мають харчової цінності (пшеничне пиво насичує через свій бонус насичення, який ці моди не враховують), тож твої групи наповнюють лише виноград, соки й страви. Сирий ячмінь рахується
+як вуглеводи, тож усе, що інший мод робить із нього, теж. Перевірено з Nutritional Balance {v.nutritionalbalance}.
+
+Кожен напій і кожна страва також мають спільні теги обох завантажувачів (напої, соки, фрукти, супи), тож інші моди, що їх читають, бачать
+їх такими, якими вони є.
+
+## Spice of Life Onion
+
+Працює як є. Страви зараховуються до різноманітності твоєї їжі, як і будь-яка їжа. Напої самі по собі не мають харчової цінності (бонус насичення пшеничного пива
+не рахується), тож, як і напої Farmer's Delight, різноманітності не додають. Перевірено з Spice of Life Onion {v.solonion}.
+
+## Biomes O' Plenty
+
+Дикі культури ростуть у кожному біомі з тегом лісу, рівнини, савани, річки чи гірського схилу (де температура їм підходить), тож модові біоми з такими тегами отримують їх автоматично.
+З Biomes O' Plenty вони також ростуть у кількох біомах, які їм пасують:
+
+<ul>
+	{bop.map((b) => <li><Item id={b.crop} />: {list(b.biomes)}</li>)}
+</ul>
+
+## Serene Seasons
+
+З Serene Seasons кожна культура росте у свої сезони:
+
+<ul>
+	{['vineandbarrel:red_grapes', 'vineandbarrel:white_grapes', 'vineandbarrel:hops', 'vineandbarrel:barley_seeds'].map((id) => (
+		<li><Item id={id} />: {list(seasonRows.filter(([, ids]) => ids.includes(id)).map(([s]) => seasonNames[s] ?? s))}</li>
+	))}
+</ul>

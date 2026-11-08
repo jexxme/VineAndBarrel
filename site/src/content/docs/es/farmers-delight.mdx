@@ -1,0 +1,108 @@
+---
+title: Farmer's Delight
+description: Qué cambia en Vine & Barrel cuando Farmer's Delight también está instalado.
+---
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, recipe, duration, FDN_WIKI } from '../../../lib/l10n/es';
+import { fd } from '../../../data/code/compat';
+
+export const meals = rules.fdMealNourishment;
+export const potMeals = ['beer_battered_fish', 'wine_braised_beef', 'cider_braised_pork', 'barley_mutton_broth', 'white_wine_risotto'];
+export const bread = items['vineandbarrel:beer_bread'];
+export const coq = items['vineandbarrel:coq_au_vin'];
+
+Vine & Barrel es un mod independiente: todo lo de este wiki funciona sin Farmer's Delight. Si juegas también con Farmer's
+Delight, los dos trabajan juntos en unos cuantos sitios. No hace falta configurar nada.
+
+En Minecraft 26.x para NeoForge, eso es Farmer's Delight Neoforged, versión {fd.minVersion} o posterior, que tiene su propio wiki.
+En Fabric, es <a href={fd.refabricated}>Farmer's Delight Refabricated</a>.
+
+<LinkCard title="Wiki de Farmer's Delight Neoforged" description="Olla, parrilla, cuerdas, suelo rico y todos los objetos de FD." href={`${FDN_WIKI}/`} />
+
+## Lo que aporta Farmer's Delight
+
+- **La parrilla calienta la marmita.** La parrilla de Farmer's Delight funciona como fuente de calor para la [Marmita](/brew-kettle/),
+  y también todo lo demás que FD cuenta como calor. Los bloques por los que FD deja pasar el calor se lo pasan también a la marmita.
+- **Las vides trepan por las cuerdas.** Un arbusto de uvas maduro (tinto o blanco) o de lúpulo con una cuerda de FD encima trepa hasta {rules.crops.climbMaxHeight} bloques
+  y da fruto a lo largo de la cuerda, como los tomates de FD, igual que en una [espaldera](/crops/#espaldera). Cuerdas y espalderas se
+  mezclan en una misma planta, y al romper una vid la cuerda se queda.
+- **El suelo rico** acelera las uvas, el lúpulo y la cebada, como a todos los cultivos a los que puedes echar polvo de hueso.
+- **Las bebidas de FD fermentan.** Los frascos de <Item id="farmersdelight:apple_cider" /> y de <Item id="farmersdelight:melon_juice" /> entran en un
+  [Barril de crianza](/aging-barrel/) como nuestras propias bases, una ración cada uno. La sidra de manzana de FD se convierte en la misma
+  <Item id="hard_cider" /> que hace nuestro <Item id="apple_juice" />, así que hay una sola sidra, con dos formas de llegar a ella. Un barril contiene una
+  sola base a la vez, así que las dos no se mezclan en una tanda. Las bebidas de FD solo vienen en frascos, así que un barril lleno admite
+  {rules.barrelCapacity} de ellos; los dispensadores también los vierten.
+- **Platos de la olla, un festín y un pan** usan nuestro vino, sidra y cerveza.
+- **El cuchillo de FD saca paja de la cebada**, como del trigo y del arroz silvestre.
+- Nuestras bebidas cuentan como bebidas de FD allí donde FD pide una.
+
+## Bebidas de los frascos de Farmer's Delight
+
+<DrinkTable fd />
+
+{[recipe('aging/hard_cider'), recipe('aging/melon_wine')].map((r) => <Recipe recipe={r} />)}
+
+## Platos de la olla
+
+Cocina estos en la olla de Farmer's Delight. Como los platos de FD, vienen en un cuenco y dan Nutrido. Cada uno aparece en el libro
+de recetas de la olla cuando llevas su bebida (joven o añeja), el caldo cuando llevas cebada.
+
+{potMeals.map((id) => <Recipe id={`cooking/${id}`} />)}
+
+| Plato | Comida | Nutrido |
+|---|---|---|
+| <Item id="beer_battered_fish" /> | <FoodStats nutrition={items['vineandbarrel:beer_battered_fish'].food.nutrition} saturation={items['vineandbarrel:beer_battered_fish'].food.saturation} compact /> | {duration(meals['vineandbarrel:beer_battered_fish'])} |
+| <Item id="wine_braised_beef" /> | <FoodStats nutrition={items['vineandbarrel:wine_braised_beef'].food.nutrition} saturation={items['vineandbarrel:wine_braised_beef'].food.saturation} compact /> | {duration(meals['vineandbarrel:wine_braised_beef'])} |
+| <Item id="cider_braised_pork" /> | <FoodStats nutrition={items['vineandbarrel:cider_braised_pork'].food.nutrition} saturation={items['vineandbarrel:cider_braised_pork'].food.saturation} compact /> | {duration(meals['vineandbarrel:cider_braised_pork'])} |
+| <Item id="barley_mutton_broth" /> | <FoodStats nutrition={items['vineandbarrel:barley_mutton_broth'].food.nutrition} saturation={items['vineandbarrel:barley_mutton_broth'].food.saturation} compact /> | {duration(meals['vineandbarrel:barley_mutton_broth'])} |
+| <Item id="white_wine_risotto" /> | <FoodStats nutrition={items['vineandbarrel:white_wine_risotto'].food.nutrition} saturation={items['vineandbarrel:white_wine_risotto'].food.saturation} compact /> | {duration(meals['vineandbarrel:white_wine_risotto'])} |
+
+Cocinar con una bebida te devuelve la jarra o la copa, y también el <Item id="farmersdelight:bone_broth" /> del risotto con
+su cuenco. Todos nuestros zumos y bebidas cuentan como bebidas de Farmer's Delight.
+
+## Coq au vin
+
+Un festín, como los de Farmer's Delight: cocínalo en la olla sin cuenco y sale como una olla de <Item id="coq_au_vin_block" />
+para dejar sobre una mesa. Usa un cuenco en ella para servir un <Item id="coq_au_vin" />, cuatro en total. Tras el último, úsala una vez
+más para quitar los huesos. Aparece en el libro de recetas cuando llevas vino tinto.
+
+<Recipe id="cooking/coq_au_vin_block" />
+
+| Ración | Comida | Nutrido |
+|---|---|---|
+| <Item id="coq_au_vin" /> | <FoodStats nutrition={coq.food.nutrition} saturation={coq.food.saturation} compact /> | {duration(meals['vineandbarrel:coq_au_vin'])} |
+
+Si se rompe antes de servir a nadie, la olla vuelve entera; una vez servida, solo quedan los huesos.
+
+## Pan de cerveza
+
+Tres de trigo y una cerveza (pale ale o de trigo) dan dos panes. La jarra se queda en la cuadrícula de crafteo. Aparece en el libro
+de recetas cuando llevas una pale ale o una cerveza de trigo.
+
+<Recipe id="beer_bread" />
+
+| Pan | Comida |
+|---|---|
+| <Item id="beer_bread" /> | <FoodStats nutrition={bread.food.nutrition} saturation={bread.food.saturation} compact /> |
+
+## Paja de la cebada
+
+Cosecha cebada madura con un cuchillo de Farmer's Delight y obtienes también una <Item id="farmersdelight:straw" />, como del trigo.
+En la tabla de cortar, un cuchillo corta la <Item id="wild_barley" /> en cebada y, la mitad de las veces, una paja, como el arroz silvestre de FD.
+
+<Recipe id="cutting/wild_barley" />
+
+## Sin Farmer's Delight
+
+Los platos, el festín, el pan y el vino de melón siguen existiendo, así que los mundos y los inventarios quedan intactos, pero no puedes
+hacerlos, la pestaña creativa y JEI los ocultan, y los platos no dan Nutrido. La sidra se sigue haciendo con nuestro zumo de manzana. ¿Quitaste Farmer's Delight con sidra aún en un barril? La tanda termina como siempre;
+lo único es que ya no puedes sacar la base.
+
+<Aside>
+Farmer's Delight es un mod de vectorwing. Vine & Barrel es un mod aparte, hecho para encajar a su lado; no forma parte de
+Farmer's Delight ni cuenta con el respaldo de vectorwing.
+</Aside>

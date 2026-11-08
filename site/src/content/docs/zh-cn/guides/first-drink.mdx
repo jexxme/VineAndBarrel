@@ -1,0 +1,97 @@
+---
+title: 你的第一杯酒
+description: 一步一步上手 Vine & Barrel，从第一株野生葡萄到一杯陈酿红葡萄酒。
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/zh-cn';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="酒馆一角，桌上摆着酒桶和酒" />
+
+这篇指南带你从全新的世界出发，酿出第一杯红葡萄酒，再继续酿出陈酿的那一杯。一开始只需要原版材料，
+葡萄会在途中找到。每一步都链接到有完整细节的页面。
+
+<Steps>
+
+1. **找到野生葡萄。** 野生植物成片生长在野外，各自长在合适的地方。酿红酒要找
+   <Item id="wild_grapes" />：徒手破坏一株，就能得到<Item id="red_grapes" plural />。
+
+   <WildCrops />
+
+   找不到？村庄的农民和流浪商人会卖葡萄，村庄的箱子里也常有一些。详见
+   [村庄与酒馆](/villages/)。
+
+2. **种几丛灌木。** 把葡萄种在草方块、泥土或耕地上，和甜浆果一样。灌木会自己生长，
+   成熟后右键即可采摘 {h.grapes.count[0]} 到 {h.grapes.count[1]} 颗葡萄。它会退回一个生长阶段，
+   然后再次结果，所以你不需要重新种植。骨粉可以催熟。
+
+   <Stages prefix="grape_bush" title="生长中的葡萄灌木" labels={['刚种下', '生长中', '半熟', '成熟']} />
+
+   一批果汁需要 {grapesPerBatch} 颗葡萄和一份糖，所以刚开始有几丛灌木就够了。更多内容见
+   [作物](/crops/)。
+
+3. **做一口酿造锅，架在火上。** <Item id="brew_kettle" />是铜制的。只有正下方的方块是热的，它才会酿造：
+   从第一天起，点燃的营火就能用。它架在火焰上方的铁托架上。
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **酿葡萄汁。** 右键打开酿造锅，放入 {grapesPerBatch} 颗葡萄和一份糖。锅加热时箭头会慢慢填满，
+   锅盖下冒出蒸汽，{seconds(juice.brewingTime)}后，量表里就有了 {juice.servings} 份<Item id="grape_juice" />。
+   如果你放进更多材料，它会接着酿下一批。详见
+   [酿造锅](/brew-kettle/)。
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **取出来。** 拿玻璃瓶右键酿造锅取一份，拿铁桶则取 {rules.servingsPerBucket} 份。
+   葡萄汁本身就是一种饮品：它能缓解[微醺](/tipsy/)。
+
+6. **装满陈酿桶。** 放下一个<Item id="aging_barrel" />，用桶或瓶子右键它。它能装
+   {rules.barrelCapacity} 份：两桶就能装满。发酵期间继续倒入同样的果汁补满也没问题。
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **等它发酵。** **{days(wine.fermentingTime)}** 后，果汁就变成了<Item id="red_wine" />。酒桶会告诉你进度：
+   发酵时顶上的玻璃水封会冒泡，空手右键则会显示一行状态，比如 *红葡萄酒 · 8份 · 发酵中，明天早上完成*。
+   计时按游戏时间走，所以睡过一夜也算数。详见[陈酿桶](/aging-barrel/)。
+
+8. **放一杯酒。** 拿空的<Item id="wine_glass" />右键酒桶，放出一份。葡萄酒装进高脚杯，
+   啤酒、蜂蜜酒和苹果西打装进<Item id="mug" />；拿错了，酒桶会告诉你。
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **喝下去。** <Item id="red_wine" />会给你<EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} />，
+   外加一级<EffectBadge id="vineandbarrel:tipsy" name="微醺" />。杯子还是你的。
+   和附近的朋友同时喝，就会触发一次 **干杯！**：所有人的增益都延长 {rules.cheersBonusPercent}%。
+
+10. **让剩下的继续陈酿。** 再放着酒桶不动 **{days(wine.agingTime)}**，剩下的就会变成
+    <Item id="aged_red_wine" />：颜色更深、会闪光，还带有<EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />。
+    一声轻轻的木塞声，加上顶上的红色蜡封，就说明好了。
+
+</Steps>
+
+<Aside type="tip" title="等不及了？">
+在陈酿阶段，每放出一杯，能陈酿的就少一份。多备两个酒桶：一桶拿来喝，另一桶放着不动，直到陈酿完成。
+或者找一座村庄酒馆，那里的酒桶本来就是满的，有几桶还是陈酿好的。详见
+[村庄与酒馆](/villages/)。
+</Aside>
+
+## 接下来去哪
+
+- 酿其他的酒：白葡萄酿白葡萄酒，甜浆果酿甜浆果酒，大麦和啤酒花酿淡色艾尔，小麦和啤酒花酿小麦啤酒，
+  蜂蜜酿蜂蜜酒，苹果酿苹果西打。详见
+  [酒类](/drinks/)和[作物](/crops/)。
+- 把几个酒桶并排放好，搭一座像样的酒窖：[搭建酒窖](/guides/cellar/)。
+- 留心自己的酒量：每一级[微醺](/tipsy/)有什么效果，以及怎么醒酒。
+- 有了 Farmer's Delight，就可以在它的炉灶上酿酒，也可以拿你的酒下厨：[Farmer's Delight](/farmers-delight/)。

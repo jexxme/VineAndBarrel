@@ -1,0 +1,189 @@
+---
+// Every way a blackout can end, as chalkboard cards: how likely it is, where it can happen, the souvenirs it brings
+// and the lines you might wake up to (behind a click, for those who'd rather find out themselves).
+// Weights, poses, souvenirs, ranges and lines come from the game (rules.tipsy.blackout); names and wording from
+// src/data/code/blackout.ts.
+import Item from '../mc/Item.astro';
+import { rules, gameText } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
+import { endingText } from '../../data/code/blackout';
+
+const locale = localeOf(Astro.currentLocale);
+const b = rules.tipsy.blackout;
+const endings = (b.endings as { id: string; weight: number; pose: string; souvenirs: string[]; lines: string[]; lineKeys?: string[]; collectable: boolean }[]).map((e) => ({
+	...e,
+	name: endingText[e.id]?.name(locale) ?? e.id.replaceAll('_', ' '),
+	where: endingText[e.id]?.where(b.ranges, locale) ?? '',
+	// the fallback draws its souvenir from everyone else's pool; the page says so instead of listing them all
+	souvenirs: e.collectable ? e.souvenirs : [],
+}));
+const collectable = endings.filter((e) => e.collectable);
+const total = collectable.reduce((n, e) => n + e.weight, 0);
+const max = Math.max(...collectable.map((e) => e.weight));
+const POSE: Record<string, string> = { bed: t('wakes in a bed', locale), ground: t('wakes on the ground', locale), seat: t('wakes sitting in a boat', locale) };
+---
+<ul class="vb-endings not-content">
+	{endings.map((e) => (
+		<li class="vb-chalk" id={`ending-${e.id.replaceAll('_', '-')}`}>
+			<p class="h">
+				<span class="name">{e.name}</span>
+				<span class="pose">{POSE[e.pose]}</span>
+			</p>
+			{e.collectable ? (
+				<p class="odds" title={t('Draw weight {w} of {total}', locale, { w: e.weight, total })}>
+					<span class="bar"><i style={`width:${(e.weight / max) * 100}%`}></i></span>
+					<span class="pct">{t('about {p}%', locale, { p: Math.round((e.weight / total) * 100) })}</span>
+				</p>
+			) : (
+				<p class="odds"><span class="pct fallback">{t('only when nothing else is possible', locale)}</span></p>
+			)}
+			<p class="where">{e.where}</p>
+			{e.souvenirs.length > 0 && (
+				<div class="souv"><span class="lbl">{t('Souvenir, one of', locale)}</span><ul>{e.souvenirs.map((s) => <li><Item id={s} /></li>)}</ul></div>
+			)}
+			<details>
+				<summary>{t('What you wake up to', locale)}</summary>
+				<ul class="lines">{e.lines.map((l, i) => <li>{gameText(e.lineKeys?.[i], l, locale).replace('%s', gameText('entity.minecraft.cow', 'cow', locale))}</li>)}</ul>
+			</details>
+		</li>
+	))}
+</ul>
+<style>
+	.vb-endings {
+		list-style: none;
+		padding: 0;
+		margin: 28px 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+		gap: 20px;
+	}
+	.vb-endings > li {
+		margin: 0 !important;
+		padding: 6px 10px 6px;
+		box-shadow: 6px 6px 0 rgb(0 0 0 / 0.35);
+		scroll-margin-top: 7rem;
+	}
+	.vb-endings > li:target {
+		box-shadow: 6px 6px 0 rgb(0 0 0 / 0.35), 0 0 0 4px var(--vb-gilt);
+	}
+	p {
+		margin: 0;
+		line-height: 26px;
+	}
+	.h {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0 12px;
+		padding-bottom: 4px;
+		border-bottom: 2px dashed var(--vb-chalk-line);
+	}
+	.name {
+		color: var(--vb-chalk-yellow);
+		text-shadow: 2px 0 0 currentColor;
+		letter-spacing: 2px;
+	}
+	.pose {
+		color: var(--vb-chalk-dim);
+	}
+	.odds {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-top: 6px;
+	}
+	.bar {
+		flex: 1;
+		height: 10px;
+		background: rgb(239 233 220 / 0.12);
+	}
+	.bar i {
+		display: block;
+		height: 100%;
+		background: var(--vb-chalk-orange);
+	}
+	.pct {
+		color: var(--vb-chalk-orange);
+		white-space: nowrap;
+	}
+	.pct.fallback {
+		white-space: normal;
+	}
+	.where {
+		margin-top: 6px;
+		color: var(--vb-chalk);
+	}
+	.souv {
+		margin-top: 6px;
+		color: var(--vb-chalk);
+		line-height: 26px;
+	}
+	.souv ul {
+		list-style: none;
+		margin: 2px 0 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 2px 14px;
+	}
+	.souv li {
+		margin: 0;
+		display: flex;
+		align-items: center;
+		min-height: 32px;
+	}
+	.souv :global(.fd-item) {
+		vertical-align: baseline;
+	}
+	.souv :global(a.fd-item),
+	.souv :global(span.fd-item) {
+		color: var(--vb-chalk-yellow);
+	}
+	.lbl {
+		color: var(--vb-chalk-dim);
+	}
+	details {
+		margin-top: 6px;
+		border-top: 2px dotted rgb(239 233 220 / 0.18);
+		padding-top: 4px;
+	}
+	summary {
+		cursor: pointer;
+		color: var(--vb-chalk-orange);
+		list-style: none;
+	}
+	summary::-webkit-details-marker {
+		display: none;
+	}
+	summary::before {
+		content: '+ ';
+	}
+	details[open] summary::before {
+		content: '- ';
+	}
+	summary:hover,
+	summary:focus-visible {
+		color: var(--vb-chalk-yellow);
+		outline: none;
+	}
+	.lines {
+		margin: 4px 0 2px;
+		padding-left: 0;
+		list-style: none;
+	}
+	.lines li {
+		margin: 0;
+		color: #fff;
+		text-shadow: 2px 2px 0 #3f3f3f;
+		line-height: 26px;
+	}
+	.lines li::before {
+		content: '"';
+		color: var(--vb-chalk-dim);
+	}
+	.lines li::after {
+		content: '"';
+		color: var(--vb-chalk-dim);
+	}
+</style>

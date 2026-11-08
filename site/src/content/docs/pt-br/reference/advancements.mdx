@@ -1,0 +1,12 @@
+---
+title: Avanços
+description: A aba de avanços de Vine & Barrel e como conseguir cada um.
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/pt-br';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel tem a própria aba de avanços, <strong>{gameText(root.titleKey, root.title)}</strong>: <em>{gameText(root.descriptionKey, root.description)}</em>
+
+<Advancements />

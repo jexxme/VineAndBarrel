@@ -1,0 +1,3 @@
+# en_us keys that are not translated yet, one per line. checkLang (./gradlew check) allows exactly these to be missing
+# from the other language files; the game shows the English text for them meanwhile. Add a new key here when you add it
+# to en_us.json without translating it; the next translation pass translates them all and empties this list.

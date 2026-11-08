@@ -1,0 +1,112 @@
+---
+title: Beczka do leżakowania
+description: Napełnij, sfermentuj, wyleżakuj i nalej. Jak działa Beczka do leżakowania, ile to trwa i jak zbudować z nich piwnicę.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import AgingTimeline from '../../../components/brewing/AgingTimeline.astro';
+import { rules, byType, days, list, nameOf } from '../../../lib/l10n/pl';
+
+export const aging = byType('vineandbarrel:aging');
+export const a = aging[0];
+export const sameTimes = aging.every((r) => r.fermentingTime === a.fermentingTime && r.agingTime === a.agingTime);
+
+<Render name="scenes/barrel-rack" float="right" size={256} alt="Trzy beczki do leżakowania obok siebie, połączone w regał" />
+
+<Item id="aging_barrel" /> to serce Vine & Barrel. Nie ma ekranu: nalewasz do niej, czekasz i czerpiesz z niej, wszystko
+w świecie gry. Stawia się ją kranem w twoją stronę.
+
+## Napełnianie
+
+Kliknij beczkę prawym przyciskiem bazą z [Kotła warzelnego](/brew-kettle/):
+
+- wiadro wlewa **porcje: {rules.servingsPerBucket}**, butelka **porcje: {rules.servingsPerBottle}**,
+- beczka mieści **{rules.barrelCapacity} porcji**: dwa wiadra albo osiem butelek.
+
+Możesz dolewać tej samej bazy, dopóki jeszcze fermentuje. Pomyłka przy wlewaniu? Dopóki partia nie zmieni się
+w napój, puste wiadro lub butelka wyjmą ją z powrotem.
+
+## Fermentacja i leżakowanie
+
+{sameTimes && <p>Każda partia przechodzi te same dwa etapy:</p>}
+
+1. **Fermentacja**, czas: **{days(a.fermentingTime)}**. Partia zmienia się w *młody* napój, na przykład <Item id="red_wine" />.
+2. **Leżakowanie**, kolejne **{days(a.agingTime)}**. To, co jeszcze zostało w beczce, zmienia się w napój *leżakowany*, na przykład <Item id="aged_red_wine" />, którego bonus jest mocniejszy i trwa dłużej.
+
+<AgingTimeline />
+
+{aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
+
+Zegar chodzi według czasu gry, więc przespana noc się liczy. Możesz nalewać młode napoje w trakcie leżakowania, ale
+każda nalana porcja to o jedną mniej do zleżakowania. Z Farmer's Delight fermentuje też jego sok jabłkowy (w ten sam cydr) i sok
+arbuzowy: zobacz
+[Farmer's Delight](/farmers-delight/).
+
+<Shot src="cellar.jpg" caption="Piwnica wzdłuż ściany karczmy: beczki połączone w regał, drugi rząd ułożony na wierzchu. Korek fermentacyjny na jednej z nich bulgocze; woskowe pieczęcie oznaczają leżakowane partie." />
+
+## Podgląd pracy
+
+Jak idzie beczce, poznasz bez otwierania czegokolwiek:
+
+- **Kliknięcie prawym przyciskiem pustą ręką** pokazuje linię stanu, np. *Pale ale · Porcje: 5 · leżakuje, gotowe za 3 dni*. Zmień nazwę beczki
+  na kowadle, a nazwa pojawi się tam też.
+- **Czop na górze** pokazuje etap: korek, gdy beczka jest pusta albo napój jest młody i gotowy, szklany korek fermentacyjny, który bulgocze,
+  gdy trwa fermentacja, i czerwona woskowa pieczęć, gdy napój jest leżakowany.
+- **Wziernik** z przodu pokazuje, jak bardzo jest pełna, w kolorze napoju.
+- **Dźwięki i kapanie:** bulgotanie podczas fermentacji, kran co jakiś czas kapie, a cichy *pstryk* korka daje znać, że partia stała się leżakowana.
+
+<Stages prefix="barrel-bung" title="Czop" labels={['korek', 'korek fermentacyjny: fermentuje', 'wosk: leżakowane']} />
+<Stages prefix="barrel-fill" title="Wziernik" only={['0', '2', '4', '6', '8']} labels={['pusta', '2', '4', '6', 'pełna']} />
+
+## Nalewanie
+
+Kliknij beczkę prawym przyciskiem pustym naczyniem <Item id="wine_glass" /> (wina) albo <Item id="mug" /> (piwa, miód pitny i cydr), by nalać jedną porcję.
+Rączka kranu się obraca, a napój ląduje w twojej dłoni.
+
+- Niewłaściwe naczynie? Beczka powie, którego użyć (*Czerwone wino – potrzebne naczynie: Kieliszek do wina*), a nic się nie zużywa.
+- Wciąż fermentuje? Powie, kiedy będzie gotowe.
+- Gdy nalejesz ostatnią porcję, beczka jest pusta i gotowa na nową partię.
+
+## Budowa piwnicy
+
+<Render name="scenes/barrel-cellar" float="right" size={256} alt="Dwa rzędy beczek, górny stoi na dolnym" />
+
+- **Regały:** beczki obok siebie, zwrócone w tę samą stronę, łączą swoje kołyski w jeden długi regał.
+- **Stosy:** beczka postawiona na innej traci kołyskę i opiera się na klinach, więc możesz zbudować całą ścianę z beczek.
+- **Komparator:** odczytuje pozostałe porcje, od 0 (pusta) do 15 (wszystkie {rules.barrelCapacity}).
+- **Zniszcz ją pełną**, a zachowa swoją partię i nazwę z kowadła. Opis przedmiotu pokazuje napój, porcje i etap.
+  Leżakowanie jest wstrzymane, dopóki jest przedmiotem, i rusza dalej po ponownym postawieniu. Pełna beczka nie układa się w stosy z innymi.
+- Beczki są drewniane: wydobywaj je siekierą.
+
+## Automatyzacja
+
+- **Leje** z góry wlewają bazy. Z boków i od dołu podają puste kufle i kieliszki oraz wyciągają
+  nalane napoje i puste wiadra i butelki, które zostają po wlewaniu.
+- **Dozowniki** skierowane na beczkę nalewają porcję do pustego kufla lub kieliszka albo wlewają wiadro lub butelkę bazy.
+
+## Warto wiedzieć
+
+- **Dolewaj wcześnie.** Tylko pierwsze wlanie uruchamia zegar: baza dolana później dołącza do partii w jej wieku, więc fermentuje
+  krócej. Gdy partia jest już napojem, beczka nie przyjmuje niczego więcej, dopóki jej nie opróżnisz.
+- **Jedna baza na beczkę.** Wlanie innej bazy jest odrzucane (*W beczce jest Sok z winogron*), a nic się nie zużywa.
+- **Prawie pełna?** Wiadro potrzebuje miejsca na wszystkie porcje (liczba: {rules.servingsPerBucket}), więc beczka, w której jest więcej niż
+  {rules.barrelCapacity - rules.servingsPerBucket}, go odrzuci. Resztę dolej butelkami. Działa to też w drugą stronę: puste wiadro
+  wyjmuje bazę z powrotem tylko wtedy, gdy w środku jest co najmniej tyle porcji, ile mieści (liczba: {rules.servingsPerBucket}).
+- **Leżakuje, gdy cię nie ma.** Beczka chodzi według czasu gry, więc działa dalej, gdy jesteś daleko lub offline. Przegapisz
+  tylko pstryk korka.
+- **Piwnicę zbuduj w Overworldzie.** W Netherze i Kresie nie ma dnia do przespania, więc spanie nie
+  przyspiesza tam beczki, a jej linia stanu liczy w dniach zamiast „jutro rano”.
+- **Pełny ekwipunek?** Nalany napój spada wtedy pod twoje nogi.
+- **Tryb kreatywny:** zniszczenie pełnej beczki nic nie wyrzuca. Wybierz blok (środkowy przycisk myszy z Ctrl), by skopiować ją z partią.
+- **Trzymaj creepery z dala.** Wybuch może całkiem zniszczyć beczkę razem z partią.
+- **Wskazówki o lejach:** lej na górze wlewa tylko to, co beczka przyjmie, więc niewłaściwa baza czeka w leju zamiast go
+  zatkać. Trzymaj lej pod układem do nalewania, żeby gotowe napoje nie blokowały następnych.
+- **Bez ryzyka pożaru.** Beczki nigdy się nie zapalają. Pusta nawet pali się jako paliwo do pieca; pełna nie.
+
+## Przepis
+
+<Recipe id="aging_barrel" />

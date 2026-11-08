@@ -1,0 +1,450 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "vineandbarrel:block/placed_drink_glass",
+    "glass": "vineandbarrel:block/placed_drink_glass",
+    "liquid": "vineandbarrel:block/placed_drink_liquid",
+    "foam": "vineandbarrel:block/placed_drink_foam"
+  },
+  "elements": [
+    {
+      "name": "mug_wall_n",
+      "from": [
+        10,
+        0,
+        2
+      ],
+      "to": [
+        14,
+        5,
+        2.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            15,
+            0,
+            16,
+            1
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_wall_s",
+      "from": [
+        10,
+        0,
+        5.5
+      ],
+      "to": [
+        14,
+        5,
+        6
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            15,
+            0,
+            16,
+            1
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_wall_w",
+      "from": [
+        10,
+        0,
+        2.5
+      ],
+      "to": [
+        10.5,
+        5,
+        5.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            15,
+            0,
+            16,
+            1
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_wall_e",
+      "from": [
+        13.5,
+        0,
+        2.5
+      ],
+      "to": [
+        14,
+        5,
+        5.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            15,
+            0,
+            16,
+            1
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_base",
+      "from": [
+        10.5,
+        0,
+        2.5
+      ],
+      "to": [
+        13.5,
+        1,
+        5.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9,
+            13,
+            12,
+            14
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            9,
+            13,
+            12,
+            14
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            9,
+            13,
+            12,
+            14
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            9,
+            13,
+            12,
+            14
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            9,
+            10,
+            12,
+            13
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_handle",
+      "from": [
+        14,
+        1,
+        3.5
+      ],
+      "to": [
+        15,
+        4,
+        4.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        },
+        "down": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_liquid",
+      "from": [
+        10.5,
+        1,
+        2.5
+      ],
+      "to": [
+        13.5,
+        4,
+        5.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#liquid",
+          "tintindex": 1
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#liquid",
+          "tintindex": 1
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#liquid",
+          "tintindex": 1
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#liquid",
+          "tintindex": 1
+        }
+      }
+    },
+    {
+      "name": "mug_foam",
+      "from": [
+        10.5,
+        4,
+        2.5
+      ],
+      "to": [
+        13.5,
+        5.25,
+        5.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            3,
+            1.25
+          ],
+          "texture": "#foam"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            3,
+            1.25
+          ],
+          "texture": "#foam"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            3,
+            1.25
+          ],
+          "texture": "#foam"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            3,
+            1.25
+          ],
+          "texture": "#foam"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#foam"
+        }
+      }
+    }
+  ]
+}

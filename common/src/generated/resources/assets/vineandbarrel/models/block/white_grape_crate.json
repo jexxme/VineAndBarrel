@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "vineandbarrel:block/white_grape_crate_side",
+    "side": "vineandbarrel:block/white_grape_crate_side",
+    "top": "vineandbarrel:block/white_grape_crate_top"
+  }
+}

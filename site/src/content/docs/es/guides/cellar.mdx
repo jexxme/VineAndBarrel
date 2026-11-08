@@ -1,0 +1,87 @@
+---
+title: Construir una bodega
+description: "De un barril a una bodega: planea una tanda, una cervecería que funciona con tolvas, estantes y muros de barriles, servir de forma automática y repartir una ronda."
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Shot from '../../../../components/mc/Shot.astro';
+import CellarPlanner from '../../../../components/brewing/CellarPlanner.astro';
+import { rules, recipe, days } from '../../../../lib/l10n/es';
+
+export const wine = recipe('aging/red_wine');
+
+<Render name="scenes/barrel-cellar" float="right" size={230} alt="Dos filas de barriles de crianza, la de arriba apoyada sobre la de abajo" />
+
+Un barril es un comienzo. Una bodega es una fila de ellos, llenados desde una marmita que trabaja sola, con bebidas que sirves
+sin pensarlo. Esta guía la monta en el orden en que la vas a querer; cada parte enlaza con la página que tiene todos los detalles.
+
+## Planea la tanda
+
+¿Cuánto necesitas? Elige una bebida y un número de raciones y obtienes el pedido completo: qué cultivar, cuántas tandas de marmita,
+cuántos cubos y frascos, cuántos barriles y cuánto hay que esperar. Los botones avanzan de barril en barril.
+
+<CellarPlanner />
+
+## Una cervecería que funciona sola
+
+<Render name="scenes/kettle-on-hopper" float="right" size={192} alt="Una marmita sobre una tolva encima de un fuego" />
+
+La [marmita](/brew-kettle/) funciona con tolvas por todos los lados:
+
+- **Debajo, una tolva hace dos trabajos.** Pasa el calor del fuego de debajo hasta la marmita, y saca los
+  frascos y cubos llenos. Así que: fuego, tolva, marmita, apilados.
+- **Arriba, una tolva mete los ingredientes** y los frascos o cubos vacíos. Úsala solo para ingredientes: cualquier cosa que la
+  receta no use, incluso un sobrante de otra receta, detiene la marmita hasta que lo saques.
+- **Desde los lados, las tolvas meten** frascos o cubos vacíos.
+- La marmita sigue elaborando mientras entren ingredientes, hasta {rules.kettleMaxServings} raciones.
+
+<Aside type="tip" title="Recoge tu experiencia">
+Cada tanda da un poco de experiencia, pero la marmita solo la entrega cuando alguien llena un frasco o un cubo a mano, o cuando la
+rompen. Llena uno a mano de vez en cuando.
+</Aside>
+
+## Estantes y muros
+
+<Shot src="cellar.jpg" caption="Una bodega a lo largo de la pared de la taberna: barriles unidos en un estante, una segunda fila apilada encima." />
+
+- **Estantes:** los [barriles de crianza](/aging-barrel/) colocados uno al lado del otro en el suelo, mirando en la misma dirección, unen sus cunas en
+  un estante largo.
+- **Muros:** un barril sobre otro se apoya en calzos en lugar de una cuna, así que puedes apilarlos en un muro. Tu primer
+  barril apilado te da *Maestro bodeguero*.
+- **Ponles nombre.** Renombra un barril en un yunque y el nombre aparece en su línea de estado, así que *Vino de boda* es fácil de encontrar. El
+  nombre se queda cuando rompes el barril y lo vuelves a colocar.
+- **Léelos de un vistazo:** el tapón de arriba dice cuánto ha avanzado cada barril (corcho, esclusa burbujeante, cera roja), y el
+  visor del frente cuánto contiene, con el color de la bebida.
+- **Los comparadores** leen las raciones de un barril, desde 1 con una ración hasta 15 cuando está lleno.
+
+## Llenar y servir con máquinas
+
+- **Una tolva arriba vierte las bases.** Solo vierte lo que el barril admite en ese momento, así que la base equivocada se queda
+  esperando en la tolva.
+- **Las tolvas de los lados** meten jarras o copas vacías; el barril las sirve llenas. Jarras para la cerveza, la hidromiel y la sidra, copas para el
+  vino: las equivocadas se atascan hasta que rompas el barril.
+- **Una tolva debajo** saca las bebidas servidas y los cubos y frascos vacíos que quedan tras verter. Pon una ahí,
+  o las bebidas terminadas bloquean a las siguientes.
+- **Los dispensadores** orientados a un barril sirven una ración con una jarra o una copa vacía, o vierten un cubo o un frasco de base.
+
+## Dónde construirla
+
+- **En el Overworld.** Los barriles corren con el tiempo del juego y dormir toda la noche cuenta, pero en el Nether y en el End no hay
+  noche que saltarse.
+- **Lejos de los creepers.** Una explosión puede destruir un barril, tanda incluida.
+- **En cualquier otro sitio:** los barriles siguen madurando aunque estés lejos o desconectado, y nunca se incendian. Solo
+  te pierdes el suave pop de corcho cuando una tanda se vuelve añeja.
+- **Llena dos de cada.** Tarda {days(wine.fermentingTime)} en fermentar y {days(wine.agingTime)} más en madurar, y cada copa
+  que sirves entre medias es una menos que madura. Bebe de un barril y deja el otro en paz.
+
+## Repartir una ronda
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Jarras y copas colocadas sobre un bloque" />
+
+- **Pon la mesa:** agáchate y haz clic derecho en la parte de arriba de un bloque con una jarra o una copa para dejarla ahí, hasta cuatro por bloque.
+  Las bebidas añejas relucen incluso sobre la mesa.
+- **¡Salud!** Termina una bebida a la vez que tus amigos cercanos y la mejora de todos dura un
+  {rules.cheersBonusPercent}% más. Mira [Bebidas](/drinks/#salud).
+- **Vigila los niveles.** Cada bebida suma un nivel de [Achispado](/tipsy/). Ten a mano <Item id="grape_juice" /> o agua:
+  cada uno te quita un nivel.

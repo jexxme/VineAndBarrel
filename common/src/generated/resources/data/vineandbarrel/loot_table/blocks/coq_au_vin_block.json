@@ -1,0 +1,45 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "conditions": [
+        {
+          "block": "vineandbarrel:coq_au_vin_block",
+          "condition": "minecraft:block_state_property",
+          "properties": {
+            "servings": "4"
+          }
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "vineandbarrel:coq_au_vin_block"
+        }
+      ],
+      "rolls": 1.0
+    },
+    {
+      "conditions": [
+        {
+          "condition": "minecraft:inverted",
+          "term": {
+            "block": "vineandbarrel:coq_au_vin_block",
+            "condition": "minecraft:block_state_property",
+            "properties": {
+              "servings": "4"
+            }
+          }
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:bone"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "vineandbarrel:blocks/coq_au_vin_block"
+}

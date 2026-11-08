@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_white_grapes": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "vineandbarrel:white_grapes"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "vineandbarrel:brewing/white_grape_juice"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_white_grapes"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "vineandbarrel:brewing/white_grape_juice"
+    ]
+  }
+}

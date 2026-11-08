@@ -1,0 +1,107 @@
+---
+title: Başlarken
+description: Vine & Barrel'ı kur, neler eklediğine ve demleme döngüsünün nasıl işlediğine bak, nereden başlayacağını seç.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import Loop from '../../../components/brewing/Loop.astro';
+import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/tr';
+import { downloads } from '../../../data/code/downloads';
+
+export const cells = { 'next release': 'sonraki sürüm', planned: 'planlanıyor' };
+export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+
+export const needs = (s) => s.replace(' or newer', ' veya üzeri').replace(/^(.+) to (.+)$/, '$1 ile $2 arası');
+
+export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
+export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
+
+Vine & Barrel, Minecraft'a bir bağ, bir bira evi ve bir mahzen getirir. Üzüm, şerbetçiotu ve arpa yetiştirirsin, meyve suyunu ve şırayı bakır bir kazanda kaynatırsın, meşe fıçılarda mayalanıp yıllanmasını beklersin ve arkadaşlarına bir tur ısmarlarsın. Sabrın karşılığı var: yıllanmış bir içeceğin etkisi daha güçlü ve daha uzun sürer, üstelik kadehte parıldar.
+
+<Shot src="hero.jpg" caption="Bir Vine & Barrel çiftliği: fıçı mahzenli ve çardaklı meyhane, bir bağ, direklere sarılmış şerbetçiotu ve bir arpa tarlası." />
+
+## Kurulum
+
+Minecraft sürümünü ve mod yükleyicini bul, indirmeyi o hücreden yap:
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{cell(r.neoforge)}</td>
+				<td>{cell(r.fabric)}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+- **NeoForge** için gerekenler: {downloads.map((r) => `Minecraft ${r.minecraft} üzerinde NeoForge ${r.neoforgeNeeds ? needs(r.neoforgeNeeds) : `${meta.neoforge} veya üzeri`}`).join('; ')}.
+- **Fabric** için Fabric Loader {meta.fabricLoader} veya üzeri ve Fabric API {meta.fabricApi} veya üzeri gerekir.
+
+Dosya adı hangisine sahip olduğunu söyler: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> NeoForge, <code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> Fabric dosyasıdır. Dosyayı hem istemcide hem sunucuda `mods` klasörüne koy. Başka hiçbir mod gerekmez. Birlikte çalıştığı her şey isteğe bağlıdır ve kendiliğinden devreye girer: bkz. [Uyumluluk](/compatibility/).
+
+<Aside type="tip" title="Farmer's Delight ile mi oynuyorsun?">
+Vine & Barrel kendi başına bir moddur ama Farmer's Delight'a çok iyi oturur: kazanı FD'nin ocağında kaynar, üzüm ve şerbetçiotu sarmaşıkları FD'nin halatlarına tırmanır; bir avuç pişirme kazanı yemeği, bir ziyafet ve bir ekmek onun içeceklerini kullanır. Bkz. [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Nasıl işler
+
+Her içecek tarladan kadehe aynı yolu izler. Ayrıntılar için bir adıma tıkla.
+
+<Loop />
+
+## Mod neler ekliyor
+
+<dl class="tour">
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:red_grapes')?.src} alt="" width="32" height="32" /> Yeni ürünler</dt>
+		<dd>[Üzüm çalıları](/crops/), kırmızı ve beyaz, tekrar tekrar toplayabileceğin şerbetçiotu çalıları, tırmanmaları için bir bahçe kafesi (Farmer's Delight gerekmez) ve buğday gibi büyüyen arpa. Onları önce yabani bitki olarak, köy çiftliklerinde ve gezgin tüccarda bulursun.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:brew_kettle')?.src} alt="" width="32" height="32" /> Bir bira evi</dt>
+		<dd>Bakır [Kaynatma Kazanı](/brew-kettle/), ürünleri bir ateşin üstünde meyve suyuna ve şıraya çevirir. Her bakır gibi zamanla yıpranır, istersen bir zincirden asılır ve huniler onu senin yerine çalıştırabilir.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aging_barrel')?.src} alt="" width="32" height="32" /> Bir mahzen</dt>
+		<dd>[Yıllandırma Fıçısı](/aging-barrel/) ekransızdır: doldurursun, beklersin ve çekersin, hepsi dünyanın içinde. Fıçılar yan yana sıralara katılır, üst üste duvara dönüşür.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aged_red_wine')?.src} alt="" width="32" height="32" /> {meta.counts.drinks} içecek</dt>
+		<dd>{young.map((d) => nameOf(d.id)).join(', ').replace(/, ([^,]+)$/, ' ve $1')}; hepsi hem genç hem yıllanmış{fdExtra.length > 0 && `, ayrıca Farmer's Delight ile ${list(fdExtra.map((d) => nameOf(d.id)))}`}. Her biri bir etki verir: seviye {roman(rules.youngBuffAmplifier)}, yıllanınca seviye {roman(rules.agedBuffAmplifier)}. Bkz. [İçecekler](/drinks/).</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> Çakırkeyif</dt>
+		<dd>Her içecek bir [Çakırkeyif](/tipsy/) seviyesi ekler: başta bir sallanma, hıçkırık ve azıcık cesaret, sonra ağır göz kapakları ve ağır bacaklar. Ne zaman duracağını bil.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> Meyhaneler</dt>
+		<dd>Köylerde fıçıları çoktan dolu bir [meyhane](/villages/) bulunur; kendi içeceğini demlemeden önce bir tadına bakabilirsin.</dd>
+	</div>
+</dl>
+
+## Nereden başlamalı
+
+- **Modda yeni misin?** [İlk içeceğin](/guides/first-drink/) rehberini izle: yeni bir dünyadan ilk yıllanmış kırmızı şarap kadehine, adım adım.
+- **Toplu demlemeye hazır mısın?** [Mahzen kurmak](/guides/cellar/) fıçı sıralarını, otomasyonu ve parti planlamayı anlatır.
+- **Acelen mi var?** Bir köy meyhanesi bul: fıçıları dolu ve çekilmeyi bekliyor. Bkz. [Köyler ve meyhaneler](/villages/).
+- **Bir şey mi arıyorsun?** Her eşyanın [Tüm eşyalar ve bloklar](/items/) içinde kendi sayfası var, her tarif [Tüm tarifler](/reference/recipes/) içinde, sunucu ve istemci ayarları ise [Yapılandırma](/reference/config/) sayfasında.
+
+## Temel tarifler
+
+İki blok ve iki kap da vanilla malzemelerinden yapılır:
+
+<Recipe id="brew_kettle" /> <Recipe id="aging_barrel" />
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<style>{`
+.tour { margin: 1rem 0 0; border-top: 2px solid var(--fd-border); }
+.tour > div { display: grid; align-items: start; grid-template-columns: 12rem 1fr; gap: 1rem; padding: .7rem 0; border-bottom: 2px solid var(--fd-border); margin: 0; }
+.tour dt { font-weight: 400; display: flex; align-items: center; gap: 10px; color: var(--vb-heading); }
+.tour dd { margin: 0; }
+@media (max-width: 40rem) { .tour > div { grid-template-columns: 1fr; gap: .2rem; } }
+`}</style>

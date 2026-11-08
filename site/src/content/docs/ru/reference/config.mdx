@@ -1,0 +1,73 @@
+---
+title: Настройки
+description: Все параметры Vine & Barrel для владельцев серверов и для каждого игрока, со значениями по умолчанию и описанием.
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../../lib/l10n/ru';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+У Vine & Barrel два файла настроек, оба про [«Навеселе»](/tipsy/). Всё остальное, от рецептов до времени выдержки в бочке,
+работает так, как поставляется в моде, и меняется датапаком, как любой рецепт.
+
+В игре их можно менять на экране настроек: **Моды**, Vine & Barrel, **Настройки** на NeoForge; на Fabric та же кнопка
+появляется с установленным [Mod Menu](https://modrinth.com/mod/modmenu). Изменения там применяются сразу. Серверные параметры
+показываются там в одиночной игре (но не после открытия мира для LAN); на сервере они принадлежат серверу.
+
+Сами файлы: на NeoForge это файлы TOML с параметрами в разделе <code>[{configFiles.server.section}]</code>. На
+Fabric это обычные файлы <code>.properties</code> в папке <code>config</code>, те же параметры записаны как
+<code>{configFiles.server.section}.option=value</code>. На Fabric клиентский файл читается при запуске игры, так что
+после правки перезапусти её; серверный файл перечитывается по <code>/reload</code>.
+
+## Серверные параметры
+
+В <code>{configFiles.server.file}</code> на NeoForge, в <code>{configFiles.server.fabricFile}</code> на Fabric. Значения сервера
+передаются каждому, кто заходит, так что все играют по одним правилам. У одного мира могут быть свои: положи файл в папку
+<code>serverconfig</code> этого мира, и он перекроет файл из <code>config</code>, пока этот мир запущен.
+
+<table>
+	<thead><tr><th>Параметр</th><th>По умолчанию</th><th>Что делает</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">от {o.range[0]} до {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Режим без алкоголя">
+Поставь `enabled = false` (`tipsy.enabled=false` на Fabric), и напитки станут обычными напитками с бонусами: никакого «Навеселе», икоты и провалов в памяти, но названия и бонусы те же.
+Подходит для семейного сервера или если тебе просто не нравится качание.
+</Aside>
+
+## Клиентские параметры
+
+В <code>{configFiles.client.file}</code> на NeoForge, в <code>{configFiles.client.fabricFile}</code> на Fabric. Каждый игрок
+настраивает их для себя; они меняют только то, что видишь ты.
+
+<table>
+	<thead><tr><th>Параметр</th><th>По умолчанию</th><th>Что делает</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">от {o.range[0]} до {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="Укачивает?">
+Поставь `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` на Fabric). «Навеселе» перестанет двигать твой экран, что бы ни говорил сервер: ни качания, ни толчков, ни приступов Тошноты. Ползунки ванильных настроек «Эффекты укачивания» и «Эффекты поля зрения» тоже его смягчают. Лежание лицом вниз после падения всё равно видно, это не эффект экрана; всё остальное в «Навеселе» остаётся.
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

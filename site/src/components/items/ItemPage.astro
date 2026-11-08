@@ -1,0 +1,506 @@
+---
+// One page per Vine & Barrel item, generated from src/data/gen. Stable URL: /items/<item id path>/
+// Layout (the same as the FD Neoforged docs): the item as you see it in game (a big slot and its tooltip), then how
+// to get it, then what it is used for.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Recipe from '../../components/recipes/Recipe.astro';
+import Slot from '../../components/mc/Slot.astro';
+import Stages from '../../components/data/Stages.astro';
+import Tr from '../../components/mc/Tr.astro';
+import {
+	itemList, iconOf, renderOf, recipesFor, recipesUsing, recipeOutputs, loot, trades, worldgen, rules, drinks, blocks, renders,
+	seconds, duration, roman, pct, nameOf, gameText, pageUrl, url, short, mechanicFor, type Item as ItemT,
+} from '../../lib/data';
+import { t, listOf } from '../../lib/i18n';
+
+// Rendered by pages/items/[slug].astro (English) and pages/[locale]/items/[slug].astro (the other languages)
+const { item, locale = 'en' } = Astro.props as { item: ItemT; locale?: string };
+const icon = iconOf(item.id);
+const itemName = nameOf(item.id, locale);
+// Category names, lower case in running text (the table is literal so the keys get collected)
+const CAT = {
+	workstations: { label: t('Workstations', locale), lower: t('workstations', locale) },
+	crops: { label: t('Crops & seeds', locale), lower: t('crops & seeds', locale) },
+	storage: { label: t('Storage', locale), lower: t('storage', locale) },
+	bases: { label: t('Juice & wort', locale), lower: t('juice & wort', locale) },
+	drinks: { label: t('Drinks', locale), lower: t('drinks', locale) },
+	meals: { label: t("Farmer's Delight meals", locale), lower: t("farmer's delight meals", locale) },
+} as Record<string, { label: string; lower: string }>;
+// "a or b" in the page's language
+const or = (xs: string[]) => (locale === 'en' ? xs.join(' or ') : listOf(xs, locale, 'disjunction'));
+const VILLAGE = {
+	desert: () => t('desert', locale),
+	plains: () => t('plains', locale),
+	savanna: () => t('savanna', locale),
+	snowy: () => t('snowy', locale),
+	taiga: () => t('taiga', locale),
+} as Record<string, () => string>;
+const village = (v: string) => VILLAGE[v]?.() ?? v;
+const TOOL = {
+	axe: () => t('axe', locale),
+	hoe: () => t('hoe', locale),
+	pickaxe: () => t('pickaxe', locale),
+	shovel: () => t('shovel', locale),
+} as Record<string, () => string>;
+// What a mechanic page is called in "How … work(s)" (mechanicFor gives the English label)
+const MECHANIC = {
+	'the Brew Kettle': () => t('How the Brew Kettle works', locale),
+	'the Aging Barrel': () => t('How the Aging Barrel works', locale),
+	crops: () => t('How crops work', locale),
+	'storage blocks': () => t('How storage blocks work', locale),
+	drinks: () => t('How drinks work', locale),
+	"Farmer's Delight meals": () => t("How Farmer's Delight meals work", locale),
+} as Record<string, () => string>;
+const block = item.block ? blocks[item.block] : null;
+const blockSlug = item.block?.split(':')[1];
+// A placed block shows its render; seeds and produce that plant a crop show their icon
+const render = blockSlug && blockSlug === item.id.split(':')[1] ? renderOf(`blocks/${blockSlug}`) : null;
+const stagePrefix = blockSlug && Object.keys(renders).some((k) => k.startsWith(`stages/${blockSlug}-`)) ? blockSlug : null;
+const made = recipesFor(item.id);
+const used = recipesUsing(item.id);
+const usedOutputs = [...new Set(used.flatMap((r) => recipeOutputs(r)).filter((o) => o !== item.id))];
+const drink = drinks.find((d) => d.id === item.id);
+
+// Where to find it: wild plants, picking a bush, village farms, trades, chests
+const wild = worldgen.filter((w) => !w.extra && (w.crop === item.id || rules.wildDrops[w.crop]?.some((d: any) => d.id === item.id)));
+const myTrades = trades.filter((tr) => tr.gives.id === item.id);
+const chestOdds = (pools: any[]) => {
+	let miss = 1;
+	const counts: string[] = [];
+	for (const pool of pools) {
+		const e = pool.entries.find((x: any) => x.id === item.id);
+		if (!e) continue;
+		const [a, b] = pool.rolls;
+		let poolMiss = 0;
+		for (let r = a; r <= b; r++) poolMiss += (1 - e.chance) ** r / (b - a + 1);
+		miss *= poolMiss;
+		counts.push(e.count[0] === e.count[1] ? `${e.count[0]}` : `${e.count[0]}–${e.count[1]}`);
+	}
+	return { chance: 1 - miss, counts: [...new Set(counts)] };
+};
+const chests = Object.entries(loot)
+	.map(([table, pools]) => ({ table, ...chestOdds(pools) }))
+	.filter((ch) => ch.chance > 0)
+	.map((ch) => {
+		const v = village(ch.table.split('_')[1]);
+		return { ...ch, name: ch.table.includes('tavern') ? t('Tavern ({village})', locale, { village: v }) : t('Village house ({village})', locale, { village: v }) };
+	});
+const picked = Object.entries(rules.harvest as Record<string, { id: string; count: number[] }>).filter(([, h]) => h.id === item.id);
+const farms = Object.entries(rules.villages.farmCrops as Record<string, { block: string }[]>).filter(([, cs]) => cs.some((x) => x.block === item.block)).map(([v]) => v);
+const hasSources = wild.length > 0 || myTrades.length > 0 || chests.length > 0 || picked.length > 0 || farms.length > 0;
+
+const mech = mechanicFor(item);
+const cat = CAT[item.category];
+const siblings = itemList.filter((i) => i.category === item.category);
+const c = item.consumable;
+const ticks = c ? Math.round(c.seconds * 20) : null;
+const mineable = (block?.tags as string[] | undefined)?.filter((tag) => tag.includes('mineable/')).map((tag) => tag.split('mineable/')[1]) ?? [];
+const blockProps = block && render ? Object.entries(block.properties as Record<string, string[]>) : [];
+
+// Tooltip lines, coloured like the game: blue for effects, grey for everything else
+type Line = { text: string; tone: 'blue' | 'green' | 'gray' | 'gold' };
+const tooltip: string[] = [];
+const effectLines: Line[] = (c?.effects ?? []).map((e) => {
+	const name = gameText(`effect.${e.id.replace(':', '.')}`, e.name, locale);
+	return {
+		text: e.id === 'minecraft:saturation'
+			? t('{effect} ({n} food points)', locale, { effect: name, n: e.duration })
+			: t('{effect} ({time})', locale, { effect: `${name}${e.amplifier > 0 ? ` ${roman(e.amplifier)}` : ''}`, time: duration(e.duration, locale) }),
+		tone: 'blue',
+	};
+});
+if (drink && rules.tipsy.config.enabled) effectLines.push({ text: t('+1 Tipsy', locale), tone: 'blue' });
+const facts: Line[] = [];
+const g = (text: string) => facts.push({ text, tone: 'gray' });
+if (drink) g(drink.stage === 'aged' ? t('Served in a {vessel}, aged', locale, { vessel: nameOf(drink.vessel, locale) }) : t('Served in a {vessel}', locale, { vessel: nameOf(drink.vessel, locale) }));
+if (ticks) g(c!.animation === 'drink' ? t('Drink in {time}', locale, { time: seconds(ticks, locale) }) : t('Eat in {time}', locale, { time: seconds(ticks, locale) }));
+if (item.food?.alwaysEdible) g(c?.animation === 'drink' ? t('Can be drunk when full', locale) : t('Can be eaten when full', locale));
+if (item.remainder) g(t('Leaves a {item}', locale, { item: nameOf(item.remainder, locale) }));
+g(item.stack === 1 ? t("Doesn't stack", locale) : t('Stacks to {n}', locale, { n: item.stack }));
+if (block && render) g(mineable.length ? t('Hardness {hardness}, mine with a {tool}', locale, { hardness: block.hardness, tool: or(mineable.map((m) => TOOL[m]?.() ?? m)) }) : t('Hardness {hardness}', locale, { hardness: block.hardness }));
+if (item.compost != null) g(t('Composter: {chance} chance', locale, { chance: pct(item.compost, 0, locale) }));
+if (item.tags.includes('farmersdelight:drinks')) g(t("Counts as a Farmer's Delight drink", locale));
+const shanks = item.food ? [...Array(Math.floor(item.food.nutrition / 2)).fill('food_full'), ...Array(item.food.nutrition % 2).fill('food_half')] : [];
+
+const headings = [
+	...(made.length ? [{ depth: 2, slug: 'recipes', text: t('How to make it', locale) }] : []),
+	...(hasSources ? [{ depth: 2, slug: 'sources', text: t('Where to find it', locale) }] : []),
+	...(used.length ? [{ depth: 2, slug: 'uses', text: t('Used in', locale) }] : []),
+	...(siblings.length > 1 ? [{ depth: 2, slug: 'more', text: t('More {cat}', locale, { cat: cat.lower }) }] : []),
+];
+const hasTags = (item.tags as string[]).length > 0;
+const hasStates = blockProps.length > 0;
+const summary = hasTags && hasStates ? t('Command, ID, tags and block states', locale) : hasTags ? t('Command, ID and tags', locale) : hasStates ? t('Command, ID and block states', locale) : t('Command, ID', locale);
+const description = [
+	t('{name}: {cat} from Vine & Barrel.', locale, { name: itemName, cat: cat.lower }),
+	drink && t('Gives {effect}.', locale, { effect: gameText(`effect.${drink.effect.id.replace(':', '.')}`, drink.effect.name, locale) }),
+	item.food && item.food.nutrition ? t('Restores {n} hunger.', locale, { n: item.food.nutrition }) : '',
+].filter(Boolean).join(' ');
+---
+<StarlightPage frontmatter={{ title: itemName, description, tableOfContents: headings.length > 1 ? { minHeadingLevel: 2, maxHeadingLevel: 2 } : false }} headings={headings}>
+	<section class="ip-hero not-content">
+		<div class="ip-slot">
+			{render ? <img src={render} alt={itemName} width="200" height="200" /> : icon && <img class="pixel" src={icon.src} alt={itemName} width="128" height="128" />}
+		</div>
+		<div class="ip-info">
+			<div class="i-head">
+				<p class="i-name" data-pagefind-ignore>{itemName}</p>
+				<a class="i-cat" href={pageUrl(`/items/#${item.category}`, locale)} title={t('All {cat}', locale, { cat: cat.lower })}>{cat.label}</a>
+			</div>
+			{tooltip.map((line) => <p class="t-blue">{line}</p>)}
+			{item.food && item.food.nutrition > 0 && (
+				<p class="t-food">
+					<span class="shanks">{shanks.map((s) => <img src={url(`/gui/mc/${s}.png`)} alt="" width="18" height="18" />)}</span>
+					<span>{t('{n} hunger, {saturation} saturation', locale, { n: item.food.nutrition, saturation: +item.food.saturation.toFixed(1) })}</span>
+				</p>
+			)}
+			{effectLines.length > 0 && (
+				<div class="i-group">
+					<p class="t-gray">{c?.animation === 'drink' ? t('When drunk:', locale) : t('When eaten:', locale)}</p>
+					{effectLines.map((l) => <p class={`t-${l.tone} indent`}>{l.text}</p>)}
+				</div>
+			)}
+			<ul class="i-facts">{facts.map((l) => <li>{l.text}</li>)}</ul>
+			{mech && (
+				<p class="ip-links">
+					<a class="mc-button" href={pageUrl(mech.href, locale)}>{MECHANIC[mech.label]?.() ?? `How ${mech.label} work${/s$/.test(mech.label) ? '' : 's'}`}</a>
+				</p>
+			)}
+		</div>
+	</section>
+
+	{stagePrefix && <Stages prefix={stagePrefix} title={t('{name}: growth', locale, { name: gameText(item.block!, blocks[item.block!].name, locale) })} />}
+
+	{
+		made.length > 0 && (
+			<>
+				<h2 id="recipes">{t('How to make it', locale)}</h2>
+				<div class="ip-recipes not-content">{made.map((r) => <Recipe recipe={r} />)}</div>
+			</>
+		)
+	}
+
+	{
+		hasSources && (
+			<>
+				<h2 id="sources">{t('Where to find it', locale)}</h2>
+				<ul class="ip-sources">
+					{wild.map((w) => (
+						<li>
+							{w.crop === item.id ? (
+								<Tr k="{crop} grows wild. {link}" locale={locale}>
+									<strong slot="crop">{nameOf(w.crop, locale)}</strong>
+									<a slot="link" href={pageUrl('/crops/#wild-crops', locale)}>{t('Where to look', locale)}</a>
+								</Tr>
+							) : (
+								<Tr k="{crop} grows wild and drops it. {link}" locale={locale}>
+									<strong slot="crop">{nameOf(w.crop, locale)}</strong>
+									<a slot="link" href={pageUrl('/crops/#wild-crops', locale)}>{t('Where to look', locale)}</a>
+								</Tr>
+							)}
+						</li>
+					))}
+					{picked.map(([, h]) => (
+						<li>
+							<Tr k="{picking} a ripe bush gives {a} to {b}. {link}" vars={{ a: h.count[0], b: h.count[1] }} locale={locale}>
+								<strong slot="picking">{t('Picking', locale)}</strong>
+								<a slot="link" href={pageUrl('/crops/#grape-and-hop-bushes', locale)}>{t('How bushes work', locale)}</a>
+							</Tr>
+						</li>
+					))}
+					{farms.length > 0 && (
+						<li>
+							<Tr k="{farms} grow it in {villages} villages." vars={{ villages: locale === 'en' ? farms.join(', ') : listOf(farms.map(village), locale) }} locale={locale}>
+								<strong slot="farms">{t('Village farms', locale)}</strong>
+							</Tr>
+						</li>
+					)}
+					{myTrades.map((tr) => (
+						<li>
+							{tr.level ? (
+								<Tr k="{who} sell {n} for {m} {item} (from level {level})." vars={{ n: tr.gives.count, m: tr.wants.count, item: nameOf(tr.wants.id, locale), level: tr.level }} locale={locale}>
+									<strong slot="who">{tr.profession === 'farmer' ? t('Farmer villagers', locale) : t('Wandering Traders', locale)}</strong>
+								</Tr>
+							) : (
+								<Tr k="{who} sell {n} for {m} {item}." vars={{ n: tr.gives.count, m: tr.wants.count, item: nameOf(tr.wants.id, locale) }} locale={locale}>
+									<strong slot="who">{tr.profession === 'farmer' ? t('Farmer villagers', locale) : t('Wandering Traders', locale)}</strong>
+								</Tr>
+							)}
+						</li>
+					))}
+					{chests.map((ch) => (
+						<li>
+							<Tr k="{where} chests: in about {chance} of them, {counts} at a time." vars={{ chance: pct(ch.chance, 0, locale), counts: or(ch.counts) }} locale={locale}>
+								<strong slot="where">{ch.name}</strong>
+							</Tr>
+						</li>
+					))}
+				</ul>
+			</>
+		)
+	}
+
+	{
+		used.length > 0 && (
+			<>
+				<h2 id="uses">{t('Used in', locale)}</h2>
+				<p>
+					{t('{name} goes into {n} recipe|{name} goes into {n} recipes', locale, { name: itemName, n: usedOutputs.length })} {t('Hover a slot for its name, click it to open it.', locale)}
+				</p>
+				<div class="ip-inv grid9 not-content">
+					{usedOutputs.map((o) => (
+						<Slot id={o} scale={3} />
+					))}
+				</div>
+			</>
+		)
+	}
+
+	{
+		siblings.length > 1 && (
+			<>
+				<h2 id="more">{t('More {cat}', locale, { cat: cat.lower })}</h2>
+				<p>
+					<Tr k="All {n} {cat} in the mod, in creative-tab order. {link}." vars={{ n: siblings.length, cat: cat.lower }} locale={locale}>
+						<a slot="link" href={pageUrl(`/items/#${item.category}`, locale)}>{t('Open them in the item list', locale)}</a>
+					</Tr>
+				</p>
+				<div class="ip-inv grid9 not-content">
+					{siblings.map((s) =>
+						s.id === item.id ? (
+							<span class="sib cur">
+								<Slot id={s.id} scale={3} />
+							</span>
+						) : (
+							<Slot id={s.id} scale={3} />
+						),
+					)}
+				</div>
+			</>
+		)
+	}
+
+	<footer class="ip-foot not-content">
+		<details>
+			<summary>{summary}</summary>
+			<p><span class="lbl">{t('Command', locale)}</span> <button type="button" class="vb-copy" data-copy={`/give @s ${item.id}`} aria-label={t('Copy the command', locale)}><code>/give @s {item.id}</code></button></p>
+			<p><span class="lbl">{t('ID', locale)}</span> <button type="button" class="vb-copy" data-copy={item.id} aria-label={t('Copy the ID', locale)}><code>{item.id}</code></button></p>
+			{blockProps.length > 0 && <p><span class="lbl">{t('Block states', locale)}</span> {blockProps.map(([k, v]) => <code>{k}: {v.join(' | ')}</code>)}</p>}
+			{(item.tags as string[]).length > 0 && <p><span class="lbl">{t('Item tags', locale)}</span> {(item.tags as string[]).map((tag) => <code>#{short(tag)}</code>)}</p>}
+			{block && block.tags.length > 0 && <p><span class="lbl">{t('Block tags', locale)}</span> {(block.tags as string[]).map((tag) => <code>#{short(tag)}</code>)}</p>}
+		</details>
+	</footer>
+</StarlightPage>
+
+<style>
+	/* ---- the item, as in the game ---- */
+	/* The item as one Minecraft GUI panel across the column: the slot on the left, its info as GUI text on the right */
+	.ip-hero {
+		margin-top: 24px;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 20px 28px;
+		align-items: start;
+		padding: 16px;
+		background: #c6c6c6;
+		box-shadow: inset 4px 4px 0 #fff, inset -4px -4px 0 #555, 0 0 0 2px #000, 6px 6px 0 2px #000;
+		color: #404040;
+	}
+	.ip-slot {
+		width: 168px;
+		height: 168px;
+		display: grid;
+		place-items: center;
+		background: #8b8b8b;
+		box-shadow: inset 4px 4px 0 #373737, inset -4px -4px 0 #fff;
+	}
+	.ip-slot img {
+		max-width: 86%;
+		height: auto;
+	}
+	.ip-slot img.pixel {
+		width: 128px;
+		image-rendering: pixelated;
+	}
+	.ip-info {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		min-height: 168px;
+	}
+	.ip-info p {
+		margin: 0;
+	}
+	.i-name {
+		font-size: 30px;
+		line-height: 40px;
+		color: #303030;
+	}
+	.t-blue {
+		color: #2b2bc0;
+	}
+	.t-green {
+		color: #007a00;
+	}
+	.t-gray {
+		color: #606060;
+	}
+	.t-gold {
+		color: #a05a00;
+	}
+	.indent {
+		padding-left: 12px;
+	}
+	.t-food {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 4px 10px;
+	}
+	.shanks {
+		display: inline-flex;
+	}
+	.shanks img {
+		image-rendering: pixelated;
+	}
+	/* Facts flow into two columns when there's room */
+	.i-facts {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		columns: 2 14rem;
+		column-gap: 28px;
+		color: #606060;
+	}
+	.i-facts li {
+		margin: 0;
+		break-inside: avoid;
+	}
+	/* Name with its category under it, like the tab name in the creative inventory */
+	.i-head {
+		display: flex;
+		flex-direction: column;
+	}
+	.i-cat {
+		width: fit-content;
+		color: #707070;
+		text-decoration: none;
+	}
+	.i-cat:hover {
+		color: #303030;
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 4px;
+	}
+	/* The one action, as a Minecraft button at the bottom of the panel */
+	.ip-links {
+		margin-top: auto !important;
+		padding-top: 6px;
+	}
+	.ip-links .mc-button {
+		max-width: 100%;
+		box-sizing: border-box;
+		white-space: normal;
+		text-align: center;
+	}
+
+	/* ---- sections ---- */
+	.ip-recipes {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 24px 32px;
+	}
+	.ip-sources li + li {
+		margin-top: 8px;
+	}
+	.ip-inv {
+		display: flex;
+		flex-wrap: wrap;
+		width: fit-content;
+		max-width: 100%;
+		padding: 8px;
+		background: #c6c6c6;
+		box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #555, 0 0 0 2px #000;
+		margin-left: 2px;
+	}
+
+	/* Up to 9 columns, fewer when the column is narrow; empty slots after the last item are a tiled background, so
+	   every row is full at any width */
+	.ip-inv.grid9 {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, 54px);
+		grid-auto-rows: 54px;
+		box-sizing: content-box;
+		width: min(486px, round(down, 100% - 20px, 54px));
+		max-width: none;
+		background:
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54' shape-rendering='crispEdges'%3E%3Crect width='54' height='54' fill='%238b8b8b'/%3E%3Crect y='51' width='54' height='3' fill='%23fff'/%3E%3Crect x='51' width='3' height='54' fill='%23fff'/%3E%3Crect width='54' height='3' fill='%23373737'/%3E%3Crect width='3' height='54' fill='%23373737'/%3E%3C/svg%3E") 0 0 / 54px 54px repeat content-box,
+			#c6c6c6;
+	}
+
+	/* ---- the quiet footer: command, tags, related items ---- */
+	.ip-foot {
+		margin-top: 72px;
+		padding-top: 16px;
+		border-top: 4px solid var(--fd-border);
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		color: var(--sl-color-gray-3);
+	}
+	.ip-foot p {
+		margin: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 12px;
+		align-items: baseline;
+	}
+	.ip-foot code {
+		overflow-wrap: anywhere;
+		font-family: var(--sl-font);
+		font-size: 20px;
+		background: var(--fd-surface-2);
+		color: var(--sl-color-white);
+		padding: 0 6px;
+	}
+	.lbl {
+		color: var(--sl-color-gray-3);
+		min-width: 8rem;
+	}
+	.ip-foot details {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.ip-foot summary {
+		cursor: pointer;
+		width: fit-content;
+	}
+	.ip-foot summary:hover {
+		color: var(--sl-color-text-accent);
+	}
+	.ip-foot details[open] summary {
+		margin-bottom: 8px;
+	}
+	.ip-foot details p + p {
+		margin-top: 8px;
+	}
+	/* The item you're on, in its category's inventory */
+	.sib.cur :global(.mc-slot) {
+		outline: 3px solid #ffcf4d;
+		outline-offset: -3px;
+	}
+	/* Phones: slot on top, info below */
+	@media (max-width: 34rem) {
+		.ip-hero {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.ip-slot {
+			width: 136px;
+			height: 136px;
+		}
+		.ip-info {
+			min-height: 0;
+		}
+	}
+</style>

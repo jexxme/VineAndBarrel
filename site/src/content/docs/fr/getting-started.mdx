@@ -1,0 +1,111 @@
+---
+title: Pour commencer
+description: Installe Vine & Barrel, vois ce qu'il ajoute et comment se déroule la boucle de brassage, puis choisis par où commencer.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import Loop from '../../../components/brewing/Loop.astro';
+import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/fr';
+import { downloads } from '../../../data/code/downloads';
+
+export const cells = { 'next release': 'prochaine version', planned: 'prévu' };
+export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+
+export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
+export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
+
+Vine & Barrel apporte un vignoble, une brasserie et une cave à Minecraft. Tu cultives du raisin, du houblon et de l'orge, tu
+brasses jus et moût dans une cuve en cuivre, tu les laisses fermenter et vieillir dans des fûts de chêne, et tu offres une
+tournée à tes amis. La patience paie : le bonus d'une boisson vieillie est plus fort et dure plus longtemps, et elle
+scintille dans le verre.
+
+<Shot src="hero.jpg" caption="Une ferme Vine & Barrel : la taverne avec sa cave à fûts et ses pergolas, un vignoble, du houblon sur des perches de treillis et un champ d'orge." />
+
+## Installation
+
+Trouve ta version de Minecraft et ton chargeur de mods, puis télécharge depuis cette case :
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{cell(r.neoforge)}</td>
+				<td>{cell(r.fabric)}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+- **NeoForge** demande {downloads.map((r) => `NeoForge ${r.neoforgeNeeds ?? `${meta.neoforge} ou plus récent`} sur Minecraft ${r.minecraft}`).join(' ; ')}.
+- **Fabric** demande Fabric Loader {meta.fabricLoader} ou plus récent et Fabric API {meta.fabricApi} ou plus récent.
+
+Le nom du fichier t'indique lequel tu as : <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> est la version NeoForge,
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> la version Fabric. Mets-le dans le dossier `mods`, côté client comme côté serveur. Il
+n'a besoin d'aucun autre mod. Tout ce avec quoi il fonctionne est facultatif et s'active tout seul : voir [Compatibilité](/compatibility/).
+
+<Aside type="tip" title="Tu joues avec Farmer's Delight ?">
+Vine & Barrel est un mod à part entière, mais il s'y intègre à merveille : sa cuve brasse sur le four de FD, la vigne et le houblon grimpent sur les cordes de FD, et
+une poignée de plats de la marmite, un festin et un pain utilisent ses boissons. Voir [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Comment ça marche
+
+Chaque boisson suit le même chemin, du champ au verre. Clique sur une étape pour les détails.
+
+<Loop />
+
+## Ce qu'ajoute le mod
+
+<dl class="tour">
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:red_grapes')?.src} alt="" width="32" height="32" /> De nouvelles cultures</dt>
+		<dd>Des [buissons de raisin](/crops/), rouge et blanc, des buissons de houblon que tu cueilles encore et encore, un treillis où ils grimpent (sans Farmer's Delight), et de l'orge qui pousse comme le blé. Tu les trouves d'abord à l'état sauvage, dans les fermes de village et chez le marchand ambulant.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:brew_kettle')?.src} alt="" width="32" height="32" /> Une brasserie</dt>
+		<dd>La [cuve de brassage](/brew-kettle/) en cuivre transforme les récoltes en jus et en moût au-dessus d'un feu. Elle s'oxyde comme n'importe quel cuivre, peut pendre à une chaîne si tu veux, et des entonnoirs peuvent la faire tourner pour toi.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aging_barrel')?.src} alt="" width="32" height="32" /> Une cave</dt>
+		<dd>Le [fût de vieillissement](/aging-barrel/) n'a pas d'écran : tu verses, tu attends et tu tires, le tout dans le monde. Les fûts se joignent en rangées et s'empilent en murs.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aged_red_wine')?.src} alt="" width="32" height="32" /> {meta.counts.drinks} boissons</dt>
+		<dd>{list(young.map((d) => nameOf(d.id)))}, chacune jeune et vieillie{fdExtra.length > 0 && `, plus ${list(fdExtra.map((d) => nameOf(d.id)))} avec Farmer's Delight`}. Chacune donne un bonus, de niveau {roman(rules.youngBuffAmplifier)}, ou de niveau {roman(rules.agedBuffAmplifier)} une fois vieillie. Voir [Boissons](/drinks/).</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> Pompette</dt>
+		<dd>Chaque boisson ajoute un niveau de [Pompette](/tipsy/) : un balancement, le hoquet et un peu de courage au début, des yeux lourds et des jambes lourdes ensuite. Sache t'arrêter.</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> Des tavernes</dt>
+		<dd>Les villages ont une [taverne](/villages/) aux fûts déjà pleins : tu peux goûter une boisson avant d'en avoir brassé une.</dd>
+	</div>
+</dl>
+
+## Par où commencer
+
+- **Nouveau dans le mod ?** Suis [Ta première boisson](/guides/first-drink/) : d'un monde tout neuf à ton premier verre de vin rouge vieilli, étape par étape.
+- **Prêt à brasser en grand ?** [Construire une cave](/guides/cellar/) couvre les rangées de fûts, l'automatisation et la planification d'un lot.
+- **Pressé ?** Trouve une taverne de village : ses fûts sont pleins et n'attendent que toi. Voir [Villages et tavernes](/villages/).
+- **Tu cherches une info ?** Chaque objet a sa propre page dans [Tous les objets et blocs](/items/), chaque recette est dans [Toutes les recettes](/reference/recipes/), et les options du serveur et du client sont dans [Configuration](/reference/config/).
+
+## Fabriquer l'essentiel
+
+Les deux blocs et les deux récipients se fabriquent avec des matériaux vanilla :
+
+<Recipe id="brew_kettle" /> <Recipe id="aging_barrel" />
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<style>{`
+.tour { margin: 1rem 0 0; border-top: 2px solid var(--fd-border); }
+.tour > div { display: grid; align-items: start; grid-template-columns: 12rem 1fr; gap: 1rem; padding: .7rem 0; border-bottom: 2px solid var(--fd-border); margin: 0; }
+.tour dt { font-weight: 400; display: flex; align-items: center; gap: 10px; color: var(--vb-heading); }
+.tour dd { margin: 0; }
+@media (max-width: 40rem) { .tour > div { grid-template-columns: 1fr; gap: .2rem; } }
+`}</style>

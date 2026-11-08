@@ -1,0 +1,35 @@
+{
+  "required": true,
+  "package": "jexxme.vineandbarrel.fabric.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "FuelValuesMixin",
+    "LivingEntityMixin",
+    "PlayerMixin",
+    "RecipeBookSettingsMixin",
+    "RecipeBookTypeMixin",
+    "RegistryLoadTaskMixin",
+    "ResourceManagerRegistryLoadTaskMixin",
+    "ServerGamePacketListenerImplMixin",
+    "ServerLevelMixin",
+    "ServerPlayerGameModeMixin"
+  ],
+  "client": [
+    "client.AvatarRendererMixin",
+    "client.CameraMixin",
+    "client.ClientPacketListenerMixin",
+    "client.EffectsInInventoryMixin",
+    "client.FirstPersonHandsMixin",
+    "client.GuiMixin",
+    "client.LivingEntityRendererMixin",
+    "client.LocalPlayerMixin",
+    "client.MouseHandlerMixin",
+    "client.MultiPlayerGameModeMixin",
+    "client.RecipeMapAccessor",
+    "client.SearchRecipeBookCategoryMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}

@@ -1,0 +1,87 @@
+---
+title: Costruire una cantina
+description: "Da una botte a una cantina: pianifica una partita, una birreria che va avanti con le tramogge, scaffali e pareti di botti, spillatura automatica e come servire un giro."
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Shot from '../../../../components/mc/Shot.astro';
+import CellarPlanner from '../../../../components/brewing/CellarPlanner.astro';
+import { rules, recipe, days } from '../../../../lib/l10n/it';
+
+export const wine = recipe('aging/red_wine');
+
+<Render name="scenes/barrel-cellar" float="right" size={230} alt="Due file di Botti d'invecchiamento, quella in alto appoggiata su quella in basso" />
+
+Una botte è un inizio. Una cantina è una fila di botti, riempite da un bollitore che lavora da solo, con bevande che spilli
+senza pensarci. Questa guida la costruisce nell'ordine in cui ti servirà; ogni parte rimanda alla pagina con tutti i dettagli.
+
+## Pianifica la partita
+
+Quanto te ne serve? Scegli una bevanda e un numero di porzioni, e ottieni tutto l'ordine: cosa coltivare, quante partite
+nel bollitore, quanti secchi e ampolle, quante botti e quanto aspettare. I pulsanti procedono una botte alla volta.
+
+<CellarPlanner />
+
+## Una birreria che va da sola
+
+<Render name="scenes/kettle-on-hopper" float="right" size={192} alt="Un Bollitore su una tramoggia sopra un fuoco" />
+
+Il [Bollitore](/brew-kettle/) funziona con le tramogge su ogni lato:
+
+- **Sotto, una tramoggia fa due lavori.** Passa il calore del fuoco sottostante al bollitore e ne estrae le ampolle e i secchi
+  riempiti. Quindi: fuoco, tramoggia, bollitore, in pila.
+- **Sopra, una tramoggia porta gli ingredienti** e le ampolle o i secchi vuoti. Usala solo per gli ingredienti: tutto ciò che
+  la ricetta non usa, anche l'avanzo di un'altra ricetta, ferma il bollitore finché non lo togli.
+- **Dai lati, le tramogge portano** ampolle o secchi vuoti.
+- Il bollitore continua a preparare finché arrivano ingredienti, fino a {rules.kettleMaxServings} porzioni.
+
+<Aside type="tip" title="Raccogli la tua esperienza">
+Ogni partita dà un po' di XP, ma il bollitore la consegna solo quando qualcuno riempie a mano un'ampolla o un secchio, o quando
+viene rotto. Ogni tanto riempine uno a mano.
+</Aside>
+
+## Scaffali e pareti
+
+<Shot src="cellar.jpg" caption="Una cantina lungo il muro della taverna: botti unite in uno scaffale, una seconda fila impilata sopra." />
+
+- **Scaffali:** le botti d'invecchiamento posate affiancate sul terreno, rivolte nella stessa direzione, uniscono i loro
+  supporti in un unico lungo scaffale. Vedi [Botte d'invecchiamento](/aging-barrel/).
+- **Pareti:** una botte sopra un'altra poggia su dei tacchetti invece che su un supporto, così puoi impilarle in una parete. La tua prima
+  botte impilata ti fa ottenere *Maestro di cantina*.
+- **Dai loro un nome.** Rinomina una botte su un'incudine e il nome compare nella sua riga di stato, così *Vino delle nozze* si trova facilmente. Il
+  nome resta quando rompi e riposizioni la botte.
+- **Leggile a colpo d'occhio:** il tappo in cima dice a che punto è ogni botte (sughero, gorgogliatore, cera rossa), e
+  il vetrino sul davanti quanto è piena, nel colore della bevanda.
+- **I comparatori** leggono le porzioni di una botte, da 1 per una porzione fino a 15 quando è piena.
+
+## Riempire e spillare a macchina
+
+- **Una tramoggia in cima versa le basi.** Versa solo ciò che la botte accetta in quel momento, quindi la base sbagliata
+  aspetta semplicemente nella tramoggia.
+- **Le tramogge ai lati** portano boccali o calici vuoti; la botte li spilla pieni. Boccali per birra, idromele e sidro, calici per
+  il vino: quelli sbagliati restano bloccati finché non rompi la botte.
+- **Una tramoggia sotto** estrae le bevande spillate e i secchi e le ampolle vuoti rimasti dopo il versamento. Tienine una lì,
+  altrimenti le bevande finite bloccano le successive.
+- **I dispenser** rivolti verso una botte spillano una porzione con un boccale o un calice vuoto, o versano un secchio o un'ampolla di base.
+
+## Dove costruirla
+
+- **Nel Sovramondo.** Le botti seguono il tempo di gioco e dormire per tutta la notte conta, ma nel Nether e nell'End non c'è
+  nessuna notte da saltare.
+- **Lontano dai creeper.** Un'esplosione può distruggere una botte, con tutta la partita.
+- **Per il resto, dove vuoi:** le botti continuano a invecchiare mentre sei lontano o offline, e non prendono mai fuoco.
+  Ti perdi solo il lieve schiocco di tappo quando una partita diventa invecchiata.
+- **Riempine due di ognuna.** Servono {days(wine.fermentingTime)} per fermentare e altri {days(wine.agingTime)} per invecchiare, e ogni bicchiere
+  che spilli nel frattempo è uno in meno che invecchia. Bevi da una botte e lascia l'altra in pace.
+
+## Servire un giro
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Boccali e calici posati su un blocco" />
+
+- **Apparecchia:** accovacciati e clicca con il tasto destro sulla faccia superiore di un blocco con un boccale o un calice per posarlo lì, fino a quattro per blocco.
+  Le bevande invecchiate brillano anche sul tavolo.
+- **Cin cin!** Finisci una bevanda nello stesso momento degli amici vicini e il bonus di tutti dura
+  il {rules.cheersBonusPercent}% in più. Vedi [Bevande](/drinks/#cin-cin).
+- **Occhio ai livelli.** Ogni bevanda aggiunge un livello di [Brillo](/tipsy/). Tieni a portata di mano un po' di <Item id="grape_juice" /> o d'acqua:
+  ognuno toglie un livello.
