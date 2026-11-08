@@ -1,0 +1,109 @@
+---
+title: Farmer's Delight
+description: Що змінюється у Vine & Barrel, коли встановлено ще й Farmer's Delight.
+---
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, recipe, duration, FDN_WIKI } from '../../../lib/l10n/uk';
+import { fd } from '../../../data/code/compat';
+
+export const meals = rules.fdMealNourishment;
+export const potMeals = ['beer_battered_fish', 'wine_braised_beef', 'cider_braised_pork', 'barley_mutton_broth', 'white_wine_risotto'];
+export const bread = items['vineandbarrel:beer_bread'];
+export const coq = items['vineandbarrel:coq_au_vin'];
+
+Vine & Barrel — самостійний мод: усе на цій вікі працює без Farmer's Delight. Якщо ти граєш ще й із Farmer's Delight,
+вони співпрацюють у кількох місцях. Нічого налаштовувати не треба.
+
+На Minecraft 26.x для NeoForge це Farmer's Delight Neoforged версії {fd.minVersion} або новішої, у якого є власна вікі.
+На Fabric це <a href={fd.refabricated}>Farmer's Delight Refabricated</a>.
+
+<LinkCard title="Вікі Farmer's Delight Neoforged" description="Каструля, плита, мотузки, родючий ґрунт і кожен предмет FD." href={`${FDN_WIKI}/`} />
+
+## Що додає Farmer's Delight
+
+- **Плита гріє казан.** Кухонна плита з Farmer's Delight працює джерелом тепла для [варильного казана](/brew-kettle/),
+  так само, як і все, що FD вважає теплом. Блоки, крізь які FD пропускає тепло, передають його й до казана.
+- **Лози лізуть по мотузках.** Стиглий кущ винограду (червоного чи білого) або хмелю з мотузкою FD над ним лізе вгору на {rules.crops.climbMaxHeight} блоків
+  і плодоносить уздовж мотузки, як помідори FD, так само, як на [шпалері](/crops/#шпалера). Мотузки й шпалери змішуються в одній
+  рослині, а зламана лоза лишає мотузку.
+- **Родючий ґрунт** пришвидшує ріст винограду, хмелю й ячменю, як і будь-якої культури, до якої можна застосувати кісткове борошно.
+- **Напої FD бродять.** Пляшки <Item id="farmersdelight:apple_cider" /> і <Item id="farmersdelight:melon_juice" /> можна
+  вливати в [діжку для витримки](/aging-barrel/), як наші власні основи, по одній порції. Яблучний сидр FD стає тим самим
+  напоєм <Item id="hard_cider" />, що й із нашого <Item id="apple_juice" />, тож сидр один, а шляхів до нього два. Діжка тримає одну
+  основу за раз, тож вони не змішуються в одній партії. Напої FD бувають лише в пляшках, тож повна діжка вміщує
+  {rules.barrelCapacity} таких; роздавачі теж їх вливають.
+- **Страви з каструлі, бенкет і хліб** використовують наше вино, сидр і пиво.
+- **Ніж FD ріже солому з ячменю**, як із пшениці й дикого рису.
+- Наші напої вважаються напоями FD скрізь, де FD вимагає напій.
+
+## Напої з пляшок Farmer's Delight
+
+<DrinkTable fd />
+
+{[recipe('aging/hard_cider'), recipe('aging/melon_wine')].map((r) => <Recipe recipe={r} />)}
+
+## Страви з каструлі
+
+Готуй їх у каструлі з Farmer's Delight. Як і страви FD, вони подаються в мисці й дають «Ситість». Кожна з'являється
+в книзі рецептів каструлі, щойно ти носиш її напій (молодий чи витриманий), а бульйон — щойно носиш ячмінь.
+
+{potMeals.map((id) => <Recipe id={`cooking/${id}`} />)}
+
+| Страва | Їжа | Ситість |
+|---|---|---|
+| <Item id="beer_battered_fish" /> | <FoodStats nutrition={items['vineandbarrel:beer_battered_fish'].food.nutrition} saturation={items['vineandbarrel:beer_battered_fish'].food.saturation} compact /> | {duration(meals['vineandbarrel:beer_battered_fish'])} |
+| <Item id="wine_braised_beef" /> | <FoodStats nutrition={items['vineandbarrel:wine_braised_beef'].food.nutrition} saturation={items['vineandbarrel:wine_braised_beef'].food.saturation} compact /> | {duration(meals['vineandbarrel:wine_braised_beef'])} |
+| <Item id="cider_braised_pork" /> | <FoodStats nutrition={items['vineandbarrel:cider_braised_pork'].food.nutrition} saturation={items['vineandbarrel:cider_braised_pork'].food.saturation} compact /> | {duration(meals['vineandbarrel:cider_braised_pork'])} |
+| <Item id="barley_mutton_broth" /> | <FoodStats nutrition={items['vineandbarrel:barley_mutton_broth'].food.nutrition} saturation={items['vineandbarrel:barley_mutton_broth'].food.saturation} compact /> | {duration(meals['vineandbarrel:barley_mutton_broth'])} |
+| <Item id="white_wine_risotto" /> | <FoodStats nutrition={items['vineandbarrel:white_wine_risotto'].food.nutrition} saturation={items['vineandbarrel:white_wine_risotto'].food.saturation} compact /> | {duration(meals['vineandbarrel:white_wine_risotto'])} |
+
+Коли готуєш із напоєм, кухоль чи келих повертається, і так само миска повертається з <Item id="farmersdelight:bone_broth" />
+для різото. Усі наші соки й напої вважаються напоями Farmer's Delight.
+
+## Півень у вині
+
+Бенкет, як у Farmer's Delight: готуй його в каструлі без миски, і він виходить казаном <Item id="coq_au_vin_block" />, який
+ставлять на стіл. Клацни по ньому мискою, щоб покласти <Item id="coq_au_vin" />, усього чотири. Після останньої клацни ще
+раз, щоб прибрати кістки. Він з'являється в книзі рецептів, щойно ти носиш червоне вино.
+
+<Recipe id="cooking/coq_au_vin_block" />
+
+| Порція | Їжа | Ситість |
+|---|---|---|
+| <Item id="coq_au_vin" /> | <FoodStats nutrition={coq.food.nutrition} saturation={coq.food.saturation} compact /> | {duration(meals['vineandbarrel:coq_au_vin'])} |
+
+Якщо зламати, поки нікому не поклали, каструля повертається цілою; після першої порції лишаються самі кістки.
+
+## Пивний хліб
+
+Три пшениці й пейл-ель чи пшеничне пиво дають два хліби. Кухоль лишається в сітці крафту. Він з'являється в книзі
+рецептів, щойно ти носиш пейл-ель чи пшеничне пиво.
+
+<Recipe id="beer_bread" />
+
+| Хліб | Їжа |
+|---|---|
+| <Item id="beer_bread" /> | <FoodStats nutrition={bread.food.nutrition} saturation={bread.food.saturation} compact /> |
+
+## Солома з ячменю
+
+Збери стиглий ячмінь ножем Farmer's Delight, і отримаєш ще й <Item id="farmersdelight:straw" />, як із пшениці.
+На обробній дошці ніж ріже <Item id="wild_barley" /> на ячмінь, а вполовину випадків ще й на солому, як дикий рис FD.
+
+<Recipe id="cutting/wild_barley" />
+
+## Без Farmer's Delight
+
+Страви, бенкет, хліб і кавунове вино все одно існують, тож світи та інвентарі лишаються цілими, але зробити їх не можна,
+творча вкладка й JEI їх ховають, а страви не дають «Ситості». Сидр і далі робиться з нашого яблучного соку.
+Прибрав Farmer's Delight, а в діжці ще лишився сидр? Партія доварюється як завжди; тільки
+вийняти основу назад уже не вийде.
+
+<Aside>
+Farmer's Delight — мод vectorwing. Vine & Barrel — окремий мод, створений, щоб пасувати поруч із ним; він не є частиною Farmer's
+Delight і не схвалений vectorwing.
+</Aside>

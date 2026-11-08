@@ -1,0 +1,62 @@
+---
+title: Villaggi e taverne
+description: Taverne di villaggio con botti pronte da spillare, fattorie di villaggio che coltivano uva, luppolo e orzo, scambi di semi e bottino nei forzieri.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import VillageInfo from '../../../components/data/VillageInfo.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, roman } from '../../../lib/l10n/it';
+
+<Render name="scenes/tavern" float="right" size={256} alt="Un angolo di taverna" />
+
+## Taverne
+
+Ogni tipo di villaggio può avere una **taverna**, costruita nel suo stile, in uno di due schemi. Ne trovi una in circa un
+villaggio su tre, e ogni tanto un villaggio ne ha due. Non ce ne sono due uguali: cosa c'è nelle botti, le bevande sui
+tavoli, i fiori, gli stendardi e le candele cambiano da una taverna all'altra.
+
+Cerca l'insegna appesa sopra la porta. Dentro c'è spazio per muoversi: un tavolo accanto al fuoco, sgabelli al bancone, il bollitore
+sul suo falò dietro. Dietro il bancone, una scala scende alla **cantina delle botti**, una sala a volta illuminata da torce sotto
+la sala, piena di botti in fila.
+
+Ogni tipo di villaggio ha una particolarità sua:
+
+- **Pianure:** un giardino della birra, lunghi tavoli sotto una pergola di rampicanti di luppolo.
+- **Deserto:** un terrazzo sul tetto, su per le scale esterne.
+- **Savana:** un bar in veranda all'ombra, con un bancone tutto suo.
+- **Innevato:** una sala con un grande camino e tappeti di pelliccia.
+- **Taiga:** una sala dell'idromele con un lungo tavolo, e una catasta di legna sotto la gronda.
+
+Le sue botti sono **già piene**: entra, prendi un boccale o un calice e spilla una bevanda. Un paio sono invecchiate. Il baule
+della taverna contiene semi, boccali e calici, e qualche bevanda della regione, tutto ciò che serve per iniziare a preparare da solo.
+
+<Shot src="taverns/plains.jpg" caption="Pianure: il giardino della birra, lunghi tavoli sotto una pergola di rampicanti di luppolo." />
+<Shot src="taverns/desert.jpg" caption="Deserto: il terrazzo sul tetto, su per le scale esterne." />
+<Shot src="taverns/savanna.jpg" caption="Savana: il bar in veranda, un bancone sotto i portelli aperti della sala." />
+<Shot src="taverns/snowy.jpg" caption="Innevato: la sala del camino, tre fuochi di larghezza, tappeti di pelliccia e poltrone." />
+<Shot src="taverns/taiga.jpg" caption="Taiga: il lungo tavolo della sala dell'idromele." />
+<Shot src="taverns/cellar.jpg" caption="La cantina delle botti sotto la sala: botti in fila sotto una volta di pietra, torce alle pareti." />
+
+### Da sapere
+
+- Le botti della taverna hanno già finito di fermentare, quindi non si possono rabboccare. Spillane una fino a svuotarla e riempila con la tua preparazione:
+  una bevanda invecchiata da una botte che hai riempito tu è ciò che ti fa ottenere *La pazienza premia*.
+- Le botti giovani della taverna continuano a invecchiare come qualsiasi botte, quindi una taverna che lasci stare per qualche giorno ha più bevande invecchiate.
+- Spillare da una botte qualsiasi in un villaggio, di una taverna o tua, ti fa ottenere *Alla spina*.
+- Fai i tuoi scambi da sobrio: da Brillo {roman(rules.tipsy.rowdyLevel - 1)}, villici e mercanti non commerciano con te. Vedi [Brillo](/tipsy/#attaccabrighe).
+
+## Fattorie del villaggio
+
+Le fattorie dei villaggi coltivano le nostre colture insieme a quelle vanilla, a seconda del clima: uva rossa dove fa caldo, uva bianca
+nei villaggi di pianura e di taiga, luppolo dove fa fresco, orzo quasi ovunque.
+
+<VillageInfo show="farms" />
+
+## Scambi
+
+<VillageInfo show="trades" />
+
+## Bottino nei forzieri
+
+<VillageInfo show="loot" />

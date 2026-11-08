@@ -1,0 +1,63 @@
+---
+title: Wioski i karczmy
+description: Wioskowe karczmy z beczkami gotowymi do nalewania, wioskowe farmy uprawiające winogrona, chmiel i jęczmień, handel nasionami i łupy ze skrzyń.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import VillageInfo from '../../../components/data/VillageInfo.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, roman } from '../../../lib/l10n/pl';
+
+<Render name="scenes/tavern" float="right" size={256} alt="Kącik karczmy" />
+
+## Karczmy
+
+Każdy typ wioski może mieć **karczmę** zbudowaną we własnym stylu, w jednym z dwóch układów. Trafisz na nią mniej więcej
+w co trzeciej wiosce, a czasem wioska ma dwie. Żadne dwie nie są takie same: zawartość beczek, napoje na stołach, kwiaty,
+sztandary i świece zmieniają się od karczmy do karczmy.
+
+Szukaj wiszącego szyldu nad drzwiami. W środku jest miejsce na ruch: stół przy kominku, stołki przy ladzie, a za nią kocioł
+na ognisku. Za ladą schody prowadzą w dół do **piwnicy z beczkami**, sklepionej, oświetlonej pochodniami sali pod główną
+izbą, pełnej beczek.
+
+Każdy typ wioski ma coś swojego:
+
+- **Równiny:** piwiarnia ogródkowa, długie stoły pod pergolą z chmielu.
+- **Pustynia:** taras na dachu, na górę zewnętrznymi schodami.
+- **Sawanna:** weranda z ladą w cieniu, z własnym kontuarem.
+- **Śnieg:** izba z wielkim kominkiem i futrzanymi dywanami.
+- **Tajga:** sala miodowa z długim stołem i stosem drewna pod okapem.
+
+Jej beczki są **już pełne**: wejdź, weź kufel lub kieliszek i nalej sobie. Kilka z nich zawiera napój leżakowany. Skrzynia w
+karczmie skrywa nasiona, kufle i kieliszki oraz kilka napojów z regionu, czyli wszystko, czego potrzebujesz, by zacząć
+warzyć samemu.
+
+<Shot src="taverns/plains.jpg" caption="Równiny: piwiarnia ogródkowa, długie stoły pod pergolą z chmielu." />
+<Shot src="taverns/desert.jpg" caption="Pustynia: taras na dachu, na górę zewnętrznymi schodami." />
+<Shot src="taverns/savanna.jpg" caption="Sawanna: weranda z ladą pod otwartymi klapami izby." />
+<Shot src="taverns/snowy.jpg" caption="Śnieg: izba z kominkiem, trzy paleniska szerokości, futrzane dywany i fotele." />
+<Shot src="taverns/taiga.jpg" caption="Tajga: długi stół sali miodowej." />
+<Shot src="taverns/cellar.jpg" caption="Piwnica z beczkami pod izbą: beczki ułożone pod kamiennym sklepieniem, pochodnie na ścianach." />
+
+### Warto wiedzieć
+
+- Beczki w karczmie mają fermentację za sobą, więc nie da się ich dolać. Opróżnij jedną i napełnij własnym trunkiem:
+  leżakowany napój z beczki, którą napełniłeś sam, daje osiągnięcie *Cierpliwość popłaca*.
+- Młode beczki w karczmie leżakują dalej jak każda inna, więc karczma zostawiona na kilka dni ma w końcu więcej napojów leżakowanych.
+- Nalanie z dowolnej beczki w wiosce, karczmianej lub własnej, daje osiągnięcie *Prosto z beczki*.
+- Handluj na trzeźwo: od Rauszyk {roman(rules.tipsy.rowdyLevel - 1)} osadnicy i handlarze nie chcą z tobą interesów. Zobacz [Rauszyk](/tipsy/#awanturnik).
+
+## Wioskowe farmy
+
+Wioskowe farmy uprawiają nasze rośliny obok tych z podstawowej gry, zależnie od klimatu: czerwone winogrona tam, gdzie
+ciepło, białe winogrona w wioskach na równinach i w tajdze, chmiel tam, gdzie chłodno, jęczmień prawie wszędzie.
+
+<VillageInfo show="farms" />
+
+## Handel
+
+<VillageInfo show="trades" />
+
+## Łupy ze skrzyń
+
+<VillageInfo show="loot" />

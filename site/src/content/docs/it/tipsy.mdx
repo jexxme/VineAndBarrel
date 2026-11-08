@@ -1,0 +1,79 @@
+---
+title: Brillo
+description: Cosa fa Brillo a ogni livello, cosa succede dopo un bicchiere di troppo, come smaltire la sbornia e come attenuarlo o disattivarlo.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import TipsyLevels from '../../../components/data/TipsyLevels.astro';
+import EffectBadge from '../../../components/data/EffectBadge.astro';
+import { rules, nameOf, roman } from '../../../lib/l10n/it';
+
+export const t = rules.tipsy;
+export const cfg = t.config;
+export const rowdyLevel = t.rowdyLevel;
+export const punchHearts = t.rowdyPunchDamage / 2;
+
+Ogni vino, birra, sidro e idromele ti dà il suo bonus **e un livello di <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. All'inizio
+è divertente: un'ondeggiata, il singhiozzo, un po' di coraggio liquido, e a Brillo {roman(t.slurLevel - 1)} sei al tuo meglio (la tua
+chat un po' meno), anche se gli occhi iniziano a farsi pesanti. Se continui, inizia a costarti caro: giramenti di testa, braccia deboli e, in cima, gambe
+che a stento ti riportano a casa. Si ferma al livello {t.maxLevel}.
+
+## Livelli
+
+<TipsyLevels />
+
+Anche gli altri giocatori ti vedono ondeggiare, singhiozzare, barcollare e inciampare. Passa il mouse sull'effetto Brillo
+nel tuo inventario per vedere cosa fa il tuo livello attuale.
+
+## Un goccetto di troppo
+
+Sei già al livello {t.maxLevel} e continui a bere? Hai un **vuoto di memoria**. Gli occhi si chiudono e crolli a terra, con le
+stelline che ti girano attorno alla testa per tutti. Per quei pochi secondi nessuno può farti del male, né mob né giocatori,
+e nemmeno la caduta; il resto del mondo però conta, quindi non svenire nella lava. Poi ti svegli. Dove? Dipende dalla
+serata, e i modi per svegliarsi sono più di quanti pensi…
+
+Avrai fame e ti sentirai tremante per un po', di nuovo a Brillo I, e nelle tasche potresti trovare qualcosa che non ricordi
+di aver preso. Non perdi mai niente di ciò che avevi.
+
+## Attaccabrighe
+
+Da Brillo {roman(rowdyLevel - 1)} diventi attaccabrighe. Ogni tanto il braccio parte da solo e tira un vero pugno a
+ciò che hai proprio davanti: {punchHearts === 0.5 ? 'mezzo cuore' : `${punchHearts} cuori`} di danno
+e una spinta, qualunque cosa tu stia tenendo in mano. Non colpisce mai animali addomesticati, golem di ferro o supporti per armature, e colpisce altri
+giocatori solo dove il PvP è attivo. I villici e i passanti, invece, sono bersagli validi, e se lo ricordano.
+
+Inoltre **non ti servono più da bere**: da Brillo {roman(t.cutOffLevel - 1)}, villici e mercanti ambulanti scuotono la testa e non
+commerciano con te finché non ti sei ripreso. Fai i tuoi scambi prima del {t.cutOffLevel === 4 ? 'quarto' : `${t.cutOffLevel}°`} bicchiere.
+
+## Smaltire la sbornia
+
+- **Aspetta:** ogni livello passa dopo **{cfg.secondsPerLevel} secondi**, un livello alla volta. Una nuova bevanda fa ripartire il tempo di
+  ogni livello, quindi a Brillo {roman(t.maxLevel - 1)} sei di nuovo sobrio dopo circa {Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10} minuti
+  senza un altro goccio.
+- **Il latte** lo toglie del tutto, come qualsiasi effetto. Toglie anche i bonus delle bevande.
+- **Un'ampolla d'acqua o un succo qualsiasi** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
+  <Item id="apple_juice" />) lo abbassa subito di un livello. Funziona solo l'ampolla d'acqua semplice, nessun'altra pozione.
+- **Smaltiscila dormendo:** vai a letto e dormi fino al mattino. Deve essere una notte saltata davvero: se ti alzi presto, o resti
+  sveglio mentre gli altri sul server restano in piedi, ti svegli brillo come quando sei andato a letto.
+
+## Da sapere
+
+- **Accovacciati** a Brillo {roman(t.stumbleLevel - 1)} e le gambe reggono: niente deriva, niente inciampi, niente capitomboli. Anche
+  nuotare, cavalcare e volare sono sicuri.
+- **Un capitombolo non fa mai male** e non ti porta mai dove non sei andato a piedi. Cadi solo su terreno piano e aperto, senza
+  mostri vicini, e non due volte entro {Math.round(t.tripCooldownTicks / 20)} secondi; altrove resta un semplice inciampo.
+- **L'acqua ti toglie in fretta dai livelli peggiori,** ma i livelli sotto mantengono il loro tempo, quindi non ti rende
+  sobrio prima, nel complesso.
+- Brillo si occupa solo dei propri effetti collaterali: Lentezza o Nausea di una pozione o di un comando non vengono toccate.
+- Link, comandi e @menzioni in chat non vengono mai impastati.
+- Gli altri giocatori ti vedono ondeggiare, sentono i tuoi singhiozzi e vedono inciampi, capitomboli e pugni, ma non i bordi
+  scuri dello schermo né i tuoi battiti di ciglia.
+- **Vuoi la storia completa di un vuoto di memoria?** Ogni posto in cui puoi svegliarti, le probabilità e i souvenir sono
+  su [Vuoti di memoria](/blackouts/). Spoiler, ovviamente.
+
+## Impostazioni
+
+I proprietari del server possono disattivare del tutto Brillo (la modalità analcolica) oppure spegnere uno per uno la chat impastata,
+gli inciampi (con capitomboli e deriva), i vuoti di memoria, i pugni da attaccabrighe e il rifiuto di servirti. Ogni giocatore può ridurre quanto
+Brillo muove lo schermo, fino a zero, e disattivare gli effetti visivi; contano anche i cursori Effetti di distorsione,
+Effetti sul campo visivo e Pulsazione oscurità di vanilla. Tutte le opzioni e i valori predefiniti sono su [Configurazione](/reference/config/).

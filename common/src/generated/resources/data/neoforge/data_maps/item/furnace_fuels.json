@@ -1,0 +1,10 @@
+{
+  "values": {
+    "vineandbarrel:aging_barrel": {
+      "burn_time": 300
+    },
+    "vineandbarrel:trellis": {
+      "burn_time": 300
+    }
+  }
+}

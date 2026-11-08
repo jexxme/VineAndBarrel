@@ -39,6 +39,19 @@
 		"maxUses": 12
 	},
 	{
+		"profession": "wandering_trader",
+		"level": null,
+		"gives": {
+			"id": "vineandbarrel:white_grapes",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 12
+	},
+	{
 		"profession": "farmer",
 		"level": 1,
 		"gives": {
@@ -69,6 +82,19 @@
 		"level": 2,
 		"gives": {
 			"id": "vineandbarrel:red_grapes",
+			"count": 3
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 16
+	},
+	{
+		"profession": "farmer",
+		"level": 2,
+		"gives": {
+			"id": "vineandbarrel:white_grapes",
 			"count": 3
 		},
 		"wants": {

@@ -1,0 +1,63 @@
+{
+  "entity.player.heartbeat": {
+    "subtitle": "subtitles.vineandbarrel.entity.player.heartbeat",
+    "sounds": [
+      {"name": "minecraft:mob/warden/heartbeat_1", "pitch": 0.8},
+      {"name": "minecraft:mob/warden/heartbeat_2", "pitch": 0.8},
+      {"name": "minecraft:mob/warden/heartbeat_3", "pitch": 0.8},
+      {"name": "minecraft:mob/warden/heartbeat_4", "pitch": 0.8}
+    ]
+  },
+  "entity.player.wake_in_bed": {
+    "subtitle": "subtitles.vineandbarrel.entity.player.wake_in_bed",
+    "sounds": ["minecraft:step/cloth1", "minecraft:step/cloth2", "minecraft:step/cloth3", "minecraft:step/cloth4"]
+  },
+  "entity.player.hiccup": {
+    "subtitle": "subtitles.vineandbarrel.entity.player.hiccup",
+    "sounds": [
+      {
+        "name": "minecraft:random/burp",
+        "pitch": 1.6,
+        "volume": 0.45
+      }
+    ]
+  },
+  "block.brew_kettle.boil": {
+    "sounds": ["vineandbarrel:block/brew_kettle/boil_water1", "vineandbarrel:block/brew_kettle/boil_water2"],
+    "subtitle": "subtitles.vineandbarrel.block.brew_kettle.boil"
+  },
+  "block.brew_kettle.boil_brew": {
+    "sounds": ["vineandbarrel:block/brew_kettle/boil_brew1", "vineandbarrel:block/brew_kettle/boil_brew2", "vineandbarrel:block/brew_kettle/boil_brew3"],
+    "subtitle": "subtitles.vineandbarrel.block.brew_kettle.boil"
+  },
+  "block.brew_kettle.rattle": {
+    "sounds": [{"name": "minecraft:block.copper_trapdoor.close", "type": "event"}],
+    "subtitle": "subtitles.vineandbarrel.block.brew_kettle.rattle"
+  },
+  "block.brew_kettle.open": {
+    "sounds": [{"name": "minecraft:block.copper_trapdoor.open", "type": "event"}],
+    "subtitle": "subtitles.vineandbarrel.block.brew_kettle.open"
+  },
+  "block.brew_kettle.close": {
+    "sounds": [{"name": "minecraft:block.copper_trapdoor.close", "type": "event"}],
+    "subtitle": "subtitles.vineandbarrel.block.brew_kettle.close"
+  },
+  "block.brew_kettle.finish": {
+    "sounds": [{"name": "minecraft:block.fire.extinguish", "type": "event"}],
+    "subtitle": "subtitles.vineandbarrel.block.brew_kettle.finish"
+  },
+
+  "block.aging_barrel.fill": {"sounds": [{"name": "minecraft:item/bottle/empty1"}, {"name": "minecraft:item/bottle/empty2"}], "subtitle": "subtitles.vineandbarrel.block.aging_barrel.fill"},
+  "block.aging_barrel.fill_bucket": {"sounds": [{"name": "minecraft:item/bucket/empty1"}, {"name": "minecraft:item/bucket/empty2"}, {"name": "minecraft:item/bucket/empty3"}], "subtitle": "subtitles.vineandbarrel.block.aging_barrel.fill"},
+  "block.aging_barrel.drain": {"sounds": [{"name": "minecraft:item/bottle/fill1"}, {"name": "minecraft:item/bottle/fill2"}, {"name": "minecraft:item/bottle/fill3"}, {"name": "minecraft:item/bottle/fill4"}], "subtitle": "subtitles.vineandbarrel.block.aging_barrel.drain"},
+  "block.aging_barrel.drain_bucket": {"sounds": [{"name": "minecraft:item/bucket/fill1"}, {"name": "minecraft:item/bucket/fill2"}, {"name": "minecraft:item/bucket/fill3"}], "subtitle": "subtitles.vineandbarrel.block.aging_barrel.drain"},
+  "block.aging_barrel.tap": {"sounds": [{"name": "minecraft:item/bottle/fill1", "pitch": 0.75}, {"name": "minecraft:item/bottle/fill2", "pitch": 0.75}, {"name": "minecraft:item/bottle/fill3", "pitch": 0.75}, {"name": "minecraft:item/bottle/fill4", "pitch": 0.75}], "subtitle": "subtitles.vineandbarrel.block.aging_barrel.tap"},
+  "block.aging_barrel.ferment": {"sounds": [{"name": "vineandbarrel:block/aging_barrel/airlock1", "volume": 0.6}, {"name": "vineandbarrel:block/aging_barrel/airlock2", "volume": 0.6}, {"name": "vineandbarrel:block/aging_barrel/airlock3", "volume": 0.6}, {"name": "vineandbarrel:block/aging_barrel/airlock4", "volume": 0.6}], "subtitle": "subtitles.vineandbarrel.block.aging_barrel.ferment"},
+  "block.aging_barrel.aged": {"sounds": [{"name": "vineandbarrel:block/aging_barrel/cork_pop1"}, {"name": "vineandbarrel:block/aging_barrel/cork_pop2"}], "subtitle": "subtitles.vineandbarrel.block.aging_barrel.aged"},
+  "block.aging_barrel.drip": {"sounds": [{"name": "minecraft:block/pointed_dripstone/drip_water1", "volume": 0.6}, {"name": "minecraft:block/pointed_dripstone/drip_water2", "volume": 0.6}, {"name": "minecraft:block/pointed_dripstone/drip_water3", "volume": 0.6}, {"name": "minecraft:block/pointed_dripstone/drip_water4", "volume": 0.6}], "subtitle": "subtitles.vineandbarrel.block.aging_barrel.drip"},
+  "item.drink.cheers_glass": {"sounds": [{"name": "vineandbarrel:item/drink/cheers_glass1"}, {"name": "vineandbarrel:item/drink/cheers_glass2"}, {"name": "vineandbarrel:item/drink/cheers_glass3"}, {"name": "vineandbarrel:item/drink/cheers_glass4"}], "subtitle": "subtitles.vineandbarrel.item.drink.cheers"},
+  "item.drink.cheers_mug": {"sounds": [{"name": "vineandbarrel:item/drink/cheers_mug1"}, {"name": "vineandbarrel:item/drink/cheers_mug2"}, {"name": "vineandbarrel:item/drink/cheers_mug3"}, {"name": "vineandbarrel:item/drink/cheers_mug4"}], "subtitle": "subtitles.vineandbarrel.item.drink.cheers_mug"},
+  "item.mug.drink": {"sounds": [{"name": "minecraft:random/drink", "pitch": 0.8}], "subtitle": "subtitles.entity.generic.drink"},
+  "item.wine_glass.drink": {"sounds": [{"name": "minecraft:random/drink", "pitch": 1.2}], "subtitle": "subtitles.entity.generic.drink"},
+  "block.feast.serve": {"sounds": [{"name": "minecraft:item.armor.equip_generic", "type": "event"}], "subtitle": "subtitles.vineandbarrel.block.feast.serve"}
+}

@@ -1,0 +1,81 @@
+---
+title: Rauszyk
+description: Co robi Rauszyk na każdym poziomie, co się dzieje po jednym drinku za dużo, jak wytrzeźwieć i jak go przyciszyć albo wyłączyć.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import TipsyLevels from '../../../components/data/TipsyLevels.astro';
+import EffectBadge from '../../../components/data/EffectBadge.astro';
+import { rules, nameOf, roman } from '../../../lib/l10n/pl';
+
+export const t = rules.tipsy;
+export const cfg = t.config;
+export const rowdyLevel = t.rowdyLevel;
+export const punchHearts = t.rowdyPunchDamage / 2;
+
+Każde wino, piwo, cydr i miód pitny daje swój bonus **i jeden poziom efektu <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. Na początku
+jest zabawnie: lekkie kołysanie, czkawka, odrobina pijackiej odwagi, a przy Rauszyk {roman(t.slurLevel - 1)} jesteś w
+najlepszej formie (czat już nie), choć powieki zaczynają ciążyć. Pij dalej, a zacznie cię to kosztować: mdłości, słabe ręce, a na
+samym szczycie nogi, które ledwo niosą cię do domu. Maksymalny poziom to {t.maxLevel}.
+
+## Poziomy
+
+<TipsyLevels />
+
+Inni gracze też widzą, jak się kołyszesz, czkasz, zataczasz i potykasz. Najedź na efekt Rauszyk w ekwipunku, żeby
+zobaczyć, co robi twój obecny poziom.
+
+## O jeden drink za dużo
+
+Masz już poziom {t.maxLevel} i dalej pijesz? **Urywa ci się film.** Oczy się zamykają i padasz, a wokół głowy
+krążą gwiazdki, które widzą wszyscy. Przez te kilka sekund nikt cię nie skrzywdzi: ani mob, ani gracz, ani sam upadek.
+Reszta świata nadal działa, więc nie odpływaj w lawie. Potem się budzisz. Gdzie? To zależy od nocy, a sposobów na
+przebudzenie jest więcej, niż myślisz…
+
+Przez chwilę czujesz głód i drżenie rąk, z powrotem na poziomie Rauszyk I, a w kieszeniach może znajdziesz coś, czego
+nie pamiętasz. Nic z tego, co masz, nie przepada.
+
+## Awanturnik
+
+Gdy masz Rauszyk {roman(rowdyLevel - 1)}, robisz się awanturniczy. Co jakiś czas ręka sama się zamachuje i wymierza
+prawdziwy cios w to, co jest tuż przed tobą: {punchHearts === 0.5 ? 'pół serca' : punchHearts === 1 ? '1 serce' : Number.isInteger(punchHearts) && punchHearts >= 5 ? `${punchHearts} serc` : `${String(punchHearts).replace('.', ',')} serca`} obrażeń
+i odepchnięcie, bez względu na to, co trzymasz w ręce. Nigdy nie trafia oswojonych zwierząt, żelaznych golemów ani stojaków na
+zbroję, a innych graczy tylko tam, gdzie włączone jest PvP. Osadnicy i przechodnie są jednak do wzięcia, i to zapamiętają.
+
+Dodatkowo **nie nalewają ci**: od Rauszyk {roman(t.cutOffLevel - 1)} osadnicy i wędrowni handlarze kręcą głową i nie
+handlują z tobą, dopóki nie wytrzeźwiejesz. Handluj przed {t.cutOffLevel === 4 ? 'czwartym' : `${t.cutOffLevel}.`} drinkiem.
+
+## Trzeźwienie
+
+- **Poczekaj:** każdy poziom schodzi po **{cfg.secondsPerLevel} s**, po jednym naraz. Nowy drink resetuje zegar każdego
+  poziomu, więc z poziomu Rauszyk {roman(t.maxLevel - 1)} trzeźwiejesz po około {String(Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10).replace('.', ',')} min
+  bez ani jednej kropli więcej.
+- **Mleko** czyści go całkowicie, jak każdy efekt. Czyści też bonusy z napojów.
+- **Butelka wody albo dowolny sok** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
+  <Item id="apple_juice" />) od razu obniża go o jeden poziom. Działa tylko zwykła butelka wody, żadna inna mikstura.
+- **Odśpij to:** połóż się do łóżka i prześpij noc. Noc musi zostać naprawdę przeskoczona: wstań wcześnie albo leż
+  bezsennie, gdy reszta serwera nie śpi, a pobudka zastanie cię w takim samym rauszu, w jakim poszedłeś spać.
+
+## Warto wiedzieć
+
+- **Skradanie** się przy Rauszyk {roman(t.stumbleLevel - 1)} trzyma cię na nogach: bez znoszenia, zataczania i
+  potykania. Pływanie, jazda wierzchem i latanie też są bezpieczne.
+- **Potknięcie nigdy nie boli** i nigdy nie przenosi cię tam, gdzie nie szedłeś. Przewracasz się tylko na płaskim,
+  otwartym terenie, gdy w pobliżu nie ma potworów, i nie dwa razy w ciągu {Math.round(t.tripCooldownTicks / 20)} s; gdzie indziej
+  kończy się na zatoczeniu.
+- **Woda szybko wyciąga cię z najgorszych poziomów,** ale niższe poziomy mają własny czas, więc ogólnie nie
+  trzeźwiejesz od niej szybciej.
+- Rauszyk pilnuje tylko własnych skutków ubocznych: Spowolnienie albo Mdłości z mikstury lub komendy zostają nietknięte.
+- Linki na czacie, komendy i @wzmianki nigdy nie są bełkotane.
+- Inni gracze widzą, jak się kołyszesz, słyszą twoją czkawkę i widzą zataczanie, potknięcia i awanturnicze zamachy,
+  ale nie widzą ciemnych brzegów twojego ekranu ani mrugnięć.
+- **Chcesz poznać całą historię urwanego filmu?** Każde miejsce przebudzenia, szanse i pamiątki są na stronie
+  [Urwany film](/blackouts/). Ze spoilerami, oczywiście.
+
+## Ustawienia
+
+Właściciele serwerów mogą całkiem wyłączyć Rauszyk (tryb bezalkoholowy) albo osobno wyłączyć bełkot na czacie,
+zataczanie się (razem z potknięciami i znoszeniem), urwany film, ciosy Awanturnika i brak nalewania. Każdy gracz może
+ograniczyć, jak bardzo Rauszyk rusza jego ekranem, nawet do zera, i wyłączyć efekty widzenia; suwaki Efekty zniekształcenia,
+Efekty pola widzenia i Miganie mroku z podstawowej gry też się liczą. Wszystkie opcje i wartości domyślne są w
+[Konfiguracji](/reference/config/).

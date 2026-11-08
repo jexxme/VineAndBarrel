@@ -1,0 +1,99 @@
+---
+title: Dein erstes Getränk
+description: Ein Einstieg in Vine & Barrel Schritt für Schritt, von den ersten wilden Trauben bis zum Glas gereiftem Rotwein.
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/de';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="Eine Tavernenecke mit Fässern und Getränken auf einem Tisch" />
+
+Dieser Guide führt dich von einer frischen Welt zu deinem ersten Glas Rotwein und dann weiter zu einem gereiften. Zum Start
+brauchst du nur Vanilla-Materialien; die Trauben findest du unterwegs. Jeder Schritt verlinkt auf die Seite mit allen Einzelheiten.
+
+<Steps>
+
+1. **Wilde Trauben finden.** Wildpflanzen wachsen in Gruppen draußen in der Welt, jede an einem passenden Ort. Für Wein
+   brauchst du <Item id="wild_grapes" />: Schlag eine von Hand ab und du bekommst <Item id="red_grapes" plural />.
+
+   <WildCrops />
+
+   Findest du keine? Dorfbauern und der Fahrende Händler verkaufen Trauben, und in Dorftruhen liegen oft welche. Siehe
+   [Dörfer & Tavernen](/villages/).
+
+2. **Ein paar Sträucher pflanzen.** Pflanz die Trauben auf Gras, Erde oder Ackerland, wie Süßbeeren. Ein Strauch wächst von
+   allein; ist er reif, pflückst du mit Rechtsklick {h.grapes.count[0]} bis {h.grapes.count[1]} Trauben. Er fällt eine Stufe zurück
+   und trägt wieder Früchte, du musst also nie neu pflanzen. Knochenmehl beschleunigt ihn.
+
+   <Stages prefix="grape_bush" title="Ein Traubenstrauch wächst" labels={['gepflanzt', 'wachsend', 'halbreif', 'reif']} />
+
+   Ein Ansatz Saft braucht {grapesPerBatch} Trauben und einen Zucker, ein paar Sträucher reichen für den Anfang also locker. Mehr dazu unter
+   [Pflanzen](/crops/).
+
+3. **Einen Braukessel bauen und übers Feuer stellen.** Der <Item id="brew_kettle" /> besteht aus Kupfer. Er braut nur, solange
+   der Block direkt darunter heiß ist: Ein entzündetes Lagerfeuer genügt von Anfang an. Er steht auf einem Eisenrost über den Flammen.
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **Traubensaft brauen.** Öffne den Kessel mit Rechtsklick und gib {grapesPerBatch} Trauben und einen Zucker hinein. Der Pfeil
+   füllt sich, solange der Kessel heiß ist, unter dem Deckel steigt Dampf auf, und nach {seconds(juice.brewingTime)} zeigt die Anzeige
+   {juice.servings} Portionen <Item id="grape_juice" />. Gibst du mehr hinein, braut er weitere Ansätze. Siehe
+   [Braukessel](/brew-kettle/).
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **Herausnehmen.** Klick den Kessel mit einer Glasflasche rechts an für eine Portion oder mit einem Eimer für {rules.servingsPerBucket}.
+   Traubensaft ist schon ein Getränk für sich: Er nimmt dir etwas von deinem [Schwips](/tipsy/).
+
+6. **Ein Reifefass füllen.** Stell ein <Item id="aging_barrel" /> auf und klick es mit dem Eimer oder den Flaschen rechts an. Es
+   fasst {rules.barrelCapacity} Portionen: Zwei Eimer füllen es bis zum Rand. Während der Gärung kannst du jederzeit mehr vom
+   selben Saft nachfüllen.
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **Die Gärung abwarten.** Nach **{days(wine.fermentingTime)}** ist aus dem Saft <Item id="red_wine" /> geworden. Das Fass
+   verrät dir, wie es steht: Das gläserne Gärröhrchen oben blubbert, solange es gärt, und ein Rechtsklick mit leerer Hand
+   zeigt eine Statuszeile wie *Rotwein · 8 Portionen · gärt, fertig morgen früh*. Die Uhr läuft in Spielzeit, auch das
+   Verschlafen der Nacht zählt. Siehe [Reifefass](/aging-barrel/).
+
+8. **Ein Glas zapfen.** Klick das Fass mit einem leeren <Item id="wine_glass" /> rechts an, um eine Portion zu zapfen. Wein kommt in ein Glas,
+   Bier, Met und Cidre in einen <Item id="mug" />; hältst du das falsche, sagt dir das Fass Bescheid.
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **Trinken.** <Item id="red_wine" /> gibt dir <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> und eine Stufe
+   <EffectBadge id="vineandbarrel:tipsy" name="Schwips" />. Das Glas behältst du. Trinkst du im selben Moment wie ein Freund in der Nähe,
+   gibt es ein **Prost!**: Der Bonus von allen hält {rules.cheersBonusPercent} % länger.
+
+10. **Den Rest reifen lassen.** Lass das Fass **{days(wine.agingTime)}** länger in Ruhe, und was übrig ist, wird zu
+    <Item id="aged_red_wine" />: ein tieferes Rot, das schimmert, und <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
+    Ein leises Korkenknallen und ein rotes Wachssiegel oben zeigen dir, dass es fertig ist.
+
+</Steps>
+
+<Aside type="tip" title="Du kannst nicht warten?">
+Jedes Glas, das du während der Reifung zapfst, reift nicht weiter. Füll zwei Fässer: Trink aus dem einen und lass das andere
+in Ruhe, bis es gereift ist. Oder such eine Dorftaverne, deren Fässer schon voll sind, einige davon gereift. Siehe
+[Dörfer & Tavernen](/villages/).
+</Aside>
+
+## Wie es weitergeht
+
+- Brau die anderen Getränke: weiße Trauben für Weißwein, Süßbeeren für Süßbeerenwein, Gerste und Hopfen für Pale Ale,
+  Weizen und Hopfen für Weizenbier, Honig für Met, Äpfel für Cidre. Siehe
+  [Getränke](/drinks/) und [Pflanzen](/crops/).
+- Stell ein paar Fässer nebeneinander und bau einen richtigen Keller: [Einen Keller bauen](/guides/cellar/).
+- Kenn deine Grenzen: was jede Stufe [Schwips](/tipsy/) bewirkt und wie du wieder nüchtern wirst.
+- Mit Farmer's Delight braust du über dessen Herd und kochst mit deinem Wein: [Farmer's Delight](/farmers-delight/).

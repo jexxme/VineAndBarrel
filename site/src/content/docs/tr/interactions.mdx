@@ -1,0 +1,92 @@
+---
+title: Etkileşimler
+description: Vine & Barrel'daki blokların ve içeceklerin yaptığı tüm küçük şeyler; her biri vanilla'da ya da Farmer's Delight'ta zaten var olan bir şey gibi çalışır.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Advancements from '../../../components/data/Advancements.astro';
+import { rules } from '../../../lib/l10n/tr';
+
+Vine & Barrel oyunun bir parçası gibi hissettirmeye çalışır. Aşağıdakilerin neredeyse hepsi vanilla'dan ya da Farmer's
+Delight'tan bildiğin bir şey gibi çalışır; kontrolleri okumadan tahmin edebilirsin. Bu sayfa hepsini tek yerde toplar;
+mekanik sayfaları ayrıntıyı daha fazla anlatır.
+
+## Yıllandırma Fıçısı
+
+<Render name="scenes/barrel-cellar" float="right" size={224} alt="İstiflenmiş fıçılardan bir duvar" />
+
+- **Sana bakacak şekilde yerleşir,** ocak gibi sana doğru dokun.
+- **Raflar:** aynı yöne bakan yan yana fıçılar beşiklerini birleştirir, çitlerin bağlanması gibi.
+- **İstifler:** bir fıçının üstündeki fıçı beşik yerine takozlara oturur. Bir mahzen duvarı ör.
+- **Tapa aşamayı gösterir:** mantar, mayalanırken kabarcıklı hava kilidi, yıllanınca kırmızı mum.
+- **Mayalanma duyulur:** hava kilidinden kabarcıklar, iş bitmeye yaklaştıkça seyrekleşir.
+- **Musluk ara sıra damlar,** içeride içecek olduğu sürece, içeceğin renginde; kovandan akan bal gibi.
+- **Yıllanma anı:** parti yıllandığında yumuşak bir mantar patlaması.
+- **Dökmek** için kova ya da şişe kullan, kazanı doldurur gibi. İçecek olana kadar boş bir kova ya da şişe onu geri alır.
+- **Çekmek** için boş bir kupa ya da kadeh kullan, Farmer's Delight şöleninden porsiyon almak gibi. Yanlış kap bir ipucu verir ve harcanmaz.
+- **Durum satırı** boş elle sağ tıklayınca çıkar. Örste verilen isim burada görünür.
+- **Karşılaştırıcı** kalan porsiyonları okur.
+- **Doluyken kırarsan** partisini korur, shulker kutusu gibi. Yıllanma onu tekrar yerleştirene kadar durur.
+- **Fırlatıcılar** bir kapla çeker ya da bir baz döker. **Huniler** doldurur ve boşaltır.
+
+Bkz. [Yıllandırma Fıçısı](/aging-barrel/).
+
+## Kaynatma Kazanı
+
+- **Tencere gibi destek alır:** kamp ateşi, ateş ya da lavın üstünde demir bir tepsi; diğer ısı kaynaklarında tam oturur; boş
+  elle eğilip sağ tıklayarak bir kulptan asabilirsin.
+- **Kapak kalkar,** biri ekranı açık tuttuğu sürece, sandık gibi. Biten demleme kapağı havada tutar ve içindeki demlemeyi,
+  porsiyon aldıkça alçalırken görebilirsin.
+- **Demlenirken** kapağın altından buhar kıvrılır ve kapak takırdar. **Bitince** bir buhar tüter.
+- **Şişe ya da kovayla sağ tıkla** doldurmak için, kazan gibi.
+- **Doluyken kırarsan** içindekini korur.
+- **Karşılaştırıcı** içinde bir şey olduğu sürece sinyal verir. **Huniler** malzemeleri ve boş kapları içeri alır, dolu olanları aşağıdan çeker.
+- **Bakır:** zamanla yıpranır; bal peteği cilalar, balta kazır, yıldırım temizler.
+- **Tarif kitabı** kendi ekranında.
+
+Bkz. [Kaynatma Kazanı](/brew-kettle/).
+
+## İçecekler ve kaplar
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Bir blok üzerinde kupalar ve kadehler" />
+
+- **İçecekleri yere koy:** dolu ya da boş bir kupa veya kadehle bir bloğun üstüne eğilip sağ tıkla. Blok başına dört tane,
+  mumlar gibi. Birini almak için boş elle sağ tıkla.
+- **Şerefe!** İki ya da daha fazla oyuncu, birbirinin {rules.cheersRadius} blok yakınında, {rules.cheersWindowTicks / 20} saniye içinde
+  içkisini bitirirse kadehler tokuşur ve herkesin bonusu %{rules.cheersBonusPercent} daha uzun sürer.
+- **İçmek** iksir gibi ses çıkarır ve görünür, boş kabı geri alırsın.
+- **Meyve suyu ve şıra kovaları** süt gibi sıvı olarak boşaltılamaz.
+
+## Çakırkeyif
+
+- **Diğer oyuncular senin sallandığını görür** ve hıçkırıklarını, tökezlemelerini ve düşmelerini de.
+- **Uyuyup geçir:** geceyi uyuyarak geçmek Çakırkeyif'i temizler.
+- **Süt** temizler; **su ya da herhangi bir meyve suyu** bir seviye azaltır.
+- **Efektin üstüne gel,** envanterinde, seviyenin ne yaptığını görmek için.
+- **Bir kadeh fazla** en üst seviyede filmini koparır. Nerede uyanacağın belli olmaz.
+
+Bkz. [Çakırkeyif](/tipsy/).
+
+## Ürünler ve çiftlik hayatı
+
+- Çalılar sağ tıkla toplanır (yarı olgunken de) ve bir aşama geri düşer, tatlı orman meyveleri gibi. Bir çalının üstündeki bahçe kafesi onun tırmanmasını sağlar.
+- Arılar üzüm, şerbetçiotu ve arpanın büyümesine yardım eder.
+- Arpa hayvanları buğday gibi besler ve çiftleştirir; tohumları tavukları ve papağanları besler.
+- Çiftçi köylüler arpa eker ve biçer.
+- Tilkiler üzümleri çalılardan, kırmızı ve beyaz, tatlı orman meyveleri gibi toplar.
+- Her ürün komposta gider.
+- <Item id="barley_bale" /> düşüşü yumuşatır ve kamp ateşi dumanını yükseltir, saman balyası gibi.
+
+Bkz. [Ürünler](/crops/).
+
+## Dünya
+
+- **Köy meyhanelerinde** zaten dolu, çekilmeyi bekleyen fıçılar var. Bkz. [Köyler ve meyhaneler](/villages/).
+- **JEI** demleme ve yıllandırma tariflerini, ayrıca fıçı ve yabani ürünler için bilgi sayfalarını gösterir. **Jade** baktığın
+  bir kazanın ya da fıçının içindekini gösterir. Bkz. [Uyumluluk](/compatibility/).
+
+## Gelişmeler
+
+Vine & Barrel'ın kendi gelişme sekmesi var:
+
+<Advancements />

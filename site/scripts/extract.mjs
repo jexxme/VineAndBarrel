@@ -1,24 +1,25 @@
 // Turns the mod's real data into the JSON the wiki reads (src/data/gen/*.json).
 // Sources: src/data/runtime.json (written by the game itself: ./gradlew runDocsExport), the mod's data files
-// (src/main/resources, src/generated/resources) and the vanilla client jar (names, compost chances).
+// (common/src/main/resources, common/src/generated/resources) and the vanilla client jar (names, compost chances).
 // No number on the wiki is typed by hand: they all come from here.
 import fs from 'node:fs';
 import path from 'node:path';
-import { REPO, vanillaLang, vanillaData } from './lib/assets.mjs';
+import { REPO, vanillaLang, vanillaData, vanillaLocaleLang } from './lib/assets.mjs';
+import { LOCALES } from '../src/i18n/locales.mjs';
 
 const SITE = path.resolve(import.meta.dirname, '..');
 const OUT = path.join(SITE, 'src/data/gen');
 fs.mkdirSync(OUT, { recursive: true });
 const runtime = JSON.parse(fs.readFileSync(path.join(SITE, 'src/data/runtime.json'), 'utf8'));
 const NS = 'vineandbarrel';
-const GEN = path.join(REPO, 'src/generated/resources/data');
-const MAIN = path.join(REPO, 'src/main/resources/data');
+const GEN = path.join(REPO, 'common/src/generated/resources/data');
+const MAIN = path.join(REPO, 'common/src/main/resources/data');
 const write = (name, data) => fs.writeFileSync(path.join(OUT, name), JSON.stringify(data, null, '\t'));
 const walk = (dir) => (fs.existsSync(dir) ? fs.readdirSync(dir, { recursive: true }).filter((f) => f.endsWith('.json')).map((f) => f.replaceAll('\\', '/')) : []);
 const readFile = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 /** A data file of ours, from the hand-written or the generated resources. */
 const dataFiles = (sub) => [GEN, MAIN].flatMap((root) => walk(path.join(root, NS, sub)).map((f) => ({ rel: f, json: readFile(path.join(root, NS, sub, f)) })));
-const ourLang = readFile(path.join(REPO, 'src/main/resources/assets/vineandbarrel/lang/en_us.json'));
+const ourLang = readFile(path.join(REPO, 'common/src/main/resources/assets/vineandbarrel/lang/en_us.json'));
 const mcLang = vanillaLang();
 const lang = { ...mcLang, ...ourLang };
 const props = Object.fromEntries(fs.readFileSync(path.join(REPO, 'gradle.properties'), 'utf8').split(/\r?\n/).filter((l) => /^\w+=/.test(l)).map((l) => l.split(/=(.*)/s).slice(0, 2)));
@@ -119,7 +120,13 @@ for (const { rel, json } of dataFiles('recipe')) {
 			r.result = stack(json.result);
 			r.cookingtime = json.cookingtime ?? 200; // FD's codec default
 			r.experience = json.experience ?? 0;
-			r.container = stack(json.container ?? 'minecraft:bowl');
+			// FD's codec default: no container given, the result's own remainder (a meal's bowl; a feast has none)
+			r.container = json.container ? stack(json.container) : stack(runtime.items[json.result.id]?.components?.['minecraft:use_remainder'] ?? null);
+			break;
+		case 'farmersdelight:cutting':
+			r.ingredients = json.ingredients.map(ingredient);
+			r.tool = ingredient(json.tool);
+			r.results = json.result.map((x) => ({ ...stack(x.item), chance: x.chance ?? 1 }));
 			break;
 		default:
 			r.special = true;
@@ -142,10 +149,10 @@ const compostChance = (layers) => {
 const CATEGORY = (id, it) => {
 	const p = id.split(':')[1];
 	if (runtime.drinks[id] || p === 'mug' || p === 'wine_glass') return 'drinks';
-	if (/juice|wort/.test(p)) return 'bases';
+	if (/juice|wort|must/.test(p)) return 'bases';
 	if (/kettle|aging_barrel/.test(p)) return 'workstations';
 	if (/crate|bale/.test(p)) return 'storage';
-	if (/fish|beef/.test(p)) return 'meals';
+	if (runtime.rules?.fdMealNourishment?.[id] != null || /beer_bread|coq_au_vin/.test(p)) return 'meals';
 	return 'crops';
 };
 const items = {};
@@ -159,7 +166,8 @@ for (const [id, it] of Object.entries(runtime.items)) {
 	items[id] = {
 		id,
 		name: itemName(id),
-		slug: id.split(':')[1].replaceAll('_', '-'),
+		// the item's id, as on the FD Neoforged docs (/items/red_wine/): one URL scheme across the family
+		slug: id.split(':')[1],
 		category: CATEGORY(id, it),
 		stack: c['minecraft:max_stack_size'] ?? 64,
 		food: food ? { nutrition: food.nutrition ?? 0, saturation: food.saturation ?? 0, alwaysEdible: !!food.can_always_eat } : null,
@@ -273,6 +281,8 @@ const advancements = dataFiles('advancement/main').map(({ rel, json }) => {
 		parent: json.parent ?? null,
 		title: lang[d.title.translate] ?? d.title.translate,
 		description: lang[d.description.translate] ?? d.description.translate,
+		titleKey: d.title.translate,
+		descriptionKey: d.description.translate,
 		icon: d.icon.id,
 		frame: d.frame ?? 'task',
 		hidden: !!d.hidden,
@@ -292,15 +302,27 @@ const heat = {
 	fdSources: JSON.stringify(readFile(path.join(MAIN, NS, 'tags/block/heat_sources.json'))).includes('#farmersdelight:heat_sources'),
 };
 [...heat.sources, ...heat.conductors, ...heat.containers].forEach((i) => referenced.add(i));
+// The blackout endings come from the game (weights, poses, souvenirs); their wake-up lines from the lang file
+const tipsy = structuredClone(runtime.tipsy);
+for (const e of tipsy.blackout?.endings ?? []) {
+	e.lineKeys = Array.from({ length: e.lines }, (_, n) => `blackout.${NS}.${e.id}.${n}`).filter((k) => lang[k]);
+	e.lines = e.lineKeys.map((k) => lang[k]);
+	e.souvenirs.forEach((i) => referenced.add(i));
+}
 const sobering = runtime.tags.item[`${NS}:sobering_drinks`];
 sobering.forEach((i) => referenced.add(i));
 ['minecraft:milk_bucket', 'minecraft:glass_bottle', 'minecraft:bucket', 'minecraft:hopper', 'minecraft:dispenser', 'minecraft:comparator', 'minecraft:honeycomb', 'minecraft:iron_axe', 'minecraft:sweet_berries', 'minecraft:wheat', 'minecraft:sugar', 'minecraft:red_bed', 'minecraft:composter', 'minecraft:crafting_table', 'minecraft:anvil', 'minecraft:iron_chain', 'minecraft:copper_ingot', 'minecraft:melon_slice'].forEach((i) => referenced.add(i));
 
-// Picking a ripe bush (block_interact loot tables) and what wild crops drop without shears
+// Picking a bush (block_interact loot tables, built like vanilla's sweet berry one: every pool adds up, a pool or entry
+// with a match_block age only at that age) and what wild crops drop without shears
+const atAge = (age, cond) => !cond || JSON.stringify(cond).match(/"age":"?(\d)"?/)?.[1] == age;
 const harvest = {};
 for (const { rel, json } of dataFiles('loot_table/harvest')) {
-	const e = json.pools[0].entries[0];
-	harvest[rel.replace(/\.json$/, '')] = { id: e.name, count: countRange(e.modifier ?? e.functions) };
+	const at = (age) => json.pools.flatMap((p) => (atAge(age, p.condition ?? p.conditions) ? p.entries : []))
+		.filter((e) => atAge(age, e.condition ?? e.conditions))
+		.map((e) => countRange(e.modifier ?? e.functions))
+		.reduce((sum, r) => [sum[0] + r[0], sum[1] + r[1]], [0, 0]);
+	harvest[rel.replace(/\.json$/, '')] = { id: json.pools[0].entries[0].name, count: at(3), halfRipe: at(2) };
 }
 const wildDrops = {};
 for (const { rel, json } of dataFiles('loot_table/blocks').filter(({ rel }) => rel.startsWith('wild_'))) {
@@ -317,8 +339,69 @@ const others = {};
 for (const id of referenced) if (id && !items[id]) others[id] = { id, name: itemName(id) };
 
 write('items.json', items);
-write('names.json', Object.fromEntries(Object.entries(mcLang).filter(([k]) => /^(item|block)\.minecraft\.[a-z0-9_]+$/.test(k)).map(([k, v]) => ['minecraft:' + k.split('.')[2], v])));
+// ------------------------------------------------------------------ other mods (the data compat/CompatData generates)
+// Thirst values per item from each mod's own format, grouped into rows of items that share all of them
+const tagValues = (ns, dir, re) =>
+	Object.fromEntries(walk(path.join(GEN, ns, 'tags/item', dir)).flatMap((f) => readFile(path.join(GEN, ns, 'tags/item', dir, f)).values.map((id) => [id, +f.match(re)[1]])));
+const tanThirst = tagValues('toughasnails', 'thirst', /^(\d+)_/);
+const tanHydration = tagValues('toughasnails', 'hydration', /^(\d+)_/);
+const twtValues = readFile(path.join(GEN, NS, 'thirstwastaken2/drinks', `${NS}.json`)).values;
+const thirstRows = [];
+for (const f of walk(path.join(GEN, NS, 'environment/drinkable'))) {
+	const h = readFile(path.join(GEN, NS, 'environment/drinkable', f));
+	const id = h.type;
+	const twt = twtValues[id];
+	const row = {
+		tan: tanThirst[id] ? { thirst: tanThirst[id], hydration: tanHydration[id] } : null,
+		homeostatic: { amount: h.amount, saturation: h.saturation },
+		twt: twt ? { thirst: twt.thirst, quenched: twt.quenched } : null,
+	};
+	const key = JSON.stringify(row);
+	const same = thirstRows.find((r) => r.key === key);
+	if (same) same.items.push(id);
+	else thirstRows.push({ key, items: [id], ...row });
+}
+// In the order of the mod's own registry (items.json), most quenching first
+const order = Object.keys(items);
+thirstRows.forEach((r) => r.items.sort((a, b) => order.indexOf(a) - order.indexOf(b)));
+thirstRows.sort((a, b) => (b.tan?.thirst ?? 0) - (a.tan?.thirst ?? 0) || b.homeostatic.amount - a.homeostatic.amount || order.indexOf(a.items[0]) - order.indexOf(b.items[0]));
+const nutrients = Object.fromEntries(walk(path.join(GEN, 'c/tags/item/nutrients')).map((f) => [f.replace('.json', ''), readFile(path.join(GEN, 'c/tags/item/nutrients', f)).values.sort((a, b) => order.indexOf(a) - order.indexOf(b))]));
+write('compat.json', {
+	thirst: thirstRows.map(({ key, ...r }) => r),
+	nutrients,
+	versions: {
+		appleskin: props.appleskin_version.replace(/^mc[\d.]+-/, ''),
+		toughasnails: props.tough_as_nails_version,
+		homeostatic: props.homeostatic_version,
+		thirstwastaken2: props.thirst_was_taken_version.replace(/\+.*$/, ''),
+		nutritionalbalance: props.nutritional_balance_version.replace(/^[\d.]+-/, ''),
+		solonion: props.spice_of_life_version,
+	},
+});
+
+write('names.json',Object.fromEntries(Object.entries(mcLang).filter(([k]) => /^(item|block)\.minecraft\.[a-z0-9_]+$/.test(k)).map(([k, v]) => ['minecraft:' + k.split('.')[2], v])));
 write('others.json', others);
+
+// The game's own text for the translated wiki (lang.<code>.json): item and block names by id, plus our lang keys and
+// vanilla's effect, biome and entity names by key. Vanilla's from its lang file in the Gradle asset cache, ours from
+// the mod's lang file. Anything missing falls back to English on the page.
+for (const { code, mc } of LOCALES) {
+	const modFile = path.join(REPO, `common/src/main/resources/assets/vineandbarrel/lang/${mc}.json`);
+	const ourFile = fs.existsSync(modFile) ? modFile : null;
+	const ours = ourFile ? readFile(ourFile) : {};
+	const locLang = { ...(vanillaLocaleLang(mc) ?? {}), ...ours };
+	const nameIn = (id) => {
+		const key = runtime.items[id]?.components?.['minecraft:item_name']?.translate;
+		const [ns, p] = id.split(':');
+		return locLang[key] ?? locLang[`item.${ns}.${p}`] ?? locLang[`block.${ns}.${p}`];
+	};
+	const ids = new Set([...Object.keys(items), ...Object.keys(others), ...Object.keys(blocks), ...Object.keys(locLang).filter((k) => /^(item|block)\.minecraft\.[a-z0-9_]+$/.test(k)).map((k) => 'minecraft:' + k.split('.')[2])]);
+	const out = Object.fromEntries([...ids].sort().map((id) => [id, nameIn(id)]).filter(([, n]) => n));
+	for (const [k, v] of Object.entries(locLang).sort()) if (k in ours || /^(effect|biome|entity)\.minecraft\.[a-z0-9_]+$/.test(k)) out[k] = v;
+	const ourNames = Object.keys(out).filter((id) => id.startsWith(NS + ':')).length;
+	console.log(`lang.${code}.json: ${Object.keys(out).length} entries, ${ourNames} of our names${ourFile ? '' : ` (no ${mc}.json yet)`}`);
+	write(`lang.${code}.json`, out);
+}
 write('blocks.json', blocks);
 write('recipes.json', recipes);
 write('drinks.json', drinks);
@@ -328,18 +411,24 @@ write('animals.json', animals);
 write('trades.json', trades);
 write('loot.json', loot);
 write('advancements.json', advancements);
-write('rules.json', { ...runtime.rules, crops: runtime.crops, villages: runtime.villages, harvest, wildDrops, tipsy: runtime.tipsy, heat, sobering, tipsyEffect: runtime.effects[`${NS}:tipsy`] ?? null });
+write('rules.json', { ...runtime.rules, crops: runtime.crops, villages: runtime.villages, harvest, wildDrops, tipsy, heat, sobering, tipsyEffect: runtime.effects[`${NS}:tipsy`] ?? null });
 write('meta.json', {
 	modVersion: props.mod_version,
+	fabricModVersion: props.fabric_mod_version,
+	// The version players see, without the loader build ("0.9.0"); names read "Vine & Barrel 0.9.0 · NeoForge · Minecraft 26.3"
+	version: props.mod_version.split('+')[0],
 	minecraft: props.minecraft_version,
 	neoforge: props.neo_version,
+	fabricLoader: props.fabric_loader_version,
+	fabricApi: props.fabric_api_version.replace(/\+.*$/, ''),
 	modId: props.mod_id,
 	license: props.mod_license,
 	jei: props.jei_version,
 	jade: props.jade_version,
 	counts: {
 		items: Object.keys(items).length,
-		drinks: drinks.length,
+		// unique ids: a drink with two aging recipes (hard cider from FD's or our apple juice) has two rows
+		drinks: new Set(drinks.map((d) => d.id)).size,
 		brewing: recipes.filter((r) => r.type === 'vineandbarrel:brewing').length,
 		aging: recipes.filter((r) => r.type === 'vineandbarrel:aging').length,
 		advancements: advancements.length,

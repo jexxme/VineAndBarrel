@@ -1,6 +1,6 @@
 ---
 title: Brew Kettle
-description: How the Brew Kettle turns grapes, berries, barley and wheat into juice and wort, and how to heat, fill and automate it.
+description: How the Brew Kettle turns grapes, berries, apples, honey, barley and wheat into juice, must and wort, and how to heat, fill and automate it.
 ---
 import { Aside } from '@astrojs/starlight/components';
 import Item from '../../components/mc/Item.astro';
@@ -8,6 +8,7 @@ import Render from '../../components/mc/Render.astro';
 import Recipe from '../../components/recipes/Recipe.astro';
 import Stages from '../../components/data/Stages.astro';
 import KettleScreen from '../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../components/brewing/BrewFlow.astro';
 import FoodStats from '../../components/data/FoodStats.astro';
 import { rules, items, byType, seconds, nameOf, list } from '../../lib/data';
 
@@ -19,7 +20,7 @@ export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes
 <Render name="scenes/kettle-on-campfire" float="right" size={256} alt="A copper Brew Kettle on its iron tray over a campfire" />
 
 The <Item id="brew_kettle" /> is where every drink starts. Put it on a heat source, add the ingredients, and a few seconds
-later it holds a batch of juice or wort, ready to bottle. If you've ever cooked in Farmer's Delight's cooking pot, you
+later it holds a batch of juice, must or wort, ready to bottle. If you've ever cooked in Farmer's Delight's cooking pot, you
 already know how it works.
 
 ## Heat
@@ -48,9 +49,11 @@ full the kettle is; hover it for the servings.
 
 <KettleScreen recipe="brewing/barley_wort" />
 
-Each recipe makes **{rules.servingsPerBucket} servings** and takes **{seconds(brews[0].brewingTime)}**. While it brews, steam
-curls out from under the lid and the lid rattles; when it's done, it lets out a puff of steam. The kettle keeps brewing
+Each recipe makes **{rules.servingsPerBucket} servings** and takes **{seconds(brews[0].brewingTime)}**. A heated kettle steams
+and bubbles once it holds a brew or the makings of one (otherwise it stays quiet); while a batch brews, the lid rattles too, and when it's done it lets out a puff of steam. The kettle keeps brewing
 more batches as long as there are ingredients, up to {rules.kettleMaxServings} servings in total.
+
+<BrewFlow />
 
 Once a brew is done, the lid stays up and you can see it inside, sinking as you take servings out. While a batch brews, the
 lid is down; when the last serving is gone, it closes.
@@ -70,12 +73,12 @@ Buckets of juice and wort can't be poured out into the world, like milk.
 
 ## Juice to drink
 
-<Item id="grape_juice" /> and <Item id="sweet_berry_juice" /> are drinks on their own: they take {juice.consumable.seconds} s to
-drink, you can always drink them, and they fill a little hunger.
+<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" /> and <Item id="apple_juice" /> are
+drinks on their own: they take {juice.consumable.seconds} s to drink, you can always drink them, and they fill a little hunger.
 
 <FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
 
-Grape juice also lowers [Tipsy](/tipsy/) by one level. Wort has to ferment first; you can't drink it.
+Every juice also lowers [Tipsy](/tipsy/) by one level. Wort and honey must have to ferment first; you can't drink them.
 
 ## Automation
 
@@ -87,7 +90,9 @@ Hoppers can run the kettle on their own:
 
 Nothing pulls the ingredients or the brew itself out.
 
-A comparator next to the kettle reads how full it is.
+A comparator next to the kettle gives a signal as soon as anything is inside, ingredients, brew or containers, and a
+stronger one the fuller all of it gets. A brew on its own only gives a weak signal, so use it to tell "something in
+there" from "empty" rather than to count servings.
 
 ## Copper
 
@@ -97,7 +102,26 @@ The kettle is copper, and it ages like copper.
 
 - Over time it turns exposed, weathered and finally oxidized. It brews the same at every stage.
 - **Honeycomb** waxes it and stops the weathering. An **axe** scrapes off wax or one stage of weathering, and lightning cleans it.
-- **Break it full** and it keeps its contents: the item's tooltip shows the brew, and you can place it somewhere else and carry on.
+- **Break it full** and it keeps its brew: the item's tooltip and fill bar show it, and you can place it somewhere else
+  and carry on. Ingredients and waiting bottles or buckets drop on the ground.
+- It doesn't weather while someone has its screen open.
+
+## Good to know
+
+- **Lost the fire?** Taking the heat away doesn't reset a batch, but the arrow slips back twice as fast as it filled.
+  Ingredients are only used up when a batch finishes, so nothing is wasted.
+- **One brew at a time.** The kettle won't brew a different drink on top of a brew that's still inside: it waits, with the
+  ingredients untouched, until you've bottled the old one out. At {rules.kettleMaxServings} servings it waits too.
+- **Keep the grid clean.** Any item the recipe doesn't use stops the kettle, leftovers from another recipe included. A
+  hopper on top pushes in whatever it holds, so feed it only ingredients.
+- **Where's my XP?** Each batch earns a little experience. The kettle saves it up and gives it to the next player who fills
+  a bottle or bucket by hand, or drops it when it's broken.
+- **Not enough for a bucket?** A click with a bucket just opens the screen. Sneaking with a bottle or bucket does nothing.
+- **One hopper, two jobs:** a hopper under the kettle passes the campfire's heat up and collects the filled containers.
+- **Sneak and right-click with an empty hand** to hang the kettle from its handle, and again to stand it back up.
+- The kettle can stand in water, it breaks quickly with any tool (a pickaxe is fastest), keeps its anvil name, and doesn't
+  stack. An explosion can destroy it, brew and all.
+- **Recipe book:** brews unlock when you pick up their main crop, sorted into Juices, Worts and Misc.
 
 ## Recipe
 

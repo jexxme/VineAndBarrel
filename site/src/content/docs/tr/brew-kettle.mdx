@@ -1,0 +1,111 @@
+---
+title: Kaynatma Kazanı
+description: Kaynatma Kazanı üzümü, tatlı orman meyvesini, elmayı, balı, arpayı ve buğdayı nasıl meyve suyuna, şıraya ve bal şırasına çevirir; nasıl ısıtılır, doldurulur ve otomatikleştirilir.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/tr';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="Bir kamp ateşinin üstünde, demir tepsisinde duran bakır Kaynatma Kazanı" />
+
+<Item id="brew_kettle" /> her içeceğin başladığı yerdir. Bir ısı kaynağına koy, malzemeleri ekle, birkaç saniye sonra şişelenmeye hazır bir parti meyve suyu, bal şırası ya da şıra elinde. Farmer's Delight'ın pişirme kazanında hiç yemek pişirdiysen nasıl çalıştığını zaten biliyorsun.
+
+## Isı
+
+Kazan yalnızca hemen altındaki blok sıcakken demler:
+
+- **{heatNames(rules.heat.tray)}**: kazan bunların üstünde bir demir tepsiye oturur.
+- **{heatNames(direct)}**: kazan doğrudan üstüne oturur.
+- **{heatNames(rules.heat.conductors)} üzerinden**: ısı içinden geçer, yani kazanla ısı kaynağının arasına bir huni koyabilirsin ve kazan yine beslenir.
+- Farmer's Delight ile onun **ocağı** da kazanı ısıtır.
+
+Kamp ateşi yanıyor olmalı. Kazanın ekranındaki küçük alev, kazan ısınınca yanar.
+
+<Render name="scenes/kettle-on-magma" size={192} caption="Magma bloğunun üstünde" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="Huni üzerinden ısı" />
+<Render name="scenes/kettle-hanging" size={192} caption="Sapından asılı" />
+
+**Askıya al:** Boş elle eğilip kazana sağ tıklarsan tepsi yerine demir bir sap takılır; ya da kazanı bir bloğun alt yüzüne yerleştirebilirsin. Asılı kazan, hemen altındaki bir ateşin üstünde yine demler ve bir zincirin altında harika görünür.
+
+## Demleme
+
+Sağ tıkla kazanı aç ve malzemeleri koy. Sağdaki gösterge demi kendi renginde ve kazanın ne kadar dolu olduğunu gösterir; porsiyonları görmek için üzerine gel.
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+Her tarif **{rules.servingsPerBucket} porsiyon** yapar ve **{seconds(brews[0].brewingTime)}** sürer. Isıtılmış bir kazan içinde bir demleme ya da onun malzemeleri olunca buharlanır ve kabarcıklanır (yoksa sessiz kalır); bir parti demlenirken kapak da sallanır, iş bitince bir buhar tütmesi bırakır. Malzeme olduğu sürece kazan, toplam {rules.kettleMaxServings} porsiyona kadar yeni partiler demlemeye devam eder.
+
+<BrewFlow />
+
+Dem bitince kapak açık kalır ve içindekini görürsün; porsiyon aldıkça alçalır. Bir parti demlenirken kapak kapalıdır; son porsiyon bitince de kapanır.
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="Kapağı açık, demi gösteren kazan" />
+
+## Şişeleme
+
+Kazan gibi: boş bir kapla kazana sağ tıkla.
+
+- bir <Item id="glass_bottle" /> **{rules.servingsPerBottle} porsiyon** alır,
+- boş bir <Item id="bucket" /> **{rules.servingsPerBucket} porsiyon** alır, yani kazanda en az o kadar olmalı.
+
+Meyve suyu ve şıra kovaları, süt gibi dünyaya dökülemez.
+
+## İçmelik meyve suyu
+
+<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" /> ve <Item id="apple_juice" /> başlı başına içecektir: içmek {juice.consumable.seconds} sn sürer, her zaman içebilirsin ve biraz açlık doldurur.
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+Her meyve suyu ayrıca [Çakırkeyif](/tipsy/) seviyesini bir düşürür. Şıra ile bal şırası önce mayalanmalı; onları içemezsin.
+
+## Otomasyon
+
+Huniler kazanı kendi başına çalıştırabilir:
+
+- **Yukarıdan** bir huni malzemeleri ve boş şişe ya da kovaları besler.
+- **Yanlardan** boş şişe ya da kova besler.
+- Kazan onları dem ile doldurur, **alttaki bir huni** de dolanları çeker.
+
+Malzemeleri ya da demin kendisini hiçbir şey dışarı çekmez.
+
+Kazanın yanındaki bir karşılaştırıcı, içeride herhangi bir şey olur olmaz (malzeme, dem ya da kaplar) sinyal verir; hepsi dolu oldukça daha güçlü verir. Tek başına dem yalnızca zayıf bir sinyal verir, bu yüzden onu porsiyon saymak için değil, "içeride bir şey var" ile "boş" arasında ayrım yapmak için kullan.
+
+## Bakır
+
+Kazan bakırdandır ve bakır gibi yaşlanır.
+
+<Stages prefix="kettle-weathering" title="Yıpranma" labels={['Bakır', 'Açıkta Kalmış', 'Yıpranmış', 'Oksitlenmiş']} />
+
+- Zamanla açıkta kalmış, yıpranmış ve sonunda oksitlenmiş olur. Her aşamada aynı şekilde demler.
+- **Bal peteği** onu cilalar ve yıpranmayı durdurur. Bir **balta** cilayı ya da bir yıpranma aşamasını kazır, yıldırım ise temizler.
+- **Doluyken kırarsan** demini korur: eşyanın bilgi kutusu ve dolum çubuğu bunu gösterir, başka bir yere koyup devam edebilirsin. Malzemeler ve bekleyen şişeler ya da kovalar yere düşer.
+- Biri ekranını açıkken yıpranmaz.
+
+## Bilmekte fayda var
+
+- **Ateşi mi kaybettin?** Isıyı kesmek partiyi sıfırlamaz ama ok dolduğundan iki kat hızlı geri kayar. Malzemeler yalnızca parti bittiğinde harcanır, yani hiçbir şey boşa gitmez.
+- **Aynı anda tek dem.** Kazan, içeride hâlâ duran bir demin üstüne başka bir içecek demlemez: eski demi şişeleyene kadar malzemelere dokunmadan bekler. {rules.kettleMaxServings} porsiyona ulaşınca da bekler.
+- **Izgarayı temiz tut.** Tarifin kullanmadığı her eşya, başka bir tariften kalanlar da dahil, kazanı durdurur. Üstteki huni elindeki her şeyi içeri iter, o yüzden ona yalnızca malzeme ver.
+- **XP'm nerede?** Her parti biraz deneyim kazandırır. Kazan onu biriktirir ve elle şişe ya da kova dolduran bir sonraki oyuncuya verir, ya da kırılınca yere bırakır.
+- **Kova için yeterli değil mi?** Kovayla tıklamak yalnızca ekranı açar. Eğilirken şişe ya da kovayla hiçbir şey olmaz.
+- **Bir huni, iki iş:** kazanın altındaki bir huni kamp ateşinin ısısını yukarı iletir ve dolan kapları toplar.
+- **Boş elle eğilip sağ tıkla:** kazanı sapından asar; yeniden tıklarsan ayağa kaldırır.
+- Kazan suyun içinde durabilir, her aletle çabuk kırılır (en hızlısı kazma), örs adını korur ve üst üste yığılmaz. Bir patlama onu demiyle birlikte yok edebilir.
+- **Tarif kitabı:** demler, ana ürünlerini aldığında açılır; Meyve Suları, Şıralar ve Çeşitli diye sıralanır.
+
+## Tarif
+
+<Recipe id="brew_kettle" />

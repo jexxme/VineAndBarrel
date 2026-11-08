@@ -1,0 +1,110 @@
+---
+title: はじめに
+description: Vine & Barrel の入れ方、追加されるもの、醸造の流れを紹介します。どこから始めるかもここで選べます。
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import Loop from '../../../components/brewing/Loop.astro';
+import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/ja';
+import { downloads } from '../../../data/code/downloads';
+
+export const cells = { 'next release': '次のリリース', planned: '予定' };
+export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+
+export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
+export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
+
+Vine & Barrel は、ブドウ園と醸造所とワインセラーをMinecraftに持ち込みます。ブドウ、ホップ、大麦を育て、銅の釜でジュースや麦汁を醸造し、
+オークの樽で発酵、熟成させて、仲間と一杯やりましょう。待った分だけ報われます。熟成した飲み物は強化効果が強く、長く続き、
+グラスの中できらめきます。
+
+<Shot src="hero.jpg" caption="Vine & Barrel の農園。樽のセラーとパーゴラのある酒場、ブドウ園、支柱に絡むホップ、大麦畑が並びます。" />
+
+## インストール
+
+Minecraft のバージョンとローダーを選んで、そのセルからダウンロードします。
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{cell(r.neoforge)}</td>
+				<td>{cell(r.fabric)}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+- **NeoForge** には {downloads.map((r) => `Minecraft ${r.minecraft} 用に NeoForge ${r.neoforgeNeeds?.replace(' or newer', ' 以降') ?? `${meta.neoforge} 以降`}`).join('、')} が必要です。
+- **Fabric** には Fabric Loader {meta.fabricLoader} 以降と Fabric API {meta.fabricApi} 以降が必要です。
+
+ファイル名でどちらか分かります。<code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> は NeoForge、
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> は Fabric です。クライアントにもサーバーにも `mods` フォルダーに入れてください。
+ほかの Mod は必要ありません。連携する Mod はすべて任意で、自動的に有効になります。詳しくは[互換性](/compatibility/)をご覧ください。
+
+<Aside type="tip" title="Farmer's Delight と一緒に遊びますか?">
+Vine & Barrel は独立した Mod ですが、Farmer's Delight とよくなじみます。醸造釜は FD のコンロで醸造でき、ブドウとホップのつるは FD のロープを登り、
+いくつかの鍋料理とごちそう、パンがこの Mod の飲み物を使います。[Farmer's Delight](/farmers-delight/)をご覧ください。
+</Aside>
+
+## 仕組み
+
+どの飲み物も、畑からグラスまで同じ道をたどります。手順をクリックすると詳細が見られます。
+
+<Loop />
+
+## 追加されるもの
+
+<dl class="tour">
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:red_grapes')?.src} alt="" width="32" height="32" /> 新しい作物</dt>
+		<dd>赤と白の[ブドウの低木](/crops/)、何度も収穫できるホップの低木、それが登るトレリス（Farmer's Delight なしで使えます）、小麦のように育つ大麦。最初は野生の植物、村の農場、行商人のところで見つかります。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:brew_kettle')?.src} alt="" width="32" height="32" /> 醸造所</dt>
+		<dd>銅の[醸造釜](/brew-kettle/)が、火にかけて作物をジュースや麦汁に変えます。ほかの銅と同じように風化し、好みで鎖に吊るすこともでき、ホッパーで自動化もできます。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aging_barrel')?.src} alt="" width="32" height="32" /> セラー</dt>
+		<dd>[熟成樽](/aging-barrel/)に画面はありません。注ぐのも、待つのも、注ぎ出すのも、すべてワールドの中で行います。樽は並べてラックに、重ねて壁にできます。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aged_red_wine')?.src} alt="" width="32" height="32" /> {meta.counts.drinks}種類の飲み物</dt>
+		<dd>{list(young.map((d) => nameOf(d.id)))}。それぞれに若いものと熟成したものがあります。{fdExtra.length > 0 && `Farmer's Delight があれば${list(fdExtra.map((d) => nameOf(d.id)))}も加わります。`}どれも強化効果を持ち、レベルは{roman(rules.youngBuffAmplifier)}、熟成するとレベル{roman(rules.agedBuffAmplifier)}です。[飲み物](/drinks/)をご覧ください。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> ほろ酔い</dt>
+		<dd>飲み物を飲むたびに[ほろ酔い](/tipsy/)が1レベル増えます。最初はふらつき、しゃっくり、ちょっとした勇気。やがてまぶたも足も重くなります。引き際が肝心です。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> 酒場</dt>
+		<dd>村に[酒場](/villages/)ができます。樽にはすでに中身が入っているので、自分で醸造する前に味見できます。</dd>
+	</div>
+</dl>
+
+## どこから始めるか
+
+- **初めてですか?** [はじめての一杯](/guides/first-drink/)をどうぞ。新しいワールドから熟成赤ワインの最初の一杯まで、順を追って進みます。
+- **まとめて醸造したい?** [セラーを作る](/guides/cellar/)で、樽のラック、自動化、バッチの計画を扱います。
+- **急ぎですか?** 村の酒場を探しましょう。樽は満タンで、注がれるのを待っています。[村と酒場](/villages/)をご覧ください。
+- **調べものですか?** アイテムごとのページは[すべてのアイテムとブロック](/items/)に、レシピは[すべてのレシピ](/reference/recipes/)に、サーバーとクライアントの設定は[設定](/reference/config/)にあります。
+
+## 基本のクラフト
+
+2つのブロックと2つの容器は、どれもバニラの素材で作れます。
+
+<Recipe id="brew_kettle" /> <Recipe id="aging_barrel" />
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<style>{`
+.tour { margin: 1rem 0 0; border-top: 2px solid var(--fd-border); }
+.tour > div { display: grid; align-items: start; grid-template-columns: 12rem 1fr; gap: 1rem; padding: .7rem 0; border-bottom: 2px solid var(--fd-border); margin: 0; }
+.tour dt { font-weight: 400; display: flex; align-items: center; gap: 10px; color: var(--vb-heading); }
+.tour dd { margin: 0; }
+@media (max-width: 40rem) { .tour > div { grid-template-columns: 1fr; gap: .2rem; } }
+`}</style>

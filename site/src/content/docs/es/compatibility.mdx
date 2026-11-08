@@ -1,0 +1,118 @@
+---
+title: Compatibilidad
+description: Con qué mods funciona Vine & Barrel y qué añade cada uno.
+---
+import Item from '../../../components/mc/Item.astro';
+import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/es';
+import compat from '../../../data/gen/compat.json';
+import { optional } from '../../../data/code/downloads';
+
+export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
+export const seasonRows = Object.entries(seasons);
+export const v = compat.versions;
+// Wheat beer feeds through Saturation: (level + 1) food and twice that in saturation per tick it lasts
+export const beer = drinks.filter((d) => d.effect.id === 'minecraft:saturation').map((d) => ({ ...d, food: (d.effect.amplifier + 1) * d.effect.duration }));
+export const young = beer.find((d) => d.stage === 'young');
+export const aged = beer.find((d) => d.stage === 'aged');
+// A row of the thirst table is all young drinks, all aged drinks, or a few named items
+export const stageOf = (id) => drinks.find((d) => d.id === id)?.stage;
+export const rowLabel = (items) => {
+	const all = (stage) => items.every((id) => stageOf(id) === stage) && items.length === drinks.filter((d) => d.stage === stage).length;
+	return all('young') ? 'Todas las bebidas jóvenes' : all('aged') ? 'Todas las bebidas añejas' : null;
+};
+export const groups = { fruits: 'Frutas', carbs: 'Hidratos de carbono', proteins: 'Proteínas', vegetables: 'Verduras', sugars: 'Azúcares' };
+
+Vine & Barrel {meta.version} funciona en **Minecraft {meta.minecraft}** con **NeoForge {meta.neoforge}** o posterior, o con
+**Fabric Loader {meta.fabricLoader}** y **Fabric API {meta.fabricApi}** o posterior. No necesita ningún otro mod.
+Todo lo de abajo es opcional y se activa solo cuando el otro mod está instalado:
+
+- **NeoForge:** {optional.neoforge.join(', ')}.
+- **Fabric:** {optional.fabric.join(', ')}.
+
+Serene Seasons y Biomes O' Plenty funcionan mediante etiquetas.
+
+## Farmer's Delight
+
+Calor de la parrilla, vides en cuerdas (como en una espaldera), suelo rico, bebidas de los frascos de FD, un puñado de platos de la olla, un festín y un pan. Mira [Farmer's Delight](/farmers-delight/).
+
+## JEI
+
+JEI muestra una categoría de recetas de **Marmita** y otra de **Barril de crianza**, con los tiempos de elaboración y los días
+que dura cada fase, además de páginas de información del barril y de los cultivos silvestres. Hecho para JEI {meta.jei}.
+
+## Jade
+
+Mira una marmita o un barril para ver qué hay dentro: el brebaje o la bebida, las raciones que quedan, cuánto ha avanzado el
+brebaje, si la marmita está calentada y en qué fase está el barril. Hecho para Jade {meta.jade.split('+')[0]}.
+
+## AppleSkin
+
+La descripción de comida y la vista previa de la barra de hambre de AppleSkin funcionan con todo lo que puedes comer o beber. Los zumos y los platos muestran su
+propia comida. <Item id={young.id} /> alimenta mediante su mejora de Saturación, así que AppleSkin muestra lo que llena esa mejora: **{young.food}**
+de hambre y **{young.food * 2}** de saturación, o **{aged.food}** y **{aged.food * 2}** para <Item id={aged.id} />. Los demás
+vinos, cervezas, sidras e hidromieles no alimentan, así que no muestran comida. Hecho para AppleSkin {v.appleskin}.
+
+## Sed
+
+Con **Tough As Nails**, **Homeostatic** o **Thirst Was Taken 2**, las bebidas quitan la sed: los zumos mucho, los vinos, cervezas,
+sidras e hidromiel un poco, y las añejas algo más que las jóvenes. En los mods que cuentan también la comida, los
+estofados, el caldo y el coq au vin cuentan como un estofado y las uvas, tintas o blancas, como bayas dulces.
+
+<table>
+	<thead>
+		<tr><th></th><th>Tough As Nails<br />sed, hidratación</th><th>Homeostatic<br />agua, saturación</th><th>Thirst Was Taken 2<br />sed, saciada</th></tr>
+	</thead>
+	<tbody>
+		{compat.thirst.map((row) => (
+			<tr>
+				<td>{rowLabel(row.items) ?? row.items.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</td>
+				<td>{row.tan ? `${row.tan.thirst}, ${row.tan.hydration}%` : '–'}</td>
+				<td>{row.homeostatic.amount}, {row.homeostatic.saturation.toFixed(1)}</td>
+				<td>{row.twt ? `${row.twt.thirst}, ${row.twt.quenched}` : '–'}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+Tough As Nails solo cuenta las bebidas. Probado con Tough As Nails {v.toughasnails}, Homeostatic {v.homeostatic} y Thirst Was
+Taken 2 {v.thirstwastaken2}.
+
+## Nutritional Balance
+
+Solo NeoForge. Cada comida y bebida cuenta para los grupos de alimentos de Nutritional Balance:
+
+<ul>
+	{Object.entries(compat.nutrients).map(([group, ids]) => (
+		<li><strong>{groups[group] ?? group}:</strong> {ids.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</li>
+	))}
+</ul>
+
+Los vinos, cervezas, sidras e hidromieles no tienen valor alimenticio propio (la cerveza de trigo te llena mediante su mejora de Saturación, que estos mods no cuentan), así que solo las uvas, los zumos y los platos llenan tus grupos. La cebada cruda cuenta como
+hidratos de carbono, así que todo lo que otro mod haga con ella también. Probado con Nutritional Balance {v.nutritionalbalance}.
+
+Cada bebida y comida lleva además las etiquetas comunes que comparten los dos cargadores (bebidas, zumos, fruta, sopas), así que otros mods que las lean las ven
+como lo que son.
+
+## Spice of Life Onion
+
+Funciona tal cual. Los platos cuentan para tu variedad de comida como cualquier alimento. Las bebidas no tienen valor alimenticio propio (la mejora de
+Saturación de la cerveza de trigo no cuenta), así que, como las bebidas de Farmer's Delight, no añaden variedad. Probado con Spice of Life Onion {v.solonion}.
+
+## Biomes O' Plenty
+
+Los cultivos silvestres crecen en todos los biomas con etiqueta de bosque, llanura, sabana, río o ladera de montaña (donde la temperatura les conviene), así que los biomas de mods con esas etiquetas los reciben automáticamente.
+Con Biomes O' Plenty también crecen en algunos biomas que les van bien:
+
+<ul>
+	{bop.map((b) => <li><Item id={b.crop} />: {list(b.biomes)}</li>)}
+</ul>
+
+## Serene Seasons
+
+Con Serene Seasons, cada cultivo crece en sus propias estaciones:
+
+<ul>
+	{['vineandbarrel:red_grapes', 'vineandbarrel:white_grapes', 'vineandbarrel:hops', 'vineandbarrel:barley_seeds'].map((id) => (
+		<li><Item id={id} />: {list(seasonRows.filter(([, ids]) => ids.includes(id)).map(([s]) => s))}</li>
+	))}
+</ul>

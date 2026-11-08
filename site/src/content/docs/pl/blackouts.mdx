@@ -1,0 +1,76 @@
+---
+title: Urwany film
+description: "Jeden drink za dużo: co się dzieje, gdy urywa ci się film, wszystkie miejsca przebudzenia, szanse na każde z nich i pamiątki, które przynosisz."
+---
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
+import { rules, roman, seconds, gameText } from '../../../lib/l10n/pl';
+
+export const t = rules.tipsy;
+export const b = t.blackout;
+export const count = b.endings.filter((e) => e.collectable).length;
+
+<Aside type="caution" title="Spoilery">
+Ta strona zdradza wszystkie sposoby, na jakie może skończyć się noc. Jeśli wolisz odkryć je sam, przestań czytać:
+strona [Rauszyk](/tipsy/#o-jeden-drink-za-dużo) tylko je zapowiada.
+</Aside>
+
+Masz już Rauszyk {roman(t.maxLevel - 1)} i dalej pijesz? Jeszcze jeden i **urywa ci się film**. To nieszkodliwe: nic z tego,
+co masz, nie przepada, nigdy nie obudzisz się w niebezpiecznym miejscu, nie mija żaden czas i nikogo innego to nie dotyczy.
+Właściciele serwerów mogą to wyłączyć opcją `blackout` (zobacz [Konfiguracja](/reference/config/)).
+
+## Co się dzieje
+
+<Steps>
+
+1. **Padasz.** Oczy się zamykają i przewracasz się. Wszyscy wokół widzą, jak leżysz, a wokół twojej głowy krążą
+   gwiazdki.
+2. **Ciemność.** Przez kilka sekund nie możesz się ruszać, a Rauszyk daje ci spokój: bez kołysania, czkawki i wirowania.
+   Nikt cię też nie skrzywdzi, ani mob, ani gracz, ani sam upadek. Liczy się tylko to, co skrzywdziłoby każdego
+   leżącego, jak lawa czy pustka, więc miejsce, w którym ci się urwie film, ma znaczenie; miejsce, w którym *się
+   obudzisz*, jest zawsze bezpieczne.
+3. **Budzisz się gdzieś.** Gdy ekran jest jeszcze czarny, gra wybiera, gdzie skończyła się twoja noc (zobacz niżej)
+   i cię tam przenosi: leżysz na ziemi, w łóżku albo siedzisz w łódce. Oczy otwierają się powoli, potem wstajesz.
+4. **Napis na ekranie** mówi, jak poszło: *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0], 'pl')}* albo jeden z wielu innych.
+
+</Steps>
+
+Całość trwa około {seconds(b.ticks)}. Budzisz się:
+
+- **z powrotem na poziomie Rauszyk I**, bez bonusów z wypitych napojów,
+- **z głodem:** ikony głodu: −{b.hungerLost / 2}, a nasycenie bez zmian,
+- **z drżeniem rąk** przez {seconds(b.shakyTicks)}: lekkie oszołomienie i spowolnienie,
+- **z pamiątką** w kieszeniach, czymś pasującym do miejsca przebudzenia (u stóp, jeśli kieszenie są pełne),
+- a raz na {b.pumpkinOneIn} **z wyrzeźbioną dynią na głowie**, jeśli nie masz hełmu.
+
+## Gdzie się budzisz
+
+Noc może skończyć się w {count} miejscach, plus jedno na wypadek, gdy żadne nie wyjdzie. Każde ma własną szansę, ale w
+losowaniu biorą udział tylko te, które są możliwe tam, gdzie padłeś: bez wody w pobliżu nie ma łódki, bez wioski nie
+ma karczmy.
+
+- **Nowe najpierw:** zakończenie, którego jeszcze nie miałeś, jest {b.unseenBonus}× bardziej prawdopodobne niż to, które już znasz.
+- **Nigdy dwa razy z rzędu,** chyba że nic innego nie wchodzi w grę.
+- **Zawsze bezpiecznie:** twardy grunt, miejsce do stania, bez lawy i wody, bez niczego, co parzy lub kłuje obok, bez
+  potworów w promieniu {b.ranges.monsterFree} bloków, w granicach bariery świata.
+- **Nigdy w czyjejś budowli:** zakończenia na zewnątrz wymagają otwartego nieba nad głową, szkło i liście też się
+  liczą. Dwa w środku używają tylko tego, co świat zbudował dla wszystkich, czyli wioskowej karczmy i łóżka osadnika w
+  wiejskim domu, oraz twojego własnego łóżka.
+- **W Netherze i w Endzie** nie ma otwartego nieba, więc większość nocy kończy się dokładnie tam, gdzie padłeś.
+
+Szanse poniżej dotyczą twojego pierwszego urwanego filmu, gdy wszystkie zakończenia są możliwe. Potem się zmieniają:
+zakończenia, których jeszcze nie miałeś, stają się bardziej prawdopodobne, a to, które właśnie przeżyłeś, ustępuje miejsca.
+
+<BlackoutEndings />
+
+## Zbierz wszystkie
+
+Pierwszy urwany film daje osiągnięcie *Gdzie ja jestem?*. Obudź się we wszystkich {count} miejscach (*Tutaj* się nie
+liczy), a zdobędziesz wyzwanie *Urwany weekend*. Gra pamięta, które już miałeś, nawet po śmierci.
+
+<Aside type="tip" title="Polujesz na konkretne zakończenie?">
+Przygotuj scenę przed ostatnim drinkiem: własne łóżko w pobliżu dla *W domu*, stóg siana albo <Item id="barley_bale" />
+na zewnątrz dla *W sianie*, staw dla *W łódce*, wioska z karczmą dla zakończeń we wnętrzach. Zakończenia, które już
+miałeś, są mniej prawdopodobne, więc rzadkie wpadają szybciej, niż myślisz.
+</Aside>

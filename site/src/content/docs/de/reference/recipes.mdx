@@ -1,0 +1,16 @@
+---
+title: Alle Rezepte
+description: Jedes Vine-&-Barrel-Rezept, so wie es im Spiel erscheint, nach Station filterbar und nach Ergebnis oder Zutat durchsuchbar.
+tableOfContents: false
+---
+import RecipeBrowser from '../../../../components/reference/RecipeBrowser.astro';
+import { playableRecipes, byType } from '../../../../lib/l10n/de';
+
+export const fd = playableRecipes.filter((r) => r.fdOnly).length;
+
+Alle {playableRecipes.length} Rezepte, so gezeichnet, wie das Spiel sie zeigt: {byType('vineandbarrel:brewing').length} für den
+[Braukessel](/brew-kettle/), {byType('vineandbarrel:aging').length} für das [Reifefass](/aging-barrel/) und der Rest für die
+Werkbank. {fd} davon brauchen [Farmer's Delight](/farmers-delight/). Such nach einem Ergebnis oder einer Zutat, oder wähle eine Station.
+Fahr über einen Slot, um den Namen des Gegenstands zu sehen; Slots, die durch Gegenstände blättern, nehmen jeden davon an.
+
+<RecipeBrowser />

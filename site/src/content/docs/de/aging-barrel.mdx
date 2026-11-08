@@ -1,0 +1,111 @@
+---
+title: Reifefass
+description: Befüllen, gären, reifen und zapfen. Wie das Reifefass funktioniert, wie lange es dauert und wie du einen Keller voller Fässer baust.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import AgingTimeline from '../../../components/brewing/AgingTimeline.astro';
+import { rules, byType, days, list, nameOf } from '../../../lib/l10n/de';
+
+export const aging = byType('vineandbarrel:aging');
+export const a = aging[0];
+export const sameTimes = aging.every((r) => r.fermentingTime === a.fermentingTime && r.agingTime === a.agingTime);
+
+<Render name="scenes/barrel-rack" float="right" size={256} alt="Drei Reifefässer nebeneinander, zu einem Regal verbunden" />
+
+Das <Item id="aging_barrel" /> ist das Herz von Vine & Barrel. Es hat keine Oberfläche: Du gießt ein, wartest und zapfst, alles in
+der Welt. Es wird mit dem Zapfhahn zu dir hin aufgestellt.
+
+## Befüllen
+
+Klick das Fass mit einer Grundlage aus dem [Braukessel](/brew-kettle/) rechts an:
+
+- Ein Eimer gießt **{rules.servingsPerBucket} Portionen** ein, eine Flasche **{rules.servingsPerBottle}**,
+- das Fass fasst **{rules.barrelCapacity} Portionen**: zwei Eimer oder acht Flaschen.
+
+Solange es noch gärt, kannst du mehr von derselben Grundlage nachfüllen. Das Falsche eingegossen? Bis der Ansatz zu einem Getränk
+geworden ist, holt ein leerer Eimer oder eine leere Flasche es wieder heraus.
+
+## Gären und reifen
+
+{sameTimes && <p>Jeder Ansatz durchläuft dieselben zwei Phasen:</p>}
+
+1. **Gären**, **{days(a.fermentingTime)}** lang. Der Ansatz wird zum *jungen* Getränk, etwa <Item id="red_wine" />.
+2. **Reifen**, **{days(a.agingTime)}** länger. Was noch im Fass ist, wird zum *gereiften* Getränk, etwa <Item id="aged_red_wine" />, dessen Bonus stärker ist und länger hält.
+
+<AgingTimeline />
+
+{aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
+
+Die Uhr läuft in Spielzeit, auch das Verschlafen der Nacht zählt. Junge Getränke kannst du in der Reifephase zapfen, aber
+jede Portion, die du nimmst, reift nicht weiter. Mit Farmer's Delight gären auch dessen Apfelwein (zum selben Cidre) und Melonensaft: siehe
+[Farmer's Delight](/farmers-delight/).
+
+<Shot src="cellar.jpg" caption="Ein Keller an der Taverne entlang: Fässer zu einem Regal verbunden, eine zweite Reihe obendrauf. Das Gärröhrchen auf einem blubbert; die Wachssiegel markieren die gereiften Ansätze." />
+
+## Beim Arbeiten zusehen
+
+Du siehst, wie es einem Fass geht, ohne etwas zu öffnen:
+
+- **Ein Rechtsklick mit leerer Hand** zeigt eine Statuszeile, z. B. *Pale Ale · 5 Portionen · reift, fertig in 3 Tagen*. Benenn ein Fass im
+  Amboss um, und der Name erscheint dort ebenfalls.
+- **Der Spund oben** zeigt die Phase: ein Korken, wenn es leer oder das Getränk jung und fertig ist, ein gläsernes Gärröhrchen, das blubbert,
+  solange es gärt, und ein rotes Wachssiegel, sobald es gereift ist.
+- **Das Schauglas** vorn zeigt, wie voll es ist, in der Farbe des Getränks.
+- **Geräusche und Tropfen:** Blubbern, solange es gärt, der Zapfhahn tropft ab und zu, und ein leises Korkenknallen, wenn der Ansatz reift.
+
+<Stages prefix="barrel-bung" title="Der Spund" labels={['Korken', 'Gärröhrchen: gärt', 'Wachs: gereift']} />
+<Stages prefix="barrel-fill" title="Schauglas" only={['0', '2', '4', '6', '8']} labels={['leer', '2', '4', '6', 'voll']} />
+
+## Zapfen
+
+Klick das Fass mit einem leeren <Item id="wine_glass" /> (Wein) oder <Item id="mug" /> (Bier, Met und Cidre) rechts an, um eine Portion zu zapfen.
+Der Zapfhahn dreht sich, und das Getränk landet in deiner Hand.
+
+- Falsches Gefäß? Das Fass sagt dir, welches du nehmen sollst (*Rotwein wird im Weinglas serviert*), und nichts wird verbraucht.
+- Gärt es noch? Es sagt dir, wann es fertig ist.
+- Ist die letzte Portion gezapft, ist das Fass leer und bereit für einen neuen Ansatz.
+
+## Einen Keller bauen
+
+<Render name="scenes/barrel-cellar" float="right" size={256} alt="Zwei Reihen Fässer, die obere ruht auf der unteren" />
+
+- **Regale:** Fässer nebeneinander, in dieselbe Richtung ausgerichtet, verbinden ihre Gestelle zu einem langen Regal.
+- **Stapel:** Ein Fass auf einem anderen verliert sein Gestell und ruht auf Keilen, so kannst du eine ganze Wand aus Fässern bauen.
+- **Komparator:** liest die übrigen Portionen aus, von 0 (leer) bis 15 (alle {rules.barrelCapacity}).
+- **Baust du es voll ab,** behält es seinen Ansatz und seinen Amboss-Namen. Der Tooltip des Gegenstands zeigt Getränk, Portionen und Phase.
+  Das Reifen pausiert, solange es ein Gegenstand ist, und läuft weiter, wenn du es wieder aufstellst. Ein volles Fass lässt sich nicht mit anderen stapeln.
+- Fässer sind aus Holz: Bau sie mit einer Axt ab.
+
+## Automatisierung
+
+- **Trichter** von oben gießen Grundlagen ein. Von den Seiten und von unten füttern sie leere Krüge und Gläser ein und ziehen die
+  gezapften Getränke und die leeren Eimer und Flaschen heraus, die vom Eingießen übrig sind.
+- **Werfer**, die auf ein Fass zeigen, zapfen eine Portion mit einem leeren Krug oder Glas oder gießen einen Eimer oder eine Flasche Grundlage ein.
+
+## Gut zu wissen
+
+- **Füll früh nach.** Nur der erste Guss startet die Uhr: Grundlage, die du später dazugibst, schließt sich dem Ansatz in seinem Alter an und gärt
+  daher in kürzerer Zeit. Ist der Ansatz erst ein Getränk, nimmt das Fass nichts mehr an, bis es leer gezapft ist.
+- **Eine Grundlage pro Fass.** Eine andere einzugießen wird abgelehnt (*Dieses Fass enthält Traubensaft*), und nichts wird verbraucht.
+- **Fast voll?** Ein Eimer braucht Platz für alle {rules.servingsPerBucket} Portionen, ein Fass mit mehr als
+  {rules.barrelCapacity - rules.servingsPerBucket} darin lehnt ihn also ab. Nimm Flaschen für den Rest. Umgekehrt genauso: Ein leerer Eimer holt
+  nur dann Grundlage wieder heraus, wenn mindestens {rules.servingsPerBucket} Portionen darin sind.
+- **Es reift, während du weg bist.** Das Fass läuft in Spielzeit, es macht also weiter, während du weit weg oder offline bist. Du
+  verpasst nur das Korkenknallen.
+- **Bau deinen Keller in der Oberwelt.** Im Nether und im Ende gibt es keinen Tag zu verschlafen, Schlafen beschleunigt dort also kein Fass,
+  und seine Statuszeile zählt in Tagen statt „morgen früh“.
+- **Inventar voll?** Ein gezapftes Getränk fällt dann vor deine Füße.
+- **Kreativmodus:** Baust du ein volles Fass ab, fällt nichts. Mit Block auswählen (Mittelklick mit Strg) kopierst du es samt Ansatz.
+- **Halte Creeper fern.** Eine Explosion kann ein Fass samt Ansatz zerstören.
+- **Trichter-Tipps:** Ein Trichter oben gießt nur ein, was das Fass annimmt, eine falsche Grundlage wartet also im Trichter, statt ihn
+  zu verstopfen. Häng bei einer Zapfanlage einen Trichter darunter, damit fertige Getränke die nächsten nicht blockieren.
+- **Keine Brandgefahr.** Fässer fangen nie Feuer. Ein leeres brennt sogar als Brennstoff im Ofen; ein volles nicht.
+
+## Rezept
+
+<Recipe id="aging_barrel" />

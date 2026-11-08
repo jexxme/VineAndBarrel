@@ -1,0 +1,73 @@
+---
+title: Configuration
+description: Every Vine & Barrel option, for server owners and for each player, with its default and what it does.
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../lib/data';
+import { configFiles } from '../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+Vine & Barrel has two config files, both about [Tipsy](/tipsy/). Everything else, from recipes to how long a barrel
+takes, works the way the mod ships and can be changed with a datapack like any recipe.
+
+In game, change them on the settings screen: **Mods**, Vine & Barrel, **Config** on NeoForge; on Fabric the same button
+appears with [Mod Menu](https://modrinth.com/mod/modmenu) installed. Changes there apply at once. The server options
+show there in singleplayer (not once the world is open to LAN); on a server they are the server's.
+
+The files themselves: on NeoForge they are TOML files with the options under <code>[{configFiles.server.section}]</code>. On
+Fabric they are plain <code>.properties</code> files in the <code>config</code> folder, with the same options written as
+<code>{configFiles.server.section}.option=value</code>. On Fabric the client file is read when the game starts, so
+restart after editing it; the server file is read again on <code>/reload</code>.
+
+## Server options
+
+In <code>{configFiles.server.file}</code> on NeoForge, <code>{configFiles.server.fabricFile}</code> on Fabric. The server's
+values go to every player who joins, so everyone plays by the same rules. One world can have its own: put the file into
+that world's <code>serverconfig</code> folder, and it wins over the one in <code>config</code> while that world runs.
+
+<table>
+	<thead><tr><th>Option</th><th>Default</th><th>What it does</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} to {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Non-alcoholic mode">
+Set `enabled = false` (`tipsy.enabled=false` on Fabric) and drinks become plain buff drinks: no Tipsy, no hiccups, no blackouts, but the same names and buffs.
+Good for a family server, or if you simply don't like the wobble.
+</Aside>
+
+## Client options
+
+In <code>{configFiles.client.file}</code> on NeoForge, <code>{configFiles.client.fabricFile}</code> on Fabric. Each player
+sets these for themselves; they only change what you see.
+
+<table>
+	<thead><tr><th>Option</th><th>Default</th><th>What it does</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} to {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="Motion sickness?">
+Set `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` on Fabric). Tipsy stops moving your screen, whatever the server says: no sway, no jolts, no Nausea spells. Vanilla's Distortion Effects and FOV Effects sliders tone it down too. Lying on your face after a trip still shows, it isn't a screen effect; everything else about Tipsy stays.
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

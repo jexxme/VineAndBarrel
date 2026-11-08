@@ -1,0 +1,79 @@
+---
+title: Alegrinho
+description: O que o Alegrinho faz em cada nível, o que acontece depois de uma bebida a mais, como ficar sóbrio e como reduzir ou desligar o efeito.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import TipsyLevels from '../../../components/data/TipsyLevels.astro';
+import EffectBadge from '../../../components/data/EffectBadge.astro';
+import { rules, nameOf, roman } from '../../../lib/l10n/pt-br';
+
+export const t = rules.tipsy;
+export const cfg = t.config;
+export const rowdyLevel = t.rowdyLevel;
+export const punchHearts = t.rowdyPunchDamage / 2;
+
+Todo vinho, cerveja, sidra e hidromel dá o bônus dele **e um nível de <EffectBadge id="vineandbarrel:tipsy" name="Alegrinho" />**. No começo
+é divertido: um balanço, soluços, um pouco de coragem líquida, e no Alegrinho {roman(t.slurLevel - 1)} você está no seu melhor (e
+seu chat não), embora os olhos comecem a pesar. Continue e a conta chega: enjoos, braços fracos e, no topo, pernas que mal
+te levam para casa. O máximo é o nível {t.maxLevel}.
+
+## Níveis
+
+<TipsyLevels />
+
+Os outros jogadores veem você balançar, soluçar, tropeçar e levar tombos também. Passe o mouse sobre o efeito Alegrinho no inventário para ver o que seu
+nível atual faz.
+
+## Uma bebida a mais
+
+Já no nível {t.maxLevel} e ainda bebendo? Você **apaga**. Seus olhos se fecham e você tomba, com estrelinhas
+girando em volta da cabeça para todo mundo ver. Nesses poucos segundos ninguém pode te machucar, nem mob nem jogador, e a queda
+também não; o resto do mundo continua valendo, então não apague na lava. Depois você acorda. Onde? Isso
+depende da noite, e há mais jeitos de acordar do que você imagina…
+
+Você vai ficar com fome e trêmulo por um tempo, de volta ao Alegrinho I, e talvez tenha nos bolsos algo de que não lembra de ter
+pegado. Você nunca perde nada do que tinha.
+
+## Arruaceiro
+
+A partir do Alegrinho {roman(rowdyLevel - 1)}, você fica arruaceiro. De vez em quando seu braço se mexe sozinho e solta um soco de verdade
+em quem estiver bem na sua frente: {punchHearts === 0.5 ? 'meio coração' : `${punchHearts} corações`} de dano
+e um empurrão, não importa o que você esteja segurando. Ele nunca acerta pets domesticados, golens de ferro nem suportes de armadura, e só acerta outros jogadores
+onde o PvP está ligado. Aldeões e passantes, porém, estão na mira, e eles não esquecem.
+
+Você também fica **sem mais doses**: a partir do Alegrinho {roman(t.cutOffLevel - 1)}, aldeões e mercadores andarilhos balançam a cabeça e não
+negociam com você até você ficar sóbrio. Faça suas trocas antes da {t.cutOffLevel === 4 ? 'quarta' : `${t.cutOffLevel}ª`} bebida.
+
+## Ficando sóbrio
+
+- **Espere:** cada nível passa depois de **{cfg.secondsPerLevel} segundos**, um nível de cada vez. Uma bebida nova dá a cada nível
+  um relógio novo, então no Alegrinho {roman(t.maxLevel - 1)} você fica sóbrio de novo em cerca de {String(Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10).replace('.', ',')} minutos
+  sem mais uma gota.
+- **Leite** limpa tudo de uma vez, como qualquer efeito. Limpa também os bônus das suas bebidas.
+- **Um frasco de água ou qualquer suco** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
+  <Item id="apple_juice" />) baixa um nível na hora. Só funciona o frasco de água simples, nenhuma outra poção.
+- **Dormir para passar:** vá para a cama e durma a noite toda. Tem que ser uma noite que realmente passe: se você acordar cedo, ou ficar
+  deitado enquanto os outros do servidor continuam acordados, você acorda tão alegrinho quanto foi dormir.
+
+## Bom saber
+
+- **Agache** no Alegrinho {roman(t.stumbleLevel - 1)} e suas pernas seguram: sem desvio, sem tropeços, sem tombos. Nadar, cavalgar e
+  voar também são seguros.
+- **Um tombo nunca machuca** e nunca te leva a um lugar aonde você não andou. Você só cai em terreno plano e aberto, sem
+  monstro por perto, e não duas vezes em {Math.round(t.tripCooldownTicks / 20)} segundos; em qualquer outro lugar fica só um tropeço.
+- **A água tira você dos níveis ruins rápido,** mas os níveis de baixo têm o próprio tempo, então ela não deixa você sóbrio
+  mais cedo no geral.
+- O Alegrinho só cuida dos próprios efeitos colaterais: uma Lentidão ou Náusea de uma poção ou de um comando fica como está.
+- Links, comandos e @menções no chat nunca são enrolados.
+- Os outros jogadores veem você balançar, ouvem seus soluços e veem seus tropeços, tombos e socos de arruaceiro, mas não as bordas escuras
+  da sua tela nem suas piscadas.
+- **Quer a história completa de um apagão?** Todos os lugares onde você pode acordar, as chances e as lembranças estão em
+  [Apagões](/blackouts/). Spoilers, claro.
+
+## Configurações
+
+Donos de servidor podem desligar o Alegrinho por completo (o modo sem álcool) ou desligar um a um a fala enrolada, os tropeços (com os tombos
+e o desvio), os apagões, os socos de arruaceiro e o corte de doses. Cada jogador pode reduzir o quanto o Alegrinho mexe na
+tela, até nada, e desligar os efeitos de visão; os controles Efeitos de Distorção, Efeitos de FOV e Escuridão pulsante do Minecraft
+também valem. Todas as opções e padrões estão em [Configuração](/reference/config/).

@@ -1,0 +1,87 @@
+---
+title: Construindo uma adega
+description: "De um barril a uma adega: planeje uma leva, uma cervejaria movida a funis, prateleiras e paredes de barris, servir automático e como oferecer uma rodada."
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Shot from '../../../../components/mc/Shot.astro';
+import CellarPlanner from '../../../../components/brewing/CellarPlanner.astro';
+import { rules, recipe, days } from '../../../../lib/l10n/pt-br';
+
+export const wine = recipe('aging/red_wine');
+
+<Render name="scenes/barrel-cellar" float="right" size={230} alt="Duas fileiras de Barris de Envelhecimento, a de cima apoiada na de baixo" />
+
+Um barril é um começo. Uma adega é uma fileira deles, enchidos por uma tina que funciona sozinha, com bebidas que você serve
+sem pensar. Este guia monta tudo na ordem em que você vai querer; cada parte leva à página com todos os detalhes.
+
+## Planeje a leva
+
+De quanto você precisa? Escolha uma bebida e um número de porções e você recebe o pedido completo: o que plantar, quantas
+levas na tina, quantos baldes e frascos, quantos barris e quanto tempo esperar. Os botões avançam um barril por vez.
+
+<CellarPlanner />
+
+## Uma cervejaria que funciona sozinha
+
+<Render name="scenes/kettle-on-hopper" float="right" size={192} alt="Uma Tina de Brassagem sobre um Funil, em cima de um fogo" />
+
+A [Tina de Brassagem](/brew-kettle/) funciona com Funis em todos os lados:
+
+- **Embaixo, um Funil faz dois trabalhos.** Ele passa o calor do fogo abaixo dele para a tina e puxa os frascos e baldes
+  cheios. Ou seja: fogo, Funil, tina, empilhados.
+- **Em cima, um Funil alimenta os ingredientes** e os frascos ou baldes vazios. Use-o só para ingredientes: qualquer coisa
+  que a receita não usa, até a sobra de outra receita, trava a tina até você tirar.
+- **Pelos lados, Funis alimentam** frascos ou baldes vazios.
+- A tina continua preparando enquanto chegam ingredientes, até {rules.kettleMaxServings} porções.
+
+<Aside type="tip" title="Recolha a sua experiência">
+Cada leva rende um pouquinho de XP, mas a tina só entrega quando alguém enche um frasco ou balde à mão, ou quando ela é
+quebrada. Encha um à mão de vez em quando.
+</Aside>
+
+## Prateleiras e paredes
+
+<Shot src="cellar.jpg" caption="Uma adega ao longo da parede da taverna: barris juntos numa prateleira, uma segunda fileira empilhada em cima." />
+
+- **Prateleiras:** [Barris de Envelhecimento](/aging-barrel/) colocados lado a lado no chão, virados para o mesmo lado, juntam seus berços
+  numa prateleira comprida.
+- **Paredes:** um barril sobre outro se apoia em calços em vez de um berço, então você pode empilhá-los numa parede. Seu primeiro
+  barril empilhado rende *Mestre da Adega*.
+- **Dê nomes a eles.** Renomeie um barril numa Bigorna e o nome aparece na linha de status, então *Vinho do Casamento* fica fácil de achar. O
+  nome continua quando você quebra e coloca o barril de novo.
+- **Leia num relance:** o batoque no topo mostra o andamento de cada barril (rolha, airlock borbulhando, cera vermelha), e
+  o visor na frente mostra o quanto está cheio, na cor da bebida.
+- **Comparadores de Redstone** leem as porções de um barril, de 1 para uma porção até 15 quando está cheio.
+
+## Encher e servir por máquina
+
+- **Um Funil em cima despeja as bases.** Ele só despeja o que o barril aceita no momento, então a base errada simplesmente espera
+  no Funil.
+- **Funis nos lados** alimentam canecas ou taças vazias; o barril as serve cheias. Canecas para cerveja, hidromel e sidra, taças para
+  vinho: as erradas ficam presas até você quebrar o barril.
+- **Um Funil embaixo** puxa as bebidas servidas e os baldes e frascos vazios que sobram do despejo. Mantenha um ali,
+  ou as bebidas prontas bloqueiam as próximas.
+- **Ejetores** virados para um barril servem uma porção com uma caneca ou taça vazia, ou despejam um balde ou frasco de base.
+
+## Onde construir
+
+- **Na Superfície.** Os barris correm no tempo do jogo e dormir durante a noite conta, mas no Nether e no End não
+  há noite para pular.
+- **Longe de creepers.** Uma explosão pode destruir um barril, leva e tudo.
+- **Em qualquer outro lugar:** os barris continuam envelhecendo enquanto você está longe ou offline, e nunca pegam fogo. Você
+  só perde o estalo suave da rolha quando uma leva fica envelhecida.
+- **Encha dois de cada.** Leva {days(wine.fermentingTime)} para fermentar e mais {days(wine.agingTime)} para envelhecer, e cada taça
+  que você serve no meio é uma a menos para envelhecer. Beba de um barril e deixe o outro em paz.
+
+## Oferecendo uma rodada
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Canecas e taças apoiadas num bloco" />
+
+- **Ponha a mesa:** esgueire-se e clique com o botão direito no topo de um bloco com uma caneca ou taça para deixá-la ali, até quatro por bloco.
+  Bebidas envelhecidas brilham até na mesa.
+- **Saúde!** Termine uma bebida ao mesmo tempo que os amigos por perto e o bônus de todo mundo dura
+  {rules.cheersBonusPercent}% mais. Veja [Bebidas](/drinks/#saúde).
+- **Cuidado com os níveis.** Cada bebida soma um nível de [Alegrinho](/tipsy/). Tenha por perto <Item id="grape_juice" /> ou água:
+  cada um tira um nível.

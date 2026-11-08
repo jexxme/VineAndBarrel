@@ -1,0 +1,12 @@
+---
+title: 도전 과제
+description: Vine & Barrel 도전 과제 탭과 각 과제를 얻는 방법.
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/ko';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel에는 자체 도전 과제 탭 <strong>{gameText(root.titleKey, root.title)}</strong>이 있어요: <em>{gameText(root.descriptionKey, root.description)}</em>
+
+<Advancements />

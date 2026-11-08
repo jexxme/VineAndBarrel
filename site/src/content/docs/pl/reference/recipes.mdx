@@ -1,0 +1,16 @@
+---
+title: Wszystkie receptury
+description: Każda receptura Vine & Barrel tak, jak wygląda w grze, z filtrem według stanowiska i wyszukiwaniem po wyniku lub składniku.
+tableOfContents: false
+---
+import RecipeBrowser from '../../../../components/reference/RecipeBrowser.astro';
+import { playableRecipes, byType } from '../../../../lib/l10n/pl';
+
+export const fd = playableRecipes.filter((r) => r.fdOnly).length;
+
+Wszystkie {playableRecipes.length} receptur, narysowane tak, jak pokazuje je gra: {byType('vineandbarrel:brewing').length} dla
+[kotła warzelnego](/brew-kettle/), {byType('vineandbarrel:aging').length} dla [beczki do leżakowania](/aging-barrel/), a reszta dla
+stołu rzemieślniczego. {fd} z nich wymaga [Farmer's Delight](/farmers-delight/). Wyszukaj wynik lub składnik albo wybierz stanowisko.
+Najedź na slot, żeby zobaczyć nazwę przedmiotu; sloty, które przełączają przedmioty, przyjmują każdy z nich.
+
+<RecipeBrowser />

@@ -1,0 +1,73 @@
+---
+title: Configuração
+description: Todas as opções de Vine & Barrel, para donos de servidor e para cada jogador, com o padrão e o que cada uma faz.
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../../lib/l10n/pt-br';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+Vine & Barrel tem dois arquivos de configuração, os dois sobre o [Alegrinho](/tipsy/). Todo o resto, das receitas ao tempo que um barril
+leva, funciona do jeito que o mod vem e pode ser mudado com um datapack, como qualquer receita.
+
+No jogo, mude pela tela de configurações: **Mods**, Vine & Barrel, **Config** no NeoForge; no Fabric o mesmo botão
+aparece com o [Mod Menu](https://modrinth.com/mod/modmenu) instalado. As mudanças ali valem na hora. As opções do servidor
+aparecem ali no modo um jogador (não depois que o mundo é aberto para LAN); em um servidor, elas são do servidor.
+
+Os arquivos em si: no NeoForge são arquivos TOML com as opções em <code>[{configFiles.server.section}]</code>. No
+Fabric são arquivos <code>.properties</code> simples na pasta <code>config</code>, com as mesmas opções escritas como
+<code>{configFiles.server.section}.option=value</code>. No Fabric o arquivo do cliente é lido quando o jogo inicia, então
+reinicie depois de editar; o arquivo do servidor é lido de novo com <code>/reload</code>.
+
+## Opções do servidor
+
+Em <code>{configFiles.server.file}</code> no NeoForge, <code>{configFiles.server.fabricFile}</code> no Fabric. Os valores do servidor
+vão para todo jogador que entra, então todos jogam pelas mesmas regras. Um mundo pode ter as suas: coloque o arquivo na pasta
+<code>serverconfig</code> do mundo, e ele vale mais que o da pasta <code>config</code> enquanto aquele mundo roda.
+
+<table>
+	<thead><tr><th>Opção</th><th>Padrão</th><th>O que faz</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} a {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Modo sem álcool">
+Defina `enabled = false` (`tipsy.enabled=false` no Fabric) e as bebidas viram bebidas de bônus comuns: sem Alegrinho, sem soluços, sem apagões, mas com os mesmos nomes e bônus.
+Bom para um servidor família, ou se você simplesmente não curte o balanço.
+</Aside>
+
+## Opções do cliente
+
+Em <code>{configFiles.client.file}</code> no NeoForge, <code>{configFiles.client.fabricFile}</code> no Fabric. Cada jogador
+define as suas; elas só mudam o que você vê.
+
+<table>
+	<thead><tr><th>Opção</th><th>Padrão</th><th>O que faz</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} a {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="Enjoo de movimento?">
+Defina `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` no Fabric). O Alegrinho para de mexer na sua tela, não importa o que o servidor diga: sem balanço, sem solavancos, sem crises de Náusea. Os controles Efeitos de Distorção e Efeitos de FOV do Minecraft também ajudam a reduzir. Ficar de cara no chão depois de um tombo continua aparecendo, não é um efeito de tela; todo o resto do Alegrinho continua.
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

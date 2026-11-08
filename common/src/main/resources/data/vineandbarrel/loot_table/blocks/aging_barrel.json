@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "function": "minecraft:copy_components",
+              "include": [
+                "minecraft:custom_name",
+                "vineandbarrel:barrel_contents",
+                "vineandbarrel:home_brewed"
+              ],
+              "source": "block_entity"
+            }
+          ],
+          "name": "vineandbarrel:aging_barrel"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "vineandbarrel:blocks/aging_barrel"
+}

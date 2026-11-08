@@ -1,0 +1,110 @@
+---
+title: Ürünler
+description: Kırmızı ve beyaz üzüm çalıları, şerbetçiotu çalıları, bahçe kafesleri, arpa, yabani ürünler ve arılardan gübreye her şey.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../../lib/l10n/tr';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+// Who eats what: the food tags our items are in (animals.json), as the animals those tags feed
+export const ANIMALS = { cow_food: 'inekler', sheep_food: 'koyunlar', goat_food: 'keçiler', horse_food: 'atlar', llama_food: 'lamalar', chicken_food: 'tavuklar', parrot_food: 'papağanlar', fox_food: 'tilkiler' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const SEASON_NAMES = { spring: 'ilkbahar', summer: 'yaz', autumn: 'sonbahar', winter: 'kış' };
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)).map((s) => SEASON_NAMES[s] ?? s));
+
+<Render name="scenes/garden" float="right" size={256} alt="Bir arpa tarlasının arkasında üzüm ve şerbetçiotu çalıları" />
+
+Bizim dört ürünümüz içecekleri besler: kırmızı şarap için <Item id="red_grapes" plural />, beyaz şarap için <Item id="white_grapes" plural />, iki bira için <Item id="hops" />, ale için <Item id="barley" />. Diğer malzemeler vanilla: tatlı orman meyvesi şarabı için <Item id="sweet_berries" />, buğday birası için <Item id="wheat" />, elma şarabı için <Item id="apple" plural />, bal şarabı için <Item id="honey_bottle" plural />.
+
+<Shot src="vineyard.jpg" caption="Çitle çevrili, olgun üzüm çalılarıyla dolu bir bağ; sıra başlarında fener direkleri." />
+
+## Üzüm ve şerbetçiotu çalıları
+
+<Item id="red_grapes" plural />, <Item id="white_grapes" plural /> ya da <Item id="hops" /> çimene, toprağa ya da tarlaya dik, tıpkı tatlı orman meyvesi gibi. Çalı, tatlı orman meyvesi çalısının hızında {c.bushMaxAge + 1} aşamadan geçerek büyür. Kırmızı ve beyaz üzüm aynı şekilde büyür; onları yalnızca olgun meyve ayırır.
+
+<Stages prefix="grape_bush" title="Kırmızı üzüm çalısı" labels={['dikildi', 'büyüyor', 'yarı olgun', 'olgun']} />
+<Stages prefix="white_grape_bush" title="Beyaz üzüm çalısı" labels={['dikildi', 'büyüyor', 'yarı olgun', 'olgun']} />
+<Stages prefix="hop_bush" title="Şerbetçiotu çalısı" labels={['dikildi', 'büyüyor', 'yarı olgun', 'olgun']} />
+
+- **Hasat:** olgun bir çalıya sağ tıkla; {h.grapes.count[0]} ile {h.grapes.count[1]} arası üzüm (ya da {h.hops.count[0]} ile {h.hops.count[1]} arası <Item id="hops" />) verir ve ikinci aşamasına geri döner, yani meyve vermeye devam eder. Yeniden dikmen gerekmez.
+- **Acelen mi var?** Tatlı orman meyvesi gibi yarı olgunken de toplayabilirsin: bu durumda {h.grapes.halfRipe[0]} ile {h.grapes.halfRipe[1]} arası verir ve aynı şekilde geri döner.
+- **Kemik tozu** onu bir aşama ilerletir.
+- Çalılar da tatlı orman meyvesi çalıları kadar kolay tutuşur, o yüzden kamp ateşlerini ve lavı bağdan uzak tut.
+
+## Bahçe Kafesi
+
+<Render name="scenes/trellis" float="right" size={256} alt="Bahçe kafeslerinde üzüm ve şerbetçiotu asmaları ve çıplak bir bahçe kafesi" />
+
+Bir çalının üstüne <Item id="trellis" /> koy; çalı olgunlaşınca {c.climbMaxHeight} bloğa kadar tırmanır ve yukarıya kadar meyve verir. Bahçe Kafesi yerleştirirken sana bakar ve altındakiyle hizalanır, böylece sıralar düz kalır.
+
+- Her asma çalı gibi büyür, meyve verir ve toplanır; yarı olgunken de. Olgun bir çalıya kemik tozu atarsan tırmanış hemen başlar.
+- Bir asmayı kırınca meyvesini alırsın ve bahçe kafesi yerinde kalır.
+- Bahçe Kafesi merdiven değildir: üzerindeki her şey yerden erişilebilir.
+
+<Recipe id="trellis" />
+
+<Aside title="Farmer's Delight ile: halatlar da olur">
+Bir çalının üstündeki Farmer's Delight halatı tıpkı bir bahçe kafesi gibi çalışır, FD'nin domateslerinin tırmandığı gibi. Bkz. [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Arpa
+
+Tarlaya <Item id="barley_seeds" /> ek. Arpa tam olarak buğday gibi, {barleyStages} aşamada büyür ve aynı şekilde verir: olgunlaşınca <Item id="barley" />, bir de fazladan tohum.
+
+<Stages prefix="barley" title="Arpa" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', 'olgun']} />
+
+## Yabani ürünler
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="Çimenlikte yabani kırmızı üzüm, yabani beyaz üzüm, yabani şerbetçiotu ve yabani arpa" />
+
+İlk tohumların yabani bitkilerden gelir. Biyoma ve sıcaklığa göre kümeler halinde büyürler; bu yüzden olağan şekilde etiketlenmiş modlu biyomlarda da çıkarlar. Ürünü için birini kır ya da bitkiyi süs olarak bütün eve götürmek için makas kullan.
+
+<WildCrops />
+
+Çiftçiler ve gezgin tüccar da tohum satar, köy sandıklarında da bazen bulunur. Bkz. [Köyler ve meyhaneler](/villages/).
+
+## Çiftlik hayatı
+
+- **Arılar** vanilla ürünlerinde olduğu gibi üzümü, şerbetçiotunu ve arpayı tozlaştırır, büyümelerine yardım eder.
+- **Hayvanlar:** <Item id="barley" /> buğday gibi şu hayvanları besler ve üretir: {list(eaters('vineandbarrel:barley').filter((a) => a !== 'atlar' && a !== 'lamalar'))}. Atlar ve lamalar da arpayla tıpkı buğdaydaki gibi iyileşir ve büyür, <Item id="barley_bale" /> üzerinde de saman balyasındaki gibi. <Item id="barley_seeds" /> şunları besler: {list(eaters('vineandbarrel:barley_seeds'))}. Üzümle de şunları üretebilirsin: {list(eaters('vineandbarrel:red_grapes'))}.
+- **Tilkiler** kırmızı ve beyaz üzümü sever: tatlı orman meyvesi çalılarını bastıkları gibi onları çalılardan koparırlar. Bahçe kafesi ya da halat üstündeki asmalar erişimlerinin dışındadır ve yaratık tahribatı kapalıyken dururlar.
+- **Çiftçiler** tarlalarında arpa eker ve hasat eder, artan tohumları gübreler. Üzüm ve şerbetçiotunu sana bırakırlar.
+- **Gübre Varili:** her ürün vanilla'daki olasılıklarla gübrelenir.
+
+<table>
+	<thead><tr><th>Eşya</th><th>Bir katman ekleme şansı</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="Sulanmış tarlada, şerbetçiotu bahçesinin yanında hasada hazır arpa." />
+
+## Depolama blokları
+
+<Render name="scenes/storage" float="right" size={256} alt="Kırmızı Üzüm Kasası, Beyaz Üzüm Kasası, Şerbetçiotu Kasası ve Arpa Balyası" />
+
+Bir üründen dokuzunu <Item id="grape_crate" />, <Item id="white_grape_crate" />, <Item id="hops_crate" /> ya da <Item id="barley_bale" /> halinde paketle; işleme masasında yeniden açabilirsin. <Item id="barley_bale" /> her bakımdan bir saman balyasıdır: düşmeyi yumuşatır, üstündeki kamp ateşinin dumanı yükseğe çıkar, lamalar ve atlar da onu yer.
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## Bilmekte fayda var
+
+- **Topla, kırma.** Genç bir çalıyı kırarsan hiçbir şey düşmez ve bitki gider. Meyvesi olanı kırarsan meyve düşer (Servet ile daha fazla), ama sağ tık meyveyi toplar ve çalıyı bırakır.
+- **İçinden geç.** Üzüm ve şerbetçiotu çalıları, tatlı orman meyvesi çalıları gibi batmaz ve yavaşlatmaz.
+- **Işık ve su:** çalı yalnızca iyi ışıkta büyür. Su çalıları sürükler, pistonlar onları söker.
+- **Üzüm bir atıştırmalıktır,** tıpkı tatlı orman meyvesi gibi.
+- **Daha çok yabani bitki:** yabani bir ürüne kemik tozu atarsan sık sık yakınına bir tane daha ekilir; ilk tohumlarını almanın kolay yolu. Yabani arpa bir arpa ve bir tohum verir.
+- **Arpanın altındaki tarla** her üründe olduğu gibi asla toprağa dönmez.
+- **Asmalar** da ışık ister: karanlıkta kırılırlar, bahçe kafesi ya da halat yerinde kalır. Tam büyümüş bir bitkiye atılan kemik tozu üstündeki asmaya geçer. Halattaki asmaya halat gibi tırmanabilirsin.
+- **Arılar** bir çalıyı asla tırmandırmaz; bunu yalnızca sen başlatabilirsin.
+
+## Mevsimler
+
+Serene Seasons yüklüyse ürünlerin mevsimleri olur. Büyüdükleri mevsimler: kırmızı ve beyaz üzüm {seasonsOf('vineandbarrel:red_grapes')}; şerbetçiotu {seasonsOf('vineandbarrel:hops')}; arpa {seasonsOf('vineandbarrel:barley_seeds')}. Bkz. [Uyumluluk](/compatibility/).

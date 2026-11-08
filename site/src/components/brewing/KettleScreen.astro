@@ -4,10 +4,12 @@
 import Slot from '../mc/Slot.astro';
 import Sprite from '../mc/Sprite.astro';
 import { kettleScreen as k } from '../../data/code/kettle';
-import { recipe, rules } from '../../lib/data';
+import { recipe, rules, nameOf } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
 interface Props {
 	recipe: string;
 }
+const locale = localeOf(Astro.currentLocale);
 const r = recipe(Astro.props.recipe);
 const s = 2;
 const W = 176;
@@ -22,15 +24,15 @@ const [lx, ly, lw, lh] = k.liquid;
 const fill = Math.min(lh, Math.max(1, Math.ceil((r.servings * lh) / rules.kettleMaxServings)));
 ---
 <div class="fd-kettle not-content">
-	<div class="gui" style={`width:${W * s}px;height:${H * s}px`} role="img" aria-label="Brew Kettle screen">
+	<div class="gui" style={`width:${W * s}px;height:${H * s}px`} role="img" aria-label={t('Brew Kettle screen', locale)}>
 		<Sprite src="/gui/brew_kettle.png" x={0} y={0} w={W} h={H} scale={s} />
-		<span class="title" style={at(k.titleX, 6)}>Brew Kettle</span>
+		<span class="title" style={at(k.titleX, 6)}>{nameOf('vineandbarrel:brew_kettle', locale)}</span>
 		{ing.map((g, i) => (
 			<div style={at(k.inputs[0] + (i % 3) * k.step, k.inputs[1] + Math.floor(i / 3) * k.step)}>
 				<Slot ingredient={g} bare scale={s} />
 			</div>
 		))}
-		<div style={at(k.heat[0], k.heat[1])} data-tip-items="Heated~" tabindex="0">
+		<div style={at(k.heat[0], k.heat[1])} data-tip-items={`${t('Heated', locale)}~`} tabindex="0">
 			<Sprite src="/gui/brew_kettle.png" x={k.heat[4]} y={k.heat[5]} w={k.heat[2]} h={k.heat[3]} scale={s} />
 		</div>
 		<div style={at(k.arrow[0], k.arrow[1])}>
@@ -39,7 +41,7 @@ const fill = Math.min(lh, Math.max(1, Math.ceil((r.servings * lh) / rules.kettle
 		<div
 			class="liquid"
 			style={`${at(lx, ly + lh - fill)};width:${lw * s}px;height:${fill * s}px;background:${hex};border-top:${s}px solid ${surface}`}
-			data-tip-items={`${r.servings} servings`}
+			data-tip-items={t('{n} serving|{n} servings', locale, { n: r.servings })}
 			tabindex="0"
 		></div>
 		<div style={at(lx, ly)}>
@@ -51,8 +53,8 @@ const fill = Math.min(lh, Math.max(1, Math.ceil((r.servings * lh) / rules.kettle
 		].map(([n, x, y, c]) => <span class:list={['mk', c]} style={at(+x, +y)}>{n}</span>)}
 	</div>
 	<dl class="legend">
-		<dt class="in">A</dt><dd>{rules.kettleIngredientSlots} ingredient slots</dd>
-		<dt class="brew">B</dt><dd>The brew in the kettle, up to {rules.kettleMaxServings} servings</dd>
+		<dt class="in">A</dt><dd>{t('{n} ingredient slot|{n} ingredient slots', locale, { n: rules.kettleIngredientSlots })}</dd>
+		<dt class="brew">B</dt><dd>{t('The brew in the kettle, up to {n} servings', locale, { n: rules.kettleMaxServings })}</dd>
 	</dl>
 </div>
 <style>
@@ -112,5 +114,11 @@ const fill = Math.min(lh, Math.max(1, Math.ceil((r.servings * lh) / rules.kettle
 	.legend dd {
 		margin: 0;
 		color: var(--sl-color-gray-2);
+	}
+	/* The screen is 352 px wide at 2x; on narrow phones it shrinks to fit the column */
+	@media (max-width: 400px) {
+		.gui {
+			zoom: 0.85;
+		}
 	}
 </style>

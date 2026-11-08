@@ -1,0 +1,98 @@
+---
+title: Твой первый напиток
+description: "Пошаговый старт с Vine & Barrel: от первого дикого винограда до бокала выдержанного красного вина."
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/ru';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="Уголок таверны с бочками и напитками на столе" />
+
+Это руководство проведёт тебя от свежего мира до первого бокала красного вина, а потом и до выдержанного. Для начала хватит
+обычных материалов ванили, а виноград найдётся по пути. У каждого шага есть ссылка на страницу со всеми подробностями.
+
+<Steps>
+
+1. **Найди дикий виноград.** Дикие растения растут пятнами по всему миру, каждое в своём месте. Для вина тебе нужен
+   <Item id="wild_grapes" />: сломай его рукой и получишь <Item id="red_grapes" plural />.
+
+   <WildCrops />
+
+   Не нашёл? Виноград продают деревенские фермеры и странствующий торговец, а ещё он часто лежит в деревенских сундуках.
+   Смотри [Деревни и таверны](/villages/).
+
+2. **Посади несколько кустов.** Сажай виноград на траву, землю или грядку, как сладкие ягоды. Куст растёт сам; когда он
+   созреет, нажми на него правой кнопкой мыши и собери от {h.grapes.count[0]} до {h.grapes.count[1]} ягод. Он откатится на одну
+   стадию назад и снова даст плоды, так что пересаживать не придётся. Костная мука ускоряет рост.
+
+   <Stages prefix="grape_bush" title="Рост куста винограда" labels={['посажен', 'растёт', 'полуспелый', 'созрел']} />
+
+   На одну партию сока нужно винограда: {grapesPerBatch} шт., и ещё сахар. Для начала хватит и горстки кустов. Подробнее в разделе
+   [Культуры](/crops/).
+
+3. **Построй варочный котёл и поставь его над огнём.** <Item id="brew_kettle" /> делается из меди. Он варит только тогда,
+   когда блок прямо под ним горячий: с самого начала подойдёт зажжённый костёр. Котёл стоит на железном поддоне над пламенем.
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **Свари виноградный сок.** Нажми правой кнопкой по котлу, чтобы открыть его, и положи туда виноград ({grapesPerBatch} шт.) и сахар. Пока котёл
+   горячий, стрелка заполняется, из-под крышки идёт пар, а через {seconds(juice.brewingTime)} на шкале появятся
+   {juice.servings} порций: <Item id="grape_juice" />. Если положить больше, котёл продолжит варить новые партии. Смотри
+   [Варочный котёл](/brew-kettle/).
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **Забери сок.** Нажми по котлу правой кнопкой с пустой бутылочкой, чтобы взять одну порцию, или с ведром, чтобы взять {rules.servingsPerBucket}.
+   Виноградный сок — уже напиток: он снижает уровень [«Навеселе»](/tipsy/).
+
+6. **Наполни бочку для выдержки.** Поставь <Item id="aging_barrel" /> и нажми по ней правой кнопкой с ведром или бутылочками.
+   Она вмещает {rules.barrelCapacity} порций: два ведра заполнят её до краёв. Пока сок бродит, можно долить ещё того же сока.
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **Дай ему побродить.** Через **{days(wine.fermentingTime)}** сок превратится в <Item id="red_wine" />. Бочка сама показывает, как у неё дела:
+   стеклянный клапан сверху булькает, пока идёт брожение, а правый клик пустой рукой выводит строку состояния, например
+   *Красное вино · Порций: 8 · бродит, будет готово завтра утром*. Время считается по игровому времени, так что сон на ночь
+   засчитывается. Смотри [Бочка для выдержки](/aging-barrel/).
+
+8. **Налей бокал.** Нажми по бочке правой кнопкой с пустым <Item id="wine_glass" />, чтобы разлить одну порцию. Вино наливают в бокал,
+   пиво, медовуха и сидр — в <Item id="mug" />; если взял не то, бочка подскажет.
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **Выпей.** <Item id="red_wine" /> даст тебе <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> и один уровень
+   <EffectBadge id="vineandbarrel:tipsy" name="Навеселе" />. Бокал останется у тебя. Если выпить одновременно с другом рядом,
+   выйдет **«За здоровье!»**: бонус у всех продлится на {rules.cheersBonusPercent}% дольше.
+
+10. **Оставь остальное выдерживаться.** Не трогай бочку ещё **{days(wine.agingTime)}**, и то, что в ней осталось, станет
+    <Item id="aged_red_wine" />: более глубокий красный цвет, переливы и <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
+    Тихий хлопок пробки и красная восковая печать сверху покажут, что всё готово.
+
+</Steps>
+
+<Aside type="tip" title="Не терпится?">
+Каждый бокал, который ты нальёшь на стадии выдержки, уменьшает то, что дойдёт до выдержанного. Заполни две бочки: пей из одной,
+а другую не трогай, пока не выдержится. Или найди деревенскую таверну: её бочки уже полны, а пара из них даже выдержана. Смотри
+[Деревни и таверны](/villages/).
+</Aside>
+
+## Что дальше
+
+- Свари другие напитки: белый виноград для белого вина, сладкие ягоды для вина из сладких ягод, ячмень и хмель для пейл-эля,
+  пшеница и хмель для пшеничного пива, мёд для медовухи, яблоки для сидра. Смотри
+  [Напитки](/drinks/) и [Культуры](/crops/).
+- Поставь несколько бочек рядом и построй настоящий погреб: [Строим погреб](/guides/cellar/).
+- Знай свою меру: что делает каждый уровень [«Навеселе»](/tipsy/) и как протрезветь.
+- С Farmer's Delight вари на его плите и готовь блюда с вином: [Farmer's Delight](/farmers-delight/).

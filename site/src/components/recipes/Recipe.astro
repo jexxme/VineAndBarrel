@@ -4,6 +4,7 @@
 import Slot from '../mc/Slot.astro';
 import Sprite from '../mc/Sprite.astro';
 import { recipe as recipeOf, seconds, days, url, rules, nameOf, type Recipe } from '../../lib/data';
+import { t, localeOf, listOf } from '../../lib/i18n';
 interface Props {
 	id?: string;
 	recipe?: Recipe;
@@ -12,19 +13,24 @@ interface Props {
 }
 const { id, caption = true, scale: s = 2 } = Astro.props;
 const r: Recipe = Astro.props.recipe ?? recipeOf(id!);
+const locale = localeOf(Astro.currentLocale);
+const orList = (xs: string[]) => (locale === 'en' ? xs.join(' or ') : listOf(xs, locale, 'disjunction'));
 const px = (n: number) => `${n * s}px`;
 const at = (x: number, y: number) => `position:absolute;left:${px(x)};top:${px(y)}`;
 const type = r.type;
 const xp = r.experience ?? 0;
 const grid = r.grid ?? (r.ingredients && type.startsWith('crafting') ? [r.ingredients.slice(0, 3), r.ingredients.slice(3, 6), r.ingredients.slice(6, 9)] : null);
 const arrow = `width:${px(24)};height:${px(16)};background-image:url(${url('/gui/mc/burn_progress.png')});background-size:100% 100%;image-rendering:pixelated;display:block`;
-const KIND: Record<string, string> = {
-	crafting_shaped: 'Crafting',
-	crafting_shapeless: 'Crafting (shapeless)',
-	'vineandbarrel:brewing': 'Brew Kettle',
-	'vineandbarrel:aging': 'Aging Barrel',
-	'farmersdelight:cooking': "Farmer's Delight Cooking Pot",
+const KIND: Record<string, () => string> = {
+	crafting_shaped: () => t('Crafting', locale),
+	crafting_shapeless: () => t('Crafting (shapeless)', locale),
+	'vineandbarrel:brewing': () => t('Brew Kettle', locale),
+	'vineandbarrel:aging': () => t('Aging Barrel', locale),
+	'farmersdelight:cooking': () => t("Farmer's Delight Cooking Pot", locale),
+	'farmersdelight:cutting': () => t("Farmer's Delight Cutting Board", locale),
 };
+// Tag labels ("Any copper") come from the data; scripts/i18n.mjs lists them as UI strings
+const tr = t;
 ---
 <figure class="fd-recipe not-content" data-type={type} title={r.id}>
 	{
@@ -39,7 +45,7 @@ const KIND: Record<string, string> = {
 				<div style={at(60, 9)}>
 					<Sprite src="/gui/brew_kettle.png" x={176} y={15} w={24} h={17} scale={s} class="fd-arrow" />
 				</div>
-				<div style={at(18, 39)} data-tip-items="Needs heat from below~" tabindex="0">
+				<div style={at(18, 39)} data-tip-items={`${t('Needs heat from below', locale)}~`} tabindex="0">
 					<Sprite src="/gui/brew_kettle.png" x={176} y={0} w={17} h={15} scale={s} />
 				</div>
 				<div style={at(64, 2)}>
@@ -50,12 +56,12 @@ const KIND: Record<string, string> = {
 						<Sprite src="/gui/brew_kettle.png" x={176} y={43} w={9} h={9} scale={s} />
 					</div>
 				)}
-				<div class="hit" style={`${at(61, 2)};width:${px(22)};height:${px(28)}`} data-tip-items={`Brewing time: ${seconds(r.brewingTime!)}~`} data-tip-sub={xp > 0 ? `${+xp.toFixed(2)} XP` : undefined} tabindex="0" />
+				<div class="hit" style={`${at(61, 2)};width:${px(22)};height:${px(28)}`} data-tip-items={`${t('Brewing time: {time}', locale, { time: seconds(r.brewingTime!, locale) })}~`} data-tip-sub={xp > 0 ? t('{value} XP', locale, { value: +xp.toFixed(2) }) : undefined} tabindex="0" />
 				<div style={at(95, 10)}>
-					<Slot id={r.result!.id} count={r.servings} bare scale={s} note={`${r.servings} servings`} />
+					<Slot id={r.result!.id} count={r.servings} bare scale={s} note={t('{n} serving|{n} servings', locale, { n: r.servings! })} />
 				</div>
 				<div style={at(63, 39)}>
-					<Slot ingredient={{ items: ['minecraft:glass_bottle', 'minecraft:bucket'] }} bare scale={s} note={`A bottle takes ${rules.servingsPerBottle} serving, a bucket ${rules.servingsPerBucket}`} />
+					<Slot ingredient={{ items: ['minecraft:glass_bottle', 'minecraft:bucket'] }} bare scale={s} note={t('A bottle takes {bottle} serving, a bucket {bucket}', locale, { bottle: rules.servingsPerBottle, bucket: rules.servingsPerBucket })} />
 				</div>
 				<div style={at(95, 39)}>
 					<Slot ingredient={{ items: [r.result!.id, r.bucket!.id] }} bare scale={s} />
@@ -69,14 +75,14 @@ const KIND: Record<string, string> = {
 				<Slot ingredient={{ items: [r.base!.id, ...(r.bucket ? [r.bucket.id] : [])] }} scale={s} />
 				<div class="col step">
 					<span style={arrow} />
-					<span class="mc-label">{days(r.fermentingTime!)}</span>
+					<span class="mc-label">{days(r.fermentingTime!, locale)}</span>
 				</div>
-				<Slot id={r.young!.id} large scale={s} note="Young" />
+				<Slot id={r.young!.id} large scale={s} note={t('Young', locale)} />
 				<div class="col step">
 					<span style={arrow} />
-					<span class="mc-label">+{days(r.agingTime!)}</span>
+					<span class="mc-label">+{days(r.agingTime!, locale)}</span>
 				</div>
-				<Slot id={r.aged!.id} large scale={s} note="Aged" />
+				<Slot id={r.aged!.id} large scale={s} note={t('Aged', locale)} />
 			</div>
 		)
 	}
@@ -99,23 +105,33 @@ const KIND: Record<string, string> = {
 				</div>
 				<div class="col">
 					<span style={arrow} />
-					<span class="mc-label">{seconds(r.cookingtime!)}</span>
+					<span class="mc-label">{seconds(r.cookingtime!, locale)}</span>
 				</div>
 				<Slot id={r.result!.id} large scale={s} />
-				{r.container && <Slot id={r.container.id} scale={s} note="Served in" />}
+				{r.container && <Slot id={r.container.id} scale={s} note={t('Served in', locale)} />}
+			</div>
+		)
+	}
+	{
+		type === 'farmersdelight:cutting' && (
+			<div class="mc-panel row" style={`--s:${s}px`}>
+				<Slot ingredient={r.ingredients![0]} scale={s} />
+				<Slot ingredient={r.tool!} scale={s} note={t('Cut with', locale)} />
+				<span style={arrow} />
+				{r.results!.map((x) => <Slot id={x.id} count={x.count} chance={x.chance < 1 ? x.chance : undefined} scale={s} />)}
 			</div>
 		)
 	}
 	{
 		caption && (
 			<figcaption>
-				<span class="kind">{KIND[type] ?? type}</span>
-				{r.brewingTime && <span class="stat">{seconds(r.brewingTime)}</span>}
-				{r.servings && <span class="stat">{r.servings} servings</span>}
-				{xp > 0 && <span class="stat xp">{+xp.toFixed(2)} xp</span>}
-				{r.fdOnly && <span class="hint">needs Farmer's Delight</span>}
+				<span class="kind">{KIND[type]?.() ?? type}</span>
+				{r.brewingTime && <span class="stat">{seconds(r.brewingTime, locale)}</span>}
+				{r.servings && <span class="stat">{t('{n} serving|{n} servings', locale, { n: r.servings })}</span>}
+				{xp > 0 && <span class="stat xp">{t('{value} xp', locale, { value: +xp.toFixed(2) })}</span>}
+				{r.fdOnly && <span class="hint">{t("needs Farmer's Delight", locale)}</span>}
 				{type === 'farmersdelight:cooking' && (
-					<span class="hint">Ingredients: {r.ingredients!.map((i) => i.label ?? i.items.map(nameOf).join(' or ')).join(', ')}</span>
+					<span class="hint">{t('Ingredients: {list}', locale, { list: r.ingredients!.map((i) => (i.label ? tr(i.label, locale) : null) ?? orList(i.items.map((x) => nameOf(x, locale)))).join(', ') })}</span>
 				)}
 			</figcaption>
 		)

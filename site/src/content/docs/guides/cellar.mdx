@@ -1,0 +1,87 @@
+---
+title: Building a cellar
+description: "From one barrel to a cellar: plan a batch, a brewhouse that runs on hoppers, barrel racks and walls, automatic tapping, and serving a round."
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import CellarPlanner from '../../../components/brewing/CellarPlanner.astro';
+import { rules, recipe, days } from '../../../lib/data';
+
+export const wine = recipe('aging/red_wine');
+
+<Render name="scenes/barrel-cellar" float="right" size={230} alt="Two rows of Aging Barrels, the top row resting on the bottom one" />
+
+One barrel is a start. A cellar is a row of them, filled from a kettle that runs by itself, with drinks you tap without
+thinking. This guide builds one up in the order you'll want it; each part links to the page with every detail.
+
+## Plan the batch
+
+How much do you need? Pick a drink and a number of servings, and you get the whole order: what to grow, how many kettle
+batches, how many buckets and bottles, how many barrels, and how long to wait. The buttons step a barrel at a time.
+
+<CellarPlanner />
+
+## A brewhouse that runs itself
+
+<Render name="scenes/kettle-on-hopper" float="right" size={192} alt="A Brew Kettle standing on a hopper over a fire" />
+
+The [Brew Kettle](/brew-kettle/) works with hoppers on every side:
+
+- **Underneath, a hopper does two jobs.** It passes the heat of the fire below it up to the kettle, and it pulls out the
+  filled bottles and buckets. So: fire, hopper, kettle, stacked.
+- **On top, a hopper feeds the ingredients** and empty bottles or buckets. Keep it for ingredients only: anything the
+  recipe doesn't use, even a leftover from another recipe, stops the kettle until you take it out.
+- **From the sides, hoppers feed** empty bottles or buckets.
+- The kettle keeps brewing as long as ingredients come in, up to {rules.kettleMaxServings} servings.
+
+<Aside type="tip" title="Collect your experience">
+Every batch earns a little XP, but the kettle only pays it out when someone fills a bottle or bucket by hand, or when it's
+broken. Fill one by hand now and then.
+</Aside>
+
+## Racks and walls
+
+<Shot src="cellar.jpg" caption="A cellar along the tavern wall: barrels joined into a rack, a second row stacked on top." />
+
+- **Racks:** [Aging Barrels](/aging-barrel/) placed side by side on the ground, facing the same way, join their cradles into
+  one long rack.
+- **Walls:** a barrel on top of another rests on chocks instead of a cradle, so you can stack them into a wall. Your first
+  stacked barrel earns *Cellar Master*.
+- **Name them.** Rename a barrel in an anvil and the name shows in its status line, so *Wedding Wine* is easy to find. The
+  name stays when you break and place the barrel again.
+- **Read them at a glance:** the bung on top says how far along each barrel is (cork, bubbling airlock, red wax), and the
+  sight glass on the front how full it is, in the drink's colour.
+- **Comparators** read a barrel's servings, from 1 for one serving up to 15 when it's full.
+
+## Filling and tapping by machine
+
+- **A hopper on top pours bases in.** It only pours what the barrel takes right now, so the wrong base simply waits in the
+  hopper.
+- **Hoppers at the sides** feed in empty mugs or glasses; the barrel taps them full. Mugs for beer, mead and cider, glasses for
+  wine: the wrong ones get stuck until you break the barrel.
+- **A hopper below** pulls out the tapped drinks and the empty buckets and bottles left over from pouring. Keep one there,
+  or finished drinks block the next ones.
+- **Dispensers** facing a barrel tap a serving with an empty mug or glass, or pour in a bucket or bottle of base.
+
+## Where to build it
+
+- **In the Overworld.** Barrels run on game time and sleeping through the night counts, but in the Nether and the End there's
+  no night to skip.
+- **Away from creepers.** An explosion can destroy a barrel, batch and all.
+- **Anywhere you like otherwise:** barrels keep aging while you're far away or offline, and they never catch fire. You
+  only miss the soft cork pop when a batch turns aged.
+- **Fill two of each.** It takes {days(wine.fermentingTime)} to ferment and {days(wine.agingTime)} more to age, and every glass
+  you tap in between is one less that ages. Drink from one barrel and leave the other alone.
+
+## Serving a round
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Mugs and glasses set down on a block" />
+
+- **Set the table:** sneak and right-click the top of a block with a mug or glass to put it there, up to four per block.
+  Aged drinks shimmer even on the table.
+- **Cheers!** Finish a drink at the same moment as your friends nearby and everyone's buff lasts
+  {rules.cheersBonusPercent}% longer. See [Drinks](/drinks/#cheers).
+- **Mind the levels.** Every drink adds a level of [Tipsy](/tipsy/). Keep some <Item id="grape_juice" /> or water around:
+  each one takes a level off.

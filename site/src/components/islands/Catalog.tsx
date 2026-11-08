@@ -1,5 +1,9 @@
 /** @jsxImportSource preact */
 import { useEffect, useMemo, useState } from 'preact/hooks';
+// The tavern's oak buttons (scripts/make-ui.mjs); imported so they get the site's base path
+import btn from '../../assets/ui/button-oak.png?url';
+import btnHover from '../../assets/ui/button-oak-hover.png?url';
+import btnOn from '../../assets/ui/button-oak-on.png?url';
 
 type Row = {
 	id: string;
@@ -16,8 +20,25 @@ type Row = {
 	tags: string[];
 };
 type Cat = { key: string; label: string; blurb: string; count: number };
+// Every word the island shows, rendered in the page's language by ItemIndex.astro
+type Strings = {
+	lang: string;
+	placeholder: string;
+	filterLabel: string;
+	sortLabel: string;
+	sortTab: string;
+	sortName: string;
+	sortNutrition: string;
+	sortSaturation: string;
+	foodOnly: string;
+	blocksOnly: string;
+	categories: string;
+	clear: string;
+	count: string; // "{shown} of {total} items"
+	none: string;
+};
 
-export default function Catalog({ rows, cats, base }: { rows: Row[]; cats: Cat[]; base: string }) {
+export default function Catalog({ rows, cats, base, i18n }: { rows: Row[]; cats: Cat[]; base: string; i18n: Strings }) {
 	const [q, setQ] = useState('');
 	const [active, setActive] = useState<string[]>([]);
 	const [food, setFood] = useState(false);
@@ -42,7 +63,7 @@ export default function Catalog({ rows, cats, base }: { rows: Row[]; cats: Cat[]
 	}, [q, active, food, blocks]);
 	const byCat = useMemo(() => new Map(cats.map((c) => [c.key, rows.filter((r) => r.category === c.key)])), [rows, cats]);
 	const sorted = useMemo(() => {
-		if (sort === 'name') return [...rows].sort((a, b) => a.name.localeCompare(b.name));
+		if (sort === 'name') return [...rows].sort((a, b) => a.name.localeCompare(b.name, i18n.lang));
 		if (sort === 'nutrition') return [...rows].sort((a, b) => (b.nutrition ?? -1) - (a.nutrition ?? -1));
 		if (sort === 'saturation') return [...rows].sort((a, b) => (b.saturation ?? -1) - (a.saturation ?? -1));
 		return rows;
@@ -68,21 +89,21 @@ export default function Catalog({ rows, cats, base }: { rows: Row[]; cats: Cat[]
 	return (
 		<div class="catalog not-content">
 			<div class="cat-bar">
-				<input class="cat-search" type="search" placeholder="Filter by name, id, effect or tag…" value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} aria-label="Filter items" />
-				<select value={sort} onChange={(e) => setSort((e.target as HTMLSelectElement).value as any)} aria-label="Sort">
-					<option value="tab">Creative tab order</option>
-					<option value="name">Name A–Z</option>
-					<option value="nutrition">Most hunger restored</option>
-					<option value="saturation">Most saturation</option>
+				<input class="cat-search" type="search" placeholder={i18n.placeholder} value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} aria-label={i18n.filterLabel} />
+				<select value={sort} onChange={(e) => setSort((e.target as HTMLSelectElement).value as any)} aria-label={i18n.sortLabel}>
+					<option value="tab">{i18n.sortTab}</option>
+					<option value="name">{i18n.sortName}</option>
+					<option value="nutrition">{i18n.sortNutrition}</option>
+					<option value="saturation">{i18n.sortSaturation}</option>
 				</select>
 				<label class="cat-check">
-					<input type="checkbox" checked={food} onChange={() => setFood(!food)} /> Food only
+					<input type="checkbox" checked={food} onChange={() => setFood(!food)} /> {i18n.foodOnly}
 				</label>
 				<label class="cat-check">
-					<input type="checkbox" checked={blocks} onChange={() => setBlocks(!blocks)} /> Placeable blocks
+					<input type="checkbox" checked={blocks} onChange={() => setBlocks(!blocks)} /> {i18n.blocksOnly}
 				</label>
 			</div>
-			<div class="cat-chips" role="group" aria-label="Categories">
+			<div class="cat-chips" role="group" aria-label={i18n.categories}>
 				{cats.map((c) => (
 					<button type="button" class={active.includes(c.key) ? 'on' : ''} onClick={() => toggle(c.key)} aria-pressed={active.includes(c.key)} title={c.blurb}>
 						{c.label} <span>{c.count}</span>
@@ -90,12 +111,12 @@ export default function Catalog({ rows, cats, base }: { rows: Row[]; cats: Cat[]
 				))}
 				{active.length > 0 && (
 					<button type="button" class="clear" onClick={() => setActive([])}>
-						Clear
+						{i18n.clear}
 					</button>
 				)}
 			</div>
 			<p class="cat-count">
-				{shown.size} of {rows.length} items
+				{i18n.count.replace('{shown}', String(shown.size)).replace('{total}', String(rows.length))}
 			</p>
 			{grouped ? (
 				cats.map((c) => (
@@ -109,7 +130,7 @@ export default function Catalog({ rows, cats, base }: { rows: Row[]; cats: Cat[]
 			) : (
 				<div class="cat-grid">{sorted.map(tile)}</div>
 			)}
-			{shown.size === 0 && <p>No items match. Try fewer words, or clear the filters.</p>}
+			{shown.size === 0 && <p>{i18n.none}</p>}
 			<style>{`
 .catalog { margin-top: 24px; }
 .cat-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; position: sticky; top: var(--sl-nav-height); z-index: 5; background: var(--sl-color-black); padding: 12px 0 10px; }
@@ -118,12 +139,12 @@ export default function Catalog({ rows, cats, base }: { rows: Row[]; cats: Cat[]
 .cat-search:focus { outline: none; border-color: #fff; }
 .catalog select { padding: 4px 8px; border: 2px solid #a0a0a0; border-radius: 0; background: #000; color: #e0e0e0; font: inherit; font-size: 20px; }
 .cat-check { display: inline-flex; gap: 8px; align-items: center; color: var(--sl-color-gray-2); }
-.cat-check input { accent-color: #8f3a12; width: 18px; height: 18px; }
+.cat-check input { accent-color: #8e1a2e; width: 18px; height: 18px; }
 .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.cat-chips button { font: inherit; font-size: 20px; color: #fff; text-shadow: 2px 2px 0 #3f3f3f; padding: 2px 12px 4px; border-style: solid; border-width: 6px; border-image: url('/FarmersDelight-Neoforged/ui/button.png') 3 fill / 6px stretch; image-rendering: pixelated; background: none; cursor: pointer; border-radius: 0; }
-.cat-chips button:hover { border-image-source: url('/FarmersDelight-Neoforged/ui/button-hover.png'); color: #ffffa0; }
-.cat-chips button span { color: #c0c0c0; margin-left: 6px; }
-.cat-chips button.on { border-image-source: url('/FarmersDelight-Neoforged/ui/button-hover.png'); color: #ffff55; }
+.cat-chips button { font: inherit; font-size: 20px; color: #fff4dc; text-shadow: 2px 2px 0 #1a0f07; padding: 2px 12px 4px; border-style: solid; border-width: 6px; border-image: url('${btn}') 3 fill / 6px stretch; image-rendering: pixelated; background: none; cursor: pointer; border-radius: 0; }
+.cat-chips button:hover, .cat-chips button:focus-visible { outline: none; border-image-source: url('${btnHover}'); color: #ffffa0; }
+.cat-chips button span { color: #d8c6a8; margin-left: 6px; }
+.cat-chips button.on { border-image-source: url('${btnOn}'); color: #fff0a8; }
 .cat-chips .clear { color: #ffaaaa; }
 .cat-count { color: var(--sl-color-gray-3); margin: 12px 0 0; }
 .cat-h { font-family: var(--sl-font); font-weight: 400; font-size: 30px; margin: 40px 0 0; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; scroll-margin-top: 9rem; color: var(--fd-heading-ink, var(--sl-color-white)); }

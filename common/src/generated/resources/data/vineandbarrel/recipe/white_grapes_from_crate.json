@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "vineandbarrel:white_grape_crate"
+  ],
+  "result": {
+    "count": 9,
+    "id": "vineandbarrel:white_grapes"
+  }
+}

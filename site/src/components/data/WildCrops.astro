@@ -1,19 +1,32 @@
 ---
 // Where each wild crop grows (the mod's biome modifiers and biome tags) and what it drops.
 import Item from '../mc/Item.astro';
-import { worldgen, rules, list, pct } from '../../lib/data';
-const tagName = (t: string) => {
-	const p = t.replace(/^#c:is_/, '').replaceAll('_', ' ');
-	return p === 'underground' ? 'caves' : p === 'mushroom' ? 'mushroom fields' : /s$/.test(p) ? p : `${p}s`;
+import { worldgen, rules, list, pct, gameText } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
+const locale = localeOf(Astro.currentLocale);
+// the biome groups the mod's biome tags name (#c:is_<group>)
+const GROUP: Record<string, () => string> = {
+	plains: () => t('plains', locale),
+	savanna: () => t('savannas', locale),
+	mushroom: () => t('mushroom fields', locale),
+	underground: () => t('caves', locale),
+	forest: () => t('forests', locale),
+	river: () => t('rivers', locale),
+	'mountain/slope': () => t('mountain slopes (meadows, cherry groves)', locale),
 };
+const tagName = (tag: string) => {
+	const p = tag.replace(/^#c:is_/, '');
+	return GROUP[p] ? GROUP[p]() : p.replaceAll('_', ' ');
+};
+const biomeName = (b: { id: string; name: string }) => gameText(`biome.${b.id.replace(':', '.')}`, b.name, locale);
 const main = worldgen.filter((w) => !w.extra);
 const temp = (w: any) =>
 	w.minTemperature != null && w.maxTemperature != null
-		? `temperature ${w.minTemperature} to ${w.maxTemperature}`
+		? t('temperature {min} to {max}', locale, { min: w.minTemperature, max: w.maxTemperature })
 		: w.minTemperature != null
-			? `temperature ${w.minTemperature} or warmer`
+			? t('temperature {min} or warmer', locale, { min: w.minTemperature })
 			: w.maxTemperature != null
-				? `temperature ${w.maxTemperature} or colder`
+				? t('temperature {max} or colder', locale, { max: w.maxTemperature })
 				: '';
 const rows = main.map((w) => ({
 	w,
@@ -23,19 +36,19 @@ const rows = main.map((w) => ({
 ---
 <div class="fd-table-wrap not-content">
 	<table>
-		<thead><tr><th>Wild crop</th><th>Grows in</th><th>Drops</th></tr></thead>
+		<thead><tr><th>{t('Wild crop', locale)}</th><th>{t('Grows in', locale)}</th><th>{t('Drops', locale)}</th></tr></thead>
 		<tbody>
 			{rows.map(({ w, extra, denied }) => (
 				<tr>
 					<td><Item id={w.crop} /></td>
 					<td>
-						{list(w.allowedTags.map(tagName))}{temp(w) ? ` (${temp(w)})` : ''}
-						{denied.length > 0 && <span class="soft">; never in {list(denied.map(tagName))}</span>}
-						{extra && extra.optional.length > 0 && <span class="soft">. With Biomes O&apos; Plenty also: {list(extra.optional.map((b: any) => b.name))}</span>}
+						{temp(w) ? t('{areas} ({temp})', locale, { areas: list(w.allowedTags.map(tagName), locale), temp: temp(w) }) : list(w.allowedTags.map(tagName), locale)}
+						{denied.length > 0 && <span class="soft">{t('; never in {areas}', locale, { areas: list(denied.map(tagName), locale) })}</span>}
+						{extra && extra.optional.length > 0 && <span class="soft">{t(". With Biomes O' Plenty also: {biomes}", locale, { biomes: list(extra.optional.map(biomeName), locale) })}</span>}
 					</td>
 					<td>
 						{rules.wildDrops[w.crop].map((d: any, i: number) => (
-							<>{i > 0 && <br />}<Item id={d.id} />{d.chance < 1 ? ` (${pct(d.chance)} chance)` : ''}{d.fortune ? ', more with Fortune' : ''}</>
+							<>{i > 0 && <br />}<Item id={d.id} />{d.chance < 1 ? ' ' + t('({pct} chance)', locale, { pct: pct(d.chance, 0, locale) }) : ''}{d.fortune ? t(', more with Fortune', locale) : ''}</>
 						))}
 					</td>
 				</tr>

@@ -1,0 +1,99 @@
+---
+title: Твій перший напій
+description: "Покроковий старт із Vine & Barrel: від першого дикого винограду до келиха витриманого червоного вина."
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/uk';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="Куточок корчми з діжками й напоями на столі" />
+
+Цей посібник проведе тебе від свіжого світу до першого келиха червоного вина, а потім і до витриманого. Для початку
+потрібні лише ванільні матеріали, а виноград знайдеться по дорозі. Кожен крок веде на сторінку з усіма подробицями.
+
+<Steps>
+
+1. **Знайди дикий виноград.** Дикі рослини ростуть латками просто неба, кожна у своєму місці. Для вина потрібен
+   <Item id="wild_grapes" />: зламай його рукою, і випаде <Item id="red_grapes" plural />.
+
+   <WildCrops />
+
+   Не знаходиш? Сільські фермери й мандрівний торговець продають виноград, а в сільських скринях його часто можна знайти. Див.
+   [Села й корчми](/villages/).
+
+2. **Посади кілька кущів.** Садь виноград на траву, землю чи грядку, як солодкі ягоди. Кущ росте сам, а коли
+   достигне, клацни по ньому правою кнопкою, щоб зібрати від {h.grapes.count[0]} до {h.grapes.count[1]} грон. Він повертається на
+   одну стадію назад і плодоносить знову, тож пересаджувати не треба. Кісткове борошно прискорює ріст.
+
+   <Stages prefix="grape_bush" title="Ріст куща винограду" labels={['посаджено', 'росте', 'напівстиглий', 'стиглий']} />
+
+   На одну партію соку йде {grapesPerBatch} шт. винограду й цукор, тож для початку вистачить жменьки кущів. Докладніше про
+   [культури](/crops/).
+
+3. **Збудуй варильний казан і постав його над вогнем.** <Item id="brew_kettle" /> зроблено з міді. Він варить, лише
+   коли блок просто під ним гарячий: запалене багаття підійде з першого дня. Казан стоїть на залізному піддоні над полум'ям.
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **Звари виноградний сік.** Клацни правою кнопкою по казану, щоб відкрити його, і поклади виноград ({grapesPerBatch} шт.) та цукор.
+   Стрілка заповнюється, поки казан гарячий, з-під кришки йде пара, а за {seconds(juice.brewingTime)} на шкалі з'являються
+   порції: {juice.servings}, <Item id="grape_juice" />. Якщо поклади більше, він вариться далі партія за партією. Див.
+   [Варильний казан](/brew-kettle/).
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **Забери його.** Клацни правою кнопкою по казану скляною пляшкою, щоб узяти одну порцію, або відром, щоб узяти {rules.servingsPerBucket}.
+   Виноградний сік — уже напій сам по собі: він знімає гостроту [Напідпитку](/tipsy/).
+
+6. **Наповни діжку для витримки.** Постав <Item id="aging_barrel" /> і клацни по ній правою кнопкою з відром або пляшками. Вона
+   вміщує порцій: {rules.barrelCapacity}, тобто два відра наповнюють її вщент. Доливати того самого соку, поки він
+   бродить, можна.
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **Дай йому побродити.** Через **{days(wine.fermentingTime)}** сік стане напоєм <Item id="red_wine" />. Діжка
+   показує, як він: скляний гідрозатвор зверху булькає, поки триває бродіння, а клацання правою кнопкою порожньою рукою
+   показує рядок стану, на кшталт *Червоне вино · Порцій: 8 · бродить, буде готово завтра вранці*. Годинник іде за ігровим
+   часом, тож сон уночі враховується. Див. [Діжка для витримки](/aging-barrel/).
+
+8. **Налий келих.** Клацни правою кнопкою по діжці з порожнім предметом <Item id="wine_glass" />, щоб налити одну порцію. Вино наливають у келих,
+   пиво, медовуха й сидр — у <Item id="mug" />; якщо візьмеш не те, діжка скаже.
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **Випий.** <Item id="red_wine" /> дає тобі <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> і один рівень
+   <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />. Келих лишається в тебе. Випий одночасно з другом поруч,
+   і вийде **Будьмо!**: бонус у всіх діє на {rules.cheersBonusPercent}% довше.
+
+10. **Дай решті визріти.** Залиш діжку в спокої ще на **{days(wine.agingTime)}**, і те, що лишилося, стане
+    напоєм <Item id="aged_red_wine" />: глибшого червоного кольору, з мерехтінням і з <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
+    М'який хлопок корка й червона воскова печатка зверху кажуть, що все готово.
+
+</Steps>
+
+<Aside type="tip" title="Не можеш дочекатися?">
+Кожен келих, налитий під час витримки, — на одну порцію менше для витримки. Наповни дві діжки: пий з однієї, а другу
+не чіпай, поки не визріє. Або знайди сільську корчму, де діжки вже повні, а кілька з них витримані. Див.
+[Села й корчми](/villages/).
+</Aside>
+
+## Куди далі
+
+- Звари інші напої: білий виноград для білого вина, солодкі ягоди для вина із солодких ягід, ячмінь і хміль для пейл-елю,
+  пшениця й хміль для пшеничного пива, мед для медовухи, яблука для сидру. Див.
+  [Напої](/drinks/) і [Культури](/crops/).
+- Постав кілька діжок поруч і збудуй справжній погріб: [Будівництво погреба](/guides/cellar/).
+- Знай свою міру: що робить кожен рівень [Напідпитку](/tipsy/) і як протверезіти.
+- З Farmer's Delight вари на його плиті й готуй страви з вином: [Farmer's Delight](/farmers-delight/).

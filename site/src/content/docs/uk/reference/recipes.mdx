@@ -1,0 +1,16 @@
+---
+title: Усі рецепти
+description: Кожен рецепт Vine & Barrel так, як він виглядає в грі, з фільтром за станцією та пошуком за результатом чи інгредієнтом.
+tableOfContents: false
+---
+import RecipeBrowser from '../../../../components/reference/RecipeBrowser.astro';
+import { playableRecipes, byType } from '../../../../lib/l10n/uk';
+
+export const fd = playableRecipes.filter((r) => r.fdOnly).length;
+
+Усього рецептів: {playableRecipes.length}, намальованих так, як їх показує гра: {byType('vineandbarrel:brewing').length} для
+[варильного казана](/brew-kettle/), {byType('vineandbarrel:aging').length} для [діжки для витримки](/aging-barrel/), а решта для
+верстака. Потребують [Farmer's Delight](/farmers-delight/): {fd}. Шукай за результатом чи інгредієнтом або обери станцію.
+Наведи курсор на комірку, щоб побачити назву предмета; комірки, що перемикають предмети, приймають будь-який із них.
+
+<RecipeBrowser />

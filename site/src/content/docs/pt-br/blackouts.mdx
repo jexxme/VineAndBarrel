@@ -1,0 +1,73 @@
+---
+title: Apagões
+description: "Uma bebida a mais: o que acontece quando você apaga, todos os lugares onde pode acordar, a chance de cada um e as lembranças que você traz."
+---
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
+import { rules, roman, seconds, gameText } from '../../../lib/l10n/pt-br';
+
+export const t = rules.tipsy;
+export const b = t.blackout;
+export const count = b.endings.filter((e) => e.collectable).length;
+
+<Aside type="caution" title="Spoilers">
+Esta página conta todos os jeitos de uma noite terminar. Se você prefere descobrir sozinho, pare por aqui: a página
+[Alegrinho](/tipsy/#uma-bebida-a-mais) só dá uma dica.
+</Aside>
+
+Já no Alegrinho {roman(t.maxLevel - 1)} e ainda bebendo? Mais uma e você **apaga**. É inofensivo: você nunca perde nada do que tinha,
+nunca acorda em um lugar perigoso, nenhum tempo passa e ninguém mais é afetado. Donos de servidor podem desligar
+com a opção `blackout` (veja [Configuração](/reference/config/)).
+
+## O que acontece
+
+<Steps>
+
+1. **Você tomba.** Seus olhos se fecham e você cai. Todo mundo em volta vê você deitado, com estrelinhas girando
+   em volta da cabeça.
+2. **Escuro.** Por alguns segundos você não consegue se mexer, e o Alegrinho te deixa em paz: sem balanço, sem soluços, sem rodopio. Ninguém pode te machucar
+   também, nem mob nem jogador, e a queda também não. Só conta o que machucaria qualquer um deitado ali,
+   como lava ou o vazio, então o lugar onde você apaga importa; o lugar onde você *acorda* é sempre seguro.
+3. **Você acorda em algum lugar.** Enquanto a tela ainda está escura, o jogo escolhe onde sua noite terminou (veja abaixo) e
+   coloca você lá: deitado no chão, numa cama ou sentado num barco. Seus olhos se abrem devagar, e então você se levanta.
+4. **Uma frase na tela** diz como foi, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* ou uma de muitas outras.
+
+</Steps>
+
+Tudo leva cerca de {seconds(b.ticks)}. Você acorda:
+
+- **de volta ao Alegrinho I**, e sem os bônus que suas bebidas deram,
+- **com fome:** {b.hungerLost / 2} coxinhas de fome a menos, e nada na sua saturação,
+- **trêmulo** por {seconds(b.shakyTicks)}: um pouco tonto e lento,
+- **com uma lembrança** nos bolsos, algo que combina com o lugar onde você acordou (aos seus pés se os bolsos estiverem cheios),
+- e, uma vez em {b.pumpkinOneIn}, **com uma abóbora talhada na cabeça**, se você não estiver de capacete.
+
+## Onde você acorda
+
+Existem {count} lugares onde uma noite pode terminar, mais um para quando nenhum deles dá certo. Cada um tem a própria chance, mas só os
+possíveis onde você apagou entram no sorteio: sem água por perto, sem barco; sem aldeia, sem taverna.
+
+- **Os novos primeiro:** um final que você ainda não teve é {b.unseenBonus} vezes mais provável do que um que você já teve.
+- **Nunca duas vezes seguidas,** a não ser que nada mais seja possível.
+- **Sempre seguro:** chão firme, espaço para ficar de pé, sem lava nem água, nada que queime ou espete ao lado, nenhum monstro
+  a menos de {b.ranges.monsterFree} blocos, dentro da borda do mundo.
+- **Nunca dentro da construção de alguém:** os finais ao ar livre precisam de céu aberto acima, vidro e folhas incluídos. Os dois finais
+  internos só usam o que o mundo construiu para todos, uma taverna de aldeia e a cama de um aldeão numa casa da aldeia, e a sua própria cama.
+- **No Nether e no End** não há céu aberto, então a maioria das noites termina bem onde você caiu.
+
+As chances abaixo valem para o seu primeiro apagão com todos os finais possíveis. Depois disso elas mudam: os finais que você ainda não
+teve ficam mais prováveis, e o que você acabou de ter sai da frente.
+
+<BlackoutEndings />
+
+## Colecione todos
+
+O primeiro apagão rende *Onde Estou?*. Acorde nos {count} lugares (*Bem aqui* não conta) para o desafio
+*Fim de Semana Perdido*. O jogo lembra quais você já teve, até depois de morrer.
+
+<Aside type="tip" title="Atrás de um final específico?">
+Prepare o cenário antes da última bebida: uma cama sua por perto para *Em casa*, uma pilha de feno ou de <Item id="barley_bale" /> lá fora
+para *No feno*, um lago para *Num barco*, uma aldeia com taverna para os finais internos. Os finais que você já teve são menos
+prováveis, então os raros aparecem mais cedo do que você imagina.
+</Aside>

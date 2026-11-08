@@ -1,0 +1,84 @@
+---
+title: Boissons
+description: "Chaque vin, bière, cidre et hydromel de Vine & Barrel : de quoi il est fait, dans quoi il se sert et le bonus qu'il donne."
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/fr';
+
+export const sample = items[drinks[0].id];
+
+Toutes les boissons suivent les mêmes règles :
+
+- Elle donne **un bonus** et un niveau de [Pompette](/tipsy/). Une boisson qui t'amène à Pompette {roman(rules.tipsy.noBuffLevel - 1)} ou plus ne donne
+  aucun bonus : tu es trop ivre pour en profiter.
+- Tu peux toujours la boire, même rassasié. Il faut {sample.consumable.seconds} s, et tu récupères la
+  <Item id="mug" /> ou le <Item id="wine_glass" /> vide.
+- Elle s'empile jusqu'à **{sample.stack}**.
+- Le bonus d'une boisson **jeune** est de niveau {roman(rules.youngBuffAmplifier)} pendant **{duration(rules.youngBuffTicks)}**. La version **vieillie** a une couleur plus
+  profonde, scintille comme un objet enchanté, et son bonus est de niveau **{roman(rules.agedBuffAmplifier)} pendant {duration(rules.agedBuffTicks)}**. La Saturation de la bière blanche
+  agit tout de suite à la place : quelques points de nourriture.
+- Posée sur une table, une boisson vieillie scintille comme un objet enchanté, pour la distinguer d'une jeune d'un coup d'œil.
+
+## Couleurs
+
+Chaque boisson a sa propre couleur : tu la vois dans le voyant du fût et dans les chopes et les verres sur une table. Les boissons
+vieillies sont d'une teinte plus profonde.
+
+<DrinkSwatches />
+
+## Vins, bières, cidre et hydromel
+
+<DrinkTable />
+
+La Saturation fonctionne différemment des autres bonus : elle ne dure pas, chaque tick remplit tout de suite un point de faim (et un peu de
+saturation). C'est pour ça que la bière blanche affiche des points de nourriture au lieu d'une durée.
+
+## Avec Farmer's Delight
+
+Les propres bouteilles de Farmer's Delight fermentent aussi. Son cidre de pommes devient le même cidre brut que notre jus de pomme, et son jus de
+melon devient du vin de pastèque, que tu ne peux faire qu'avec FD installé (l'objet existe toujours). Voir
+[Farmer's Delight](/farmers-delight/).
+
+<DrinkTable fd />
+
+## Récipients
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Des chopes et des verres sur un bloc" />
+
+Le vin se sert dans un <Item id="wine_glass" /> ; la bière, le cidre et l'hydromel dans une <Item id="mug" />. Les deux s'empilent jusqu'à {items['vineandbarrel:mug'].stack}.
+
+**Pose-les :** accroupis-toi et fais un clic droit sur le dessus d'un bloc avec une chope ou un verre, plein ou vide, pour l'y poser. Jusqu'à quatre
+partagent un même bloc, chacun gardant sa boisson, et tu vois la boisson à travers le verre. Fais un clic droit à mains nues pour en reprendre un.
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="Des chopes et des verres posés sur les tables, jusqu'à quatre par bloc." />
+
+## Planifier un lot
+
+De combien as-tu besoin pour une tournée ? Le planificateur de [Construire une cave](/guides/cellar/#planifier-le-lot) calcule les cultures,
+les lots de cuve, les seaux, les fûts et le temps d'attente pour n'importe quel nombre de portions.
+
+## Santé !
+
+Quand deux joueurs ou plus finissent une boisson à moins de {rules.cheersWindowTicks / 20} secondes d'écart et à {rules.cheersRadius} blocs l'un de
+l'autre, les verres trinquent, quelques étincelles montent, et le bonus de cette boisson dure **{rules.cheersBonusPercent} % de plus** pour chacun.
+
+Cela ne compte qu'entre joueurs du même monde, une fois par boisson, et tes deux propres boissons ne font pas une tournée. Le bonus est de
+{rules.cheersBonusPercent} % de la durée totale du bonus de cette boisson, ajoutés à ce qu'il reste ; si le bonus vient de se terminer, tu le récupères pour cette durée.
+
+## Bon à savoir
+
+- **Trop ?** La boisson qui t'amène à Pompette {roman(rules.tipsy.noBuffLevel - 1)} ne donne aucun bonus, et elle retire aussi les
+  bonus que t'ont donnés tes boissons précédentes. Les effets des potions restent.
+- **Tables :** une boisson se pose sur le quart de bloc que tu vises, ou sur le plus proche de libre, et seulement sur un dessus solide.
+  Un clic droit à mains nues reprend celle que tu vises ; si tu tiens quelque chose, tu utilises cet objet comme d'habitude, donc tu peux boire
+  à table. Casser le bloc, un piston ou la perte du bloc en dessous les fait tomber toutes.
+- **Les boissons comme ingrédients** (dans la marmite de Farmer's Delight) te rendent la chope ou le verre.
+- **Ventre plein ?** Ça n'a pas d'importance : tu peux toujours boire.

@@ -1,0 +1,106 @@
+---
+title: Farmer's Delight
+description: Farmer's Delight도 설치했을 때 Vine & Barrel에서 달라지는 점.
+---
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, recipe, duration, FDN_WIKI } from '../../../lib/l10n/ko';
+import { fd } from '../../../data/code/compat';
+
+export const meals = rules.fdMealNourishment;
+export const potMeals = ['beer_battered_fish', 'wine_braised_beef', 'cider_braised_pork', 'barley_mutton_broth', 'white_wine_risotto'];
+export const bread = items['vineandbarrel:beer_bread'];
+export const coq = items['vineandbarrel:coq_au_vin'];
+
+Vine & Barrel은 독립된 모드라서, 이 위키의 모든 내용은 Farmer's Delight 없이도 작동해요. Farmer's Delight도 함께 하면 몇몇 부분에서
+둘이 같이 작동해요. 따로 설정할 건 없어요.
+
+NeoForge용 Minecraft 26.x에서는 Farmer's Delight Neoforged {fd.minVersion} 버전 이상이고, 자체 위키가 있어요.
+Fabric에서는 <a href={fd.refabricated}>Farmer's Delight Refabricated</a>예요.
+
+<LinkCard title="Farmer's Delight Neoforged 위키" description="조리솥, 화덕, 밧줄, 비옥한 흙, 모든 FD 아이템." href={`${FDN_WIKI}/`} />
+
+## Farmer's Delight가 더해 주는 것
+
+- **화덕이 솥을 데워요.** Farmer's Delight의 화덕은 [양조 솥](/brew-kettle/)의 열원으로 쓸 수 있고, FD가 열원으로 치는 다른 것도
+  마찬가지예요. FD가 열을 통과시키는 블록은 그 열을 솥까지 전해 줘요.
+- **덩굴이 밧줄을 타요.** 잘 익은 포도 덤불(적포도든 청포도든)이나 홉 덤불 위에 FD 밧줄이 있으면 최대 {rules.crops.climbMaxHeight}블록 높이까지 타고 올라가
+  밧줄을 따라 열매를 맺어요. FD의 토마토처럼요. [격자 지지대](/crops/#격자-지지대)에서도 똑같아요. 밧줄과 격자 지지대는 한 식물에 섞어 쓸 수 있고,
+  덩굴을 부수면 밧줄은 그대로 남아요.
+- **비옥한 흙**은 뼛가루를 쓸 수 있는 모든 작물처럼 포도, 홉, 보리를 더 빨리 키워요.
+- **FD의 음료도 발효돼요.** <Item id="farmersdelight:apple_cider" />와 <Item id="farmersdelight:melon_juice" /> 병은 우리 베이스처럼
+  [숙성 통](/aging-barrel/)에 한 병에 한 인분씩 들어가요. FD의 사과 사이더는 우리 <Item id="apple_juice" />로 만드는 것과 같은
+  <Item id="hard_cider" />가 되니까, 사이더는 하나이고 들어가는 길이 둘이에요. 통에는 한 번에 한 가지 베이스만 담을 수 있어서
+  둘이 한 배치에 섞이지는 않아요. FD의 병은 병으로만 나오기 때문에 가득 찬 통에는 {rules.barrelCapacity}병이 들어가요. 발사기도 부어 넣어요.
+- **조리솥 요리, 잔치 음식, 빵**에 우리 와인, 사이더, 맥주가 쓰여요.
+- **FD의 칼로 보리에서 짚을 얻어요.** 밀, 야생 쌀과 똑같아요.
+- 우리 술은 FD가 음료를 요구하는 곳 어디서나 FD 음료로 쳐요.
+
+## Farmer's Delight 병으로 만드는 술
+
+<DrinkTable fd />
+
+{[recipe('aging/hard_cider'), recipe('aging/melon_wine')].map((r) => <Recipe recipe={r} />)}
+
+## 조리솥 요리
+
+Farmer's Delight의 조리솥에서 요리하세요. FD의 요리처럼 그릇에 담겨 나오고 영양을 줘요. 각 요리는 그 술(어린 것이든 숙성된
+것이든)을 가지고 있으면 솥의 레시피 북에 나타나요. 보리 수프는 보리를 가지고 있으면 나타나요.
+
+{potMeals.map((id) => <Recipe id={`cooking/${id}`} />)}
+
+| 요리 | 음식 | 영양 |
+|---|---|---|
+| <Item id="beer_battered_fish" /> | <FoodStats nutrition={items['vineandbarrel:beer_battered_fish'].food.nutrition} saturation={items['vineandbarrel:beer_battered_fish'].food.saturation} compact /> | {duration(meals['vineandbarrel:beer_battered_fish'])} |
+| <Item id="wine_braised_beef" /> | <FoodStats nutrition={items['vineandbarrel:wine_braised_beef'].food.nutrition} saturation={items['vineandbarrel:wine_braised_beef'].food.saturation} compact /> | {duration(meals['vineandbarrel:wine_braised_beef'])} |
+| <Item id="cider_braised_pork" /> | <FoodStats nutrition={items['vineandbarrel:cider_braised_pork'].food.nutrition} saturation={items['vineandbarrel:cider_braised_pork'].food.saturation} compact /> | {duration(meals['vineandbarrel:cider_braised_pork'])} |
+| <Item id="barley_mutton_broth" /> | <FoodStats nutrition={items['vineandbarrel:barley_mutton_broth'].food.nutrition} saturation={items['vineandbarrel:barley_mutton_broth'].food.saturation} compact /> | {duration(meals['vineandbarrel:barley_mutton_broth'])} |
+| <Item id="white_wine_risotto" /> | <FoodStats nutrition={items['vineandbarrel:white_wine_risotto'].food.nutrition} saturation={items['vineandbarrel:white_wine_risotto'].food.saturation} compact /> | {duration(meals['vineandbarrel:white_wine_risotto'])} |
+
+술로 요리하면 맥주잔이나 잔을 돌려받고, 리조토에 들어가는 <Item id="farmersdelight:bone_broth" />도 그릇을 돌려줘요.
+우리 주스와 술은 모두 Farmer's Delight 음료로 쳐요.
+
+## 코코뱅
+
+FD의 잔치 음식처럼요. 그릇 없이 솥에서 요리하면 식탁에 올려 둘 <Item id="coq_au_vin_block" /> 냄비가 나와요. 거기에 그릇을 쓰면
+<Item id="coq_au_vin" /> 한 그릇을 덜어 주고, 모두 네 그릇이에요. 마지막 그릇 뒤에 한 번 더 쓰면 뼈를 치워요. 적포도주를 가지고 있으면
+레시피 북에 나타나요.
+
+<Recipe id="cooking/coq_au_vin_block" />
+
+| 한 그릇 | 음식 | 영양 |
+|---|---|---|
+| <Item id="coq_au_vin" /> | <FoodStats nutrition={coq.food.nutrition} saturation={coq.food.saturation} compact /> | {duration(meals['vineandbarrel:coq_au_vin'])} |
+
+아무도 덜어 먹기 전에 부수면 냄비가 온전히 돌아와요. 한 번이라도 덜어 먹은 뒤에는 뼈만 남아요.
+
+## 맥주 빵
+
+밀 세 개와 에일 또는 밀맥주 하나로 빵 두 개를 만들어요. 맥주잔은 제작 칸에 남아요. 에일이나 밀맥주를 가지고 있으면
+레시피 북에 나타나요.
+
+<Recipe id="beer_bread" />
+
+| 빵 | 음식 |
+|---|---|
+| <Item id="beer_bread" /> | <FoodStats nutrition={bread.food.nutrition} saturation={bread.food.saturation} compact /> |
+
+## 보리에서 짚
+
+다 익은 보리를 Farmer's Delight 칼로 수확하면 밀처럼 <Item id="farmersdelight:straw" />도 나와요.
+도마 위에서는 칼로 <Item id="wild_barley" />를 보리로 썰 수 있고, 절반 확률로 짚도 나와요. FD의 야생 쌀처럼요.
+
+<Recipe id="cutting/wild_barley" />
+
+## Farmer's Delight 없이
+
+요리, 잔치 음식, 빵, 수박 와인은 그대로 있어서 월드와 인벤토리는 온전하지만, 만들 수는 없고, 크리에이티브 탭과 JEI에서는
+숨겨지고, 요리는 영양을 주지 않아요. 하드 사이더는 우리 <Item id="apple_juice" />로 그대로 만들 수 있어요. 하드 사이더가 아직 통에 있는 채로 Farmer's Delight를 뺐나요? 그 배치는 평소처럼 끝나요. 다만 베이스를 다시 꺼낼 수는 없어요.
+
+<Aside>
+Farmer's Delight는 vectorwing의 모드예요. Vine & Barrel은 그 옆에 어울리도록 만든 별도의 모드이고, Farmer's Delight의 일부가 아니며
+vectorwing의 보증을 받은 것도 아니에요.
+</Aside>

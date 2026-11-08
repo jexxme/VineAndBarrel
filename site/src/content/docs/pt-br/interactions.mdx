@@ -1,0 +1,92 @@
+---
+title: Interações
+description: Todas as pequenas coisas que blocos e bebidas fazem em Vine & Barrel, cada uma funcionando como algo que já existe no vanilla ou no Farmer's Delight.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Advancements from '../../../components/data/Advancements.astro';
+import { rules } from '../../../lib/l10n/pt-br';
+
+Vine & Barrel tenta parecer parte do jogo. Quase tudo abaixo funciona como algo que você já conhece do
+vanilla ou do Farmer's Delight, então dá para adivinhar os controles sem ler. Esta página lista tudo num lugar só; as
+páginas de cada mecânica explicam com mais detalhe.
+
+## Barril de Envelhecimento
+
+<Render name="scenes/barrel-cellar" float="right" size={224} alt="Uma parede de barris empilhados" />
+
+- **Colocado de frente para você**, a torneira virada para você, como uma fornalha.
+- **Fileiras:** barris lado a lado com a mesma direção juntam seus berços, como as cercas se conectam.
+- **Pilhas:** um barril sobre outro descansa em calços em vez de um berço. Monte uma parede de adega.
+- **O batoque mostra a etapa:** rolha, válvula borbulhando enquanto fermenta, cera vermelha quando envelhecido.
+- **Dá para ouvir a fermentação:** bolhas da válvula, mais raras conforme termina.
+- **A torneira pinga** de vez em quando enquanto há bebida dentro, na cor da bebida, como o mel de uma colmeia.
+- **O momento do envelhecimento:** um estalo suave de rolha quando a fornada fica envelhecida.
+- **Despeje** com um balde ou frasco, como se enche um caldeirão. Enquanto não for uma bebida, um balde ou frasco vazio leva de volta.
+- **Sirva** com uma caneca ou taça vazia, como pegar uma porção de um banquete do Farmer's Delight. O recipiente errado recebe uma dica e não é gasto.
+- **Linha de status** ao clicar com o botão direito de mão vazia. O nome dado na bigorna aparece nela.
+- **O comparador** lê as porções que restam.
+- **Quebre cheio** e ele guarda a fornada, como uma shulker box. O envelhecimento pausa até você colocá-lo de novo.
+- **Dispensadores** servem com um recipiente ou despejam uma base. **Funis** abastecem e esvaziam.
+
+Veja [Barril de Envelhecimento](/aging-barrel/).
+
+## Tina de Brassagem
+
+- **Apoios, como a panela de cozinhar:** uma bandeja de ferro sobre uma fogueira, fogo ou lava; rente em outras fontes de calor; agache e clique com o botão direito
+  de mão vazia para pendurá-la num cabo.
+- **A tampa levanta** enquanto alguém está com a tela aberta, como um baú. Uma infusão pronta mantém a tampa erguida, e dá para ver a
+  infusão lá dentro, descendo conforme você pega porções.
+- **Enquanto ferve**, o vapor sai de baixo da tampa e a tampa chacoalha. **Quando termina**, uma baforada de vapor.
+- **Clique com o botão direito com um frasco ou balde** para encher, como um caldeirão.
+- **Quebre cheia** e ela guarda o conteúdo.
+- **O comparador** dá sinal enquanto houver algo dentro. **Funis** colocam ingredientes e recipientes vazios, e puxam os cheios por baixo.
+- **Cobre:** ela oxida com o tempo; o favo de mel encera, um machado raspa, um raio limpa.
+- **Livro de receitas** na tela dela.
+
+Veja [Tina de Brassagem](/brew-kettle/).
+
+## Bebidas e recipientes
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Canecas e taças sobre um bloco" />
+
+- **Deixe as bebidas sobre um bloco:** agache e clique com o botão direito na parte de cima de um bloco com uma caneca ou taça, cheia ou vazia. Até quatro por bloco,
+  como velas. Clique com o botão direito de mão vazia para pegar uma.
+- **Saúde!** Dois ou mais jogadores que terminam uma bebida em até {rules.cheersWindowTicks / 20} segundos e a {rules.cheersRadius}
+  blocos um do outro brindam, e o bônus de todos dura {rules.cheersBonusPercent}% mais.
+- **Beber** soa e parece com uma poção, e você recebe o recipiente vazio de volta.
+- **Baldes de suco e de mosto** não podem ser despejados como líquido, como o leite.
+
+## Alegrinho
+
+- **Os outros jogadores veem você balançar** e veem seus soluços, tropeços e tombos.
+- **Dormir pra passar:** dormir a noite toda limpa o Alegrinho.
+- **Leite** limpa; **água ou qualquer suco** baixa um nível.
+- **Passe o mouse sobre o efeito** no inventário para ver o que seu nível faz.
+- **Uma bebida a mais** no nível máximo e você apaga. Onde você acorda, ninguém sabe.
+
+Veja [Alegrinho](/tipsy/).
+
+## Plantações e vida na fazenda
+
+- Os arbustos são colhidos com um clique direito (meio maduros também) e voltam uma etapa, como as bagas doces. Uma treliça acima de um arbusto o deixa subir.
+- As abelhas ajudam as uvas, o lúpulo e a cevada a crescer.
+- A cevada alimenta e faz os animais procriarem como o trigo; as sementes dela alimentam galinhas e papagaios.
+- Os aldeões fazendeiros plantam e colhem cevada.
+- As raposas pegam uvas dos arbustos, tintas e brancas, como fazem com as bagas doces.
+- Toda plantação vira composto.
+- O <Item id="barley_bale" /> amortece uma queda e ergue a fumaça da fogueira como um fardo de feno.
+
+Veja [Plantações](/crops/).
+
+## Mundo
+
+- **As tavernas das aldeias** têm barris que já vêm cheios, esperando para serem servidos. Veja [Aldeias e tavernas](/villages/).
+- **JEI** mostra receitas de brassagem e envelhecimento, além de páginas de informação do barril e das plantas silvestres. **Jade** mostra o que há em uma
+  tina ou barril quando você olha para ele. Veja [Compatibilidade](/compatibility/).
+
+## Avanços
+
+Vine & Barrel tem a própria aba de avanços:
+
+<Advancements />

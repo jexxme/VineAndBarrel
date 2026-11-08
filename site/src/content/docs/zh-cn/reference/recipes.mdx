@@ -1,0 +1,13 @@
+---
+title: 全部配方
+description: Vine & Barrel 的每个配方，按游戏里显示的样子呈现，可按工作站筛选，也可按成品或材料搜索。
+tableOfContents: false
+---
+import RecipeBrowser from '../../../../components/reference/RecipeBrowser.astro';
+import { playableRecipes, byType } from '../../../../lib/l10n/zh-cn';
+
+export const fd = playableRecipes.filter((r) => r.fdOnly).length;
+
+共 {playableRecipes.length} 个配方，画成游戏里显示的样子：{byType('vineandbarrel:brewing').length} 个用于[酿造锅](/brew-kettle/)，{byType('vineandbarrel:aging').length} 个用于[陈酿桶](/aging-barrel/)，其余用于工作台。其中 {fd} 个需要 [Farmer's Delight](/farmers-delight/)。可以搜索成品或材料，也可以选择一个工作站。把鼠标移到格子上可以看到物品名称；会轮流切换物品的格子可以放入其中任何一个。
+
+<RecipeBrowser />

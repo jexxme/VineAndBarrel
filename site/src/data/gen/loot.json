@@ -9,7 +9,7 @@
 				{
 					"id": "vineandbarrel:barley_seeds",
 					"weight": 3,
-					"chance": 0.3333333333333333,
+					"chance": 0.3,
 					"count": [
 						2,
 						6
@@ -18,7 +18,16 @@
 				{
 					"id": "vineandbarrel:red_grapes",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
 					"count": [
 						2,
 						4
@@ -27,7 +36,7 @@
 				{
 					"id": "vineandbarrel:hops",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						4
@@ -36,7 +45,7 @@
 				{
 					"id": "vineandbarrel:barley",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						5
@@ -125,7 +134,7 @@
 				{
 					"id": "vineandbarrel:barley_seeds",
 					"weight": 3,
-					"chance": 0.3333333333333333,
+					"chance": 0.3,
 					"count": [
 						2,
 						6
@@ -134,7 +143,16 @@
 				{
 					"id": "vineandbarrel:red_grapes",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
 					"count": [
 						2,
 						4
@@ -143,7 +161,7 @@
 				{
 					"id": "vineandbarrel:hops",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						4
@@ -152,7 +170,7 @@
 				{
 					"id": "vineandbarrel:barley",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						5
@@ -250,7 +268,7 @@
 				{
 					"id": "vineandbarrel:barley_seeds",
 					"weight": 3,
-					"chance": 0.3333333333333333,
+					"chance": 0.3,
 					"count": [
 						2,
 						6
@@ -259,7 +277,16 @@
 				{
 					"id": "vineandbarrel:red_grapes",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
 					"count": [
 						2,
 						4
@@ -268,7 +295,7 @@
 				{
 					"id": "vineandbarrel:hops",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						4
@@ -277,7 +304,7 @@
 				{
 					"id": "vineandbarrel:barley",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						5
@@ -366,7 +393,7 @@
 				{
 					"id": "vineandbarrel:barley_seeds",
 					"weight": 3,
-					"chance": 0.3333333333333333,
+					"chance": 0.3,
 					"count": [
 						2,
 						6
@@ -375,7 +402,16 @@
 				{
 					"id": "vineandbarrel:red_grapes",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
 					"count": [
 						2,
 						4
@@ -384,7 +420,7 @@
 				{
 					"id": "vineandbarrel:hops",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						4
@@ -393,7 +429,7 @@
 				{
 					"id": "vineandbarrel:barley",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						5
@@ -482,7 +518,7 @@
 				{
 					"id": "vineandbarrel:barley_seeds",
 					"weight": 3,
-					"chance": 0.3333333333333333,
+					"chance": 0.3,
 					"count": [
 						2,
 						6
@@ -491,7 +527,16 @@
 				{
 					"id": "vineandbarrel:red_grapes",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
 					"count": [
 						2,
 						4
@@ -500,7 +545,7 @@
 				{
 					"id": "vineandbarrel:hops",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						4
@@ -509,7 +554,7 @@
 				{
 					"id": "vineandbarrel:barley",
 					"weight": 2,
-					"chance": 0.2222222222222222,
+					"chance": 0.2,
 					"count": [
 						2,
 						5
@@ -635,7 +680,7 @@
 				{
 					"id": "vineandbarrel:barley_seeds",
 					"weight": 4,
-					"chance": 0.3333333333333333,
+					"chance": 0.26666666666666666,
 					"count": [
 						1,
 						3
@@ -644,7 +689,7 @@
 				{
 					"id": "vineandbarrel:red_grapes",
 					"weight": 3,
-					"chance": 0.25,
+					"chance": 0.2,
 					"count": [
 						1,
 						3
@@ -653,7 +698,16 @@
 				{
 					"id": "vineandbarrel:hops",
 					"weight": 3,
-					"chance": 0.25,
+					"chance": 0.2,
+					"count": [
+						1,
+						3
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 2,
+					"chance": 0.13333333333333333,
 					"count": [
 						1,
 						3
@@ -662,7 +716,7 @@
 				{
 					"id": "vineandbarrel:barley_ale",
 					"weight": 1,
-					"chance": 0.08333333333333333,
+					"chance": 0.06666666666666667,
 					"count": [
 						1,
 						1
@@ -671,7 +725,16 @@
 				{
 					"id": "vineandbarrel:wheat_beer",
 					"weight": 1,
-					"chance": 0.08333333333333333,
+					"chance": 0.06666666666666667,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:white_wine",
+					"weight": 1,
+					"chance": 0.06666666666666667,
 					"count": [
 						1,
 						1
@@ -736,7 +799,7 @@
 				{
 					"id": "vineandbarrel:barley_seeds",
 					"weight": 4,
-					"chance": 0.4444444444444444,
+					"chance": 0.4,
 					"count": [
 						1,
 						3
@@ -745,7 +808,7 @@
 				{
 					"id": "vineandbarrel:hops",
 					"weight": 3,
-					"chance": 0.3333333333333333,
+					"chance": 0.3,
 					"count": [
 						1,
 						3
@@ -754,7 +817,7 @@
 				{
 					"id": "vineandbarrel:barley_ale",
 					"weight": 1,
-					"chance": 0.1111111111111111,
+					"chance": 0.1,
 					"count": [
 						1,
 						1
@@ -763,7 +826,16 @@
 				{
 					"id": "vineandbarrel:wheat_beer",
 					"weight": 1,
-					"chance": 0.1111111111111111,
+					"chance": 0.1,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:mead",
+					"weight": 1,
+					"chance": 0.1,
 					"count": [
 						1,
 						1
@@ -782,7 +854,7 @@
 				{
 					"id": "vineandbarrel:barley_seeds",
 					"weight": 4,
-					"chance": 0.4444444444444444,
+					"chance": 0.3333333333333333,
 					"count": [
 						1,
 						3
@@ -791,7 +863,16 @@
 				{
 					"id": "vineandbarrel:hops",
 					"weight": 3,
-					"chance": 0.3333333333333333,
+					"chance": 0.25,
+					"count": [
+						1,
+						3
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 2,
+					"chance": 0.16666666666666666,
 					"count": [
 						1,
 						3
@@ -800,7 +881,7 @@
 				{
 					"id": "vineandbarrel:barley_ale",
 					"weight": 1,
-					"chance": 0.1111111111111111,
+					"chance": 0.08333333333333333,
 					"count": [
 						1,
 						1
@@ -809,7 +890,16 @@
 				{
 					"id": "vineandbarrel:sweet_berry_wine",
 					"weight": 1,
-					"chance": 0.1111111111111111,
+					"chance": 0.08333333333333333,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:mead",
+					"weight": 1,
+					"chance": 0.08333333333333333,
 					"count": [
 						1,
 						1

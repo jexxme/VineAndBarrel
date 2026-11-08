@@ -3,25 +3,28 @@
 import Slot from '../mc/Slot.astro';
 import Item from '../mc/Item.astro';
 import EffectBadge from './EffectBadge.astro';
-import { drinks } from '../../lib/data';
+import Tr from '../mc/Tr.astro';
+import { drinks, nameOf } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
 interface Props {
 	fd?: boolean;
 }
 const { fd = false } = Astro.props;
+const locale = localeOf(Astro.currentLocale);
 const rows = drinks.filter((d) => d.stage === 'young' && d.fdOnly === fd).map((y) => ({ young: y, aged: drinks.find((d) => d.aging === y.aging && d.stage === 'aged')! }));
 ---
 <div class="fd-table-wrap not-content">
 	<table>
 		<thead>
-			<tr><th>From</th><th>Drink, young and aged</th><th>Buff</th></tr>
+			<tr><th>{t('From', locale)}</th><th>{t('Drink, young and aged', locale)}</th><th>{t('Buff', locale)}</th></tr>
 		</thead>
 		<tbody>
 			{rows.map(({ young, aged }) => (
-				<tr id={young.id.split(':')[1].replaceAll('_', '-')}>
-					<td><Item id={young.base} /><br /><span class="soft">in a </span><Item id={young.vessel} /></td>
+				<tr id={young.id.split(':')[1].replaceAll('_', '-') + (fd && drinks.some((d) => !d.fdOnly && d.id === young.id) ? '-from-fd' : '')}>
+					<td><Item id={young.base} /><br /><span class="soft"><Tr k="in a {vessel}"><Item slot="vessel" id={young.vessel} /></Tr></span></td>
 					<td>
 						{[young, aged].map((d) => (
-							<span class="cell"><Slot id={d.id} /><span>{d.name}</span></span>
+							<span class="cell"><Slot id={d.id} /><span>{nameOf(d.id, locale)}</span></span>
 						))}
 					</td>
 					<td>
@@ -57,6 +60,20 @@ const rows = drinks.filter((d) => d.stage === 'young' && d.fdOnly === fd).map((y
 		border-bottom: 1px solid var(--fd-border);
 		vertical-align: middle;
 	}
+	tbody tr {
+		transition: background-color 0.12s;
+	}
+	tbody tr:hover {
+		background: var(--fd-surface-2);
+	}
+	/* A row you linked to (#red-wine) is marked */
+	tbody tr:target {
+		background: var(--fd-surface-2);
+		box-shadow: inset 4px 0 0 var(--sl-color-text-accent);
+	}
+	tr {
+		scroll-margin-top: 7rem;
+	}
 	.cell {
 		display: flex;
 		align-items: center;
@@ -71,5 +88,8 @@ const rows = drinks.filter((d) => d.stage === 'young' && d.fdOnly === fd).map((y
 	}
 	.soft {
 		color: var(--sl-color-gray-3);
+	}
+	.soft :global(span.fd-item) {
+		color: var(--sl-color-text);
 	}
 </style>

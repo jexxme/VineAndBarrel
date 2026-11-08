@@ -1,0 +1,70 @@
+---
+title: İçecekler
+description: Vine & Barrel'daki her şarap, bira, elma şarabı ve bal şarabı; neyden yapıldığı, neyle servis edildiği ve verdiği etki.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/tr';
+
+export const sample = items[drinks[0].id];
+
+Her içecek aynı kurallara uyar:
+
+- **Tek bir etki** ve bir seviye [Çakırkeyif](/tipsy/) verir. Seni Çakırkeyif {roman(rules.tipsy.noBuffLevel - 1)} ya da üstüne çıkaran içecek hiç etki vermez: tadını çıkaramayacak kadar sarhoşsun.
+- Karnın tok olsa bile her zaman içebilirsin. {sample.consumable.seconds} sn sürer ve boş <Item id="mug" /> ya da <Item id="wine_glass" /> geri gelir.
+- **{sample.stack}** adede kadar üst üste yığılır.
+- **Genç** bir içeceğin etkisi **{duration(rules.youngBuffTicks)}** boyunca seviye {roman(rules.youngBuffAmplifier)}'dir. **Yıllanmış** sürüm daha koyu renklidir, büyülü bir eşya gibi parıldar ve etkisi **{duration(rules.agedBuffTicks)}** boyunca seviye **{roman(rules.agedBuffAmplifier)}**'dir. Buğday birasının Doygunluğu hemen işler: birkaç yemek puanı.
+- Masaya konunca yıllanmış bir içecek büyülü bir eşya gibi parıldar, böylece genç olandan bir bakışta ayırt edersin.
+
+## Renkler
+
+Her içeceğin kendi rengi vardır: fıçının gözetleme camında ve masadaki kupalarda ve kadehlerde görürsün. Yıllanmış içecekler bir ton daha koyudur.
+
+<DrinkSwatches />
+
+## Şaraplar, biralar, elma şarabı ve bal şarabı
+
+<DrinkTable />
+
+Doygunluk diğer etkilerden farklı çalışır: sürmez, her tikinde bir açlık puanını (ve biraz tokluğu) hemen doldurur. Buğday birası bu yüzden süre yerine yemek puanı gösterir.
+
+## Farmer's Delight ile
+
+Farmer's Delight'ın kendi şişeleri de mayalanır. Onun elma şırası, bizim Elma Suyu ile aynı Elma Şarabı olur; karpuz suyu ise yalnızca FD yüklüyken yapabileceğin Karpuz Şarabı olur (eşya her zaman vardır). Bkz.
+[Farmer's Delight](/farmers-delight/).
+
+<DrinkTable fd />
+
+## Kaplar
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Bir bloğun üstünde kupalar ve kadehler" />
+
+Şarap bir <Item id="wine_glass" /> içine gider; bira, elma şarabı ve bal şarabı bir <Item id="mug" /> içine. İkisi de {items['vineandbarrel:mug'].stack} adede kadar yığılır.
+
+**Masaya koy:** Eğilip bir bloğun üstüne dolu ya da boş kupa veya kadehle sağ tıklayarak oraya koy. Bir blokta dört tane durabilir, her biri kendi içeceğini korur ve içeceği camdan görebilirsin. Birini geri almak için boş elle sağ tıkla.
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="Masalara konmuş kupalar ve kadehler, blok başına dört tane." />
+
+## Bir parti planla
+
+Bir tur için ne kadar lazım? [Mahzen kurmak](/guides/cellar/#partiyi-planla) içindeki planlayıcı, istediğin porsiyon sayısı için ürünleri, kazan partilerini, kovaları, fıçıları ve bekleme süresini hesaplar.
+
+## Şerefe!
+
+İki ya da daha çok oyuncu bir içeceği birbirinden {rules.cheersRadius} blok ve {rules.cheersWindowTicks / 20} saniye içinde bitirirse kadehler tokuşur, birkaç kıvılcım yükselir ve herkesin o içecekten aldığı etki **%{rules.cheersBonusPercent} daha uzun sürer**.
+
+Yalnızca aynı dünyadaki oyuncular arasında ve içecek başına bir kez sayılır; kendi iki içeceğin tur sayılmaz. Bonus, o içeceğin tam etki süresinin %{rules.cheersBonusPercent}'idir ve kalan süreye eklenir; etki az önce bittiyse o kadar süreyle geri gelir.
+
+## Bilmekte fayda var
+
+- **Çok mu oldu?** Seni Çakırkeyif {roman(rules.tipsy.noBuffLevel - 1)} seviyesine çıkaran içecek etki vermez, üstelik önceki içeceklerinden aldığın etkileri de alır götürür. İksirlerden gelen etkiler kalır.
+- **Masalar:** içecek, nişan aldığın bloğun çeyreğine ya da en yakın boş çeyreğe konur ve yalnızca sağlam bir yüzeye. Boş elle sağ tık, nişan aldığın içeceği alır; elinde bir şey varsa o eşyayı her zamanki gibi kullanırsın, yani masada içebilirsin. Bloğu kırmak, bir piston ya da altındaki bloğu kaybetmek hepsini düşürür.
+- **İçecekler malzeme olarak** (Farmer's Delight'ın pişirme kazanında) kupayı ya da kadehi sana geri verir.
+- **Tok karna mı?** Fark etmez: her zaman içebilirsin.

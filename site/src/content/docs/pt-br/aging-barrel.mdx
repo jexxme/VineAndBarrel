@@ -1,0 +1,112 @@
+---
+title: Barril de Envelhecimento
+description: Encha, fermente, envelheça e sirva. Como funciona o Barril de Envelhecimento, quanto tempo leva e como montar uma adega com eles.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import AgingTimeline from '../../../components/brewing/AgingTimeline.astro';
+import { rules, byType, days, list, nameOf } from '../../../lib/l10n/pt-br';
+
+export const aging = byType('vineandbarrel:aging');
+export const a = aging[0];
+export const sameTimes = aging.every((r) => r.fermentingTime === a.fermentingTime && r.agingTime === a.agingTime);
+
+<Render name="scenes/barrel-rack" float="right" size={256} alt="Três Barris de Envelhecimento lado a lado, juntos numa prateleira" />
+
+O <Item id="aging_barrel" /> é o coração de Vine & Barrel. Ele não tem tela: você despeja, espera e serve, tudo no
+mundo. Ele é colocado com a torneira virada para você.
+
+## Enchendo
+
+Clique com o botão direito no barril com uma base da [Tina de Brassagem](/brew-kettle/):
+
+- um balde despeja **{rules.servingsPerBucket} porções**, um frasco **{rules.servingsPerBottle}**,
+- o barril comporta **{rules.barrelCapacity} porções**: dois baldes, ou oito frascos.
+
+Você pode completar com mais da mesma base enquanto ela ainda fermenta. Despejou a coisa errada? Até a leva virar
+bebida, um balde ou frasco vazio a tira de volta.
+
+## Fermentando e envelhecendo
+
+{sameTimes && <p>Toda leva passa pelas mesmas duas etapas:</p>}
+
+1. **Fermentando**, por **{days(a.fermentingTime)}**. A leva vira a bebida *jovem*, como <Item id="red_wine" />.
+2. **Envelhecendo**, por mais **{days(a.agingTime)}**. O que ainda estiver no barril vira a bebida *envelhecida*, como <Item id="aged_red_wine" />, cujo bônus é mais forte e dura mais.
+
+<AgingTimeline />
+
+{aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
+
+O relógio corre no tempo do jogo, então dormir durante a noite conta. Você pode servir bebidas jovens durante a etapa de envelhecimento, mas
+cada porção que você serve é uma a menos para envelhecer. Com Farmer's Delight, a sidra de maçã dele (que vira a mesma Sidra) e o suco de melancia
+também fermentam: veja
+[Farmer's Delight](/farmers-delight/).
+
+<Shot src="cellar.jpg" caption="Uma adega ao longo da parede da taverna: barris juntos numa prateleira, uma segunda fileira empilhada em cima. O airlock de um deles borbulha; os selos de cera marcam as levas envelhecidas." />
+
+## Vendo-o trabalhar
+
+Dá para saber como um barril está sem abrir nada:
+
+- **Clique direito com a mão vazia** mostra uma linha de status, por exemplo *Pale Ale · 5 porções · envelhecendo, envelhecido em 3 dias*. Renomeie um barril numa
+  Bigorna e o nome aparece ali também.
+- **O batoque no topo** mostra a etapa: uma rolha quando está vazio ou a bebida está jovem e pronta, um airlock de vidro que borbulha
+  enquanto fermenta e um selo de cera vermelha quando está envelhecido.
+- **O visor** na frente mostra o quanto está cheio, na cor da bebida.
+- **Sons e gotas:** bolhas enquanto fermenta, a torneira pinga de vez em quando e uma rolha suave *estala* quando a leva fica envelhecida.
+
+<Stages prefix="barrel-bung" title="O batoque" labels={['rolha', 'airlock: fermentando', 'cera: envelhecido']} />
+<Stages prefix="barrel-fill" title="Visor" only={['0', '2', '4', '6', '8']} labels={['vazio', '2', '4', '6', 'cheio']} />
+
+## Servindo
+
+Clique com o botão direito no barril com uma <Item id="wine_glass" /> vazia (vinhos) ou uma <Item id="mug" /> (cervejas, hidromel e sidra) para servir uma porção.
+A torneira gira e a bebida cai na sua mão.
+
+- Vasilhame errado? O barril diz qual usar (*Vinho Tinto é servido em: Taça de Vinho*), e nada é gasto.
+- Ainda fermentando? Ele avisa quando vai ficar pronto.
+- Quando a última porção é servida, o barril fica vazio e pronto para uma nova leva.
+
+## Construindo uma adega
+
+<Render name="scenes/barrel-cellar" float="right" size={256} alt="Duas fileiras de barris, a de cima apoiada na de baixo" />
+
+- **Prateleiras:** barris lado a lado, virados para o mesmo lado, juntam seus berços numa prateleira comprida.
+- **Pilhas:** um barril sobre outro perde o berço e se apoia em calços, então você pode montar uma parede inteira de tonéis.
+- **Comparador:** lê as porções restantes, de 0 (vazio) a 15 (todas as {rules.barrelCapacity}).
+- **Quebre-o cheio** e ele guarda a leva e o nome da Bigorna. A dica do item mostra a bebida, as porções e a etapa.
+  O envelhecimento pausa enquanto ele é um item e continua quando você o coloca de novo. Um barril cheio não empilha com outros.
+- Barris são de madeira: minere-os com um machado.
+
+## Automação
+
+- **Funis** por cima despejam bases. Pelos lados e por baixo, eles alimentam canecas e taças vazias e puxam as
+  bebidas servidas, e os baldes e frascos vazios que sobram do despejo.
+- **Ejetores** virados para um barril servem uma porção com uma caneca ou taça vazia, ou despejam um balde ou frasco de base.
+
+## Bom saber
+
+- **Complete cedo.** Só o primeiro despejo inicia o relógio: a base que você acrescenta depois entra na leva com a idade dela, então fermenta
+  em menos tempo. Quando a leva vira bebida, o barril não aceita mais nada até ser servido por completo.
+- **Uma base por barril.** Despejar uma base diferente é recusado (*Este barril contém Suco de Uva*) e nada é gasto.
+- **Quase cheio?** Um balde precisa de espaço para todas as {rules.servingsPerBucket} porções, então um barril com mais de
+  {rules.barrelCapacity - rules.servingsPerBucket} dentro o recusa. Use frascos para o resto. Vale o inverso também: um
+  balde vazio só tira a base de volta quando há pelo menos {rules.servingsPerBucket} porções dentro.
+- **Ele envelhece enquanto você está fora.** O barril corre no tempo do jogo, então continua enquanto você está longe ou offline. Você
+  só perde o estalo da rolha.
+- **Construa sua adega na Superfície.** No Nether e no End não há dia para dormir, então dormir não
+  acelera um barril ali, e a linha de status conta em dias em vez de "amanhã de manhã".
+- **Inventário cheio?** Uma bebida servida cai aos seus pés.
+- **Modo Criativo:** quebrar um barril cheio não solta nada. Use o pegar bloco (clique do meio com Ctrl) para copiá-lo com a leva.
+- **Mantenha os creepers longe.** Uma explosão pode destruir um barril de vez, leva e tudo.
+- **Dicas de Funil:** um Funil em cima só despeja o que o barril aceita, então uma base errada espera no Funil em vez
+  de travá-lo. Mantenha um Funil embaixo numa instalação de servir, para que as bebidas prontas não bloqueiem as próximas.
+- **Sem risco de fogo.** Barris nunca pegam fogo. Um vazio até queima como combustível de fornalha; um cheio, não.
+
+## Receita
+
+<Recipe id="aging_barrel" />

@@ -1,0 +1,64 @@
+---
+title: 配置
+description: Vine & Barrel 的每个选项，分别面向服主和每位玩家，附带默认值和作用。
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../../lib/l10n/zh-cn';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+Vine & Barrel 有两个配置文件，都与[微醺](/tipsy/)有关。其他一切，从配方到酒桶要多久，都按模组出厂的样子工作，可以像修改配方一样用数据包来改。
+
+在游戏里，到设置界面修改：NeoForge 上是**模组**，Vine & Barrel，**配置**；Fabric 上安装了 [Mod Menu](https://modrinth.com/mod/modmenu) 后会出现同样的按钮。在那里的改动立即生效。服务器选项在单人游戏中会显示在那里（世界对局域网开放后就不显示了）；在服务器上，它们归服务器所有。
+
+文件本身：NeoForge 上是 TOML 文件，选项位于 <code>[{configFiles.server.section}]</code> 下。Fabric 上是 <code>config</code> 文件夹里的普通 <code>.properties</code> 文件，同样的选项写成 <code>{configFiles.server.section}.option=value</code>。Fabric 上客户端文件在游戏启动时读取，所以改完要重启；服务器文件会在 <code>/reload</code> 时重新读取。
+
+## 服务器选项
+
+NeoForge 上在 <code>{configFiles.server.file}</code> 里，Fabric 上在 <code>{configFiles.server.fabricFile}</code> 里。服务器的值会发给每位加入的玩家，所以大家按同样的规则游玩。某个世界可以有自己的一份：把文件放进该世界的 <code>serverconfig</code> 文件夹，它运行期间会优先于 <code>config</code> 里的那份。
+
+<table>
+	<thead><tr><th>选项</th><th>默认值</th><th>作用</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} 到 {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="无酒精模式">
+设置 `enabled = false`（Fabric 上是 `tipsy.enabled=false`），饮品就变成普通的增益饮品：没有微醺，没有打嗝，没有断片，但名字和增益都不变。
+适合家庭服务器，或者你单纯不喜欢那种晃悠悠的感觉。
+</Aside>
+
+## 客户端选项
+
+NeoForge 上在 <code>{configFiles.client.file}</code> 里，Fabric 上在 <code>{configFiles.client.fabricFile}</code> 里。每位玩家为自己设置这些；它们只改变你看到的东西。
+
+<table>
+	<thead><tr><th>选项</th><th>默认值</th><th>作用</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} 到 {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="容易晕动症？">
+设置 `wobbleIntensity = 0`（Fabric 上是 `tipsy.wobbleIntensity=0`）。无论服务器怎么设，微醺都不会再晃动你的屏幕：没有摇晃，没有抖动，也不会有反胃。原版的“畸变效果”和“视场角效果”滑块同样能调低它。绊倒后脸朝下趴着的样子仍然看得到，因为那不是屏幕效果；微醺的其他一切都不变。
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

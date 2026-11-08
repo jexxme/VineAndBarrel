@@ -1,0 +1,130 @@
+---
+title: 작물
+description: 적포도와 청포도 덤불, 홉 덤불, 격자 지지대, 보리, 야생 작물, 그리고 벌부터 퇴비까지 그 둘레의 모든 것.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../../lib/l10n/ko';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+// Who eats what: the food tags our items are in (animals.json), as the animals those tags feed
+export const ANIMALS = { cow_food: '소', sheep_food: '양', goat_food: '염소', horse_food: '말', llama_food: '라마', chicken_food: '닭', parrot_food: '앵무새', fox_food: '여우' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const SEASON = { spring: '봄', summer: '여름', autumn: '가을', winter: '겨울' };
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)).map((s) => SEASON[s] ?? s));
+
+<Render name="scenes/garden" float="right" size={256} alt="보리밭 뒤의 포도 덤불과 홉 덤불" />
+
+이 모드의 작물 네 가지가 술의 재료예요. <Item id="red_grapes" plural />는 레드 와인, <Item id="white_grapes" plural />는
+화이트 와인, <Item id="hops" />은 두 종류의 맥주, <Item id="barley" />는 에일에 쓰여요. 나머지 재료는 바닐라예요.
+<Item id="sweet_berries" />는 달콤한 열매 와인, <Item id="wheat" />은 밀맥주, <Item id="apple" plural />는 하드 사이더,
+<Item id="honey_bottle" plural />은 벌꿀술에 들어가요.
+
+<Shot src="vineyard.jpg" caption="잘 익은 포도 덤불로 가득한 울타리 친 포도밭. 줄 맨 앞에 등불 기둥이 서 있다." />
+
+## 포도 덤불과 홉 덤불
+
+<Item id="red_grapes" plural />, <Item id="white_grapes" plural />, <Item id="hops" />을 잔디, 흙, 경작지에 심으세요.
+달콤한 열매처럼요. 덤불은 달콤한 열매 덤불과 같은 속도로 {c.bushMaxAge + 1}단계에 걸쳐 자라요. 적포도와 청포도는
+똑같이 자라고, 익은 열매만 서로 달라요.
+
+<Stages prefix="grape_bush" title="적포도 덤불" labels={['심음', '성장 중', '반쯤 익음', '익음']} />
+<Stages prefix="white_grape_bush" title="청포도 덤불" labels={['심음', '성장 중', '반쯤 익음', '익음']} />
+<Stages prefix="hop_bush" title="홉 덤불" labels={['심음', '성장 중', '반쯤 익음', '익음']} />
+
+- **수확**은 익은 덤불을 우클릭하면 돼요. 포도 {h.grapes.count[0]}~{h.grapes.count[1]}개(또는
+  <Item id="hops" /> {h.hops.count[0]}~{h.hops.count[1]}개)가 나오고, 덤불은 두 번째 단계로 되돌아가 계속
+  열매를 맺어요. 다시 심을 필요가 없어요.
+- **급할 때는** 반쯤 익었을 때 따세요. 달콤한 열매처럼요. 대신 {h.grapes.halfRipe[0]}~{h.grapes.halfRipe[1]}개가 나오고, 덤불은
+  똑같이 되돌아가요.
+- **뼛가루**는 한 단계씩 자라게 해요.
+- 덤불은 달콤한 열매 덤불만큼 불이 잘 붙으니, 포도밭에서 모닥불과 용암을 멀리하세요.
+
+## 격자 지지대
+
+<Render name="scenes/trellis" float="right" size={256} alt="격자 지지대를 타고 오른 포도 덩굴과 홉 덩굴, 그리고 빈 격자 지지대" />
+
+덤불 위에 <Item id="trellis" />를 놓으면, 덤불이 다 익었을 때 타고 올라가요. 최대 {c.climbMaxHeight}블록 높이까지 올라가고,
+올라가는 내내 열매를 맺어요. 격자 지지대는 놓을 때 플레이어를 향하고 아래 격자 지지대와 정렬되니, 줄이 곧게 서요.
+
+- 덩굴은 덤불처럼 자라고, 열매를 맺고, 따요. 반쯤 익었을 때도요. 다 익은 덤불에 뼛가루를 쓰면 바로 타고 올라가요.
+- 덩굴을 부수면 열매가 나오고 격자 지지대는 그대로 서 있어요.
+- 격자 지지대는 사다리가 아니에요. 그 위의 모든 것은 땅에서 손이 닿아요.
+
+<Recipe id="trellis" />
+
+<Aside title="Farmer's Delight와 함께: 밧줄도 돼요">
+덤불 위의 Farmer's Delight 밧줄도 격자 지지대와 똑같이 작동해요. FD의 토마토가 타고 오르는 것처럼요. [Farmer's Delight](/farmers-delight/)를 참고하세요.
+</Aside>
+
+## 보리
+
+<Item id="barley_seeds" />을 경작지에 뿌리세요. 보리는 밀과 똑같이 {barleyStages}단계에 걸쳐 자라고,
+수확물도 같아요. 다 익으면 <Item id="barley" />와 함께 씨앗이 더 나와요.
+
+<Stages prefix="barley" title="보리" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', '익음']} />
+
+## 야생 작물
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="풀밭 위의 야생 적포도, 야생 청포도, 야생 홉, 야생 보리" />
+
+첫 씨앗은 야생 식물에서 얻어요. 바이옴과 기온에 따라 무리 지어 자라서, 일반적인 방식으로 태그가 달린 모드 바이옴에도
+나타나요. 부수면 수확물이 나오고, 가위를 쓰면 식물을 통째로 장식용으로 가져갈 수 있어요.
+
+<WildCrops />
+
+농부와 떠돌이 상인도 씨앗을 팔고, 마을 상자에도 가끔 들어 있어요. [마을과 선술집](/villages/)을 참고하세요.
+
+## 농장 생활
+
+- **벌**은 바닐라 작물과 마찬가지로 포도, 홉, 보리의 가루받이를 해 주고 자라는 걸 도와줘요.
+- **동물:** <Item id="barley" />는 밀처럼 먹이고 번식시킬 수 있어요: {list(eaters('vineandbarrel:barley').filter((a) => a !== '말' && a !== '라마'))}.
+  말과 라마도 밀을 먹을 때처럼 보리로 회복하고 자라며, <Item id="barley_bale" />는 건초 더미처럼 쓸 수 있어요.
+  <Item id="barley_seeds" />은 이 동물들이 먹어요: {list(eaters('vineandbarrel:barley_seeds'))}. 포도로는 이 동물들을 번식시킬 수 있어요: {list(eaters('vineandbarrel:red_grapes'))}.
+- **여우**는 적포도든 청포도든 좋아해요. 달콤한 열매 덤불을 털듯이 덤불에서 포도를 따 가요. 격자 지지대나 밧줄 위로 올라간
+  덩굴은 손이 닿지 않고, 몹 환경 파괴가 꺼져 있으면 멈춰요.
+- **농부**는 밭에서 보리를 심고 수확하고, 남는 씨앗은 퇴비로 써요. 포도와 홉은 플레이어 몫으로 남겨 둬요.
+- **퇴비통:** 모든 작물은 바닐라와 같은 확률로 퇴비가 돼요.
+
+<table>
+	<thead><tr><th>아이템</th><th>층이 쌓일 확률</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="물을 댄 경작지의 보리와 그 옆 홉 정원. 수확할 때가 됐다." />
+
+## 저장용 블록
+
+<Render name="scenes/storage" float="right" size={256} alt="적포도 상자, 청포도 상자, 홉 상자, 보리 더미" />
+
+작물 아홉 개를 <Item id="grape_crate" />, <Item id="white_grape_crate" />, <Item id="hops_crate" />, <Item id="barley_bale" />로
+묶고, 제작대에서 다시 풀 수 있어요. <Item id="barley_bale" />는 모든 면에서 건초 더미예요. 낙하 피해를 줄여 주고, 위에 모닥불을
+놓으면 연기가 높이 올라가고, 라마와 말이 먹어요.
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## 알아 두면 좋아요
+
+- **부수지 말고 따세요.** 어린 덤불을 부수면 아무것도 나오지 않고 식물도 사라져요. 열매가 달린 덤불을 부수면 열매가
+  나오지만(행운이 있으면 더 많이), 우클릭으로 따면 덤불이 그대로 남아요.
+- **그냥 지나갈 수 있어요.** 포도 덤불과 홉 덤불은 달콤한 열매 덤불처럼 찌르거나 느려지게 하지 않아요.
+- **빛과 물:** 덤불은 빛이 좋은 곳에서만 자라요. 물은 덤불을 쓸어 가고, 피스톤은 덤불을 터뜨려요.
+- **포도는 간식이에요.** 달콤한 열매처럼요.
+- **야생 식물 더 얻기:** 야생 작물에 뼛가루를 쓰면 근처에 하나가 더 심어지는 경우가 많아서, 첫 씨앗을 얻는 쉬운
+  방법이에요. 야생 보리에서는 보리 하나와 씨앗 하나가 나와요.
+- **보리 밑의 경작지**는 다른 작물처럼 흙으로 돌아가지 않아요.
+- **덩굴**도 빛이 필요해요. 어두우면 부러지고, 격자 지지대나 밧줄은 그대로 남아요. 다 자란 식물에 뼛가루를 쓰면 위의
+  덩굴로 넘어가요. 밧줄 위의 덩굴은 밧줄처럼 탈 수 있어요.
+- **벌**은 덤불이 타고 올라가게 만들지 못해요. 그건 플레이어만 시작할 수 있어요.
+
+## 계절
+
+Serene Seasons를 설치하면 작물에 계절이 생겨요. 적포도와 청포도는 {seasonsOf('vineandbarrel:red_grapes')}에, 홉은
+{seasonsOf('vineandbarrel:hops')}에, 보리는 {seasonsOf('vineandbarrel:barley_seeds')}에 자라요. [호환성](/compatibility/)을 참고하세요.

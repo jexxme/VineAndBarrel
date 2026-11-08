@@ -1,0 +1,131 @@
+---
+title: Colture
+description: Cespugli d'uva rossa e bianca, cespugli di luppolo, graticci, orzo, colture selvatiche e tutto ciò che sta intorno, dalle api al compost.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../../lib/l10n/it';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+// Chi mangia cosa: i tag di cibo in cui sono i nostri oggetti (animals.json), come gli animali che nutrono
+export const ANIMALS = { cow_food: 'mucche', sheep_food: 'pecore', goat_food: 'capre', horse_food: 'cavalli', llama_food: 'lama', chicken_food: 'galline', parrot_food: 'pappagalli', fox_food: 'volpi' };
+export const SEASONS = { spring: 'primavera', summer: 'estate', autumn: 'autunno' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)).map((s) => SEASONS[s] ?? s));
+
+<Render name="scenes/garden" float="right" size={256} alt="Cespugli d'uva e di luppolo dietro un campo d'orzo" />
+
+Quattro colture nostre alimentano le bevande: <Item id="red_grapes" plural /> per il vino rosso, <Item id="white_grapes" plural /> per il
+vino bianco, <Item id="hops" /> per entrambe le birre e <Item id="barley" /> per la Pale Ale. Gli altri ingredienti sono vanilla:
+<Item id="sweet_berries" /> per il vino di bacche dolci, <Item id="wheat" /> per la birra di frumento, <Item id="apple" plural /> per il sidro
+e <Item id="honey_bottle" plural /> per l'idromele.
+
+<Shot src="vineyard.jpg" caption="Un vigneto recintato di cespugli d'uva maturi, con lanterne sui pali in testa ai filari." />
+
+## Cespugli d'uva e di luppolo
+
+Pianta <Item id="red_grapes" plural />, <Item id="white_grapes" plural /> o <Item id="hops" /> su erba, terra o terreno coltivato,
+proprio come le bacche dolci. Il cespuglio cresce in {c.bushMaxAge + 1} stadi, al ritmo del cespuglio di bacche dolci. L'uva rossa e quella bianca
+crescono allo stesso modo; solo il frutto maturo le distingue.
+
+<Stages prefix="grape_bush" title="Cespuglio d'uva rossa" labels={['piantato', 'in crescita', 'semimaturo', 'maturo']} />
+<Stages prefix="white_grape_bush" title="Cespuglio d'uva bianca" labels={['piantato', 'in crescita', 'semimaturo', 'maturo']} />
+<Stages prefix="hop_bush" title="Cespuglio di luppolo" labels={['piantato', 'in crescita', 'semimaturo', 'maturo']} />
+
+- **Raccogli** un cespuglio maturo con un clic destro: dà da {h.grapes.count[0]} a {h.grapes.count[1]} acini (o da
+  {h.hops.count[0]} a {h.hops.count[1]} <Item id="hops" />) e torna al secondo stadio, così continua a fruttificare. Non
+  serve ripiantarlo.
+- **Hai fretta?** Raccoglilo semimaturo, come le bacche dolci: da {h.grapes.halfRipe[0]} a {h.grapes.halfRipe[1]} invece, e
+  torna indietro allo stesso modo.
+- **La farina d'ossa** lo fa avanzare di uno stadio.
+- I cespugli prendono fuoco facilmente come quelli di bacche dolci, quindi tieni falò e lava lontani dal vigneto.
+
+## Graticcio
+
+<Render name="scenes/trellis" float="right" size={256} alt="Viti d'uva e di luppolo su graticci, e un graticcio spoglio" />
+
+Metti un <Item id="trellis" /> sopra un cespuglio, e quando il cespuglio è maturo si arrampica, fino a {c.climbMaxHeight} blocchi di altezza,
+fruttificando fino in cima. Il graticcio ti guarda quando lo posi e si allinea con quello sotto, così i filari restano dritti.
+
+- Ogni vite cresce, fruttifica e si raccoglie come il cespuglio, anche semimatura. La farina d'ossa su un cespuglio maturo fa partire subito la salita.
+- Rompere una vite ti dà il suo frutto e lascia il graticcio al suo posto.
+- Un graticcio non è una scala: tutto ciò che c'è sopra è alla portata da terra.
+
+<Recipe id="trellis" />
+
+<Aside title="Con Farmer's Delight: funzionano anche le corde">
+Una corda di Farmer's Delight sopra un cespuglio funziona proprio come un graticcio, come si arrampicano i pomodori di FD. Vedi [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Orzo
+
+Semina i <Item id="barley_seeds" /> sul terreno coltivato. L'orzo cresce esattamente come il grano, in {barleyStages} stadi, e
+dà gli stessi raccolti: <Item id="barley" /> quando è maturo, più semi extra.
+
+<Stages prefix="barley" title="Orzo" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', 'maturo']} />
+
+## Colture selvatiche
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="Uva rossa selvatica, uva bianca selvatica, luppolo selvatico e orzo selvatico sull'erba" />
+
+I tuoi primi semi vengono dalle piante selvatiche. Crescono a macchie, a seconda di bioma e temperatura, quindi compaiono anche nei
+biomi di altri mod che hanno i tag consueti. Rompine una per ottenere il raccolto, oppure usa le cesoie per portarti a casa l'intera pianta come decorazione.
+
+<WildCrops />
+
+Anche i contadini e il mercante errante vendono semi, e le casse dei villaggi a volte ne contengono. Vedi [Villaggi e taverne](/villages/).
+
+## Vita di campagna
+
+- **Le api** impollinano uva, luppolo e orzo e li aiutano a crescere, come con le colture vanilla.
+- **Animali:** <Item id="barley" /> nutre e fa riprodurre {list(eaters('vineandbarrel:barley').filter((a) => a !== 'cavalli' && a !== 'lama'))} come
+  il grano. Cavalli e lama si curano e crescono con l'orzo proprio come con il grano, e con la <Item id="barley_bale" /> come con una balla di fieno.
+  I <Item id="barley_seeds" /> nutrono {list(eaters('vineandbarrel:barley_seeds'))}, e puoi far riprodurre {list(eaters('vineandbarrel:red_grapes'))} con l'uva.
+- **Le volpi** amano l'uva, rossa e bianca: la staccano dai cespugli, proprio come assaltano i cespugli di bacche dolci. Le viti in alto su un
+  graticcio o una corda sono fuori dalla loro portata, e smettono quando il griefing dei mob è disattivato.
+- **I contadini** piantano e raccolgono l'orzo nei loro campi e mettono nel compost i semi in più. L'uva e il luppolo li lasciano a te.
+- **Compostiera:** ogni coltura va in compost con le probabilità vanilla.
+
+<table>
+	<thead><tr><th>Oggetto</th><th>Probabilità di aggiungere uno strato</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="Orzo su terreno coltivato irrigato accanto al giardino di luppolo, pronto da raccogliere." />
+
+## Blocchi di stoccaggio
+
+<Render name="scenes/storage" float="right" size={256} alt="Cassa di uva rossa, Cassa di uva bianca, Cassa di luppolo e Balla di orzo" />
+
+Riunisci nove pezzi di una coltura in una <Item id="grape_crate" />, <Item id="white_grape_crate" />, <Item id="hops_crate" /> o
+<Item id="barley_bale" />, e riaprila
+nella griglia di creazione. La <Item id="barley_bale" /> è una balla di fieno a tutti gli effetti: attutisce una caduta, un falò sopra
+di essa manda il fumo in alto, e lama e cavalli la mangiano.
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## Da sapere
+
+- **Raccogli, non rompere.** Rompere un cespuglio giovane non fa cadere niente, e la pianta sparisce. Rompere uno con frutti li fa cadere
+  (di più con Fortuna), ma un clic destro lo raccoglie e conserva il cespuglio.
+- **Ci passi attraverso.** I cespugli d'uva e di luppolo non pungono né rallentano come quelli di bacche dolci.
+- **Luce e acqua:** un cespuglio cresce solo con buona luce. L'acqua porta via i cespugli, e i pistoni li fanno saltare.
+- **L'uva è uno spuntino,** come le bacche dolci.
+- **Altre piante selvatiche:** la farina d'ossa su una coltura selvatica spesso ne pianta un'altra lì vicino, un modo facile per ottenere i primi semi.
+  L'orzo selvatico dà un orzo e un seme.
+- **Il terreno coltivato sotto l'orzo** non torna mai terra, come con qualsiasi coltura.
+- **Le viti** hanno bisogno di luce: al buio si rompono, e il graticcio o la corda restano. La farina d'ossa su una pianta cresciuta passa
+  fino alla vite sopra. Su una vite su corda puoi arrampicarti come sulla corda.
+- **Le api** non fanno mai arrampicare un cespuglio; solo tu puoi farlo partire.
+
+## Stagioni
+
+Con Serene Seasons installato, le colture hanno le loro stagioni: l'uva, rossa e bianca, cresce in {seasonsOf('vineandbarrel:red_grapes')}, il luppolo in
+{seasonsOf('vineandbarrel:hops')} e l'orzo in {seasonsOf('vineandbarrel:barley_seeds')}. Vedi [Compatibilità](/compatibility/).

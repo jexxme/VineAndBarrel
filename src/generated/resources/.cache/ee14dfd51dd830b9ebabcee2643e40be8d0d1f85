@@ -1,0 +1,22 @@
+// 26.1.1	2026-11-08T16:55:36.591798	Tags for minecraft:block mod id vineandbarrel
+e2101b4d1efe6557dda8c1310e906f4fb9d5d029 data/c/tags/block/storage_blocks.json
+04bc75cbb77e8463b92383f9e9ad6a3a09494199 data/c/tags/block/storage_blocks/barley.json
+ec1175e5e0514ddde70b49bda045a8c166d3cc05 data/c/tags/block/storage_blocks/grape.json
+041fbef82d16dcca985f586cb1cfdd2cc0f2cbc7 data/c/tags/block/storage_blocks/hops.json
+04bc75cbb77e8463b92383f9e9ad6a3a09494199 data/farmersdelight/tags/block/campfire_signal_smoke.json
+440c8bc96315d13bddd0e27e733fcb8a5eb2f17a data/farmersdelight/tags/block/feasts.json
+4ed7e23443e0cd512e0b98f43b6eec02fd7c117a data/farmersdelight/tags/block/wild_crops.json
+405c70e392ce0a34052221f1e1b4cf1e03c2affe data/minecraft/tags/block/bee_growables.json
+f0ee2195aa241c6fbd73fa9d4848a0bec3586137 data/minecraft/tags/block/climbable.json
+c48351b21c18631be442ad42a5bb8d25abbc5863 data/minecraft/tags/block/crops.json
+c48351b21c18631be442ad42a5bb8d25abbc5863 data/minecraft/tags/block/maintains_farmland.json
+682d0df972ffc54cec22019037d667070b982ebd data/minecraft/tags/block/mineable/axe.json
+04bc75cbb77e8463b92383f9e9ad6a3a09494199 data/minecraft/tags/block/mineable/hoe.json
+4ed7e23443e0cd512e0b98f43b6eec02fd7c117a data/minecraft/tags/block/small_flowers.json
+1089f73c1aa8ce4c558eb1fff55d01564cb87531 data/sereneseasons/tags/block/autumn_crops.json
+c48351b21c18631be442ad42a5bb8d25abbc5863 data/sereneseasons/tags/block/spring_crops.json
+82592382fa0dea77fd5027ce6e161e5d18e10f57 data/sereneseasons/tags/block/summer_crops.json
+04bc75cbb77e8463b92383f9e9ad6a3a09494199 data/vineandbarrel/tags/block/campfire_signal_smoke.json
+849623417a3a94aba7dde6a3005b1c08e56104c6 data/vineandbarrel/tags/block/hay_bales.json
+bdbbdad06d5c206bd88c4ab5798a38e971f7beb4 data/vineandbarrel/tags/block/vine_supports.json
+4ed7e23443e0cd512e0b98f43b6eec02fd7c117a data/vineandbarrel/tags/block/wild_crops.json

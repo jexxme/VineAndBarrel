@@ -1,36 +1,308 @@
 ---
-// The advancement tab, from the mod's generated advancements.
-import Slot from '../mc/Slot.astro';
-import { advancements } from '../../lib/data';
-const shown = advancements.filter((a) => a.parent);
----
-<ul class="fd-adv not-content">
-	{shown.map((a) => (
-		<li class={a.frame}>
-			<Slot id={a.icon} />
-			<span><b>{a.title}</b>{a.description}</span>
-		</li>
-	))}
-</ul>
-<style>
-	.fd-adv {
-		list-style: none;
-		padding: 0;
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
-		gap: 10px 20px;
+// The Vine & Barrel advancement tab, laid out from the parent links in advancements.json like the game's advancement
+// screen (frames on a dark background, black-and-white connectors), plus a detailed list. Hover a frame for its name
+// (tap it on a phone), click it to jump to its entry below. Same tree as the Farmer's Delight Neoforged docs.
+import { advancements, iconOf, gameText } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
+import Tr from '../mc/Tr.astro';
+import { advancementHints } from '../../data/code/advancements';
+import '../reference/ref.css';
+
+type Adv = { id: string; parent: string | null; title: string; titleKey?: string; description: string; descriptionKey?: string; icon: string; frame: string; hidden: boolean };
+const locale = localeOf(Astro.currentLocale);
+const all = advancements as Adv[];
+const title = (a: Adv) => gameText(a.titleKey, a.title, locale);
+const description = (a: Adv) => gameText(a.descriptionKey, a.description, locale);
+const byId = new Map(all.map((a) => [a.id, a]));
+const kids = (id: string | null) => all.filter((a) => a.parent === id).sort((a, b) => a.title.localeCompare(b.title));
+const root = kids(null)[0];
+// Tidy layout: x = depth, y = order of leaves; a parent sits at the middle of its children
+const pos = new Map<string, { x: number; y: number }>();
+let leaf = 0;
+function place(a: Adv, depth: number): number {
+	const ch = kids(a.id);
+	let y: number;
+	if (!ch.length) y = leaf++;
+	else {
+		const ys = ch.map((c) => place(c, depth + 1));
+		y = (ys[0] + ys[ys.length - 1]) / 2;
 	}
-	li {
+	pos.set(a.id, { x: depth, y });
+	return y;
+}
+place(root, 0);
+const COL = 92;
+const ROW = 62;
+const PAD = 16;
+const F = 52; // frame size: 26 GUI pixels at 2x, like the advancement screen
+const W = (Math.max(...[...pos.values()].map((p) => p.x)) + 1) * COL - (COL - F) + PAD * 2;
+const H = leaf * ROW + PAD * 2;
+const fx = (id: string) => PAD + pos.get(id)!.x * COL;
+const fy = (id: string) => PAD + pos.get(id)!.y * ROW + (ROW - F) / 2;
+const frameName: Record<string, string> = { task: t('Task', locale), goal: t('Goal', locale), challenge: t('Challenge', locale) };
+// Order for the list: depth-first from the root
+const ordered: Adv[] = [];
+(function walk(a: Adv) {
+	ordered.push(a);
+	kids(a.id).forEach(walk);
+})(root);
+// Elbow connectors, drawn like the game: a black line with a white line on top
+const lines = all
+	.filter((a) => a.parent && pos.has(a.parent))
+	.map((a) => {
+		const x1 = fx(a.parent!) + F;
+		const y1 = fy(a.parent!) + F / 2;
+		const x2 = fx(a.id);
+		const y2 = fy(a.id) + F / 2;
+		const mx = x2 - (COL - F) / 2;
+		return `M${x1} ${y1} H${mx} V${y2} H${x2}`;
+	});
+const icon = (id: string) => iconOf(id)?.src;
+const slug = (a: Adv) => `adv-${a.id.split('/').pop()}`;
+---
+<figure class="adv not-content">
+	<div class="mc-panel adv-window">
+		<p class="adv-title"><Tr k="Advancements: {name}" vars={{ name: title(root) }} locale={locale} /></p>
+		<div class="adv-scroll" tabindex="0" aria-label={t('Advancement tree, scrolls', locale)}>
+			<div class="adv-canvas" style={`width:${W}px;height:${H}px`}>
+				<svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+					{lines.map((d) => <path class="o" d={d} />)}
+					{lines.map((d) => <path class="i" d={d} />)}
+				</svg>
+				{
+					all.map((a) => (
+						<a
+							class={`adv-node f-${a.frame}`}
+							href={`#${slug(a)}`}
+							style={`left:${fx(a.id)}px;top:${fy(a.id)}px`}
+							aria-label={`${title(a)}: ${description(a)}`}
+							data-tip-items={`${title(a)}~${a.id}`}
+							data-tip-extra={description(a)}
+							data-tip-sub={frameName[a.frame]}
+						>
+							<span class="adv-frame">{icon(a.icon) && <img src={icon(a.icon)} alt="" width="32" height="32" loading="lazy" />}</span>
+						</a>
+					))
+				}
+			</div>
+		</div>
+	</div>
+	<figcaption>
+		<span class="key f-task"><span class="adv-frame sm" /> {frameName.task}</span>
+		<span class="key f-goal"><span class="adv-frame sm" /> {frameName.goal}</span>
+		<span class="key f-challenge"><span class="adv-frame sm" /> {frameName.challenge}</span>
+		<span>{t('Hover a frame for its name (tap it on a phone), click it for the details below.', locale)}</span>
+	</figcaption>
+</figure>
+
+<ol class="adv-list not-content">
+	{
+		ordered.map((a) => {
+			const parent = a.parent ? byId.get(a.parent) : null;
+			return (
+				<li id={slug(a)} class={`f-${a.frame} ref-target`}>
+					<span class="adv-frame">{icon(a.icon) && <img src={icon(a.icon)} alt="" width="32" height="32" loading="lazy" />}</span>
+					<div>
+						<p class="t">
+							<strong>{title(a)}</strong>
+							<span class="fr">{frameName[a.frame] ?? a.frame}</span>
+							{a.hidden && <span class="fr">{t('hidden', locale)}</span>}
+						</p>
+						<p class="d">{description(a)}</p>
+						<p class="m">
+							{parent ? (
+								<>
+									<Tr k="After {parent}." locale={locale}><a slot="parent" href={`#${slug(parent)}`}>{title(parent)}</a></Tr>{' '}
+								</>
+							) : (
+								<>{t('The first one in the tab.', locale)} </>
+							)}
+							{advancementHints[a.id]?.(locale) ?? ''}
+						</p>
+					</div>
+				</li>
+			);
+		})
+	}
+</ol>
+
+<style>
+	.adv {
+		margin: 20px 0 30px;
+	}
+	.adv-window {
+		display: block;
+		padding: 8px 14px 14px;
+	}
+	.adv-title {
+		margin: 0 0 6px;
+		font-size: 20px;
+		line-height: 30px;
+		color: #404040;
+	}
+	.adv-scroll {
+		overflow: auto;
+		max-height: 80vh;
+		background: #24170e url('../../assets/ui/wall-spruce.png') 0 0 / 64px 64px;
+		image-rendering: pixelated;
+		box-shadow: inset 2px 2px 0 #000, inset -2px -2px 0 #fff;
+	}
+	.adv-scroll:focus-visible {
+		outline: 2px solid #fff;
+	}
+	.adv-canvas {
+		position: relative;
+		margin: 0 auto;
+	}
+	svg {
+		position: absolute;
+		inset: 0;
+	}
+	path {
+		fill: none;
+		stroke-linejoin: miter;
+		stroke-linecap: square;
+	}
+	path.o {
+		stroke: #000;
+		stroke-width: 6;
+	}
+	path.i {
+		stroke: #fff;
+		stroke-width: 2;
+	}
+	.adv-node {
+		position: absolute;
+		display: block;
+		transition: transform 0.12s cubic-bezier(0.3, 1.6, 0.5, 1);
+	}
+	.adv-node:hover,
+	.adv-node:focus-visible {
+		transform: scale(1.08);
+		z-index: 1;
+	}
+	.adv-node:focus-visible {
+		outline: none;
+	}
+	/* Frames: square for tasks, cut corners for goals, notched corners for challenges */
+	.adv-frame {
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 52px;
+		height: 52px;
+		box-sizing: border-box;
+		background: #e0b33d;
+		border: 4px solid #6e4b11;
+		box-shadow:
+			inset 2px 2px 0 #fff3b0,
+			inset -2px -2px 0 #a6721a;
+		outline: 2px solid #000;
+	}
+	.adv-frame img {
+		width: 32px;
+		height: 32px;
+		image-rendering: pixelated;
+		display: block;
+	}
+	.f-goal .adv-frame {
+		clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+		box-shadow: inset 0 0 0 2px #fff3b0;
+		outline: 0;
+	}
+	.f-challenge .adv-frame {
+		background: #b26ad1;
+		border-color: #3c1453;
+		box-shadow:
+			inset 2px 2px 0 #e7c2f5,
+			inset -2px -2px 0 #7a3a96;
+		outline: 0;
+		clip-path: polygon(0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 6px calc(100% - 6px), 0 calc(100% - 6px));
+	}
+	.adv-node:hover .adv-frame,
+	.adv-node:focus-visible .adv-frame {
+		background: #fff3b0;
+	}
+	.adv-node.f-challenge:hover .adv-frame,
+	.adv-node.f-challenge:focus-visible .adv-frame {
+		background: #e7c2f5;
+	}
+	.adv-frame.sm {
+		display: inline-block;
+		width: 20px;
+		height: 20px;
+		border-width: 2px;
+		box-shadow: none;
+		vertical-align: -4px;
+		margin-right: 6px;
+	}
+	.f-goal .adv-frame.sm {
+		clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px);
+	}
+	.f-challenge .adv-frame.sm {
+		clip-path: polygon(0 3px, 3px 3px, 3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px));
+	}
+	figcaption {
 		display: flex;
-		gap: 12px;
+		flex-wrap: wrap;
+		gap: 4px 24px;
+		margin-top: 12px;
+		font-size: 20px;
+		line-height: 30px;
+		color: var(--sl-color-gray-3);
+	}
+	.key {
+		display: inline-flex;
 		align-items: center;
-		margin: 0 !important;
+	}
+	.adv-list {
+		list-style: none;
+		padding: 0 16px;
+		margin: 20px 0;
+	}
+	.adv-list li {
+		display: grid;
+		grid-template-columns: 52px 1fr;
+		gap: 16px;
+		padding: 14px 0;
+		margin: 0;
+		border-bottom: 2px solid var(--fd-border);
+		scroll-margin-top: 6rem;
+	}
+	.adv-list li:last-child {
+		border-bottom: 0;
+	}
+	.adv-list p {
+		margin: 0;
 		font-size: 20px;
 		line-height: 30px;
 	}
-	b {
-		display: block;
-		font-weight: 400;
-		color: var(--fd-gold);
+	.t {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 16px;
+		align-items: baseline;
+	}
+	.t strong {
+		color: var(--fd-heading-ink);
+	}
+	.fr {
+		color: var(--sl-color-gray-3);
+	}
+	.f-goal .fr,
+	.f-challenge .fr {
+		color: var(--sl-color-text-accent);
+	}
+	.d {
+		color: var(--sl-color-gray-2);
+	}
+	.m {
+		color: var(--sl-color-gray-3);
+	}
+	.m a {
+		color: var(--sl-color-text-accent);
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 4px;
 	}
 </style>

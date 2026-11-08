@@ -1,0 +1,75 @@
+---
+title: İlk içeceğin
+description: İlk yabani üzümden bir kadeh yıllanmış kırmızı şaraba, Vine & Barrel'a adım adım bir başlangıç.
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/tr';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="Fıçıların ve içeceklerin olduğu bir meyhane köşesi" />
+
+Bu rehber seni yeni bir dünyadan ilk kadeh kırmızı şaraba, oradan da yıllanmış olanına götürür. Başlamak için yalnızca vanilla malzemeleri yeter; üzümler yol boyunca gelir. Her adım, tüm ayrıntıların olduğu sayfaya bağlanır.
+
+<Steps>
+
+1. **Yabani üzüm bul.** Yabani bitkiler dünyada kümeler halinde büyür, her biri kendine uygun bir yerde. Şarap için <Item id="wild_grapes" /> lazım: elle kırarsan <Item id="red_grapes" plural /> düşer.
+
+   <WildCrops />
+
+   Hiç bulamadın mı? Köy çiftçileri ve gezgin tüccar üzüm satar, köy sandıklarında da sık sık bulunur. Bkz. [Köyler ve meyhaneler](/villages/).
+
+2. **Birkaç çalı dik.** Üzümleri tatlı orman meyvesi gibi çimene, toprağa ya da tarlaya dik. Çalı kendi kendine büyür; olgunlaşınca sağ tıkla ve {h.grapes.count[0]} ile {h.grapes.count[1]} arası üzüm topla. Bir aşama geri döner ve yeniden meyve verir, yani bir daha dikmen gerekmez. Kemik tozu hızlandırır.
+
+   <Stages prefix="grape_bush" title="Büyüyen bir üzüm çalısı" labels={['dikildi', 'büyüyor', 'yarı olgun', 'olgun']} />
+
+   Bir parti meyve suyu için {grapesPerBatch} üzüm ve bir şeker gerekir; başlamak için bir avuç çalı fazlasıyla yeter. Daha fazlası [Ürünler](/crops/) sayfasında.
+
+3. **Bir Kaynatma Kazanı yap ve ateşin üstüne koy.** <Item id="brew_kettle" /> bakırdan yapılır. Yalnızca hemen altındaki blok sıcakken demler: yanan bir kamp ateşi daha ilk günden iş görür. Alevlerin üstünde bir demir tepsiye oturur.
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **Üzüm suyu kaynat.** Kazanı açmak için sağ tıkla, içine {grapesPerBatch} üzüm ve bir şeker koy. Kazan sıcakken ok dolar, kapağın altından buhar tüter ve {seconds(juice.brewingTime)} sonra gösterge <Item id="grape_juice" /> için {juice.servings} porsiyon gösterir. Daha fazla koyarsan parti parti demlemeye devam eder. Bkz. [Kaynatma Kazanı](/brew-kettle/).
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **Çıkar.** Kazana cam şişeyle sağ tıklayarak bir porsiyon, kovayla {rules.servingsPerBucket} porsiyon al. Üzüm suyu zaten başlı başına bir içecektir: [Çakırkeyif](/tipsy/) etkisinin keskinliğini alır.
+
+6. **Bir Yıllandırma Fıçısı doldur.** Bir <Item id="aging_barrel" /> yerleştir ve kovayla ya da şişelerle sağ tıkla. Fıçı {rules.barrelCapacity} porsiyon alır: iki kova ağzına kadar doldurur. Mayalanırken aynı meyve suyundan eklemekte sakınca yok.
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **Mayalanmasını bekle.** **{days(wine.fermentingTime)}** sonra meyve suyu <Item id="red_wine" /> olmuştur. Fıçı nasıl gittiğini sana söyler: üstteki cam hava kilidi mayalanırken kabarcıklanır, boş elle sağ tıklayınca da *Kırmızı Şarap · 8 porsiyon · mayalanıyor, yarın sabah hazır* gibi bir durum satırı çıkar. Saat oyun zamanıyla işler, yani geceyi uyuyarak geçirmek de sayılır. Bkz. [Yıllandırma Fıçısı](/aging-barrel/).
+
+8. **Bir kadeh çek.** Boş bir <Item id="wine_glass" /> ile fıçıya sağ tıklayıp bir porsiyon çek. Şarap kadehe, bira, bal şarabı ve elma şarabı <Item id="mug" /> içine gider; yanlış kabı tutuyorsan fıçı söyler.
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **İç.** <Item id="red_wine" /> sana <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> ve bir seviye <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" /> verir. Kadehi geri alırsın. Yakınındaki bir arkadaşınla aynı anda içersen **Şerefe!** olur: herkesin etkisi %{rules.cheersBonusPercent} daha uzun sürer.
+
+10. **Gerisi yıllansın.** Fıçıya **{days(wine.agingTime)}** daha dokunma; kalanı <Item id="aged_red_wine" /> olur: parıldayan daha derin bir kırmızı ve <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
+    Yumuşak bir mantar patlaması ve üstte kırmızı bir balmumu mührü bittiğini söyler.
+
+</Steps>
+
+<Aside type="tip" title="Bekleyemiyor musun?">
+Yıllanma aşamasında çektiğin her kadeh, yıllanacak bir porsiyon eksiği demek. İki fıçı doldur: birinden iç, diğerine yıllanana kadar dokunma. Ya da fıçıları çoktan dolu, birkaçı da yıllanmış bir köy meyhanesi bul. Bkz. [Köyler ve meyhaneler](/villages/).
+</Aside>
+
+## Sonra nereye
+
+- Öbür içecekleri demle: beyaz şarap için beyaz üzüm, tatlı orman meyvesi şarabı için tatlı orman meyvesi, pale ale için arpa ve şerbetçiotu, buğday birası için buğday ve şerbetçiotu, bal şarabı için bal, elma şarabı için elma. Bkz. [İçecekler](/drinks/) ve [Ürünler](/crops/).
+- Birkaç fıçıyı yan yana koy ve düzgün bir mahzen kur: [Mahzen kurmak](/guides/cellar/).
+- Sınırlarını bil: her [Çakırkeyif](/tipsy/) seviyesi ne yapar ve nasıl ayılırsın.
+- Farmer's Delight ile onun ocağında demle, şarabınla yemek pişir: [Farmer's Delight](/farmers-delight/).
