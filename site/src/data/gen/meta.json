@@ -1,7 +1,7 @@
 {
-	"modVersion": "1.0.0+neoforged.1",
-	"fabricModVersion": "1.0.0+fabric.1",
-	"version": "1.0.0",
+	"modVersion": "1.0.1+neoforged.1",
+	"fabricModVersion": "1.0.1+fabric.1",
+	"version": "1.0.1",
 	"minecraft": "26.3",
 	"neoforge": "26.3.0.101",
 	"fabricLoader": "0.20.1",

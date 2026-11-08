@@ -34,9 +34,10 @@ public class PlacedDrinksRenderer implements BlockEntityRenderer<PlacedDrinksBlo
 	private static final Identifier FOAM = VineAndBarrel.id("block/placed_drink_foam");
 	/** Liquid boxes in spot 0 (pixels); spots 1-3 are moved by 8 px in x and/or z, as in the block models. */
 	private static final float[] GLASS_LIQUID = {3, 3.5F, 3, 5, 5, 5};
-	private static final float[] MUG_LIQUID = {2.5F, 0.75F, 2.5F, 5.5F, 4, 5.5F};
+	private static final float[] MUG_LIQUID = {2.5F, 1, 2.5F, 5.5F, 4, 5.5F};
 	private static final float[] MUG_FOAM = {2.5F, 4, 2.5F, 5.5F, 5.25F, 5.5F};
-	private static final float GROW = 0.02F;
+	/** How far the shimmer stands out from the drink (pixels): clear of it under shaders too, still inside the 0.5 px glass. */
+	private static final float GROW = 0.05F;
 
 	public static class State extends BlockEntityRenderState
 	{
@@ -81,25 +82,32 @@ public class PlacedDrinksRenderer implements BlockEntityRenderer<PlacedDrinksBlo
 				float dx = (i & 1) * 8;
 				float dz = (i >> 1) * 8;
 				if (state.spots[i] == PlacedDrink.GLASS_AGED) {
-					box(consumer, at, GLASS_LIQUID, dx, dz, liquid, state.colors[i], state.lightCoords);
+					box(consumer, at, GLASS_LIQUID, dx, dz, liquid, state.colors[i], state.lightCoords, true);
 				} else if (state.spots[i] == PlacedDrink.MUG_AGED) {
-					box(consumer, at, MUG_LIQUID, dx, dz, liquid, state.colors[i], state.lightCoords);
-					box(consumer, at, MUG_FOAM, dx, dz, foam, 0xFFFFFFFF, state.lightCoords);
+					// the beer up to exactly where the foam starts, without a top inside it: the two never overlap
+					box(consumer, at, MUG_LIQUID, dx, dz, liquid, state.colors[i], state.lightCoords, false);
+					box(consumer, at, MUG_FOAM, dx, dz, foam, 0xFFFFFFFF, state.lightCoords, true);
 				}
 			}
 		});
 	}
 
-	private static void box(VertexConsumer out, PoseStack.Pose at, float[] px, float dx, float dz, TextureAtlasSprite sprite, int color, int light) {
-		float x0 = (px[0] + dx - GROW) / 16, y0 = (px[1] - GROW) / 16, z0 = (px[2] + dz - GROW) / 16;
-		float x1 = (px[3] + dx + GROW) / 16, y1 = (px[4] + GROW) / 16, z1 = (px[5] + dz + GROW) / 16;
+	/**
+	 * The box a hair larger to the sides, with its top (a hair higher too) or, under the foam, without one. The bottom
+	 * sits on the vessel or on the box below and never shows: no face, and it starts right where the drink does.
+	 */
+	private static void box(VertexConsumer out, PoseStack.Pose at, float[] px, float dx, float dz, TextureAtlasSprite sprite, int color, int light,
+							boolean top) {
+		float x0 = (px[0] + dx - GROW) / 16, y0 = px[1] / 16, z0 = (px[2] + dz - GROW) / 16;
+		float x1 = (px[3] + dx + GROW) / 16, y1 = (px[4] + (top ? GROW : 0)) / 16, z1 = (px[5] + dz + GROW) / 16;
 		float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
-		// up, north, south, west, east (the bottom sits on the vessel and never shows); corners take the UVs
-		// (u0, v0), (u0, v1), (u1, v1), (u1, v0) in this order
-		vertex(out, at, x0, y1, z0, u0, v0, color, light, 0, 1, 0);
-		vertex(out, at, x0, y1, z1, u0, v1, color, light, 0, 1, 0);
-		vertex(out, at, x1, y1, z1, u1, v1, color, light, 0, 1, 0);
-		vertex(out, at, x1, y1, z0, u1, v0, color, light, 0, 1, 0);
+		// up, north, south, west, east; corners take the UVs (u0, v0), (u0, v1), (u1, v1), (u1, v0) in this order
+		if (top) {
+			vertex(out, at, x0, y1, z0, u0, v0, color, light, 0, 1, 0);
+			vertex(out, at, x0, y1, z1, u0, v1, color, light, 0, 1, 0);
+			vertex(out, at, x1, y1, z1, u1, v1, color, light, 0, 1, 0);
+			vertex(out, at, x1, y1, z0, u1, v0, color, light, 0, 1, 0);
+		}
 		vertex(out, at, x1, y1, z0, u0, v0, color, light, 0, 0, -1);
 		vertex(out, at, x1, y0, z0, u0, v1, color, light, 0, 0, -1);
 		vertex(out, at, x0, y0, z0, u1, v1, color, light, 0, 0, -1);

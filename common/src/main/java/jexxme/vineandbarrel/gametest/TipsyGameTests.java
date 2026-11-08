@@ -786,7 +786,7 @@ public final class TipsyGameTests
 		}
 		helper.assertFalse(Blackout.isOut(player), "awake again after the blackout");
 		helper.assertValueEqual(Tipsy.getLevel(player), 1, "Tipsy after waking");
-		helper.assertTrue(player.getFoodData().getFoodLevel() <= 12, "woke up hungry: " + player.getFoodData().getFoodLevel());
+		helper.assertTrue(player.getFoodData().getFoodLevel() <= 20 - Blackout.HUNGER_LOST, "woke up hungry: " + player.getFoodData().getFoodLevel());
 		helper.assertTrue(player.hasEffect(MobEffects.NAUSEA) && player.hasEffect(MobEffects.SLOWNESS), "woke up shaky");
 		helper.assertValueEqual(countItems(player), itemsBefore + 1, "a mystery souvenir in the pockets");
 		helper.succeed();

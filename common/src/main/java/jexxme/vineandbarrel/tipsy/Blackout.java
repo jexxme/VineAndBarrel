@@ -74,8 +74,8 @@ public final class Blackout
 	/** Endings not seen yet weigh this much more in the draw. */
 	public static final int UNSEEN_BONUS = 3;
 	public static final int PUMPKIN_ONE_IN = 6;
-	public static final int HUNGER_LOST = 8;
-	public static final int SHAKY_TICKS = 30 * 20;
+	public static final int HUNGER_LOST = 6;
+	public static final int SHAKY_TICKS = 15 * 20;
 	/** Lying, the eyes look straight ahead along the ground (the camera is tipped on its side). */
 	static final float LIE_PITCH = 0.0F;
 

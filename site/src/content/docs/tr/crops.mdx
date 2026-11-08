@@ -24,7 +24,7 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 
 Bizim dört ürünümüz içecekleri besler: kırmızı şarap için <Item id="red_grapes" plural />, beyaz şarap için <Item id="white_grapes" plural />, iki bira için <Item id="hops" />, ale için <Item id="barley" />. Diğer malzemeler vanilla: tatlı orman meyvesi şarabı için <Item id="sweet_berries" />, buğday birası için <Item id="wheat" />, elma şarabı için <Item id="apple" plural />, bal şarabı için <Item id="honey_bottle" plural />.
 
-<Shot src="vineyard.jpg" caption="Çitle çevrili, olgun üzüm çalılarıyla dolu bir bağ; sıra başlarında fener direkleri." />
+<Shot src="vineyard.jpg" caption="Alacakaranlıkta bir bağ: sıra sıra olgun üzüm çalıları, yanlarında bahçe kafeslerine tırmanan üzüm asmaları." />
 
 ## Üzüm ve şerbetçiotu çalıları
 
@@ -84,7 +84,7 @@ Tarlaya <Item id="barley_seeds" /> ek. Arpa tam olarak buğday gibi, {barleyStag
 	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
 </table>
 
-<Shot src="fields.jpg" caption="Sulanmış tarlada, şerbetçiotu bahçesinin yanında hasada hazır arpa." />
+<Shot src="fields.jpg" caption="Gün batımında olgun bir arpa tarlası, hasada hazır." />
 
 ## Depolama blokları
 

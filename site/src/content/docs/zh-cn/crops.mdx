@@ -27,7 +27,7 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 <Item id="sweet_berries" />酿甜浆果酒，<Item id="wheat" />酿小麦啤酒，<Item id="apple" plural />酿苹果西打，
 <Item id="honey_bottle" plural />酿蜂蜜酒。
 
-<Shot src="vineyard.jpg" caption="围着栅栏的葡萄园，灌木上挂满成熟的葡萄，每排的排头立着灯笼柱。" />
+<Shot src="vineyard.jpg" caption="暮色中的葡萄园：一排排挂满成熟葡萄的灌木，旁边的葡萄藤顺着棚架往上爬。" />
 
 ## 葡萄与啤酒花灌木
 
@@ -98,7 +98,7 @@ Farmer's Delight 的绳子挂在灌木上方，作用和棚架一样，就像 FD
 	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
 </table>
 
-<Shot src="fields.jpg" caption="浇过水的耕地上的大麦，紧挨着啤酒花园，已经可以收获了。" />
+<Shot src="fields.jpg" caption="夕阳下一片成熟的大麦田，已经可以收获了。" />
 
 ## 储存方块
 

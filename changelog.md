@@ -1,3 +1,9 @@
+## 1.0.1
+
+- Placed mugs no longer flicker at the bottom with shaders, and aged ones lose the flickering line between beer and foam.
+- Tipsy V: you trip a little more often (sprinting too); the 30-second break between trips stays.
+- A gentler hangover after a blackout: shaky for 15 seconds instead of 30, and three hunger shanks lighter instead of four.
+
 ## 1.0.0
 
 - **Fabric:** Vine & Barrel runs on Fabric for Minecraft 26.3 too (Fabric Loader 0.20.1 and Fabric API 0.165.2 or newer), with all the same content, per-world server settings included. There, Farmer's Delight Refabricated takes the place of Farmer's Delight Neoforged.

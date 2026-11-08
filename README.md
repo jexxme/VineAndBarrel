@@ -1,17 +1,13 @@
-<p align="center" style="text-align:center"><img src="branding/store/hero.jpg" width="800" alt="Vine & Barrel: a cozy brewing mod. Beer, wine, mead and cider."></p>
+<p align="center" style="text-align:center"><img src="branding/store/hero.png" width="678" alt="Vine & Barrel: a cozy brewing mod. Beer, wine, mead and cider."></p>
 
 <p align="center" style="text-align:center"><b>A cozy brewing mod: beer, wine, mead and cider.</b><br>
 Grow the crops, boil them in a copper kettle, age them in oak barrels, and pour a round for your friends.</p>
 
 <p align="center" style="text-align:center"><a href="https://www.curseforge.com/minecraft/mc-mods/vine-and-barrel"><img src="https://img.shields.io/badge/CurseForge-download-f16436?style=for-the-badge&logo=curseforge&logoColor=white" alt="Download on CurseForge"></a> <a href="https://jexxme.github.io/VineAndBarrel/"><img src="https://img.shields.io/badge/Wiki-12%20languages-c8913a?style=for-the-badge&logo=bookstack&logoColor=white" alt="The wiki, in 12 languages"></a></p>
 
-<p align="center" style="text-align:center"><b><a href="https://jexxme.github.io/VineAndBarrel/">Wiki</a> · <a href="https://github.com/jexxme/VineAndBarrel">Source</a> · <a href="https://github.com/jexxme/VineAndBarrel/issues">Issues</a></b></p>
-
 <p align="center" style="text-align:center"><img src="branding/store/flow-1.png" width="172" alt="1. Grow hops and grapes"> <img src="branding/store/flow-2.png" width="172" alt="2. Brew them into juice and wort in the kettle"> <img src="branding/store/flow-3.png" width="172" alt="3. Age them into beer and wine in a barrel"> <img src="branding/store/flow-4.png" width="172" alt="4. Serve them and say cheers"></p>
 
 Everything happens right in the world. The kettle bubbles on the fire, the barrel's airlock blubs while it ferments, and a cork pops when the batch is aged. The secret ingredient is patience. It's a whole mod on its own, and it fits right in with Farmer's Delight.
-
-<p align="center" style="text-align:center">Every recipe, every number, every drink: <b><a href="https://jexxme.github.io/VineAndBarrel/">the wiki</a></b>, in 12 languages.</p>
 
 <p align="center" style="text-align:center"><img src="branding/store/menu.png" width="448" alt="On tap: Pale Ale, Wheat Beer, Mead, Hard Cider, Red Wine, White Wine, Sweet Berry Wine and, with Farmer's Delight, Melon Wine, each with what it's brewed from and its buff. Young drinks give a level I buff for 45 seconds, aged ones level II for 90 seconds; Wheat Beer fills you up at once instead."></p>
 
@@ -30,7 +26,11 @@ Everything happens right in the world. The kettle bubbles on the fire, the barre
 - **Barley** grows on farmland, just like wheat.
 - Bees help your crops grow. Foxes steal ripe grapes, and horses and llamas love barley.
 
-*[More on the wiki →](https://jexxme.github.io/VineAndBarrel/crops/)*
+<p align="right" style="text-align:right"><em><a href="https://jexxme.github.io/VineAndBarrel/crops/">More on the wiki →</a></em></p>
+
+<p align="center" style="text-align:center"><img src="branding/store/clips/loop-harvest.gif" width="584" alt="Picking ripe grapes off a bush"></p>
+
+<p align="center" style="text-align:center"><img src="branding/store/clips/loop-trellis.gif" width="584" alt="Grapes climbing a trellis at golden hour"></p>
 
 <p align="center" style="text-align:center"><img src="branding/store/h-brew.png" width="800" alt="Brew"></p>
 
@@ -42,7 +42,9 @@ The **Brew Kettle** is a copper pot. Set it over a campfire, a fire, lava or a m
 - The kettle weathers like any copper. Wax it to keep the shine.
 - The juices are good drinks too, and they sober you up a little.
 
-*[More on the wiki →](https://jexxme.github.io/VineAndBarrel/brew-kettle/)*
+<p align="right" style="text-align:right"><em><a href="https://jexxme.github.io/VineAndBarrel/brew-kettle/">More on the wiki →</a></em></p>
+
+<p align="center" style="text-align:center"><img src="branding/store/clips/loop-kettle.gif" width="584" alt="The Brew Kettle bubbling over a campfire"></p>
 
 <p align="center" style="text-align:center"><img src="branding/store/h-age.png" width="800" alt="Age"></p>
 
@@ -53,14 +55,18 @@ Pour the brew into an **Aging Barrel** and wait. The barrel shows you everything
 - A barrel holds **8 servings**, two buckets' worth. Right-click it with an empty hand to see how long is left.
 - Barrels join into racks and stack into walls. Hoppers and dispensers fill and empty them.
 
-*[More on the wiki →](https://jexxme.github.io/VineAndBarrel/aging-barrel/)*
+<p align="right" style="text-align:right"><em><a href="https://jexxme.github.io/VineAndBarrel/aging-barrel/">More on the wiki →</a></em></p>
 
 <p align="center" style="text-align:center"><img src="branding/store/h-serve.png" width="800" alt="Serve"></p>
 
 Right-click a barrel with a **Mug** for beer, mead and cider, or a **Wine Glass** for wine.
 
+<p align="center" style="text-align:center"><img src="branding/store/clips/loop-tap.gif" width="584" alt="Tapping a barrel into a mug"></p>
+
 - **Set your drink down.** Sneak and right-click a block. Four fit on one block, and aged ones shimmer there too.
 - **Cheers!** Finish a drink within 3 seconds of a friend, up to 5 blocks apart. Glasses ring, mugs clunk, and both buffs last 20% longer.
+
+<p align="center" style="text-align:center"><img src="branding/store/clips/loop-cheers.gif" width="584" alt="Friends clinking mugs and glasses at a tavern table"></p>
 
 <p align="center" style="text-align:center"><img src="branding/store/h-tipsy.png" width="800" alt="Tipsy"></p>
 
@@ -72,7 +78,9 @@ Every drink adds a level of **Tipsy**, up to five. The first three are the fun p
 - **One more at level V** and it's lights out. Where you wake up depends on the night. You wake up hungry, but you never lose any items.
 - **To sober up**, wait (90 seconds a level), drink water, juice or milk, or sleep through the night.
 
-*[More on the wiki →](https://jexxme.github.io/VineAndBarrel/tipsy/)*
+<p align="right" style="text-align:right"><em><a href="https://jexxme.github.io/VineAndBarrel/tipsy/">More on the wiki →</a></em></p>
+
+<p align="center" style="text-align:center"><img src="branding/store/clips/loop-tipsy.gif" width="584" alt="A tipsy player stumbling across a village square"></p>
 
 <p align="center" style="text-align:center"><img src="branding/store/h-taverns.png" width="800" alt="Village taverns"></p>
 
@@ -83,7 +91,7 @@ About **one village in three** has a tavern, built in its village's style: plain
 - The barrels are already full, and some are aged. Bring a mug.
 - The tavern chest has seeds, mugs and glasses to start your own brewery.
 
-*[More on the wiki →](https://jexxme.github.io/VineAndBarrel/villages/)*
+<p align="right" style="text-align:right"><em><a href="https://jexxme.github.io/VineAndBarrel/villages/">More on the wiki →</a></em></p>
 
 <p align="center" style="text-align:center"><img src="branding/store/h-fd.png" width="800" alt="With Farmer's Delight"></p>
 
@@ -98,7 +106,7 @@ Vine & Barrel works fine on its own. Add Farmer's Delight and the two fit togeth
 
 That's [Farmer's Delight Neoforged](https://modrinth.com/mod/farmers-delight-neoforged) on NeoForge and [Farmer's Delight Refabricated](https://modrinth.com/mod/farmers-delight-refabricated) on Fabric.
 
-*[More on the wiki →](https://jexxme.github.io/VineAndBarrel/farmers-delight/)*
+<p align="right" style="text-align:right"><em><a href="https://jexxme.github.io/VineAndBarrel/farmers-delight/">More on the wiki →</a></em></p>
 
 <p align="center" style="text-align:center"><img src="branding/store/h-compat.png" width="800" alt="Plays well with others"></p>
 
@@ -119,7 +127,7 @@ All optional. They switch on by themselves.
 - Server owners can turn off slurred chat, stumbling, lights out and stray punches one by one.
 - **All in game:** Mods, Vine & Barrel, Config on NeoForge, or the same button with [Mod Menu](https://modrinth.com/mod/modmenu) on Fabric.
 
-*[More on the wiki →](https://jexxme.github.io/VineAndBarrel/reference/config/)*
+<p align="right" style="text-align:right"><em><a href="https://jexxme.github.io/VineAndBarrel/reference/config/">More on the wiki →</a></em></p>
 
 <p align="center" style="text-align:center"><img src="branding/store/h-download.png" width="800" alt="Which file do I need?"></p>
 
@@ -142,7 +150,7 @@ Older Minecraft versions (26.1–26.2, NeoForge): planned.
 - **Is this part of Farmer's Delight?** No. Farmer's Delight is vectorwing's mod. Vine & Barrel is a separate project made to sit next to it, and it isn't affiliated with or endorsed by vectorwing.
 - **Found a bug, or have an idea?** Open an issue on [GitHub](https://github.com/jexxme/VineAndBarrel/issues). The [wiki](https://jexxme.github.io/VineAndBarrel/) has every recipe and every number, in 12 languages.
 
-<p align="center" style="text-align:center"><img src="branding/store/h-dev.png" width="800" alt="Building and contributing"></p>
+<p align="center" style="text-align:center"><img src="branding/store/h-dev.png" width="800" alt="Contributing"></p>
 
 Bug reports and pull requests are welcome. How to build, test and work on the Minecraft version branches: [CONTRIBUTING.md](CONTRIBUTING.md).
 

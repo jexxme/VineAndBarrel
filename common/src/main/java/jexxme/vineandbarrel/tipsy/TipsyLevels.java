@@ -83,10 +83,10 @@ public final class TipsyLevels
 		// IV, the turn: Nausea now and then, more and long blinks, Weakness, no buffs, Rowdy, cut off, the courage is gone
 		new Level(4, 7.8F, 0.64F, 16 * S, 3, 0.0, 0.0, 30 * S, new int[] {3, 5}, true, 25 * S, true, -1, -1, false, 30 * S, true, 0, 0, false, false),
 		// V, really drunk: legs (drift, stumbles, trips, Slowness II), the spin (sway, FOV, Nausea in waves), heavy eyes
-		new Level(5, 15.6F, 0.8F, 7 * S, 2, 0.0, 0.0, 25 * S, new int[] {3, 5}, true, 10 * S, true, 1, 0, false, 15 * S, true, 3 * S, 20, true, true));
+		new Level(5, 15.6F, 0.8F, 7 * S, 2, 0.0, 0.0, 25 * S, new int[] {3, 5}, true, 10 * S, true, 1, 0, false, 15 * S, true, 3 * S, 12, true, true));
 
 	/** Sprinting at V, one in this many unsteady-legs rolls is a trip. */
-	public static final int SPRINT_TRIP_ONE_IN = 8;
+	public static final int SPRINT_TRIP_ONE_IN = 5;
 
 	private TipsyLevels() {
 	}

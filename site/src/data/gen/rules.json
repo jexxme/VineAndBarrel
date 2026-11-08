@@ -198,7 +198,7 @@
 		"tripTicks": 49,
 		"tripDownTicks": 24,
 		"tripMonsterFree": 10,
-		"sprintTripOneIn": 8,
+		"sprintTripOneIn": 5,
 		"levels": [
 			{
 				"level": 1,
@@ -341,7 +341,7 @@
 				"rowdySwingOneIn": 300,
 				"cutOff": true,
 				"legsOneIn": 60,
-				"tripOneIn": 20,
+				"tripOneIn": 12,
 				"drift": true,
 				"fovBreathing": true,
 				"tooltipGood": [],
@@ -367,11 +367,11 @@
 		],
 		"blackout": {
 			"ticks": 170,
-			"shakyTicks": 600,
+			"shakyTicks": 300,
 			"wakeAt": 100,
 			"unseenBonus": 3,
 			"pumpkinOneIn": 6,
-			"hungerLost": 8,
+			"hungerLost": 6,
 			"ranges": {
 				"home": 128,
 				"openMin": 20,
