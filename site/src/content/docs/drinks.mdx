@@ -1,0 +1,57 @@
+---
+title: Drinks
+description: Every wine, beer and cider in Vine & Barrel, what it's made from, what it's served in and the buff it gives.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../components/mc/Item.astro';
+import Render from '../../components/mc/Render.astro';
+import Recipe from '../../components/recipes/Recipe.astro';
+import DrinkTable from '../../components/data/DrinkTable.astro';
+import Shot from '../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../lib/data';
+
+export const sample = items[drinks[0].id];
+
+Every drink follows the same rules:
+
+- It gives **one buff** and one level of [Tipsy](/tipsy/). A drink that takes you to Tipsy {roman(rules.tipsy.noBuffLevel - 1)} or higher gives
+  no buff at all: you're too drunk to enjoy it.
+- You can always drink it, even when you're full. It takes {sample.consumable.seconds} s, and you get the empty
+  <Item id="mug" /> or <Item id="wine_glass" /> back.
+- It stacks to **{sample.stack}**.
+- A **young** drink's buff is level {roman(rules.youngBuffAmplifier)} for **{duration(rules.youngBuffTicks)}**. The **aged** version has a deeper
+  colour, shimmers like an enchanted item, and its buff is level **{roman(rules.agedBuffAmplifier)} for {duration(rules.agedBuffTicks)}**. Wheat beer's
+  Saturation works at once instead: a few food points.
+- Put down on a table, an aged drink's surface glows softly, so you can tell it from a young one even at night.
+
+## Wines and beers
+
+<DrinkTable />
+
+Saturation works differently from the other buffs: it doesn't last, each tick of it fills one hunger point (and some
+saturation) right away. That's why wheat beer shows food points instead of a time.
+
+## With Farmer's Delight
+
+Two more drinks ferment from Farmer's Delight's own bottles. The items always exist, but you can only make them with FD
+installed. See [Farmer's Delight](/farmers-delight/).
+
+<DrinkTable fd />
+
+## Vessels
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Mugs and glasses on a block" />
+
+Wine goes in a <Item id="wine_glass" />, beer and cider in a <Item id="mug" />. Both stack to {items['vineandbarrel:mug'].stack}.
+
+**Set them down:** sneak and right-click the top of a block with a mug or glass, full or empty, to put it there. Up to four
+share one block, each keeping its own drink, and you can see the drink through the glass. Right-click with an empty hand to pick one back up.
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="Mugs and glasses set down on the tables, up to four on a block." />
+
+## Cheers!
+
+When two or more players finish a drink within {rules.cheersWindowTicks / 20} seconds and {rules.cheersRadius} blocks of each
+other, glasses clink, a few sparkles go up, and everyone's buff from that drink lasts **{rules.cheersBonusPercent}% longer**.

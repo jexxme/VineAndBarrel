@@ -1,0 +1,43 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+
+# datagen cache
+src/generated/resources/.cache
+
+# other
+eclipse
+run
+logs
+docsOut
+
+# Files from Forge MDK
+forge*changelog.txt
+
+# Local playtest setup (see playtest-template/README.md)
+playtest/
+
+# Internal dev material: never committed (design doc, art workshop, previews, review page)
+/docs/
+/art/
+
+# Farmer's Delight GameTest run (runGameTestServerFd)
+run-fd
+
+# Maintainer dev tooling: its own repository, checked out here as dev/ where it is used
+/dev/

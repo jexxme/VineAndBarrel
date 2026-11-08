@@ -1,0 +1,9 @@
+{
+  "type": "vineandbarrel:aging",
+  "base": "vineandbarrel:wheat_wort_bottle",
+  "bucket": "vineandbarrel:wheat_wort_bucket",
+  "young": "vineandbarrel:wheat_beer",
+  "aged": "vineandbarrel:aged_wheat_beer",
+  "fermenting_time": 24000,
+  "aging_time": 72000
+}

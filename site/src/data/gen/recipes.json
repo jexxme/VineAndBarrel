@@ -1,0 +1,980 @@
+[
+	{
+		"id": "vineandbarrel:aging_barrel",
+		"type": "crafting_shaped",
+		"loaded": true,
+		"fdOnly": false,
+		"grid": [
+			[
+				{
+					"tag": "minecraft:planks",
+					"items": [
+						"minecraft:acacia_planks",
+						"minecraft:bamboo_planks",
+						"minecraft:birch_planks",
+						"minecraft:cherry_planks",
+						"minecraft:crimson_planks",
+						"minecraft:dark_oak_planks",
+						"minecraft:jungle_planks",
+						"minecraft:mangrove_planks",
+						"minecraft:oak_planks",
+						"minecraft:pale_oak_planks",
+						"minecraft:poplar_planks",
+						"minecraft:spruce_planks",
+						"minecraft:warped_planks"
+					],
+					"label": "Any minecraft:planks"
+				},
+				{
+					"tag": "c:nuggets/iron",
+					"items": [
+						"minecraft:iron_nugget"
+					],
+					"label": "Any iron"
+				},
+				{
+					"tag": "minecraft:planks",
+					"items": [
+						"minecraft:acacia_planks",
+						"minecraft:bamboo_planks",
+						"minecraft:birch_planks",
+						"minecraft:cherry_planks",
+						"minecraft:crimson_planks",
+						"minecraft:dark_oak_planks",
+						"minecraft:jungle_planks",
+						"minecraft:mangrove_planks",
+						"minecraft:oak_planks",
+						"minecraft:pale_oak_planks",
+						"minecraft:poplar_planks",
+						"minecraft:spruce_planks",
+						"minecraft:warped_planks"
+					],
+					"label": "Any minecraft:planks"
+				}
+			],
+			[
+				{
+					"tag": "minecraft:planks",
+					"items": [
+						"minecraft:acacia_planks",
+						"minecraft:bamboo_planks",
+						"minecraft:birch_planks",
+						"minecraft:cherry_planks",
+						"minecraft:crimson_planks",
+						"minecraft:dark_oak_planks",
+						"minecraft:jungle_planks",
+						"minecraft:mangrove_planks",
+						"minecraft:oak_planks",
+						"minecraft:pale_oak_planks",
+						"minecraft:poplar_planks",
+						"minecraft:spruce_planks",
+						"minecraft:warped_planks"
+					],
+					"label": "Any minecraft:planks"
+				},
+				{
+					"tag": "c:ingots/copper",
+					"items": [
+						"minecraft:copper_ingot"
+					],
+					"label": "Any copper"
+				},
+				{
+					"tag": "minecraft:planks",
+					"items": [
+						"minecraft:acacia_planks",
+						"minecraft:bamboo_planks",
+						"minecraft:birch_planks",
+						"minecraft:cherry_planks",
+						"minecraft:crimson_planks",
+						"minecraft:dark_oak_planks",
+						"minecraft:jungle_planks",
+						"minecraft:mangrove_planks",
+						"minecraft:oak_planks",
+						"minecraft:pale_oak_planks",
+						"minecraft:poplar_planks",
+						"minecraft:spruce_planks",
+						"minecraft:warped_planks"
+					],
+					"label": "Any minecraft:planks"
+				}
+			],
+			[
+				{
+					"tag": "minecraft:planks",
+					"items": [
+						"minecraft:acacia_planks",
+						"minecraft:bamboo_planks",
+						"minecraft:birch_planks",
+						"minecraft:cherry_planks",
+						"minecraft:crimson_planks",
+						"minecraft:dark_oak_planks",
+						"minecraft:jungle_planks",
+						"minecraft:mangrove_planks",
+						"minecraft:oak_planks",
+						"minecraft:pale_oak_planks",
+						"minecraft:poplar_planks",
+						"minecraft:spruce_planks",
+						"minecraft:warped_planks"
+					],
+					"label": "Any minecraft:planks"
+				},
+				{
+					"tag": "c:nuggets/iron",
+					"items": [
+						"minecraft:iron_nugget"
+					],
+					"label": "Any iron"
+				},
+				{
+					"tag": "minecraft:planks",
+					"items": [
+						"minecraft:acacia_planks",
+						"minecraft:bamboo_planks",
+						"minecraft:birch_planks",
+						"minecraft:cherry_planks",
+						"minecraft:crimson_planks",
+						"minecraft:dark_oak_planks",
+						"minecraft:jungle_planks",
+						"minecraft:mangrove_planks",
+						"minecraft:oak_planks",
+						"minecraft:pale_oak_planks",
+						"minecraft:poplar_planks",
+						"minecraft:spruce_planks",
+						"minecraft:warped_planks"
+					],
+					"label": "Any minecraft:planks"
+				}
+			]
+		],
+		"result": {
+			"id": "vineandbarrel:aging_barrel",
+			"count": 1
+		}
+	},
+	{
+		"id": "vineandbarrel:aging/barley_ale",
+		"type": "vineandbarrel:aging",
+		"loaded": true,
+		"fdOnly": false,
+		"base": {
+			"id": "vineandbarrel:barley_wort_bottle",
+			"count": 1
+		},
+		"bucket": {
+			"id": "vineandbarrel:barley_wort_bucket",
+			"count": 1
+		},
+		"young": {
+			"id": "vineandbarrel:barley_ale",
+			"count": 1
+		},
+		"aged": {
+			"id": "vineandbarrel:aged_barley_ale",
+			"count": 1
+		},
+		"fermentingTime": 24000,
+		"agingTime": 72000
+	},
+	{
+		"id": "vineandbarrel:aging/hard_cider",
+		"type": "vineandbarrel:aging",
+		"loaded": false,
+		"fdOnly": true,
+		"base": {
+			"id": "farmersdelight:apple_cider",
+			"count": 1
+		},
+		"bucket": null,
+		"young": {
+			"id": "vineandbarrel:hard_cider",
+			"count": 1
+		},
+		"aged": {
+			"id": "vineandbarrel:aged_hard_cider",
+			"count": 1
+		},
+		"fermentingTime": 24000,
+		"agingTime": 72000
+	},
+	{
+		"id": "vineandbarrel:aging/melon_wine",
+		"type": "vineandbarrel:aging",
+		"loaded": false,
+		"fdOnly": true,
+		"base": {
+			"id": "farmersdelight:melon_juice",
+			"count": 1
+		},
+		"bucket": null,
+		"young": {
+			"id": "vineandbarrel:melon_wine",
+			"count": 1
+		},
+		"aged": {
+			"id": "vineandbarrel:aged_melon_wine",
+			"count": 1
+		},
+		"fermentingTime": 24000,
+		"agingTime": 72000
+	},
+	{
+		"id": "vineandbarrel:aging/red_wine",
+		"type": "vineandbarrel:aging",
+		"loaded": true,
+		"fdOnly": false,
+		"base": {
+			"id": "vineandbarrel:grape_juice",
+			"count": 1
+		},
+		"bucket": {
+			"id": "vineandbarrel:grape_juice_bucket",
+			"count": 1
+		},
+		"young": {
+			"id": "vineandbarrel:red_wine",
+			"count": 1
+		},
+		"aged": {
+			"id": "vineandbarrel:aged_red_wine",
+			"count": 1
+		},
+		"fermentingTime": 24000,
+		"agingTime": 72000
+	},
+	{
+		"id": "vineandbarrel:aging/sweet_berry_wine",
+		"type": "vineandbarrel:aging",
+		"loaded": true,
+		"fdOnly": false,
+		"base": {
+			"id": "vineandbarrel:sweet_berry_juice",
+			"count": 1
+		},
+		"bucket": {
+			"id": "vineandbarrel:sweet_berry_juice_bucket",
+			"count": 1
+		},
+		"young": {
+			"id": "vineandbarrel:sweet_berry_wine",
+			"count": 1
+		},
+		"aged": {
+			"id": "vineandbarrel:aged_sweet_berry_wine",
+			"count": 1
+		},
+		"fermentingTime": 24000,
+		"agingTime": 72000
+	},
+	{
+		"id": "vineandbarrel:aging/wheat_beer",
+		"type": "vineandbarrel:aging",
+		"loaded": true,
+		"fdOnly": false,
+		"base": {
+			"id": "vineandbarrel:wheat_wort_bottle",
+			"count": 1
+		},
+		"bucket": {
+			"id": "vineandbarrel:wheat_wort_bucket",
+			"count": 1
+		},
+		"young": {
+			"id": "vineandbarrel:wheat_beer",
+			"count": 1
+		},
+		"aged": {
+			"id": "vineandbarrel:aged_wheat_beer",
+			"count": 1
+		},
+		"fermentingTime": 24000,
+		"agingTime": 72000
+	},
+	{
+		"id": "vineandbarrel:barley_bale",
+		"type": "crafting_shaped",
+		"loaded": true,
+		"fdOnly": false,
+		"grid": [
+			[
+				{
+					"items": [
+						"vineandbarrel:barley"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:barley"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:barley"
+					]
+				}
+			],
+			[
+				{
+					"items": [
+						"vineandbarrel:barley"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:barley"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:barley"
+					]
+				}
+			],
+			[
+				{
+					"items": [
+						"vineandbarrel:barley"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:barley"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:barley"
+					]
+				}
+			]
+		],
+		"result": {
+			"id": "vineandbarrel:barley_bale",
+			"count": 1
+		}
+	},
+	{
+		"id": "vineandbarrel:barley_from_bale",
+		"type": "crafting_shapeless",
+		"loaded": true,
+		"fdOnly": false,
+		"ingredients": [
+			{
+				"items": [
+					"vineandbarrel:barley_bale"
+				]
+			}
+		],
+		"result": {
+			"id": "vineandbarrel:barley",
+			"count": 9
+		}
+	},
+	{
+		"id": "vineandbarrel:brew_kettle",
+		"type": "crafting_shaped",
+		"loaded": true,
+		"fdOnly": false,
+		"grid": [
+			[
+				{
+					"items": [
+						"minecraft:brick"
+					]
+				},
+				{
+					"tag": "c:ingots/copper",
+					"items": [
+						"minecraft:copper_ingot"
+					],
+					"label": "Any copper"
+				},
+				{
+					"items": [
+						"minecraft:brick"
+					]
+				}
+			],
+			[
+				{
+					"tag": "c:ingots/copper",
+					"items": [
+						"minecraft:copper_ingot"
+					],
+					"label": "Any copper"
+				},
+				{
+					"tag": "c:buckets/water",
+					"items": [
+						"minecraft:water_bucket"
+					],
+					"label": "Any water"
+				},
+				{
+					"tag": "c:ingots/copper",
+					"items": [
+						"minecraft:copper_ingot"
+					],
+					"label": "Any copper"
+				}
+			],
+			[
+				{
+					"tag": "c:ingots/copper",
+					"items": [
+						"minecraft:copper_ingot"
+					],
+					"label": "Any copper"
+				},
+				{
+					"tag": "c:ingots/copper",
+					"items": [
+						"minecraft:copper_ingot"
+					],
+					"label": "Any copper"
+				},
+				{
+					"tag": "c:ingots/copper",
+					"items": [
+						"minecraft:copper_ingot"
+					],
+					"label": "Any copper"
+				}
+			]
+		],
+		"result": {
+			"id": "vineandbarrel:brew_kettle",
+			"count": 1
+		}
+	},
+	{
+		"id": "vineandbarrel:brewing/barley_wort",
+		"type": "vineandbarrel:brewing",
+		"loaded": true,
+		"fdOnly": false,
+		"ingredients": [
+			{
+				"items": [
+					"vineandbarrel:barley"
+				]
+			},
+			{
+				"items": [
+					"vineandbarrel:barley"
+				]
+			},
+			{
+				"items": [
+					"vineandbarrel:barley"
+				]
+			},
+			{
+				"items": [
+					"vineandbarrel:hops"
+				]
+			}
+		],
+		"result": {
+			"id": "vineandbarrel:barley_wort_bottle",
+			"count": 4
+		},
+		"bucket": {
+			"id": "vineandbarrel:barley_wort_bucket",
+			"count": 1
+		},
+		"servings": 4,
+		"brewingTime": 200,
+		"experience": 0.35
+	},
+	{
+		"id": "vineandbarrel:brewing/grape_juice",
+		"type": "vineandbarrel:brewing",
+		"loaded": true,
+		"fdOnly": false,
+		"ingredients": [
+			{
+				"items": [
+					"vineandbarrel:red_grapes"
+				]
+			},
+			{
+				"items": [
+					"vineandbarrel:red_grapes"
+				]
+			},
+			{
+				"items": [
+					"vineandbarrel:red_grapes"
+				]
+			},
+			{
+				"items": [
+					"vineandbarrel:red_grapes"
+				]
+			},
+			{
+				"items": [
+					"minecraft:sugar"
+				]
+			}
+		],
+		"result": {
+			"id": "vineandbarrel:grape_juice",
+			"count": 4
+		},
+		"bucket": {
+			"id": "vineandbarrel:grape_juice_bucket",
+			"count": 1
+		},
+		"servings": 4,
+		"brewingTime": 200,
+		"experience": 0.35
+	},
+	{
+		"id": "vineandbarrel:brewing/sweet_berry_juice",
+		"type": "vineandbarrel:brewing",
+		"loaded": true,
+		"fdOnly": false,
+		"ingredients": [
+			{
+				"items": [
+					"minecraft:sweet_berries"
+				]
+			},
+			{
+				"items": [
+					"minecraft:sweet_berries"
+				]
+			},
+			{
+				"items": [
+					"minecraft:sweet_berries"
+				]
+			},
+			{
+				"items": [
+					"minecraft:sweet_berries"
+				]
+			},
+			{
+				"items": [
+					"minecraft:sugar"
+				]
+			}
+		],
+		"result": {
+			"id": "vineandbarrel:sweet_berry_juice",
+			"count": 4
+		},
+		"bucket": {
+			"id": "vineandbarrel:sweet_berry_juice_bucket",
+			"count": 1
+		},
+		"servings": 4,
+		"brewingTime": 200,
+		"experience": 0.35
+	},
+	{
+		"id": "vineandbarrel:brewing/wheat_wort",
+		"type": "vineandbarrel:brewing",
+		"loaded": true,
+		"fdOnly": false,
+		"ingredients": [
+			{
+				"items": [
+					"minecraft:wheat"
+				]
+			},
+			{
+				"items": [
+					"minecraft:wheat"
+				]
+			},
+			{
+				"items": [
+					"minecraft:wheat"
+				]
+			},
+			{
+				"items": [
+					"vineandbarrel:hops"
+				]
+			}
+		],
+		"result": {
+			"id": "vineandbarrel:wheat_wort_bottle",
+			"count": 4
+		},
+		"bucket": {
+			"id": "vineandbarrel:wheat_wort_bucket",
+			"count": 1
+		},
+		"servings": 4,
+		"brewingTime": 200,
+		"experience": 0.35
+	},
+	{
+		"id": "vineandbarrel:cooking/beer_battered_fish",
+		"type": "farmersdelight:cooking",
+		"loaded": false,
+		"fdOnly": true,
+		"ingredients": [
+			{
+				"tag": "c:foods/safe_raw_fish",
+				"items": [],
+				"label": "Any raw fish"
+			},
+			{
+				"items": [
+					"vineandbarrel:barley_ale",
+					"vineandbarrel:aged_barley_ale"
+				],
+				"any": [
+					{
+						"items": [
+							"vineandbarrel:barley_ale"
+						]
+					},
+					{
+						"items": [
+							"vineandbarrel:aged_barley_ale"
+						]
+					}
+				]
+			},
+			{
+				"tag": "c:crops/wheat",
+				"items": [
+					"minecraft:wheat"
+				],
+				"label": "Any wheat"
+			}
+		],
+		"result": {
+			"id": "vineandbarrel:beer_battered_fish",
+			"count": 1
+		},
+		"cookingtime": 200,
+		"experience": 1,
+		"container": {
+			"id": "minecraft:bowl",
+			"count": 1
+		}
+	},
+	{
+		"id": "vineandbarrel:cooking/wine_braised_beef",
+		"type": "farmersdelight:cooking",
+		"loaded": false,
+		"fdOnly": true,
+		"ingredients": [
+			{
+				"tag": "c:foods/raw_beef",
+				"items": [],
+				"label": "Any raw beef"
+			},
+			{
+				"items": [
+					"vineandbarrel:red_wine",
+					"vineandbarrel:aged_red_wine"
+				],
+				"any": [
+					{
+						"items": [
+							"vineandbarrel:red_wine"
+						]
+					},
+					{
+						"items": [
+							"vineandbarrel:aged_red_wine"
+						]
+					}
+				]
+			},
+			{
+				"tag": "c:crops/onion",
+				"items": [],
+				"label": "Any onion"
+			},
+			{
+				"tag": "c:crops/carrot",
+				"items": [
+					"minecraft:carrot"
+				],
+				"label": "Any carrot"
+			}
+		],
+		"result": {
+			"id": "vineandbarrel:wine_braised_beef",
+			"count": 1
+		},
+		"cookingtime": 200,
+		"experience": 1,
+		"container": {
+			"id": "minecraft:bowl",
+			"count": 1
+		}
+	},
+	{
+		"id": "vineandbarrel:grape_crate",
+		"type": "crafting_shaped",
+		"loaded": true,
+		"fdOnly": false,
+		"grid": [
+			[
+				{
+					"items": [
+						"vineandbarrel:red_grapes"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:red_grapes"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:red_grapes"
+					]
+				}
+			],
+			[
+				{
+					"items": [
+						"vineandbarrel:red_grapes"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:red_grapes"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:red_grapes"
+					]
+				}
+			],
+			[
+				{
+					"items": [
+						"vineandbarrel:red_grapes"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:red_grapes"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:red_grapes"
+					]
+				}
+			]
+		],
+		"result": {
+			"id": "vineandbarrel:grape_crate",
+			"count": 1
+		}
+	},
+	{
+		"id": "vineandbarrel:hops_crate",
+		"type": "crafting_shaped",
+		"loaded": true,
+		"fdOnly": false,
+		"grid": [
+			[
+				{
+					"items": [
+						"vineandbarrel:hops"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:hops"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:hops"
+					]
+				}
+			],
+			[
+				{
+					"items": [
+						"vineandbarrel:hops"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:hops"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:hops"
+					]
+				}
+			],
+			[
+				{
+					"items": [
+						"vineandbarrel:hops"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:hops"
+					]
+				},
+				{
+					"items": [
+						"vineandbarrel:hops"
+					]
+				}
+			]
+		],
+		"result": {
+			"id": "vineandbarrel:hops_crate",
+			"count": 1
+		}
+	},
+	{
+		"id": "vineandbarrel:hops_from_crate",
+		"type": "crafting_shapeless",
+		"loaded": true,
+		"fdOnly": false,
+		"ingredients": [
+			{
+				"items": [
+					"vineandbarrel:hops_crate"
+				]
+			}
+		],
+		"result": {
+			"id": "vineandbarrel:hops",
+			"count": 9
+		}
+	},
+	{
+		"id": "vineandbarrel:mug",
+		"type": "crafting_shaped",
+		"loaded": true,
+		"fdOnly": false,
+		"grid": [
+			[
+				{
+					"tag": "c:glass_blocks/colorless",
+					"items": [
+						"minecraft:glass"
+					],
+					"label": "Any colorless"
+				},
+				null,
+				{
+					"tag": "c:glass_blocks/colorless",
+					"items": [
+						"minecraft:glass"
+					],
+					"label": "Any colorless"
+				}
+			],
+			[
+				{
+					"tag": "c:glass_blocks/colorless",
+					"items": [
+						"minecraft:glass"
+					],
+					"label": "Any colorless"
+				},
+				{
+					"tag": "c:glass_blocks/colorless",
+					"items": [
+						"minecraft:glass"
+					],
+					"label": "Any colorless"
+				},
+				{
+					"tag": "c:glass_blocks/colorless",
+					"items": [
+						"minecraft:glass"
+					],
+					"label": "Any colorless"
+				}
+			]
+		],
+		"result": {
+			"id": "vineandbarrel:mug",
+			"count": 3
+		}
+	},
+	{
+		"id": "vineandbarrel:red_grapes_from_crate",
+		"type": "crafting_shapeless",
+		"loaded": true,
+		"fdOnly": false,
+		"ingredients": [
+			{
+				"items": [
+					"vineandbarrel:grape_crate"
+				]
+			}
+		],
+		"result": {
+			"id": "vineandbarrel:red_grapes",
+			"count": 9
+		}
+	},
+	{
+		"id": "vineandbarrel:wine_glass",
+		"type": "crafting_shaped",
+		"loaded": true,
+		"fdOnly": false,
+		"grid": [
+			[
+				{
+					"tag": "c:glass_blocks/colorless",
+					"items": [
+						"minecraft:glass"
+					],
+					"label": "Any colorless"
+				},
+				null,
+				{
+					"tag": "c:glass_blocks/colorless",
+					"items": [
+						"minecraft:glass"
+					],
+					"label": "Any colorless"
+				}
+			],
+			[
+				null,
+				{
+					"tag": "c:glass_blocks/colorless",
+					"items": [
+						"minecraft:glass"
+					],
+					"label": "Any colorless"
+				},
+				null
+			],
+			[
+				null,
+				{
+					"tag": "c:glass_blocks/colorless",
+					"items": [
+						"minecraft:glass"
+					],
+					"label": "Any colorless"
+				},
+				null
+			]
+		],
+		"result": {
+			"id": "vineandbarrel:wine_glass",
+			"count": 2
+		}
+	}
+]

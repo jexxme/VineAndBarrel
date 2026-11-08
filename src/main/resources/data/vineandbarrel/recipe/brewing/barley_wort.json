@@ -1,0 +1,19 @@
+{
+  "type": "vineandbarrel:brewing",
+  "recipe_book_tab": "worts",
+  "ingredients": [
+    "vineandbarrel:barley",
+    "vineandbarrel:barley",
+    "vineandbarrel:barley",
+    "vineandbarrel:hops"
+  ],
+  "result": {
+    "id": "vineandbarrel:barley_wort_bottle",
+    "count": 4
+  },
+  "bucket": {
+    "id": "vineandbarrel:barley_wort_bucket"
+  },
+  "experience": 0.35,
+  "brewingtime": 200
+}

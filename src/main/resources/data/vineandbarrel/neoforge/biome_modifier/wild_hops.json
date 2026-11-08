@@ -1,0 +1,9 @@
+{
+  "type": "vineandbarrel:add_features_by_filter",
+  "allowed_biomes": "#vineandbarrel:wild_hops_whitelist",
+  "denied_biomes": "#vineandbarrel:wild_hops_blacklist",
+  "features": "vineandbarrel:patch_wild_hops",
+  "step": "vegetal_decoration",
+  "min_temperature": 0.5,
+  "max_temperature": 0.8
+}

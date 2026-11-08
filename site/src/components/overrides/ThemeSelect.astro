@@ -1,0 +1,83 @@
+---
+// Theme switch as one square icon button (like the GitHub button next to it) instead of a dropdown.
+// Uses Starlight's own storage key, so its early theme script (no flash on load) keeps working.
+import { Icon } from '@astrojs/starlight/components';
+---
+<fd-theme>
+	<button type="button" aria-label="Colour theme" title="Theme">
+		<Icon name="moon" class="i-dark" />
+		<Icon name="sun" class="i-light" />
+		<Icon name="laptop" class="i-auto" />
+	</button>
+</fd-theme>
+
+<script>
+	const KEY = 'starlight-theme';
+	const label: Record<string, string> = { dark: 'Dark', light: 'Light', '': 'Auto (follows your system)' };
+	const stored = () => {
+		try {
+			const v = localStorage.getItem(KEY);
+			return v === 'dark' || v === 'light' ? v : '';
+		} catch {
+			return '';
+		}
+	};
+	const light = matchMedia('(prefers-color-scheme: light)');
+	const apply = (pref: string) => {
+		document.documentElement.dataset.theme = pref || (light.matches ? 'light' : 'dark');
+		try {
+			localStorage.setItem(KEY, pref);
+		} catch {}
+		for (const el of document.querySelectorAll<HTMLElement>('fd-theme')) {
+			el.dataset.pref = pref || 'auto';
+			const b = el.querySelector('button')!;
+			b.title = `Theme: ${label[pref]}`;
+			b.setAttribute('aria-label', `Colour theme: ${label[pref]}. Click to change.`);
+		}
+	};
+	customElements.define(
+		'fd-theme',
+		class extends HTMLElement {
+			connectedCallback() {
+				// Auto -> the opposite of what you see now -> the other one -> Auto, so the first click always changes something
+				this.querySelector('button')!.addEventListener('click', () => {
+					const sys = light.matches ? 'light' : 'dark';
+					const opp = sys === 'dark' ? 'light' : 'dark';
+					const p = stored();
+					apply(p === '' ? opp : p === opp ? sys : '');
+				});
+			}
+		},
+	);
+	apply(stored());
+	light.addEventListener('change', () => stored() === '' && apply(''));
+</script>
+
+<style>
+	fd-theme button {
+		width: 40px;
+		height: 40px;
+		display: grid;
+		place-items: center;
+		padding: 0;
+		background: #000;
+		border: 2px solid #a0a0a0;
+		border-radius: 0;
+		color: #fff;
+		cursor: pointer;
+	}
+	fd-theme button:hover {
+		border-color: #fff;
+	}
+	fd-theme :global(svg) {
+		display: none;
+		width: 24px;
+		height: 24px;
+	}
+	fd-theme[data-pref='dark'] :global(.i-dark),
+	fd-theme[data-pref='light'] :global(.i-light),
+	fd-theme[data-pref='auto'] :global(.i-auto),
+	fd-theme:not([data-pref]) :global(.i-auto) {
+		display: block;
+	}
+</style>

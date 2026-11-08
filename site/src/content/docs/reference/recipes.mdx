@@ -1,0 +1,16 @@
+---
+title: All recipes
+description: Every Vine & Barrel recipe as it appears in game, filterable by station and searchable by result or ingredient.
+tableOfContents: false
+---
+import RecipeBrowser from '../../../components/reference/RecipeBrowser.astro';
+import { playableRecipes, byType } from '../../../lib/data';
+
+export const fd = playableRecipes.filter((r) => r.fdOnly).length;
+
+All {playableRecipes.length} recipes, drawn the way the game shows them: {byType('vineandbarrel:brewing').length} for the
+[Brew Kettle](/brew-kettle/), {byType('vineandbarrel:aging').length} for the [Aging Barrel](/aging-barrel/), and the rest for the
+crafting table. {fd} of them need [Farmer's Delight](/farmers-delight/). Search for a result or an ingredient, or pick a station.
+Hover a slot for the item's name; slots that flip through items accept any of them.
+
+<RecipeBrowser />

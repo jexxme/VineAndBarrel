@@ -1,0 +1,43 @@
+---
+// A status effect with its real icon and duration.
+import { url, duration, roman } from '../../lib/data';
+interface Props {
+	id: string;
+	name?: string;
+	ticks?: number;
+	amplifier?: number;
+	note?: string;
+}
+const { id, name, ticks, amplifier = 0, note } = Astro.props;
+const p = id.split(':')[1];
+// Effect icons copied by scripts/copy-gui.mjs
+const AVAILABLE = new Set(['tipsy', 'regeneration', 'speed', 'haste', 'saturation', 'absorption', 'fire_resistance', 'slowness', 'mining_fatigue', 'nausea']);
+const icon = AVAILABLE.has(p) ? url(`/gui/effect/${p}.png`) : null;
+const label = name ?? p.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+---
+<span class="fd-effect">
+	{icon && <img src={icon} alt="" width="18" height="18" />}
+	<span class="name">{label}{amplifier > 0 ? ` ${roman(amplifier)}` : ''}</span>
+	{ticks ? <span class="dur">{p === 'saturation' ? `${ticks * (amplifier + 1)} food points` : duration(ticks)}</span> : null}
+	{note ? <span class="dur">{note}</span> : null}
+</span>
+<style>
+	.fd-effect {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.1rem 0.45rem 0.1rem 0.25rem;
+		border: 1px solid var(--fd-border);
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-white);
+		white-space: nowrap;
+		line-height: 1.4;
+	}
+	img {
+		image-rendering: pixelated;
+	}
+	.dur {
+		font-variant-numeric: tabular-nums;
+		color: var(--sl-color-gray-3);
+	}
+</style>

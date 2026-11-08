@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column_horizontal",
+  "textures": {
+    "end": "vineandbarrel:block/barley_bale_top",
+    "side": "vineandbarrel:block/barley_bale_side"
+  }
+}

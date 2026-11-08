@@ -1,0 +1,429 @@
+---
+// One page per Vine & Barrel item, generated from src/data/gen. Stable URL: /items/<item id path>/
+// Layout (the same as the FD Neoforged docs): the item as you see it in game (a big slot and its tooltip), then how
+// to get it, then what it is used for.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Recipe from '../../components/recipes/Recipe.astro';
+import Slot from '../../components/mc/Slot.astro';
+import Stages from '../../components/data/Stages.astro';
+import {
+	itemList, iconOf, renderOf, recipesFor, recipesUsing, recipeOutputs, loot, trades, worldgen, rules, drinks, blocks, renders,
+	CATEGORIES, seconds, duration, roman, pct, nameOf, url, short, mechanicFor, type Item as ItemT,
+} from '../../lib/data';
+
+export function getStaticPaths() {
+	return itemList.map((item) => ({ params: { slug: item.slug }, props: { item } }));
+}
+const { item } = Astro.props as { item: ItemT };
+const icon = iconOf(item.id);
+const block = item.block ? blocks[item.block] : null;
+const blockSlug = item.block?.split(':')[1];
+// A placed block shows its render; seeds and produce that plant a crop show their icon
+const render = blockSlug && blockSlug === item.id.split(':')[1] ? renderOf(`blocks/${blockSlug}`) : null;
+const stagePrefix = blockSlug && Object.keys(renders).some((k) => k.startsWith(`stages/${blockSlug}-`)) ? blockSlug : null;
+const made = recipesFor(item.id);
+const used = recipesUsing(item.id);
+const usedOutputs = [...new Set(used.flatMap((r) => recipeOutputs(r)).filter((o) => o !== item.id))];
+const drink = drinks.find((d) => d.id === item.id);
+
+// Where to find it: wild plants, picking a bush, village farms, trades, chests
+const wild = worldgen.filter((w) => !w.extra && (w.crop === item.id || rules.wildDrops[w.crop]?.some((d: any) => d.id === item.id)));
+const myTrades = trades.filter((t) => t.gives.id === item.id);
+const chestOdds = (pools: any[]) => {
+	let miss = 1;
+	const counts: string[] = [];
+	for (const pool of pools) {
+		const e = pool.entries.find((x: any) => x.id === item.id);
+		if (!e) continue;
+		const [a, b] = pool.rolls;
+		let poolMiss = 0;
+		for (let r = a; r <= b; r++) poolMiss += (1 - e.chance) ** r / (b - a + 1);
+		miss *= poolMiss;
+		counts.push(e.count[0] === e.count[1] ? `${e.count[0]}` : `${e.count[0]}–${e.count[1]}`);
+	}
+	return { chance: 1 - miss, counts: [...new Set(counts)] };
+};
+const chests = Object.entries(loot)
+	.map(([table, pools]) => ({ table, ...chestOdds(pools) }))
+	.filter((ch) => ch.chance > 0)
+	.map((ch) => ({ ...ch, name: `${ch.table.includes('tavern') ? 'Tavern' : 'Village house'} (${ch.table.split('_')[1]})` }));
+const picked = Object.entries(rules.harvest as Record<string, { id: string; count: number[] }>).filter(([, h]) => h.id === item.id);
+const farms = Object.entries(rules.villages.farmCrops as Record<string, { block: string }[]>).filter(([, cs]) => cs.some((x) => x.block === item.block)).map(([v]) => v);
+const hasSources = wild.length > 0 || myTrades.length > 0 || chests.length > 0 || picked.length > 0 || farms.length > 0;
+
+const mech = mechanicFor(item);
+const cat = CATEGORIES[item.category];
+const siblings = itemList.filter((i) => i.category === item.category);
+const c = item.consumable;
+const ticks = c ? Math.round(c.seconds * 20) : null;
+const mineable = (block?.tags as string[] | undefined)?.filter((t) => t.includes('mineable/')).map((t) => t.split('mineable/')[1]) ?? [];
+const blockProps = block && render ? Object.entries(block.properties as Record<string, string[]>) : [];
+
+// Tooltip lines, coloured like the game: blue for effects, grey for everything else
+type Line = { text: string; tone: 'blue' | 'green' | 'gray' | 'gold' };
+const tooltip: string[] = [];
+const effectLines: Line[] = (c?.effects ?? []).map((e) => ({
+	text: e.id === 'minecraft:saturation' ? `${e.name} (${e.duration} food points)` : `${e.name}${e.amplifier > 0 ? ` ${roman(e.amplifier)}` : ''} (${duration(e.duration)})`,
+	tone: 'blue',
+}));
+if (drink && rules.tipsy.config.enabled) effectLines.push({ text: '+1 Tipsy', tone: 'blue' });
+const facts: Line[] = [];
+const g = (text: string) => facts.push({ text, tone: 'gray' });
+if (drink) g(`Served in a ${nameOf(drink.vessel)}${drink.stage === 'aged' ? ', aged' : ''}`);
+if (ticks) g(`${c!.animation === 'drink' ? 'Drink' : 'Eat'} in ${seconds(ticks)}`);
+if (item.food?.alwaysEdible) g(c?.animation === 'drink' ? 'Can be drunk when full' : 'Can be eaten when full');
+if (item.remainder) g(`Leaves a ${nameOf(item.remainder)}`);
+g(item.stack === 1 ? "Doesn't stack" : `Stacks to ${item.stack}`);
+if (block && render) g(`Hardness ${block.hardness}${mineable.length ? `, mine with a ${mineable.join(' or ')}` : ''}`);
+if (item.compost != null) g(`Composter: ${pct(item.compost, 0)} chance`);
+if (item.tags.includes('farmersdelight:drinks')) g("Counts as a Farmer's Delight drink");
+const shanks = item.food ? [...Array(Math.floor(item.food.nutrition / 2)).fill('food_full'), ...Array(item.food.nutrition % 2).fill('food_half')] : [];
+
+const headings = [
+	...(made.length ? [{ depth: 2, slug: 'recipes', text: 'How to make it' }] : []),
+	...(hasSources ? [{ depth: 2, slug: 'sources', text: 'Where to find it' }] : []),
+	...(used.length ? [{ depth: 2, slug: 'uses', text: 'Used in' }] : []),
+	...(siblings.length > 1 ? [{ depth: 2, slug: 'more', text: `More ${cat.label.toLowerCase()}` }] : []),
+];
+const description = `${item.name}: ${cat.label.toLowerCase()} from Vine & Barrel.${drink ? ` Gives ${drink.effect.name}.` : ''}${item.food && item.food.nutrition ? ` Restores ${item.food.nutrition} hunger.` : ''}`;
+---
+<StarlightPage frontmatter={{ title: item.name, description, tableOfContents: headings.length > 1 ? { minHeadingLevel: 2, maxHeadingLevel: 2 } : false }} headings={headings}>
+	<section class="ip-hero not-content">
+		<div class="ip-slot">
+			{render ? <img src={render} alt={item.name} width="200" height="200" /> : icon && <img class="pixel" src={icon.src} alt={item.name} width="128" height="128" />}
+		</div>
+		<div class="ip-info">
+			<div class="i-head">
+				<p class="i-name" data-pagefind-ignore>{item.name}</p>
+				<a class="i-cat" href={url(`/items/#${item.category}`)} title={`All ${cat.label.toLowerCase()}`}>{cat.label}</a>
+			</div>
+			{tooltip.map((t) => <p class="t-blue">{t}</p>)}
+			{item.food && item.food.nutrition > 0 && (
+				<p class="t-food">
+					<span class="shanks">{shanks.map((s) => <img src={url(`/gui/mc/${s}.png`)} alt="" width="18" height="18" />)}</span>
+					<span>{item.food.nutrition} hunger, {+item.food.saturation.toFixed(1)} saturation</span>
+				</p>
+			)}
+			{effectLines.length > 0 && (
+				<div class="i-group">
+					<p class="t-gray">{c?.animation === 'drink' ? 'When drunk:' : 'When eaten:'}</p>
+					{effectLines.map((l) => <p class={`t-${l.tone} indent`}>{l.text}</p>)}
+				</div>
+			)}
+			<ul class="i-facts">{facts.map((l) => <li>{l.text}</li>)}</ul>
+			{mech && (
+				<p class="ip-links">
+					<a class="mc-button" href={url(mech.href)}>How {mech.label} work{/s$/.test(mech.label) ? '' : 's'}</a>
+				</p>
+			)}
+		</div>
+	</section>
+
+	{stagePrefix && <Stages prefix={stagePrefix} title={`${blocks[item.block!].name}: growth`} />}
+
+	{
+		made.length > 0 && (
+			<>
+				<h2 id="recipes">How to make it</h2>
+				<div class="ip-recipes not-content">{made.map((r) => <Recipe recipe={r} />)}</div>
+			</>
+		)
+	}
+
+	{
+		hasSources && (
+			<>
+				<h2 id="sources">Where to find it</h2>
+				<ul class="ip-sources">
+					{wild.map((w) => (
+						<li>
+							<strong>{nameOf(w.crop)}</strong> grows wild{w.crop === item.id ? '' : ' and drops it'}. <a href={url('/crops/#wild-crops')}>Where to look</a>
+						</li>
+					))}
+					{picked.map(([, h]) => (
+						<li>
+							<strong>Picking</strong> a ripe bush gives {h.count[0]} to {h.count[1]}. <a href={url('/crops/#grape-and-hop-bushes')}>How bushes work</a>
+						</li>
+					))}
+					{farms.length > 0 && (
+						<li>
+							<strong>Village farms</strong> grow it in {farms.join(', ')} villages.
+						</li>
+					)}
+					{myTrades.map((t) => (
+						<li>
+							<strong>{t.profession === 'farmer' ? 'Farmer villagers' : 'Wandering Traders'}</strong> sell {t.gives.count} for {t.wants.count} {nameOf(t.wants.id)}
+							{t.level ? ` (from level ${t.level})` : ''}.
+						</li>
+					))}
+					{chests.map((ch) => (
+						<li>
+							<strong>{ch.name}</strong> chests: in about {pct(ch.chance, 0)} of them, {ch.counts.join(' or ')} at a time.
+						</li>
+					))}
+				</ul>
+			</>
+		)
+	}
+
+	{
+		used.length > 0 && (
+			<>
+				<h2 id="uses">Used in</h2>
+				<p>
+					{item.name} goes into {usedOutputs.length} recipe{usedOutputs.length === 1 ? '' : 's'}. Hover a slot for its name, click it to open it.
+				</p>
+				<div class="ip-inv grid9 not-content">
+					{usedOutputs.map((o) => (
+						<Slot id={o} scale={3} />
+					))}
+				</div>
+			</>
+		)
+	}
+
+	{
+		siblings.length > 1 && (
+			<>
+				<h2 id="more">More {cat.label.toLowerCase()}</h2>
+				<p>
+					All {siblings.length} {cat.label.toLowerCase()} in the mod, in creative-tab order. <a href={url(`/items/#${item.category}`)}>Open them in the item list</a>.
+				</p>
+				<div class="ip-inv grid9 not-content">
+					{siblings.map((s) =>
+						s.id === item.id ? (
+							<span class="sib cur">
+								<Slot id={s.id} scale={3} />
+							</span>
+						) : (
+							<Slot id={s.id} scale={3} />
+						),
+					)}
+				</div>
+			</>
+		)
+	}
+
+	<footer class="ip-foot not-content">
+		<details>
+			<summary>{[ 'Command', (item.tags as string[]).length > 0 && 'tags', blockProps.length > 0 && 'block states'].filter(Boolean).join(', ').replace(/, ([^,]+)$/, ' and $1')}</summary>
+			<p><span class="lbl">Command</span> <code>/give @s {item.id}</code></p>
+			{blockProps.length > 0 && <p><span class="lbl">Block states</span> {blockProps.map(([k, v]) => <code>{k}: {v.join(' | ')}</code>)}</p>}
+			{(item.tags as string[]).length > 0 && <p><span class="lbl">Item tags</span> {(item.tags as string[]).map((t) => <code>#{short(t)}</code>)}</p>}
+			{block && block.tags.length > 0 && <p><span class="lbl">Block tags</span> {(block.tags as string[]).map((t) => <code>#{short(t)}</code>)}</p>}
+		</details>
+	</footer>
+</StarlightPage>
+
+<style>
+	/* ---- the item, as in the game ---- */
+	/* The item as one Minecraft GUI panel across the column: the slot on the left, its info as GUI text on the right */
+	.ip-hero {
+		margin-top: 24px;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 20px 28px;
+		align-items: start;
+		padding: 16px;
+		background: #c6c6c6;
+		box-shadow: inset 4px 4px 0 #fff, inset -4px -4px 0 #555, 0 0 0 2px #000, 6px 6px 0 2px #000;
+		color: #404040;
+	}
+	.ip-slot {
+		width: 168px;
+		height: 168px;
+		display: grid;
+		place-items: center;
+		background: #8b8b8b;
+		box-shadow: inset 4px 4px 0 #373737, inset -4px -4px 0 #fff;
+	}
+	.ip-slot img {
+		max-width: 86%;
+		height: auto;
+	}
+	.ip-slot img.pixel {
+		width: 128px;
+		image-rendering: pixelated;
+	}
+	.ip-info {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		min-height: 168px;
+	}
+	.ip-info p {
+		margin: 0;
+	}
+	.i-name {
+		font-size: 30px;
+		line-height: 40px;
+		color: #303030;
+	}
+	.t-blue {
+		color: #2b2bc0;
+	}
+	.t-green {
+		color: #007a00;
+	}
+	.t-gray {
+		color: #606060;
+	}
+	.t-gold {
+		color: #a05a00;
+	}
+	.indent {
+		padding-left: 12px;
+	}
+	.t-food {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 4px 10px;
+	}
+	.shanks {
+		display: inline-flex;
+	}
+	.shanks img {
+		image-rendering: pixelated;
+	}
+	/* Facts flow into two columns when there's room */
+	.i-facts {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		columns: 2 14rem;
+		column-gap: 28px;
+		color: #606060;
+	}
+	.i-facts li {
+		margin: 0;
+		break-inside: avoid;
+	}
+	/* Name with its category under it, like the tab name in the creative inventory */
+	.i-head {
+		display: flex;
+		flex-direction: column;
+	}
+	.i-cat {
+		width: fit-content;
+		color: #707070;
+		text-decoration: none;
+	}
+	.i-cat:hover {
+		color: #303030;
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 4px;
+	}
+	/* The one action, as a Minecraft button at the bottom of the panel */
+	.ip-links {
+		margin-top: auto !important;
+		padding-top: 6px;
+	}
+	.ip-links .mc-button {
+		max-width: 100%;
+		box-sizing: border-box;
+		white-space: normal;
+		text-align: center;
+	}
+
+	/* ---- sections ---- */
+	.ip-recipes {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 24px 32px;
+	}
+	.ip-sources li + li {
+		margin-top: 8px;
+	}
+	.ip-inv {
+		display: flex;
+		flex-wrap: wrap;
+		width: fit-content;
+		max-width: 100%;
+		padding: 8px;
+		background: #c6c6c6;
+		box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #555, 0 0 0 2px #000;
+		margin-left: 2px;
+	}
+
+	/* Up to 9 columns, fewer when the column is narrow; empty slots after the last item are a tiled background, so
+	   every row is full at any width */
+	.ip-inv.grid9 {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, 54px);
+		grid-auto-rows: 54px;
+		box-sizing: content-box;
+		width: min(486px, round(down, 100% - 20px, 54px));
+		max-width: none;
+		background:
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54' shape-rendering='crispEdges'%3E%3Crect width='54' height='54' fill='%238b8b8b'/%3E%3Crect y='51' width='54' height='3' fill='%23fff'/%3E%3Crect x='51' width='3' height='54' fill='%23fff'/%3E%3Crect width='54' height='3' fill='%23373737'/%3E%3Crect width='3' height='54' fill='%23373737'/%3E%3C/svg%3E") 0 0 / 54px 54px repeat content-box,
+			#c6c6c6;
+	}
+
+	/* ---- the quiet footer: command, tags, related items ---- */
+	.ip-foot {
+		margin-top: 72px;
+		padding-top: 16px;
+		border-top: 4px solid var(--fd-border);
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		color: var(--sl-color-gray-3);
+	}
+	.ip-foot p {
+		margin: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 12px;
+		align-items: baseline;
+	}
+	.ip-foot code {
+		overflow-wrap: anywhere;
+		font-family: var(--sl-font);
+		font-size: 20px;
+		background: var(--fd-surface-2);
+		color: var(--sl-color-white);
+		padding: 0 6px;
+	}
+	.lbl {
+		color: var(--sl-color-gray-3);
+		min-width: 8rem;
+	}
+	.ip-foot details {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.ip-foot summary {
+		cursor: pointer;
+		width: fit-content;
+	}
+	.ip-foot summary:hover {
+		color: var(--sl-color-text-accent);
+	}
+	.ip-foot details[open] summary {
+		margin-bottom: 8px;
+	}
+	.ip-foot details p + p {
+		margin-top: 8px;
+	}
+	/* The item you're on, in its category's inventory */
+	.sib.cur :global(.mc-slot) {
+		outline: 3px solid #ffcf4d;
+		outline-offset: -3px;
+	}
+	/* Phones: slot on top, info below */
+	@media (max-width: 34rem) {
+		.ip-hero {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.ip-slot {
+			width: 136px;
+			height: 136px;
+		}
+		.ip-info {
+			min-height: 0;
+		}
+	}
+</style>

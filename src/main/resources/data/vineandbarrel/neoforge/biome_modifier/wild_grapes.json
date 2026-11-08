@@ -1,0 +1,9 @@
+{
+  "type": "vineandbarrel:add_features_by_filter",
+  "allowed_biomes": "#vineandbarrel:wild_grapes_whitelist",
+  "denied_biomes": "#vineandbarrel:wild_grapes_blacklist",
+  "features": "vineandbarrel:patch_wild_grapes",
+  "step": "vegetal_decoration",
+  "min_temperature": 0.6,
+  "max_temperature": 1.0
+}

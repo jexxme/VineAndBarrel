@@ -1,0 +1,19 @@
+{
+  "type": "vineandbarrel:brewing",
+  "recipe_book_tab": "worts",
+  "ingredients": [
+    "minecraft:wheat",
+    "minecraft:wheat",
+    "minecraft:wheat",
+    "vineandbarrel:hops"
+  ],
+  "result": {
+    "id": "vineandbarrel:wheat_wort_bottle",
+    "count": 4
+  },
+  "bucket": {
+    "id": "vineandbarrel:wheat_wort_bucket"
+  },
+  "experience": 0.35,
+  "brewingtime": 200
+}

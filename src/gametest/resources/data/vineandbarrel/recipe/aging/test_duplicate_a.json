@@ -1,0 +1,6 @@
+{
+  "type": "vineandbarrel:aging",
+  "base": "minecraft:sugar",
+  "young": "vineandbarrel:barley_ale",
+  "aged": "vineandbarrel:aged_barley_ale"
+}

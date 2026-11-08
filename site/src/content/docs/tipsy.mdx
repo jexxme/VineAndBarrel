@@ -1,0 +1,58 @@
+---
+title: Tipsy
+description: What Tipsy does at each level, what happens after one drink too many, how to sober up, and how to turn it down or off.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../components/mc/Item.astro';
+import TipsyLevels from '../../components/data/TipsyLevels.astro';
+import EffectBadge from '../../components/data/EffectBadge.astro';
+import { rules, nameOf } from '../../lib/data';
+
+export const t = rules.tipsy;
+export const cfg = t.config;
+
+Every wine, beer and cider gives you its buff **and one level of <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. It's
+fun at first: a sway, hiccups, and a little liquid courage. Keep going and it starts to cost you: dark edges, heavy eyes,
+queasy spells, weak arms, then heavy legs and stumbling. It tops out at level {t.maxLevel}.
+
+## Levels
+
+<TipsyLevels />
+
+Other players see you sway a little and see your hiccups too. Hover over the Tipsy effect in your inventory to see what
+your current level does.
+
+## One drink too many
+
+Already at level {t.maxLevel} and still drinking? You **black out**. Your eyes fall shut, and for a few seconds nothing can
+hurt you. Then you wake up somewhere else, usually at your bed. You'll be hungry and shaky for a while, back at Tipsy I,
+and your pockets may hold something you don't remember picking up.
+
+## Sobering up
+
+- **Wait:** each level wears off after **{cfg.secondsPerLevel} seconds**, one level at a time. A new drink resets the clock
+  of your current level.
+- **Milk** clears it completely, like any effect.
+- **A water bottle or <Item id="grape_juice" />** lowers it by one level.
+- **Sleep it off:** going to bed and sleeping through the night clears it.
+
+## Settings
+
+Server owners can change Tipsy in `vineandbarrel-tipsy-server.toml`:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `enabled` | <code>{String(cfg.enabled)}</code> | `false` is the non-alcoholic mode: drinks never make you tipsy, but keep their buffs and names. |
+| `maxLevel` | <code>{cfg.maxLevel}</code> | The highest level drinks can stack to. |
+| `secondsPerLevel` | <code>{cfg.secondsPerLevel}</code> | How long each level lasts. |
+| `slurredChat` | <code>{String(cfg.slurredChat)}</code> | Slurred chat from level {t.slurLevel}. |
+| `stumbling` | <code>{String(cfg.stumbling)}</code> | Stumbling at level {t.stumbleLevel}. |
+| `blackout` | <code>{String(cfg.blackout)}</code> | Black out after one drink too many at the top level. |
+
+And every player can tune the visuals in `vineandbarrel-tipsy-client.toml`:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `wobbleIntensity` | <code>{cfg.wobbleIntensity}</code> | Camera sway strength, from 0 (off) to 2. Set it to 0 if motion makes you queasy; it always wins over the server. |
+| `otherPlayersSway` | <code>{String(cfg.otherPlayersSway)}</code> | Show tipsy players swaying. |
+| `visionEffects` | <code>{String(cfg.visionEffects)}</code> | The dark screen edges and the heavy-eyed blinks. |

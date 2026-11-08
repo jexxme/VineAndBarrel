@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "#minecraft:planks",
+    "N": "#c:nuggets/iron",
+    "C": "#c:ingots/copper"
+  },
+  "pattern": [
+    "PNP",
+    "PCP",
+    "PNP"
+  ],
+  "result": {
+    "id": "vineandbarrel:aging_barrel"
+  }
+}

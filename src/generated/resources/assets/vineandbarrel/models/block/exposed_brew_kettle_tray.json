@@ -1,0 +1,10 @@
+{
+  "parent": "vineandbarrel:block/template_brew_kettle_tray",
+  "textures": {
+    "bottom": "vineandbarrel:block/exposed_brew_kettle_bottom",
+    "side": "vineandbarrel:block/exposed_brew_kettle_side",
+    "top": "vineandbarrel:block/exposed_brew_kettle_top",
+    "tray_side": "vineandbarrel:block/brew_kettle_tray_side",
+    "tray_top": "vineandbarrel:block/brew_kettle_tray_top"
+  }
+}

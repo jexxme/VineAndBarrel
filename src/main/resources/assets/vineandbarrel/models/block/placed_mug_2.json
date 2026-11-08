@@ -1,0 +1,380 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "vineandbarrel:block/placed_drink_glass",
+    "glass": "vineandbarrel:block/placed_drink_glass",
+    "liquid": "vineandbarrel:block/placed_drink_liquid",
+    "foam": "vineandbarrel:block/placed_drink_foam"
+  },
+  "elements": [
+    {
+      "name": "mug_wall_n",
+      "from": [
+        2,
+        0,
+        10
+      ],
+      "to": [
+        6,
+        5,
+        10.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            15,
+            0,
+            16,
+            1
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_wall_s",
+      "from": [
+        2,
+        0,
+        13.5
+      ],
+      "to": [
+        6,
+        5,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            15,
+            0,
+            16,
+            1
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_wall_w",
+      "from": [
+        2,
+        0,
+        10.5
+      ],
+      "to": [
+        2.5,
+        5,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            15,
+            0,
+            16,
+            1
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_wall_e",
+      "from": [
+        5.5,
+        0,
+        10.5
+      ],
+      "to": [
+        6,
+        5,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            13,
+            0,
+            14,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            9,
+            0,
+            13,
+            5
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            15,
+            0,
+            16,
+            1
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_base",
+      "from": [
+        2.5,
+        0,
+        10.5
+      ],
+      "to": [
+        5.5,
+        0.75,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9,
+            13,
+            12,
+            14
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            9,
+            13,
+            12,
+            14
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            9,
+            13,
+            12,
+            14
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            9,
+            13,
+            12,
+            14
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            9,
+            10,
+            12,
+            13
+          ],
+          "texture": "#glass"
+        },
+        "down": {
+          "uv": [
+            9,
+            10,
+            12,
+            13
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "mug_handle",
+      "from": [
+        6,
+        1,
+        11.5
+      ],
+      "to": [
+        7,
+        4,
+        12.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        },
+        "down": {
+          "uv": [
+            14,
+            0,
+            15,
+            3
+          ],
+          "texture": "#glass"
+        }
+      }
+    }
+  ]
+}

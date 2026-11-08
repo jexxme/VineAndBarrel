@@ -1,0 +1,16 @@
+{
+  "values": {
+    "vineandbarrel:brew_kettle": {
+      "next_oxidation_stage": "vineandbarrel:exposed_brew_kettle",
+      "generate_block_transform": false
+    },
+    "vineandbarrel:exposed_brew_kettle": {
+      "next_oxidation_stage": "vineandbarrel:weathered_brew_kettle",
+      "generate_block_transform": false
+    },
+    "vineandbarrel:weathered_brew_kettle": {
+      "next_oxidation_stage": "vineandbarrel:oxidized_brew_kettle",
+      "generate_block_transform": false
+    }
+  }
+}

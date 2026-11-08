@@ -1,0 +1,9 @@
+{
+  "type": "vineandbarrel:aging",
+  "base": "vineandbarrel:barley_wort_bottle",
+  "bucket": "vineandbarrel:barley_wort_bucket",
+  "young": "vineandbarrel:barley_ale",
+  "aged": "vineandbarrel:aged_barley_ale",
+  "fermenting_time": 24000,
+  "aging_time": 72000
+}

@@ -1,0 +1,11 @@
+{
+  "values": [
+    "minecraft:magma_block",
+    "minecraft:lava_cauldron",
+    "#vineandbarrel:tray_heat_sources",
+    {
+      "id": "#farmersdelight:heat_sources",
+      "required": false
+    }
+  ]
+}

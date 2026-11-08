@@ -1,0 +1,26 @@
+{
+  "parent": "vineandbarrel:main/cheers",
+  "criteria": {
+    "slept_it_off": {
+      "trigger": "vineandbarrel:slept_it_off"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.vineandbarrel.sleep_it_off.description"
+    },
+    "icon": {
+      "id": "minecraft:red_bed"
+    },
+    "title": {
+      "translate": "advancements.vineandbarrel.sleep_it_off.title"
+    }
+  },
+  "requirements": [
+    [
+      "slept_it_off"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

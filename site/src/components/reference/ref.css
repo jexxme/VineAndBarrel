@@ -1,0 +1,210 @@
+/*
+ * Shared pieces for the reference components, in the site's Farmer's Delight / Minecraft look
+ * (src/styles/theme.css): FD Pixel at 20/30/40 px, square corners, hard 4px shadows, framed boards,
+ * Minecraft text fields and stone buttons. Imported by the components in src/components/reference/.
+ */
+
+/* Minecraft text field */
+.ref-field {
+	background: #000;
+	border: 2px solid #a0a0a0;
+	border-radius: 0;
+	color: #e0e0e0;
+	font: inherit;
+	font-size: 20px;
+	line-height: 30px;
+	padding: 2px 10px;
+	min-width: 0;
+}
+.ref-field::placeholder {
+	color: #707070;
+}
+.ref-field:focus {
+	outline: none;
+	border-color: #fff;
+}
+select.ref-field {
+	padding: 2px 6px;
+}
+.ref-check {
+	display: inline-flex;
+	gap: 8px;
+	align-items: center;
+	font-size: 20px;
+	color: var(--sl-color-gray-2);
+	cursor: pointer;
+}
+.ref-check input {
+	accent-color: var(--sl-color-text-accent);
+	width: 18px;
+	height: 18px;
+	margin: 0;
+}
+
+/* Stone buttons, for filters and toggles */
+.ref-btns {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.ref-btn {
+	max-width: 100%;
+	white-space: normal;
+	font: inherit;
+	font-size: 20px;
+	line-height: 24px;
+	color: #fff;
+	text-shadow: 2px 2px 0 #3f3f3f;
+	padding: 0 10px 2px;
+	border-style: solid;
+	border-width: 6px;
+	border-image: url('/FarmersDelight-Neoforged/ui/button.png') 3 fill / 6px stretch;
+	image-rendering: pixelated;
+	background: none;
+	border-radius: 0;
+	cursor: pointer;
+	white-space: nowrap;
+	text-decoration: none !important;
+	display: inline-block;
+}
+.ref-btn:hover,
+.ref-btn:focus-visible {
+	border-image-source: url('/FarmersDelight-Neoforged/ui/button-hover.png');
+	color: #ffffa0;
+	outline: none;
+}
+.ref-btn.on,
+.ref-btn[aria-pressed='true'] {
+	border-image-source: url('/FarmersDelight-Neoforged/ui/button-hover.png');
+	color: #ffff55;
+}
+.ref-btn .n {
+	color: #c0c0c0;
+	margin-left: 6px;
+}
+.ref-btn.clear {
+	color: #ffaaaa;
+}
+
+/* Sticky toolbar above long lists */
+.ref-bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 20px;
+	align-items: center;
+	position: sticky;
+	top: var(--sl-nav-height);
+	z-index: 5;
+	background: var(--sl-color-black);
+	padding: 10px 0;
+	border-bottom: 2px solid var(--fd-border);
+}
+.ref-bar .ref-field[type='search'] {
+	flex: 1 1 16rem;
+}
+.ref-count {
+	color: var(--sl-color-gray-3);
+	font-size: 20px;
+}
+.ref-count b {
+	color: var(--sl-color-white);
+}
+
+/* Framed board (like markdown tables) */
+.ref-board {
+	background: var(--fd-surface);
+	border: 3px solid var(--fd-frame);
+	box-shadow: 4px 4px 0 #000;
+}
+.ref-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 20px;
+	line-height: 30px;
+}
+.ref-table th,
+.ref-table td {
+	padding: 4px 10px;
+	border-bottom: 2px solid var(--fd-border);
+	text-align: left;
+	vertical-align: middle;
+}
+.ref-table thead th {
+	background: var(--fd-frame);
+	color: var(--fd-paper);
+	font-weight: 400;
+	border-bottom: 3px solid #000;
+	white-space: nowrap;
+}
+.ref-table tbody tr:last-child > * {
+	border-bottom: 0;
+}
+
+/* Small labels and muted text */
+.ref-k {
+	font-size: 20px;
+	color: var(--sl-color-gray-3);
+}
+.ref-muted {
+	color: var(--sl-color-gray-3);
+}
+.ref-code {
+	font-family: var(--sl-font);
+	font-size: 20px;
+	background: var(--fd-surface-2);
+	color: var(--sl-color-white);
+	padding: 0 4px;
+}
+.ref-icon {
+	image-rendering: pixelated;
+	display: block;
+}
+
+/* Section heading inside a component: plain, like the page's own sub-headings */
+.ref-h {
+	display: block;
+	font-family: var(--fd-font-display);
+	font-weight: 400;
+	font-size: 20px;
+	line-height: 30px;
+	margin: 30px 0 8px;
+	color: var(--fd-heading-ink);
+	scroll-margin-top: 9rem;
+}
+.ref-h .n {
+	color: var(--sl-color-gray-3);
+	margin-left: 8px;
+}
+
+/* Disclosure rows */
+.ref-details > summary {
+	cursor: pointer;
+	font-size: 20px;
+	color: var(--sl-color-text-accent);
+	list-style: none;
+}
+.ref-details > summary::-webkit-details-marker {
+	display: none;
+}
+.ref-details > summary::before {
+	content: '+ ';
+	color: var(--sl-color-gray-3);
+}
+.ref-details[open] > summary::before {
+	content: '- ';
+}
+.ref-details > summary:hover {
+	color: var(--sl-color-white);
+}
+
+/* Highlight a row that is the target of a #link */
+.ref-target:target {
+	background: var(--fd-surface-2);
+	box-shadow: inset 4px 0 0 var(--sl-color-text-accent);
+}
+
+@media (max-width: 40rem) {
+	.ref-bar {
+		position: static;
+	}
+}
