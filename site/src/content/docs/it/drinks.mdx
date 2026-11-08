@@ -1,0 +1,84 @@
+---
+title: Bevande
+description: Ogni vino, birra, sidro e idromele di Vine & Barrel, da cosa si prepara, in cosa si serve e il bonus che dà.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/it';
+
+export const sample = items[drinks[0].id];
+
+Ogni bevanda segue le stesse regole:
+
+- Dà **un solo bonus** e un livello di [Brillo](/tipsy/). Una bevanda che ti porta a Brillo {roman(rules.tipsy.noBuffLevel - 1)} o oltre non dà
+  nessun bonus: sei troppo ubriaco per goderne.
+- La puoi bere sempre, anche a stomaco pieno. Ci vogliono {sample.consumable.seconds} s, e ti torna in mano il
+  <Item id="mug" /> o il <Item id="wine_glass" /> vuoto.
+- Si impila fino a **{sample.stack}**.
+- Il bonus di una bevanda **giovane** è di livello {roman(rules.youngBuffAmplifier)} per **{duration(rules.youngBuffTicks)}**. La versione **invecchiata** ha un
+  colore più profondo, brilla come un oggetto incantato e il suo bonus è di livello **{roman(rules.agedBuffAmplifier)} per {duration(rules.agedBuffTicks)}**. La
+  Saturazione della birra di frumento agisce subito: qualche punto di cibo.
+- Posata su un tavolo, una bevanda invecchiata brilla come un oggetto incantato, così la distingui da una giovane a colpo d'occhio.
+
+## Colori
+
+Ogni bevanda ha il suo colore: lo vedi nel vetrino della botte e nei boccali e nei calici su un tavolo. Le bevande invecchiate
+sono di una sfumatura più profonda.
+
+<DrinkSwatches />
+
+## Vini, birre, sidro e idromele
+
+<DrinkTable />
+
+La Saturazione funziona in modo diverso dagli altri bonus: non dura, ogni tick di essa riempie subito un punto di fame (e un po' di
+saturazione). Per questo la birra di frumento mostra punti di cibo invece di un tempo.
+
+## Con Farmer's Delight
+
+Anche le bottiglie di Farmer's Delight fermentano. Il suo sidro di mele diventa lo stesso Sidro del nostro Succo di mela, e il suo succo
+di melone diventa Vino di anguria, che puoi fare solo con FD installato (l'oggetto esiste sempre). Vedi
+[Farmer's Delight](/farmers-delight/).
+
+<DrinkTable fd />
+
+## Recipienti
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Boccali e calici su un blocco" />
+
+Il vino va in un <Item id="wine_glass" />; birra, sidro e idromele in un <Item id="mug" />. Entrambi si impilano fino a {items['vineandbarrel:mug'].stack}.
+
+**Posali:** accovacciati e clicca con il tasto destro sulla faccia superiore di un blocco con un boccale o un calice, pieno o vuoto, per metterlo lì. Fino a quattro
+condividono un blocco, ognuno con la sua bevanda, e la bevanda si vede attraverso il vetro. Clicca con il tasto destro a mani vuote per riprenderne uno.
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="Boccali e calici posati sui tavoli, fino a quattro per blocco." />
+
+## Pianifica una partita
+
+Quanto te ne serve per un giro? Il pianificatore in [Costruire una cantina](/guides/cellar/#pianifica-la-partita) calcola colture,
+partite nel bollitore, secchi, botti e tempo di attesa per qualsiasi numero di porzioni.
+
+## Cin cin!
+
+Quando due o più giocatori finiscono una bevanda entro {rules.cheersWindowTicks / 20} secondi e {rules.cheersRadius} blocchi l'uno
+dall'altro, i bicchieri tintinnano, salgono un po' di scintille e il bonus di tutti per quella bevanda dura il **{rules.cheersBonusPercent}% in più**.
+
+Conta solo tra giocatori nello stesso mondo, una volta per bevanda, e le tue due bevande non fanno un giro. Il bonus è il
+{rules.cheersBonusPercent}% della durata intera del bonus di quella bevanda, aggiunto a ciò che resta; se il bonus è appena finito, lo riottieni per quel tempo.
+
+## Da sapere
+
+- **Troppe?** La bevanda che ti porta a Brillo {roman(rules.tipsy.noBuffLevel - 1)} non dà nessun bonus, e ti toglie anche i
+  bonus che ti avevano dato le bevande precedenti. Gli effetti delle pozioni restano.
+- **Tavoli:** una bevanda va sul quarto di blocco che miri, o sul più vicino libero, e solo su una superficie robusta.
+  Un clic destro a mani vuote prende quella che miri; se tieni qualcosa in mano, usi quell'oggetto come al solito, così puoi bere
+  al tavolo. Se rompi il blocco, un pistone o perdi il blocco sottostante, cadono tutte.
+- **Le bevande come ingredienti** (nella pentola di cottura di Farmer's Delight) ti restituiscono il boccale o il calice.
+- **Stomaco pieno?** Non importa: puoi sempre bere.

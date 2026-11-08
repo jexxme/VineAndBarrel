@@ -1,6 +1,6 @@
 ---
 title: Crops
-description: Grape and hop bushes, barley, wild crops and everything around them, from bees to compost.
+description: Red and white grape bushes, hop bushes, trellises, barley, wild crops and everything around them, from bees to compost.
 ---
 import { Aside } from '@astrojs/starlight/components';
 import Item from '../../components/mc/Item.astro';
@@ -13,35 +13,54 @@ import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../..
 
 export const c = rules.crops;
 export const h = rules.harvest;
-export const animalList = (tag) => list(animals[tag].map(nameOf));
+// Who eats what: the food tags our items are in (animals.json), as the animals those tags feed
+export const ANIMALS = { cow_food: 'cows', sheep_food: 'sheep', goat_food: 'goats', horse_food: 'horses', llama_food: 'llamas', chicken_food: 'chickens', parrot_food: 'parrots', fox_food: 'foxes' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
 export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
 export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)));
 
 <Render name="scenes/garden" float="right" size={256} alt="Grape and hop bushes behind a barley field" />
 
-Three crops feed every drink: <Item id="red_grapes" plural /> for wine, <Item id="hops" /> for both beers, and
-<Item id="barley" /> for ale. The other ingredients are vanilla: <Item id="sweet_berries" /> for sweet berry wine and
-<Item id="wheat" /> for wheat beer.
+Four crops of ours feed the drinks: <Item id="red_grapes" plural /> for red wine, <Item id="white_grapes" plural /> for
+white wine, <Item id="hops" /> for both beers, and <Item id="barley" /> for ale. The other ingredients are vanilla:
+<Item id="sweet_berries" /> for sweet berry wine, <Item id="wheat" /> for wheat beer, <Item id="apple" plural /> for hard cider
+and <Item id="honey_bottle" plural /> for mead.
 
 <Shot src="vineyard.jpg" caption="A fenced vineyard of ripe grape bushes, with lantern posts at the row heads." />
 
 ## Grape and hop bushes
 
-Plant <Item id="red_grapes" plural /> or <Item id="hops" /> on grass, dirt or farmland, just like sweet berries. The bush
-grows through {c.bushMaxAge + 1} stages at the sweet berry bush's pace.
+Plant <Item id="red_grapes" plural />, <Item id="white_grapes" plural /> or <Item id="hops" /> on grass, dirt or farmland,
+just like sweet berries. The bush grows through {c.bushMaxAge + 1} stages at the sweet berry bush's pace. Red and white grapes
+grow the same way; only the ripe fruit tells them apart.
 
-<Stages prefix="grape_bush" title="Grape bush" labels={['planted', 'growing', 'flowering', 'ripe']} />
-<Stages prefix="hop_bush" title="Hop bush" labels={['planted', 'growing', 'flowering', 'ripe']} />
+<Stages prefix="grape_bush" title="Red grape bush" labels={['planted', 'growing', 'half-ripe', 'ripe']} />
+<Stages prefix="white_grape_bush" title="White grape bush" labels={['planted', 'growing', 'half-ripe', 'ripe']} />
+<Stages prefix="hop_bush" title="Hop bush" labels={['planted', 'growing', 'half-ripe', 'ripe']} />
 
-- **Harvest** a ripe bush with a right-click: it gives {h.grapes.count[0]} to {h.grapes.count[1]} <Item id="red_grapes" plural /> (or
+- **Harvest** a ripe bush with a right-click: it gives {h.grapes.count[0]} to {h.grapes.count[1]} grapes (or
   {h.hops.count[0]} to {h.hops.count[1]} <Item id="hops" />) and drops back to its second stage, so it keeps fruiting. You
   don't need to replant.
+- **In a hurry?** Pick it half-ripe, like sweet berries: {h.grapes.halfRipe[0]} to {h.grapes.halfRipe[1]} instead, and it
+  drops back the same way.
 - **Bone meal** moves it on by one stage.
 - Bushes catch fire as easily as sweet berry bushes, so keep campfires and lava away from the vineyard.
 
-<Aside title="With Farmer's Delight: vines on ropes">
-Hang a Farmer's Delight rope above a ripe bush and it climbs, up to {c.ropeMaxHeight} blocks tall, and fruits along the
-rope the way FD's tomatoes do. Bone meal on a ripe bush under a rope makes it climb right away. See [Farmer's Delight](/farmers-delight/).
+## Trellis
+
+<Render name="scenes/trellis" float="right" size={256} alt="Grape and hop vines on trellises, and a bare trellis" />
+
+Put a <Item id="trellis" /> on top of a bush, and once the bush is ripe it climbs, up to {c.climbMaxHeight} blocks tall,
+fruiting all the way up. A trellis faces you when you place it and lines up with the one below it, so rows stay straight.
+
+- Each vine grows, fruits and gets picked like the bush, half-ripe too. Bone meal on a ripe bush starts the climb right away.
+- Breaking a vine gives you its fruit and leaves the trellis standing.
+- A trellis isn't a ladder: everything on it is in reach from the ground.
+
+<Recipe id="trellis" />
+
+<Aside title="With Farmer's Delight: ropes work too">
+A Farmer's Delight rope above a bush works just like a trellis, the way FD's tomatoes climb. See [Farmer's Delight](/farmers-delight/).
 </Aside>
 
 ## Barley
@@ -53,7 +72,7 @@ drops the same way: <Item id="barley" /> when it's ripe, plus extra seeds.
 
 ## Wild crops
 
-<Render name="scenes/wild-crops" float="right" size={256} alt="Wild grapes, wild hops and wild barley on grass" />
+<Render name="scenes/wild-crops" float="right" size={256} alt="Wild red grapes, wild white grapes, wild hops and wild barley on grass" />
 
 Your first seeds come from wild plants. They grow in patches, by biome and temperature, so they also show up in modded
 biomes that are tagged the usual way. Break one for produce, or use shears to take the whole plant home as decoration.
@@ -65,11 +84,12 @@ Farmers and the wandering trader sell seeds too, and village chests sometimes ho
 ## Farm life
 
 - **Bees** pollinate grapes, hops and barley and help them grow, as they do with vanilla crops.
-- **Animals:** barley breeds and feeds {animalList('minecraft:cow_food')} like wheat does, and
-  {animalList('minecraft:horse_food')} eat it. <Item id="barley_seeds" /> feed {animalList('minecraft:chicken_food')} and
-  {animalList('minecraft:parrot_food')}.
-- **Foxes** love grapes: they pick ripe grapes off the bushes, just like they raid sweet berry bushes.
-- **Farmers** plant and harvest barley in their fields.
+- **Animals:** <Item id="barley" /> feeds and breeds {list(eaters('vineandbarrel:barley').filter((a) => a !== 'horses' && a !== 'llamas'))} like
+  wheat does. Horses and llamas heal and grow up on it just as they do on wheat, and on the <Item id="barley_bale" /> as on a hay bale.
+  <Item id="barley_seeds" /> feed {list(eaters('vineandbarrel:barley_seeds'))}, and you can breed {list(eaters('vineandbarrel:red_grapes'))} with grapes.
+- **Foxes** love grapes, red and white: they pick them off the bushes, just like they raid sweet berry bushes. Vines up on a
+  trellis or rope are out of their reach, and they stop when mob griefing is off.
+- **Farmers** plant and harvest barley in their fields and compost spare seeds. Grapes and hops they leave to you.
 - **Composter:** every crop composts with vanilla's chances.
 
 <table>
@@ -81,15 +101,30 @@ Farmers and the wandering trader sell seeds too, and village chests sometimes ho
 
 ## Storage blocks
 
-<Render name="scenes/storage" float="right" size={256} alt="Grape Crate, Hops Crate and Barley Bale" />
+<Render name="scenes/storage" float="right" size={256} alt="Red Grape Crate, White Grape Crate, Hops Crate and Barley Bale" />
 
-Pack nine of a crop into a <Item id="grape_crate" />, <Item id="hops_crate" /> or <Item id="barley_bale" />, and unpack it
+Pack nine of a crop into a <Item id="grape_crate" />, <Item id="white_grape_crate" />, <Item id="hops_crate" /> or
+<Item id="barley_bale" />, and unpack it
 again in the crafting grid. The <Item id="barley_bale" /> is a hay bale in every way: it softens a fall, a campfire on top of
 it sends its smoke up high, and llamas and horses eat it.
 
 <Recipe id="grape_crate" /> <Recipe id="barley_bale" />
 
+## Good to know
+
+- **Pick, don't break.** Breaking a young bush drops nothing, and the plant is gone. Breaking one with fruit drops it (more
+  with Fortune), but a right-click picks it and keeps the bush.
+- **Walk right through.** Grape and hop bushes don't prick or slow you the way sweet berry bushes do.
+- **Light and water:** a bush only grows in good light. Water washes bushes away, and pistons pop them.
+- **Grapes are a snack,** like sweet berries.
+- **More wild plants:** bone meal on a wild crop often plants another one nearby, an easy way to get your first seeds.
+  Wild barley drops one barley and a seed.
+- **Farmland under barley** never turns back into dirt, as with any crop.
+- **Vines** need light too: in the dark they break, and the trellis or rope stays. Bone meal on a full-grown plant passes up
+  to the vine above it. A vine on a rope can be climbed like the rope.
+- **Bees** never make a bush climb; only you can start that.
+
 ## Seasons
 
-With Serene Seasons installed, the crops have their seasons: grapes grow in {seasonsOf('vineandbarrel:red_grapes')}, hops in
+With Serene Seasons installed, the crops have their seasons: grapes, red and white, grow in {seasonsOf('vineandbarrel:red_grapes')}, hops in
 {seasonsOf('vineandbarrel:hops')}, and barley in {seasonsOf('vineandbarrel:barley_seeds')}. See [Compatibility](/compatibility/).

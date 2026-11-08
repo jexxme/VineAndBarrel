@@ -1,0 +1,109 @@
+---
+title: 快速上手
+description: 安装 Vine & Barrel，了解它加入了什么、酿酒流程是怎样的，再挑一个起点。
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import Loop from '../../../components/brewing/Loop.astro';
+import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/zh-cn';
+import { downloads } from '../../../data/code/downloads';
+
+export const cells = { 'next release': '下个版本', planned: '计划中' };
+export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+
+export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
+export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
+
+Vine & Barrel 为 Minecraft 带来葡萄园、酿酒坊和酒窖。你种下葡萄、啤酒花和大麦，在铜锅里酿出果汁和麦汁，
+让它们在橡木桶里发酵、陈酿，再和朋友们干一杯。好酒不怕等：陈酿过的酒增益更强、持续更久，在杯中还会闪闪发光。
+
+<Shot src="hero.jpg" caption="一座 Vine & Barrel 的农庄：带酒桶地窖和藤架的酒馆、葡萄园、搭在支架上的啤酒花，还有一片大麦田。" />
+
+## 安装
+
+找到你的 Minecraft 版本和加载器，从对应的格子里下载：
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{cell(r.neoforge)}</td>
+				<td>{cell(r.fabric)}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+- **NeoForge** 需要 {downloads.map((r) => `NeoForge ${r.neoforgeNeeds?.replace(' or newer', ' 或更高版本') ?? `${meta.neoforge} 或更高版本`}（Minecraft ${r.minecraft}）`).join('；')}。
+- **Fabric** 需要 Fabric Loader {meta.fabricLoader} 或更高版本，以及 Fabric API {meta.fabricApi} 或更高版本。
+
+看文件名就知道你拿的是哪一个：<code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> 是 NeoForge 版，
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> 是 Fabric 版。客户端和服务器的 `mods` 文件夹里都要放。
+它不需要任何其他模组。所有联动内容都是可选的，会自动启用：详见[兼容性](/compatibility/)。
+
+<Aside type="tip" title="在玩 Farmer's Delight？">
+Vine & Barrel 是独立的模组，但和它很合拍：酿造锅可以架在 FD 的炉灶上，葡萄藤和啤酒花藤可以顺着 FD 的绳子往上爬，
+还有好几道厨锅菜肴、一道盛宴和一种面包会用到它的酒。详见 [Farmer's Delight](/farmers-delight/)。
+</Aside>
+
+## 运作方式
+
+每一种酒的流程都一样，从田间一路到杯中。点击某一步查看细节。
+
+<Loop />
+
+## 模组内容
+
+<dl class="tour">
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:red_grapes')?.src} alt="" width="32" height="32" /> 新作物</dt>
+		<dd>[葡萄灌木](/crops/)有红白两种，还有可以反复采摘的啤酒花灌木、供它们攀爬的棚架（不需要 Farmer's Delight），以及和小麦一样生长的大麦。最开始你会在野外、村庄农田和流浪商人那里遇到它们。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:brew_kettle')?.src} alt="" width="32" height="32" /> 酿酒坊</dt>
+		<dd>铜制的[酿造锅](/brew-kettle/)在火上把作物变成果汁和麦汁。它像其他铜块一样会氧化，也可以用链条吊起来，还能交给漏斗自动运转。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aging_barrel')?.src} alt="" width="32" height="32" /> 酒窖</dt>
+		<dd>[陈酿桶](/aging-barrel/)没有界面：倒入、等待、放酒，全都在世界里完成。酒桶可以并排连成酒架，也可以层层堆成酒墙。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:aged_red_wine')?.src} alt="" width="32" height="32" /> {meta.counts.drinks} 种酒</dt>
+		<dd>{list(young.map((d) => nameOf(d.id)))}，每种都分新酿和陈酿{fdExtra.length > 0 && `，装上 Farmer's Delight 后还有${list(fdExtra.map((d) => nameOf(d.id)))}`}。每种酒都带一个增益，新酿为 {roman(rules.youngBuffAmplifier)} 级，陈酿后为 {roman(rules.agedBuffAmplifier)} 级。详见[酒类](/drinks/)。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> 微醺</dt>
+		<dd>每喝一杯酒就加一级[微醺](/tipsy/)：起初是摇摇晃晃、打嗝，再添一点胆量，后来就眼皮发沉、腿脚发软。适可而止。</dd>
+	</div>
+	<div>
+		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> 酒馆</dt>
+		<dd>村庄里会有[酒馆](/villages/)，酒桶都是满的，所以你还没酿出第一杯，就能先尝到酒的滋味。</dd>
+	</div>
+</dl>
+
+## 从哪里开始
+
+- **刚接触这个模组？** 跟着[你的第一杯酒](/guides/first-drink/)走：从全新的世界到第一杯陈酿红葡萄酒，一步一步来。
+- **想大批量酿造？** [搭建酒窖](/guides/cellar/)讲了酒桶架、自动化和酿造规划。
+- **赶时间？** 找一座村庄酒馆：酒桶是满的，等着你去放酒。详见[村庄与酒馆](/villages/)。
+- **想查点东西？** 每个物品都在[所有物品与方块](/items/)里有自己的页面，所有配方都在[所有配方](/reference/recipes/)里，服务器和客户端选项则在[配置](/reference/config/)里。
+
+## 基础物品的合成
+
+这两个方块和两种酒具，全都用原版材料制作：
+
+<Recipe id="brew_kettle" /> <Recipe id="aging_barrel" />
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<style>{`
+.tour { margin: 1rem 0 0; border-top: 2px solid var(--fd-border); }
+.tour > div { display: grid; align-items: start; grid-template-columns: 12rem 1fr; gap: 1rem; padding: .7rem 0; border-bottom: 2px solid var(--fd-border); margin: 0; }
+.tour dt { font-weight: 400; display: flex; align-items: center; gap: 10px; color: var(--vb-heading); }
+.tour dd { margin: 0; }
+@media (max-width: 40rem) { .tour > div { grid-template-columns: 1fr; gap: .2rem; } }
+`}</style>

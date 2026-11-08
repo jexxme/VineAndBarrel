@@ -1,0 +1,73 @@
+---
+title: Konfiguracja
+description: Każda opcja Vine & Barrel, dla właścicieli serwerów i dla każdego gracza, z wartością domyślną i opisem działania.
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../../lib/l10n/pl';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+Vine & Barrel ma dwa pliki konfiguracyjne, oba o [Rauszyku](/tipsy/). Wszystko inne, od receptur po czas leżakowania w beczce,
+działa tak, jak mod jest dostarczany, i można to zmienić datapackiem jak każdą recepturę.
+
+W grze zmieniasz je na ekranie ustawień: **Mody**, Vine & Barrel, **Konfiguracja** w NeoForge; w Fabricu ten sam przycisk
+pojawia się po zainstalowaniu [Mod Menu](https://modrinth.com/mod/modmenu). Zmiany działają od razu. Opcje serwera
+widać tam w trybie jednego gracza (nie po otwarciu świata dla LAN); na serwerze są to opcje serwera.
+
+Same pliki: w NeoForge to pliki TOML z opcjami pod <code>[{configFiles.server.section}]</code>. W Fabricu to zwykłe
+pliki <code>.properties</code> w folderze <code>config</code>, z tymi samymi opcjami zapisanymi jako
+<code>{configFiles.server.section}.option=value</code>. W Fabricu plik klienta jest czytany przy starcie gry, więc
+po edycji uruchom ją ponownie; plik serwera jest czytany ponownie przy <code>/reload</code>.
+
+## Opcje serwera
+
+W <code>{configFiles.server.file}</code> w NeoForge, <code>{configFiles.server.fabricFile}</code> w Fabricu. Wartości serwera
+trafiają do każdego gracza, który dołącza, więc wszyscy grają według tych samych zasad. Jeden świat może mieć własne: wrzuć plik do
+folderu <code>serverconfig</code> tego świata, a będzie miał pierwszeństwo przed plikiem z <code>config</code>, dopóki ten świat działa.
+
+<table>
+	<thead><tr><th>Opcja</th><th>Domyślnie</th><th>Co robi</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">od {o.range[0]} do {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Tryb bezalkoholowy">
+Ustaw `enabled = false` (`tipsy.enabled=false` w Fabricu), a napoje staną się zwykłymi napojami z bonusami: bez Rauszyka, czkawki i urwanego filmu, ale z tymi samymi nazwami i bonusami.
+Dobre na rodzinny serwer albo jeśli po prostu nie lubisz kołysania.
+</Aside>
+
+## Opcje klienta
+
+W <code>{configFiles.client.file}</code> w NeoForge, <code>{configFiles.client.fabricFile}</code> w Fabricu. Każdy gracz
+ustawia je dla siebie; zmieniają tylko to, co widzisz.
+
+<table>
+	<thead><tr><th>Opcja</th><th>Domyślnie</th><th>Co robi</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">od {o.range[0]} do {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="Choroba lokomocyjna?">
+Ustaw `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` w Fabricu). Rauszyk przestaje ruszać twoim ekranem, niezależnie od serwera: bez kołysania, szarpnięć i Mdłości. Suwaki Efekty zniekształcenia i Efekty pola widzenia z podstawowej gry też je łagodzą. Leżenie twarzą w ziemi po potknięciu nadal widać, to nie efekt ekranu; reszta Rauszyka zostaje bez zmian.
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

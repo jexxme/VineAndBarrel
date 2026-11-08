@@ -1,0 +1,529 @@
+---
+// A brew from start to finish, played on the Brew Kettle's real screen: the ingredients go in, the fire lights, the
+// arrow fills while the kettle steams and rattles, the gauge rises in the brew's colour, and the brew is bottled or
+// poured into a bucket. Pick a recipe; it plays when it scrolls into view (sped up: the real time is in the caption).
+// Positions come from src/data/code/kettle.ts, colours, servings and times from the recipes.
+import Slot from '../mc/Slot.astro';
+import Sprite from '../mc/Sprite.astro';
+import { kettleScreen as k } from '../../data/code/kettle';
+import { byType, rules, nameOf, iconOf, seconds, url } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
+
+const locale = localeOf(Astro.currentLocale);
+
+const brews = byType('vineandbarrel:brewing').filter((r) => !r.fdOnly && r.loaded);
+const s = 2;
+const W = 176;
+const H = 80;
+const at = (x: number, y: number) => `position:absolute;left:${x * s}px;top:${y * s}px`;
+const [lx, ly, lw, lh] = k.liquid;
+const hexOf = (c: number) => '#' + c.toString(16).padStart(6, '0');
+const surfaceOf = (c: number) => '#' + [16, 8, 0].map((b) => (((c >> b) & 255) + 255) >> 1).map((v) => v.toString(16).padStart(2, '0')).join('');
+const steps = [t('Fill the kettle', locale), t('Heat from below', locale), t('Brewing', locale), t('Done', locale), t('Bottle it', locale)];
+// Words for the script (it can't call t())
+const words = { brewing: t('Brewing', locale), done: t('Done', locale), play: t('Play', locale), pause: t('Pause', locale) };
+// English names lose the "Bottle of " in the buttons; other languages show the full name
+const shortName = (id: string) => (locale === 'en' ? nameOf(id, locale).replace(/^Bottle of /, '') : nameOf(id, locale));
+---
+<figure class="vb-brew not-content" data-i18n={JSON.stringify(words)}>
+	<div class="pick" role="group" aria-label={t('Recipe', locale)}>
+		{brews.map((r, i) => (
+			<button type="button" class="mc-button pick-btn" aria-pressed={i === 0 ? 'true' : 'false'} data-i={i}>
+				<img src={iconOf(r.result!.id)?.src} alt="" width="32" height="32" />
+				<span>{shortName(r.result!.id)}</span>
+			</button>
+		))}
+	</div>
+	<div class="stage">
+		<div class="kettle" aria-hidden="true">
+			<img src={url('/renders/scenes/kettle-on-campfire.png')} alt="" width="192" height="192" />
+			<span class="steam"><i></i><i></i><i></i><i></i></span>
+			<span class="hiss">{t('*hiss*', locale)}</span>
+		</div>
+		{brews.map((r, i) => {
+			const color = rules.kettleLiquidColors?.[r.result!.id] ?? 0x3f76e4;
+			const fill = Math.min(lh, Math.max(1, Math.ceil((r.servings! * lh) / rules.kettleMaxServings)));
+			const name = nameOf(r.result!.id, locale);
+			const time = seconds(r.brewingTime!, locale);
+			const servings = t('{n} serving|{n} servings', locale, { n: r.servings! });
+			return (
+				<div
+					class="run"
+					data-i={i}
+					hidden={i !== 0}
+					data-servings={servings}
+					data-brewing={t('Brewing, {time}', locale, { time })}
+					data-caption={t('{name}: {servings}, {time} a batch.', locale, { name, servings, time })}
+					data-caption-fast={t('{name}: {servings}, {time} a batch (sped up here).', locale, { name, servings, time })}
+				>
+					<div class="gui" style={`width:${W * s}px;height:${H * s}px`} role="img" aria-label={t('Brew Kettle brewing {name}', locale, { name })}>
+						<Sprite src="/gui/brew_kettle.png" x={0} y={0} w={W} h={H} scale={s} />
+						<span class="title" style={at(k.titleX, 6)}>{nameOf('vineandbarrel:brew_kettle', locale)}</span>
+						{r.ingredients!.map((g, n) => (
+							<div class="ing" style={`${at(k.inputs[0] + (n % 3) * k.step, k.inputs[1] + Math.floor(n / 3) * k.step)};--n:${n}`}>
+								<Slot ingredient={g} bare scale={s} />
+							</div>
+						))}
+						<div class="heat" style={at(k.heat[0], k.heat[1])}>
+							<Sprite src="/gui/brew_kettle.png" x={k.heat[4]} y={k.heat[5]} w={k.heat[2]} h={k.heat[3]} scale={s} />
+						</div>
+						<div class="arrow" style={at(k.arrow[0], k.arrow[1])}>
+							<Sprite src="/gui/brew_kettle.png" x={k.arrow[4]} y={k.arrow[5]} w={k.arrow[2]} h={k.arrow[3]} scale={s} />
+						</div>
+						<div
+							class="liquid"
+							style={`${at(lx, ly + lh - fill)};width:${lw * s}px;height:${fill * s}px;background:${hexOf(color)};border-top:${s}px solid ${surfaceOf(color)}`}
+							data-tip-items={`${servings}~`}
+						></div>
+						<div style={at(lx, ly)}>
+							<Sprite src="/gui/brew_kettle.png" x={k.glass[0]} y={k.glass[1]} w={lw} h={lh} scale={s} />
+						</div>
+					</div>
+					<div class="out">
+						<span class="row"><Slot id="minecraft:glass_bottle" scale={2} /><b>&gt;</b><Slot id={r.result!.id} scale={2} /></span>
+						{r.bucket && <span class="row"><Slot id="minecraft:bucket" scale={2} /><b>&gt;</b><Slot id={r.bucket.id} scale={2} /></span>}
+					</div>
+				</div>
+			);
+		})}
+	</div>
+	<ol class="steps">
+		{steps.map((label, i) => <li data-step={i}><span class="n">{i + 1}</span><span class="t">{label}</span></li>)}
+	</ol>
+	<div class="ctl">
+		<button type="button" class="play" aria-pressed="true"><span class="i" aria-hidden="true"></span><span class="t">{words.pause}</span></button>
+		<figcaption class="fd-kicker"></figcaption>
+	</div>
+</figure>
+
+<script>
+	const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+	for (const fig of document.querySelectorAll<HTMLElement>('.vb-brew')) {
+		const runs = [...fig.querySelectorAll<HTMLElement>('.run')];
+		const stepEls = [...fig.querySelectorAll<HTMLElement>('.steps li')];
+		const cap = fig.querySelector<HTMLElement>('figcaption')!;
+		const play = fig.querySelector<HTMLButtonElement>('.play')!;
+		const W = JSON.parse(fig.dataset.i18n!);
+		let run = runs[0];
+		let timers: number[] = [];
+		let playing = !reduce;
+		let visible = false;
+		const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
+		const clear = () => {
+			timers.forEach(clearTimeout);
+			timers = [];
+		};
+		const step = (n: number, label?: string) => {
+			fig.dataset.step = String(n);
+			stepEls.forEach((li, i) => {
+				li.classList.toggle('on', i === n);
+				li.classList.toggle('done', i < n);
+			});
+			if (label) stepEls[n].querySelector('.t')!.textContent = label;
+		};
+		/** One brew, start to finish, then again */
+		const cycle = () => {
+			clear();
+			const ings = [...run.querySelectorAll<HTMLElement>('.ing')];
+			stepEls[2].querySelector('.t')!.textContent = W.brewing;
+			stepEls[3].querySelector('.t')!.textContent = W.done;
+			fig.classList.remove('lit', 'brewing', 'full', 'bottled', 'hissed');
+			ings.forEach((e) => e.classList.remove('in', 'used'));
+			step(0);
+			let t = 300;
+			ings.forEach((e) => at((t += 320), () => e.classList.add('in')));
+			at((t += 500), () => {
+				step(1);
+				fig.classList.add('lit');
+			});
+			at((t += 700), () => {
+				step(2, run.dataset.brewing);
+				fig.classList.add('brewing');
+			});
+			at((t += 3000), () => {
+				fig.classList.remove('brewing');
+				fig.classList.add('full', 'hissed');
+				ings.forEach((e) => e.classList.add('used'));
+				step(3, run.dataset.servings);
+			});
+			at((t += 1200), () => {
+				step(4);
+				fig.classList.add('bottled');
+			});
+			at((t += 2600), () => playing && visible && cycle());
+		};
+		/** The finished state, for reduced motion and when paused before it ever played */
+		const still = () => {
+			clear();
+			fig.classList.remove('brewing', 'hissed');
+			fig.classList.add('lit', 'full', 'bottled', 'still');
+			run.querySelectorAll('.ing').forEach((e) => e.classList.add('in'));
+			stepEls.forEach((li) => li.classList.remove('on', 'done'));
+			stepEls[2].querySelector('.t')!.textContent = run.dataset.brewing!;
+			stepEls[3].querySelector('.t')!.textContent = run.dataset.servings!;
+		};
+		const caption = () => {
+			cap.textContent = (playing ? run.dataset.captionFast : run.dataset.caption)!;
+		};
+		const setPlaying = (on: boolean) => {
+			playing = on;
+			play.setAttribute('aria-pressed', String(on));
+			play.querySelector('.t')!.textContent = on ? W.pause : W.play;
+			fig.classList.toggle('still', !on);
+			if (on && visible) cycle();
+			else still();
+			caption();
+		};
+		play.addEventListener('click', () => setPlaying(!playing));
+		for (const b of fig.querySelectorAll<HTMLButtonElement>('.pick-btn')) {
+			b.addEventListener('click', () => {
+				for (const o of fig.querySelectorAll('.pick-btn')) o.setAttribute('aria-pressed', String(o === b));
+				run = runs[+b.dataset.i!];
+				runs.forEach((r) => (r.hidden = r !== run));
+				caption();
+				playing && visible ? cycle() : still();
+			});
+		}
+		new IntersectionObserver(([e]) => {
+			visible = e.isIntersecting;
+			if (visible && playing) cycle();
+			else if (!visible) clear();
+		}, { threshold: 0.35 }).observe(fig);
+		if (reduce) setPlaying(false);
+		else caption();
+	}
+</script>
+
+<style>
+	.vb-brew {
+		margin: 32px 0;
+	}
+	.pick {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-bottom: 14px;
+	}
+	.pick-btn {
+		gap: 8px;
+		padding: 2px 14px 4px 8px !important;
+	}
+	.pick-btn img {
+		image-rendering: pixelated;
+	}
+	.pick-btn[aria-pressed='true'] {
+		border-image-source: url('../../assets/ui/button-oak-on.png');
+		color: #fff0a8 !important;
+	}
+	.stage {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 16px 24px;
+	}
+	.run {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 16px 24px;
+	}
+	.run[hidden] {
+		display: none;
+	}
+	.gui {
+		position: relative;
+		flex: none;
+		outline: 2px solid #000;
+		image-rendering: pixelated;
+	}
+	.title {
+		font-size: 20px;
+		line-height: 20px;
+		color: #404040;
+		white-space: nowrap;
+	}
+	/* Ingredients pop into their slots one by one, and are used up when the brew is done */
+	.ing {
+		opacity: 0;
+		transform: translateY(-14px) scale(0.6);
+		transition: opacity 0.18s, transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+	}
+	.ing.in {
+		opacity: 1;
+		transform: none;
+	}
+	.ing.used {
+		opacity: 0;
+		transform: scale(0.4);
+		transition-duration: 0.3s;
+	}
+	.still .ing {
+		opacity: 1;
+		transform: none;
+	}
+	.heat {
+		opacity: 0;
+		transition: opacity 0.2s;
+	}
+	.lit .heat {
+		opacity: 1;
+		animation: flame 0.5s steps(2) infinite;
+	}
+	@keyframes flame {
+		50% {
+			filter: brightness(1.25);
+		}
+	}
+	/* The arrow fills pixel by pixel while it brews */
+	.arrow {
+		width: 0;
+		overflow: hidden;
+	}
+	.brewing .arrow {
+		width: 48px;
+		transition: width 3s steps(24, end);
+	}
+	.full .arrow {
+		width: 48px;
+	}
+	.liquid {
+		box-sizing: border-box;
+		transform: scaleY(0);
+		transform-origin: bottom;
+		transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.3, 1);
+	}
+	.full .liquid {
+		transform: none;
+	}
+	/* Bottling: the bottle and bucket rows light up one after the other */
+	.out {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.row {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		opacity: 0.35;
+		transition: opacity 0.3s, transform 0.3s;
+	}
+	.row b {
+		font-weight: 400;
+		color: var(--sl-color-gray-3);
+	}
+	.bottled .row {
+		opacity: 1;
+	}
+	.bottled .row + .row {
+		transition-delay: 0.45s;
+	}
+	.bottled:not(.still) .row {
+		animation: nudge 0.5s ease-out;
+	}
+	.bottled:not(.still) .row + .row {
+		animation-delay: 0.45s;
+	}
+	@keyframes nudge {
+		40% {
+			transform: translateX(6px);
+		}
+	}
+	/* The kettle itself: steam curls out while it brews, the lid rattles, one big puff when it's done */
+	.kettle {
+		position: relative;
+		width: 160px;
+		height: 160px;
+		flex: none;
+	}
+	.kettle img {
+		width: 160px;
+		height: 160px;
+		image-rendering: pixelated;
+	}
+	.brewing .kettle img {
+		animation: rattle 0.9s steps(1) infinite;
+	}
+	@keyframes rattle {
+		0%,
+		70% {
+			transform: none;
+		}
+		75% {
+			transform: translate(2px, -2px);
+		}
+		85% {
+			transform: translate(-2px, 0);
+		}
+	}
+	.steam {
+		position: absolute;
+		left: 50%;
+		top: 4px;
+		width: 40px;
+		height: 60px;
+		margin-left: -20px;
+		pointer-events: none;
+	}
+	.steam i {
+		position: absolute;
+		bottom: 0;
+		left: 16px;
+		width: 10px;
+		height: 10px;
+		background: rgb(240 240 240 / 0.8);
+		opacity: 0;
+	}
+	.brewing .steam i {
+		animation: steam 1.4s ease-out infinite;
+	}
+	.steam i:nth-child(2) {
+		animation-delay: 0.35s !important;
+		left: 8px;
+	}
+	.steam i:nth-child(3) {
+		animation-delay: 0.7s !important;
+		left: 22px;
+	}
+	.steam i:nth-child(4) {
+		animation-delay: 1.05s !important;
+	}
+	@keyframes steam {
+		0% {
+			opacity: 0;
+			transform: translate(0, 0) scale(0.6);
+		}
+		20% {
+			opacity: 0.9;
+		}
+		100% {
+			opacity: 0;
+			transform: translate(8px, -48px) scale(1.6);
+		}
+	}
+	.hiss {
+		position: absolute;
+		left: 50%;
+		top: -6px;
+		color: #fff;
+		text-shadow: 2px 2px 0 #3f3f3f;
+		opacity: 0;
+		pointer-events: none;
+		transform: translateX(-50%);
+	}
+	.hissed:not(.still) .hiss {
+		animation: hiss 1.2s ease-out;
+	}
+	@keyframes hiss {
+		0% {
+			opacity: 0;
+			transform: translate(-50%, 8px);
+		}
+		25% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+			transform: translate(-50%, -28px);
+		}
+	}
+	/* The steps, chalked underneath: the current one lit, the finished ones ticked */
+	.steps {
+		list-style: none;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px 22px;
+		padding: 0;
+		margin: 18px 0 0;
+	}
+	.steps li {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		margin: 0;
+		color: var(--sl-color-gray-3);
+		transition: color 0.2s;
+	}
+	.steps .n {
+		display: grid;
+		place-items: center;
+		width: 28px;
+		height: 28px;
+		background: var(--fd-surface-2);
+		color: var(--sl-color-gray-3);
+		box-shadow: inset 0 0 0 2px var(--fd-border);
+		transition: background-color 0.2s, color 0.2s;
+	}
+	.steps li.done {
+		color: var(--sl-color-gray-2);
+	}
+	.steps li.done .n {
+		background: var(--vb-oak-dark);
+		color: #fff4dc;
+		box-shadow: inset 0 0 0 2px #1a0f07;
+	}
+	.steps li.on {
+		color: var(--sl-color-text-accent);
+	}
+	.steps li.on .n {
+		background: var(--vb-wine);
+		color: #fff0d8;
+		box-shadow: inset 0 0 0 2px var(--vb-wine-line), 0 0 0 2px var(--vb-gilt);
+	}
+	.ctl {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 6px 20px;
+		margin-top: 10px;
+	}
+	.play {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font: inherit;
+		font-size: 20px;
+		color: var(--sl-color-text-accent);
+		background: none;
+		border: 0;
+		padding: 0;
+		cursor: pointer;
+	}
+	.play:hover,
+	.play:focus-visible {
+		color: var(--sl-color-white);
+		outline: none;
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 6px;
+	}
+	.play .i {
+		width: 10px;
+		height: 12px;
+		background: currentColor;
+		clip-path: polygon(0 0, 100% 50%, 0 100%);
+	}
+	.play[aria-pressed='true'] .i {
+		clip-path: polygon(0 0, 35% 0, 35% 100%, 0 100%, 0 0, 65% 0, 100% 0, 100% 100%, 65% 100%, 65% 0);
+	}
+	@media (max-width: 40rem) {
+		.kettle {
+			width: 112px;
+			height: 112px;
+		}
+		.kettle img {
+			width: 112px;
+			height: 112px;
+		}
+		.steam {
+			transform: scale(0.75);
+			transform-origin: bottom;
+		}
+	}
+	/* The screen is 352 px wide at 2x; on narrow phones it shrinks to fit the column */
+	@media (max-width: 400px) {
+		.gui {
+			zoom: 0.85;
+		}
+	}
+</style>

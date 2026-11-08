@@ -1,0 +1,92 @@
+---
+title: Interacciones
+description: Todas las pequeñas cosas que hacen los bloques y las bebidas de Vine & Barrel, cada una funcionando como algo que ya existe en vanilla o en Farmer's Delight.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Advancements from '../../../components/data/Advancements.astro';
+import { rules } from '../../../lib/l10n/es';
+
+Vine & Barrel intenta sentirse parte del juego. Casi todo lo de abajo funciona como algo que ya conoces de vanilla o de
+Farmer's Delight, así que puedes adivinar los controles sin leer. Esta página lo reúne todo en un solo sitio; las páginas
+de cada mecánica lo explican con más detalle.
+
+## Barril de crianza
+
+<Render name="scenes/barrel-cellar" float="right" size={224} alt="Una pared de barriles apilados" />
+
+- **Se coloca mirándote**, con el frente hacia ti, como un horno.
+- **Hileras:** los barriles uno al lado del otro con la misma orientación unen sus cunas, como se conectan las vallas.
+- **Pilas:** un barril sobre otro descansa sobre calzos en vez de sobre una cuna. Construye una pared de bodega.
+- **El tapón muestra la fase:** corcho, cierre hidráulico burbujeante mientras fermenta, cera roja una vez añejo.
+- **Se oye fermentar:** burbujas del cierre, cada vez más espaciadas hasta que termina.
+- **El grifo gotea** de vez en cuando mientras hay bebida dentro, del color de la bebida, como la miel de una colmena.
+- **El momento añejo:** un suave chasquido de corcho cuando la tanda pasa a añeja.
+- **Vierte** con un cubo o un frasco, como al llenar un caldero. Hasta que sea una bebida, un cubo o frasco vacío la recupera.
+- **Sirve** con una jarra o copa vacía, como al sacar una ración de un banquete de Farmer's Delight. El recipiente equivocado recibe una pista y no se gasta.
+- **Línea de estado** al hacer clic derecho con la mano vacía. Si le has puesto nombre en un yunque, aparece en ella.
+- **El comparador** lee las raciones que quedan.
+- **Rómpelo lleno** y conserva su tanda, como una caja de shulker. La crianza se pausa hasta que lo vuelvas a colocar.
+- **Los dispensadores** sirven con un recipiente o vierten una base. **Las tolvas** lo llenan y lo vacían.
+
+Mira [Barril de crianza](/aging-barrel/).
+
+## Marmita
+
+- **Se apoya como la olla:** una bandeja de hierro sobre una hoguera, fuego o lava; a ras sobre otras fuentes de calor; agáchate y
+  haz clic derecho con la mano vacía para colgarla de un asa.
+- **La tapa se levanta** mientras alguien tiene la pantalla abierta, como un cofre. Un brebaje terminado la mantiene
+  levantada, y puedes ver el brebaje dentro, que baja a medida que sacas raciones.
+- **Mientras elabora**, sale vapor por debajo de la tapa y la tapa tintinea. **Al terminar**, una nube de vapor.
+- **Haz clic derecho con un frasco o un cubo** para llenarlo, como un caldero.
+- **Rómpela llena** y conserva su contenido.
+- **El comparador** da señal mientras haya algo dentro. **Las tolvas** meten ingredientes y recipientes vacíos, y sacan los llenos por debajo.
+- **Cobre:** se desgasta con el tiempo; el panal la encera, un hacha la raspa, un rayo la limpia.
+- **Libro de recetas** en su pantalla.
+
+Mira [Marmita](/brew-kettle/).
+
+## Bebidas y recipientes
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Jarras y copas sobre un bloque" />
+
+- **Deja las bebidas:** agáchate y haz clic derecho en la parte de arriba de un bloque con una jarra o copa, llena o vacía.
+  Hasta cuatro por bloque, como las velas. Haz clic derecho con la mano vacía para recoger una.
+- **¡Salud!** Dos o más jugadores que terminan una bebida con {rules.cheersWindowTicks / 20} segundos de diferencia y a
+  {rules.cheersRadius} bloques unos de otros brindan, y la mejora de todos dura un {rules.cheersBonusPercent}% más.
+- **Beber** suena y se ve como una poción, y recuperas el recipiente vacío.
+- **Los cubos de zumo y de mosto** no se pueden verter como líquido, como la leche.
+
+## Achispado
+
+- **Los demás jugadores te ven balancearte** y ven tu hipo, tus tropiezos y tus caídas.
+- **Dormir la mona:** dormir toda la noche quita Achispado.
+- **La leche** lo quita; **el agua o cualquier zumo** lo baja un nivel.
+- **Pasa el cursor sobre el efecto** en tu inventario para ver qué hace tu nivel.
+- **Una copa de más** en el nivel máximo y sufres una laguna. Dónde despiertas es un misterio.
+
+Mira [Achispado](/tipsy/).
+
+## Cultivos y vida de granja
+
+- Los arbustos se recogen con un clic derecho (también medio maduros) y retroceden una fase, como las bayas dulces. Una espaldera sobre un arbusto le deja trepar.
+- Las abejas ayudan a crecer a las uvas, el lúpulo y la cebada.
+- La cebada alimenta y cría animales como el trigo; sus semillas alimentan a gallinas y loros.
+- Los aldeanos granjeros plantan y cosechan cebada.
+- Los zorros cogen uvas de los arbustos, tintas y blancas, como hacen con las bayas dulces.
+- Todos los cultivos se pueden convertir en abono.
+- La <Item id="barley_bale" /> amortigua una caída y eleva el humo de las hogueras como una bala de heno.
+
+Mira [Cultivos](/crops/).
+
+## Mundo
+
+- **Las tabernas de aldea** tienen barriles que ya están llenos, esperando a que los sirvas. Mira [Aldeas y tabernas](/villages/).
+- **JEI** muestra las recetas de elaboración y de crianza, además de páginas de información del barril y de los cultivos
+  silvestres. **Jade** muestra qué hay en una marmita o un barril cuando los miras. Mira [Compatibilidad](/compatibility/).
+
+## Logros
+
+Vine & Barrel tiene su propia pestaña de logros:
+
+<Advancements />

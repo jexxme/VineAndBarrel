@@ -1,0 +1,128 @@
+---
+title: Braukessel
+description: Wie der Braukessel Trauben, Beeren, Äpfel, Honig, Gerste und Weizen zu Saft, Most und Würze macht und wie du ihn heizt, füllst und automatisierst.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/de';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="Ein kupferner Braukessel auf seinem Eisenrost über einem Lagerfeuer" />
+
+Im <Item id="brew_kettle" /> beginnt jedes Getränk. Stell ihn auf eine Hitzequelle, gib die Zutaten hinein, und ein paar Sekunden
+später enthält er einen Ansatz Saft, Most oder Würze, bereit zum Abfüllen. Wenn du schon einmal im Kochtopf von Farmer's Delight gekocht hast,
+weißt du, wie er funktioniert.
+
+## Hitze
+
+Der Kessel braut nur, solange der Block direkt darunter heiß ist:
+
+- **{heatNames(rules.heat.tray)}**: Der Kessel steht auf einem Eisenrost darüber.
+- **{heatNames(direct)}**: Er sitzt direkt obendrauf.
+- **Durch einen {heatNames(rules.heat.conductors)}**: Die Hitze wandert durch ihn hindurch nach oben, ein Trichter kann also zwischen Kessel und
+  Hitzequelle sitzen und ihn trotzdem versorgen.
+- Mit Farmer's Delight heizt auch dessen **Herd** den Kessel.
+
+Ein Lagerfeuer muss entzündet sein. Die kleine Flamme auf dem Bildschirm des Kessels leuchtet, wenn er erhitzt wird.
+
+<Render name="scenes/kettle-on-magma" size={192} caption="Auf einem Magmablock" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="Hitze durch einen Trichter" />
+<Render name="scenes/kettle-hanging" size={192} caption="Am Henkel aufgehängt" />
+
+**Aufhängen:** Schleich und klick den Kessel mit leerer Hand rechts an, um den Rost gegen einen Eisenhenkel zu tauschen, oder stell ihn an
+die Unterseite eines Blocks. Ein hängender Kessel braut weiter über einem Feuer direkt darunter und sieht unter einer Kette großartig aus.
+
+## Brauen
+
+Öffne den Kessel mit Rechtsklick und gib die Zutaten hinein. Die Anzeige rechts zeigt den Ansatz in seiner Farbe und wie
+voll der Kessel ist; fahr darüber, um die Portionen zu sehen.
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+Jedes Rezept ergibt **{rules.servingsPerBucket} Portionen** und dauert **{seconds(brews[0].brewingTime)}**. Ein erhitzter Kessel dampft
+und blubbert, sobald er einen Sud oder die Zutaten für einen enthält (sonst bleibt er still); während ein Ansatz braut, klappert zusätzlich der Deckel, und wenn er fertig ist, lässt er eine Dampfwolke ab. Der Kessel braut
+weitere Ansätze, solange Zutaten da sind, insgesamt bis zu {rules.kettleMaxServings} Portionen.
+
+<BrewFlow />
+
+Ist ein Gebräu fertig, bleibt der Deckel oben, und du siehst es darin, wie es sinkt, wenn du Portionen entnimmst. Während ein Ansatz braut,
+ist der Deckel unten; ist die letzte Portion weg, schließt er sich.
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="Der Kessel mit offenem Deckel, man sieht das Gebräu" />
+
+## Abfüllen
+
+Wie bei einem Kessel aus Vanilla: Klick den Kessel mit einem leeren Behälter rechts an.
+
+- Eine <Item id="glass_bottle" /> nimmt **{rules.servingsPerBottle} Portion**,
+- ein leerer <Item id="bucket" /> nimmt **{rules.servingsPerBucket} Portionen**, der Kessel braucht also mindestens so viele.
+
+Eimer mit Saft und Würze lassen sich nicht in die Welt ausleeren, wie Milch.
+
+## Saft zum Trinken
+
+<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" /> und <Item id="apple_juice" /> sind
+Getränke für sich: Das Trinken dauert {juice.consumable.seconds} s, du kannst sie immer trinken, und sie stillen ein bisschen Hunger.
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+Jeder Saft senkt außerdem deinen [Schwips](/tipsy/) um eine Stufe. Würze und Honigmost müssen erst gären; trinken kannst du sie nicht.
+
+## Automatisierung
+
+Trichter können den Kessel allein betreiben:
+
+- **Von oben** füttert ein Trichter Zutaten ein, und leere Flaschen oder Eimer.
+- **Von den Seiten** füttert er leere Flaschen oder Eimer.
+- Der Kessel füllt sie aus dem Gebräu, und **ein Trichter darunter** zieht die gefüllten heraus.
+
+Weder die Zutaten noch das Gebräu selbst werden herausgezogen.
+
+Ein Komparator neben dem Kessel gibt ein Signal, sobald irgendetwas darin ist, Zutaten, Gebräu oder Behälter, und ein
+stärkeres, je voller alles wird. Ein Gebräu allein gibt nur ein schwaches Signal, nutze ihn also, um „etwas
+drin“ von „leer“ zu unterscheiden, nicht um Portionen zu zählen.
+
+## Kupfer
+
+Der Kessel ist aus Kupfer und altert wie Kupfer.
+
+<Stages prefix="kettle-weathering" title="Verwitterung" labels={['Kupfer', 'Angelaufen', 'Verwittert', 'Oxidiert']} />
+
+- Mit der Zeit läuft er an, verwittert und oxidiert schließlich. Er braut auf jeder Stufe gleich.
+- **Honigwabe** wachst ihn und hält die Verwitterung auf. Eine **Axt** schabt Wachs oder eine Stufe Verwitterung ab, und ein Blitz reinigt ihn.
+- **Baust du ihn voll ab,** behält er sein Gebräu: Der Tooltip des Gegenstands und die Füllanzeige zeigen es, und du kannst ihn woanders aufstellen
+  und weitermachen. Zutaten und wartende Flaschen oder Eimer fallen auf den Boden.
+- Er verwittert nicht, solange jemand seinen Bildschirm geöffnet hat.
+
+## Gut zu wissen
+
+- **Feuer verloren?** Fällt die Hitze weg, geht ein Ansatz nicht verloren, aber der Pfeil läuft doppelt so schnell zurück, wie er sich gefüllt hat.
+  Zutaten werden erst verbraucht, wenn ein Ansatz fertig ist, es geht also nichts verloren.
+- **Ein Gebräu nach dem anderen.** Der Kessel braut kein anderes Getränk auf ein Gebräu, das noch drin ist: Er wartet, mit den
+  Zutaten unberührt, bis du das alte abgefüllt hast. Bei {rules.kettleMaxServings} Portionen wartet er ebenfalls.
+- **Halte das Raster sauber.** Jeder Gegenstand, den das Rezept nicht braucht, hält den Kessel an, auch Reste von einem anderen Rezept. Ein
+  Trichter oben schiebt alles hinein, was er hält, füttere ihn also nur mit Zutaten.
+- **Wo bleibt meine Erfahrung?** Jeder Ansatz bringt ein bisschen Erfahrung. Der Kessel spart sie auf und gibt sie dem nächsten Spieler, der
+  von Hand eine Flasche oder einen Eimer füllt, oder lässt sie fallen, wenn er abgebaut wird.
+- **Nicht genug für einen Eimer?** Ein Klick mit dem Eimer öffnet nur den Bildschirm. Schleichen mit Flasche oder Eimer bewirkt nichts.
+- **Ein Trichter, zwei Aufgaben:** Ein Trichter unter dem Kessel leitet die Hitze des Lagerfeuers nach oben und sammelt die gefüllten Behälter.
+- **Schleich und klick mit leerer Hand rechts,** um den Kessel am Henkel aufzuhängen, und noch einmal, um ihn wieder hinzustellen.
+- Der Kessel kann im Wasser stehen, lässt sich mit jedem Werkzeug schnell abbauen (die Spitzhacke am schnellsten), behält seinen Amboss-Namen und
+  lässt sich nicht stapeln. Eine Explosion kann ihn zerstören, samt Gebräu.
+- **Rezeptbuch:** Gebräue schalten sich frei, wenn du ihre Hauptpflanze aufhebst, sortiert nach Säften, Würzen und Sonstigem.
+
+## Rezept
+
+<Recipe id="brew_kettle" />

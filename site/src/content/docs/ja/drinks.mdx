@@ -1,0 +1,84 @@
+---
+title: 飲み物
+description: Vine & Barrel のワイン、ビール、サイダー、ミードのすべて。材料、注ぐ容器、得られる強化効果。
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/ja';
+
+export const sample = items[drinks[0].id];
+
+どの飲み物も同じルールです。
+
+- **強化効果は1つ**で、[ほろ酔い](/tipsy/)が1レベル付きます。ほろ酔い{roman(rules.tipsy.noBuffLevel - 1)}以上になる飲み物は
+  強化効果がありません。酔いすぎて楽しめないのです。
+- 満腹でもいつでも飲めます。飲むのに{sample.consumable.seconds}秒かかり、空の
+  <Item id="mug" />か<Item id="wine_glass" />が手元に戻ります。
+- スタックは**{sample.stack}**個までです。
+- **若い**飲み物の強化効果はレベル{roman(rules.youngBuffAmplifier)}で、**{duration(rules.youngBuffTicks)}**続きます。**熟成した**ものは色が
+  深く、エンチャントされたアイテムのようにきらめき、強化効果は**レベル{roman(rules.agedBuffAmplifier)}で{duration(rules.agedBuffTicks)}**続きます。小麦ビールの
+  満腹度回復は、すぐに効いて、数ポイントの空腹度が回復します。
+- テーブルに置いても、熟成した飲み物はエンチャントされたアイテムのようにきらめくので、若いものとひと目で見分けられます。
+
+## 色
+
+飲み物にはそれぞれ色があり、樽ののぞき窓や、テーブルのジョッキとグラスで見られます。熟成したものは
+ひと回り深い色です。
+
+<DrinkSwatches />
+
+## ワイン、ビール、サイダー、ミード
+
+<DrinkTable />
+
+満腹度回復はほかの強化効果と違って持続しません。1ティックごとに空腹度が1ポイント(と少しの
+隠し満腹度)すぐに回復します。小麦ビールが時間ではなく空腹度のポイントで表示されるのは、そのためです。
+
+## Farmer's Delight があれば
+
+Farmer's Delight の瓶も発酵できます。そのリンゴサイダーは、この Mod のリンゴジュースと同じハードサイダーになり、
+スイカジュースはスイカワインになります。スイカワインは FD を入れたときだけ作れます(アイテム自体は常にあります)。
+[Farmer's Delight](/farmers-delight/)をご覧ください。
+
+<DrinkTable fd />
+
+## 容器
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="ブロックの上のジョッキとグラス" />
+
+ワインは<Item id="wine_glass" />、ビール、サイダー、ミードは<Item id="mug" />に注ぎます。どちらも{items['vineandbarrel:mug'].stack}個までスタックできます。
+
+**置く:** スニークしながらジョッキかグラスでブロックの上面を右クリックすると、中身が入っていても空でも、そこに置けます。1ブロックに
+4つまで置け、それぞれが自分の飲み物を保ち、グラス越しに中身が見えます。素手で右クリックすると、拾い上げられます。
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="テーブルに置かれたジョッキとグラス。1ブロックに4つまで。" />
+
+## バッチを計画する
+
+みんなで飲むには、どれだけ必要でしょうか。[セラーを作る](/guides/cellar/#バッチを計画する)のプランナーが、
+何杯ぶんでも、作物、釜のバッチ数、バケツ、樽、待ち時間を計算します。
+
+## 乾杯！
+
+2人以上のプレイヤーが{rules.cheersWindowTicks / 20}秒以内、{rules.cheersRadius}ブロック以内で飲み終えると、
+グラスが触れ合い、小さな火花が上がり、全員のその飲み物の強化効果が**{rules.cheersBonusPercent}%長く**続きます。
+
+同じワールドのプレイヤー同士、1杯につき1回だけ数えられ、自分で2杯飲んでも乾杯にはなりません。ボーナスは
+その飲み物の強化効果の全時間の{rules.cheersBonusPercent}%で、残り時間に加算されます。強化効果が切れたばかりなら、その時間ぶんだけ戻ってきます。
+
+## 知っておくと便利なこと
+
+- **飲みすぎ?** ほろ酔い{roman(rules.tipsy.noBuffLevel - 1)}になる飲み物は強化効果がなく、それまでの飲み物の
+  強化効果も消えてしまいます。ポーションの効果は残ります。
+- **テーブル:** 飲み物は狙ったブロックの4分の1の区画か、いちばん近い空きに置かれ、しっかりした上面にだけ置けます。
+  素手で右クリックすると、狙った1つを拾い上げます。何か持っているときはそのアイテムが普通に使えるので、
+  テーブルの前で飲めます。ブロックを壊したり、ピストンで動かしたり、下のブロックがなくなったりすると、すべて落ちます。
+- **材料としての飲み物**(Farmer's Delight の鍋)を使うと、ジョッキやグラスが手元に戻ります。
+- **満腹?** 関係ありません。いつでも飲めます。

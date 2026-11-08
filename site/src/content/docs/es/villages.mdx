@@ -1,0 +1,64 @@
+---
+title: Aldeas y tabernas
+description: Tabernas de aldea con barriles listos para servir, granjas de aldea que cultivan uvas, lúpulo y cebada, intercambios de semillas y botín de cofres.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import VillageInfo from '../../../components/data/VillageInfo.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, roman } from '../../../lib/l10n/es';
+
+<Render name="scenes/tavern" float="right" size={256} alt="Un rincón de taberna" />
+
+## Tabernas
+
+Todos los tipos de aldea pueden tener una **taberna**, construida a su estilo y en una de dos distribuciones. Encontrarás una en
+aproximadamente una de cada tres aldeas, y de vez en cuando una aldea tiene dos. No hay dos iguales: lo que hay en los toneles, las bebidas de las
+mesas, las flores, los estandartes y las velas cambian de una taberna a otra.
+
+Busca el cartel colgante sobre la puerta. Dentro hay espacio para moverse: una mesa junto al fuego, taburetes en la barra, la marmita
+en su hoguera detrás. Tras la barra, unas escaleras bajan a la **bodega de barriles**, una sala abovedada iluminada con antorchas bajo el
+salón, llena de toneles.
+
+Cada tipo de aldea tiene algo propio:
+
+- **Llanura:** un jardín de cerveza, mesas largas bajo una pérgola de lúpulo.
+- **Desierto:** una terraza en el tejado, por las escaleras de fuera.
+- **Sabana:** una barra de veranda a la sombra, con su propio mostrador.
+- **Nevado:** una sala con una gran chimenea y alfombras de piel.
+- **Taiga:** un salón de hidromiel con una mesa larga y una pila de leña bajo el alero.
+
+Sus barriles están **ya llenos**: entra, coge una jarra o una copa y sirve una bebida. Un par de ellos son añejos. El cofre de
+la taberna guarda semillas, jarras y copas, y unas cuantas bebidas de la región, todo lo que necesitas para empezar a
+elaborar tú mismo.
+
+<Shot src="taverns/plains.jpg" caption="Llanura: el jardín de cerveza, mesas largas bajo una pérgola de lúpulo." />
+<Shot src="taverns/desert.jpg" caption="Desierto: la terraza en el tejado, por las escaleras de fuera." />
+<Shot src="taverns/savanna.jpg" caption="Sabana: la barra de veranda, un mostrador bajo las trampillas abiertas del salón." />
+<Shot src="taverns/snowy.jpg" caption="Nevado: la sala de la chimenea, tres fuegos de ancho, alfombras de piel y sillones." />
+<Shot src="taverns/taiga.jpg" caption="Taiga: la mesa larga del salón de hidromiel." />
+<Shot src="taverns/cellar.jpg" caption="La bodega de barriles bajo el salón: toneles apilados bajo una bóveda de piedra, antorchas en las paredes." />
+
+### Para tener en cuenta
+
+- Los barriles de la taberna ya han pasado la fermentación, así que no se pueden rellenar. Vacía uno y llénalo con tu propio
+  brebaje: una bebida añeja de un barril que llenaste tú es lo que da *La paciencia tiene premio*.
+- Los barriles jóvenes de la taberna siguen madurando como cualquier barril, así que una taberna que dejes sola unos días
+  acaba con más bebidas añejas.
+- Servir de cualquier barril de una aldea, de una taberna o tuyo, da *De grifo*.
+- Haz tus tratos sobrio: desde Achispado {roman(rules.tipsy.rowdyLevel - 1)}, los aldeanos y los vendedores no comercian contigo. Mira [Achispado](/tipsy/#alborotador).
+
+## Granjas de aldea
+
+Las granjas de aldea cultivan nuestros cultivos junto a los de vanilla, según el clima: uvas tintas donde hace calor, uvas
+blancas en aldeas de llanura y taiga, lúpulo donde hace fresco, cebada casi en todas partes.
+
+<VillageInfo show="farms" />
+
+## Intercambios
+
+<VillageInfo show="trades" />
+
+## Botín de cofres
+
+<VillageInfo show="loot" />

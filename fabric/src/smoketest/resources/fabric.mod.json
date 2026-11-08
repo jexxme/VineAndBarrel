@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "vineandbarrel_smoke",
+  "version": "1",
+  "name": "Vine & Barrel smoke test (dev only)",
+  "description": "Plays through Vine & Barrel's main interactions in a hidden client window, checks them and takes screenshots. Never in the release jar.",
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "jexxme.vineandbarrel.smoke.SmokeCommands"
+    ],
+    "client": [
+      "jexxme.vineandbarrel.smoke.SmokeClient"
+    ]
+  },
+  "mixins": [
+    "vineandbarrel_smoke.mixins.json"
+  ],
+  "depends": {
+    "vineandbarrel": "*",
+    "fabric-api": "*"
+  }
+}

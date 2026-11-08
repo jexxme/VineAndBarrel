@@ -1,0 +1,9 @@
+{
+  "type": "vineandbarrel:aging",
+  "base": "vineandbarrel:honey_must_bottle",
+  "bucket": "vineandbarrel:honey_must_bucket",
+  "young": "vineandbarrel:mead",
+  "aged": "vineandbarrel:aged_mead",
+  "fermenting_time": 24000,
+  "aging_time": 72000
+}

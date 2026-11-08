@@ -2,9 +2,20 @@
 // Theme switch as one square icon button (like the GitHub button next to it) instead of a dropdown.
 // Uses Starlight's own storage key, so its early theme script (no flash on load) keeps working.
 import { Icon } from '@astrojs/starlight/components';
+import { t, localeOf } from '../../lib/i18n';
+
+const locale = localeOf(Astro.currentLocale);
+// The words for the client script (it can't call t()); {state} is filled there
+const words = {
+	dark: t('Dark', locale),
+	light: t('Light', locale),
+	auto: t('Auto (follows your system)', locale),
+	title: t('Theme: {state}', locale, { state: '{state}' }),
+	label: t('Colour theme: {state}. Click to change.', locale, { state: '{state}' }),
+};
 ---
-<fd-theme>
-	<button type="button" aria-label="Colour theme" title="Theme">
+<fd-theme data-i18n={JSON.stringify(words)}>
+	<button type="button" aria-label={t('Colour theme', locale)} title={t('Theme', locale)}>
 		<Icon name="moon" class="i-dark" />
 		<Icon name="sun" class="i-light" />
 		<Icon name="laptop" class="i-auto" />
@@ -13,7 +24,6 @@ import { Icon } from '@astrojs/starlight/components';
 
 <script>
 	const KEY = 'starlight-theme';
-	const label: Record<string, string> = { dark: 'Dark', light: 'Light', '': 'Auto (follows your system)' };
 	const stored = () => {
 		try {
 			const v = localStorage.getItem(KEY);
@@ -31,8 +41,10 @@ import { Icon } from '@astrojs/starlight/components';
 		for (const el of document.querySelectorAll<HTMLElement>('fd-theme')) {
 			el.dataset.pref = pref || 'auto';
 			const b = el.querySelector('button')!;
-			b.title = `Theme: ${label[pref]}`;
-			b.setAttribute('aria-label', `Colour theme: ${label[pref]}. Click to change.`);
+			const w = JSON.parse(el.dataset.i18n ?? '{}');
+			const state = pref === 'dark' ? w.dark : pref === 'light' ? w.light : w.auto;
+			b.title = w.title.replace('{state}', state);
+			b.setAttribute('aria-label', w.label.replace('{state}', state));
 		}
 	};
 	customElements.define(

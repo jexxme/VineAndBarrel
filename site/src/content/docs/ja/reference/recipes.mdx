@@ -1,0 +1,16 @@
+---
+title: すべてのレシピ
+description: Vine & Barrelのレシピをゲーム内の見た目のまま全部載せています。作業台で絞り込み、完成品や材料で検索できます。
+tableOfContents: false
+---
+import RecipeBrowser from '../../../../components/reference/RecipeBrowser.astro';
+import { playableRecipes, byType } from '../../../../lib/l10n/ja';
+
+export const fd = playableRecipes.filter((r) => r.fdOnly).length;
+
+全{playableRecipes.length}件のレシピを、ゲームでの表示そのままに並べています。[醸造釜](/brew-kettle/)が{byType('vineandbarrel:brewing').length}件、
+[熟成樽](/aging-barrel/)が{byType('vineandbarrel:aging').length}件、残りは作業台です。そのうち{fd}件は[Farmer's Delight](/farmers-delight/)が必要です。
+完成品や材料で検索したり、作業台を選んだりできます。スロットにカーソルを合わせるとアイテム名が出ます。
+アイテムが切り替わるスロットには、そのどれを入れてもかまいません。
+
+<RecipeBrowser />

@@ -1,0 +1,130 @@
+---
+title: 作物
+description: 红葡萄灌木、白葡萄灌木、啤酒花灌木、棚架、大麦、野生作物，以及围绕它们的一切，从蜜蜂到堆肥。
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../../lib/l10n/zh-cn';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+// Who eats what: the food tags our items are in (animals.json), as the animals those tags feed
+export const ANIMALS = { cow_food: '牛', sheep_food: '绵羊', goat_food: '山羊', horse_food: '马', llama_food: '羊驼', chicken_food: '鸡', parrot_food: '鹦鹉', fox_food: '狐狸' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const SEASON = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)).map((s) => SEASON[s] ?? s));
+
+<Render name="scenes/garden" float="right" size={256} alt="大麦田后面的葡萄灌木和啤酒花灌木" />
+
+模组自带的四种作物为酒提供原料：<Item id="red_grapes" plural />酿红葡萄酒，<Item id="white_grapes" plural />酿白葡萄酒，
+<Item id="hops" />用于两种啤酒，<Item id="barley" />用于淡色艾尔。其余的原料都来自原版：
+<Item id="sweet_berries" />酿甜浆果酒，<Item id="wheat" />酿小麦啤酒，<Item id="apple" plural />酿苹果西打，
+<Item id="honey_bottle" plural />酿蜂蜜酒。
+
+<Shot src="vineyard.jpg" caption="围着栅栏的葡萄园，灌木上挂满成熟的葡萄，每排的排头立着灯笼柱。" />
+
+## 葡萄与啤酒花灌木
+
+把<Item id="red_grapes" plural />、<Item id="white_grapes" plural />或<Item id="hops" />种在草方块、泥土或耕地上，
+就像甜浆果一样。灌木要经历 {c.bushMaxAge + 1} 个生长阶段，速度和甜浆果灌木一样。红葡萄和白葡萄
+长法相同，只有成熟的果实能区分它们。
+
+<Stages prefix="grape_bush" title="红葡萄灌木" labels={['刚种下', '生长中', '半熟', '成熟']} />
+<Stages prefix="white_grape_bush" title="白葡萄灌木" labels={['刚种下', '生长中', '开花', '成熟']} />
+<Stages prefix="hop_bush" title="啤酒花灌木" labels={['刚种下', '生长中', '开花', '成熟']} />
+
+- **采摘**：对成熟的灌木右键，会得到 {h.grapes.count[0]} 到 {h.grapes.count[1]} 颗葡萄（或
+  {h.hops.count[0]} 到 {h.hops.count[1]} 个<Item id="hops" />），灌木退回第二个生长阶段，继续结果。
+  不需要重新种植。
+- **赶时间？** 像甜浆果一样半熟时就摘：只得到 {h.grapes.halfRipe[0]} 到 {h.grapes.halfRipe[1]} 个，
+  灌木同样退回上一阶段。
+- **骨粉**可以让它前进一个阶段。
+- 灌木和甜浆果灌木一样容易着火，所以让营火和岩浆远离葡萄园。
+
+## 棚架
+
+<Render name="scenes/trellis" float="right" size={256} alt="棚架上的葡萄藤和啤酒花藤，以及一个空棚架" />
+
+把<Item id="trellis" />放在灌木顶上，灌木成熟后就会往上爬，最高 {c.climbMaxHeight} 格，一路都结果。
+放置棚架时它会朝向你，并和下面那个对齐，所以一排排保持整齐。
+
+- 每一节藤的生长、结果和采摘都和灌木一样，半熟也能摘。对成熟的灌木使用骨粉，会立刻开始攀爬。
+- 破坏一节藤会得到它的果实，棚架仍然立着。
+- 棚架不是梯子：上面的一切站在地上都够得着。
+
+<Recipe id="trellis" />
+
+<Aside title="搭配 Farmer's Delight：绳子也行">
+Farmer's Delight 的绳子挂在灌木上方，作用和棚架一样，就像 FD 的番茄那样往上爬。详见 [Farmer's Delight](/farmers-delight/)。
+</Aside>
+
+## 大麦
+
+把<Item id="barley_seeds" />播在耕地上。大麦的生长方式和小麦完全一样，要经历 {barleyStages} 个阶段，
+掉落物也一样：成熟时掉落<Item id="barley" />，外加额外的种子。
+
+<Stages prefix="barley" title="大麦" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', '成熟']} />
+
+## 野生作物
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="草地上的野生红葡萄、野生白葡萄、野生啤酒花和野生大麦" />
+
+你的第一批种子来自野生植物。它们按生物群系和温度成片生长，所以只要生物群系带有通用标签，
+模组添加的生物群系里也会出现。破坏一株就能得到作物，或者用剪刀把整株带回家当装饰。
+
+<WildCrops />
+
+农民和流浪商人也卖种子，村庄的箱子里有时也有一些。详见[村庄与酒馆](/villages/)。
+
+## 农场生活
+
+- **蜜蜂**会给葡萄、啤酒花和大麦授粉并帮助它们生长，就像对原版作物一样。
+- **动物**：<Item id="barley" />可以像小麦一样喂养并繁殖{list(eaters('vineandbarrel:barley').filter((a) => a !== '马' && a !== '羊驼'))}。
+  马和羊驼吃它就像吃小麦一样，能回血、能长大；<Item id="barley_bale" />则像干草捆一样。
+  <Item id="barley_seeds" />可以喂{list(eaters('vineandbarrel:barley_seeds'))}，用葡萄则能繁殖{list(eaters('vineandbarrel:red_grapes'))}。
+- **狐狸**喜欢葡萄，红的白的都爱：它们会从灌木上摘走葡萄，就像袭击甜浆果灌木一样。爬到棚架或绳子上的藤它们够不着，
+  而且在生物破坏关闭时也会收手。
+- **农民**会在自己的田里种植和收割大麦，并把多余的种子拿去堆肥。葡萄和啤酒花他们留给你。
+- **堆肥桶**：每种作物的堆肥几率都和原版一样。
+
+<table>
+	<thead><tr><th>物品</th><th>增加一层的几率</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="浇过水的耕地上的大麦，紧挨着啤酒花园，已经可以收获了。" />
+
+## 储存方块
+
+<Render name="scenes/storage" float="right" size={256} alt="箱装红葡萄、箱装白葡萄、箱装啤酒花和大麦捆" />
+
+把九个同种作物合成一个<Item id="grape_crate" />、<Item id="white_grape_crate" />、<Item id="hops_crate" />或
+<Item id="barley_bale" />，也可以在工作台里拆开。
+<Item id="barley_bale" />在各方面都是一块干草捆：它能减缓摔落，上面的营火会把烟冒得很高，羊驼和马也会吃它。
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## 小贴士
+
+- **要摘，别砍。** 破坏幼小的灌木什么也不掉，植物也就没了。破坏结了果的灌木会掉落果实（有时运更多），
+  但右键采摘既能拿到果实，又能留下灌木。
+- **可以直接穿过。** 葡萄和啤酒花灌木不会像甜浆果灌木那样扎人或减速。
+- **光照与水**：灌木只在光照良好的地方生长。水会冲走灌木，活塞会把它们顶掉。
+- **葡萄是零食**，和甜浆果一样。
+- **更多野生植物**：对野生作物使用骨粉，常常会在附近再长出一株，是拿到第一批种子的简单办法。
+  野生大麦会掉落一个大麦和一颗种子。
+- **大麦下面的耕地**不会变回泥土，和其他作物一样。
+- **藤**同样需要光照：在黑暗中它们会断掉，棚架或绳子则留在原处。对完全长成的植株使用骨粉，还会传给上面的藤。
+  绳子上的藤可以像绳子一样攀爬。
+- **蜜蜂**永远不会让灌木往上爬，只有你能开这个头。
+
+## 季节
+
+装上 Serene Seasons 后，作物就有了自己的季节：红白葡萄在{seasonsOf('vineandbarrel:red_grapes')}生长，啤酒花在
+{seasonsOf('vineandbarrel:hops')}，大麦在{seasonsOf('vineandbarrel:barley_seeds')}。详见[兼容性](/compatibility/)。

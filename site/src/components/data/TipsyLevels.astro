@@ -1,63 +1,516 @@
 ---
-// The Tipsy levels, from the mod: what each level adds. Thresholds come from runtime.json.
-import { rules, pct, seconds } from '../../lib/data';
+// The Tipsy levels, from the mod: what each level adds, and a view through the player's eyes at that level. Hover a
+// level (tap it on a phone) to see it; the tooltip lists what the level does in the effect tooltip's own words (exported
+// by the game: blue the courage, red the drawbacks), the view sways, darkens at the edges, blinks, hiccups and slurs like
+// the game. Everything comes from runtime.json (tipsy.levels, the mod's TipsyLevels table); the strengths of the sway
+// and blinks in the view are only illustrations.
+import { Picture } from 'astro:assets';
+import { rules, pct, roman, url, gameText } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
+import Tr from '../mc/Tr.astro';
 import EffectBadge from './EffectBadge.astro';
-const t = rules.tipsy;
-const tunnelFrom = t.vignette.findIndex((v: number) => v > 0);
-const rows = Array.from({ length: t.maxLevel }, (_, i) => i + 1).map((lvl) => {
+import view from '../../assets/shots/terrace.jpg';
+
+type Level = {
+	level: number;
+	roll: number;
+	vignette: number;
+	blinkEveryTicks: number;
+	longBlinkOneIn: number;
+	knockbackResistance: number;
+	fallDamageReduction: number;
+	hiccupBoutOneIn: number;
+	slurs: boolean;
+	nauseaOneIn: number;
+	weakness: boolean;
+	slowness: number;
+	miningFatigue: number;
+	buffs: boolean;
+	rowdySwingOneIn: number;
+	cutOff: boolean;
+	legsOneIn: number;
+	tripOneIn: number;
+	drift: boolean;
+	fovBreathing: boolean;
+	tooltipGood: string[];
+	tooltipBad: string[];
+};
+const locale = localeOf(Astro.currentLocale);
+const tipsy = rules.tipsy;
+const cfg = tipsy.config;
+const levels: Level[] = tipsy.levels;
+const effectName = (path: string, en: string) => gameText(`effect.minecraft.${path}`, en, locale);
+const tipsyName = gameText('effect.vineandbarrel.tipsy', 'Tipsy', locale);
+const rows = levels.map((at, i) => {
+	const prev: Level | undefined = levels[i - 1];
+	const last = i === levels.length - 1;
 	const adds: string[] = [];
-	if (lvl < t.hiccupLevel) adds.push(lvl === 1 ? 'The view sways gently' : 'The sway grows');
-	if (lvl === t.hiccupLevel) adds.push('A stronger sway, and hiccups: a harmless little hop, with a sound');
-	if (lvl > t.hiccupLevel) adds.push(lvl === t.maxLevel ? 'Everything above, and the world really spins' : 'Everything above, and a heavier sway');
-	if (lvl === tunnelFrom) adds.push('the edges of the screen darken a little');
-	else if (lvl > tunnelFrom && lvl < t.hiccupLevel) adds.push('the dark edges close in');
-	if (lvl === t.blinkLevel) adds.push('heavy eyes: now and then they fall shut');
-	if (lvl === t.longBlinkLevel) adds.push('long blinks: sometimes your eyes stay shut a while');
-	if (lvl === t.slurLevel) adds.push('slurred chat: stretched letters and the odd *hic*');
-	const courage = t.courage.find((c: { level: number }) => c.level === lvl);
-	if (courage) adds.push(`liquid courage: ${pct(courage.knockbackResistance)} knockback resistance and ${pct(courage.fallDamageReduction)} less fall damage`);
-	if (lvl === t.nauseaLevel) adds.push(`and now and then a spell of Nausea (${seconds(t.nauseaPulseTicks)})`);
-	if (lvl > t.nauseaLevel) adds.push(lvl === t.maxLevel ? 'you feel sick more often than not' : 'Nausea comes much more often');
-	if (lvl === t.noBuffLevel) adds.push("you're too drunk to enjoy it: drinks give no buff any more");
-	if (lvl === t.weaknessLevel) adds.push('the courage is gone');
-	if (lvl === t.stumbleLevel) adds.push('you stumble sideways now and then while you walk');
+	// The sway: gentle, growing, then the world spins
+	if (!prev) adds.push(t('The view sways gently', locale));
+	else if (last) adds.push(t('The world really spins', locale));
+	else adds.push(at.roll >= prev.roll * 1.5 ? t('A heavier sway', locale) : t('The sway grows', locale));
+	if (at.fovBreathing && !prev?.fovBreathing) adds.push(t('the view breathes in and out with it', locale));
+	if (!prev && at.vignette > 0) adds.push(t('the edges of the screen darken a little', locale));
+	else if (prev && at.vignette - prev.vignette > 0.2) adds.push(t('the dark edges close in', locale));
+	// Hiccups come in bouts: a few, a couple of seconds apart, then a quiet stretch
+	if (at.hiccupBoutOneIn > 0 && !(prev?.hiccupBoutOneIn > 0)) adds.push(t('now and then a short bout of hiccups', locale));
+	else if (at.hiccupBoutOneIn > 0 && prev && at.hiccupBoutOneIn < prev.hiccupBoutOneIn && !last) adds.push(t('more hiccups', locale));
+	if (at.slurs && !prev?.slurs && cfg.slurredChat) adds.push(t('slurred chat: stretched letters and the odd *hic*', locale));
+	if (at.blinkEveryTicks > 0 && !(prev?.blinkEveryTicks > 0)) adds.push(t('heavy eyes: now and then they fall shut', locale));
+	else if (at.longBlinkOneIn > 0 && !(prev?.longBlinkOneIn > 0)) adds.push(t('longer blinks: sometimes your eyes stay shut a while', locale));
+	else if (at.blinkEveryTicks > 0 && prev && at.blinkEveryTicks < prev.blinkEveryTicks / 2) adds.push(t('your eyes keep falling shut', locale));
+	if (at.knockbackResistance > 0 || at.fallDamageReduction > 0) {
+		adds.push(t('liquid courage: {kb} knockback resistance and {fall} less fall damage', locale, { kb: pct(at.knockbackResistance, 0, locale), fall: pct(at.fallDamageReduction, 0, locale) }));
+	} else if (prev && (prev.knockbackResistance > 0 || prev.fallDamageReduction > 0)) {
+		adds.push(t('the courage is gone', locale));
+	}
+	if (at.nauseaOneIn > 0 && !(prev?.nauseaOneIn > 0)) adds.push(t('now and then a spell of Nausea', locale));
+	else if (at.nauseaOneIn > 0 && prev && at.nauseaOneIn < prev.nauseaOneIn) adds.push(t('Nausea comes in waves, more often than not', locale));
+	if (!at.buffs && prev?.buffs) adds.push(t("you're too drunk to enjoy it: drinks give no buff, and the earlier drinks' buffs go too", locale));
+	if (at.rowdySwingOneIn > 0 && !(prev?.rowdySwingOneIn > 0) && cfg.rowdy) adds.push(t('rowdy: now and then you throw a punch at whoever is in front of you', locale));
+	if (at.cutOff && !prev?.cutOff && cfg.cutOff) adds.push(t("villagers and traders won't serve you", locale));
+	if (at.legsOneIn > 0 && !(prev?.legsOneIn > 0) && cfg.stumbling) {
+		adds.push(t('your legs give: you drift as you walk, stumble to the side now and then, and once in a while trip flat on your face (it never hurts)', locale));
+	}
 	const effects: [string, string][] = [];
-	if (lvl >= t.weaknessLevel) effects.push(['minecraft:weakness', 'Weakness']);
-	if (lvl >= t.heavyLevel) effects.push(['minecraft:slowness', 'Slowness II'], ['minecraft:mining_fatigue', 'Mining Fatigue II']);
-	if (effects.length > 0) adds.push('and');
-	return { lvl, text: adds.join(', '), effects };
+	if (at.weakness) effects.push(['minecraft:weakness', effectName('weakness', 'Weakness')]);
+	if (at.slowness >= 0) effects.push(['minecraft:slowness', `${effectName('slowness', 'Slowness')} ${roman(at.slowness)}`]);
+	if (at.miningFatigue >= 0) effects.push(['minecraft:mining_fatigue', `${effectName('mining_fatigue', 'Mining Fatigue')} ${roman(at.miningFatigue)}`]);
+	if (effects.length > 0) adds.push(t('and', locale));
+	// The effect tooltip's lines, as the game builds them (tipsy/TipsyInfo.java): three words a line
+	const lines: string[] = [];
+	for (let j = 0; j < at.tooltipBad.length; j += 3) lines.push(at.tooltipBad.slice(j, j + 3).join(', '));
+	// What the view shows
+	const flags = [
+		at.hiccupBoutOneIn > 0 && 'hic',
+		at.blinkEveryTicks > 0 && 'blink',
+		at.longBlinkOneIn > 0 && 'longblink',
+		at.nauseaOneIn > 0 && 'dizzy',
+		at.slurs && cfg.slurredChat && 'slur',
+		at.legsOneIn > 0 && cfg.stumbling && 'stumble',
+	].filter(Boolean);
+	return { lvl: at.level, text: adds.join(', '), effects, good: at.tooltipGood, lines, flags: flags.join(' '), vignette: at.vignette };
 });
 ---
-<ol class="fd-tipsy not-content">
-	{rows.map((r) => (
-		<li style={`--lvl:${r.lvl}`}>
-			<span class="lvl">{r.lvl}</span>
-			<span class="what">
-				{r.text}
-				{r.effects.length > 0 && (
-					<span class="heavy">
-						{r.effects.map(([id, name]) => <EffectBadge id={id} name={name} />)}
-					</span>
-				)}
-			</span>
-		</li>
-	))}
-</ol>
+<div class="vb-tipsy not-content" data-level="0" data-i18n={JSON.stringify({ sober: t('sober', locale), tipsy: tipsyName })}>
+	<div class="view-wrap">
+		<div class="view" aria-hidden="true" style="--vig:0;--amp:0">
+			<div class="world">
+				<Picture src={view} formats={['avif', 'webp']} fallbackFormat="jpg" widths={[480, 720, 960]} sizes="(max-width: 50rem) 100vw, 30rem" alt="" class="shot" />
+			</div>
+			<span class="vig"></span>
+			<span class="lid top"></span>
+			<span class="lid bottom"></span>
+			<span class="hic-txt">{t('*hic*', locale)}</span>
+			<div class="hud">
+				<span class="eff tipsy"><img src={url('/gui/effect/tipsy.png')} alt="" width="36" height="36" /><b></b></span>
+			</div>
+			<p class="chat"><span class="who">&lt;Steve&gt;</span> <span class="say" data-sober={t('I love this song', locale)} data-slurred={t('I love thish shooong *hic*', locale)}>{t('I love this song', locale)}</span></p>
+		</div>
+		<p class="view-cap fd-kicker"><Tr k="Through your eyes: {level}" locale={locale}><span slot="level" class="lvl-name">{t('sober', locale)}</span></Tr></p>
+	</div>
+	<div class="levels" role="radiogroup" aria-label={t('Tipsy level', locale)} data-hint={t('Hover a level, click to keep it.', locale)} data-hint-touch={t('Tap a level to look through its eyes.', locale)}>
+		<button type="button" role="radio" aria-checked="true" class="pip" data-level="0" data-tip-items={`${t('Sober', locale)}~`} style="--lvl:0">
+			<span>0</span>
+		</button>
+		{rows.map((r) => (
+			<button
+				type="button"
+				role="radio"
+				aria-checked="false"
+				class="pip"
+				data-level={r.lvl}
+				data-flags={r.flags}
+				data-vig={r.vignette}
+				data-tip-items={`${tipsyName} ${roman(r.lvl - 1)}~`}
+				data-tip-extra={r.good.join('\n') || undefined}
+				data-tip-bad={r.lines.join('\n')}
+				style={`--lvl:${r.lvl}`}
+			>
+				<span>{r.lvl}</span>
+			</button>
+		))}
+	</div>
+	<ol class="fd-tipsy">
+		{rows.map((r) => (
+			<li style={`--lvl:${r.lvl}`} data-level={r.lvl}>
+				<span class="lvl">{r.lvl}</span>
+				<span class="what">
+					{r.text}
+					{r.effects.length > 0 && (
+						<span class="heavy">
+							{r.effects.map(([id, name]) => <EffectBadge id={id} name={name} />)}
+						</span>
+					)}
+				</span>
+			</li>
+		))}
+	</ol>
+</div>
+
+<script>
+	const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+	for (const root of document.querySelectorAll<HTMLElement>('.vb-tipsy')) {
+		const view = root.querySelector<HTMLElement>('.view')!;
+		const pips = [...root.querySelectorAll<HTMLButtonElement>('.pip')];
+		const rows = [...root.querySelectorAll<HTMLElement>('.fd-tipsy li')];
+		const say = root.querySelector<HTMLElement>('.say')!;
+		const name = root.querySelector<HTMLElement>('.lvl-name')!;
+		const i18n = JSON.parse(root.dataset.i18n!);
+			const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+		let pinned = 0;
+		const show = (lvl: number) => {
+			const pip = pips[lvl];
+			const flags = (pip.dataset.flags ?? '').split(' ').filter(Boolean);
+			root.dataset.level = String(lvl);
+			for (const c of [...view.classList]) if (c.startsWith('f-') || c === 'tipsy') view.classList.remove(c);
+			for (const f of flags) view.classList.add(`f-${f}`);
+			view.classList.toggle('tipsy', lvl > 0);
+			view.style.setProperty('--vig', pip.dataset.vig ?? '0');
+			view.style.setProperty('--amp', reduce ? '0' : String(lvl));
+			// only Tipsy's own icon: the game hides the icons of the effects it brings, the tooltip names them
+			for (const e of view.querySelectorAll<HTMLElement>('.hud .eff')) e.hidden = lvl === 0;
+			view.querySelector('.hud .tipsy b')!.textContent = lvl ? roman[lvl - 1] : '';
+			say.textContent = flags.includes('slur') ? say.dataset.slurred! : say.dataset.sober!;
+			name.textContent = lvl ? `${i18n.tipsy} ${roman[lvl - 1]}` : i18n.sober;
+			rows.forEach((r) => r.classList.toggle('on', +r.dataset.level! === lvl));
+		};
+		const pin = (lvl: number, focus = false) => {
+			pinned = lvl;
+			pips.forEach((p, i) => {
+				p.setAttribute('aria-checked', String(i === lvl));
+				p.tabIndex = i === lvl ? 0 : -1;
+			});
+			if (focus) pips[lvl].focus();
+			show(lvl);
+		};
+		pips.forEach((p, i) => {
+			p.tabIndex = i === 0 ? 0 : -1;
+			p.addEventListener('click', () => pin(i));
+			p.addEventListener('pointerenter', (e) => e.pointerType !== 'touch' && show(i));
+			p.addEventListener('pointerleave', (e) => e.pointerType !== 'touch' && show(pinned));
+			p.addEventListener('keydown', (e) => {
+				const to = ({ ArrowRight: i + 1, ArrowUp: i + 1, ArrowLeft: i - 1, ArrowDown: i - 1, Home: 0, End: pips.length - 1 } as Record<string, number>)[e.key];
+				if (to === undefined) return;
+				e.preventDefault();
+				pin(Math.max(0, Math.min(pips.length - 1, to)), true);
+			});
+		});
+		// The rows below work the same way: hover to look, click to keep it
+		rows.forEach((r) => {
+			const lvl = +r.dataset.level!;
+			r.addEventListener('pointerenter', (e) => e.pointerType !== 'touch' && show(lvl));
+			r.addEventListener('pointerleave', (e) => e.pointerType !== 'touch' && show(pinned));
+			r.addEventListener('click', () => pin(lvl));
+		});
+		show(0);
+	}
+</script>
+
 <style>
+	/* The view with the level picker beside it, the list of levels underneath */
+	.vb-tipsy {
+		display: grid;
+		grid-template-columns: minmax(0, 28rem) minmax(0, 1fr);
+		grid-template-areas: 'view levels' 'list list';
+		gap: 20px 24px;
+		align-items: start;
+		margin: 28px 0;
+	}
+	.view-wrap {
+		grid-area: view;
+	}
+	.levels {
+		grid-area: levels;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, 48px);
+		gap: 10px;
+		align-content: start;
+	}
+	.levels::after {
+		content: attr(data-hint);
+		grid-column: 1 / -1;
+		color: var(--sl-color-gray-3);
+		line-height: 28px;
+	}
+	@media (hover: none) {
+		.levels::after {
+			content: attr(data-hint-touch);
+		}
+	}
 	.fd-tipsy {
+		grid-area: list;
 		list-style: none;
 		padding: 0;
-		margin: 1rem 0;
+		margin: 0;
 		display: grid;
-		gap: 8px;
+		gap: 4px;
 	}
+	/* The view: a window into the game */
+	.view {
+		--vig: 0;
+		--amp: 0;
+		position: relative;
+		aspect-ratio: 4 / 3;
+		overflow: hidden;
+		border-style: solid;
+		border-width: 12px 16px 16px 12px;
+		border-image: url('../../assets/ui/board.png') 3 4 4 3 / 12px 16px 16px 12px repeat;
+		image-rendering: pixelated;
+		background: #000;
+	}
+	.world {
+		position: absolute;
+		inset: -8%;
+		transform-origin: 50% 60%;
+	}
+	.world :global(img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		image-rendering: auto;
+		display: block;
+	}
+	/* Sway: a slow roll and drift, stronger at each level */
+	.tipsy .world {
+		animation: sway calc(5.2s - var(--amp) * 0.45s) ease-in-out infinite;
+	}
+	@keyframes sway {
+		0%,
+		100% {
+			transform: rotate(calc(var(--amp) * -0.7deg)) translate(calc(var(--amp) * -0.6%), 0);
+		}
+		50% {
+			transform: rotate(calc(var(--amp) * 0.7deg)) translate(calc(var(--amp) * 0.6%), calc(var(--amp) * 0.3%));
+		}
+	}
+	/* Dizzy (Nausea): now and then the world warps and tints */
+	.f-dizzy {
+		animation: dizzy 6s ease-in-out infinite;
+	}
+	@keyframes dizzy {
+		0%,
+		60%,
+		100% {
+			filter: none;
+		}
+		72% {
+			filter: hue-rotate(40deg) saturate(1.4) blur(1px);
+		}
+		84% {
+			filter: hue-rotate(-30deg) saturate(1.2);
+		}
+	}
+	/* Stumble: a sudden lurch sideways */
+	.f-stumble .shot,
+	.f-stumble :global(.shot) {
+		animation: stumble 4.3s ease-in-out infinite;
+	}
+	@keyframes stumble {
+		0%,
+		80%,
+		100% {
+			transform: none;
+		}
+		86% {
+			transform: translateX(5%) rotate(2deg);
+		}
+	}
+	/* Tunnel vision: dark edges, as dark as the mod draws them */
+	.vig {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: radial-gradient(ellipse at center, transparent 30%, #000 105%);
+		opacity: calc(var(--vig) * 1.25);
+		transition: opacity 0.4s;
+	}
+	/* Heavy eyes: the lids fall shut now and then; long blinks stay shut a while */
+	.lid {
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 51%;
+		background: #000;
+		transform: scaleY(0);
+		pointer-events: none;
+	}
+	.lid.top {
+		top: 0;
+		transform-origin: top;
+	}
+	.lid.bottom {
+		bottom: 0;
+		transform-origin: bottom;
+	}
+	.f-blink .lid {
+		animation: blink 4s ease-in-out infinite;
+	}
+	.f-longblink .lid {
+		animation: longblink 5s ease-in-out infinite;
+	}
+	@keyframes blink {
+		0%,
+		70%,
+		82%,
+		100% {
+			transform: scaleY(0);
+		}
+		76% {
+			transform: scaleY(1);
+		}
+	}
+	@keyframes longblink {
+		0%,
+		55%,
+		90%,
+		100% {
+			transform: scaleY(0);
+		}
+		62%,
+		82% {
+			transform: scaleY(1);
+		}
+	}
+	/* Hiccups: a sharp little jolt of the view and a *hic* */
+	.f-hic .world {
+		animation:
+			sway calc(5.2s - var(--amp) * 0.45s) ease-in-out infinite,
+			jolt 2.6s ease-out infinite;
+		animation-composition: add;
+	}
+	@keyframes jolt {
+		0%,
+		89%,
+		100% {
+			translate: 0 0;
+		}
+		90% {
+			translate: 0 1.6%;
+		}
+	}
+	.hic-txt {
+		position: absolute;
+		right: 14%;
+		top: 24%;
+		color: #fff;
+		text-shadow: 2px 2px 0 #3f3f3f;
+		opacity: 0;
+		pointer-events: none;
+	}
+	.f-hic .hic-txt {
+		animation: hic 2.6s ease-out infinite;
+	}
+	@keyframes hic {
+		0%,
+		86% {
+			opacity: 0;
+			transform: translateY(6px);
+		}
+		90% {
+			opacity: 1;
+			transform: none;
+		}
+		100% {
+			opacity: 0;
+			transform: translateY(-12px);
+		}
+	}
+	/* The effect icons, top right, like the game's HUD */
+	.hud {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		display: flex;
+		gap: 4px;
+	}
+	.eff {
+		position: relative;
+		width: 44px;
+		height: 44px;
+		display: grid;
+		place-items: center;
+		background: rgb(0 0 0 / 0.45);
+		box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.35);
+	}
+	.eff[hidden] {
+		display: none;
+	}
+	.eff img {
+		image-rendering: pixelated;
+	}
+	.eff b {
+		position: absolute;
+		right: 2px;
+		bottom: -2px;
+		font-weight: 400;
+		font-size: 20px;
+		color: #fff;
+		text-shadow: 2px 2px 0 #3f3f3f;
+	}
+	/* Chat, bottom left */
+	.chat {
+		position: absolute;
+		left: 8px;
+		bottom: 8px;
+		margin: 0;
+		padding: 0 6px;
+		max-width: calc(100% - 16px);
+		background: rgb(0 0 0 / 0.5);
+		color: #fff;
+		text-shadow: 2px 2px 0 #3f3f3f;
+		line-height: 28px;
+	}
+	.view-cap {
+		margin-top: 6px;
+	}
+	.lvl-name {
+		color: var(--sl-color-text-accent);
+	}
+	/* The level picker: one square per level, sober to the top */
+	.pip {
+		width: 48px;
+		height: 48px;
+		display: grid;
+		place-items: center;
+		font: inherit;
+		font-size: 20px;
+		color: #fff;
+		text-shadow: 2px 2px 0 #000;
+		border: 0;
+		cursor: pointer;
+		background: color-mix(in srgb, #a8283f calc((var(--lvl) - 1) * 25%), #e8a23c);
+		box-shadow: inset 2px 2px 0 rgb(255 255 255 / 0.3), inset -2px -2px 0 rgb(0 0 0 / 0.3), 0 0 0 2px #000;
+		transition: transform 0.12s cubic-bezier(0.3, 1.6, 0.5, 1);
+	}
+	.pip[data-level='0'] {
+		background: #5f8f3a;
+	}
+	.pip:hover,
+	.pip:focus-visible {
+		transform: translateY(-3px);
+		outline: none;
+	}
+	.pip[aria-checked='true'] {
+		box-shadow: inset 2px 2px 0 rgb(255 255 255 / 0.3), inset -2px -2px 0 rgb(0 0 0 / 0.3), 0 0 0 2px #000, 0 0 0 5px var(--vb-gilt);
+		transform: translateY(-3px);
+	}
+	/* The rows */
 	li {
 		display: flex;
 		gap: 14px;
 		align-items: center;
 		margin: 0 !important;
+		padding: 4px 8px 4px 4px;
 		font-size: 20px;
 		line-height: 30px;
+		cursor: pointer;
+		transition: background-color 0.12s;
+	}
+	li:hover,
+	li.on {
+		background: var(--fd-surface-2);
+		box-shadow: inset 4px 0 0 var(--sl-color-text-accent);
 	}
 	.lvl {
 		flex: none;
@@ -76,5 +529,23 @@ const rows = Array.from({ length: t.maxLevel }, (_, i) => i + 1).map((lvl) => {
 		margin-left: 8px;
 		flex-wrap: wrap;
 		vertical-align: middle;
+	}
+	@media (max-width: 40rem) {
+		.vb-tipsy {
+			grid-template-columns: 1fr;
+			grid-template-areas: 'view' 'levels' 'list';
+		}
+		.levels {
+			grid-template-columns: repeat(6, 1fr);
+		}
+		.pip {
+			width: auto;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.view *,
+		.view {
+			animation: none !important;
+		}
 	}
 </style>

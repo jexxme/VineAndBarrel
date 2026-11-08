@@ -1,0 +1,10 @@
+---
+// The catalog in every translated language: /<code>/items/
+import ItemIndex from '../../../components/items/ItemIndex.astro';
+import { activeLocales } from '../../../lib/locales-active';
+export function getStaticPaths() {
+	return activeLocales().map((locale) => ({ params: { locale }, props: { locale } }));
+}
+const { locale } = Astro.props as { locale: string };
+---
+<ItemIndex locale={locale} />

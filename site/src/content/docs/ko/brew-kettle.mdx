@@ -1,0 +1,126 @@
+---
+title: 양조 솥
+description: 양조 솥이 포도, 열매, 사과, 꿀, 보리, 밀을 주스, 꿀물, 맥아즙으로 바꾸는 방법과, 솥을 달구고 채우고 자동화하는 방법.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/ko';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="모닥불 위 철 받침대에 놓인 구리 양조 솥" />
+
+<Item id="brew_kettle" />은 모든 술의 출발점이에요. 열원 위에 놓고 재료를 넣으면, 몇 초 뒤 병에 담을 수 있는 주스,
+꿀물, 맥아즙 한 배치가 완성돼요. Farmer's Delight의 조리용 냄비로 요리해 봤다면 이미 사용법을 아는 셈이에요.
+
+## 열
+
+솥은 바로 아래 블록이 뜨거울 때만 양조해요.
+
+- **{heatNames(rules.heat.tray)}**: 솥은 철 받침대에 올려 그 위에 서요.
+- **{heatNames(direct)}**: 바로 위에 올려요.
+- **{heatNames(rules.heat.conductors)} 경유**: 열이 이 블록을 타고 올라가서, 솥과 열원 사이에 호퍼를 두어도 솥에
+  재료를 넣어 줄 수 있어요.
+- Farmer's Delight와 함께라면 FD의 **난로**도 솥을 달궈요.
+
+모닥불은 불이 붙어 있어야 해요. 솥이 달궈지면 화면의 작은 불꽃에 불이 들어와요.
+
+<Render name="scenes/kettle-on-magma" size={192} caption="마그마 블록 위" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="호퍼를 통한 열" />
+<Render name="scenes/kettle-hanging" size={192} caption="손잡이에 매달기" />
+
+**매달기:** 웅크린 채 빈손으로 솥을 우클릭하면 받침대가 철 손잡이로 바뀌고, 블록 아래쪽에 붙여 놓아도 돼요. 매달린 솥도
+바로 아래의 불로 양조하고, 사슬 아래에 달면 멋져요.
+
+## 양조
+
+우클릭으로 솥을 열고 재료를 넣으세요. 오른쪽 게이지는 양조 중인 술을 제 색으로 보여 주고 솥이 얼마나 찼는지
+알려 줘요. 마우스를 올리면 인분 수가 나와요.
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+레시피마다 **{rules.servingsPerBucket}인분**이 나오고 **{seconds(brews[0].brewingTime)}** 걸려요. 달궈진 솥은 양조할 것이나 그 재료가 들어 있으면
+김이 나고 보글거려요(아니면 조용해요). 양조 중에는 뚜껑도 덜컹거리고, 다 되면 김이 한 번 푹 나와요. 재료가 있는 동안은 계속 다음 배치를
+양조하며, 모두 합쳐 최대 {rules.kettleMaxServings}인분까지 돼요.
+
+<BrewFlow />
+
+양조가 끝나면 뚜껑이 열린 채로 있고 안에 든 술이 보여요. 인분을 꺼낼수록 술이 가라앉아요. 양조 중에는 뚜껑이
+닫혀 있고, 마지막 1인분이 사라지면 다시 닫혀요.
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="뚜껑이 열려 안의 술이 보이는 솥" />
+
+## 병에 담기
+
+가마솥처럼, 빈 용기로 솥을 우클릭하세요.
+
+- <Item id="glass_bottle" /> 하나에 **{rules.servingsPerBottle}인분**이 담겨요.
+- 빈 <Item id="bucket" /> 하나에는 **{rules.servingsPerBucket}인분**이 담기니, 솥에 그만큼은 있어야 해요.
+
+주스와 맥아즙 양동이는 우유처럼 월드에 쏟을 수 없어요.
+
+## 마시는 주스
+
+<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />, <Item id="apple_juice" />는
+그 자체로 음료예요. 마시는 데 {juice.consumable.seconds}초가 걸리고, 언제든 마실 수 있고, 허기를 조금 채워 줘요.
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+모든 주스는 [알딸딸함](/tipsy/)도 한 단계 낮춰 줘요. 맥아즙과 꿀물은 먼저 발효해야 하고, 그냥 마실 수는 없어요.
+
+## 자동화
+
+호퍼로 솥을 알아서 돌릴 수 있어요.
+
+- **위에서** 호퍼가 재료와 빈 병, 빈 양동이를 넣어 줘요.
+- **옆에서** 호퍼가 빈 병이나 빈 양동이를 넣어 줘요.
+- 솥이 양조한 술로 용기를 채우면, **아래의 호퍼**가 채워진 용기를 꺼내 가요.
+
+재료나 양조된 술 자체를 꺼내 가는 건 없어요.
+
+솥 옆의 비교기는 안에 뭐든 들어 있으면, 재료든 술이든 용기든 바로 신호를 주고, 가득 찰수록 더 강한 신호를 줘요.
+술만 있을 때는 약한 신호만 나오니, 인분 수를 세기보다는 "뭔가 있음"과 "비었음"을 구분하는 데 쓰세요.
+
+## 구리
+
+솥은 구리로 만들어서 구리처럼 낡아요.
+
+<Stages prefix="kettle-weathering" title="녹슴" labels={['구리', '약간 녹슨', '녹슨', '산화된']} />
+
+- 시간이 지나면 약간 녹슬고, 녹슬고, 마침내 산화돼요. 어느 단계에서든 양조는 똑같아요.
+- **벌집 조각**으로 밀랍칠을 하면 녹스는 게 멈춰요. **도끼**는 밀랍이나 녹 한 단계를 긁어내고, 번개는 깨끗이 닦아 줘요.
+- **가득 찬 채로 부수면** 술이 그대로 남아요. 아이템의 툴팁과 채움 막대에 보이고, 다른 곳에 놓고 이어서 쓸 수 있어요.
+  재료와 기다리던 병이나 양동이는 바닥에 떨어져요.
+- 누군가 솥 화면을 열어 둔 동안은 녹슬지 않아요.
+
+## 알아 두면 좋아요
+
+- **불이 꺼졌나요?** 열이 사라져도 배치가 초기화되진 않지만, 화살표가 차오른 속도의 두 배로 되돌아가요.
+  재료는 배치가 끝날 때만 소모되니, 낭비되는 건 없어요.
+- **한 번에 하나만.** 솥 안에 아직 술이 남아 있으면 다른 술을 그 위에 양조하지 않아요. 재료를 그대로 둔 채,
+  이전 술을 다 병에 담을 때까지 기다려요. {rules.kettleMaxServings}인분이 되었을 때도 기다려요.
+- **칸을 깨끗이.** 레시피에 쓰이지 않는 아이템은, 다른 레시피에서 남은 것이라도 솥을 멈추게 해요. 위의 호퍼는 들고
+  있는 걸 모두 밀어 넣으니, 재료만 넣도록 하세요.
+- **경험치는 어디에?** 배치마다 경험치가 조금 쌓여요. 솥이 모아 두었다가, 다음에 병이나 양동이를 손으로 채우는
+  플레이어에게 주거나, 부서질 때 떨어뜨려요.
+- **양동이에 모자라나요?** 양동이로 클릭하면 화면만 열려요. 웅크린 채 병이나 양동이를 쓰면 아무 일도 안 일어나요.
+- **호퍼 하나, 일 두 개:** 솥 아래의 호퍼는 모닥불의 열을 위로 전달하면서, 채워진 용기도 모아 가요.
+- **웅크린 채 빈손으로 우클릭**하면 솥을 손잡이에 매달고, 다시 하면 세워요.
+- 솥은 물속에도 놓을 수 있고, 어떤 도구로든 빨리 부서지고(곡괭이가 가장 빨라요), 모루 이름이 그대로 남고, 겹쳐
+  쌓이지 않아요. 폭발은 솥을 술째로 부술 수 있어요.
+- **레시피 책:** 주 작물을 줍는 순간 양조법이 해금되고, 주스, 맥아즙, 기타로 분류돼요.
+
+## 제작법
+
+<Recipe id="brew_kettle" />

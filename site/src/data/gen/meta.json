@@ -1,16 +1,20 @@
 {
-	"modVersion": "0.1.0",
+	"modVersion": "1.0.0+neoforged.1",
+	"fabricModVersion": "1.0.0+fabric.1",
+	"version": "1.0.0",
 	"minecraft": "26.3",
 	"neoforge": "26.3.0.101",
+	"fabricLoader": "0.20.1",
+	"fabricApi": "0.165.2",
 	"modId": "vineandbarrel",
 	"license": "MIT License",
 	"jei": "31.14.0.72",
 	"jade": "26.3.5+neoforge",
 	"counts": {
-		"items": 43,
-		"drinks": 12,
-		"brewing": 4,
-		"aging": 6,
-		"advancements": 10
+		"items": 63,
+		"drinks": 16,
+		"brewing": 7,
+		"aging": 9,
+		"advancements": 13
 	}
 }

@@ -1,15 +1,29 @@
 ---
-// Home page as a Minecraft title screen (panorama, logo, splash text, stone buttons), followed by the chapters on
-// canvas signs and the whole mod in a creative-inventory panel with one tab per category. Same layout as the FD
-// Neoforged docs; the panorama is an in-game shot of the showcase world (./gradlew runScreenshots, npm run shots).
+// Home page: the tavern's title screen. The panorama (an in-game shot of the showcase world, see npm run shots) in a
+// gilt frame, the logo on a signboard hanging from two chains, with a splash text like the game's
+// title screen, and the menu chalked on a board. Then the chapters as chalkboards and the whole mod in a creative-
+// inventory panel with one tab per category.
 import { Picture } from 'astro:assets';
 import Slot from './mc/Slot.astro';
 import hero from '../assets/shots/hero.jpg';
 import banner from '../assets/ui/banner.png';
-import { meta, url, itemList, CATEGORIES, iconOf, rules, roman, duration } from '../lib/data';
+import fdnShot from '../assets/fdn/kitchen.jpg';
+import fdnLogo from '../assets/fdn/banner.png';
+import { meta, FDN_WIKI, url, pageUrl, itemList, CATEGORIES, iconOf, rules, roman, duration } from '../lib/data';
+import { t, localeOf } from '../lib/i18n';
 
+const locale = localeOf(Astro.currentLocale);
+// The category names, one literal each (the key is the English name from CATEGORIES)
+const catLabel: Record<string, () => string> = {
+	workstations: () => t('Workstations', locale),
+	crops: () => t('Crops & seeds', locale),
+	storage: () => t('Storage', locale),
+	bases: () => t('Juice & wort', locale),
+	drinks: () => t('Drinks', locale),
+	meals: () => t("Farmer's Delight meals", locale),
+};
 const cats = Object.entries(CATEGORIES)
-	.map(([key, v]) => ({ key, ...v, items: itemList.filter((i) => i.category === key) }))
+	.map(([key, v]) => ({ key, ...v, label: catLabel[key]?.() ?? v.label, items: itemList.filter((i) => i.category === key) }))
 	.filter((c) => c.items.length);
 const tabIcon: Record<string, string> = {
 	workstations: 'vineandbarrel:aging_barrel', crops: 'vineandbarrel:red_grapes', storage: 'vineandbarrel:grape_crate',
@@ -17,20 +31,27 @@ const tabIcon: Record<string, string> = {
 };
 // Splash texts, all true for this release
 const splashes = [
-	`${meta.counts.drinks} drinks!`,
-	`${meta.counts.brewing} brews, one kettle!`,
-	`Aged: level ${roman(rules.agedBuffAmplifier)} for ${duration(rules.agedBuffTicks)}!`,
-	'Cheers!',
-	'*hic*',
-	`Minecraft ${meta.minecraft}!`,
-	'Patience pays!',
+	t('{n} drinks!', locale, { n: meta.counts.drinks }),
+	t('{n} brews, one kettle!', locale, { n: meta.counts.brewing }),
+	t('Aged: level {level} for {time}!', locale, { level: roman(rules.agedBuffAmplifier), time: duration(rules.agedBuffTicks, locale) }),
+	t('Cheers!', locale),
+	t('*hic*', locale),
+	t('Minecraft {version}!', locale, { version: meta.minecraft }),
+	t('Patience pays!', locale),
+];
+// The chalkboard menu on the title screen: label, page, icon
+const menu: [string, string, string][] = [
+	[t('Getting started', locale), '/getting-started/', 'vineandbarrel:wine_glass'],
+	[t('All {n} items & blocks', locale, { n: meta.counts.items }), '/items/', 'vineandbarrel:grape_crate'],
+	[t('Brew Kettle', locale), '/brew-kettle/', 'vineandbarrel:brew_kettle'],
+	[t('Aging Barrel', locale), '/aging-barrel/', 'vineandbarrel:aging_barrel'],
 ];
 const chapters = [
-	{ title: 'Start here', icon: 'vineandbarrel:wine_glass', pages: [['Getting started', 'getting-started']] },
-	{ title: 'Brewing', icon: 'vineandbarrel:brew_kettle', pages: [['Crops', 'crops'], ['Brew Kettle', 'brew-kettle'], ['Aging Barrel', 'aging-barrel'], ['Drinks', 'drinks'], ['Tipsy', 'tipsy']] },
-	{ title: 'The world', icon: 'vineandbarrel:grape_crate', pages: [['Interactions', 'interactions'], ['Villages & taverns', 'villages']] },
-	{ title: 'Reference', icon: 'vineandbarrel:aged_red_wine', pages: [['All items & blocks', 'items'], ['All recipes', 'reference/recipes'], ['Advancements', 'reference/advancements']] },
-	{ title: 'About', icon: 'vineandbarrel:mug', pages: [["Farmer's Delight", 'farmers-delight'], ['Compatibility', 'compatibility'], ['Changelog', 'changelog']] },
+	{ title: t('Start here', locale), icon: 'vineandbarrel:wine_glass', pages: [[t('Getting started', locale), 'getting-started'], [t('Your first drink', locale), 'guides/first-drink'], [t('Building a cellar', locale), 'guides/cellar']] },
+	{ title: t('Brewing', locale), icon: 'vineandbarrel:brew_kettle', pages: [[t('Crops', locale), 'crops'], [t('Brew Kettle', locale), 'brew-kettle'], [t('Aging Barrel', locale), 'aging-barrel'], [t('Drinks', locale), 'drinks'], [t('Tipsy', locale), 'tipsy'], [t('Blackouts', locale), 'blackouts']] },
+	{ title: t('The world', locale), icon: 'vineandbarrel:grape_crate', pages: [[t('Interactions', locale), 'interactions'], [t('Villages & taverns', locale), 'villages']] },
+	{ title: t('Reference', locale), icon: 'vineandbarrel:aged_red_wine', pages: [[t('All items & blocks', locale), 'items'], [t('All recipes', locale), 'reference/recipes'], [t('Advancements', locale), 'reference/advancements'], [t('Configuration', locale), 'reference/config']] },
+	{ title: t('About', locale), icon: 'vineandbarrel:mug', pages: [[t("Farmer's Delight", locale), 'farmers-delight'], [t('Compatibility', locale), 'compatibility'], [t('Changelog', locale), 'changelog']] },
 ];
 ---
 <div class="landing not-content">
@@ -46,25 +67,29 @@ const chapters = [
 			loading="eager"
 			fetchpriority="high"
 		/>
-		<div class="logo-wrap">
-			<img class="logo" src={banner.src} alt="Vine &amp; Barrel" width={banner.width * 2} height={banner.height * 2} />
+		<span class="glow left" aria-hidden="true"></span>
+		<span class="glow right" aria-hidden="true"></span>
+		<div class="sign vb-board vb-hang">
+			<img class="logo" src={banner.src} alt="Vine &amp; Barrel" width={banner.width * 5} height={banner.height * 5} />
 			<span class="splash" data-splashes={JSON.stringify(splashes)}>{splashes[0]}</span>
 		</div>
-		<nav class="menu" aria-label="Start">
-			<a class="mc-button wide" href={url('/getting-started/')}>Getting started</a>
-			<a class="mc-button wide" href={url('/items/')}>All {meta.counts.items} items &amp; blocks</a>
-			<div class="pair">
-				<a class="mc-button" href={url('/brew-kettle/')}>Brew Kettle</a>
-				<a class="mc-button" href={url('/aging-barrel/')}>Aging Barrel</a>
-			</div>
+		<nav class="menu vb-chalk" aria-label={t('Start', locale)}>
+			<p class="menu-title">{t('On the menu tonight', locale)}</p>
+			{menu.map(([label, href, icon]) => (
+				<a href={pageUrl(href, locale)}>
+					<img src={iconOf(icon)?.src} alt="" width="32" height="32" />
+					<span>{label}</span>
+					<i aria-hidden="true"></i>
+				</a>
+			))}
 		</nav>
-		<p class="corner left">Vine &amp; Barrel {meta.modVersion}</p>
-		<p class="corner right">Not an official Minecraft product</p>
+		<p class="corner left">{t('Vine & Barrel {version} · Minecraft {minecraft}', locale, { version: meta.version, minecraft: meta.minecraft })}</p>
+		<p class="corner right">{t('Not an official Minecraft product', locale)}</p>
 	</section>
 
 	<section class="chapters">
 		{chapters.map((c) => (
-			<div class="chapter fd-sign">
+			<div class="chapter vb-chalk">
 				<h2>
 					<img src={iconOf(c.icon)?.src} alt="" width="32" height="32" />
 					{c.title}
@@ -72,7 +97,7 @@ const chapters = [
 				<ul>
 					{c.pages.map(([label, slug]) => (
 						<li>
-							<a href={url(`/${slug}/`)}>{label}</a>
+							<a href={pageUrl(`/${slug}/`, locale)}>{label}</a>
 						</li>
 					))}
 				</ul>
@@ -80,15 +105,39 @@ const chapters = [
 		))}
 	</section>
 
+	<section class="sister" aria-labelledby="sister-title">
+		<Picture
+			class="sister-shot"
+			src={fdnShot}
+			formats={['avif', 'webp']}
+			fallbackFormat="jpg"
+			widths={[480, 720, 960]}
+			sizes="(max-width: 40rem) 100vw, 28rem"
+			alt={t("A Farmer's Delight kitchen: stoves, a cooking pot, cutting boards and crates", locale)}
+			loading="lazy"
+		/>
+		<div class="sister-text">
+			<p class="sister-kicker">{t('Also by Jexxme', locale)}</p>
+			<h2 id="sister-title">
+				<img src={fdnLogo.src} alt="Farmer's Delight Neoforged" width={fdnLogo.width * 3} height={fdnLogo.height * 3} />
+			</h2>
+			<p>{t("Jexxme's NeoForge port of vectorwing's Farmer's Delight: cooking pots, stoves, cutting boards and a whole kitchen of new crops and meals.", locale)}</p>
+			<div class="sister-links">
+				<a class="mc-button" href={`${FDN_WIKI}/`}>{t("Farmer's Delight Neoforged wiki", locale)}</a>
+				<a class="sister-more" href={pageUrl('/farmers-delight/', locale)}>{t('How the two work together', locale)}</a>
+			</div>
+		</div>
+	</section>
+
 	<section class="pantry-wrap">
 		<div class="pantry-head">
 			<div>
-				<h2>Everything in the mod</h2>
-				<p>All {meta.counts.items} items and blocks, one tab per category. Hover a slot to see what it is, click it to open its page.</p>
+				<h2>{t('Everything in the mod', locale)}</h2>
+				<p>{t('All {n} items and blocks, one tab per category. Hover a slot to see what it is, click it to open its page.', locale, { n: meta.counts.items })}</p>
 			</div>
-			<a class="mc-button" href={url('/items/')}>Browse all items</a>
+			<a class="mc-button" href={pageUrl('/items/', locale)}>{t('Browse all items', locale)}</a>
 		</div>
-		<div class="pantry" aria-label="All items by category">
+		<div class="pantry" aria-label={t('All items by category', locale)}>
 		<div class="tabs" role="tablist">
 			{cats.map((c, i) => (
 				<button type="button" role="tab" class="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`tab-${c.key}`} data-tab={c.key} title={c.label}>
@@ -101,7 +150,7 @@ const chapters = [
 				<div class="inv-page" id={`tab-${c.key}`} role="tabpanel" hidden={i !== 0}>
 					<p class="inv-title">
 						{c.label} <span>({c.items.length})</span>
-						<a href={url(`/items/#${c.key}`)}>open list</a>
+						<a href={pageUrl(`/items/#${c.key}`, locale)}>{t('open list', locale)}</a>
 					</p>
 					<div class="inv-grid">
 						{c.items.map((it) => (
@@ -117,18 +166,37 @@ const chapters = [
 </div>
 
 <script>
-	// Pick a splash text, like the title screen does
+	// Pick a splash text, like the title screen does; clicking the sign picks another
 	for (const el of document.querySelectorAll<HTMLElement>('.splash[data-splashes]')) {
-		const list = JSON.parse(el.dataset.splashes!);
-		el.textContent = list[Math.floor(Math.random() * list.length)];
-	}
-	// Creative-inventory tabs
-	for (const tab of document.querySelectorAll<HTMLButtonElement>('.pantry .tab')) {
-		tab.addEventListener('click', () => {
-			for (const t of document.querySelectorAll<HTMLButtonElement>('.pantry .tab')) t.setAttribute('aria-selected', String(t === tab));
-			for (const p of document.querySelectorAll<HTMLElement>('.pantry .inv-page')) p.hidden = p.id !== `tab-${tab.dataset.tab}`;
+		const list: string[] = JSON.parse(el.dataset.splashes!);
+		let i = Math.floor(Math.random() * list.length);
+		el.textContent = list[i];
+		// (the swing itself comes from scripts/mc.ts, like every hanging sign)
+		el.closest<HTMLElement>('.sign')?.addEventListener('click', () => {
+			i = (i + 1 + Math.floor(Math.random() * (list.length - 1))) % list.length;
+			el.textContent = list[i];
 		});
 	}
+	// Creative-inventory tabs: click, or arrow keys / Home / End like any tab list
+	const tabs = [...document.querySelectorAll<HTMLButtonElement>('.pantry .tab')];
+	const select = (tab: HTMLButtonElement, focus = false) => {
+		for (const t of tabs) {
+			t.setAttribute('aria-selected', String(t === tab));
+			t.tabIndex = t === tab ? 0 : -1;
+		}
+		for (const p of document.querySelectorAll<HTMLElement>('.pantry .inv-page')) p.hidden = p.id !== `tab-${tab.dataset.tab}`;
+		if (focus) tab.focus();
+	};
+	tabs.forEach((tab, i) => {
+		tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
+		tab.addEventListener('click', () => select(tab));
+		tab.addEventListener('keydown', (e) => {
+			const to = ({ ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 } as Record<string, number>)[e.key];
+			if (to === undefined) return;
+			e.preventDefault();
+			select(tabs[(to + tabs.length) % tabs.length], true);
+		});
+	});
 </script>
 
 <style>
@@ -138,18 +206,30 @@ const chapters = [
 	.landing {
 		padding-top: 1rem;
 	}
+	/* The title screen: the panorama in a gilt-rimmed oak frame, lit by two lanterns just out of the picture */
 	.title-screen {
 		position: relative;
-		min-height: 560px;
+		min-height: 580px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 44px;
-		padding: 60px 16px 70px;
-		border: 4px solid #000;
-		box-shadow: 6px 6px 0 #000;
+		gap: 40px;
+		padding: 104px 16px 72px;
+		border-style: solid;
+		border-width: 12px 16px 16px 12px;
+		border-image: url('../assets/ui/board.png') 3 4 4 3 / 12px 16px 16px 12px repeat;
+		image-rendering: pixelated;
 		isolation: isolate;
+		overflow: hidden; /* the chains run up to the frame and stop there */
+	}
+	.title-screen::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+		box-shadow: inset 0 0 0 4px #000, inset 0 0 140px 30px rgb(20 8 2 / 0.5);
 	}
 	/* The panorama is a real <img> (not a CSS background) so the browser finds it early and picks the right size */
 	.title-screen :global(.panorama) {
@@ -159,23 +239,86 @@ const chapters = [
 		height: 100%;
 		object-fit: cover;
 		object-position: 50% 40%;
+		z-index: -2;
+		image-rendering: auto;
+	}
+	.glow {
+		position: absolute;
+		top: -12%;
+		width: 46%;
+		height: 72%;
 		z-index: -1;
+		pointer-events: none;
+		background: radial-gradient(closest-side, rgb(255 196 100 / 0.32), transparent);
+		animation: flicker 3.2s ease-in-out infinite alternate;
 	}
-	.logo-wrap {
+	.glow.left {
+		left: -14%;
+	}
+	.glow.right {
+		right: -14%;
+		animation-delay: -1.7s;
+	}
+	@keyframes flicker {
+		0% { opacity: 0.7; }
+		30% { opacity: 1; }
+		45% { opacity: 0.82; }
+		70% { opacity: 1; }
+		100% { opacity: 0.78; }
+	}
+	/* The logo on a signboard, hanging from the frame on two chains (the swing: .vb-hang in theme.css). Click it for
+	   another splash. The chains are long: the frame cuts them off at the top, where the hooks would be. */
+	.sign {
+		--L: 600px;
+		--k: 0.12;
 		position: relative;
+		padding: 10px 22px 4px;
+		cursor: pointer;
+		box-shadow: 10px 10px 0 rgb(0 0 0 / 0.35);
 	}
+	.sign::before,
+	.sign::after {
+		content: '';
+		position: absolute;
+		bottom: calc(100% + 12px);
+		height: var(--L);
+		width: 6px;
+		background: repeating-linear-gradient(#74747e 0 4px, #c4c4cc 4px 6px, #2a2a31 6px 8px, #4c4c55 8px 12px);
+		box-shadow: 2px 0 0 #2a2a31;
+	}
+	.sign::before {
+		left: 24px;
+	}
+	.sign::after {
+		right: 28px;
+	}
+	/* The banner (93 x 44) at whole multiples only, so every pixel stays square: 5x, 4x, 3x, 2x */
 	.logo {
 		display: block;
-		width: min(536px, 84vw);
+		width: 465px;
 		height: auto;
 		image-rendering: pixelated;
 	}
-	/* Placed like the game's title screen: the splash is centred two thirds of the way from the wordmark's middle to its
-	   right end, on its bottom edge, so it just overlaps the last letters. Our wordmark is the right half of the logo. */
+	@media (max-width: 62rem) {
+		.logo {
+			width: 372px;
+		}
+	}
+	@media (max-width: 40rem) {
+		.logo {
+			width: 279px;
+		}
+	}
+	@media (max-width: 26rem) {
+		.logo {
+			width: 186px;
+		}
+	}
+	/* Placed like the game's title screen: on the wordmark's bottom right, just overlapping the last letters */
 	.splash {
 		position: absolute;
-		left: 89%;
-		top: 86%;
+		left: 86%;
+		top: 90%;
 		color: #ffff00;
 		font-size: 20px;
 		text-shadow: 2px 2px 0 #3f3f00;
@@ -185,32 +328,72 @@ const chapters = [
 		pointer-events: none;
 	}
 	@keyframes splash {
-		from {
-			transform: translate(-50%, -50%) rotate(-20deg) scale(1);
-		}
-		to {
-			transform: translate(-50%, -50%) rotate(-20deg) scale(1.08);
-		}
+		from { transform: translate(-50%, -50%) rotate(-20deg) scale(1); }
+		to { transform: translate(-50%, -50%) rotate(-20deg) scale(1.08); }
 	}
-	@media (prefers-reduced-motion: reduce) {
-		.splash {
-			animation: none;
-		}
-	}
+	/* The menu, chalked on a board: icon, dish, a dotted line to an arrow */
 	.menu {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		width: min(400px, 100%);
+		width: min(440px, 100%);
+		box-sizing: border-box;
+		padding: 6px 12px 4px;
+		box-shadow: 8px 8px 0 rgb(0 0 0 / 0.4);
 	}
-	.menu .wide {
-		width: 100%;
+	.menu-title {
+		margin: 0 0 4px;
+		text-align: center;
+		color: var(--vb-chalk-orange);
+		padding-bottom: 6px;
+		border-bottom: 2px dashed var(--vb-chalk-line);
 	}
-	.pair {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		gap: 8px;
-		margin-top: 16px;
+	.menu a {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		min-height: 44px;
+		color: var(--vb-chalk);
+		text-decoration: none;
+		transition: color 0.1s;
+	}
+	.menu a img {
+		image-rendering: pixelated;
+		flex: none;
+		transition: transform 0.15s;
+	}
+	.menu a i {
+		flex: 1;
+		min-width: 16px;
+		align-self: center;
+		margin: 10px 22px 0 0;
+		border-bottom: 2px dotted var(--vb-chalk-line);
+		position: relative;
+	}
+	.menu a i::after {
+		content: '>';
+		position: absolute;
+		right: -20px;
+		bottom: -10px;
+		color: var(--vb-chalk-dim);
+		transition: transform 0.15s, color 0.1s;
+	}
+	.menu a:hover,
+	.menu a:focus-visible {
+		color: var(--vb-chalk-yellow);
+		outline: none;
+	}
+	.menu a:hover img,
+	.menu a:focus-visible img {
+		transform: rotate(-8deg) scale(1.12);
+	}
+	.menu a:hover i,
+	.menu a:focus-visible i {
+		border-bottom-color: rgb(243 220 138 / 0.6);
+	}
+	.menu a:hover i::after,
+	.menu a:focus-visible i::after {
+		color: var(--vb-chalk-yellow);
+		transform: translateX(4px);
 	}
 	.corner {
 		position: absolute;
@@ -232,6 +415,13 @@ const chapters = [
 			display: none;
 		}
 	}
+	@media (prefers-reduced-motion: reduce) {
+		.splash,
+		.glow {
+			animation: none;
+		}
+	}
+	/* The chapters, each on its own chalkboard */
 	.chapters {
 		margin-top: 48px;
 		display: grid;
@@ -240,15 +430,19 @@ const chapters = [
 	}
 	.chapter {
 		margin: 0;
+		padding: 6px 12px 8px;
+		box-shadow: 6px 6px 0 rgb(0 0 0 / 0.4);
 	}
 	.chapter h2 {
 		display: flex;
 		align-items: center;
 		gap: 10px;
 		margin: 0 0 6px;
+		padding-bottom: 6px;
+		border-bottom: 2px dashed var(--vb-chalk-line);
 		font-size: 20px;
 		font-weight: 400;
-		color: #483015;
+		color: var(--vb-chalk-yellow);
 		text-shadow: 2px 0 0 currentColor;
 		letter-spacing: 2px;
 	}
@@ -265,18 +459,89 @@ const chapters = [
 		line-height: 30px;
 	}
 	.chapter a {
-		color: #6e3214;
+		color: var(--vb-chalk);
 		text-decoration: none;
+		transition: color 0.1s;
 	}
 	.chapter a::before {
-		content: '> ';
-		color: #b18e65;
+		content: '* ';
+		color: var(--vb-chalk-orange);
 	}
-	.chapter a:hover {
-		color: #000;
+	.chapter a:hover,
+	.chapter a:focus-visible {
+		color: var(--vb-chalk-yellow);
+		text-decoration: underline wavy;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 6px;
+		outline: none;
+	}
+	/* Also by Jexxme: the same Minecraft GUI panel as on the FDN wiki, screenshot in a slot, logo and text beside it */
+	.sister {
+		margin-top: 72px;
+		display: grid;
+		grid-template-columns: minmax(0, 28rem) minmax(16rem, 1fr);
+		gap: 20px 28px;
+		align-items: center;
+		padding: 16px;
+		background: #c6c6c6;
+		box-shadow: inset 4px 4px 0 #fff, inset -4px -4px 0 #555, 0 0 0 2px #000, 6px 6px 0 2px #000;
+		color: #404040;
+	}
+	.sister :global(.sister-shot) {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 16 / 9;
+		object-fit: cover;
+		border: 4px solid #8b8b8b;
+		box-shadow: 0 0 0 2px #373737;
+	}
+	.sister-text {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		min-width: 0;
+	}
+	.sister-text p {
+		margin: 0;
+	}
+	.sister-kicker {
+		color: #606060;
+	}
+	.sister h2 {
+		margin: 0;
+		line-height: 0;
+	}
+	.sister h2 img {
+		max-width: 100%;
+		height: auto;
+		image-rendering: pixelated;
+	}
+	.sister-links {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 20px;
+		margin-top: 6px;
+	}
+	.sister-more {
+		color: #303030;
 		text-decoration: underline;
 		text-decoration-thickness: 2px;
 		text-underline-offset: 4px;
+	}
+	.sister-more:hover {
+		color: #000;
+	}
+	@media (max-width: 60rem) {
+		.sister h2 img {
+			width: 268px;
+		}
+	}
+	@media (max-width: 40rem) {
+		.sister {
+			grid-template-columns: 1fr;
+		}
 	}
 	.pantry-wrap {
 		margin-top: 72px;
@@ -294,7 +559,8 @@ const chapters = [
 		font-size: 30px;
 		line-height: 40px;
 		font-weight: 400;
-		color: var(--fd-heading-ink);
+		color: var(--vb-heading);
+		text-shadow: var(--vb-heading-shadow);
 	}
 	.pantry-head p {
 		margin: 0;
@@ -317,6 +583,16 @@ const chapters = [
 		cursor: pointer;
 		box-shadow: inset 2px 2px 0 #aaa, inset -2px 0 0 #555, 0 -2px 0 #000, 2px 0 0 #000, -2px 0 0 #000;
 		margin-top: 6px;
+		transition: margin-top 0.08s, height 0.08s;
+	}
+	.tab:not([aria-selected='true']):hover {
+		background: #9d9d9d;
+		margin-top: 3px;
+		height: 55px;
+	}
+	.tab:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: -6px;
 	}
 	.tab[aria-selected='true'] {
 		background: #c6c6c6;
@@ -364,12 +640,6 @@ const chapters = [
 		min-height: 108px;
 		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54' shape-rendering='crispEdges'%3E%3Crect width='54' height='54' fill='%238b8b8b'/%3E%3Crect y='51' width='54' height='3' fill='%23fff'/%3E%3Crect x='51' width='3' height='54' fill='%23fff'/%3E%3Crect width='54' height='3' fill='%23373737'/%3E%3Crect width='3' height='54' fill='%23373737'/%3E%3C/svg%3E") 0 0 / 54px 54px repeat;
 	}
-	@media (max-width: 40rem) {
-		.menu :global(.mc-button) {
-			white-space: normal;
-			padding-inline: 10px;
-		}
-	}
 	@media (max-width: 60rem) {
 		.chapters {
 			grid-template-columns: 1fr 1fr;
@@ -381,12 +651,24 @@ const chapters = [
 		}
 		.title-screen {
 			min-height: 480px;
-		}
-		.corner.right {
-			display: none;
+			padding: 84px 10px 52px;
+			gap: 28px;
 		}
 		.splash {
-			right: 0;
+			left: 78%;
+		}
+		.menu {
+			padding-inline: 4px;
+		}
+		.menu a {
+			gap: 8px;
+		}
+		.menu a i {
+			min-width: 0;
+			margin-right: 16px;
+		}
+		.menu a i::after {
+			right: -16px;
 		}
 	}
 </style>

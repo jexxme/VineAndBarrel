@@ -1,0 +1,68 @@
+---
+// The catalog: every Vine & Barrel item and block, filterable by name, category and properties.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Catalog from '../../components/islands/Catalog.tsx';
+import Tr from '../../components/mc/Tr.astro';
+import { itemList, iconOf, CATEGORIES, nameOf, gameText, pageUrl, meta } from '../../lib/data';
+import { t, langTag } from '../../lib/i18n';
+// Rendered by pages/items/index.astro (English) and pages/[locale]/items/index.astro (the other languages)
+const { locale = 'en' } = Astro.props as { locale?: string };
+
+const rows = itemList.map((i) => ({
+	id: i.id,
+	slug: i.slug,
+	name: nameOf(i.id, locale),
+	category: i.category,
+	icon: iconOf(i.id)?.src ?? '',
+	flat: iconOf(i.id)?.flat ?? true,
+	nutrition: i.food?.nutrition ?? null,
+	saturation: i.food?.saturation ?? null,
+	effects: i.consumable?.effects.map((e) => gameText(`effect.${e.id.replace(':', '.')}`, e.name, locale)) ?? [],
+	block: !!i.block && i.block.split(':')[1] === i.id.split(':')[1],
+	stack: i.stack,
+	tags: i.tags as string[],
+}));
+// Category names and blurbs (the table is literal so the keys get collected; CATEGORIES in data.ts is the English source)
+const CAT = {
+	workstations: { label: t('Workstations', locale), blurb: t('Brew Kettle and Aging Barrel', locale) },
+	crops: { label: t('Crops & seeds', locale), blurb: t('Grapes, hops, barley and their wild plants', locale) },
+	storage: { label: t('Storage', locale), blurb: t('Crates and the Barley Bale', locale) },
+	bases: { label: t('Juice & wort', locale), blurb: t('What the kettle brews', locale) },
+	drinks: { label: t('Drinks', locale), blurb: t('Wines, beers, ciders and their vessels', locale) },
+	meals: { label: t("Farmer's Delight meals", locale), blurb: t("Cooking pot meals, with Farmer's Delight", locale) },
+} as Record<string, { label: string; blurb: string }>;
+const cats = Object.entries(CATEGORIES)
+	.filter(([k]) => rows.some((r) => r.category === k))
+	.map(([k, v]) => ({ key: k, label: CAT[k]?.label ?? v.label, blurb: CAT[k]?.blurb ?? v.blurb, count: rows.filter((r) => r.category === k).length }));
+// The island can't call t(): all its words come in as props. {shown} and {total} are filled in by the island.
+const strings = {
+	lang: langTag(locale),
+	placeholder: t('Filter by name, id, effect or tag…', locale),
+	filterLabel: t('Filter items', locale),
+	sortLabel: t('Sort', locale),
+	sortTab: t('Creative tab order', locale),
+	sortName: t('Name A–Z', locale),
+	sortNutrition: t('Most hunger restored', locale),
+	sortSaturation: t('Most saturation', locale),
+	foodOnly: t('Food only', locale),
+	blocksOnly: t('Placeable blocks', locale),
+	categories: t('Categories', locale),
+	clear: t('Clear', locale),
+	count: t('{shown} of {total} items', locale),
+	none: t('No items match. Try fewer words, or clear the filters.', locale),
+};
+---
+<StarlightPage
+	frontmatter={{
+		title: t('All items & blocks', locale),
+		description: t('Every one of the {n} items and blocks in Vine & Barrel, with filters by category, food and block.', locale, { n: meta.counts.items }),
+		tableOfContents: false,
+	}}
+>
+	<p>
+		<Tr k="All {n} items in Vine & Barrel {version}. Hover an item for its id, click it for its full page: recipes, uses, where to find it, and every stat. Type to filter, or press {key} to search the whole site." vars={{ n: rows.length, version: meta.version }} locale={locale}>
+			<kbd slot="key">/</kbd>
+		</Tr>
+	</p>
+	<Catalog client:load rows={rows} cats={cats} base={pageUrl('/items/', locale)} i18n={strings} />
+</StarlightPage>

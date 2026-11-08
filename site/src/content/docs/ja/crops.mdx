@@ -1,0 +1,131 @@
+---
+title: 作物
+description: 赤と白のブドウの低木、ホップの低木、トレリス、大麦、野生の作物、そしてミツバチからコンポストまで、まわりのことすべて。
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../../lib/l10n/ja';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+// Who eats what: the food tags our items are in (animals.json), as the animals those tags feed
+export const ANIMALS = { cow_food: 'ウシ', sheep_food: 'ヒツジ', goat_food: 'ヤギ', horse_food: 'ウマ', llama_food: 'ラマ', chicken_food: 'ニワトリ', parrot_food: 'オウム', fox_food: 'キツネ' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const SEASON = { spring: '春', summer: '夏', autumn: '秋', winter: '冬' };
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)).map((s) => SEASON[s] ?? s));
+
+<Render name="scenes/garden" float="right" size={256} alt="大麦畑の向こうにブドウとホップの低木" />
+
+この Mod 独自の作物は4つで、どれも飲み物の材料です。赤ワインには<Item id="red_grapes" plural />、
+白ワインには<Item id="white_grapes" plural />、両方のビールには<Item id="hops" />、エールには<Item id="barley" />を使います。
+ほかの材料はバニラのものです。スイートベリーワインには<Item id="sweet_berries" />、小麦ビールには<Item id="wheat" />、
+ハードサイダーには<Item id="apple" plural />、ミードには<Item id="honey_bottle" plural />を使います。
+
+<Shot src="vineyard.jpg" caption="柵で囲ったブドウ園。熟したブドウの低木が並び、列の端にはランタンの柱が立っています。" />
+
+## ブドウとホップの低木
+
+<Item id="red_grapes" plural />、<Item id="white_grapes" plural />、<Item id="hops" />は、スイートベリーと同じように
+草ブロック、土、耕地に植えます。低木はスイートベリーの低木と同じペースで{c.bushMaxAge + 1}段階かけて育ちます。赤ブドウと白ブドウは
+育ち方が同じで、熟した実だけが違います。
+
+<Stages prefix="grape_bush" title="赤ブドウの低木" labels={['植え付け', '成長中', '半熟', '完熟']} />
+<Stages prefix="white_grape_bush" title="白ブドウの低木" labels={['植え付け', '成長中', '半熟', '完熟']} />
+<Stages prefix="hop_bush" title="ホップの低木" labels={['植え付け', '成長中', '半熟', '完熟']} />
+
+- **収穫**は、熟した低木を右クリックします。ブドウなら{h.grapes.count[0]}〜{h.grapes.count[1]}個(ホップなら
+  <Item id="hops" />を{h.hops.count[0]}〜{h.hops.count[1]}個)が手に入り、低木は2段階目に戻って実をつけ続けます。
+  植え直す必要はありません。
+- **急ぐなら**、スイートベリーのように半熟のうちに摘めます。手に入るのは{h.grapes.halfRipe[0]}〜{h.grapes.halfRipe[1]}個で、
+  低木は同じように戻ります。
+- **骨粉**で1段階進みます。
+- 低木はスイートベリーの低木と同じくらい燃えやすいので、ブドウ園には焚き火や溶岩を近づけないでください。
+
+## トレリス
+
+<Render name="scenes/trellis" float="right" size={256} alt="トレリスに絡むブドウとホップのつると、何もないトレリス" />
+
+低木の上に<Item id="trellis" />を置くと、低木が熟したところで{c.climbMaxHeight}ブロックの高さまで登り、
+てっぺんまで実をつけます。トレリスは置くときにあなたの方を向き、下のトレリスと向きがそろうので、列がまっすぐになります。
+
+- つるはそれぞれ、低木と同じように育ち、実をつけ、摘めます。半熟でも同じです。熟した低木に骨粉を使うと、すぐに登り始めます。
+- つるを壊すと実が手に入り、トレリスは残ります。
+- トレリスははしごではありません。上のものも、地面から手が届きます。
+
+<Recipe id="trellis" />
+
+<Aside title="Farmer's Delight があれば: ロープも使えます">
+Farmer's Delight のロープを低木の上に吊るすと、トレリスとまったく同じように働きます。FD のトマトが登るのと同じです。
+[Farmer's Delight](/farmers-delight/)をご覧ください。
+</Aside>
+
+## 大麦
+
+<Item id="barley_seeds" />を耕地にまきます。大麦は小麦とまったく同じように{barleyStages}段階で育ち、
+収穫物も同じです。熟していれば<Item id="barley" />と、おまけの種が手に入ります。
+
+<Stages prefix="barley" title="大麦" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', '完熟']} />
+
+## 野生の作物
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="草地に生える野生の赤ブドウ、白ブドウ、ホップ、大麦" />
+
+最初の種は野生の植物から手に入ります。バイオームと気温ごとに群生していて、一般的なタグが付いた
+Mod のバイオームにも出現します。壊すと収穫物が手に入り、ハサミを使えば株ごと持ち帰って飾りにできます。
+
+<WildCrops />
+
+農民や行商人も種を売っていて、村のチェストに入っていることもあります。[村と酒場](/villages/)をご覧ください。
+
+## 農場の暮らし
+
+- **ミツバチ**は、バニラの作物と同じようにブドウ、ホップ、大麦を受粉させ、成長を助けます。
+- **動物:** <Item id="barley" />は小麦と同じように{list(eaters('vineandbarrel:barley').filter((a) => a !== 'ウマ' && a !== 'ラマ'))}の餌になり、繁殖させられます。
+  ウマとラマも小麦と同じように、大麦で回復し、成長します。<Item id="barley_bale" />も干草の俵と同じです。
+  <Item id="barley_seeds" />は{list(eaters('vineandbarrel:barley_seeds'))}の餌になり、ブドウで{list(eaters('vineandbarrel:red_grapes'))}を繁殖させられます。
+- **キツネ**はブドウが大好きで、赤も白も、スイートベリーの低木を荒らすのと同じように、低木から摘み取ります。
+  トレリスやロープに登ったつるには手が届かず、mobによる破壊がオフのときもやめます。
+- **農民**は畑で大麦を植えて収穫し、余った種をコンポストにします。ブドウとホップは任せてくれません。
+- **コンポスター:** どの作物もバニラと同じ確率でコンポストになります。
+
+<table>
+	<thead><tr><th>アイテム</th><th>層が増える確率</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="水をやった耕地の大麦が、ホップ畑のとなりで収穫を待っています。" />
+
+## 貯蔵ブロック
+
+<Render name="scenes/storage" float="right" size={256} alt="赤ブドウ入り木箱、白ブドウ入り木箱、ホップ入り木箱、大麦の俵" />
+
+作物を9個まとめると<Item id="grape_crate" />、<Item id="white_grape_crate" />、<Item id="hops_crate" />、
+<Item id="barley_bale" />になり、作業台でまた元に戻せます。<Item id="barley_bale" />はあらゆる点で干草の俵と同じです。
+落下ダメージをやわらげ、上の焚き火の煙は高く昇り、ラマやウマが食べます。
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## 知っておくと便利なこと
+
+- **壊さずに摘む。** 若い低木を壊すと何も落とさず、株もなくなります。実のついた低木を壊すと実を落とします(幸運で増えます)が、
+  右クリックなら低木を残したまま摘めます。
+- **そのまま通り抜けられる。** ブドウとホップの低木は、スイートベリーの低木のように刺さったり遅くなったりしません。
+- **光と水:** 低木は明るい場所でしか育ちません。水に流され、ピストンで壊れます。
+- **ブドウは軽食**で、スイートベリーと同じです。
+- **もっと野生の植物を:** 野生の作物に骨粉を使うと、近くにもう1本生えることがよくあります。最初の種を手に入れる近道です。
+  野生の大麦は大麦1つと種1つを落とします。
+- **大麦の下の耕地**は、どの作物とも同じで土に戻りません。
+- **つる**も光が必要です。暗いと壊れ、トレリスやロープは残ります。完全に育った株に骨粉を使うと、その上のつるに伝わります。
+  ロープに登ったつるは、ロープと同じように登れます。
+- **ミツバチ**が低木を登らせることはありません。始められるのはあなただけです。
+
+## 季節
+
+Serene Seasons を入れると、作物に季節が生まれます。ブドウは赤も白も{seasonsOf('vineandbarrel:red_grapes')}、ホップは
+{seasonsOf('vineandbarrel:hops')}、大麦は{seasonsOf('vineandbarrel:barley_seeds')}に育ちます。[互換性](/compatibility/)をご覧ください。

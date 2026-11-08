@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "vineandbarrel:block/trellis"
+    },
+    "axis=z": {
+      "model": "vineandbarrel:block/trellis",
+      "y": 90
+    }
+  }
+}

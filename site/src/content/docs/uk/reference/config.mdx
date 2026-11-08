@@ -1,0 +1,73 @@
+---
+title: Налаштування
+description: Кожен параметр Vine & Barrel для власників серверів і для кожного гравця, з типовим значенням і описом.
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules } from '../../../../lib/l10n/uk';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, 'uk') : o.what }));
+
+Vine & Barrel має два файли налаштувань, обидва про [«Напідпитку»](/tipsy/). Усе інше, від рецептів до тривалості витримки
+в діжці, працює так, як постачається з модом, і змінюється датапаком, як і будь-який рецепт.
+
+У грі їх змінюють на екрані налаштувань: **Моди**, Vine & Barrel, **Конфіг** на NeoForge; на Fabric така сама кнопка
+з'являється, якщо встановлено [Mod Menu](https://modrinth.com/mod/modmenu). Зміни там діють одразу. Серверні параметри
+видно там в одиночній грі (не тоді, коли світ відкрито для локальної мережі); на сервері вони належать серверу.
+
+Самі файли: на NeoForge це файли TOML з параметрами під <code>[{configFiles.server.section}]</code>. На
+Fabric це звичайні файли <code>.properties</code> у теці <code>config</code>, ті самі параметри записано як
+<code>{configFiles.server.section}.option=value</code>. На Fabric клієнтський файл читається під час запуску гри, тож
+перезапусти її після редагування; серверний файл перечитується командою <code>/reload</code>.
+
+## Серверні параметри
+
+У <code>{configFiles.server.file}</code> на NeoForge, <code>{configFiles.server.fabricFile}</code> на Fabric. Значення сервера
+отримує кожен гравець, що приєднується, тож усі грають за однаковими правилами. Один світ може мати свої: поклади файл у
+теку <code>serverconfig</code> цього світу, і він переважатиме файл із <code>config</code>, поки цей світ працює.
+
+<table>
+	<thead><tr><th>Параметр</th><th>Типово</th><th>Що робить</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">від {o.range[0]} до {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Безалкогольний режим">
+Постав `enabled = false` (`tipsy.enabled=false` на Fabric), і напої стануть простими напоями з бонусами: без «Напідпитку», без гикавки, без провалів у пам'яті, але з тими самими назвами й бонусами.
+Добре для сімейного сервера або якщо тобі просто не подобається хитання.
+</Aside>
+
+## Клієнтські параметри
+
+У <code>{configFiles.client.file}</code> на NeoForge, <code>{configFiles.client.fabricFile}</code> на Fabric. Кожен гравець
+налаштовує їх для себе; вони змінюють лише те, що бачиш ти.
+
+<table>
+	<thead><tr><th>Параметр</th><th>Типово</th><th>Що робить</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">від {o.range[0]} до {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="Заколисує?">
+Постав `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` на Fabric). «Напідпитку» перестане рухати екран, що б не казав сервер: ні хитання, ні поштовхів, ні нападів нудоти. Повзунки ванільних «Ефекти викривлення» й «Ефекти поля зору» теж послаблюють його. Те, що ти лежиш долілиць після падіння, лишається, це не ефект екрана; усе інше в «Напідпитку» залишається.
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

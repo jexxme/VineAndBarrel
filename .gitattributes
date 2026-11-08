@@ -12,3 +12,7 @@ gradlew text eol=lf
 *.jar binary
 *.nbt binary
 *.ogg binary
+*.cfg text eol=lf
+*.classtweaker text eol=lf
+*.py text eol=lf
+**/META-INF/services/* text eol=lf

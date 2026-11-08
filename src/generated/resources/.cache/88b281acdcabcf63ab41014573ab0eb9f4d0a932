@@ -1,0 +1,13 @@
+// 26.1.1	2026-11-08T16:55:36.6008	Tags for minecraft:worldgen/biome mod id vineandbarrel
+fc3ce41d2c2ecd8094a40ad7bd1ab37bd082467d data/vineandbarrel/tags/worldgen/biome/wild_barley_blacklist.json
+119887b65dd8d9b7775022f637d97e5a11d2ea83 data/vineandbarrel/tags/worldgen/biome/wild_barley_extra.json
+542ada938c4a22015ecb7b209bd8f5b25d9858ff data/vineandbarrel/tags/worldgen/biome/wild_barley_whitelist.json
+efcab8eb7a2304bab2c6f0940a87213e8912b369 data/vineandbarrel/tags/worldgen/biome/wild_grapes_blacklist.json
+1b89ec39acdd38652d1151b0713c77b231fd4b9a data/vineandbarrel/tags/worldgen/biome/wild_grapes_extra.json
+5a9c8e10d490f5932641c916e10299858ebbd891 data/vineandbarrel/tags/worldgen/biome/wild_grapes_whitelist.json
+c31cf497e82dadf28538fad0d92da9e9dfcd3d7c data/vineandbarrel/tags/worldgen/biome/wild_hops_blacklist.json
+e33256dbe995b85bdb141d400a512ca6795b73f8 data/vineandbarrel/tags/worldgen/biome/wild_hops_extra.json
+e14f00f1cb33b67a384fc08cf14c69c73deed210 data/vineandbarrel/tags/worldgen/biome/wild_hops_whitelist.json
+130fd11300ad2e7f8aab078aa0be4f8d461cbd31 data/vineandbarrel/tags/worldgen/biome/wild_white_grapes_blacklist.json
+498231398701edace67446a1cc463fa304dd51a8 data/vineandbarrel/tags/worldgen/biome/wild_white_grapes_extra.json
+98a548e540b45a6d55318b166ed1b09ec57a5deb data/vineandbarrel/tags/worldgen/biome/wild_white_grapes_whitelist.json

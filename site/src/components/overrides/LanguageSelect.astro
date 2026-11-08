@@ -1,0 +1,129 @@
+---
+// Language switch: one square button like the theme and menu buttons, showing the page's language ("EN", "DE"…).
+// It opens a list of the languages, each a link to this page in that language. Works without JS (<details>).
+import config from 'virtual:starlight/user-config';
+import { t, localeOf } from '../../lib/i18n';
+
+const locale = localeOf(Astro.currentLocale);
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const current = Astro.locals.starlightRoute.locale ?? 'root';
+const codes = Object.keys(config.locales ?? {}).filter((c) => c !== 'root');
+// This page's path without the base and the language: "/de/tipsy/" → "/tipsy/"
+const path = (Astro.url.pathname.slice(base.length) || '/').replace(new RegExp(`^/(${codes.join('|') || '-'})(/|$)`), '/');
+const short = (code: string) => (code === 'root' ? 'EN' : code.split('-')[0].toUpperCase());
+const options = Object.entries(config.locales ?? {}).map(([code, l]) => ({
+	code,
+	label: l!.label,
+	lang: l!.lang ?? 'en',
+	href: base + (code === 'root' ? path : `/${code}${path}`),
+}));
+const now = options.find((o) => o.code === current) ?? options[0];
+---
+{
+	config.isMultilingual && (
+		<details class="fd-lang">
+			<summary title={now?.label} aria-label={t('Language: {name}', locale, { name: now?.label ?? '' })}>{short(current)}</summary>
+			<ul>
+				{options.map((o) => (
+					<li>
+						<a href={o.href} hreflang={o.lang} lang={o.lang} aria-current={o.code === current ? 'true' : undefined}>
+							<b>{short(o.code)}</b> {o.label}
+						</a>
+					</li>
+				))}
+			</ul>
+		</details>
+	)
+}
+
+<script>
+	// Close the list on a click elsewhere or Escape
+	document.addEventListener('click', (e) => {
+		for (const d of document.querySelectorAll<HTMLDetailsElement>('details.fd-lang[open]')) if (!d.contains(e.target as Node)) d.open = false;
+	});
+	document.addEventListener('keydown', (e) => {
+		if (e.key !== 'Escape') return;
+		for (const d of document.querySelectorAll<HTMLDetailsElement>('details.fd-lang[open]')) {
+			d.open = false;
+			d.querySelector('summary')?.focus();
+		}
+	});
+</script>
+
+<style>
+	.fd-lang {
+		position: relative;
+	}
+	summary {
+		width: 40px;
+		height: 40px;
+		display: grid;
+		place-items: center;
+		background: #000;
+		border: 2px solid #a0a0a0;
+		color: #fff;
+		font-family: var(--sl-font);
+		font-size: 20px;
+		line-height: 1;
+		cursor: pointer;
+		list-style: none;
+		user-select: none;
+	}
+	summary::-webkit-details-marker {
+		display: none;
+	}
+	summary:hover,
+	summary:focus-visible,
+	.fd-lang[open] summary {
+		border-color: #fff;
+		color: #ffffa0;
+		outline: none;
+	}
+	ul {
+		position: absolute;
+		top: calc(100% + 4px);
+		right: 0;
+		z-index: 20;
+		min-width: 13rem;
+		margin: 0;
+		padding: 4px 0;
+		list-style: none;
+		background: #000;
+		border: 2px solid #a0a0a0;
+	}
+	/* In the phone menu the button sits at the bottom: open upwards */
+	:global(.mobile-preferences) ul {
+		top: auto;
+		bottom: calc(100% + 4px);
+		left: 0;
+		right: auto;
+	}
+	li {
+		margin: 0;
+	}
+	a {
+		display: flex;
+		gap: 10px;
+		padding: 5px 12px;
+		color: #fff;
+		font-family: var(--sl-font);
+		font-size: 18px;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+	a b {
+		width: 1.6em;
+		font-weight: normal;
+		color: #a0a0a0;
+	}
+	a:hover,
+	a:focus-visible {
+		background: #2a2a2a;
+		color: #ffffa0;
+		outline: none;
+	}
+	a[aria-current] {
+		color: #ffffa0;
+	}
+</style>

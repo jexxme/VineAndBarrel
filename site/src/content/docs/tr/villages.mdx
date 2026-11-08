@@ -1,0 +1,62 @@
+---
+title: Köyler ve meyhaneler
+description: Fıçıları çekmeye hazır köy meyhaneleri, üzüm, şerbetçiotu ve arpa yetiştiren köy çiftlikleri, tohum takasları ve sandık ganimeti.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import VillageInfo from '../../../components/data/VillageInfo.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, roman } from '../../../lib/l10n/tr';
+
+<Render name="scenes/tavern" float="right" size={256} alt="Bir meyhane köşesi" />
+
+## Meyhaneler
+
+Her köy türünde, kendi tarzında yapılmış, iki yerleşimden biriyle bir **meyhane** olabilir. Üç köyden birinde bir tane
+bulursun, arada bir köyde iki tane de olur. Hiçbiri tıpatıp aynı değildir: fıçılardakiler, masalardaki içecekler, çiçekler,
+flamalar ve mumlar meyhaneden meyhaneye değişir.
+
+Kapının üstündeki asılı tabelaya bak. İçeride rahatça dolaşacak yer var: ateşin yanında bir masa, barda tabureler, arkasında
+kamp ateşinin üstünde kazan. Barın arkasında merdivenler, salonun altındaki tonozlu, meşaleli, fıçılarla dolu **fıçı mahzenine**
+iner.
+
+Her köy türünün kendine has bir özelliği var:
+
+- **Ovalar:** bir bira bahçesi, şerbetçiotu sarmaşıklı bir çardağın altında uzun masalar.
+- **Çöl:** dış merdivenlerden çıkılan bir çatı terası.
+- **Savana:** gölgede, kendi tezgâhı olan bir veranda barı.
+- **Karlı:** büyük bir şömine ve kürk halılarla bir ocak odası.
+- **Tayga:** uzun bir masası olan bir bal şarabı salonu ve saçağın altında bir odun yığını.
+
+Fıçıları **zaten dolu:** içeri gir, bir kupa ya da kadeh al ve bir içecek çek. Birkaçı yıllanmış. Meyhane sandığında
+tohumlar, kupalar, kadehler ve yörenin birkaç içeceği var; kendi demlemene başlamak için gereken her şey.
+
+<Shot src="taverns/plains.jpg" caption="Ovalar: bira bahçesi, şerbetçiotu sarmaşıklı bir çardağın altında uzun masalar." />
+<Shot src="taverns/desert.jpg" caption="Çöl: dış merdivenlerden çıkılan çatı terası." />
+<Shot src="taverns/savanna.jpg" caption="Savana: veranda barı, salonun açık kapaklarının altında bir tezgâh." />
+<Shot src="taverns/snowy.jpg" caption="Karlı: ocak odası, üç şömine genişliğinde, kürk halılar ve koltuklar." />
+<Shot src="taverns/taiga.jpg" caption="Tayga: bal şarabı salonunun uzun masası." />
+<Shot src="taverns/cellar.jpg" caption="Salonun altındaki fıçı mahzeni: taş bir tonozun altında rafa dizilmiş fıçılar, duvarlarda meşaleler." />
+
+### Bilmen gerekenler
+
+- Meyhane fıçıları mayalanmayı çoktan geçmiştir, bu yüzden üstüne eklenemez. Birini boşalt ve kendi demlemenle doldur:
+  kendi doldurduğun bir fıçıdan yıllanmış bir içecek çekmek *Sabrın Sonu Selamet* kazandırır.
+- Genç meyhane fıçıları her fıçı gibi yıllanmaya devam eder; yani birkaç gün dokunmadığın bir meyhanede daha çok yıllanmış içecek olur.
+- Bir köydeki herhangi bir fıçıdan, meyhanenin ya da kendinin, çekmek *Fıçıdan* kazandırır.
+- Ticaretini ayıkken yap: Çakırkeyif {roman(rules.tipsy.rowdyLevel - 1)} seviyesinden itibaren köylüler ve tüccarlar seninle iş yapmaz. Bkz. [Çakırkeyif](/tipsy/#kavgacı).
+
+## Köy çiftlikleri
+
+Köy çiftlikleri vanilla ürünlerin yanında bizimkileri de yetiştirir, iklime göre: sıcak yerde kırmızı üzüm, ova ve tayga
+köylerinde beyaz üzüm, serin yerde şerbetçiotu, arpa neredeyse her yerde.
+
+<VillageInfo show="farms" />
+
+## Takaslar
+
+<VillageInfo show="trades" />
+
+## Sandık ganimeti
+
+<VillageInfo show="loot" />

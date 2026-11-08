@@ -1,0 +1,73 @@
+---
+title: 設定
+description: Vine & Barrelのすべてのオプション。サーバー管理者向けとプレイヤー向けに、初期値と効果をまとめています。
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../../lib/l10n/ja';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+Vine & Barrelの設定ファイルは2つあり、どちらも[ほろ酔い](/tipsy/)に関するものです。それ以外、レシピから樽の熟成にかかる時間まで、
+すべてMODの出荷時のまま動き、ほかのレシピと同じようにデータパックで変更できます。
+
+ゲーム内では設定画面で変更します。NeoForgeでは**Mod**、Vine & Barrel、**コンフィグ**の順に開きます。Fabricでは
+[Mod Menu](https://modrinth.com/mod/modmenu)を入れると同じボタンが出ます。ここでの変更はすぐに反映されます。サーバーのオプションは、
+シングルプレイでは(ワールドをLANに公開していなければ)ここに表示されます。サーバーでは、サーバー側の値が使われます。
+
+ファイルそのものについて: NeoForgeではTOMLファイルで、オプションは<code>[{configFiles.server.section}]</code>の下にあります。
+Fabricでは<code>config</code>フォルダにある普通の<code>.properties</code>ファイルで、同じオプションを
+<code>{configFiles.server.section}.option=value</code>の形で書きます。Fabricのクライアントファイルはゲームの起動時に読み込まれるので、
+編集したら再起動してください。サーバーファイルは<code>/reload</code>で読み込み直されます。
+
+## サーバーオプション
+
+NeoForgeでは<code>{configFiles.server.file}</code>、Fabricでは<code>{configFiles.server.fabricFile}</code>にあります。サーバーの
+値は参加するすべてのプレイヤーに送られるので、全員が同じルールで遊びます。ワールドごとに別の値にもできます。そのワールドの
+<code>serverconfig</code>フォルダにファイルを入れると、そのワールドが動いているあいだは<code>config</code>にあるものより優先されます。
+
+<table>
+	<thead><tr><th>オプション</th><th>初期値</th><th>効果</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]}から{o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="ノンアルコールモード">
+`enabled = false`(Fabricでは`tipsy.enabled=false`)にすると、飲み物はただの強化効果つきの飲み物になります。ほろ酔いも、しゃっくりも、記憶飛びもありませんが、名前と強化効果は同じです。
+家族向けのサーバーや、ふらふらが好きではない人に向いています。
+</Aside>
+
+## クライアントオプション
+
+NeoForgeでは<code>{configFiles.client.file}</code>、Fabricでは<code>{configFiles.client.fabricFile}</code>にあります。プレイヤーが
+各自で設定するもので、見え方だけが変わります。
+
+<table>
+	<thead><tr><th>オプション</th><th>初期値</th><th>効果</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]}から{o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="画面酔いが心配?">
+`wobbleIntensity = 0`(Fabricでは`tipsy.wobbleIntensity=0`)にしましょう。サーバーの設定にかかわらず、ほろ酔いが画面を動かさなくなります。ふらつきも、揺れも、吐き気の発作もありません。バニラの「画面の歪み」と「視野の変化」のスライダーでも弱められます。つまずいて顔から倒れる姿は画面効果ではないので、そのまま表示されます。ほろ酔いのそれ以外はそのままです。
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

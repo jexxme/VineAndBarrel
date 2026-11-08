@@ -2,14 +2,23 @@ name: CI
 
 on:
   push:
+    # Branches only: a release tag is built and tested by release.yml
+    # Not the ci/** branches: those only exist for verify.yml (gh-verify.sh pushes them and deletes them again)
+    branches: ['**', '!ci/**']
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
+    # A pull request from a branch of this repository is already tested by its push; only forks' pull requests run here
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -28,17 +37,19 @@ jobs:
       - name: Datagen is up to date
         run: |
           ./gradlew runData --console=plain
-          if [ -n "$(git status --porcelain -- src/generated)" ]; then
-            echo "::error::src/generated is out of date. Run ./gradlew runData and commit the result."
-            git status --porcelain -- src/generated | head -50
-            git diff --stat -- src/generated | tail -20
+          if [ -n "$(git status --porcelain -- common/src/generated)" ]; then
+            echo "::error::common/src/generated is out of date. Run ./gradlew runData and commit the result."
+            git status --porcelain -- common/src/generated | head -50
+            git diff --stat -- common/src/generated | tail -20
             exit 1
           fi
 
-      - name: GameTests, headless (gameplay, edge cases, item conservation)
+      - name: GameTests, headless (gameplay, edge cases, item conservation), on NeoForge and on Fabric (also with Farmer's Delight Refabricated, and with the compat mods)
+        # NeoForge with Farmer's Delight Neoforged (runGameTestServerFd) stays local for now: that run needs an FD
+        # Neoforged jar, and its Modrinth project (8Vb5dzx9) isn't public yet, so its Maven has nothing to fetch.
         run: |
           set -o pipefail
-          ./gradlew runGameTestServer --console=plain 2>&1 | tee gametest.log
+          ./gradlew :neoforge:runGameTestServer :neoforge:runGameTestServerCompat :fabric:runGameTest :fabric:runGameTestFd :fabric:runGameTestCompat --console=plain 2>&1 | tee gametest.log
 
       - name: No errors in the GameTest server log
         run: |
@@ -49,9 +60,11 @@ jobs:
             exit 1
           fi
 
-      - name: Upload jar
+      - name: Upload jars
         uses: actions/upload-artifact@v4
         with:
           name: VineAndBarrel
-          path: build/libs/*.jar
+          path: |
+            neoforge/build/libs/*.jar
+            fabric/build/libs/*.jar
           if-no-files-found: error

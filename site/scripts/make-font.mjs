@@ -135,11 +135,57 @@ const G = {
 	'✓': ['      ', '     #', '    # ', '#  #  ', ' ##   ', '  #   '],
 };
 
+// Letters of the translated wiki (es, fr, it, pl, pt, tr, de): a base letter with its mark, built from the glyphs
+// above so they match. Small letters carry the mark in their two empty top rows; capitals one row above the cap height
+// (inside the ascender); cedilla and ogonek hang in the descender row. Cyrillic and CJK pages use a system font.
+const MARK = {
+	acute: ['   # ', '  #  '],
+	grave: [' #   ', '  #  '],
+	circ: ['  #  ', ' # # '],
+	uml: [' # # ', '     '],
+	tilde: [' ## #', '#  # '],
+	dot: ['  #  ', '     '],
+	breve: ['#   #', ' ### '],
+};
+const CAP_MARK = { acute: '   # ', grave: ' #   ', circ: '  #  ', uml: ' # # ', tilde: ' ## #', dot: '  #  ', breve: '#   #' };
+const BELOW = { cedilla: '  #  ', ogonek: '   ##' };
+const fit = (row, width) => {
+	const pad = Math.max(0, Math.floor((row.length - width) / 2));
+	return row.slice(pad, pad + width).padEnd(width);
+};
+/** Glyphs taller than the cap height (a mark above a capital) start at row -1: `top` says how many rows above. */
+const TOP = {};
+const small = { á: ['a', 'acute'], à: ['a', 'grave'], â: ['a', 'circ'], ã: ['a', 'tilde'], ê: ['e', 'circ'], ë: ['e', 'uml'], ñ: ['n', 'tilde'], ó: ['o', 'acute'], ò: ['o', 'grave'], ô: ['o', 'circ'], õ: ['o', 'tilde'], ú: ['u', 'acute'], ù: ['u', 'grave'], û: ['u', 'circ'], ć: ['c', 'acute'], ń: ['n', 'acute'], ś: ['s', 'acute'], ź: ['z', 'acute'], ż: ['z', 'dot'], ğ: ['g', 'breve'] };
+for (const [ch, [b, m]] of Object.entries(small)) G[ch] = [...MARK[m].map((r) => fit(r, G[b][0].length)), ...G[b].slice(2)];
+const caps = { Á: ['A', 'acute'], À: ['A', 'grave'], Â: ['A', 'circ'], Ã: ['A', 'tilde'], Ä: ['A', 'uml'], É: ['E', 'acute'], È: ['E', 'grave'], Ê: ['E', 'circ'], Í: ['I', 'acute'], Î: ['I', 'circ'], Ó: ['O', 'acute'], Ô: ['O', 'circ'], Õ: ['O', 'tilde'], Ö: ['O', 'uml'], Ú: ['U', 'acute'], Ü: ['U', 'uml'], Ñ: ['N', 'tilde'], Ć: ['C', 'acute'], Ń: ['N', 'acute'], Ś: ['S', 'acute'], Ź: ['Z', 'acute'], Ż: ['Z', 'dot'], Ğ: ['G', 'breve'], İ: ['I', 'dot'] };
+for (const [ch, [b, m]] of Object.entries(caps)) {
+	G[ch] = [fit(CAP_MARK[m], G[b][0].length), ...G[b]];
+	TOP[ch] = 1;
+}
+const below = { ç: ['c', 'cedilla'], ş: ['s', 'cedilla'], ą: ['a', 'ogonek'], ę: ['e', 'ogonek'], Ç: ['C', 'cedilla'], Ş: ['S', 'cedilla'], Ą: ['A', 'ogonek'], Ę: ['E', 'ogonek'] };
+for (const [ch, [b, m]] of Object.entries(below)) G[ch] = [...G[b].slice(0, 7), fit(BELOW[m], G[b][0].length)];
+Object.assign(G, {
+	í: [' #', '  ', '# ', '# ', '# ', '# ', '# '],
+	ì: ['# ', '  ', ' #', ' #', ' #', ' #', ' #'],
+	î: [' # ', '# #', ' # ', ' # ', ' # ', ' # ', ' # '],
+	ï: ['# #', '   ', ' # ', ' # ', ' # ', ' # ', ' # '],
+	ı: [' ', ' ', '#', '#', '#', '#', '#'],
+	ł: [' # ', ' # ', ' ##', '## ', ' # ', ' # ', '  #'],
+	Ł: [' #   ', ' #   ', ' # # ', ' ##  ', '##   ', ' #   ', ' ####'],
+	ß: [' ### ', '#   #', '#  # ', '# #  ', '#  # ', '#   #', '# ## '],
+	'¿': ['  #  ', '     ', '  #  ', ' #   ', '#    ', '#   #', ' ### '],
+	'¡': ['#', ' ', '#', '#', '#', '#', '#'],
+	'„': ['    ', '    ', '    ', '    ', '    ', ' # #', '# # '],
+	'«': ['     ', '     ', '  # #', ' # # ', '# #  ', ' # # ', '  # #'],
+	'»': ['     ', '     ', '# #  ', ' # # ', '  # #', ' # # ', '# #  '],
+});
+
 function glyph(ch, rows) {
 	const p = new opentype.Path();
 	const width = Math.max(...rows.map((r) => r.length));
+	const top = TOP[ch] ?? 0;
 	rows.forEach((row, r) => {
-		const yTop = (7 - r) * P;
+		const yTop = (7 - r + top) * P;
 		let x = 0;
 		while (x < row.length) {
 			if (row[x] !== '#') {

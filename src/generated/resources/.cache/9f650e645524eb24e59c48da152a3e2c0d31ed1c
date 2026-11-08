@@ -1,0 +1,19 @@
+// 26.1.1	2026-11-08T16:55:36.5848008	Compat item tags (thirst, nutrients, conventions) for vineandbarrel
+0f299cac370d17d37daaee975e2733bcac9c71ba data/c/tags/item/drinks.json
+8537d3709608b35a7a4ee1eea58d8257747423b3 data/c/tags/item/drinks/juice.json
+8537d3709608b35a7a4ee1eea58d8257747423b3 data/c/tags/item/drink_containing/bottle.json
+75a26f6ff949c161b77c54cab77896292be1c13b data/c/tags/item/foods.json
+22151568ae7d5fad8696594f42f0b3453a02f7d9 data/c/tags/item/foods/bread.json
+0464defe045f092ef132ef6dae5a3e0b26d853e8 data/c/tags/item/foods/fruit.json
+1e2e968f5b33e06d0413368991eae0b044832f42 data/c/tags/item/foods/soup.json
+7f33fca47fae6dece75a56beda52596374e1ba71 data/c/tags/item/nutrients/carbs.json
+dbdb4353ce15467879e375e87e6979d5545ddc73 data/c/tags/item/nutrients/fruits.json
+15665cb62fec9505c1f33a2b6ab7eaf22c4fc215 data/c/tags/item/nutrients/proteins.json
+49361b7f8108222fc3ae3bbe9ec9d1633b9220a6 data/c/tags/item/nutrients/sugars.json
+d43a0c76f3832896beca8e918a8230a33f846d94 data/c/tags/item/nutrients/vegetables.json
+5ac09441daaf6c7d8b2dfef70f9e0fb00c39cb00 data/toughasnails/tags/item/hydration/10_hydration_drinks.json
+2096cfd0596c3a3704a4bcf460e6d1b94e94d8ef data/toughasnails/tags/item/hydration/20_hydration_drinks.json
+8537d3709608b35a7a4ee1eea58d8257747423b3 data/toughasnails/tags/item/hydration/50_hydration_drinks.json
+5ac09441daaf6c7d8b2dfef70f9e0fb00c39cb00 data/toughasnails/tags/item/thirst/2_thirst_drinks.json
+2096cfd0596c3a3704a4bcf460e6d1b94e94d8ef data/toughasnails/tags/item/thirst/3_thirst_drinks.json
+8537d3709608b35a7a4ee1eea58d8257747423b3 data/toughasnails/tags/item/thirst/7_thirst_drinks.json

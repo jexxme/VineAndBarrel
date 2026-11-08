@@ -1,0 +1,74 @@
+---
+title: Lagunas
+description: "Una copa de más: qué pasa cuando sufres una laguna, todos los sitios donde puedes despertar, lo probable que es cada uno y los recuerdos que te traes."
+---
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
+import { rules, roman, seconds, gameText } from '../../../lib/l10n/es';
+
+export const t = rules.tipsy;
+export const b = t.blackout;
+export const count = b.endings.filter((e) => e.collectable).length;
+
+<Aside type="caution" title="Spoilers">
+Esta página te cuenta todas las formas en que puede acabar una noche. Si prefieres descubrirlas tú mismo, para aquí: la
+página de [Achispado](/tipsy/#una-copa-de-más) solo lo insinúa.
+</Aside>
+
+¿Ya estás en Achispado {roman(t.maxLevel - 1)} y sigues bebiendo? Una más y sufres una **laguna**. Es inofensiva: nunca
+pierdes nada de lo que llevabas, nunca despiertas en un sitio peligroso, no pasa el tiempo y no afecta a nadie más. Los
+dueños del servidor pueden desactivarla con la opción `blackout` (mira [Configuración](/reference/config/)).
+
+## Qué pasa
+
+<Steps>
+
+1. **Te desplomas.** Se te cierran los ojos y te caes. Todos los que te rodean te ven tirado, con estrellas girando sobre
+   tu cabeza.
+2. **Negro.** Durante unos segundos no puedes moverte, y Achispado te deja en paz: sin balanceo, sin hipo, sin remolino.
+   Nadie puede hacerte daño tampoco, ni mobs ni jugadores, y la caída tampoco. Solo cuenta lo que haría daño a cualquiera
+   tumbado ahí, como la lava o el vacío, así que importa dónde sufres la laguna; el sitio donde *despiertas* siempre es seguro.
+3. **Despiertas en algún sitio.** Con la pantalla aún en negro, el juego elige dónde acabó tu noche (mira más abajo) y te
+   coloca allí: tumbado en el suelo, en una cama o sentado en una barca. Abres los ojos poco a poco y te levantas.
+4. **Una frase en pantalla** cuenta cómo fue, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* o una de muchas otras.
+
+</Steps>
+
+Todo dura unos {seconds(b.ticks)}. Despiertas:
+
+- **de vuelta en Achispado I**, y sin las mejoras que te dieron tus bebidas,
+- **con hambre:** {b.hungerLost / 2} muslos de hambre menos, y nada de saturación,
+- **con temblores** durante {seconds(b.shakyTicks)}: algo mareado y lento,
+- **con un recuerdo** en los bolsillos, algo que encaja con el sitio donde despertaste (a tus pies si llevas los bolsillos llenos),
+- y, una vez de cada {b.pumpkinOneIn}, **con una calabaza tallada en la cabeza**, si no llevabas casco.
+
+## Dónde despiertas
+
+Hay {count} sitios donde puede acabar una noche, más uno para cuando ninguno funciona. Cada uno tiene su propia
+probabilidad, pero solo entran en el sorteo los que son posibles donde sufriste la laguna: sin agua cerca, no hay barca; sin
+aldea, no hay taberna.
+
+- **Primero los nuevos:** un final que aún no has tenido es {b.unseenBonus} veces más probable que uno que ya has tenido.
+- **Nunca dos veces seguidas,** salvo que no haya otra opción.
+- **Siempre seguro:** suelo firme, espacio para ponerte de pie, sin lava ni agua, sin nada que queme o pinche a tu lado, sin
+  monstruos a menos de {b.ranges.monsterFree} bloques, dentro del borde del mundo.
+- **Nunca dentro de la construcción de alguien:** los finales al aire libre necesitan cielo abierto encima, cristal y hojas
+  incluidos. Los dos de interior solo usan lo que el mundo construyó para todos, una taberna de aldea y la cama de un aldeano en una casa de la aldea, y tu propia cama.
+- **En el Nether y el End** no hay cielo abierto, así que la mayoría de las noches acaban justo donde caíste.
+
+Las probabilidades de abajo son para tu primera laguna con todos los finales posibles. Después cambian: los finales que
+aún no has tenido se vuelven más probables, y el que acabas de tener se aparta.
+
+<BlackoutEndings />
+
+## Colecciónalos todos
+
+La primera laguna te da *¿Dónde estoy?*. Despierta en los {count} sitios (*Aquí mismo* no cuenta) para conseguir el reto
+*Fin de semana perdido*. El juego recuerda cuáles has tenido, incluso después de morir.
+
+<Aside type="tip" title="¿Buscas un final concreto?">
+Prepara el escenario antes de la última copa: una cama tuya cerca para *En casa*, una pila de heno o de <Item id="barley_bale" /> al aire libre
+para *En el heno*, un estanque para *En una barca*, una aldea con taberna para los de interior. Los finales que ya has tenido son menos
+probables, así que los raros salen antes de lo que imaginas.
+</Aside>

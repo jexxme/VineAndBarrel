@@ -120,5 +120,44 @@
 				"name": "Seasonal Forest"
 			}
 		]
+	},
+	{
+		"name": "wild_white_grapes",
+		"crop": "vineandbarrel:wild_white_grapes",
+		"extra": false,
+		"minTemperature": 0.4,
+		"maxTemperature": 0.6,
+		"allowedTags": [
+			"#c:is_forest",
+			"#c:is_mountain/slope"
+		],
+		"deniedTags": [
+			"#c:is_mushroom",
+			"#c:is_underground",
+			"#vineandbarrel:wild_white_grapes_extra"
+		],
+		"optional": []
+	},
+	{
+		"name": "wild_white_grapes_extra",
+		"crop": "vineandbarrel:wild_white_grapes",
+		"extra": true,
+		"minTemperature": null,
+		"maxTemperature": null,
+		"allowedTags": [
+			"biomesoplenty:lavender_field",
+			"biomesoplenty:lavender_forest"
+		],
+		"deniedTags": [],
+		"optional": [
+			{
+				"id": "biomesoplenty:lavender_field",
+				"name": "Lavender Field"
+			},
+			{
+				"id": "biomesoplenty:lavender_forest",
+				"name": "Lavender Forest"
+			}
+		]
 	}
 ]

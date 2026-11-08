@@ -1,12 +1,13 @@
 ---
 title: Drinks
-description: Every wine, beer and cider in Vine & Barrel, what it's made from, what it's served in and the buff it gives.
+description: Every wine, beer, cider and mead in Vine & Barrel, what it's made from, what it's served in and the buff it gives.
 ---
 import { Aside } from '@astrojs/starlight/components';
 import Item from '../../components/mc/Item.astro';
 import Render from '../../components/mc/Render.astro';
 import Recipe from '../../components/recipes/Recipe.astro';
 import DrinkTable from '../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../components/data/DrinkSwatches.astro';
 import Shot from '../../components/mc/Shot.astro';
 import { rules, items, drinks, roman, duration } from '../../lib/data';
 
@@ -22,9 +23,16 @@ Every drink follows the same rules:
 - A **young** drink's buff is level {roman(rules.youngBuffAmplifier)} for **{duration(rules.youngBuffTicks)}**. The **aged** version has a deeper
   colour, shimmers like an enchanted item, and its buff is level **{roman(rules.agedBuffAmplifier)} for {duration(rules.agedBuffTicks)}**. Wheat beer's
   Saturation works at once instead: a few food points.
-- Put down on a table, an aged drink's surface glows softly, so you can tell it from a young one even at night.
+- Put down on a table, an aged drink shimmers like an enchanted item, so you can tell it from a young one at a glance.
 
-## Wines and beers
+## Colours
+
+Every drink has its own colour: you see it in the barrel's sight glass and in the mugs and glasses on a table. Aged
+drinks are a shade deeper.
+
+<DrinkSwatches />
+
+## Wines, beers, cider and mead
 
 <DrinkTable />
 
@@ -33,8 +41,9 @@ saturation) right away. That's why wheat beer shows food points instead of a tim
 
 ## With Farmer's Delight
 
-Two more drinks ferment from Farmer's Delight's own bottles. The items always exist, but you can only make them with FD
-installed. See [Farmer's Delight](/farmers-delight/).
+Farmer's Delight's own bottles ferment too. Its apple cider becomes the same Hard Cider as our Apple Juice, and its melon
+juice becomes Melon Wine, which you can only make with FD installed (the item always exists). See
+[Farmer's Delight](/farmers-delight/).
 
 <DrinkTable fd />
 
@@ -42,7 +51,7 @@ installed. See [Farmer's Delight](/farmers-delight/).
 
 <Render name="scenes/placed-drinks" float="right" size={192} alt="Mugs and glasses on a block" />
 
-Wine goes in a <Item id="wine_glass" />, beer and cider in a <Item id="mug" />. Both stack to {items['vineandbarrel:mug'].stack}.
+Wine goes in a <Item id="wine_glass" />; beer, cider and mead in a <Item id="mug" />. Both stack to {items['vineandbarrel:mug'].stack}.
 
 **Set them down:** sneak and right-click the top of a block with a mug or glass, full or empty, to put it there. Up to four
 share one block, each keeping its own drink, and you can see the drink through the glass. Right-click with an empty hand to pick one back up.
@@ -51,7 +60,25 @@ share one block, each keeping its own drink, and you can see the drink through t
 
 <Shot src="tables.jpg" caption="Mugs and glasses set down on the tables, up to four on a block." />
 
+## Plan a batch
+
+How much do you need for a round? The planner in [Building a cellar](/guides/cellar/#plan-the-batch) works out the crops,
+kettle batches, buckets, barrels and waiting time for any number of servings.
+
 ## Cheers!
 
 When two or more players finish a drink within {rules.cheersWindowTicks / 20} seconds and {rules.cheersRadius} blocks of each
 other, glasses clink, a few sparkles go up, and everyone's buff from that drink lasts **{rules.cheersBonusPercent}% longer**.
+
+It only counts between players in the same world, once per drink, and your own two drinks don't make a round. The bonus is
+{rules.cheersBonusPercent}% of that drink's full buff time, added to what's left; if the buff has just run out, you get it back for that long.
+
+## Good to know
+
+- **Too many?** The drink that takes you to Tipsy {roman(rules.tipsy.noBuffLevel - 1)} gives no buff, and it also takes away the
+  buffs your earlier drinks gave you. Effects from potions stay.
+- **Tables:** a drink goes on the quarter of the block you aim at, or the nearest free one, and only on a sturdy top.
+  An empty-hand right-click picks up the one you aim at; holding something, you use that item as usual, so you can drink
+  at the table. Breaking the block, a piston or losing the block underneath drops them all.
+- **Drinks as ingredients** (in Farmer's Delight's cooking pot) give you the mug or glass back.
+- **Full stomach?** It doesn't matter: you can always drink.

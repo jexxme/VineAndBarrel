@@ -2,12 +2,24 @@
 // Every recipe that loads in a plain game, as cards, with a type filter and a search over outputs and ingredients.
 // Cards are rendered at build time; the script below only hides and shows them.
 import Recipe from '../recipes/Recipe.astro';
-import { playableRecipes, recipeTypeName, nameOf, recipeInputs, recipeOutputs, type Recipe as R } from '../../lib/data';
+import Tr from '../mc/Tr.astro';
+import { playableRecipes, nameOf as nameIn, recipeInputs, recipeOutputs, type Recipe as R } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
 import './ref.css';
 
+const locale = localeOf(Astro.currentLocale);
+const nameOf = (id: string) => nameIn(id, locale);
 const list = playableRecipes;
+const TYPE: Record<string, () => string> = {
+	crafting_shaped: () => t('Crafting', locale),
+	crafting_shapeless: () => t('Crafting (shapeless)', locale),
+	'vineandbarrel:brewing': () => t('Brew Kettle', locale),
+	'vineandbarrel:aging': () => t('Aging Barrel', locale),
+	'farmersdelight:cooking': () => t("Farmer's Delight Cooking Pot", locale),
+	'farmersdelight:cutting': () => t("Farmer's Delight Cutting Board", locale),
+};
 const types = [...new Set(list.map((r) => r.type))]
-	.map((t) => ({ t, n: list.filter((r) => r.type === t).length, label: recipeTypeName[t] ?? t }))
+	.map((type) => ({ type, n: list.filter((r) => r.type === type).length, label: TYPE[type]?.() ?? type }))
 	.sort((a, b) => b.n - a.n);
 const words = (r: R) => {
 	const ins = recipeInputs(r).map(nameOf);
@@ -17,15 +29,15 @@ const words = (r: R) => {
 ---
 <div class="rb not-content" data-rb>
 	<div class="ref-bar">
-		<input class="ref-field" type="search" placeholder="Search results and ingredients" aria-label="Search recipes" data-rb-q />
-		<label class="ref-check"><input type="checkbox" data-rb-out /> Results only</label>
-		<span class="ref-count" aria-live="polite"><b data-rb-n>{list.length}</b> of {list.length}</span>
+		<input class="ref-field" type="search" placeholder={t('Search results and ingredients', locale)} aria-label={t('Search recipes', locale)} data-rb-q />
+		<label class="ref-check"><input type="checkbox" data-rb-out /> {t('Results only', locale)}</label>
+		<span class="ref-count" aria-live="polite"><Tr k="{shown} of {total}" vars={{ total: list.length }}><b slot="shown" data-rb-n>{list.length}</b></Tr></span>
 	</div>
-	<div class="ref-btns rb-types" role="group" aria-label="Recipe type">
-		<button type="button" class="ref-btn" data-rb-type="" aria-pressed="true">All <span class="n">{list.length}</span></button>
+	<div class="ref-btns rb-types" role="group" aria-label={t('Recipe type', locale)}>
+		<button type="button" class="ref-btn" data-rb-type="" aria-pressed="true">{t('All', locale)} <span class="n">{list.length}</span></button>
 		{
-			types.map(({ t, n, label }) => (
-				<button type="button" class="ref-btn" data-rb-type={t} aria-pressed="false">
+			types.map(({ type, n, label }) => (
+				<button type="button" class="ref-btn" data-rb-type={type} aria-pressed="false">
 					{label} <span class="n">{n}</span>
 				</button>
 			))
@@ -43,7 +55,7 @@ const words = (r: R) => {
 			})
 		}
 	</div>
-	<p class="rb-none" hidden data-rb-none>No recipe matches. Try one word, or pick "All".</p>
+	<p class="rb-none" hidden data-rb-none>{t('No recipe matches. Try one word, or pick "All".', locale)}</p>
 </div>
 <script>
 	for (const root of document.querySelectorAll<HTMLElement>('[data-rb]')) {

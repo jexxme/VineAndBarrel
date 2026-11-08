@@ -1,0 +1,87 @@
+---
+title: Construire une cave
+description: "D'un fût à une cave : planifier un lot, une brasserie qui tourne avec des entonnoirs, des rangées et des murs de fûts, le tirage automatique et le service d'une tournée."
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Shot from '../../../../components/mc/Shot.astro';
+import CellarPlanner from '../../../../components/brewing/CellarPlanner.astro';
+import { rules, recipe, days } from '../../../../lib/l10n/fr';
+
+export const wine = recipe('aging/red_wine');
+
+<Render name="scenes/barrel-cellar" float="right" size={230} alt="Deux rangées de fûts de vieillissement, la rangée du haut posée sur celle du bas" />
+
+Un fût, c'est un début. Une cave, c'est une rangée de fûts, remplis depuis une cuve qui tourne toute seule, avec des boissons que tu tires sans
+y penser. Ce guide la construit dans l'ordre où tu en auras besoin ; chaque partie renvoie à la page qui donne tous les détails.
+
+## Planifier le lot
+
+De combien as-tu besoin ? Choisis une boisson et un nombre de portions, et tu obtiens toute la commande : quoi cultiver, combien de lots
+de cuve, combien de seaux et de fioles, combien de fûts, et combien de temps attendre. Les boutons avancent d'un fût à la fois.
+
+<CellarPlanner />
+
+## Une brasserie qui tourne toute seule
+
+<Render name="scenes/kettle-on-hopper" float="right" size={192} alt="Une cuve de brassage posée sur un entonnoir au-dessus d'un feu" />
+
+La [cuve de brassage](/brew-kettle/) fonctionne avec des entonnoirs de tous les côtés :
+
+- **En dessous, un entonnoir fait deux choses.** Il fait passer la chaleur du feu en dessous jusqu'à la cuve, et il sort les
+  fioles et les seaux remplis. Donc : feu, entonnoir, cuve, empilés.
+- **Au-dessus, un entonnoir apporte les ingrédients** et les fioles ou seaux vides. Réserve-le aux ingrédients : tout ce que la
+  recette n'utilise pas, même un reste d'une autre recette, bloque la cuve jusqu'à ce que tu l'enlèves.
+- **Sur les côtés, des entonnoirs apportent** des fioles ou des seaux vides.
+- La cuve continue de brasser tant que des ingrédients arrivent, jusqu'à {rules.kettleMaxServings} portions.
+
+<Aside type="tip" title="Récupère ton expérience">
+Chaque lot rapporte un peu d'XP, mais la cuve ne la verse que lorsque quelqu'un remplit une fiole ou un seau à la main, ou lorsqu'elle est
+cassée. Remplis-en un à la main de temps en temps.
+</Aside>
+
+## Rangées et murs
+
+<Shot src="cellar.jpg" caption="Une cave le long du mur de la taverne : des fûts joints en rangée, une deuxième rangée empilée dessus." />
+
+- **Rangées :** des [fûts de vieillissement](/aging-barrel/) posés côte à côte au sol, orientés dans le même sens, joignent leurs berceaux en
+  une longue rangée.
+- **Murs :** un fût posé sur un autre repose sur des cales au lieu d'un berceau, ce qui te permet de les empiler en mur. Ton premier
+  fût empilé te vaut *Maître de chai*.
+- **Donne-leur un nom.** Renomme un fût dans une enclume et le nom s'affiche dans sa ligne d'état, donc *Vin de mariage* est facile à retrouver. Le
+  nom reste quand tu casses le fût et le reposes.
+- **Lis-les d'un coup d'œil :** la bonde sur le dessus indique l'avancement de chaque fût (bouchon, barboteur qui bouillonne, cire rouge), et
+  le voyant sur le devant indique son remplissage, dans la couleur de la boisson.
+- **Les comparateurs** lisent les portions d'un fût, de 1 pour une portion jusqu'à 15 quand il est plein.
+
+## Remplir et tirer à la machine
+
+- **Un entonnoir sur le dessus verse les bases.** Il ne verse que ce que le fût accepte à cet instant, donc une mauvaise base attend simplement dans
+  l'entonnoir.
+- **Des entonnoirs sur les côtés** apportent des chopes ou des verres vides ; le fût les tire pleins. Des chopes pour la bière, l'hydromel et le cidre, des verres pour
+  le vin : les mauvais restent coincés jusqu'à ce que tu casses le fût.
+- **Un entonnoir en dessous** sort les boissons tirées et les seaux et fioles vides qui restent après le versement. Garde-en un là,
+  sinon les boissons terminées bloquent les suivantes.
+- **Les distributeurs** face à un fût tirent une portion avec une chope ou un verre vide, ou versent un seau ou une fiole de base.
+
+## Où la construire
+
+- **À la surface.** Les fûts suivent le temps de jeu et dormir pendant la nuit compte, mais dans le Nether et l'End il n'y a
+  pas de nuit à passer.
+- **Loin des creepers.** Une explosion peut détruire un fût, lot compris.
+- **Ailleurs, comme tu veux :** les fûts continuent de vieillir pendant que tu es loin ou hors ligne, et ils ne prennent jamais feu. Tu rates
+  seulement le petit bruit de bouchon quand un lot devient vieilli.
+- **Remplis-en deux de chaque.** Il faut {days(wine.fermentingTime)} pour fermenter et {days(wine.agingTime)} de plus pour vieillir, et chaque verre
+  que tu tires entre-temps est un verre de moins qui vieillit. Bois dans un fût et ne touche pas à l'autre.
+
+## Servir une tournée
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Des chopes et des verres posés sur un bloc" />
+
+- **Mets la table :** accroupis-toi et fais un clic droit sur le dessus d'un bloc avec une chope ou un verre pour l'y poser, jusqu'à quatre par bloc.
+  Les boissons vieillies scintillent même sur la table.
+- **Santé !** Finis un verre en même temps que tes amis à proximité et le bonus de chacun dure
+  {rules.cheersBonusPercent} % de plus. Voir [Boissons](/drinks/#santé-).
+- **Surveille les niveaux.** Chaque boisson ajoute un niveau de [Pompette](/tipsy/). Garde du <Item id="grape_juice" /> ou de l'eau sous la main :
+  chacun fait baisser d'un niveau.

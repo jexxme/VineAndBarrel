@@ -1,0 +1,24 @@
+{
+  "values": [
+    "vineandbarrel:grape_juice",
+    "vineandbarrel:sweet_berry_juice",
+    "vineandbarrel:white_grape_juice",
+    "vineandbarrel:apple_juice",
+    "vineandbarrel:red_wine",
+    "vineandbarrel:aged_red_wine",
+    "vineandbarrel:sweet_berry_wine",
+    "vineandbarrel:aged_sweet_berry_wine",
+    "vineandbarrel:barley_ale",
+    "vineandbarrel:aged_barley_ale",
+    "vineandbarrel:wheat_beer",
+    "vineandbarrel:aged_wheat_beer",
+    "vineandbarrel:hard_cider",
+    "vineandbarrel:aged_hard_cider",
+    "vineandbarrel:melon_wine",
+    "vineandbarrel:aged_melon_wine",
+    "vineandbarrel:white_wine",
+    "vineandbarrel:aged_white_wine",
+    "vineandbarrel:mead",
+    "vineandbarrel:aged_mead"
+  ]
+}

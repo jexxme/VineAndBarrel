@@ -4,6 +4,8 @@
 		"parent": "vineandbarrel:main/patience_pays",
 		"title": "Brewmaster",
 		"description": "Taste every beer, young and aged",
+		"titleKey": "advancements.vineandbarrel.brewmaster.title",
+		"descriptionKey": "advancements.vineandbarrel.brewmaster.description",
 		"icon": "vineandbarrel:aged_barley_ale",
 		"frame": "challenge",
 		"hidden": false
@@ -13,6 +15,8 @@
 		"parent": "vineandbarrel:main/first_brew",
 		"title": "Cellar Master",
 		"description": "Stack one Aging Barrel on top of another",
+		"titleKey": "advancements.vineandbarrel.cellar_master.title",
+		"descriptionKey": "advancements.vineandbarrel.cellar_master.description",
 		"icon": "vineandbarrel:aging_barrel",
 		"frame": "goal",
 		"hidden": false
@@ -22,8 +26,21 @@
 		"parent": "vineandbarrel:main/on_tap",
 		"title": "Cheers!",
 		"description": "Have a drink at the same time as a friend",
+		"titleKey": "advancements.vineandbarrel.cheers.title",
+		"descriptionKey": "advancements.vineandbarrel.cheers.description",
 		"icon": "vineandbarrel:wheat_beer",
 		"frame": "task",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/cider_house",
+		"parent": "vineandbarrel:main/patience_pays",
+		"title": "Cider House",
+		"description": "Taste hard cider, young and aged",
+		"titleKey": "advancements.vineandbarrel.cider_house.title",
+		"descriptionKey": "advancements.vineandbarrel.cider_house.description",
+		"icon": "vineandbarrel:aged_hard_cider",
+		"frame": "goal",
 		"hidden": false
 	},
 	{
@@ -31,8 +48,32 @@
 		"parent": "vineandbarrel:main/root",
 		"title": "First Brew",
 		"description": "Brew a juice or wort in a heated Brew Kettle and bottle it up",
+		"titleKey": "advancements.vineandbarrel.first_brew.title",
+		"descriptionKey": "advancements.vineandbarrel.first_brew.description",
 		"icon": "vineandbarrel:brew_kettle",
 		"frame": "task",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/lost_weekend",
+		"parent": "vineandbarrel:main/where_am_i",
+		"title": "Lost Weekend",
+		"description": "Find out every way a night can end",
+		"titleKey": "advancements.vineandbarrel.lost_weekend.title",
+		"descriptionKey": "advancements.vineandbarrel.lost_weekend.description",
+		"icon": "minecraft:clock",
+		"frame": "challenge",
+		"hidden": false
+	},
+	{
+		"id": "vineandbarrel:main/mead_hall",
+		"parent": "vineandbarrel:main/patience_pays",
+		"title": "Mead Hall",
+		"description": "Taste mead, young and aged",
+		"titleKey": "advancements.vineandbarrel.mead_hall.title",
+		"descriptionKey": "advancements.vineandbarrel.mead_hall.description",
+		"icon": "vineandbarrel:aged_mead",
+		"frame": "goal",
 		"hidden": false
 	},
 	{
@@ -40,6 +81,8 @@
 		"parent": "vineandbarrel:main/root",
 		"title": "On Tap",
 		"description": "Find a village tavern and tap a drink from one of its barrels",
+		"titleKey": "advancements.vineandbarrel.on_tap.title",
+		"descriptionKey": "advancements.vineandbarrel.on_tap.description",
 		"icon": "vineandbarrel:mug",
 		"frame": "task",
 		"hidden": false
@@ -49,6 +92,8 @@
 		"parent": "vineandbarrel:main/first_brew",
 		"title": "Patience Pays",
 		"description": "Let a batch ferment and age in an Aging Barrel, then tap the aged drink",
+		"titleKey": "advancements.vineandbarrel.patience_pays.title",
+		"descriptionKey": "advancements.vineandbarrel.patience_pays.description",
 		"icon": "vineandbarrel:aged_red_wine",
 		"frame": "goal",
 		"hidden": false
@@ -58,6 +103,8 @@
 		"parent": null,
 		"title": "Vine & Barrel",
 		"description": "Grapes, hops and barley: a cellar full of patience awaits!",
+		"titleKey": "advancements.vineandbarrel.root.title",
+		"descriptionKey": "advancements.vineandbarrel.root.description",
 		"icon": "vineandbarrel:aging_barrel",
 		"frame": "task",
 		"hidden": false
@@ -66,7 +113,9 @@
 		"id": "vineandbarrel:main/sleep_it_off",
 		"parent": "vineandbarrel:main/cheers",
 		"title": "Sleep It Off",
-		"description": "Go to bed Tipsy and wake up fresh",
+		"description": "Sleep through a night while tipsy",
+		"titleKey": "advancements.vineandbarrel.sleep_it_off.title",
+		"descriptionKey": "advancements.vineandbarrel.sleep_it_off.description",
 		"icon": "minecraft:red_bed",
 		"frame": "task",
 		"hidden": false
@@ -75,7 +124,9 @@
 		"id": "vineandbarrel:main/vintner",
 		"parent": "vineandbarrel:main/patience_pays",
 		"title": "Vintner",
-		"description": "Taste every wine, young and aged",
+		"description": "Taste red, white and sweet berry wine, young and aged",
+		"titleKey": "advancements.vineandbarrel.vintner.title",
+		"descriptionKey": "advancements.vineandbarrel.vintner.description",
 		"icon": "vineandbarrel:aged_sweet_berry_wine",
 		"frame": "challenge",
 		"hidden": false
@@ -85,6 +136,8 @@
 		"parent": "vineandbarrel:main/sleep_it_off",
 		"title": "Where Am I?",
 		"description": "Have one drink too many",
+		"titleKey": "advancements.vineandbarrel.where_am_i.title",
+		"descriptionKey": "advancements.vineandbarrel.where_am_i.description",
 		"icon": "minecraft:compass",
 		"frame": "task",
 		"hidden": false

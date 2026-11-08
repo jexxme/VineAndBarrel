@@ -1,0 +1,20 @@
+{
+  "type": "vineandbarrel:brewing",
+  "recipe_book_tab": "juices",
+  "ingredients": [
+    "minecraft:apple",
+    "minecraft:apple",
+    "minecraft:apple",
+    "minecraft:apple",
+    "minecraft:sugar"
+  ],
+  "result": {
+    "id": "vineandbarrel:apple_juice",
+    "count": 4
+  },
+  "bucket": {
+    "id": "vineandbarrel:apple_juice_bucket"
+  },
+  "experience": 0.35,
+  "brewingtime": 200
+}

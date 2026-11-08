@@ -1,8 +1,11 @@
 /*
- * Farmer's Delight / Minecraft look, taken from the mod's logo (branding/make_branding.py):
- * oak-plank wood, checkered canvas-sign paper with a dark brown frame, the orange "Neoforged" sign,
- * opaque 1-pixel drop shadows, and pixel lettering (FD Pixel, scripts/make-font.mjs).
- * FD Pixel is drawn on a 10 px em: text sizes are multiples of 10 px so every font pixel lands on whole screen pixels.
+ * Vine & Barrel: an evening in the village tavern.
+ * The plank wall behind everything, a dark oak beam with a brass rail on top, signboards with gilt rims hanging on
+ * chains, chalkboard menus in oak frames, parchment notes pinned to the wall, oak buttons. By day (light theme) the
+ * wall is whitewashed plaster; the boards and chalkboards stay what they are.
+ * Shared with the Farmer's Delight Neoforged docs: the pixel font, Minecraft slots, tooltips and GUI panels, the rhythm.
+ * The textures come from scripts/make-ui.mjs. The pixel font is drawn on a 10 px em: text sizes are multiples of 10 px
+ * so every font pixel lands on whole screen pixels.
  */
 @font-face {
 	font-family: 'FD Pixel';
@@ -44,120 +47,197 @@
 	--sl-sidebar-width: 20rem;
 	--sl-content-width: 52rem;
 
-	/* Sign palette (the logo's "Farmer's Delight" sign) */
-	--fd-paper: #d4bea4;
-	--fd-paper-2: #ceb597;
-	--fd-paper-edge: #c3a888;
-	--fd-frame-light: #b18e65;
-	--fd-frame: #483015;
-	--fd-ink: #553a1f;
-	--fd-ink-soft: #785836;
-	/* Orange "Neoforged" sign */
-	/* Vine & Barrel: FDN's orange sign is a wine-red sign here (same texture, scripts/make-ui.mjs) */
-	--fd-orange-paper: #b0303f;
-	--fd-orange-edge: #8e1a2e;
-	--fd-orange: #cf4259;
-	--fd-orange-frame: #2e0710;
-	--fd-orange-ink: #fff0f2;
-	--fd-orange-text: #f27e8e;
+	/* The tavern palette (the logo's colours: art/gen.py) */
+	--vb-gilt-hl: #fff0a8;
+	--vb-gilt: #f6d36a;
+	--vb-gilt-mid: #e2b240;
+	--vb-gilt-dark: #a77a22;
+	--vb-wine-hl: #f27e8e;
+	--vb-wine-bright: #cf4259;
+	--vb-wine: #8e1a2e;
+	--vb-wine-deep: #6a1022;
+	--vb-wine-line: #2e0710;
+	--vb-copper: #f0a066;
+	--vb-copper-deep: #b05e32;
+	--vb-oak-light: #c69a5e;
+	--vb-oak: #a67b45;
+	--vb-oak-dark: #835d31;
+	--vb-wood-line: #1a0f07;
+	--vb-hop: #9cc94e;
+	/* Chalk on the slate */
+	--vb-slate: #2c2a27;
+	--vb-chalk: #efe9dc;
+	--vb-chalk-dim: #b8b0a2;
+	--vb-chalk-yellow: #f3dc8a;
+	--vb-chalk-orange: #f0b47c;
+	--vb-chalk-line: rgb(239 233 220 / 0.3);
+	/* Parchment notes */
+	--vb-note-ink: #3b2712;
+	--vb-note-ink-soft: #6e5032;
 
 	--fd-shadow: 4px 4px 0 #000;
-	--fd-hero-glow: none;
-	--fd-green-low: transparent;
-	--fd-gold-low: transparent;
+	/* Kept for the components that read them: the old orange sign is the wine paint here */
+	--fd-orange-paper: var(--vb-wine);
+	--fd-orange-edge: var(--vb-wine-deep);
+	--fd-orange: var(--vb-wine-bright);
+	--fd-orange-frame: var(--vb-wine-line);
+	--fd-orange-ink: #fff0d8;
+	--fd-orange-text: var(--vb-wine-hl);
+	--fd-paper: #efe3c8;
+	--fd-ink: var(--vb-note-ink);
+	--fd-ink-soft: var(--vb-note-ink-soft);
+}
+/* Cyrillic, Chinese, Japanese and Korean pages: the pixel font has Latin letters only, so the whole page reads in a
+   clean system font instead of switching fonts mid-word. Sizes stay as they are. */
+:root:is(:lang(ru), :lang(uk), :lang(zh), :lang(ja), :lang(ko)) {
+	--sl-font: system-ui, 'Segoe UI', 'Noto Sans', 'PingFang SC', 'Hiragino Sans', 'Microsoft YaHei', 'Malgun Gothic', sans-serif;
+	--fd-font-display: var(--sl-font);
+	--fd-font-mono: var(--sl-font);
 }
 
-/* Dark: a wine cellar, lit by the kettle's copper (FDN's cabinet browns, shifted toward wine) */
+/* Evening (dark): the plank wall by lantern light */
 :root,
 :root[data-theme='dark'] {
 	--sl-color-accent-low: #4e1622;
-	--sl-color-accent: #f0a066;
-	--sl-color-accent-high: #ffd2a0;
-	--sl-color-white: #f3e6d2;
-	--sl-color-gray-1: #eadbc4;
-	--sl-color-gray-2: #d4bea4;
-	--sl-color-gray-3: #b39a7b;
-	--sl-color-gray-4: #85694a;
-	--sl-color-gray-5: #5c3a2e;
-	--sl-color-gray-6: #3a2219;
-	--sl-color-gray-7: #2b1812;
-	--sl-color-black: #21120f;
-	--sl-color-text-accent: #f0a066;
-	--sl-color-bg-nav: #3a2219;
-	--sl-color-bg-sidebar: #1a0d0b;
-	--sl-color-hairline: #4a2a20;
-	--sl-color-hairline-light: #5c3a2e;
+	--sl-color-accent: #f6d36a;
+	--sl-color-accent-high: #fff0a8;
+	--sl-color-white: #f7ecd8;
+	--sl-color-gray-1: #eee0c8;
+	--sl-color-gray-2: #e3d4bb;
+	--sl-color-gray-3: #b9a283;
+	--sl-color-gray-4: #86694a;
+	--sl-color-gray-5: #5a3e1f;
+	--sl-color-gray-6: #3a2612;
+	--sl-color-gray-7: #24170e;
+	--sl-color-black: #1a100b;
+	--sl-color-text-accent: #f6d36a;
+	--sl-color-bg-nav: #2a1a10;
+	--sl-color-bg-sidebar: #130b07;
+	--sl-color-hairline: #3a2612;
+	--sl-color-hairline-light: #4a3220;
 	--sl-color-hairline-shade: #000;
 
-	--fd-green: #9ccf5e;
-	--fd-gold: #ffcf4d;
-	--fd-surface: #2b1812;
-	--fd-surface-2: #331d15;
-	--fd-border: #5c3a2e;
-	--fd-rule: #b18e65;
-	--fd-heading-ink: #f3e6d2;
+	--vb-wall: #1a100b;
+	--vb-heading: var(--vb-gilt);
+	--vb-heading-shadow: 2px 2px 0 #000;
+	--vb-h3: var(--vb-copper);
+	--vb-link: var(--vb-gilt);
+	--vb-link-hover: #fff;
+	--vb-panel: #130b07;
+	--vb-panel-text: #e3d4bb;
+	--vb-panel-label: var(--vb-gilt-mid);
+	--vb-glow: rgb(255 190 90 / 0.17);
+
+	--fd-green: #9cc94e;
+	--fd-gold: #f6d36a;
+	--fd-surface: #24170e;
+	--fd-surface-2: #2e1e12;
+	--fd-border: #4a3220;
+	--fd-rule: var(--vb-oak-dark);
+	--fd-frame: #0d0704;
+	--fd-heading-ink: var(--vb-gilt);
 }
 
-/* Light: canvas-sign paper */
+/* Daytime (light): whitewashed plaster, dark ink */
 :root[data-theme='light'] {
-	--sl-color-accent-low: #f2ba84;
+	--sl-color-accent-low: #f0d9a6;
 	--sl-color-accent: #8e1a2e;
-	--sl-color-accent-high: #4a1d07;
-	--sl-color-white: #2a1a0b;
+	--sl-color-accent-high: #4a0d18;
+	--sl-color-white: #24150a;
 	--sl-color-gray-1: #3b2712;
-	--sl-color-gray-2: #553a1f;
+	--sl-color-gray-2: #48301c;
 	--sl-color-gray-3: #6e5032;
 	--sl-color-gray-4: #8c6c4a;
-	--sl-color-gray-5: #b18e65;
-	--sl-color-gray-6: #c3a888;
-	--sl-color-gray-7: #ceb597;
-	--sl-color-black: #d4bea4;
+	--sl-color-gray-5: #c4a982;
+	--sl-color-gray-6: #d8c4a2;
+	--sl-color-gray-7: #e6d6ba;
+	--sl-color-black: #f0e7d6;
 	--sl-color-text-accent: #8e1a2e;
-	--sl-color-bg-nav: #3a2816;
-	--sl-color-bg-sidebar: #c3a888;
-	--sl-color-hairline: #b18e65;
-	--sl-color-hairline-light: #c3a888;
-	--sl-color-hairline-shade: #483015;
+	--sl-color-bg-nav: #2a1a10;
+	--sl-color-bg-sidebar: #e4d1ae;
+	--sl-color-hairline: #cdb592;
+	--sl-color-hairline-light: #dcc8a6;
+	--sl-color-hairline-shade: #6b4a2b;
+
+	--vb-wall: #f0e7d6;
+	--vb-heading: var(--vb-wine-deep);
+	--vb-heading-shadow: none;
+	--vb-h3: var(--vb-wine);
+	--vb-link: var(--vb-wine);
+	--vb-link-hover: #000;
+	--vb-panel: #e4d1ae;
+	--vb-panel-text: #3b2712;
+	--vb-panel-label: var(--vb-wine);
+	--vb-glow: rgb(255 230 170 / 0.35);
 
 	--fd-green: #3d6b1c;
 	--fd-gold: #8a5a00;
-	--fd-surface: #ceb597;
-	--fd-surface-2: #c3a888;
-	--fd-border: #b18e65;
-	--fd-rule: #483015;
-	--fd-heading-ink: #483015;
+	--fd-surface: #f6eedd;
+	--fd-surface-2: #e9dcc2;
+	--fd-border: #cdb592;
+	--fd-rule: #6b4a2b;
+	--fd-frame: #4a3018;
+	--fd-heading-ink: var(--vb-wine-deep);
 }
 
 html {
 	-webkit-font-smoothing: none;
+	/* Opening search hides the page scrollbar; keep its space so the page doesn't jump sideways */
+	scrollbar-gutter: stable;
+}
+/* The wall, painted on the page canvas. The root is pixelated for its own background only: body sets it back, so
+   photos and renders inside keep their own rendering */
+html {
+	image-rendering: pixelated;
+	background:
+		radial-gradient(ellipse 38% 900px at 32% 0, var(--vb-glow), transparent 70%),
+		radial-gradient(ellipse 38% 900px at 86% 0, var(--vb-glow), transparent 70%),
+		linear-gradient(rgb(8 4 2 / 0.25), rgb(8 4 2 / 0.25)),
+		url('../assets/ui/wall-spruce.png') 0 0 / 64px 64px var(--vb-wall);
+}
+:root[data-theme='light'] {
+	background:
+		radial-gradient(ellipse 50% 900px at 30% 0, var(--vb-glow), transparent 70%),
+		linear-gradient(rgb(250 244 232 / 0.74), rgb(250 244 232 / 0.74)),
+		url('../assets/ui/wall-plaster.png') 0 0 / 64px 64px var(--vb-wall);
 }
 body {
-	background: var(--sl-color-black);
+	image-rendering: auto;
+	background: transparent;
 	color: var(--sl-color-gray-2);
 	font-kerning: none;
 }
 :root[data-theme='light'] body {
-	color: var(--fd-ink);
+	color: var(--sl-color-gray-2);
 }
 
-/* ---------------------------------------------------------------- header: the side of an Aging Barrel */
-/* Vine & Barrel: the barrel's own staves, one texture tall, so its two iron hoops run along the top and bottom edge */
+/* ---------------------------------------------------------------- header: the tavern's beam with a brass rail */
 header.header {
-	background: #835d31 url('../assets/ui/barrel-staves.png') 0 50% / var(--sl-nav-height) var(--sl-nav-height) repeat-x;
+	background: #2a1a10 url('../assets/ui/beam.png') 0 0 / 64px 64px repeat;
 	image-rendering: pixelated;
 	border-bottom: 0;
-	box-shadow: 0 4px 0 #2a2a31, 0 7px 0 #000;
+	box-shadow: 0 2px 0 var(--vb-gilt), 0 4px 0 var(--vb-gilt-dark), 0 7px 0 #000;
 }
 .site-title img {
 	image-rendering: pixelated;
-	height: 68px !important;
+	/* the one-line lockup (branding/header.png, 20 px tall) at exactly 3x; 2x on phones */
+	height: 60px !important;
 	width: auto !important;
 	max-width: none;
+	transition: transform 0.15s;
+}
+.site-title:hover img {
+	transform: rotate(-2deg) scale(1.03);
+}
+@media (prefers-reduced-motion: reduce) {
+	.site-title:hover img {
+		transform: none;
+	}
 }
 /* Phones: a little smaller so the search and menu buttons fit beside it */
 @media (max-width: 30rem) {
 	.site-title img {
-		height: 54px !important;
+		height: 40px !important;
 	}
 }
 /* Search box and theme picker as Minecraft text fields */
@@ -180,10 +260,6 @@ site-search kbd {
 	color: #a0a0a0 !important;
 	font-family: var(--sl-font);
 }
-header .social-icons a {
-	color: #fff;
-	filter: drop-shadow(2px 2px 0 #000);
-}
 header starlight-theme-select svg {
 	color: #e0e0e0;
 }
@@ -196,12 +272,11 @@ header .header > :nth-child(2) {
 		width: 20rem;
 	}
 }
-/* Same height as the search field; a GitHub icon you can actually see */
 starlight-theme-select select {
 	height: 40px;
 	padding-block: 0 !important;
 }
-/* Search, GitHub and theme read as one toolbar: three black text-field boxes, same height, same gaps */
+/* Search, GitHub and theme read as one toolbar: black text-field boxes, same height, same gaps */
 @media (min-width: 50rem) {
 	header .header {
 		column-gap: 8px;
@@ -213,7 +288,6 @@ starlight-theme-select select {
 		display: none;
 	}
 }
-/* GitHub as a square box like the theme button (header and the phone menu) */
 .social-icons a {
 	width: 40px;
 	height: 40px;
@@ -233,12 +307,10 @@ header .social-icons svg {
 	width: 24px;
 	height: 24px;
 }
-
 /* The phone menu button: the same square black box as search, GitHub and theme */
 .sl-menu-button {
 	width: 40px !important;
 	height: 40px !important;
-	display: grid !important;
 	place-items: center;
 	padding: 0 !important;
 	background: #000 !important;
@@ -246,12 +318,18 @@ header .social-icons svg {
 	border-radius: 0 !important;
 	color: #fff !important;
 	box-shadow: none !important;
-}
-.sl-menu-button {
-	/* vertically centred in the header, level with the search box */
 	top: calc((var(--sl-nav-height) - 40px) / 2) !important;
 }
+/* The phone menu's footer: theme and language side by side, like the toolbar, not pushed to opposite edges */
+.mobile-preferences {
+	justify-content: flex-start !important;
+	column-gap: 8px !important;
+}
 @media (max-width: 50rem) {
+	/* Phones only: from 50rem on, the sidebar is there and Starlight hides the button (it would float over the toolbar) */
+	.sl-menu-button {
+		display: grid !important;
+	}
 	site-search > button {
 		width: 40px;
 		height: 40px;
@@ -265,11 +343,6 @@ header .social-icons svg {
 .sl-menu-button svg {
 	width: 24px;
 	height: 24px;
-}
-
-/* Opening search hides the page scrollbar; keep its space so the page doesn't jump sideways */
-html {
-	scrollbar-gutter: stable;
 }
 
 /* ---------------------------------------------------------------- search dialog, like the creative "Search Items" tab */
@@ -298,6 +371,9 @@ site-search dialog {
 	border: 0 !important;
 	border-radius: 0 !important;
 	box-shadow: inset 4px 4px 0 #fff, inset -4px -4px 0 #555, 0 0 0 4px #000, 8px 8px 0 4px #000 !important;
+}
+site-search dialog::backdrop {
+	background: rgb(10 5 2 / 0.7);
 }
 @media (min-width: 50rem) {
 	site-search dialog {
@@ -378,7 +454,8 @@ site-search button[data-close-modal] {
 	text-shadow: 2px 2px 0 #3f3f3f;
 }
 #starlight__search .pagefind-ui__result-inner > .pagefind-ui__result-title:hover .pagefind-ui__result-link,
-#starlight__search .pagefind-ui__result-nested:hover .pagefind-ui__result-link {
+#starlight__search .pagefind-ui__result-nested:hover .pagefind-ui__result-link,
+#starlight__search .pagefind-ui__result-link:focus-visible {
 	color: #ffffa0;
 }
 #starlight__search .pagefind-ui__result-inner > .pagefind-ui__result-title:hover,
@@ -396,70 +473,308 @@ site-search button[data-close-modal] {
 	background: none;
 	font-weight: 400;
 }
+#starlight__search .pagefind-ui__button {
+	border-radius: 0;
+	border: 0;
+	background: none;
+	border-style: solid;
+	border-width: 6px;
+	border-image: url('../assets/ui/button.png') 3 fill / 6px stretch;
+	image-rendering: pixelated;
+	color: #fff;
+	text-shadow: 2px 2px 0 #3f3f3f;
+	font-size: 20px;
+}
+#starlight__search .pagefind-ui__button:hover {
+	border-image-source: url('../assets/ui/button-hover.png');
+	color: #ffffa0;
+}
 
-/* ---------------------------------------------------------------- sidebar */
+/* ---------------------------------------------------------------- sidebar: a dark oak panel with a post on its edge */
 .sidebar-pane {
-	background: var(--sl-color-bg-sidebar);
-	border-inline-end: 5px solid #000 !important;
+	background: var(--vb-panel);
+	border-inline-end: 0 !important;
+	box-shadow: inset -2px 0 0 var(--vb-wood-line), inset -8px 0 0 var(--vb-oak-dark), inset -10px 0 0 var(--vb-wood-line);
+}
+:root[data-theme='light'] .sidebar-pane {
+	box-shadow: inset -2px 0 0 #4a3018, inset -8px 0 0 var(--vb-oak), inset -10px 0 0 #4a3018;
+}
+.sidebar-content {
+	padding-inline-end: 22px !important;
 }
 .sidebar-content a {
 	border-radius: 0 !important;
+	color: var(--vb-panel-text) !important;
+	transition: color 0.1s, background-color 0.1s;
+}
+.sidebar-content a:hover {
+	color: var(--sl-color-accent) !important;
 }
 .sidebar-content a[aria-current='page'],
 .sidebar-content a[aria-current='page']:hover {
-	background: var(--fd-orange-paper) !important;
-	color: var(--fd-orange-ink) !important;
-	box-shadow: inset 0 0 0 2px var(--fd-orange-frame);
+	background: var(--vb-wine) !important;
+	color: #fff0d8 !important;
+	box-shadow: inset 4px 0 0 var(--vb-gilt), inset 0 0 0 2px var(--vb-wine-line);
 }
 .sidebar-content summary .group-label span {
-	color: var(--fd-orange-text);
+	color: var(--vb-panel-label);
+	text-shadow: 2px 0 0 currentColor;
+	letter-spacing: 2px;
 }
-:root[data-theme='light'] .sidebar-content summary .group-label span {
-	color: var(--fd-orange-frame);
+.sidebar-content summary svg {
+	color: var(--vb-panel-label);
 }
 .sidebar-content .large {
 	font-size: 20px !important;
 }
+.sidebar-content ul ul {
+	margin-top: 2px;
+	border-inline-start-color: var(--sl-color-hairline-light) !important;
+}
+.sidebar-content a {
+	padding-block: 1px !important;
+	line-height: 26px;
+}
+.sidebar-content summary {
+	padding-block: 4px !important;
+}
+.sidebar-content details + details,
+.sidebar-content li + li > details {
+	margin-top: 10px;
+}
+/* Right-hand "On this page" */
+starlight-toc a,
+starlight-toc h2 {
+	line-height: 26px !important;
+}
+starlight-toc a {
+	color: var(--sl-color-gray-3);
+	transition: color 0.1s;
+}
+starlight-toc a:hover {
+	color: var(--sl-color-white);
+}
+starlight-toc a[aria-current='true'] {
+	color: var(--sl-color-text-accent) !important;
+}
+starlight-toc a[aria-current='true']::before {
+	content: '> ';
+}
+#starlight__on-this-page {
+	font-family: var(--sl-font);
+	font-size: 20px !important;
+	color: var(--vb-heading);
+}
+/* The phone "On this page" bar: one dark oak strip under the beam, "On this page" quiet, the section you're in
+   in gilt, a caret at the end; it opens a chalkboard with the sections */
+mobile-starlight-toc nav {
+	background: #1d120a url('../assets/ui/beam.png') 0 0 / 64px 64px !important;
+	image-rendering: pixelated;
+	border-top: 0 !important;
+	box-shadow: 0 2px 0 var(--vb-gilt-dark), 0 4px 0 #000;
+}
+mobile-starlight-toc summary {
+	gap: 10px !important;
+	border-bottom: 0 !important;
+	padding-inline: 16px !important;
+	cursor: pointer;
+}
+mobile-starlight-toc summary .toggle {
+	border: 0 !important;
+	border-radius: 0 !important;
+	background: none !important;
+	padding: 0 !important;
+	gap: 0 !important;
+	color: #c9b391 !important;
+	text-shadow: 2px 2px 0 #000;
+}
+mobile-starlight-toc summary .toggle::after {
+	content: ':';
+}
+mobile-starlight-toc summary .toggle .caret {
+	display: none;
+}
+mobile-starlight-toc summary .display-current {
+	flex: 1;
+	color: var(--vb-gilt) !important;
+	text-shadow: 2px 2px 0 #000;
+}
+/* a pixel caret: points down, up when open */
+mobile-starlight-toc summary::after {
+	content: '';
+	flex: none;
+	width: 12px;
+	height: 8px;
+	background: var(--vb-gilt);
+	clip-path: polygon(0 0, 100% 0, 100% 25%, 83% 25%, 83% 50%, 67% 50%, 67% 75%, 50% 75%, 50% 100%, 50% 100%, 33% 75%, 33% 50%, 17% 50%, 17% 25%, 0 25%);
+	transition: transform 0.15s;
+}
+mobile-starlight-toc details[open] summary::after {
+	transform: rotate(180deg);
+}
+mobile-starlight-toc summary:hover .display-current,
+mobile-starlight-toc summary:focus-visible .display-current {
+	color: var(--vb-gilt-hl) !important;
+}
+mobile-starlight-toc .dropdown {
+	--sl-color-white: var(--vb-chalk-yellow);
+	--sl-color-gray-2: var(--vb-chalk);
+	--sl-color-gray-3: var(--vb-chalk);
+	--sl-color-text-accent: var(--vb-chalk-yellow);
+	margin: 6px 10px 0 !important;
+	border-radius: 0 !important;
+	border-style: solid !important;
+	border-width: 12px 15px 15px 12px !important;
+	border-image: url('../assets/ui/chalkboard.png') 4 5 5 4 fill / 12px 15px 15px 12px repeat !important;
+	background: none !important;
+	box-shadow: 8px 8px 0 rgb(0 0 0 / 0.45) !important;
+	color: var(--vb-chalk);
+}
+mobile-starlight-toc .dropdown a {
+	color: var(--vb-chalk) !important;
+}
+mobile-starlight-toc .dropdown a[aria-current='true'] {
+	color: var(--vb-chalk-yellow) !important;
+}
 
-/* ---------------------------------------------------------------- headings */
+/* ---------------------------------------------------------------- page title: a signboard hanging on two chains */
 h1#_top {
+	--chain: repeating-linear-gradient(#74747e 0 4px, #c4c4cc 4px 6px, #2a2a31 6px 8px, #4c4c55 8px 12px);
+	--L: 96px; /* chain length: they run up under the header, where the hooks are */
+	position: relative;
 	display: inline-block;
 	font-family: var(--fd-font-display);
 	font-weight: 400;
 	font-size: 40px;
 	line-height: 1.25;
-	color: #483015;
-	padding: 6px 20px 2px;
+	color: var(--vb-gilt);
+	text-shadow: 2px 2px 0 var(--vb-wood-line);
+	padding: 8px 32px 2px;
+	margin-top: 40px;
 	border-style: solid;
-	border-width: 8px 12px 12px 8px;
-	border-image: url('../assets/ui/sign.png') 2 3 3 2 fill / 8px 12px 12px 8px repeat;
+	border-width: 12px 16px 16px 12px;
+	border-image: url('../assets/ui/board.png') 3 4 4 3 fill / 12px 16px 16px 12px repeat;
 	image-rendering: pixelated;
 	max-width: 100%;
 }
+h1#_top::before,
+h1#_top::after {
+	content: '';
+	position: absolute;
+	bottom: calc(100% + 12px);
+	width: 6px;
+	height: var(--L);
+	background: var(--chain);
+	box-shadow: 2px 0 0 #2a2a31;
+}
+h1#_top::before {
+	left: 10px;
+}
+h1#_top::after {
+	right: 14px;
+}
+/* Hanging signs swing like a real two-chain sign: each chain turns on its own hook, which stays put, and the board
+   swings sideways and stays level, always hanging from the chain ends. The sign settles when the page opens; a touch
+   sets it swinging again (scripts/mc.ts restarts the animation). --L is the chain length, --k scales the swing. */
+:where(h1#_top, .vb-hang) {
+	--k: 1;
+	animation: vb-hang 2s ease-in-out both;
+}
+:where(h1#_top, .vb-hang)::before,
+:where(h1#_top, .vb-hang)::after {
+	transform-origin: 50% 0;
+	animation: vb-hang-chain 2s ease-in-out both;
+}
+@keyframes vb-hang {
+	0% {
+		transform: none;
+	}
+	14% {
+		transform: translate(calc(var(--L) * sin(6deg * var(--k))), calc(var(--L) * (cos(6deg * var(--k)) - 1)));
+	}
+	32% {
+		transform: translate(calc(var(--L) * sin(-4.4deg * var(--k))), calc(var(--L) * (cos(-4.4deg * var(--k)) - 1)));
+	}
+	50% {
+		transform: translate(calc(var(--L) * sin(2.6deg * var(--k))), calc(var(--L) * (cos(2.6deg * var(--k)) - 1)));
+	}
+	67% {
+		transform: translate(calc(var(--L) * sin(-1.3deg * var(--k))), calc(var(--L) * (cos(-1.3deg * var(--k)) - 1)));
+	}
+	83% {
+		transform: translate(calc(var(--L) * sin(0.5deg * var(--k))), calc(var(--L) * (cos(0.5deg * var(--k)) - 1)));
+	}
+	100% {
+		transform: none;
+	}
+}
+@keyframes vb-hang-chain {
+	0% {
+		transform: none;
+	}
+	14% {
+		transform: translate(calc(var(--L) * sin(-6deg * var(--k))), calc(var(--L) * (1 - cos(6deg * var(--k))))) rotate(calc(-6deg * var(--k)));
+	}
+	32% {
+		transform: translate(calc(var(--L) * sin(4.4deg * var(--k))), calc(var(--L) * (1 - cos(-4.4deg * var(--k))))) rotate(calc(4.4deg * var(--k)));
+	}
+	50% {
+		transform: translate(calc(var(--L) * sin(-2.6deg * var(--k))), calc(var(--L) * (1 - cos(2.6deg * var(--k))))) rotate(calc(-2.6deg * var(--k)));
+	}
+	67% {
+		transform: translate(calc(var(--L) * sin(1.3deg * var(--k))), calc(var(--L) * (1 - cos(-1.3deg * var(--k))))) rotate(calc(1.3deg * var(--k)));
+	}
+	83% {
+		transform: translate(calc(var(--L) * sin(-0.5deg * var(--k))), calc(var(--L) * (1 - cos(0.5deg * var(--k))))) rotate(calc(-0.5deg * var(--k)));
+	}
+	100% {
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	:where(h1#_top, .vb-hang),
+	:where(h1#_top, .vb-hang)::before,
+	:where(h1#_top, .vb-hang)::after {
+		animation: none;
+	}
+}
+/* The title panel's bottom line would cut the chains' wall short; the boards hang on the wall itself */
+.content-panel:has(h1#_top),
+.content-panel:has(h1#_top) + .content-panel {
+	border-bottom: 0 !important;
+	border-top: 0 !important;
+}
+
+/* ---------------------------------------------------------------- headings */
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
 	font-family: var(--fd-font-display);
 	font-weight: 400;
 	letter-spacing: 0;
-	color: var(--fd-heading-ink);
+	color: var(--vb-heading);
 }
+/* Sections: gilt lettering over a painted rule (wine bar, brass nub, a thin seam to the edge) */
 .sl-markdown-content h2:not(:where(.not-content *)) {
-	display: inline-block;
+	display: block;
+	width: 100%;
 	font-size: 30px;
-	line-height: 1.4;
+	line-height: 40px;
+	color: var(--vb-heading);
+	text-shadow: var(--vb-heading-shadow);
+	padding: 0 0 14px;
 	margin: 0;
-	padding: 4px 14px 0;
-	color: var(--fd-orange-ink);
-	border-style: solid;
-	border-width: 6px 9px 9px 6px;
-	border-image: url('../assets/ui/sign-orange.png') 2 3 3 2 fill / 6px 9px 9px 6px repeat;
-	image-rendering: pixelated;
+	border: 0;
+	background:
+		linear-gradient(var(--vb-wine-bright), var(--vb-wine-bright)) 0 100% / 96px 4px no-repeat,
+		linear-gradient(var(--vb-gilt-mid), var(--vb-gilt-mid)) 100px 100% / 12px 4px no-repeat,
+		linear-gradient(var(--sl-color-hairline), var(--sl-color-hairline)) 116px calc(100% - 1px) / 100% 2px no-repeat;
 }
 .sl-markdown-content h3:not(:where(.not-content *)) {
 	font-size: 20px;
-	margin: 0;
-	color: var(--sl-color-text-accent);
+	line-height: 28px;
+	color: var(--vb-h3);
 	text-shadow: 2px 0 0 currentColor;
 	letter-spacing: 2px;
+	margin: 0;
 }
 .sl-markdown-content h4:not(:where(.not-content *)) {
 	font-size: 20px;
@@ -476,19 +791,23 @@ b {
 
 /* Links */
 .sl-markdown-content a:not(:where(.not-content *)) {
-	color: var(--sl-color-text-accent);
+	color: var(--vb-link);
 	text-decoration: underline;
 	text-decoration-thickness: 2px;
 	text-underline-offset: 4px;
+	transition: color 0.1s;
 }
 .sl-markdown-content a:not(:where(.not-content *)):hover {
-	color: var(--sl-color-white);
+	color: var(--vb-link-hover);
 }
 
 /* Body text */
 .sl-markdown-content {
 	font-size: 20px;
-	line-height: 30px;
+	line-height: 28px;
+}
+.sl-markdown-content :is(p, li) {
+	line-height: 28px;
 }
 .sl-markdown-content code:not(pre code) {
 	font-family: var(--sl-font);
@@ -499,79 +818,120 @@ b {
 	border-radius: 0;
 	border: 0;
 }
+::selection {
+	background: var(--vb-wine);
+	color: #fff0d8;
+}
 
-/* Tables: a framed board with a dark header row */
-.sl-markdown-content table:not(:where(.not-content *)) {
-	display: table;
-	width: 100%;
+/* ---------------------------------------------------------------- tables: chalked on a slate in an oak frame */
+.sl-markdown-content table:not(:where(.not-content *)),
+.vb-chalk-table {
+	--sl-color-text-accent: var(--vb-chalk-yellow);
+	--sl-color-accent-low: rgb(243 220 138 / 0.15);
+	--sl-color-white: var(--vb-chalk);
+	display: block;
+	width: max-content;
+	max-width: calc(100% - 20px);
+	overflow-x: auto;
 	border-collapse: collapse;
 	font-size: 20px;
-	border: 3px solid var(--fd-frame);
-	box-shadow: 4px 4px 0 #000;
-	background: var(--fd-surface);
+	color: var(--vb-chalk);
+	background: var(--vb-slate);
+	border: 0;
+	margin-inline: 10px;
+	box-shadow: 0 0 0 2px #171513, 0 0 0 6px var(--vb-oak-dark), 0 0 0 8px var(--vb-oak-light) inset, 0 0 0 8px var(--vb-wood-line), 8px 8px 0 8px #000;
 }
 .sl-markdown-content :is(th, td):not(:where(.not-content *)) {
 	border: 0;
-	border-bottom: 2px solid var(--fd-border);
-	padding: 6px 12px;
+	border-bottom: 2px dotted rgb(239 233 220 / 0.18);
+	padding: 6px 14px;
 	background: none;
 	line-height: 30px;
+	overflow-wrap: normal;
+	min-width: 4ch;
 }
 .sl-markdown-content th:not(:where(.not-content *)) {
-	background: var(--fd-frame);
-	color: var(--fd-paper);
+	color: var(--vb-chalk-yellow);
 	font-weight: 400;
 	text-align: left;
-	border-bottom: 3px solid #000;
+	border-bottom: 2px dashed var(--vb-chalk-line);
 }
-@media (max-width: 50rem) {
-	.sl-markdown-content table:not(:where(.not-content *)) {
-		display: block;
-		overflow-x: auto;
-	}
+.sl-markdown-content tbody tr:not(:where(.not-content *)) {
+	transition: background-color 0.1s;
+}
+.sl-markdown-content tbody tr:not(:where(.not-content *)):hover {
+	background: rgb(239 233 220 / 0.05);
+}
+.sl-markdown-content :is(td, th) .fd-src {
+	white-space: normal;
+	word-break: break-all;
 }
 
-/* Asides: signs. Notes on canvas, cautions on the orange sign */
+/* ---------------------------------------------------------------- asides: parchment notes pinned to the wall */
 .starlight-aside {
+	position: relative;
 	border-radius: 0;
-	padding: 12px 18px 8px;
-	color: #483015;
+	margin-top: 28px !important;
+	padding: 10px 18px 6px;
+	color: var(--vb-note-ink);
 	border-style: solid !important;
 	border-width: 8px 12px 12px 8px !important;
-	border-image: url('../assets/ui/sign.png') 2 3 3 2 fill / 8px 12px 12px 8px repeat !important;
+	border-image: url('../assets/ui/note.png') 2 3 3 2 fill / 8px 12px 12px 8px repeat !important;
 	image-rendering: pixelated;
 	background: none !important;
+	transform: rotate(-0.3deg);
+}
+.starlight-aside:nth-of-type(even) {
+	transform: rotate(0.25deg);
+}
+/* The nail */
+.starlight-aside::before {
+	content: '';
+	position: absolute;
+	top: -2px;
+	left: 50%;
+	width: 8px;
+	height: 8px;
+	margin-left: -4px;
+	background: #74747e;
+	box-shadow: inset 2px 2px 0 #c4c4cc, inset -2px -2px 0 #4c4c55, 2px 2px 0 rgb(0 0 0 / 0.5);
 }
 .starlight-aside--caution,
 .starlight-aside--danger {
-	border-image-source: url('../assets/ui/sign-orange.png') !important;
-	color: #682c10;
+	border-image-source: url('../assets/ui/note-wine.png') !important;
+	color: #4a0d18;
 }
 .starlight-aside a,
 .starlight-aside code {
-	color: #6e3214 !important;
+	color: var(--vb-wine) !important;
 }
 .starlight-aside code {
-	background: rgb(0 0 0 / 0.08) !important;
+	background: rgb(0 0 0 / 0.07) !important;
 }
 .starlight-aside__title {
 	font-family: var(--sl-font);
 	font-size: 20px;
-	color: #483015 !important;
+	color: var(--vb-wine-deep) !important;
 	text-shadow: 2px 0 0 currentColor;
 	letter-spacing: 2px;
+}
+.starlight-aside--tip .starlight-aside__title {
+	color: #3d6b1c !important;
 }
 .starlight-aside__icon {
 	display: none;
 }
+.starlight-aside__content p {
+	line-height: 28px;
+}
 
-/* Starlight steps: square markers */
+/* Starlight steps: wine squares with a gilt edge */
 .sl-steps > li::before {
 	border-radius: 0 !important;
 	font-family: var(--sl-font);
-	background: var(--fd-orange-paper) !important;
-	color: var(--fd-orange-ink) !important;
-	box-shadow: inset 0 0 0 2px var(--fd-orange-frame), 3px 3px 0 #000 !important;
+	background: var(--vb-wine) !important;
+	color: #fff0d8 !important;
+	box-shadow: inset 0 0 0 2px var(--vb-wine-line), inset 0 2px 0 2px var(--vb-wine-bright), 3px 3px 0 #000 !important;
 	border: 0 !important;
 }
 .sl-steps > li::after {
@@ -588,18 +948,28 @@ b {
 starlight-tabs [role='tab'] {
 	border-radius: 0 !important;
 }
+/* Previous / next: two small boards */
 .pagination-links a {
-	border: 3px solid var(--fd-frame) !important;
-	box-shadow: 4px 4px 0 #000 !important;
-	background: var(--fd-surface) !important;
+	border-style: solid !important;
+	border-width: 8px 12px 12px 8px !important;
+	border-image: url('../assets/ui/board-plain.png') 2 3 3 2 fill / 8px 12px 12px 8px repeat !important;
+	image-rendering: pixelated;
+	background: none !important;
+	box-shadow: none !important;
+	color: var(--vb-chalk) !important;
+	transition: transform 0.12s;
 }
-#starlight__on-this-page {
-	font-family: var(--sl-font);
-	font-size: 20px !important;
-	color: var(--sl-color-white);
+.pagination-links a .link-title {
+	color: var(--vb-gilt);
+}
+.pagination-links a:hover {
+	transform: translateY(-2px);
+}
+.pagination-links a:hover .link-title {
+	color: var(--vb-gilt-hl);
 }
 
-/* Minecraft button (vanilla widget sprite, 9-slice) */
+/* Oak button (vanilla widget layout, 9-slice); the stone one stays inside Minecraft GUIs */
 .mc-button {
 	display: inline-flex;
 	align-items: center;
@@ -608,10 +978,10 @@ starlight-tabs [role='tab'] {
 	padding: 4px 24px 6px;
 	border-style: solid;
 	border-width: 6px;
-	border-image: url('../assets/ui/button.png') 3 fill / 6px stretch;
+	border-image: url('../assets/ui/button-oak.png') 3 fill / 6px stretch;
 	image-rendering: pixelated;
-	color: #fff !important;
-	text-shadow: 2px 2px 0 #3f3f3f;
+	color: #fff4dc !important;
+	text-shadow: 2px 2px 0 var(--vb-wood-line);
 	font-family: var(--sl-font);
 	font-size: 20px;
 	text-decoration: none !important;
@@ -620,8 +990,56 @@ starlight-tabs [role='tab'] {
 }
 .mc-button:hover,
 .mc-button:focus-visible {
-	border-image-source: url('../assets/ui/button-hover.png');
+	border-image-source: url('../assets/ui/button-oak-hover.png');
 	color: #ffffa0 !important;
+	outline: none;
+}
+.mc-button:active {
+	transform: translateY(2px);
+}
+.mc-button.stone {
+	border-image-source: url('../assets/ui/button.png');
+	text-shadow: 2px 2px 0 #3f3f3f;
+}
+.mc-button.stone:hover,
+.mc-button.stone:focus-visible {
+	border-image-source: url('../assets/ui/button-hover.png');
+}
+
+/* Copy buttons: the text itself, with a small "copy" mark that turns into a tick */
+.vb-copy {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font: inherit;
+	color: inherit;
+	background: none;
+	border: 0;
+	padding: 0;
+	cursor: copy;
+	text-align: left;
+}
+.vb-copy::after {
+	content: 'copy';
+	color: var(--sl-color-gray-3);
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 4px;
+}
+.vb-copy:hover::after,
+.vb-copy:focus-visible::after {
+	color: var(--sl-color-text-accent);
+}
+.vb-copy.copied::after {
+	content: 'copied';
+	color: var(--fd-green);
+	text-decoration: none;
+}
+.vb-copy:hover code,
+.vb-copy:focus-visible code {
+	box-shadow: inset 0 -2px 0 var(--sl-color-text-accent);
+}
+.vb-copy:focus-visible {
 	outline: none;
 }
 
@@ -642,18 +1060,37 @@ img.pixel,
 .fd-val {
 	white-space: nowrap;
 }
+/* A parchment note (the old canvas sign) */
 .fd-sign {
 	display: inline-block;
-	color: #483015;
+	color: var(--vb-note-ink);
 	padding: 6px 14px 2px;
 	border-style: solid;
 	border-width: 8px 12px 12px 8px;
-	border-image: url('../assets/ui/sign.png') 2 3 3 2 fill / 8px 12px 12px 8px repeat;
+	border-image: url('../assets/ui/note.png') 2 3 3 2 fill / 8px 12px 12px 8px repeat;
 	image-rendering: pixelated;
 }
 .fd-sign.orange {
-	color: #682c10;
-	border-image-source: url('../assets/ui/sign-orange.png');
+	color: #4a0d18;
+	border-image-source: url('../assets/ui/note-wine.png');
+}
+/* A chalkboard (menus, small panels) */
+.vb-chalk {
+	--sl-color-text-accent: var(--vb-chalk-yellow);
+	color: var(--vb-chalk);
+	border-style: solid;
+	border-width: 12px 15px 15px 12px;
+	border-image: url('../assets/ui/chalkboard.png') 4 5 5 4 fill / 12px 15px 15px 12px repeat;
+	image-rendering: pixelated;
+}
+/* A gilt signboard */
+.vb-board {
+	color: var(--vb-gilt);
+	text-shadow: 2px 2px 0 var(--vb-wood-line);
+	border-style: solid;
+	border-width: 12px 16px 16px 12px;
+	border-image: url('../assets/ui/board.png') 3 4 4 3 fill / 12px 16px 16px 12px repeat;
+	image-rendering: pixelated;
 }
 .fd-board,
 .fd-card {
@@ -662,18 +1099,11 @@ img.pixel,
 	border-radius: 0;
 	box-shadow: 4px 4px 0 #000;
 }
-
-/* Long source chips must not push tables past the content column */
-.sl-markdown-content :is(td, th) .fd-src {
-	white-space: normal;
-	word-break: break-all;
-}
-.sl-markdown-content table:not(:where(.not-content *)) {
-	max-width: 100%;
+:root[data-theme='light'] :is(.fd-board, .fd-card) {
+	box-shadow: 4px 4px 0 rgb(60 30 10 / 0.35);
 }
 
-
-/* Scrollbars like the creative-inventory scroller: a grey bevelled thumb in a dark slot */
+/* ---------------------------------------------------------------- scrollbars like the creative-inventory scroller */
 /* Firefox (Chromium ignores ::-webkit-scrollbar once scrollbar-color is set, so only use it where those don't exist) */
 @supports not selector(::-webkit-scrollbar) {
 	* {
@@ -708,104 +1138,65 @@ img.pixel,
 	box-shadow: inset 2px 2px 0 #483015;
 }
 
-/* Heading rhythm: the sign sits on one line with its anchor link; even space above, a little below */
+/* ==================================================================================================
+ * Layout rhythm: page title = hanging board · section = gilt heading on a painted rule · sub-section = 20px copper.
+ * On an 8px grid: blocks 20px apart, sections 64px, heading to text 12px, visuals 28px around.
+ * ================================================================================================== */
 .sl-markdown-content .sl-heading-wrapper {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
-.sl-markdown-content .sl-heading-wrapper.level-h2 {
-	margin-top: 56px;
-	margin-bottom: 4px;
-}
-.sl-markdown-content .sl-heading-wrapper.level-h3 {
-	margin-top: 36px;
-}
-.sl-markdown-content .sl-heading-wrapper.level-h4 {
-	margin-top: 28px;
-}
-.sl-markdown-content .sl-heading-wrapper + * {
-	margin-top: 16px !important;
-}
-
-/* Wide tables scroll inside the column instead of running under the side panel; words never break mid-word */
-.sl-markdown-content table:not(:where(.not-content *)) {
-	display: block;
-	width: max-content;
-	max-width: 100%;
-	overflow-x: auto;
-}
-.sl-markdown-content td {
-	overflow-wrap: normal;
-	min-width: 4ch;
-}
-
-/* Headings written without Starlight's anchor wrapper (generated item pages) get the same rhythm */
+.sl-markdown-content .sl-heading-wrapper.level-h2,
 .sl-markdown-content > h2:not(:where(.not-content *)) {
-	margin-top: 56px;
-	margin-bottom: 4px;
-}
-.sl-markdown-content > h2 + * {
-	margin-top: 16px !important;
-}
-.sl-markdown-content > h3:not(:where(.not-content *)) {
-	margin-top: 36px;
-}
-
-/* ==================================================================================================
- * Layout system (supersedes the heading and spacing rules above)
- * Hierarchy: page title = canvas sign · section = plain 30px heading on a rule · sub-section = 20px accent.
- * Rhythm on an 8px grid: blocks 20px apart, sections 64px, heading to text 12px, visuals 28px around.
- * ================================================================================================== */
-.sl-markdown-content {
-	line-height: 28px;
-}
-.sl-markdown-content :is(p, li) {
-	line-height: 28px;
-}
-
-/* Section headings: no sign box, a full-width rule above instead */
-.sl-markdown-content h2:not(:where(.not-content *)) {
-	display: block;
-	width: 100%;
-	font-size: 30px;
-	line-height: 40px;
-	color: var(--fd-heading-ink);
-	padding: 16px 0 0;
-	border: 0;
-	border-top: 4px solid var(--fd-border);
-	border-image: none;
-	margin: 0;
-}
-.sl-markdown-content .sl-heading-wrapper.level-h2 {
 	margin-top: 64px;
 	margin-bottom: 0;
 }
-.sl-markdown-content > h2:not(:where(.not-content *)) {
-	margin-top: 64px;
-}
-.sl-markdown-content h3:not(:where(.not-content *)) {
-	font-size: 20px;
-	line-height: 28px;
-	color: var(--sl-color-text-accent);
-	text-shadow: 2px 0 0 currentColor;
-	letter-spacing: 2px;
-	margin: 0;
-}
-.sl-markdown-content .sl-heading-wrapper.level-h3 {
+.sl-markdown-content .sl-heading-wrapper.level-h3,
+.sl-markdown-content > h3:not(:where(.not-content *)) {
 	margin-top: 40px;
+}
+.sl-markdown-content .sl-heading-wrapper.level-h4 {
+	margin-top: 28px;
 }
 .sl-markdown-content .sl-heading-wrapper + *,
 .sl-markdown-content > :is(h2, h3) + * {
 	margin-top: 12px !important;
 }
+.sl-markdown-content .sl-heading-wrapper.level-h2 + * {
+	margin-top: 16px !important;
+}
 /* The anchor link only shows on hover, so it doesn't add noise next to every heading */
 .sl-markdown-content .sl-anchor-link {
 	opacity: 0;
+	transition: opacity 0.12s;
+	color: var(--sl-color-gray-3);
 }
 .sl-markdown-content .sl-heading-wrapper:hover .sl-anchor-link,
 .sl-markdown-content .sl-anchor-link:focus-visible {
 	opacity: 1;
+}
+/* Phones have no hover: the anchor stays faintly visible there */
+@media (hover: none) {
+	.sl-markdown-content .sl-anchor-link {
+		opacity: 0.5;
+	}
+}
+/* A heading you jumped to (a #link, the table of contents) glows for a moment */
+.sl-markdown-content :is(h2, h3):target {
+	animation: vb-target 1.6s ease-out;
+}
+@keyframes vb-target {
+	0%,
+	30% {
+		color: var(--vb-gilt-hl);
+		text-shadow: 0 0 12px rgb(246 211 106 / 0.8), var(--vb-heading-shadow);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.sl-markdown-content :is(h2, h3):target {
+		animation: none;
+	}
 }
 
 /* Visual blocks get room around them; text blocks stay close together */
@@ -821,36 +1212,9 @@ img.pixel,
 .sl-markdown-content li + li {
 	margin-top: 6px;
 }
-
-/* Asides: compact */
-.starlight-aside {
-	margin-top: 28px !important;
-	padding: 8px 16px 6px;
-}
-.starlight-aside__content p {
-	line-height: 28px;
-}
-
-/* Sidebar: quieter, tighter */
-.sidebar-content ul ul {
-	margin-top: 2px;
-}
-.sidebar-content a {
-	padding-block: 1px !important;
-	line-height: 26px;
-}
-.sidebar-content summary {
-	padding-block: 4px !important;
-}
-.sidebar-content details + details,
-.sidebar-content li + li > details {
-	margin-top: 10px;
-}
-
-/* Right-hand "On this page": smaller weight than content */
-starlight-toc a,
-starlight-toc h2 {
-	line-height: 26px !important;
+.sl-markdown-content table:not(:where(.not-content *)) {
+	margin-top: 36px !important;
+	margin-bottom: 12px;
 }
 
 /* Long words (ids, commands, links) never widen the page on phones */
@@ -860,4 +1224,24 @@ starlight-toc h2 {
 .sl-markdown-content svg[viewBox] {
 	max-width: 100%;
 	height: auto;
+}
+
+/* Page to page: a quick cross-fade where the browser supports it (the header and sidebar stay put) */
+@view-transition {
+	navigation: auto;
+}
+header.header {
+	view-transition-name: vb-header;
+}
+.sidebar-pane {
+	view-transition-name: vb-sidebar;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.18s;
+}
+@media (prefers-reduced-motion: reduce) {
+	@view-transition {
+		navigation: none;
+	}
 }

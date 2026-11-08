@@ -16,7 +16,16 @@ import advancementsJson from '../data/gen/advancements.json';
 import rulesJson from '../data/gen/rules.json';
 import metaJson from '../data/gen/meta.json';
 import namesJson from '../data/gen/names.json';
+import { t, num, listOf, langTag, localPath, type Locale } from './i18n';
 const vanillaNames = namesJson as Record<string, string>;
+// The game's own text per language (lang.<code>.json from scripts/extract.mjs): item and block names by id
+// ("vineandbarrel:red_wine"), everything else by its lang key ("advancements.vineandbarrel.root.title").
+const langFiles = import.meta.glob<{ default: Record<string, string> }>('../data/gen/lang.*.json', { eager: true });
+const gameLang: Record<string, Record<string, string>> = Object.fromEntries(
+	Object.entries(langFiles).map(([p, m]) => [p.match(/lang\.([\w-]+)\.json$/)![1], m.default]),
+);
+/** Game text by lang key (or item id) in the page's language; `en` when the game has none there. */
+export const gameText = (key: string | null | undefined, en: string, locale: Locale = 'en') => (key && locale !== 'en' && gameLang[locale]?.[key]) || en;
 
 export const NS = 'vineandbarrel';
 /** The Farmer's Delight Neoforged wiki: FD's own items link there (we don't show FD's textures here). */
@@ -38,6 +47,8 @@ export type Recipe = {
 	experience?: number;
 	cookingtime?: number;
 	container?: Stack | null;
+	results?: (Stack & { chance: number })[];
+	tool?: Ingredient;
 	base?: Stack;
 	young?: Stack;
 	aged?: Stack;
@@ -89,6 +100,16 @@ export const meta = metaJson;
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 export const url = (p: string) => BASE + (p.startsWith('/') ? p : '/' + p);
+/** A link to a wiki page in the page's language: pageUrl('/crops/', 'de') → <base>/de/crops/. Files use url(). */
+/** The page's language: 'en' here; lib/l10n/<code> sets its own. */
+export const LOCALE: Locale = 'en';
+// English anchor → the translated heading's anchor, per language (scripts/i18n.mjs writes it)
+import anchorsJson from '../i18n/anchors.json';
+const anchors = anchorsJson as Record<string, Record<string, string>>;
+export const pageUrl = (p: string, locale: Locale = 'en') => {
+	const to = locale === 'en' ? undefined : anchors[locale]?.[p];
+	return url(localPath(to ? `${p.split('#')[0]}#${to}` : p, locale));
+};
 
 export const itemList = Object.values(items);
 export const CATEGORIES: Record<string, { label: string; blurb: string }> = {
@@ -107,10 +128,11 @@ export const recipeTypeName: Record<string, string> = {
 	'vineandbarrel:brewing': 'Brew Kettle',
 	'vineandbarrel:aging': 'Aging Barrel',
 	'farmersdelight:cooking': "Farmer's Delight Cooking Pot",
+	'farmersdelight:cutting': "Farmer's Delight Cutting Board",
 };
 /** Every recipe a player can use; the Farmer's Delight ones (fdOnly) need FD installed. */
 export const playableRecipes = recipes.filter((r) => (r.loaded || r.fdOnly) && !r.special);
-const outputsOf = (r: Recipe) => [r.result?.id, r.bucket?.id, r.young?.id, r.aged?.id].filter(Boolean) as string[];
+const outputsOf = (r: Recipe) => [r.result?.id, r.bucket?.id, r.young?.id, r.aged?.id, ...(r.results ?? []).map((x) => x.id)].filter(Boolean) as string[];
 const inputsOf = (r: Recipe) => [...(r.ingredients ?? []), ...((r.grid ?? []).flat().filter(Boolean) as Ingredient[])].flatMap((i) => i.items).concat(r.type === 'vineandbarrel:aging' ? [r.base!.id, ...(r.bucket ? [r.bucket.id] : [])] : []);
 export function recipesFor(id: string) {
 	return playableRecipes.filter((r) => outputsOf(r).includes(id));
@@ -134,7 +156,10 @@ export const fullId = (raw: string) => (raw.includes(':') ? raw : items[`${NS}:$
 export const isFd = (id: string) => id.startsWith('farmersdelight:');
 
 /** Name of any item id, from the game's language files (FD items from their id). */
-export function nameOf(id: string): string {
+/** An item's name, in the page's language when the game has it there (else English). */
+export function nameOf(id: string, locale: Locale = 'en'): string {
+	const local = locale === 'en' ? undefined : gameLang[locale]?.[id];
+	if (local) return local;
 	return items[id]?.name ?? others[id]?.name ?? vanillaNames[id] ?? id.split(':')[1].replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 export function iconOf(id: string): { src: string; flat: boolean } | null {
@@ -156,36 +181,35 @@ export function mechanicFor(it: Item): { href: string; label: string } | null {
 	return p ? { href: p[0], label: p[1] } : null;
 }
 /** Our items have their own page (/items/<id path>/); Farmer's Delight items link to the FD Neoforged wiki. */
-export function pageOf(id: string): string | null {
-	if (isFd(id)) return `${FDN_WIKI}/items/${id.split(':')[1].replaceAll('_', '-')}/`;
-	return items[id] ? url(`/items/${items[id].slug}/`) : null;
+export function pageOf(id: string, locale: Locale = 'en'): string | null {
+	// FD items live on the FD Neoforged docs, whose item pages are /items/<id>/ (underscores, as in the id)
+	if (isFd(id)) return `${FDN_WIKI}/items/${id.split(':')[1]}/`;
+	return items[id] ? pageUrl(`/items/${items[id].slug}/`, locale) : null;
 }
 export function renderOf(name: string): string | null {
 	return renders[name] ? url(`/renders/${name}.png`) : null;
 }
 
 // ------------------------------------------------------------ formatting
-export const seconds = (ticks: number) => {
-	const s = ticks / 20;
-	return Number.isInteger(s) ? `${s} s` : `${+s.toFixed(2)} s`;
-};
+// Every formatter takes the page's language last (default English); translated pages import them already bound to
+// their language from lib/l10n/<code>.ts.
+export const seconds = (ticks: number, locale: Locale = 'en') => t('{n} s', locale, { n: +(ticks / 20).toFixed(2) });
 /** "15 s", "1 min", "1 min 30 s" */
-export function duration(ticks: number) {
+export function duration(ticks: number, locale: Locale = 'en') {
 	const s = Math.round(ticks / 20);
-	if (s < 60) return `${s} s`;
+	if (s < 60) return t('{n} s', locale, { n: s });
 	const m = Math.floor(s / 60);
-	return s % 60 ? `${m} min ${s % 60} s` : `${m} min`;
+	return s % 60 ? t('{m} min {s} s', locale, { m, s: s % 60 }) : t('{n} min', locale, { n: m });
 }
 /** In-game days ("1 day", "3 days") from ticks */
-export const days = (ticks: number) => {
-	const d = ticks / rules.dayTicks;
-	return `${+d.toFixed(2)} ${d === 1 ? 'day' : 'days'}`;
-};
-export const pct = (x: number, digits = 0) => `${+(x * 100).toFixed(digits)}%`;
+export const days = (ticks: number, locale: Locale = 'en') => t('{n} day|{n} days', locale, { n: +(ticks / rules.dayTicks).toFixed(2) });
+export const pct = (x: number, digits = 0, locale: Locale = 'en') =>
+	new Intl.NumberFormat(langTag(locale), { style: 'percent', maximumFractionDigits: digits }).format(+(x).toFixed(digits + 2));
 export const roman = (n: number) => ['I', 'II', 'III', 'IV', 'V', 'VI'][n] ?? String(n + 1);
 export const short = (id: string) => id.replace(/^minecraft:/, '');
 /** "a, b and c" */
-export const list = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+export const list = (xs: string[], locale: Locale = 'en') => (locale === 'en' ? (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`) : listOf(xs, locale));
+export { num };
 
 /** All items an ingredient can be, for cycling slot displays (de-duplicated, stable order). */
 export const ingredientItems = (i: Ingredient | null | undefined) => (i ? [...new Set(i.items)] : []);

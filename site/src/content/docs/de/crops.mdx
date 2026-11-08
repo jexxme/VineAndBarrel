@@ -1,0 +1,129 @@
+---
+title: Pflanzen
+description: Rote und weiße Traubensträucher, Hopfensträucher, Rankgitter, Gerste, Wildpflanzen und alles drumherum, von Bienen bis Kompost.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../../lib/l10n/de';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+// Who eats what: the food tags our items are in (animals.json), as the animals those tags feed
+export const ANIMALS = { cow_food: 'Kühe', sheep_food: 'Schafe', goat_food: 'Ziegen', horse_food: 'Pferde', llama_food: 'Lamas', chicken_food: 'Hühner', parrot_food: 'Papageien', fox_food: 'Füchse' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const SEASON = { spring: 'Frühling', summer: 'Sommer', autumn: 'Herbst', winter: 'Winter' };
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)).map((s) => SEASON[s] ?? s));
+
+<Render name="scenes/garden" float="right" size={256} alt="Trauben- und Hopfensträucher hinter einem Gerstenfeld" />
+
+Vier unserer Pflanzen speisen die Getränke: <Item id="red_grapes" plural /> für Rotwein, <Item id="white_grapes" plural /> für
+Weißwein, <Item id="hops" /> für beide Biere und <Item id="barley" /> für Pale Ale. Die übrigen Zutaten sind Vanilla:
+<Item id="sweet_berries" /> für Süßbeerenwein, <Item id="wheat" /> für Weizenbier, <Item id="apple" plural /> für Cidre
+und <Item id="honey_bottle" plural /> für Met.
+
+<Shot src="vineyard.jpg" caption="Ein umzäunter Weinberg voller reifer Traubensträucher, mit Laternenpfosten an den Reihenenden." />
+
+## Trauben- und Hopfensträucher
+
+Pflanz <Item id="red_grapes" plural />, <Item id="white_grapes" plural /> oder <Item id="hops" /> auf Gras, Erde oder Ackerland,
+genau wie Süßbeeren. Der Strauch wächst in {c.bushMaxAge + 1} Stufen im Tempo des Süßbeerenstrauchs. Rote und weiße Trauben
+wachsen gleich; nur die reife Frucht unterscheidet sie.
+
+<Stages prefix="grape_bush" title="Roter Traubenstrauch" labels={['gepflanzt', 'wachsend', 'halbreif', 'reif']} />
+<Stages prefix="white_grape_bush" title="Weißer Traubenstrauch" labels={['gepflanzt', 'wachsend', 'halbreif', 'reif']} />
+<Stages prefix="hop_bush" title="Hopfenstrauch" labels={['gepflanzt', 'wachsend', 'halbreif', 'reif']} />
+
+- **Ernten** kannst du einen reifen Strauch mit Rechtsklick: Er gibt {h.grapes.count[0]} bis {h.grapes.count[1]} Trauben (oder
+  {h.hops.count[0]} bis {h.hops.count[1]} <Item id="hops" />) und fällt auf seine zweite Stufe zurück, trägt also weiter Früchte. Du
+  musst nicht neu pflanzen.
+- **Es eilt?** Pflück ihn halbreif, wie Süßbeeren: dann gibt er {h.grapes.halfRipe[0]} bis {h.grapes.halfRipe[1]}, und er fällt genauso zurück.
+- **Knochenmehl** bringt ihn eine Stufe weiter.
+- Sträucher fangen so leicht Feuer wie Süßbeerensträucher, halte Lagerfeuer und Lava also vom Weinberg fern.
+
+## Rankgitter
+
+<Render name="scenes/trellis" float="right" size={256} alt="Trauben- und Hopfenreben an Rankgittern und ein leeres Rankgitter" />
+
+Stell ein <Item id="trellis" /> auf einen Strauch, und sobald der Strauch reif ist, rankt er daran hoch, bis zu {c.climbMaxHeight} Blöcke,
+und trägt auf der ganzen Höhe Früchte. Ein Rankgitter zeigt beim Platzieren zu dir und richtet sich nach dem darunter aus, die Reihen bleiben also gerade.
+
+- Jede Rebe wächst, trägt Früchte und wird gepflückt wie der Strauch, auch halbreif. Knochenmehl auf einem reifen Strauch startet das Hochranken sofort.
+- Baust du eine Rebe ab, bekommst du ihre Frucht, und das Rankgitter bleibt stehen.
+- Ein Rankgitter ist keine Leiter: Alles daran erreichst du vom Boden aus.
+
+<Recipe id="trellis" />
+
+<Aside title="Mit Farmer's Delight: Seile gehen auch">
+Ein Seil von Farmer's Delight über einem Strauch wirkt genau wie ein Rankgitter, so wie FDs Tomaten hochranken. Siehe [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Gerste
+
+Sä <Item id="barley_seeds" /> auf Ackerland. Gerste wächst genau wie Weizen, in {barleyStages} Stufen, und
+gibt dasselbe: <Item id="barley" />, wenn sie reif ist, dazu zusätzliche Körner.
+
+<Stages prefix="barley" title="Gerste" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', 'reif']} />
+
+## Wildpflanzen
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="Wilde rote Trauben, wilde weiße Trauben, wilder Hopfen und wilde Gerste auf Gras" />
+
+Dein erstes Saatgut stammt von Wildpflanzen. Sie wachsen in Gruppen, je nach Biom und Temperatur, und tauchen deshalb auch in Mod-Biomen auf,
+die auf die übliche Weise markiert sind. Schlag eine ab für die Ernte, oder nimm mit einer Schere die ganze Pflanze als Dekoration mit nach Hause.
+
+<WildCrops />
+
+Bauern und der Fahrende Händler verkaufen auch Saatgut, und in Dorftruhen liegt manchmal welches. Siehe [Dörfer & Tavernen](/villages/).
+
+## Leben auf dem Hof
+
+- **Bienen** bestäuben Trauben, Hopfen und Gerste und helfen ihnen beim Wachsen, wie bei Vanilla-Pflanzen.
+- **Tiere:** <Item id="barley" /> füttert und züchtet {list(eaters('vineandbarrel:barley').filter((a) => a !== 'Pferde' && a !== 'Lamas'))} wie
+  Weizen. Pferde und Lamas heilen und wachsen damit genauso wie mit Weizen, und mit dem <Item id="barley_bale" /> wie mit einem Strohballen.
+  <Item id="barley_seeds" /> füttern {list(eaters('vineandbarrel:barley_seeds'))}, und mit Trauben kannst du {list(eaters('vineandbarrel:red_grapes'))} züchten.
+- **Füchse** lieben Trauben, rote und weiße: Sie pflücken sie von den Sträuchern, so wie sie Süßbeerensträucher plündern. Reben
+  an einem Rankgitter oder Seil sind außer Reichweite, und sie hören auf, wenn Mob-Griefing aus ist.
+- **Bauern** pflanzen und ernten Gerste auf ihren Feldern und kompostieren überschüssiges Saatgut. Trauben und Hopfen überlassen sie dir.
+- **Komposter:** Jede Pflanze kompostiert mit den Chancen von Vanilla.
+
+<table>
+	<thead><tr><th>Gegenstand</th><th>Chance auf eine Schicht</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="Gerste auf bewässertem Ackerland neben dem Hopfengarten, erntereif." />
+
+## Lagerblöcke
+
+<Render name="scenes/storage" float="right" size={256} alt="Rote Traubenkiste, Weiße Traubenkiste, Hopfenkiste und Gerstenballen" />
+
+Pack neun einer Pflanze in eine <Item id="grape_crate" />, <Item id="white_grape_crate" />, <Item id="hops_crate" /> oder
+einen <Item id="barley_bale" />, und pack sie im Handwerksfeld wieder aus. Der <Item id="barley_bale" /> ist in jeder Hinsicht ein Strohballen: Er mildert einen Sturz, ein Lagerfeuer darauf
+schickt seinen Rauch hoch hinauf, und Lamas und Pferde fressen ihn.
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## Gut zu wissen
+
+- **Pflücken, nicht abbauen.** Baust du einen jungen Strauch ab, fällt nichts, und die Pflanze ist weg. Einer mit Früchten lässt sie
+  fallen (mehr mit Glück), aber ein Rechtsklick pflückt sie und lässt den Strauch stehen.
+- **Einfach durchlaufen.** Trauben- und Hopfensträucher stechen oder bremsen dich nicht wie Süßbeerensträucher.
+- **Licht und Wasser:** Ein Strauch wächst nur bei gutem Licht. Wasser spült Sträucher weg, und Kolben knicken sie um.
+- **Trauben sind ein Snack,** wie Süßbeeren.
+- **Mehr Wildpflanzen:** Knochenmehl auf einer Wildpflanze setzt oft eine weitere in die Nähe, ein einfacher Weg zu deinem ersten Saatgut.
+  Wilde Gerste gibt eine Gerste und ein Saatgut.
+- **Ackerland unter Gerste** wird nie wieder zu Erde, wie bei jeder Pflanze.
+- **Reben** brauchen ebenfalls Licht: Im Dunkeln brechen sie, und das Rankgitter oder Seil bleibt stehen. Knochenmehl auf einer
+  ausgewachsenen Pflanze reicht bis zur Rebe darüber weiter. Eine Rebe an einem Seil kannst du wie das Seil hochklettern.
+- **Bienen** lassen nie einen Strauch hochranken; das kannst nur du anstoßen.
+
+## Jahreszeiten
+
+Mit Serene Seasons haben die Pflanzen ihre Jahreszeiten: Trauben, rote und weiße, wachsen im {seasonsOf('vineandbarrel:red_grapes')}, Hopfen im
+{seasonsOf('vineandbarrel:hops')} und Gerste im {seasonsOf('vineandbarrel:barley_seeds')}. Siehe [Kompatibilität](/compatibility/).

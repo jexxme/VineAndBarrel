@@ -1,0 +1,84 @@
+---
+title: Bebidas
+description: Todos los vinos, cervezas, sidras e hidromieles de Vine & Barrel, con qué se hacen, en qué se sirven y la mejora que dan.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/es';
+
+export const sample = items[drinks[0].id];
+
+Todas las bebidas siguen las mismas reglas:
+
+- Da **una mejora** y un nivel de [Achispado](/tipsy/). Una bebida que te lleva a Achispado {roman(rules.tipsy.noBuffLevel - 1)} o más no da
+  ninguna mejora: vas demasiado pasado para disfrutarla.
+- Siempre puedes beberla, incluso con el estómago lleno. Tardas {sample.consumable.seconds} s, y recuperas la
+  <Item id="mug" /> o la <Item id="wine_glass" /> vacía.
+- Se apila hasta **{sample.stack}**.
+- La mejora de una bebida **joven** es de nivel {roman(rules.youngBuffAmplifier)} durante **{duration(rules.youngBuffTicks)}**. La versión **añeja** tiene un
+  color más profundo, reluce como un objeto encantado, y su mejora es de nivel **{roman(rules.agedBuffAmplifier)} durante {duration(rules.agedBuffTicks)}**. La
+  Saturación de la cerveza de trigo funciona al instante: unos pocos puntos de comida.
+- Puesta en una mesa, una bebida añeja reluce como un objeto encantado, así que la distingues de una joven de un vistazo.
+
+## Colores
+
+Cada bebida tiene su propio color: lo ves en el visor del barril y en las jarras y copas de una mesa. Las bebidas
+añejas son un tono más profundas.
+
+<DrinkSwatches />
+
+## Vinos, cervezas, sidra e hidromiel
+
+<DrinkTable />
+
+La Saturación funciona distinto de las demás mejoras: no dura, cada tic de ella llena un punto de hambre (y algo de
+saturación) al instante. Por eso la cerveza de trigo muestra puntos de comida en lugar de un tiempo.
+
+## Con Farmer's Delight
+
+Los frascos propios de Farmer's Delight también fermentan. Su sidra de manzana se convierte en la misma Sidra que nuestro Zumo de manzana, y su zumo
+de melón se convierte en Vino de sandía, que solo puedes hacer con FD instalado (el objeto siempre existe). Mira
+[Farmer's Delight](/farmers-delight/).
+
+<DrinkTable fd />
+
+## Recipientes
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Jarras y copas sobre un bloque" />
+
+El vino va en una <Item id="wine_glass" />; la cerveza, la sidra y la hidromiel en una <Item id="mug" />. Ambas se apilan hasta {items['vineandbarrel:mug'].stack}.
+
+**Déjalas en la mesa:** agáchate y haz clic derecho en la parte de arriba de un bloque con una jarra o una copa, llena o vacía, para dejarla ahí. Hasta cuatro
+comparten un bloque, cada una con su propia bebida, y ves la bebida a través del cristal. Haz clic derecho con la mano vacía para recoger una de nuevo.
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="Jarras y copas dejadas en las mesas, hasta cuatro por bloque." />
+
+## Planea una tanda
+
+¿Cuánto necesitas para una ronda? El planificador de [Construir una bodega](/guides/cellar/#planea-la-tanda) calcula los cultivos,
+las tandas de marmita, los cubos, los barriles y el tiempo de espera para cualquier número de raciones.
+
+## ¡Salud!
+
+Cuando dos o más jugadores terminan una bebida en {rules.cheersWindowTicks / 20} segundos y a {rules.cheersRadius} bloques unos
+de otros, las copas tintinean, saltan unas chispas, y la mejora de todos por esa bebida dura **un {rules.cheersBonusPercent}% más**.
+
+Solo cuenta entre jugadores del mismo mundo, una vez por bebida, y tus dos propias bebidas no hacen una ronda. La bonificación es
+el {rules.cheersBonusPercent}% del tiempo completo de la mejora de esa bebida, sumado a lo que quede; si la mejora acaba de agotarse, la recuperas durante ese tiempo.
+
+## Conviene saber
+
+- **¿Demasiadas?** La bebida que te lleva a Achispado {roman(rules.tipsy.noBuffLevel - 1)} no da mejora, y además te quita las
+  mejoras que te dieron tus bebidas anteriores. Los efectos de las pociones se quedan.
+- **Mesas:** una bebida va en el cuarto del bloque al que apuntas, o en el libre más cercano, y solo sobre una cara superior firme.
+  El clic derecho con la mano vacía recoge la que apuntas; si llevas algo en la mano, usas ese objeto como siempre, así que puedes beber
+  en la mesa. Romper el bloque, un pistón o perder el bloque de debajo las suelta todas.
+- **Las bebidas como ingredientes** (en la olla de cocción de Farmer's Delight) te devuelven la jarra o la copa.
+- **¿Estómago lleno?** Da igual: siempre puedes beber.

@@ -1,0 +1,12 @@
+plugins {
+    id 'groovy-gradle-plugin'
+}
+
+repositories {
+    gradlePluginPortal()
+}
+
+dependencies {
+    // The Error Prone Gradle plugin, so the convention plugin can apply it
+    implementation 'net.ltgt.gradle:gradle-errorprone-plugin:5.2.0'
+}

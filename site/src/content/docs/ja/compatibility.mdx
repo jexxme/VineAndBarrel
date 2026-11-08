@@ -1,0 +1,120 @@
+---
+title: 互換性
+description: Vine & Barrelが連携するMODと、それぞれが加えるもの。
+---
+import Item from '../../../components/mc/Item.astro';
+import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/ja';
+import compat from '../../../data/gen/compat.json';
+import { optional } from '../../../data/code/downloads';
+
+export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
+export const seasonRows = Object.entries(seasons);
+export const seasonNames = { spring: '春', summer: '夏', autumn: '秋', winter: '冬' };
+export const v = compat.versions;
+// Wheat beer feeds through Saturation: (level + 1) food and twice that in saturation per tick it lasts
+export const beer = drinks.filter((d) => d.effect.id === 'minecraft:saturation').map((d) => ({ ...d, food: (d.effect.amplifier + 1) * d.effect.duration }));
+export const young = beer.find((d) => d.stage === 'young');
+export const aged = beer.find((d) => d.stage === 'aged');
+// A row of the thirst table is all young drinks, all aged drinks, or a few named items
+export const stageOf = (id) => drinks.find((d) => d.id === id)?.stage;
+export const rowLabel = (items) => {
+	const all = (stage) => items.every((id) => stageOf(id) === stage) && items.length === drinks.filter((d) => d.stage === stage).length;
+	return all('young') ? '若い飲み物すべて' : all('aged') ? '熟成した飲み物すべて' : null;
+};
+export const groups = { fruits: '果物', carbs: '炭水化物', proteins: 'タンパク質', vegetables: '野菜', sugars: '糖類' };
+
+Vine & Barrel {meta.version} は **Minecraft {meta.minecraft}** 上で、**NeoForge {meta.neoforge}** 以降、または
+**Fabric Loader {meta.fabricLoader}** と **Fabric API {meta.fabricApi}** 以降で動きます。ほかのMODは不要です。
+以下はすべて任意で、相手のMODが入っていれば自動で有効になります:
+
+- **NeoForge:** {optional.neoforge.join(', ')}。
+- **Fabric:** {optional.fabric.join(', ')}。
+
+Serene SeasonsとBiomes O' Plentyはタグ経由で連携します。
+
+## Farmer's Delight
+
+コンロの熱、ロープに登るつる(トレリスと同じ)、肥沃な土、FDの瓶から作る飲み物、いくつかの鍋料理とごちそう、パン。[Farmer's Delight](/farmers-delight/)を参照。
+
+## JEI
+
+JEIには**醸造釜**と**熟成樽**のレシピカテゴリが表示され、醸造時間と各段階にかかる日数がわかります。
+そのほか、樽と野生の作物の情報ページもあります。JEI {meta.jei} に対してビルドされています。
+
+## Jade
+
+釜や樽を見ると中身がわかります。醸造物や飲み物、残りの杯数、醸造の進み具合、釜が加熱されているか、
+樽がどの段階かです。Jade {meta.jade.split('+')[0]} に対してビルドされています。
+
+## AppleSkin
+
+AppleSkinの食料ツールチップと空腹ゲージのプレビューは、食べられるものと飲めるものすべてで働きます。ジュースと料理には、それぞれの食料が表示されます。
+<Item id={young.id} />は満腹度回復の強化効果で腹を満たすので、AppleSkinにはその効果が回復する量が表示されます。**{young.food}**の
+空腹度と**{young.food * 2}**の隠し満腹度で、<Item id={aged.id} />なら**{aged.food}**と**{aged.food * 2}**です。ほかの
+ワイン、ビール、サイダー、ミードは腹を満たさないので、食料は表示されません。AppleSkin {v.appleskin} に対してビルドされています。
+
+## Thirst
+
+**Tough As Nails**、**Homeostatic**、**Thirst Was Taken 2** を入れると、飲み物が渇きを癒やします。ジュースは大きく、ワイン、ビール、
+サイダー、ミードは少し、熟成したものは若いものより少し多めです。食料も数えるMODでは、煮込み料理、スープ、コック・オー・ヴァンはシチューと同じ扱いで、
+ブドウ(赤も白も)はスイートベリーと同じ扱いです。
+
+<table>
+	<thead>
+		<tr><th></th><th>Tough As Nails<br />渇き、水分</th><th>Homeostatic<br />水分、隠し満腹度</th><th>Thirst Was Taken 2<br />渇き、潤い</th></tr>
+	</thead>
+	<tbody>
+		{compat.thirst.map((row) => (
+			<tr>
+				<td>{rowLabel(row.items) ?? row.items.map((id, i) => <>{i > 0 && '、'}<Item id={id} /></>)}</td>
+				<td>{row.tan ? `${row.tan.thirst}, ${row.tan.hydration}%` : '–'}</td>
+				<td>{row.homeostatic.amount}, {row.homeostatic.saturation.toFixed(1)}</td>
+				<td>{row.twt ? `${row.twt.thirst}, ${row.twt.quenched}` : '–'}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+Tough As Nailsが数えるのは飲み物だけです。Tough As Nails {v.toughasnails}、Homeostatic {v.homeostatic}、Thirst Was
+Taken 2 {v.thirstwastaken2} でテストしています。
+
+## Nutritional Balance
+
+NeoForgeのみ。食べ物と飲み物はそれぞれ、Nutritional Balanceの食品グループに数えられます:
+
+<ul>
+	{Object.entries(compat.nutrients).map(([group, ids]) => (
+		<li><strong>{groups[group] ?? group}:</strong> {ids.map((id, i) => <>{i > 0 && '、'}<Item id={id} /></>)}</li>
+	))}
+</ul>
+
+ワイン、ビール、サイダー、ミード自体には食料の値がない(小麦ビールは満腹度回復の強化効果で腹を満たしますが、これらのMODはそれを数えません)ので、
+グループを満たすのはブドウ、ジュース、料理だけです。生の大麦は炭水化物として数えられるので、ほかのMODがそれから作るものも同じです。
+Nutritional Balance {v.nutritionalbalance} でテストしています。
+
+飲み物と食べ物にはすべて、両ローダーに共通する一般的なタグ(飲み物、ジュース、果物、スープ)も付いているので、それを読むほかのMODからも、
+本来の姿として認識されます。
+
+## Spice of Life Onion
+
+そのまま動きます。料理はほかの食べ物と同じく、食事のバラエティに数えられます。飲み物自体には食料の値がない(小麦ビールの
+満腹度回復の強化効果は数えられません)ので、Farmer's Delightの飲み物と同じく、バラエティには加わりません。Spice of Life Onion {v.solonion} でテストしています。
+
+## Biomes O' Plenty
+
+野生の作物は、森林、平原、サバンナ、川、山の斜面のタグが付いたバイオームならどこでも(気温が合う場所で)育つので、これらのタグを持つMODのバイオームにも自動で生えます。
+Biomes O' Plentyを入れると、作物に合ういくつかのバイオームでも育ちます:
+
+<ul>
+	{bop.map((b) => <li><Item id={b.crop} />: {list(b.biomes)}</li>)}
+</ul>
+
+## Serene Seasons
+
+Serene Seasonsを入れると、作物ごとに育つ季節が決まります:
+
+<ul>
+	{['vineandbarrel:red_grapes', 'vineandbarrel:white_grapes', 'vineandbarrel:hops', 'vineandbarrel:barley_seeds'].map((id) => (
+		<li><Item id={id} />: {list(seasonRows.filter(([, ids]) => ids.includes(id)).map(([s]) => seasonNames[s] ?? s))}</li>
+	))}
+</ul>

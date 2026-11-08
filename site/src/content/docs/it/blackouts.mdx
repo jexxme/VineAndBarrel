@@ -1,0 +1,73 @@
+---
+title: Vuoti di memoria
+description: "Un bicchiere di troppo: cosa succede quando hai un vuoto di memoria, tutti i posti in cui puoi svegliarti, quanto è probabile ciascuno e i souvenir che porti a casa."
+---
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
+import { rules, roman, seconds, gameText } from '../../../lib/l10n/it';
+
+export const t = rules.tipsy;
+export const b = t.blackout;
+export const count = b.endings.filter((e) => e.collectable).length;
+
+<Aside type="caution" title="Spoiler">
+Questa pagina rivela tutti i modi in cui può finire una serata. Se preferisci scoprirli da solo, fermati qui: la pagina
+[Brillo](/tipsy/#un-goccetto-di-troppo) ne dà solo un accenno.
+</Aside>
+
+Sei già a Brillo {roman(t.maxLevel - 1)} e continui a bere? Un altro e hai un **vuoto di memoria**. È innocuo: non perdi mai niente
+di ciò che avevi, non ti svegli mai in un posto pericoloso, non passa tempo e nessun altro ne è toccato. I proprietari del server
+possono disattivarlo con l'opzione `blackout` (vedi [Configurazione](/reference/config/)).
+
+## Cosa succede
+
+<Steps>
+
+1. **Crolli a terra.** Gli occhi si chiudono e ti ribalti. Tutti quelli intorno ti vedono lì steso, con le stelline che ti
+   girano attorno alla testa.
+2. **Buio.** Per qualche secondo non puoi muoverti, e Brillo ti lascia in pace: niente ondeggiamento, niente singhiozzo, niente giramento. Nessuno può
+   farti del male, né mob né giocatori, e nemmeno cadere. Conta solo ciò che farebbe male a chiunque fosse steso lì,
+   come la lava o il vuoto, quindi dove hai il vuoto di memoria è importante; dove ti *svegli* è sempre sicuro.
+3. **Ti svegli da qualche parte.** Mentre lo schermo è ancora nero, il gioco sceglie dove è finita la tua serata (vedi sotto) e
+   ti ci porta: steso a terra, in un letto o seduto in una barca. Gli occhi si aprono piano, poi ti alzi.
+4. **Una riga sullo schermo** dice com'è andata, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* o una tra tante altre.
+
+</Steps>
+
+Il tutto dura circa {seconds(b.ticks)}. Ti svegli:
+
+- **di nuovo a Brillo I**, e senza i bonus che ti davano le bevande,
+- **affamato:** {b.hungerLost / 2} cosce in meno nella barra della fame, e niente nella saturazione,
+- **tremante** per {seconds(b.shakyTicks)}: un po' stordito e lento,
+- **con un souvenir** nelle tasche, qualcosa che c'entra con il posto in cui ti sei svegliato (ai tuoi piedi se le tasche sono piene),
+- e, una volta su {b.pumpkinOneIn}, **con una zucca intagliata in testa**, se non indossavi un elmo.
+
+## Dove ti svegli
+
+Ci sono {count} posti in cui può finire una serata, più uno per quando nessuno funziona. Ognuno ha la sua probabilità, ma entrano in gioco solo
+quelli possibili nel punto in cui hai avuto il vuoto di memoria: niente acqua vicino, niente barca; niente villaggio, niente taverna.
+
+- **Prima le novità:** un finale che non hai ancora avuto è {b.unseenBonus} volte più probabile di uno che hai già avuto.
+- **Mai due volte di fila,** a meno che non sia possibile nient'altro.
+- **Sempre sicuro:** terreno solido, spazio per stare in piedi, niente lava o acqua, niente che bruci o punga accanto a te, nessun mostro
+  entro {b.ranges.monsterFree} blocchi, dentro il bordo del mondo.
+- **Mai dentro la costruzione di qualcuno:** i finali all'aperto richiedono cielo aperto sopra, vetro e foglie compresi. I due finali al chiuso
+  usano solo ciò che il mondo ha costruito per tutti, una taverna di villaggio e il letto di un villico in una casa del villaggio, e il tuo letto.
+- **Nel Nether e nell'End** non c'è cielo aperto, quindi la maggior parte delle serate finisce proprio dove sei caduto.
+
+Le probabilità qui sotto valgono per il tuo primo vuoto di memoria con tutti i finali possibili. Poi cambiano: i finali che non hai
+ancora avuto diventano più probabili, e quello che hai appena avuto si fa da parte.
+
+<BlackoutEndings />
+
+## Collezionali tutti
+
+Il primo vuoto di memoria ti fa ottenere *Dove mi trovo?*. Svegliati in tutti i {count} posti (*Proprio qui* non conta) per la sfida
+*Weekend perduto*. Il gioco ricorda quali hai avuto, anche dopo la morte.
+
+<Aside type="tip" title="Cerchi un finale in particolare?">
+Prepara la scena prima dell'ultimo bicchiere: un tuo letto lì vicino per *A casa*, una pila di fieno o di <Item id="barley_bale" /> all'aperto
+per *Nel fieno*, uno stagno per *In barca*, un villaggio con una taverna per i finali al chiuso. I finali che hai già avuto sono meno
+probabili, quindi quelli rari arrivano prima di quanto pensi.
+</Aside>

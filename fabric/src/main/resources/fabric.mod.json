@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description} Some art, the boiling sounds, and the Brew Kettle, rope-climbing, wild-crop and biome-filter code are adapted from Farmer's Delight by vectorwing (MIT); see NOTICE_farmersdelight.txt.",
+  "authors": [
+    "${mod_authors}"
+  ],
+  "contact": {
+    "homepage": "https://jexxme.github.io/VineAndBarrel/",
+    "sources": "https://github.com/jexxme/VineAndBarrel",
+    "issues": "https://github.com/jexxme/VineAndBarrel/issues"
+  },
+  "license": "MIT",
+  "icon": "icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "jexxme.vineandbarrel.fabric.VineAndBarrelFabric"
+    ],
+    "client": [
+      "jexxme.vineandbarrel.fabric.client.VineAndBarrelFabricClient"
+    ],
+    "jei_mod_plugin": [
+      "jexxme.vineandbarrel.compat.jei.VBJeiPlugin"
+    ],
+    "jade": [
+      "jexxme.vineandbarrel.compat.jade.VBJadePlugin"
+    ],
+    "modmenu": [
+      "jexxme.vineandbarrel.fabric.client.VBModMenu"
+    ]
+  },
+  "mixins": [
+    "${mod_id}.mixins.json",
+    "${mod_id}.fabric.mixins.json"
+  ],
+  "accessWidener": "${mod_id}.classtweaker",
+  "depends": {
+    "fabricloader": ">=${fabric_loader_version}",
+    "fabric-api": ">=${fabric_api_min_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25"
+  },
+  "breaks": {
+    "farmersdelight": "<26.1-3.5.0"
+  },
+  "suggests": {
+    "farmersdelight": "*",
+    "modmenu": "*",
+    "jei": "*",
+    "jade": "*",
+    "appleskin": "*",
+    "toughasnails": "*",
+    "homeostatic": "*",
+    "thirstwastaken2": "*",
+    "solonion": "*"
+  }
+}

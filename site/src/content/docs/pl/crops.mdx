@@ -1,0 +1,131 @@
+---
+title: Uprawy
+description: Czerwone i białe krzewy winogron, krzewy chmielu, kratki ogrodowe, jęczmień, dzikie rośliny i wszystko wokół nich, od pszczół po kompost.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../../lib/l10n/pl';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+// Kto co zjada: tagi jedzenia naszych przedmiotów (animals.json), jako zwierzęta, które te tagi karmią
+export const ANIMALS = { cow_food: 'krowy', sheep_food: 'owce', goat_food: 'kozy', horse_food: 'konie', llama_food: 'lamy', chicken_food: 'kury', parrot_food: 'papugi', fox_food: 'lisy' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
+export const SEASONS = { spring: 'wiosna', summer: 'lato', autumn: 'jesień', winter: 'zima' };
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)).map((s) => SEASONS[s] ?? s));
+
+<Render name="scenes/garden" float="right" size={256} alt="Krzewy winogron i chmielu za polem jęczmienia" />
+
+Cztery nasze uprawy zasilają napoje: <Item id="red_grapes" /> do czerwonego wina, <Item id="white_grapes" /> do
+białego wina, <Item id="hops" /> do obu piw i <Item id="barley" /> do ale. Pozostałe składniki są vanillowe:
+<Item id="sweet_berries" /> do wina ze słodkich jagód, <Item id="wheat" /> do piwa pszenicznego, <Item id="apple" /> do cydru
+i <Item id="honey_bottle" /> do miodu pitnego.
+
+<Shot src="vineyard.jpg" caption="Ogrodzona winnica pełna dojrzałych krzewów winogron, z latarniami na końcach rzędów." />
+
+## Krzewy winogron i chmielu
+
+Posadź <Item id="red_grapes" />, <Item id="white_grapes" /> lub <Item id="hops" /> na trawie, ziemi lub zaoranym polu,
+tak jak słodkie jagody. Krzew rośnie w tempie krzewu słodkich jagód. Etapów wzrostu: {c.bushMaxAge + 1}. Czerwone i białe winogrona
+rosną tak samo; odróżnia je tylko dojrzały owoc.
+
+<Stages prefix="grape_bush" title="Czerwony krzew winogron" labels={['zasadzony', 'rośnie', 'półdojrzały', 'dojrzały']} />
+<Stages prefix="white_grape_bush" title="Biały krzew winogron" labels={['zasadzony', 'rośnie', 'półdojrzały', 'dojrzały']} />
+<Stages prefix="hop_bush" title="Krzew chmielu" labels={['zasadzony', 'rośnie', 'półdojrzały', 'dojrzały']} />
+
+- **Zbieraj** dojrzały krzew prawym przyciskiem: daje od {h.grapes.count[0]} do {h.grapes.count[1]} winogron (albo od
+  {h.hops.count[0]} do {h.hops.count[1]} sztuk: <Item id="hops" />) i cofa się do drugiego etapu, więc dalej owocuje. Nie musisz
+  sadzić od nowa.
+- **Śpieszy ci się?** Zerwij go półdojrzałego, jak słodkie jagody: dostaniesz od {h.grapes.halfRipe[0]} do {h.grapes.halfRipe[1]},
+  a krzew cofa się tak samo.
+- **Mączka kostna** przesuwa go o jeden etap dalej.
+- Krzewy zapalają się tak samo łatwo jak krzewy słodkich jagód, więc trzymaj ogniska i lawę z dala od winnicy.
+
+## Kratka ogrodowa
+
+<Render name="scenes/trellis" float="right" size={256} alt="Winorośl i chmiel na kratkach ogrodowych oraz pusta kratka ogrodowa" />
+
+Postaw <Item id="trellis" /> na krzewie, a gdy krzew dojrzeje, zacznie się pnąć, do {c.climbMaxHeight} bloków wysokości,
+owocując aż na górę. Kratka ogrodowa po postawieniu jest zwrócona ku tobie i dopasowuje się do tej pod nią, więc rzędy są proste.
+
+- Każde pnącze rośnie, owocuje i jest zbierane jak krzew, także półdojrzałe. Mączka kostna na dojrzałym krzewie od razu zaczyna wspinaczkę.
+- Zniszczenie pnącza daje jego owoce, a kratka ogrodowa zostaje na miejscu.
+- Kratka ogrodowa to nie drabina: wszystko na niej masz w zasięgu ręki z ziemi.
+
+<Recipe id="trellis" />
+
+<Aside title="Z Farmer's Delight: liny też działają">
+Lina z Farmer's Delight nad krzewem działa tak samo jak kratka ogrodowa, tak jak pną się pomidory z FD. Zobacz [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Jęczmień
+
+Wysiej <Item id="barley_seeds" /> na zaoranym polu. Jęczmień rośnie dokładnie jak pszenica, przez {barleyStages} etapów, i
+zostawia to samo: <Item id="barley" /> gdy dojrzeje, plus dodatkowe nasiona.
+
+<Stages prefix="barley" title="Jęczmień" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', 'dojrzały']} />
+
+## Dzikie uprawy
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="Dzikie czerwone winogrona, dzikie białe winogrona, dziki chmiel i dziki jęczmień na trawie" />
+
+Pierwsze nasiona pochodzą z dzikich roślin. Rosną w skupiskach, zależnie od biomu i temperatury, więc pojawiają się też w modowanych
+biomach oznaczonych w zwykły sposób. Zniszcz roślinę, by dostać plon, albo użyj nożyc, by zabrać całą roślinę do domu jako dekorację.
+
+<WildCrops />
+
+Rolnicy i wędrowny handlarz też sprzedają nasiona, a w wiejskich skrzyniach czasem jakieś leżą. Zobacz [Wioski i karczmy](/villages/).
+
+## Życie na farmie
+
+- **Pszczoły** zapylają winogrona, chmiel i jęczmień i pomagają im rosnąć, tak jak vanillowe uprawy.
+- **Zwierzęta:** <Item id="barley" /> karmi i rozmnaża te zwierzęta: {list(eaters('vineandbarrel:barley').filter((a) => a !== 'konie' && a !== 'lamy'))}, tak jak pszenica.
+  Konie i lamy leczą się i dorastają na nim tak samo jak na pszenicy, a na <Item id="barley_bale" /> tak jak na snopie siana.
+  <Item id="barley_seeds" /> karmią te zwierzęta: {list(eaters('vineandbarrel:barley_seeds'))}, a winogronami rozmnożysz: {list(eaters('vineandbarrel:red_grapes'))}.
+- **Lisy** uwielbiają winogrona, czerwone i białe: zrywają je z krzewów, tak jak plądrują krzewy słodkich jagód. Winorośl
+  na kratce ogrodowej lub linie jest poza ich zasięgiem, a przestają, gdy wyłączone jest niszczenie przez moby.
+- **Rolnicy** sadzą i zbierają jęczmień na swoich polach i kompostują zbędne nasiona. Winogrona i chmiel zostawiają tobie.
+- **Kompostownik:** każda uprawa się kompostuje z vanillowymi szansami.
+
+<table>
+	<thead><tr><th>Przedmiot</th><th>Szansa na dodanie warstwy</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="Jęczmień na nawodnionym polu obok chmielnika, gotowy do zbioru." />
+
+## Bloki do przechowywania
+
+<Render name="scenes/storage" float="right" size={256} alt="Skrzynka czerwonych winogron, skrzynka białych winogron, skrzynka chmielu i bela jęczmienia" />
+
+Zapakuj po dziewięć sztuk uprawy do: <Item id="grape_crate" />, <Item id="white_grape_crate" />, <Item id="hops_crate" /> lub
+<Item id="barley_bale" />, a rozpakujesz je
+z powrotem w siatce craftingu. <Item id="barley_bale" /> pod każdym względem jest snopem siana: łagodzi upadek, ognisko na
+nim wypuszcza dym wysoko w górę, a lamy i konie go jedzą.
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## Warto wiedzieć
+
+- **Zbieraj, nie niszcz.** Zniszczenie młodego krzewu nic nie daje, a roślina przepada. Zniszczenie krzewu z owocami daje je
+  (więcej ze Szczęściem), ale kliknięcie prawym przyciskiem zbiera je i zostawia krzew.
+- **Przejdziesz przez nie.** Krzewy winogron i chmielu nie kłują i nie spowalniają tak jak krzewy słodkich jagód.
+- **Światło i woda:** krzew rośnie tylko przy dobrym świetle. Woda zmywa krzewy, a tłoki je wyrzucają.
+- **Winogrona to przekąska,** jak słodkie jagody.
+- **Więcej dzikich roślin:** mączka kostna na dzikiej uprawie często sadzi kolejną w pobliżu, to łatwy sposób na pierwsze nasiona.
+  Dziki jęczmień daje jeden jęczmień i jedno nasiono.
+- **Zorane pole pod jęczmieniem** nigdy nie zamienia się z powrotem w ziemię, jak przy każdej uprawie.
+- **Winorośl** też potrzebuje światła: w ciemności się łamie, a kratka ogrodowa lub lina zostaje. Mączka kostna na w pełni wyrośniętej
+  roślinie przekazuje wzrost do pnącza nad nią. Po pnączu na linie można się wspinać jak po linie.
+- **Pszczoły** nigdy nie sprawią, że krzew zacznie się pnąć; tylko ty możesz to zacząć.
+
+## Pory roku
+
+Z zainstalowanym Serene Seasons uprawy mają swoje pory roku. Winogrona, czerwone i białe: {seasonsOf('vineandbarrel:red_grapes')}. Chmiel:
+{seasonsOf('vineandbarrel:hops')}. Jęczmień: {seasonsOf('vineandbarrel:barley_seeds')}. Zobacz [Kompatybilność](/compatibility/).

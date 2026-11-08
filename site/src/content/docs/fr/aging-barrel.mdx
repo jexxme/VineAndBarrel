@@ -1,0 +1,111 @@
+---
+title: Fût de vieillissement
+description: Remplir, fermenter, vieillir et tirer. Comment fonctionne le fût de vieillissement, combien de temps il faut, et comment construire une cave pleine de fûts.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import AgingTimeline from '../../../components/brewing/AgingTimeline.astro';
+import { rules, byType, days, list, nameOf } from '../../../lib/l10n/fr';
+
+export const aging = byType('vineandbarrel:aging');
+export const a = aging[0];
+export const sameTimes = aging.every((r) => r.fermentingTime === a.fermentingTime && r.agingTime === a.agingTime);
+
+<Render name="scenes/barrel-rack" float="right" size={256} alt="Trois fûts de vieillissement côte à côte, joints en une rangée" />
+
+Le <Item id="aging_barrel" /> est le cœur de Vine & Barrel. Il n'a pas d'écran : tu verses dedans, tu attends et tu tires, le tout dans
+le monde. Il se pose avec le robinet face à toi.
+
+## Remplir
+
+Fais un clic droit sur le fût avec une base de la [cuve de brassage](/brew-kettle/) :
+
+- un seau verse **{rules.servingsPerBucket} portions**, une fiole **{rules.servingsPerBottle}**,
+- le fût contient **{rules.barrelCapacity} portions** : deux seaux, ou huit fioles.
+
+Tu peux le compléter avec davantage de la même base tant qu'il fermente. Tu as versé le mauvais contenu ? Tant que le lot n'est pas devenu
+une boisson, un seau ou une fiole vide le ressort.
+
+## Fermentation et vieillissement
+
+{sameTimes && <p>Chaque lot passe par les deux mêmes étapes :</p>}
+
+1. **Fermentation**, pendant **{days(a.fermentingTime)}**. Le lot devient la boisson *jeune*, comme le <Item id="red_wine" />.
+2. **Vieillissement**, pendant **{days(a.agingTime)}** de plus. Ce qui reste dans le fût devient la boisson *vieillie*, comme le <Item id="aged_red_wine" />, dont le bonus est plus fort et dure plus longtemps.
+
+<AgingTimeline />
+
+{aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
+
+L'horloge suit le temps de jeu, donc dormir pendant la nuit compte. Tu peux tirer des boissons jeunes pendant le vieillissement, mais
+chaque portion que tu prends est une portion de moins qui vieillit. Avec Farmer's Delight, son cidre de pommes (dans le même cidre brut) et son jus de melon
+fermentent aussi : voir
+[Farmer's Delight](/farmers-delight/).
+
+<Shot src="cellar.jpg" caption="Une cave le long du mur de la taverne : des fûts joints en rangée, une deuxième rangée empilée dessus. Le barboteur de l'un d'eux bouillonne ; les sceaux de cire marquent les lots vieillis." />
+
+## Le voir travailler
+
+Tu peux savoir où en est un fût sans rien ouvrir :
+
+- **Un clic droit à mains nues** affiche une ligne d'état, par ex. *Pale ale · 5 portions · vieillit, c'est prêt dans 3 jours*. Renomme un fût dans
+  une enclume et le nom s'y affiche aussi.
+- **La bonde sur le dessus** montre l'étape : un bouchon quand il est vide ou que la boisson est jeune et prête, un barboteur en verre qui bouillonne
+  pendant la fermentation, et un sceau de cire rouge une fois la boisson vieillie.
+- **Le voyant** sur le devant montre son remplissage, dans la couleur de la boisson.
+- **Sons et gouttes :** des bulles pendant la fermentation, le robinet qui goutte de temps en temps, et un petit *pop* de bouchon quand le lot devient vieilli.
+
+<Stages prefix="barrel-bung" title="La bonde" labels={['bouchon', 'barboteur : fermentation', 'cire : vieilli']} />
+<Stages prefix="barrel-fill" title="Voyant" only={['0', '2', '4', '6', '8']} labels={['vide', '2', '4', '6', 'plein']} />
+
+## Tirer
+
+Fais un clic droit sur le fût avec un <Item id="wine_glass" /> (vins) ou une <Item id="mug" /> (bières, hydromel et cidre) vide pour tirer une portion.
+La poignée du robinet tourne et la boisson atterrit dans ta main.
+
+- Mauvais récipient ? Le fût te dit lequel utiliser (*Vin rouge se sert dans : Verre à vin*), et rien n'est consommé.
+- Encore en fermentation ? Il te dit quand ce sera prêt.
+- Une fois la dernière portion tirée, le fût est vide et prêt pour un nouveau lot.
+
+## Construire une cave
+
+<Render name="scenes/barrel-cellar" float="right" size={256} alt="Deux rangées de fûts, la rangée du haut posée sur celle du bas" />
+
+- **Rangées :** des fûts côte à côte, orientés dans le même sens, joignent leurs berceaux en une longue rangée.
+- **Piles :** un fût posé sur un autre perd son berceau et repose sur des cales, ce qui te permet de construire tout un mur de tonneaux.
+- **Comparateur :** lit les portions restantes, de 0 (vide) à 15 (les {rules.barrelCapacity} portions).
+- **Casse-le plein** et il garde son lot, et son nom d'enclume. L'infobulle de l'objet montre la boisson, les portions et l'étape.
+  Le vieillissement se met en pause tant que c'est un objet et reprend quand tu le reposes. Un fût plein ne s'empile pas avec les autres.
+- Les fûts sont en bois : mine-les avec une hache.
+
+## Automatisation
+
+- **Les entonnoirs** au-dessus versent les bases. Sur les côtés et en dessous, ils apportent des chopes et des verres vides et sortent les
+  boissons tirées, ainsi que les seaux et fioles vides qui restent après le versement.
+- **Les distributeurs** face à un fût tirent une portion avec une chope ou un verre vide, ou versent un seau ou une fiole de base.
+
+## Bon à savoir
+
+- **Complète tôt.** Seul le premier versement lance l'horloge : la base que tu ajoutes ensuite rejoint le lot à son âge, donc elle fermente
+  en moins de temps. Une fois le lot devenu une boisson, le fût n'accepte plus rien jusqu'à ce qu'il soit tiré à vide.
+- **Presque plein ?** Un seau a besoin de place pour les {rules.servingsPerBucket} portions, donc un fût qui en contient plus de
+  {rules.barrelCapacity - rules.servingsPerBucket} le refuse. Utilise des fioles pour le reste. C'est pareil dans l'autre sens : un
+  seau vide ne ressort la base que s'il y a au moins {rules.servingsPerBucket} portions dedans.
+- **Il vieillit pendant ton absence.** Le fût suit le temps de jeu, donc il continue quand tu es loin ou hors ligne. Tu
+  rates seulement le pop du bouchon.
+- **Construis ta cave à la surface.** Dans le Nether et l'End, il n'y a pas de jour à passer en dormant, donc dormir
+  n'accélère pas un fût là-bas, et sa ligne d'état compte en jours au lieu de « demain matin ».
+- **Inventaire plein ?** Une boisson tirée tombe à tes pieds.
+- **Mode créatif :** casser un fût plein ne laisse rien. Fais un pick-block (clic molette avec Ctrl) pour le copier avec son lot.
+- **Tiens les creepers à l'écart.** Une explosion peut détruire un fût net, lot compris.
+- **Astuces d'entonnoir :** un entonnoir au-dessus ne verse que ce que le fût accepte, donc une mauvaise base attend dans l'entonnoir au lieu
+  de le bloquer. Garde un entonnoir en dessous d'une installation de tirage, pour que les boissons finies ne bloquent pas les suivantes.
+- **Aucun risque d'incendie.** Les fûts ne prennent jamais feu. Un fût vide sert même de combustible au fourneau ; un fût plein non.
+
+## Recette
+
+<Recipe id="aging_barrel" />

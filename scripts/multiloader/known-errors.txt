@@ -1,0 +1,4 @@
+# ERROR lines another mod logs about its own data on this Minecraft version, which change nothing for our tests.
+# verify-all.sh ignores lines matching one of these extended regexes (this file is on the older-Minecraft branches only).
+# Spice of Life Onion 1.5.5 for 26.2 ships two recipes in a format 26.2 doesn't read
+Couldn't parse data file 'solonion:(lunchbag|food_book)'

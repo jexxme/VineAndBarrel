@@ -1,0 +1,62 @@
+---
+title: Villages et tavernes
+description: Des tavernes de village avec des fûts prêts à tirer, des fermes de village qui cultivent raisins, houblon et orge, des échanges de graines et du butin en coffre.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import VillageInfo from '../../../components/data/VillageInfo.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, roman } from '../../../lib/l10n/fr';
+
+<Render name="scenes/tavern" float="right" size={256} alt="Un coin de taverne" />
+
+## Tavernes
+
+Chaque type de village peut avoir une **taverne**, construite dans son propre style, en deux plans. Tu en trouveras une dans environ un
+village sur trois, et de temps en temps un village en a deux. Il n'y en a pas deux tout à fait pareilles : le contenu des tonneaux, les boissons sur les
+tables, les fleurs, les bannières et les bougies changent d'une taverne à l'autre.
+
+Cherche l'enseigne suspendue au-dessus de la porte. À l'intérieur, il y a de la place pour circuler : une table près du feu, des tabourets au comptoir, la cuve
+sur son feu de camp derrière. Derrière le comptoir, un escalier descend à la **cave aux fûts**, une salle voûtée éclairée aux torches sous
+la grande salle, pleine de tonneaux en rang.
+
+Chaque type de village a sa particularité :
+
+- **Plaines :** un jardin à bière, de longues tables sous une pergola de houblon.
+- **Désert :** une terrasse sur le toit, par l'escalier extérieur.
+- **Savane :** un bar sous véranda, à l'ombre, avec son propre comptoir.
+- **Neige :** une salle au coin du feu avec une grande cheminée et des tapis de fourrure.
+- **Taïga :** une salle d'hydromel avec une longue table, et un tas de bois sous l'avant-toit.
+
+Ses fûts sont **déjà pleins** : entre, prends une chope ou un verre, et tire une boisson. Quelques-uns sont vieillis. Le coffre de la taverne
+contient des graines, des chopes et des verres, et quelques boissons de la région, tout ce qu'il te faut pour te mettre toi-même au brassage.
+
+<Shot src="taverns/plains.jpg" caption="Plaines : le jardin à bière, de longues tables sous une pergola de houblon." />
+<Shot src="taverns/desert.jpg" caption="Désert : la terrasse sur le toit, par l'escalier extérieur." />
+<Shot src="taverns/savanna.jpg" caption="Savane : le bar sous véranda, un comptoir sous les trappes ouvertes de la salle." />
+<Shot src="taverns/snowy.jpg" caption="Neige : la salle au coin du feu, trois foyers de large, tapis de fourrure et fauteuils." />
+<Shot src="taverns/taiga.jpg" caption="Taïga : la longue table de la salle d'hydromel." />
+<Shot src="taverns/cellar.jpg" caption="La cave aux fûts sous la grande salle : des tonneaux en rang sous une voûte de pierre, des torches aux murs." />
+
+### Bon à savoir
+
+- Les fûts de taverne ont déjà fini de fermenter, donc on ne peut pas les compléter. Vide-en un et remplis-le avec ta propre préparation :
+  une boisson vieillie issue d'un fût que tu as rempli toi-même, c'est ce qui te vaut *Patience récompensée*.
+- Les fûts de taverne encore jeunes continuent de vieillir comme n'importe quel fût, donc une taverne que tu laisses tranquille quelques jours finit avec plus de boissons vieillies.
+- Tirer dans n'importe quel fût d'un village, celui d'une taverne ou le tien, te vaut *À la pression*.
+- Fais tes échanges sobre : dès Pompette {roman(rules.tipsy.rowdyLevel - 1)}, les villageois et les marchands ne commercent plus avec toi. Voir [Pompette](/tipsy/#tapageur).
+
+## Fermes de village
+
+Les fermes de village cultivent nos plantes à côté de celles de Minecraft, selon le climat : des raisins rouges là où il fait chaud, des raisins blancs
+dans les villages de plaines et de taïga, du houblon là où il fait frais, de l'orge presque partout.
+
+<VillageInfo show="farms" />
+
+## Échanges
+
+<VillageInfo show="trades" />
+
+## Butin des coffres
+
+<VillageInfo show="loot" />

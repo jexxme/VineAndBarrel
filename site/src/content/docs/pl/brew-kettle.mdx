@@ -1,0 +1,128 @@
+---
+title: Kocioł warzelny
+description: Jak Kocioł warzelny zamienia winogrona, jagody, jabłka, miód, jęczmień i pszenicę w sok, brzeczkę miodową i brzeczkę, oraz jak go podgrzewać, napełniać i automatyzować.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/pl';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="Miedziany kocioł warzelny na żelaznej tacy nad ogniskiem" />
+
+<Item id="brew_kettle" /> to miejsce, od którego zaczyna się każdy napój. Postaw go na źródle ciepła, dodaj składniki, a po kilku sekundach
+zawiera partię soku, brzeczki miodowej lub brzeczki, gotową do zabutelkowania. Jeśli znasz garnek z Farmer's Delight,
+wiesz już, jak to działa.
+
+## Ciepło
+
+Kocioł warzy tylko wtedy, gdy blok tuż pod nim jest gorący:
+
+- **{heatNames(rules.heat.tray)}**: kocioł stoi na żelaznej tacy nad nimi.
+- **{heatNames(direct)}**: kocioł stoi bezpośrednio na wierzchu.
+- **Przez lej ({heatNames(rules.heat.conductors)})**: ciepło przechodzi przez niego w górę, więc lej może stać między kotłem a
+  źródłem ciepła i nadal go zasilać.
+- Z Farmer's Delight kocioł podgrzewa także jego **kuchenka**.
+
+Ognisko musi być zapalone. Mały płomyk na ekranie kotła zapala się, gdy kocioł jest podgrzany.
+
+<Render name="scenes/kettle-on-magma" size={192} caption="Na bloku magmy" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="Ciepło przez lej" />
+<Render name="scenes/kettle-hanging" size={192} caption="Zawieszony za uchwyt" />
+
+**Powieś go:** skradaj się i kliknij kocioł prawym przyciskiem pustą ręką, żeby zamienić tacę na żelazny uchwyt, albo postaw go przy
+spodzie bloku. Wiszący kocioł nadal warzy nad ogniem tuż pod nim i świetnie wygląda pod łańcuchem.
+
+## Warzenie
+
+Otwórz kocioł prawym przyciskiem i włóż składniki. Wskaźnik po prawej pokazuje warzony płyn w jego kolorze i to, jak
+pełny jest kocioł; najedź na niego, by zobaczyć porcje.
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+Każdy przepis daje **porcje: {rules.servingsPerBucket}** i trwa **{seconds(brews[0].brewingTime)}**. Podgrzany kocioł paruje
+i bulgocze, gdy ma w sobie warkę albo składniki na nią (inaczej milczy); gdy warzy partię, pokrywka też grzechocze, a gdy skończy, wypuszcza kłąb pary. Kocioł warzy
+kolejne partie, dopóki są składniki, łącznie do {rules.kettleMaxServings} porcji.
+
+<BrewFlow />
+
+Gdy warzenie się skończy, pokrywka zostaje uniesiona i widzisz płyn w środku, który opada w miarę nabierania porcji. Gdy partia się warzy,
+pokrywka jest opuszczona; gdy zniknie ostatnia porcja, zamyka się.
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="Kocioł z otwartą pokrywką, widać warzony płyn" />
+
+## Butelkowanie
+
+Jak przy kociołku: kliknij kocioł prawym przyciskiem pustym pojemnikiem.
+
+- <Item id="glass_bottle" /> nabiera **porcje: {rules.servingsPerBottle}**,
+- puste <Item id="bucket" /> nabiera **porcje: {rules.servingsPerBucket}**, więc w kotle musi być co najmniej tyle.
+
+Wiader z sokiem i brzeczką nie da się wylać do świata, tak jak mleka.
+
+## Sok do picia
+
+<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" /> i <Item id="apple_juice" /> to
+napoje same w sobie: picie trwa {juice.consumable.seconds} s, możesz je pić zawsze i zapełniają odrobinę głodu.
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+Każdy sok obniża też [Rauszyk](/tipsy/) o jeden poziom. Brzeczka i brzeczka miodowa muszą najpierw sfermentować; nie da się ich pić.
+
+## Automatyzacja
+
+Leje mogą obsługiwać kocioł same:
+
+- **Z góry** lej podaje składniki oraz puste butelki lub wiadra.
+- **Z boków** podaje puste butelki lub wiadra.
+- Kocioł napełnia je warzonym płynem, a **lej pod spodem** wyciąga napełnione.
+
+Nic nie wyciąga składników ani samego płynu.
+
+Komparator obok kotła daje sygnał, gdy tylko cokolwiek jest w środku: składniki, płyn lub pojemniki, i silniejszy
+im pełniejsze jest to wszystko. Sam warzony płyn daje tylko słaby sygnał, więc używaj go, by odróżnić „coś jest w środku” od
+„pusto”, a nie do liczenia porcji.
+
+## Miedź
+
+Kocioł jest miedziany i starzeje się jak miedź.
+
+<Stages prefix="kettle-weathering" title="Starzenie" labels={['Miedź', 'Zwietrzały', 'Zaśniedziały', 'Utleniony']} />
+
+- Z czasem staje się zwietrzały, zaśniedziały i w końcu utleniony. Warzy tak samo na każdym etapie.
+- **Plaster miodu** woskuje go i zatrzymuje starzenie. **Siekiera** zdrapuje wosk albo jeden etap starzenia, a piorun go czyści.
+- **Zniszcz go pełnego**, a zachowa swój płyn: widać go w opisie przedmiotu i na pasku napełnienia, a kocioł możesz postawić gdzie indziej
+  i warzyć dalej. Składniki i czekające butelki lub wiadra wypadają na ziemię.
+- Nie starzeje się, gdy ktoś ma otwarty jego ekran.
+
+## Warto wiedzieć
+
+- **Zgasł ogień?** Utrata ciepła nie zeruje partii, ale strzałka cofa się dwa razy szybciej, niż się wypełniała.
+  Składniki zużywają się dopiero po skończeniu partii, więc nic się nie marnuje.
+- **Jeden płyn naraz.** Kocioł nie uwarzy innego napoju na wierzchu płynu, który wciąż jest w środku: czeka, a
+  składniki zostają nietknięte, dopóki nie zabutelkujesz starego. Przy {rules.kettleMaxServings} porcjach też czeka.
+- **Trzymaj siatkę w czystości.** Każdy przedmiot, którego przepis nie używa, zatrzymuje kocioł, także resztki z innego przepisu.
+  Lej na górze wpycha wszystko, co trzyma, więc podawaj przez niego tylko składniki.
+- **Gdzie moje PD?** Każda partia daje trochę doświadczenia. Kocioł je odkłada i oddaje kolejnemu graczowi, który napełni
+  butelkę lub wiadro ręcznie, albo wyrzuca je po zniszczeniu.
+- **Za mało na wiadro?** Kliknięcie wiadrem po prostu otwiera ekran. Skradanie się z butelką lub wiadrem nic nie robi.
+- **Jeden lej, dwie role:** lej pod kotłem przekazuje ciepło ogniska w górę i zbiera napełnione pojemniki.
+- **Skradaj się i kliknij prawym przyciskiem pustą ręką,** żeby powiesić kocioł za uchwyt, i jeszcze raz, żeby go z powrotem postawić.
+- Kocioł może stać w wodzie, szybko niszczy się każdym narzędziem (najszybciej kilofem), zachowuje nazwę z kowadła i nie
+  układa się w stosy. Wybuch może go zniszczyć razem z płynem.
+- **Książka przepisów:** warzone płyny odblokowują się po zebraniu ich głównej uprawy i są posortowane na Soki, Brzeczki i Różne.
+
+## Przepis
+
+<Recipe id="brew_kettle" />

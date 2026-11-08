@@ -1,0 +1,12 @@
+---
+title: Досягнення
+description: Вкладка досягнень Vine & Barrel і як отримати кожне з них.
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/uk';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel має власну вкладку досягнень, <strong>{gameText(root.titleKey, root.title)}</strong>: <em>{gameText(root.descriptionKey, root.description)}</em>
+
+<Advancements />

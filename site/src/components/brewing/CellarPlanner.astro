@@ -1,0 +1,349 @@
+---
+// Plan a batch: pick a drink and how many servings you want, and get the whole order chalked up: what to grow, how many
+// kettle batches that is, what to bottle it in, how many barrels, what to tap it into, and how long it all takes.
+// The Vine & Barrel take on the FD Neoforged docs' recipe planner. Every number is worked out from the recipes and rules.
+import { drinks, byType, recipe, rules, nameOf, iconOf, ingredientItems, num } from '../../lib/data';
+import { t, localeOf, langTag } from '../../lib/i18n';
+
+const locale = localeOf(Astro.currentLocale);
+
+const brewing = byType('vineandbarrel:brewing');
+const plans = drinks
+	.filter((d) => d.stage === 'young' && !d.fdOnly)
+	.map((y) => {
+		const aging = recipe(y.aging);
+		const brew = brewing.find((b) => b.result?.id === y.base)!;
+		const aged = drinks.find((d) => d.aging === y.aging && d.stage === 'aged')!;
+		// the ingredients of one batch, counted (a slot with several choices counts as its first item)
+		const counts = new Map<string, number>();
+		for (const g of brew.ingredients!) {
+			const id = ingredientItems(g)[0];
+			counts.set(id, (counts.get(id) ?? 0) + 1);
+		}
+		const item = (id: string) => ({ id, name: nameOf(id, locale), icon: iconOf(id)?.src ?? '' });
+		return {
+			key: y.id.split(':')[1],
+			young: item(y.id),
+			aged: item(aged.id),
+			vessel: item(y.vessel),
+			base: { ...item(y.base), short: locale === 'en' ? nameOf(y.base, locale).replace(/^Bottle of /, '') : nameOf(y.base, locale) },
+			bucket: item(brew.bucket!.id),
+			ingredients: [...counts].map(([id, n]) => ({ ...item(id), n })),
+			batch: brew.servings!,
+			brewTicks: brew.brewingTime!,
+			ferment: aging.fermentingTime!,
+			age: aging.agingTime!,
+		};
+	});
+const extras = {
+	bottle: { id: 'minecraft:glass_bottle', name: nameOf('minecraft:glass_bottle', locale), icon: iconOf('minecraft:glass_bottle')?.src ?? '' },
+	bucket: { id: 'minecraft:bucket', name: nameOf('minecraft:bucket', locale), icon: iconOf('minecraft:bucket')?.src ?? '' },
+	barrel: { id: 'vineandbarrel:aging_barrel', name: nameOf('vineandbarrel:aging_barrel', locale), icon: iconOf('vineandbarrel:aging_barrel')?.src ?? '' },
+};
+// The script can't call t(): each plural sentence goes out as one template per plural form of the language ({n} is
+// filled in the script), found by trying sample counts until every form the language has is covered.
+const pr = new Intl.PluralRules(langTag(locale));
+const SAMPLES = [...Array.from({ length: 999 }, (_, i) => i + 1), 0, 0.5, 1.5, 2.5, 0.25, 0.75, 1.25];
+const forms = (fn: (n: number) => string) => {
+	const out: Record<string, string> = {};
+	for (const n of SAMPLES) {
+		const cat = pr.select(n);
+		if (cat in out) continue;
+		const parts = fn(n).split(num(n, locale));
+		if (parts.length <= 2) out[cat] = parts.join('{n}');
+	}
+	return out;
+};
+const cap = rules.barrelCapacity;
+const words = {
+	lang: langTag(locale),
+	head: forms((n) => t('{n} serving of {drink}|{n} servings of {drink}', locale, { n })),
+	grow: t('Grow and gather: {items}.', locale),
+	item: t('{n} {name}', locale),
+	brew: forms((n) => t('Brew {n} batch of {drink} in the kettle: {time} over a fire.|Brew {n} batches of {drink} in the kettle: {time} over a fire.', locale, { n })),
+	brewRounds: forms((n) => t('Brew {n} batch of {drink} in the kettle: {time} over a fire, in rounds of up to {max} servings.|Brew {n} batches of {drink} in the kettle: {time} over a fire, in rounds of up to {max} servings.', locale, { n })),
+	out: t('Take it out with {items}.', locale),
+	bucket: forms((n) => t('{n} empty bucket|{n} empty buckets', locale, { n })),
+	bottle: forms((n) => t('{n} glass bottle|{n} glass bottles', locale, { n })),
+	pour: forms((n) => t('Pour it into {n} Aging Barrel ({cap} servings each).|Pour it into {n} Aging Barrels ({cap} servings each).', locale, { n, cap })),
+	wait2: t('Wait {a} to ferment, then {b} to age.', locale),
+	wait1: t('Wait {a} to ferment.', locale),
+	tap: forms((n) => t('Tap it with {n} empty {vessel}.|Tap it with {n} empty {vessels}.', locale, { n })),
+	total: t('Ready in about {time} of game time (sleeping counts). Cheers!', locale),
+	day: forms((n) => t('{n} day|{n} days', locale, { n })),
+	sec: t('{n} s', locale),
+	minsec: t('{m} min {s} s', locale),
+	min: t('{n} min', locale),
+};
+const conf = {
+	words,
+	plans,
+	extras,
+	perBucket: rules.servingsPerBucket,
+	perBottle: rules.servingsPerBottle,
+	capacity: rules.barrelCapacity,
+	kettleMax: rules.kettleMaxServings,
+	day: rules.dayTicks,
+};
+---
+<div class="vb-plan not-content" data-conf={JSON.stringify(conf)}>
+	<div class="ask">
+		<label class="field">
+			<span>{t('I want', locale)}</span>
+			<span class="stepper">
+				<button type="button" class="mc-button step" data-d="-1" aria-label={t('Fewer', locale)}>-</button>
+				<input type="number" class="n" min="1" max="999" value={rules.barrelCapacity} inputmode="numeric" aria-label={t('Servings', locale)} />
+				<button type="button" class="mc-button step" data-d="1" aria-label={t('More', locale)}>+</button>
+			</span>
+			<span>{t('servings of', locale)}</span>
+		</label>
+		<div class="drinks" role="radiogroup" aria-label={t('Drink', locale)}>
+			{plans.map((p, i) => (
+				<button type="button" role="radio" class="mc-button pick" aria-checked={i === 0 ? 'true' : 'false'} data-key={p.key} data-tip-items={`${p.young.name}~`}>
+					<img src={p.young.icon} alt="" width="32" height="32" />
+					<span>{p.young.name}</span>
+				</button>
+			))}
+		</div>
+		<label class="aged-toggle">
+			<input type="checkbox" class="aged" checked />
+			<span>{t('aged', locale)}</span>
+		</label>
+	</div>
+	<div class="slip vb-chalk" aria-live="polite">
+		<p class="slip-h"></p>
+		<ol class="steps"></ol>
+		<p class="total"></p>
+	</div>
+</div>
+
+<script>
+	type It = { id: string; name: string; icon: string };
+	type Plan = { key: string; young: It; aged: It; vessel: It; base: It & { short: string }; bucket: It; ingredients: (It & { n: number })[]; batch: number; brewTicks: number; ferment: number; age: number };
+	for (const root of document.querySelectorAll<HTMLElement>('.vb-plan')) {
+		const c = JSON.parse(root.dataset.conf!);
+		const plans: Plan[] = c.plans;
+		const input = root.querySelector<HTMLInputElement>('.n')!;
+		const aged = root.querySelector<HTMLInputElement>('.aged')!;
+		const head = root.querySelector<HTMLElement>('.slip-h')!;
+		const list = root.querySelector<HTMLElement>('.steps')!;
+		const total = root.querySelector<HTMLElement>('.total')!;
+		let plan = plans[0];
+		const W = c.words;
+		const lang: string = W.lang;
+		const nf = new Intl.NumberFormat(lang, { maximumFractionDigits: 2, useGrouping: false });
+		const rules = new Intl.PluralRules(lang);
+		const fill = (tpl: string, vars: Record<string, string | number> = {}) =>
+			tpl.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? (typeof vars[k] === 'number' ? nf.format(vars[k] as number) : String(vars[k])) : m));
+		/** The template for the plural form of n, filled in */
+		const plural = (forms: Record<string, string>, n: number, vars: Record<string, string | number> = {}) => fill(forms[rules.select(n)] ?? forms.other, { n, ...vars });
+		const days = (ticks: number) => plural(W.day, +(ticks / c.day).toFixed(2));
+		const time = (ticks: number) => {
+			const s = Math.round(ticks / 20);
+			if (s < 60) return fill(W.sec, { n: s });
+			const m = Math.floor(s / 60);
+			return s % 60 ? fill(W.minsec, { m, s: s % 60 }) : fill(W.min, { n: m });
+		};
+		const join = (xs: string[]) => (lang.startsWith('en') ? xs.join(', ') : new Intl.ListFormat(lang).format(xs));
+		/** A Minecraft slot with a count, like the site's Slot component (the tooltip script picks it up) */
+		const slot = (it: It, n: number) => {
+			const s = document.createElement('span');
+			s.className = 'mc-slot';
+			s.style.setProperty('--s', '2px');
+			s.tabIndex = 0;
+			s.dataset.tipItems = `${it.name}~${it.id}`;
+			s.innerHTML = `<span class="mc-stack"><img src="${it.icon}" alt="${it.name}" width="32" height="32">${n > 1 ? `<span class="mc-count">${n}</span>` : ''}</span>`;
+			return s;
+		};
+		const line = (text: string, items: [It, number][] = []) => {
+			const li = document.createElement('li');
+			const slots = document.createElement('span');
+			slots.className = 'slots';
+			for (const [it, n] of items) if (n > 0) slots.append(slot(it, n));
+			const p = document.createElement('span');
+			p.className = 'txt';
+			p.textContent = text;
+			li.append(slots, p);
+			list.append(li);
+		};
+		const update = () => {
+			const n = Math.max(1, Math.min(999, Math.round(+input.value || 1)));
+			const wantAged = aged.checked;
+			const drink = wantAged ? plan.aged : plan.young;
+			const batches = Math.ceil(n / plan.batch);
+			const buckets = Math.floor(n / c.perBucket);
+			const bottles = Math.ceil((n - buckets * c.perBucket) / c.perBottle);
+			const barrels = Math.ceil(n / c.capacity);
+			list.replaceChildren();
+			head.textContent = plural(W.head, n, { drink: drink.name });
+			line(
+				fill(W.grow, { items: join(plan.ingredients.map((i) => fill(W.item, { n: i.n * batches, name: i.name }))) }),
+				plan.ingredients.map((i) => [i, i.n * batches]),
+			);
+			line(plural(batches * plan.batch > c.kettleMax ? W.brewRounds : W.brew, batches, { drink: plan.base.short, time: time(plan.brewTicks * batches), max: c.kettleMax }));
+			line(
+				fill(W.out, { items: new Intl.ListFormat(lang).format([buckets && plural(W.bucket, buckets), bottles && plural(W.bottle, bottles)].filter(Boolean) as string[]) }),
+				[[c.extras.bucket, buckets], [c.extras.bottle, bottles]],
+			);
+			line(plural(W.pour, barrels), [[c.extras.barrel, barrels]]);
+			line(wantAged ? fill(W.wait2, { a: days(plan.ferment), b: days(plan.age) }) : fill(W.wait1, { a: days(plan.ferment) }));
+			const vn: string = plan.vessel.name;
+			const vessels = lang.startsWith('en') ? (vn.endsWith('s') ? vn + 'es' : vn + 's') : vn;
+			line(plural(W.tap, n, { vessel: vn, vessels }), [[plan.vessel, n]]);
+			total.textContent = fill(W.total, { time: days(wantAged ? plan.ferment + plan.age : plan.ferment) });
+		};
+		root.querySelectorAll<HTMLButtonElement>('.step').forEach((b) =>
+			b.addEventListener('click', (e) => {
+				// steps of a barrel's worth, or one at a time with Shift
+				const d = +b.dataset.d!;
+				const cur = Math.max(1, Math.round(+input.value || 1));
+				input.value = String(Math.max(1, Math.min(999, cur + d * (e.shiftKey ? 1 : c.capacity))));
+				update();
+			}),
+		);
+		input.addEventListener('input', update);
+		aged.addEventListener('change', update);
+		root.querySelectorAll<HTMLButtonElement>('.pick').forEach((b) =>
+			b.addEventListener('click', () => {
+				root.querySelectorAll('.pick').forEach((o) => o.setAttribute('aria-checked', String(o === b)));
+				plan = plans.find((p) => p.key === b.dataset.key)!;
+				update();
+			}),
+		);
+		update();
+	}
+</script>
+
+<style>
+	.vb-plan {
+		margin: 28px 0;
+		display: grid;
+		gap: 18px;
+	}
+	.ask {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px 16px;
+	}
+	.field {
+		display: inline-flex;
+		align-items: center;
+		gap: 12px;
+		flex-wrap: wrap;
+	}
+	.stepper {
+		display: inline-flex;
+		align-items: stretch;
+	}
+	.step {
+		min-width: 40px;
+		padding-inline: 10px !important;
+	}
+	.n {
+		width: 4.5ch;
+		text-align: center;
+		font: inherit;
+		font-size: 20px;
+		color: #e0e0e0;
+		background: #000;
+		border: 2px solid #a0a0a0;
+		border-radius: 0;
+		margin: 0 4px;
+		-moz-appearance: textfield;
+	}
+	.n::-webkit-inner-spin-button,
+	.n::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+	}
+	.n:focus {
+		outline: none;
+		border-color: #fff;
+	}
+	.drinks {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+	.pick {
+		gap: 8px;
+		padding: 2px 14px 4px 8px !important;
+	}
+	.pick img {
+		image-rendering: pixelated;
+	}
+	.pick[aria-checked='true'] {
+		border-image-source: url('../../assets/ui/button-oak-on.png');
+		color: #fff0a8 !important;
+	}
+	.aged-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		cursor: pointer;
+	}
+	.aged-toggle input {
+		width: 20px;
+		height: 20px;
+		accent-color: var(--vb-wine);
+	}
+	/* The order, chalked on a board */
+	.slip {
+		padding: 10px 18px 12px;
+		box-shadow: 8px 8px 0 rgb(0 0 0 / 0.4);
+	}
+	.slip-h {
+		margin: 0 0 6px;
+		padding-bottom: 6px;
+		color: var(--vb-chalk-yellow);
+		border-bottom: 2px dashed var(--vb-chalk-line);
+	}
+	.steps {
+		list-style: none;
+		counter-reset: step;
+		margin: 0;
+		padding: 0;
+	}
+	.steps :global(li) {
+		counter-increment: step;
+		display: grid;
+		grid-template-columns: 28px auto 1fr;
+		align-items: center;
+		gap: 12px;
+		margin: 0;
+		padding: 6px 0;
+		border-bottom: 2px dotted rgb(239 233 220 / 0.14);
+	}
+	.steps :global(li)::before {
+		content: counter(step) '.';
+		color: var(--vb-chalk-orange);
+	}
+	.steps :global(.slots) {
+		display: flex;
+		gap: 2px;
+	}
+	.steps :global(.slots:empty) {
+		display: none;
+	}
+	.steps :global(li:has(.slots:empty)) {
+		grid-template-columns: 28px 1fr;
+	}
+	.steps :global(.txt) {
+		line-height: 28px;
+	}
+	.total {
+		margin: 10px 0 0;
+		color: var(--vb-chalk-yellow);
+	}
+	@media (max-width: 40rem) {
+		.steps :global(li) {
+			grid-template-columns: 28px 1fr;
+		}
+		.steps :global(.slots) {
+			grid-column: 2;
+		}
+		.steps :global(.txt) {
+			grid-column: 2;
+		}
+	}
+</style>

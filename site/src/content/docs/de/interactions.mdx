@@ -1,0 +1,92 @@
+---
+title: Interaktionen
+description: Alle kleinen Dinge, die Blöcke und Getränke in Vine & Barrel tun, jedes nach dem Vorbild von etwas, das es in Vanilla oder Farmer's Delight schon gibt.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Advancements from '../../../components/data/Advancements.astro';
+import { rules } from '../../../lib/l10n/de';
+
+Vine & Barrel will sich wie ein Teil des Spiels anfühlen. Fast alles unten funktioniert wie etwas, das du aus Vanilla oder
+Farmer's Delight schon kennst, du kannst die Bedienung also erraten, ohne zu lesen. Diese Seite listet alles an einem Ort auf; die
+Seiten zu den einzelnen Mechaniken erklären es genauer.
+
+## Reifefass
+
+<Render name="scenes/barrel-cellar" float="right" size={224} alt="Eine Wand aus gestapelten Fässern" />
+
+- **Zu dir gerichtet platziert,** tippe es auf dich zu, wie einen Ofen.
+- **Regale:** Fässer nebeneinander mit gleicher Ausrichtung verbinden ihre Lager, wie Zäune sich verbinden.
+- **Stapel:** Ein Fass auf einem Fass ruht auf Keilen statt auf einem Lager. Bau eine Kellerwand.
+- **Der Spund zeigt die Stufe:** Kork, blubbernder Gärverschluss während der Gärung, rotes Wachs, sobald es gereift ist.
+- **Das Gären hört man:** Blasen aus dem Gärverschluss, die gegen Ende seltener werden.
+- **Der Zapfhahn tropft** hin und wieder, solange Getränk drin ist, in der Farbe des Getränks, wie Honig aus einem Bienenstock.
+- **Der Moment des Reifens:** ein leises Korkenknallen, wenn der Ansatz gereift ist.
+- **Einfüllen** mit Eimer oder Flasche, wie beim Füllen eines Kessels. Solange es noch kein Getränk ist, nimmt ein leerer Eimer oder eine leere Flasche es zurück.
+- **Zapfen** mit leerem Krug oder Glas, wie beim Nehmen einer Portion von einem Farmer's-Delight-Festmahl. Das falsche Gefäß bekommt einen Hinweis und wird nicht verbraucht.
+- **Statuszeile** bei Rechtsklick mit leerer Hand. Ein Name vom Amboss erscheint darin.
+- **Komparator** liest die verbleibenden Portionen.
+- **Voll abbauen,** und es behält seinen Ansatz, wie eine Schulkerkiste. Das Reifen pausiert, bis du es wieder aufstellst.
+- **Werfer** zapfen mit einem Gefäß oder gießen eine Basis ein. **Trichter** befüllen und leeren es.
+
+Siehe [Reifefass](/aging-barrel/).
+
+## Braukessel
+
+- **Halterungen wie beim Kochtopf:** ein Eisengestell über Lagerfeuer, Feuer oder Lava; bündig auf anderer Hitze; schleiche und klicke
+  mit leerer Hand rechts, um ihn an einen Haken zu hängen.
+- **Der Deckel hebt sich,** solange jemand den Bildschirm offen hat, wie bei einer Truhe. Ein fertiges Gebräu hält ihn oben, und du siehst das
+  Gebräu darin, das beim Entnehmen von Portionen sinkt.
+- **Beim Brauen** kräuselt Dampf unter dem Deckel hervor, und der Deckel klappert. **Wenn es fertig ist,** gibt es ein Dampfwölkchen.
+- **Rechtsklick mit Flasche oder Eimer** füllt ihn, wie einen Kessel.
+- **Voll abbauen,** und er behält seinen Inhalt.
+- **Komparator** gibt ein Signal, solange etwas drin ist. **Trichter** füllen Zutaten und leere Behälter ein und ziehen die gefüllten unten wieder heraus.
+- **Kupfer:** Es verwittert mit der Zeit; Wabe wachst es, eine Axt schabt es ab, ein Blitz reinigt es.
+- **Rezeptbuch** in seinem Bildschirm.
+
+Siehe [Braukessel](/brew-kettle/).
+
+## Getränke und Gefäße
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Krüge und Gläser auf einem Block" />
+
+- **Getränke abstellen:** Schleiche und klicke mit einem Krug oder Glas, voll oder leer, rechts auf die Oberseite eines Blocks. Bis zu vier pro Block,
+  wie Kerzen. Rechtsklick mit leerer Hand nimmt eines wieder auf.
+- **Prost!** Zwei oder mehr Spieler, die innerhalb von {rules.cheersWindowTicks / 20} Sekunden und {rules.cheersRadius}
+  Blöcken voneinander ein Getränk austrinken, stoßen an, und der Bonus aller hält {rules.cheersBonusPercent} % länger.
+- **Trinken** klingt und sieht aus wie bei einem Trank, und du bekommst das leere Gefäß zurück.
+- **Eimer mit Saft und Würze** lassen sich nicht als Flüssigkeit ausgießen, wie Milch.
+
+## Schwips
+
+- **Andere Spieler sehen dich schwanken** und sehen deinen Schluckauf, dein Torkeln und Stolpern.
+- **Ausschlafen:** Durch die Nacht zu schlafen löscht Schwips.
+- **Milch** löscht ihn; **Wasser oder jeder Saft** senkt ihn um eine Stufe.
+- **Fahr im Inventar über den Effekt,** um zu sehen, was deine Stufe bewirkt.
+- **Ein Drink zu viel** auf der höchsten Stufe, und du hast einen Filmriss. Wo du aufwachst, weiß keiner.
+
+Siehe [Schwips](/tipsy/).
+
+## Pflanzen und Landleben
+
+- Sträucher erntest du mit einem Rechtsklick (auch halbreif), und sie fallen eine Stufe zurück, wie Süßbeeren. Ein Rankgitter über einem Strauch lässt ihn hochranken.
+- Bienen helfen Trauben, Hopfen und Gerste beim Wachsen.
+- Gerste füttert und vermehrt Tiere wie Weizen; ihre Samen füttern Hühner und Papageien.
+- Bauern-Dorfbewohner pflanzen und ernten Gerste.
+- Füchse pflücken Trauben von den Sträuchern, rote und weiße, wie sie es mit Süßbeeren tun.
+- Jede Pflanze lässt sich kompostieren.
+- Der <Item id="barley_bale" /> federt einen Sturz ab und lässt Lagerfeuerrauch aufsteigen wie ein Strohballen.
+
+Siehe [Pflanzen](/crops/).
+
+## Welt
+
+- **Dorftavernen** haben Fässer, die schon voll sind und darauf warten, gezapft zu werden. Siehe [Dörfer & Tavernen](/villages/).
+- **JEI** zeigt Brau- und Reiferezepte sowie Infoseiten zum Fass und zu den Wildpflanzen. **Jade** zeigt, was in einem
+  Kessel oder Fass steckt, wenn du es ansiehst. Siehe [Kompatibilität](/compatibility/).
+
+## Fortschritte
+
+Vine & Barrel hat einen eigenen Fortschritts-Tab:
+
+<Advancements />

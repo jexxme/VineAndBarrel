@@ -1,0 +1,112 @@
+---
+title: Botte d'invecchiamento
+description: Riempi, fai fermentare, invecchia e spilla. Come funziona la Botte d'invecchiamento, quanto ci vuole e come costruire una cantina di botti.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import AgingTimeline from '../../../components/brewing/AgingTimeline.astro';
+import { rules, byType, days, list, nameOf } from '../../../lib/l10n/it';
+
+export const aging = byType('vineandbarrel:aging');
+export const a = aging[0];
+export const sameTimes = aging.every((r) => r.fermentingTime === a.fermentingTime && r.agingTime === a.agingTime);
+
+<Render name="scenes/barrel-rack" float="right" size={256} alt="Tre Botti d'invecchiamento affiancate, unite in uno scaffale" />
+
+La <Item id="aging_barrel" /> è il cuore di Vine & Barrel. Non ha schermata: ci versi dentro, aspetti e spilli, tutto nel
+mondo. Si posiziona con il rubinetto rivolto verso di te.
+
+## Riempire
+
+Clicca con il tasto destro sulla botte con una base del [Bollitore](/brew-kettle/):
+
+- un secchio versa **{rules.servingsPerBucket} porzioni**, un'ampolla **{rules.servingsPerBottle}**,
+- la botte contiene **{rules.barrelCapacity} porzioni**: due secchi, oppure otto ampolle.
+
+Puoi rabboccarla con altra base dello stesso tipo finché fermenta ancora. Hai versato la cosa sbagliata? Finché la partita non è diventata
+una bevanda, un secchio o un'ampolla vuoti la riprendono.
+
+## Fermentazione e invecchiamento
+
+{sameTimes && <p>Ogni partita passa per gli stessi due stadi:</p>}
+
+1. **Fermentazione**, per **{days(a.fermentingTime)}**. La partita diventa la bevanda *giovane*, come <Item id="red_wine" />.
+2. **Invecchiamento**, per altri **{days(a.agingTime)}**. Ciò che resta nella botte diventa la bevanda *invecchiata*, come <Item id="aged_red_wine" />, il cui bonus è più forte e dura di più.
+
+<AgingTimeline />
+
+{aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
+
+L'orologio segue il tempo di gioco, quindi dormire per tutta la notte conta. Puoi spillare le bevande giovani durante l'invecchiamento, ma
+ogni porzione che prelevi è una in meno che invecchia. Con Farmer's Delight fermentano anche il suo sidro di mele (nello stesso Sidro) e il succo
+di melone: vedi
+[Farmer's Delight](/farmers-delight/).
+
+<Shot src="cellar.jpg" caption="Una cantina lungo il muro della taverna: botti unite in uno scaffale, una seconda fila impilata sopra. Il gorgogliatore di una di esse fa bolle; i sigilli di cera segnano le partite invecchiate." />
+
+## Guardarla al lavoro
+
+Capisci come va una botte senza aprire niente:
+
+- **Il clic destro a mani vuote** mostra una riga di stato, ad esempio *Pale Ale · 5 porzioni · in invecchiamento, pronto tra 3 giorni*. Rinomina una botte su
+  un'incudine e il nome compare anche lì.
+- **Il tappo in cima** mostra lo stadio: un sughero quando è vuota o la bevanda è giovane e pronta, un gorgogliatore di vetro che fa bolle
+  mentre fermenta, e un sigillo di cera rossa quando è invecchiata.
+- **Il vetrino** sul davanti mostra quanto è piena, nel colore della bevanda.
+- **Suoni e gocce:** bolle mentre fermenta, il rubinetto gocciola ogni tanto, e un lieve *pop* di tappo quando la partita diventa invecchiata.
+
+<Stages prefix="barrel-bung" title="Il tappo" labels={['sughero', 'gorgogliatore: fermenta', 'cera: invecchiata']} />
+<Stages prefix="barrel-fill" title="Vetrino" only={['0', '2', '4', '6', '8']} labels={['vuota', '2', '4', '6', 'piena']} />
+
+## Spillare
+
+Clicca con il tasto destro sulla botte con un <Item id="wine_glass" /> (vini) o un <Item id="mug" /> (birre, idromele e sidro) vuoti per spillare una porzione.
+La manopola del rubinetto gira e la bevanda ti finisce in mano.
+
+- Recipiente sbagliato? La botte ti dice quale usare (*Vino rosso: da servire in Calice*), e non si consuma niente.
+- Fermenta ancora? Ti dice quando sarà pronta.
+- Quando hai spillato l'ultima porzione, la botte è vuota e pronta per una nuova partita.
+
+## Costruire una cantina
+
+<Render name="scenes/barrel-cellar" float="right" size={256} alt="Due file di botti, quella in alto appoggiata su quella in basso" />
+
+- **Scaffali:** botti affiancate, rivolte nella stessa direzione, uniscono i loro supporti in un unico lungo scaffale.
+- **Pile:** una botte sopra un'altra perde il supporto e poggia su dei tacchetti, così puoi costruire un'intera parete di botti.
+- **Comparatore:** legge le porzioni rimaste, da 0 (vuota) a 15 (tutte e {rules.barrelCapacity}).
+- **Rompila piena** e conserva la sua partita e il nome dell'incudine. La descrizione dell'oggetto mostra bevanda, porzioni e stadio.
+  L'invecchiamento si ferma finché è un oggetto e riprende quando la posizioni di nuovo. Una botte piena non si impila con le altre.
+- Le botti sono di legno: estraile con un'ascia.
+
+## Automazione
+
+- **Le tramogge** dall'alto versano le basi. Dai lati e da sotto, portano boccali e calici vuoti ed estraggono le
+  bevande spillate e i secchi e le ampolle vuoti rimasti dopo il versamento.
+- **I dispenser** rivolti verso una botte spillano una porzione con un boccale o un calice vuoto, o versano un secchio o un'ampolla di base.
+
+## Da sapere
+
+- **Rabbocca presto.** Solo il primo versamento fa partire l'orologio: la base che aggiungi dopo si unisce alla partita con la sua età, quindi fermenta
+  in meno tempo. Quando la partita è una bevanda, la botte non accetta più niente finché non è spillata fino a svuotarla.
+- **Una base per botte.** Versare una base diversa viene rifiutato (*Questa botte contiene Succo di uva rossa*) e non si consuma niente.
+- **Quasi piena?** Un secchio ha bisogno di spazio per tutte e {rules.servingsPerBucket} le porzioni, quindi una botte con più di
+  {rules.barrelCapacity - rules.servingsPerBucket} porzioni lo rifiuta. Usa le ampolle per il resto. Vale anche al contrario: un
+  secchio vuoto riprende la base solo se ci sono almeno {rules.servingsPerBucket} porzioni.
+- **Invecchia mentre sei via.** La botte segue il tempo di gioco, quindi va avanti anche se sei lontano o offline. Ti perdi
+  solo il pop del tappo.
+- **Costruisci la cantina nel Sovramondo.** Nel Nether e nell'End non c'è nessun giorno da dormire, quindi dormire non
+  accelera una botte lì, e la sua riga di stato conta in giorni invece di "domattina".
+- **Inventario pieno?** Una bevanda spillata cade ai tuoi piedi.
+- **Modalità creativa:** rompere una botte piena non fa cadere niente. Seleziona il blocco (clic centrale con Ctrl) per copiarla con la sua partita.
+- **Tieni lontani i creeper.** Un'esplosione può distruggere una botte, con tutta la partita.
+- **Consigli sulle tramogge:** una tramoggia in cima versa solo ciò che la botte accetta, quindi una base sbagliata aspetta nella tramoggia invece
+  di incepparla. Tieni una tramoggia sotto un impianto di spillatura, così le bevande finite non bloccano le successive.
+- **Nessun rischio di incendio.** Le botti non prendono mai fuoco. Una vuota brucia perfino come combustibile da fornace; una piena no.
+
+## Ricetta
+
+<Recipe id="aging_barrel" />

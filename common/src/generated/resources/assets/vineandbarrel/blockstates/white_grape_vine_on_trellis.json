@@ -1,0 +1,32 @@
+{
+  "variants": {
+    "age=0,axis=x": {
+      "model": "vineandbarrel:block/white_grape_vine_on_trellis_stage0"
+    },
+    "age=0,axis=z": {
+      "model": "vineandbarrel:block/white_grape_vine_on_trellis_stage0",
+      "y": 90
+    },
+    "age=1,axis=x": {
+      "model": "vineandbarrel:block/white_grape_vine_on_trellis_stage1"
+    },
+    "age=1,axis=z": {
+      "model": "vineandbarrel:block/white_grape_vine_on_trellis_stage1",
+      "y": 90
+    },
+    "age=2,axis=x": {
+      "model": "vineandbarrel:block/white_grape_vine_on_trellis_stage2"
+    },
+    "age=2,axis=z": {
+      "model": "vineandbarrel:block/white_grape_vine_on_trellis_stage2",
+      "y": 90
+    },
+    "age=3,axis=x": {
+      "model": "vineandbarrel:block/white_grape_vine_on_trellis_stage3"
+    },
+    "age=3,axis=z": {
+      "model": "vineandbarrel:block/white_grape_vine_on_trellis_stage3",
+      "y": 90
+    }
+  }
+}
