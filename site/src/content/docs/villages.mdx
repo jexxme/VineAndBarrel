@@ -1,0 +1,36 @@
+---
+title: Villages & taverns
+description: Village taverns with barrels ready to tap, village farms that grow grapes, hops and barley, seed trades and chest loot.
+---
+import Item from '../../components/mc/Item.astro';
+import Render from '../../components/mc/Render.astro';
+import VillageInfo from '../../components/data/VillageInfo.astro';
+import Shot from '../../components/mc/Shot.astro';
+import { rules } from '../../lib/data';
+
+<Render name="scenes/tavern" float="right" size={256} alt="A tavern corner" />
+
+## Taverns
+
+Every village type, from plains to snowy, can have a **tavern** built in its own style. You'll find one in roughly every
+second village, and now and then two.
+
+Its barrels are **already full**: walk in, grab a mug or glass, and tap a drink. One of them is even aged. The tavern chest holds seeds, mugs and glasses, and a few drinks of the region,
+everything you need to start brewing yourself.
+
+<Shot src="terrace.jpg" caption="A tavern terrace: tables of drinks under the pergolas, the barrel cellar against the wall." />
+
+## Village farms
+
+Village farms grow our crops alongside the vanilla ones, depending on the climate: grapes where it's warm, hops where it's cool,
+barley nearly everywhere.
+
+<VillageInfo show="farms" />
+
+## Trades
+
+<VillageInfo show="trades" />
+
+## Chest loot
+
+<VillageInfo show="loot" />

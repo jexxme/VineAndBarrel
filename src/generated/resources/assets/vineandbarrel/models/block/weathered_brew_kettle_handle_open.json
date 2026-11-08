@@ -1,0 +1,11 @@
+{
+  "parent": "vineandbarrel:block/template_brew_kettle_handle_open",
+  "textures": {
+    "bottom": "vineandbarrel:block/weathered_brew_kettle_bottom",
+    "brew": "minecraft:block/water_still",
+    "handle": "vineandbarrel:block/brew_kettle_handle",
+    "inside": "vineandbarrel:block/weathered_brew_kettle_bottom",
+    "side": "vineandbarrel:block/weathered_brew_kettle_side",
+    "top": "vineandbarrel:block/weathered_brew_kettle_top"
+  }
+}

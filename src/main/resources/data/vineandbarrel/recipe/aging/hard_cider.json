@@ -1,0 +1,14 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "type": "vineandbarrel:aging",
+  "base": "farmersdelight:apple_cider",
+  "young": "vineandbarrel:hard_cider",
+  "aged": "vineandbarrel:aged_hard_cider",
+  "fermenting_time": 24000,
+  "aging_time": 72000
+}

@@ -1,0 +1,715 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "facing": "north"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cask"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "tapping": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_tap_handle"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "tapping": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_tap_handle_turned"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "stacked": "false",
+        "left": "false",
+        "right": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "stacked": "false",
+        "left": "true",
+        "right": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_left"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "stacked": "false",
+        "left": "false",
+        "right": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_right"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "stacked": "false",
+        "left": "true",
+        "right": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_both"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "stacked": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_chocks"
+      }
+    },
+    {
+      "when": {
+        "facing": "north"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "fill": "1"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_1"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "fill": "2"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_2"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "fill": "3"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_3"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "fill": "4"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_4"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "fill": "5"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_5"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "fill": "6"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_6"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "fill": "7"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_7"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "fill": "8"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_8"
+      }
+    },
+    {
+      "when": {
+        "facing": "east"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cask",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "tapping": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_tap_handle",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "tapping": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_tap_handle_turned",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "stacked": "false",
+        "left": "false",
+        "right": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "stacked": "false",
+        "left": "true",
+        "right": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_left",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "stacked": "false",
+        "left": "false",
+        "right": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_right",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "stacked": "false",
+        "left": "true",
+        "right": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_both",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "stacked": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_chocks",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "fill": "1"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_1",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "fill": "2"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_2",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "fill": "3"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_3",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "fill": "4"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_4",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "fill": "5"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_5",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "fill": "6"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_6",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "fill": "7"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_7",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "fill": "8"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_8",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "south"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cask",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "tapping": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_tap_handle",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "tapping": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_tap_handle_turned",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "stacked": "false",
+        "left": "false",
+        "right": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "stacked": "false",
+        "left": "true",
+        "right": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_left",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "stacked": "false",
+        "left": "false",
+        "right": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_right",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "stacked": "false",
+        "left": "true",
+        "right": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_both",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "stacked": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_chocks",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "fill": "1"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_1",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "fill": "2"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_2",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "fill": "3"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_3",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "fill": "4"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_4",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "fill": "5"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_5",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "fill": "6"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_6",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "fill": "7"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_7",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "fill": "8"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_8",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "west"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cask",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "tapping": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_tap_handle",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "tapping": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_tap_handle_turned",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "stacked": "false",
+        "left": "false",
+        "right": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "stacked": "false",
+        "left": "true",
+        "right": "false"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_left",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "stacked": "false",
+        "left": "false",
+        "right": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_right",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "stacked": "false",
+        "left": "true",
+        "right": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_cradle_both",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "stacked": "true"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_chocks",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "fill": "1"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_1",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "fill": "2"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_2",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "fill": "3"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_3",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "fill": "4"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_4",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "fill": "5"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_5",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "fill": "6"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_6",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "fill": "7"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_7",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "fill": "8"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_gauge_8",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "bung": "cork"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_bung_cork"
+      }
+    },
+    {
+      "when": {
+        "bung": "airlock"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_bung_airlock"
+      }
+    },
+    {
+      "when": {
+        "bung": "wax"
+      },
+      "apply": {
+        "model": "vineandbarrel:block/aging_barrel_bung_wax"
+      }
+    }
+  ]
+}

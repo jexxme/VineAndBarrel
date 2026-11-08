@@ -1,0 +1,24 @@
+---
+// A crop of a GUI texture (e.g. the cooking pot arrow), scaled with crisp pixels.
+import { url } from '../../lib/data';
+interface Props {
+	src: string;
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+	scale?: number;
+	sheet?: number;
+	class?: string;
+	style?: string;
+	title?: string;
+}
+const { src, x, y, w, h, scale = 2, sheet = 256, class: cls, style = '', title } = Astro.props;
+---
+<span
+	class:list={['mc-sprite', cls]}
+	role={title ? 'img' : undefined}
+	aria-label={title}
+	title={title}
+	style={`width:${w * scale}px;height:${h * scale}px;background-image:url(${url(src)});background-size:${sheet * scale}px ${sheet * scale}px;background-position:${-x * scale}px ${-y * scale}px;${style}`}
+></span>

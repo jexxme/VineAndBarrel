@@ -1,0 +1,80 @@
+---
+// The Tipsy levels, from the mod: what each level adds. Thresholds come from runtime.json.
+import { rules, pct, seconds } from '../../lib/data';
+import EffectBadge from './EffectBadge.astro';
+const t = rules.tipsy;
+const tunnelFrom = t.vignette.findIndex((v: number) => v > 0);
+const rows = Array.from({ length: t.maxLevel }, (_, i) => i + 1).map((lvl) => {
+	const adds: string[] = [];
+	if (lvl < t.hiccupLevel) adds.push(lvl === 1 ? 'The view sways gently' : 'The sway grows');
+	if (lvl === t.hiccupLevel) adds.push('A stronger sway, and hiccups: a harmless little hop, with a sound');
+	if (lvl > t.hiccupLevel) adds.push(lvl === t.maxLevel ? 'Everything above, and the world really spins' : 'Everything above, and a heavier sway');
+	if (lvl === tunnelFrom) adds.push('the edges of the screen darken a little');
+	else if (lvl > tunnelFrom && lvl < t.hiccupLevel) adds.push('the dark edges close in');
+	if (lvl === t.blinkLevel) adds.push('heavy eyes: now and then they fall shut');
+	if (lvl === t.longBlinkLevel) adds.push('long blinks: sometimes your eyes stay shut a while');
+	if (lvl === t.slurLevel) adds.push('slurred chat: stretched letters and the odd *hic*');
+	const courage = t.courage.find((c: { level: number }) => c.level === lvl);
+	if (courage) adds.push(`liquid courage: ${pct(courage.knockbackResistance)} knockback resistance and ${pct(courage.fallDamageReduction)} less fall damage`);
+	if (lvl === t.nauseaLevel) adds.push(`and now and then a spell of Nausea (${seconds(t.nauseaPulseTicks)})`);
+	if (lvl > t.nauseaLevel) adds.push(lvl === t.maxLevel ? 'you feel sick more often than not' : 'Nausea comes much more often');
+	if (lvl === t.noBuffLevel) adds.push("you're too drunk to enjoy it: drinks give no buff any more");
+	if (lvl === t.weaknessLevel) adds.push('the courage is gone');
+	if (lvl === t.stumbleLevel) adds.push('you stumble sideways now and then while you walk');
+	const effects: [string, string][] = [];
+	if (lvl >= t.weaknessLevel) effects.push(['minecraft:weakness', 'Weakness']);
+	if (lvl >= t.heavyLevel) effects.push(['minecraft:slowness', 'Slowness II'], ['minecraft:mining_fatigue', 'Mining Fatigue II']);
+	if (effects.length > 0) adds.push('and');
+	return { lvl, text: adds.join(', '), effects };
+});
+---
+<ol class="fd-tipsy not-content">
+	{rows.map((r) => (
+		<li style={`--lvl:${r.lvl}`}>
+			<span class="lvl">{r.lvl}</span>
+			<span class="what">
+				{r.text}
+				{r.effects.length > 0 && (
+					<span class="heavy">
+						{r.effects.map(([id, name]) => <EffectBadge id={id} name={name} />)}
+					</span>
+				)}
+			</span>
+		</li>
+	))}
+</ol>
+<style>
+	.fd-tipsy {
+		list-style: none;
+		padding: 0;
+		margin: 1rem 0;
+		display: grid;
+		gap: 8px;
+	}
+	li {
+		display: flex;
+		gap: 14px;
+		align-items: center;
+		margin: 0 !important;
+		font-size: 20px;
+		line-height: 30px;
+	}
+	.lvl {
+		flex: none;
+		width: 40px;
+		height: 40px;
+		display: grid;
+		place-items: center;
+		color: #fff;
+		text-shadow: 2px 2px 0 #000;
+		background: color-mix(in srgb, #a8283f calc((var(--lvl) - 1) * 25%), #e8a23c);
+		box-shadow: inset 2px 2px 0 rgb(255 255 255 / 0.3), inset -2px -2px 0 rgb(0 0 0 / 0.3);
+	}
+	.heavy {
+		display: inline-flex;
+		gap: 6px;
+		margin-left: 8px;
+		flex-wrap: wrap;
+		vertical-align: middle;
+	}
+</style>

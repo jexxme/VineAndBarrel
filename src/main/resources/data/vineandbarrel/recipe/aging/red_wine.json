@@ -1,0 +1,9 @@
+{
+  "type": "vineandbarrel:aging",
+  "base": "vineandbarrel:grape_juice",
+  "bucket": "vineandbarrel:grape_juice_bucket",
+  "young": "vineandbarrel:red_wine",
+  "aged": "vineandbarrel:aged_red_wine",
+  "fermenting_time": 24000,
+  "aging_time": 72000
+}

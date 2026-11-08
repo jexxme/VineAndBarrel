@@ -1,0 +1,124 @@
+[
+	{
+		"name": "wild_barley",
+		"crop": "vineandbarrel:wild_barley",
+		"extra": false,
+		"minTemperature": 0.3,
+		"maxTemperature": null,
+		"allowedTags": [
+			"#c:is_plains",
+			"#c:is_savanna"
+		],
+		"deniedTags": [
+			"#c:is_mushroom",
+			"#c:is_underground",
+			"#vineandbarrel:wild_barley_extra"
+		],
+		"optional": []
+	},
+	{
+		"name": "wild_barley_extra",
+		"crop": "vineandbarrel:wild_barley",
+		"extra": true,
+		"minTemperature": null,
+		"maxTemperature": null,
+		"allowedTags": [
+			"biomesoplenty:field",
+			"biomesoplenty:pasture",
+			"biomesoplenty:prairie"
+		],
+		"deniedTags": [],
+		"optional": [
+			{
+				"id": "biomesoplenty:field",
+				"name": "Field"
+			},
+			{
+				"id": "biomesoplenty:pasture",
+				"name": "Pasture"
+			},
+			{
+				"id": "biomesoplenty:prairie",
+				"name": "Prairie"
+			}
+		]
+	},
+	{
+		"name": "wild_grapes",
+		"crop": "vineandbarrel:wild_grapes",
+		"extra": false,
+		"minTemperature": 0.6,
+		"maxTemperature": 1,
+		"allowedTags": [
+			"#c:is_forest",
+			"#c:is_plains"
+		],
+		"deniedTags": [
+			"#c:is_mushroom",
+			"#c:is_underground",
+			"#vineandbarrel:wild_grapes_extra"
+		],
+		"optional": []
+	},
+	{
+		"name": "wild_grapes_extra",
+		"crop": "vineandbarrel:wild_grapes",
+		"extra": true,
+		"minTemperature": null,
+		"maxTemperature": null,
+		"allowedTags": [
+			"biomesoplenty:mediterranean_forest",
+			"biomesoplenty:orchard"
+		],
+		"deniedTags": [],
+		"optional": [
+			{
+				"id": "biomesoplenty:mediterranean_forest",
+				"name": "Mediterranean Forest"
+			},
+			{
+				"id": "biomesoplenty:orchard",
+				"name": "Orchard"
+			}
+		]
+	},
+	{
+		"name": "wild_hops",
+		"crop": "vineandbarrel:wild_hops",
+		"extra": false,
+		"minTemperature": 0.5,
+		"maxTemperature": 0.8,
+		"allowedTags": [
+			"#c:is_forest",
+			"#c:is_river"
+		],
+		"deniedTags": [
+			"#c:is_mushroom",
+			"#c:is_underground",
+			"#vineandbarrel:wild_hops_extra"
+		],
+		"optional": []
+	},
+	{
+		"name": "wild_hops_extra",
+		"crop": "vineandbarrel:wild_hops",
+		"extra": true,
+		"minTemperature": null,
+		"maxTemperature": null,
+		"allowedTags": [
+			"biomesoplenty:woodland",
+			"biomesoplenty:seasonal_forest"
+		],
+		"deniedTags": [],
+		"optional": [
+			{
+				"id": "biomesoplenty:woodland",
+				"name": "Woodland"
+			},
+			{
+				"id": "biomesoplenty:seasonal_forest",
+				"name": "Seasonal Forest"
+			}
+		]
+	}
+]

@@ -1,0 +1,9 @@
+{
+  "type": "vineandbarrel:aging",
+  "base": "vineandbarrel:sweet_berry_juice",
+  "bucket": "vineandbarrel:sweet_berry_juice_bucket",
+  "young": "vineandbarrel:sweet_berry_wine",
+  "aged": "vineandbarrel:aged_sweet_berry_wine",
+  "fermenting_time": 24000,
+  "aging_time": 72000
+}

@@ -1,0 +1,36 @@
+---
+// The advancement tab, from the mod's generated advancements.
+import Slot from '../mc/Slot.astro';
+import { advancements } from '../../lib/data';
+const shown = advancements.filter((a) => a.parent);
+---
+<ul class="fd-adv not-content">
+	{shown.map((a) => (
+		<li class={a.frame}>
+			<Slot id={a.icon} />
+			<span><b>{a.title}</b>{a.description}</span>
+		</li>
+	))}
+</ul>
+<style>
+	.fd-adv {
+		list-style: none;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+		gap: 10px 20px;
+	}
+	li {
+		display: flex;
+		gap: 12px;
+		align-items: center;
+		margin: 0 !important;
+		font-size: 20px;
+		line-height: 30px;
+	}
+	b {
+		display: block;
+		font-weight: 400;
+		color: var(--fd-gold);
+	}
+</style>

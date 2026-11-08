@@ -1,0 +1,114 @@
+---
+// Every recipe that loads in a plain game, as cards, with a type filter and a search over outputs and ingredients.
+// Cards are rendered at build time; the script below only hides and shows them.
+import Recipe from '../recipes/Recipe.astro';
+import { playableRecipes, recipeTypeName, nameOf, recipeInputs, recipeOutputs, type Recipe as R } from '../../lib/data';
+import './ref.css';
+
+const list = playableRecipes;
+const types = [...new Set(list.map((r) => r.type))]
+	.map((t) => ({ t, n: list.filter((r) => r.type === t).length, label: recipeTypeName[t] ?? t }))
+	.sort((a, b) => b.n - a.n);
+const words = (r: R) => {
+	const ins = recipeInputs(r).map(nameOf);
+	const outs = recipeOutputs(r).map(nameOf);
+	return { out: [...outs, r.id].join(' ').toLowerCase(), all: [...outs, ...ins, r.id].join(' ').toLowerCase() };
+};
+---
+<div class="rb not-content" data-rb>
+	<div class="ref-bar">
+		<input class="ref-field" type="search" placeholder="Search results and ingredients" aria-label="Search recipes" data-rb-q />
+		<label class="ref-check"><input type="checkbox" data-rb-out /> Results only</label>
+		<span class="ref-count" aria-live="polite"><b data-rb-n>{list.length}</b> of {list.length}</span>
+	</div>
+	<div class="ref-btns rb-types" role="group" aria-label="Recipe type">
+		<button type="button" class="ref-btn" data-rb-type="" aria-pressed="true">All <span class="n">{list.length}</span></button>
+		{
+			types.map(({ t, n, label }) => (
+				<button type="button" class="ref-btn" data-rb-type={t} aria-pressed="false">
+					{label} <span class="n">{n}</span>
+				</button>
+			))
+		}
+	</div>
+	<div class="rb-grid">
+		{
+			list.map((r) => {
+				const w = words(r);
+				return (
+					<div class="rb-item" data-type={r.type} data-out={w.out} data-all={w.all} id={`r-${r.id.replace('vineandbarrel:', '').replaceAll('/', '-')}`}>
+						<Recipe recipe={r} />
+					</div>
+				);
+			})
+		}
+	</div>
+	<p class="rb-none" hidden data-rb-none>No recipe matches. Try one word, or pick "All".</p>
+</div>
+<script>
+	for (const root of document.querySelectorAll<HTMLElement>('[data-rb]')) {
+		const q = root.querySelector<HTMLInputElement>('[data-rb-q]')!;
+		const outOnly = root.querySelector<HTMLInputElement>('[data-rb-out]')!;
+		const n = root.querySelector('[data-rb-n]')!;
+		const none = root.querySelector<HTMLElement>('[data-rb-none]')!;
+		const cards = [...root.querySelectorAll<HTMLElement>('.rb-item')];
+		const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-rb-type]')];
+		let type = '';
+		const apply = () => {
+			const words = q.value.toLowerCase().split(/\s+/).filter(Boolean);
+			let shown = 0;
+			for (const c of cards) {
+				const text = outOnly.checked ? c.dataset.out! : c.dataset.all!;
+				const ok = (!type || c.dataset.type === type) && words.every((w) => text.includes(w));
+				c.hidden = !ok;
+				if (ok) shown++;
+			}
+			n.textContent = String(shown);
+			none.hidden = shown > 0;
+			const p = new URLSearchParams();
+			if (q.value) p.set('q', q.value);
+			if (type) p.set('type', type);
+			history.replaceState(null, '', p.toString() ? `?${p}` : location.pathname);
+		};
+		for (const b of buttons)
+			b.addEventListener('click', () => {
+				type = b.dataset.rbType!;
+				for (const x of buttons) {
+										x.setAttribute('aria-pressed', String(x === b));
+				}
+				apply();
+			});
+		q.addEventListener('input', apply);
+		outOnly.addEventListener('change', apply);
+		const params = new URLSearchParams(location.search);
+		if (params.get('q')) q.value = params.get('q')!;
+		const t = params.get('type');
+		if (t) buttons.find((b) => b.dataset.rbType === t)?.click();
+		else if (q.value) apply();
+	}
+</script>
+<style>
+	.rb {
+		margin-top: 20px;
+	}
+	.rb-types {
+		margin-top: 10px;
+	}
+	.rb-grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 30px 30px;
+		margin-top: 30px;
+	}
+	.rb-item {
+		content-visibility: auto;
+		contain-intrinsic-size: auto 200px;
+		max-width: 100%;
+	}
+	.rb-item[hidden] {
+		display: none;
+	}
+	.rb-none {
+		color: var(--sl-color-gray-3);
+	}
+</style>

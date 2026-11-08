@@ -1,0 +1,8 @@
+{
+  "parent": "vineandbarrel:block/template_brew_kettle",
+  "textures": {
+    "bottom": "vineandbarrel:block/weathered_brew_kettle_bottom",
+    "side": "vineandbarrel:block/weathered_brew_kettle_side",
+    "top": "vineandbarrel:block/weathered_brew_kettle_top"
+  }
+}

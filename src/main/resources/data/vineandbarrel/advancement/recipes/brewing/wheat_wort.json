@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_hops": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "vineandbarrel:hops"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "vineandbarrel:brewing/wheat_wort"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_hops"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "vineandbarrel:brewing/wheat_wort"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+---
+title: Farmer's Delight
+description: What changes in Vine & Barrel when Farmer's Delight is installed too.
+---
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+import Item from '../../components/mc/Item.astro';
+import Recipe from '../../components/recipes/Recipe.astro';
+import DrinkTable from '../../components/data/DrinkTable.astro';
+import FoodStats from '../../components/data/FoodStats.astro';
+import { rules, items, recipe, duration, FDN_WIKI } from '../../lib/data';
+
+export const fish = items['vineandbarrel:beer_battered_fish'];
+export const beef = items['vineandbarrel:wine_braised_beef'];
+export const meals = rules.fdMealNourishment;
+
+Vine & Barrel is a standalone mod: everything on this wiki works without Farmer's Delight. If you play with Farmer's Delight
+too, the two work together in a few places. Nothing needs setting up.
+
+On Minecraft 26.x for NeoForge, that's Farmer's Delight Neoforged, which has its own wiki.
+
+<LinkCard title="Farmer's Delight Neoforged wiki" description="Cooking pot, stove, ropes, rich soil and every FD item." href={`${FDN_WIKI}/`} />
+
+## What Farmer's Delight adds
+
+- **The stove heats the kettle.** Farmer's Delight's stove works as a heat source for the [Brew Kettle](/brew-kettle/),
+  and so does anything else FD counts as heat.
+- **Vines climb ropes.** A ripe grape or hop bush with an FD rope above it climbs up to {rules.crops.ropeMaxHeight} blocks
+  and fruits along the rope, like FD's tomatoes. See [Crops](/crops/).
+- **Rich soil** speeds up grapes, hops and barley, as it does every crop you can use bone meal on.
+- **FD's drinks ferment.** <Item id="farmersdelight:apple_cider" /> and <Item id="farmersdelight:melon_juice" /> bottles go into an
+  [Aging Barrel](/aging-barrel/) like our own bases, one serving each.
+- **Two cooking pot meals** use our wine and ale.
+- Our drinks count as FD drinks wherever FD asks for one.
+
+## Drinks from Farmer's Delight bottles
+
+<DrinkTable fd />
+
+{[recipe('aging/hard_cider'), recipe('aging/melon_wine')].map((r) => <Recipe recipe={r} />)}
+
+## Cooking pot meals
+
+Cook these in Farmer's Delight's cooking pot. Like FD's meals, they come in a bowl and give Nourishment.
+
+<Recipe id="cooking/beer_battered_fish" /> <Recipe id="cooking/wine_braised_beef" />
+
+| Meal | Food | Nourishment |
+|---|---|---|
+| <Item id="beer_battered_fish" /> | <FoodStats nutrition={fish.food.nutrition} saturation={fish.food.saturation} compact /> | {duration(meals['vineandbarrel:beer_battered_fish'])} |
+| <Item id="wine_braised_beef" /> | <FoodStats nutrition={beef.food.nutrition} saturation={beef.food.saturation} compact /> | {duration(meals['vineandbarrel:wine_braised_beef'])} |
+
+<Aside>
+Farmer's Delight is vectorwing's mod. Vine & Barrel is a separate mod, made to fit alongside it; it isn't part of Farmer's
+Delight and isn't endorsed by vectorwing.
+</Aside>

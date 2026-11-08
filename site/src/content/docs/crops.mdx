@@ -1,0 +1,95 @@
+---
+title: Crops
+description: Grape and hop bushes, barley, wild crops and everything around them, from bees to compost.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../components/mc/Item.astro';
+import Render from '../../components/mc/Render.astro';
+import Recipe from '../../components/recipes/Recipe.astro';
+import Stages from '../../components/data/Stages.astro';
+import WildCrops from '../../components/data/WildCrops.astro';
+import Shot from '../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../lib/data';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+export const animalList = (tag) => list(animals[tag].map(nameOf));
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)));
+
+<Render name="scenes/garden" float="right" size={256} alt="Grape and hop bushes behind a barley field" />
+
+Three crops feed every drink: <Item id="red_grapes" plural /> for wine, <Item id="hops" /> for both beers, and
+<Item id="barley" /> for ale. The other ingredients are vanilla: <Item id="sweet_berries" /> for sweet berry wine and
+<Item id="wheat" /> for wheat beer.
+
+<Shot src="vineyard.jpg" caption="A fenced vineyard of ripe grape bushes, with lantern posts at the row heads." />
+
+## Grape and hop bushes
+
+Plant <Item id="red_grapes" plural /> or <Item id="hops" /> on grass, dirt or farmland, just like sweet berries. The bush
+grows through {c.bushMaxAge + 1} stages at the sweet berry bush's pace.
+
+<Stages prefix="grape_bush" title="Grape bush" labels={['planted', 'growing', 'flowering', 'ripe']} />
+<Stages prefix="hop_bush" title="Hop bush" labels={['planted', 'growing', 'flowering', 'ripe']} />
+
+- **Harvest** a ripe bush with a right-click: it gives {h.grapes.count[0]} to {h.grapes.count[1]} <Item id="red_grapes" plural /> (or
+  {h.hops.count[0]} to {h.hops.count[1]} <Item id="hops" />) and drops back to its second stage, so it keeps fruiting. You
+  don't need to replant.
+- **Bone meal** moves it on by one stage.
+- Bushes catch fire as easily as sweet berry bushes, so keep campfires and lava away from the vineyard.
+
+<Aside title="With Farmer's Delight: vines on ropes">
+Hang a Farmer's Delight rope above a ripe bush and it climbs, up to {c.ropeMaxHeight} blocks tall, and fruits along the
+rope the way FD's tomatoes do. Bone meal on a ripe bush under a rope makes it climb right away. See [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Barley
+
+Sow <Item id="barley_seeds" /> on farmland. Barley grows exactly like wheat, through {barleyStages} stages, and
+drops the same way: <Item id="barley" /> when it's ripe, plus extra seeds.
+
+<Stages prefix="barley" title="Barley" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', 'ripe']} />
+
+## Wild crops
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="Wild grapes, wild hops and wild barley on grass" />
+
+Your first seeds come from wild plants. They grow in patches, by biome and temperature, so they also show up in modded
+biomes that are tagged the usual way. Break one for produce, or use shears to take the whole plant home as decoration.
+
+<WildCrops />
+
+Farmers and the wandering trader sell seeds too, and village chests sometimes hold some. See [Villages & taverns](/villages/).
+
+## Farm life
+
+- **Bees** pollinate grapes, hops and barley and help them grow, as they do with vanilla crops.
+- **Animals:** barley breeds and feeds {animalList('minecraft:cow_food')} like wheat does, and
+  {animalList('minecraft:horse_food')} eat it. <Item id="barley_seeds" /> feed {animalList('minecraft:chicken_food')} and
+  {animalList('minecraft:parrot_food')}.
+- **Foxes** love grapes: they pick ripe grapes off the bushes, just like they raid sweet berry bushes.
+- **Farmers** plant and harvest barley in their fields.
+- **Composter:** every crop composts with vanilla's chances.
+
+<table>
+	<thead><tr><th>Item</th><th>Chance to add a layer</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="Barley on watered farmland next to the hop garden, ready to harvest." />
+
+## Storage blocks
+
+<Render name="scenes/storage" float="right" size={256} alt="Grape Crate, Hops Crate and Barley Bale" />
+
+Pack nine of a crop into a <Item id="grape_crate" />, <Item id="hops_crate" /> or <Item id="barley_bale" />, and unpack it
+again in the crafting grid. The <Item id="barley_bale" /> is a hay bale in every way: it softens a fall, a campfire on top of
+it sends its smoke up high, and llamas and horses eat it.
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## Seasons
+
+With Serene Seasons installed, the crops have their seasons: grapes grow in {seasonsOf('vineandbarrel:red_grapes')}, hops in
+{seasonsOf('vineandbarrel:hops')}, and barley in {seasonsOf('vineandbarrel:barley_seeds')}. See [Compatibility](/compatibility/).

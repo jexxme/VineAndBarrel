@@ -1,0 +1,198 @@
+{
+	"minecraft:acacia_planks": {
+		"id": "minecraft:acacia_planks",
+		"name": "Acacia Planks"
+	},
+	"minecraft:bamboo_planks": {
+		"id": "minecraft:bamboo_planks",
+		"name": "Bamboo Planks"
+	},
+	"minecraft:birch_planks": {
+		"id": "minecraft:birch_planks",
+		"name": "Birch Planks"
+	},
+	"minecraft:cherry_planks": {
+		"id": "minecraft:cherry_planks",
+		"name": "Cherry Planks"
+	},
+	"minecraft:crimson_planks": {
+		"id": "minecraft:crimson_planks",
+		"name": "Crimson Planks"
+	},
+	"minecraft:dark_oak_planks": {
+		"id": "minecraft:dark_oak_planks",
+		"name": "Dark Oak Planks"
+	},
+	"minecraft:jungle_planks": {
+		"id": "minecraft:jungle_planks",
+		"name": "Jungle Planks"
+	},
+	"minecraft:mangrove_planks": {
+		"id": "minecraft:mangrove_planks",
+		"name": "Mangrove Planks"
+	},
+	"minecraft:oak_planks": {
+		"id": "minecraft:oak_planks",
+		"name": "Oak Planks"
+	},
+	"minecraft:pale_oak_planks": {
+		"id": "minecraft:pale_oak_planks",
+		"name": "Pale Oak Planks"
+	},
+	"minecraft:poplar_planks": {
+		"id": "minecraft:poplar_planks",
+		"name": "Poplar Planks"
+	},
+	"minecraft:spruce_planks": {
+		"id": "minecraft:spruce_planks",
+		"name": "Spruce Planks"
+	},
+	"minecraft:warped_planks": {
+		"id": "minecraft:warped_planks",
+		"name": "Warped Planks"
+	},
+	"minecraft:iron_nugget": {
+		"id": "minecraft:iron_nugget",
+		"name": "Iron Nugget"
+	},
+	"minecraft:copper_ingot": {
+		"id": "minecraft:copper_ingot",
+		"name": "Copper Ingot"
+	},
+	"minecraft:brick": {
+		"id": "minecraft:brick",
+		"name": "Brick"
+	},
+	"minecraft:water_bucket": {
+		"id": "minecraft:water_bucket",
+		"name": "Water Bucket"
+	},
+	"minecraft:glass": {
+		"id": "minecraft:glass",
+		"name": "Glass"
+	},
+	"farmersdelight:apple_cider": {
+		"id": "farmersdelight:apple_cider",
+		"name": "Apple Cider"
+	},
+	"farmersdelight:melon_juice": {
+		"id": "farmersdelight:melon_juice",
+		"name": "Melon Juice"
+	},
+	"minecraft:sugar": {
+		"id": "minecraft:sugar",
+		"name": "Sugar"
+	},
+	"minecraft:sweet_berries": {
+		"id": "minecraft:sweet_berries",
+		"name": "Sweet Berries"
+	},
+	"minecraft:wheat": {
+		"id": "minecraft:wheat",
+		"name": "Wheat"
+	},
+	"minecraft:bowl": {
+		"id": "minecraft:bowl",
+		"name": "Bowl"
+	},
+	"minecraft:carrot": {
+		"id": "minecraft:carrot",
+		"name": "Carrot"
+	},
+	"minecraft:emerald": {
+		"id": "minecraft:emerald",
+		"name": "Emerald"
+	},
+	"minecraft:red_bed": {
+		"id": "minecraft:red_bed",
+		"name": "Red Bed"
+	},
+	"minecraft:compass": {
+		"id": "minecraft:compass",
+		"name": "Compass"
+	},
+	"minecraft:campfire": {
+		"id": "minecraft:campfire",
+		"name": "Campfire"
+	},
+	"minecraft:fire": {
+		"id": "minecraft:fire",
+		"name": "Fire"
+	},
+	"minecraft:lava": {
+		"id": "minecraft:lava",
+		"name": "Lava"
+	},
+	"minecraft:lava_cauldron": {
+		"id": "minecraft:lava_cauldron",
+		"name": "Lava Cauldron"
+	},
+	"minecraft:magma_block": {
+		"id": "minecraft:magma_block",
+		"name": "Magma Block"
+	},
+	"minecraft:soul_campfire": {
+		"id": "minecraft:soul_campfire",
+		"name": "Soul Campfire"
+	},
+	"minecraft:soul_fire": {
+		"id": "minecraft:soul_fire",
+		"name": "Soul Fire"
+	},
+	"minecraft:hopper": {
+		"id": "minecraft:hopper",
+		"name": "Hopper"
+	},
+	"minecraft:bucket": {
+		"id": "minecraft:bucket",
+		"name": "Bucket"
+	},
+	"minecraft:glass_bottle": {
+		"id": "minecraft:glass_bottle",
+		"name": "Glass Bottle"
+	},
+	"minecraft:potion": {
+		"id": "minecraft:potion",
+		"name": "Potion"
+	},
+	"minecraft:milk_bucket": {
+		"id": "minecraft:milk_bucket",
+		"name": "Milk Bucket"
+	},
+	"minecraft:dispenser": {
+		"id": "minecraft:dispenser",
+		"name": "Dispenser"
+	},
+	"minecraft:comparator": {
+		"id": "minecraft:comparator",
+		"name": "Redstone Comparator"
+	},
+	"minecraft:honeycomb": {
+		"id": "minecraft:honeycomb",
+		"name": "Honeycomb"
+	},
+	"minecraft:iron_axe": {
+		"id": "minecraft:iron_axe",
+		"name": "Iron Axe"
+	},
+	"minecraft:composter": {
+		"id": "minecraft:composter",
+		"name": "Composter"
+	},
+	"minecraft:crafting_table": {
+		"id": "minecraft:crafting_table",
+		"name": "Crafting Table"
+	},
+	"minecraft:anvil": {
+		"id": "minecraft:anvil",
+		"name": "Anvil"
+	},
+	"minecraft:iron_chain": {
+		"id": "minecraft:iron_chain",
+		"name": "Iron Chain"
+	},
+	"minecraft:melon_slice": {
+		"id": "minecraft:melon_slice",
+		"name": "Melon Slice"
+	}
+}

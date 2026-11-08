@@ -1,0 +1,6 @@
+{
+  "type": "vineandbarrel:add_features_by_filter",
+  "allowed_biomes": "#vineandbarrel:wild_hops_extra",
+  "features": "vineandbarrel:patch_wild_hops",
+  "step": "vegetal_decoration"
+}

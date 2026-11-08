@@ -1,0 +1,44 @@
+---
+// An in-game screenshot from src/assets/shots, full width with a caption. <Shot src="kitchen.jpg" caption="…" />
+// Served as AVIF/WebP in a few widths (JPG fallback), so phones don't download the 1920px original.
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+interface Props {
+	src: string;
+	caption?: string;
+	alt?: string;
+}
+const { src, caption, alt } = Astro.props;
+const shots = import.meta.glob<{ default: ImageMetadata }>('../../assets/shots/**/*.{jpg,png}', { eager: true });
+const img = shots[`../../assets/shots/${src}`]?.default;
+if (!img) throw new Error(`Unknown screenshot ${src}`);
+---
+<figure class="fd-shot">
+	<Picture
+		src={img}
+		formats={['avif', 'webp']}
+		fallbackFormat="jpg"
+		widths={[480, 720, 1080, 1440]}
+		sizes="(max-width: 45rem) 100vw, 45rem"
+		alt={alt ?? caption ?? ''}
+		loading="lazy"
+		decoding="async"
+	/>
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+<style>
+	.fd-shot {
+		margin: 1.5rem 0;
+	}
+	.fd-shot :global(img) {
+		width: 100%;
+		height: auto;
+		display: block;
+	}
+	figcaption {
+		font-family: var(--fd-font-mono);
+		margin-top: 0.4rem;
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+	}
+</style>

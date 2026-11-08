@@ -1,0 +1,68 @@
+---
+// A Minecraft inventory slot. Shows one item, or cycles through every item of a tag/ingredient (like JEI).
+import { nameOf, iconOf, pageOf, short, type Ingredient } from '../../lib/data';
+interface Props {
+	id?: string;
+	ingredient?: Ingredient | null;
+	count?: number;
+	chance?: number;
+	scale?: number;
+	large?: boolean;
+	bare?: boolean;
+	note?: string;
+}
+const { id, ingredient, count = 1, chance, scale = 2, large = false, bare = false, note } = Astro.props;
+// A slot cycles through at most 12 of an ingredient's items (the tooltip names the whole tag) to keep pages light
+const all = ingredient ? [...new Set(ingredient.items)] : id ? [id] : [];
+const list = all.slice(0, 12);
+const tagLine = ingredient?.tag
+	? (ingredient.label ?? `Any #${short(ingredient.tag)}`)
+	: ingredient?.action
+		? `Any tool that can ${ingredient.action.replaceAll('_', ' ')}`
+		: ingredient && all.length > 1
+			? `Any of ${all.length} items`
+			: '';
+const first = list[0];
+const link = list.length === 1 && first ? pageOf(first) : null;
+const Tag = link ? 'a' : 'div';
+const sub = [tagLine, chance !== undefined && chance < 1 ? `${+(chance * 100).toFixed(1)}% chance` : '', note ?? ''].filter(Boolean).join(' · ');
+// A valid 1x1 transparent GIF for cycling slots whose other items have no icon
+const blank = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+// Farmer's Delight's own items have no icon here (its textures aren't shown); the slot shows an "FD" mark instead
+const noIcon = list.length === 1 && !iconOf(list[0]);
+---
+<Tag
+	class:list={['mc-slot', { large, bare }]}
+	style={`--s:${scale}px`}
+	href={link ?? undefined}
+	tabindex={link ? undefined : list.length ? 0 : undefined}
+	data-tip-items={list.length ? list.map((i) => `${nameOf(i)}~${i}`).join('|') : ingredient?.label ? `${ingredient.label}~#${ingredient.tag}` : undefined}
+	data-tip-sub={sub || undefined}
+>
+	{list.length === 0 && ingredient?.label && <span class="mc-tagtext" aria-label={ingredient.label}>#</span>}
+	{
+		list.length > 0 && (
+			<span class:list={['mc-stack', { 'mc-cycle': list.length > 1 }]}>
+				{noIcon ? (
+					<span class="mc-tagtext" aria-label={nameOf(list[0])}>FD</span>
+				) : (
+					list.map((i, n) => {
+						const ic = iconOf(i);
+						return <img src={ic?.src ?? blank} alt={n === 0 ? nameOf(i) : ''} class:list={[{ on: n === 0 }]} loading="lazy" width="32" height="32" />;
+					})
+				)}
+				{count > 1 && <span class="mc-count">{count}</span>}
+				{chance !== undefined && chance < 1 && <span class="mc-chance">{Math.round(chance * 100)}%</span>}
+			</span>
+		)
+	}
+</Tag>
+<style>
+	/* A tag with no items to show (it is filled by another mod): the slot shows a tag sign, the tooltip and caption name it */
+	.mc-tagtext {
+		color: #fff;
+		font-size: 20px;
+		text-shadow: 2px 2px 0 #3f3f3f;
+		line-height: 1;
+	}
+</style>

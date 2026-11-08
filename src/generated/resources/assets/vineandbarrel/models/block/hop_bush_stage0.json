@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "vineandbarrel:block/hop_bush_stage0"
+  }
+}

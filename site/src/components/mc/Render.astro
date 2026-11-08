@@ -1,0 +1,53 @@
+---
+// An isometric render from public/renders (made by scripts/render-scenes.mjs). <Render name="scenes/pot-on-stove" />
+import { renderOf } from '../../lib/data';
+interface Props {
+	name: string;
+	alt?: string;
+	caption?: string;
+	size?: number;
+	float?: 'left' | 'right';
+}
+const { name, alt, caption, size = 256, float } = Astro.props;
+const src = renderOf(name);
+if (!src) throw new Error(`No render named ${name}. See src/data/gen/renders.json.`);
+---
+<figure class:list={['fd-render', float && `f-${float}`]} style={`--w:${size}px`}>
+	<img src={src} alt={alt ?? caption ?? ''} width={size} height={size} loading="lazy" />
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+<style>
+	.fd-render {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		max-width: min(100%, var(--w));
+		margin: 0.5rem 0;
+		vertical-align: top;
+	}
+	.fd-render img {
+		width: 100%;
+		height: auto;
+	}
+	figcaption {
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+		text-align: center;
+	}
+	.f-right {
+		float: right;
+		margin: 0 0 1rem 1.5rem;
+	}
+	.f-left {
+		float: left;
+		margin: 0 1.5rem 1rem 0;
+	}
+	@media (max-width: 40rem) {
+		.f-right,
+		.f-left {
+			float: none;
+			margin: 0.5rem auto;
+			display: flex;
+		}
+	}
+</style>
