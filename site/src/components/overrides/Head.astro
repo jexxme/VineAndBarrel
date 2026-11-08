@@ -1,12 +1,8 @@
 ---
 import Default from '@astrojs/starlight/components/Head.astro';
-import { getImage } from 'astro:assets';
-import hero from '../../assets/shots/hero.jpg';
 import font from '../../assets/fonts/fd-pixel.otf?url';
 import { t, localeOf } from '../../lib/i18n';
-// Share image: the title-screen panorama as a 1200 px JPG (what social sites expect)
-const share = await getImage({ src: hero, width: 1200, format: 'jpg', quality: 82 });
-const og = Astro.site ? new URL(share.src, Astro.site).href : null;
+// Search titles, descriptions, link-preview pictures and structured data: lib/seo-route.ts (Starlight route middleware)
 // A page that is only the English one under a language (not translated yet): kept out of search engines
 const fallback = Astro.locals.starlightRoute?.isFallback;
 // Words for the site-wide script (scripts/mc.ts), in the page's language
@@ -16,9 +12,6 @@ const words = { copied: t('Copied {text}', locale), copyByHand: t('Press Ctrl+C 
 <Default><slot /></Default>
 <link rel="preload" href={font} as="font" type="font/otf" crossorigin />
 <meta name="theme-color" content="#17140f" />
-{og && <meta property="og:image" content={og} />}
-{og && <meta name="twitter:image" content={og} />}
-<meta name="twitter:card" content="summary_large_image" />
 {fallback && <meta name="robots" content="noindex" />}
 <script type="application/json" id="vb-words" set:html={JSON.stringify(words)} />
 <script>

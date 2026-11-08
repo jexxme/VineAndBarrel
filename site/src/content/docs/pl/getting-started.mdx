@@ -8,11 +8,9 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/pl';
-import { downloads } from '../../../data/code/downloads';
+import { downloads, stores } from '../../../data/code/downloads';
 
-export const cells = { 'next release': 'w następnym wydaniu', planned: 'planowane' };
-export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
-export const newer = (s) => s.replace(' or newer', ' lub nowszy').replace(' to ', ' do ');
+export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
 export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
 export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
@@ -40,8 +38,21 @@ Znajdź swoją wersję Minecrafta i swój loader, a plik pobierzesz z odpowiedni
 	</tbody>
 </table>
 
-- **NeoForge** wymaga: {downloads.map((r) => `NeoForge ${r.neoforgeNeeds ? newer(r.neoforgeNeeds) : `${meta.neoforge} lub nowszy`} dla Minecrafta ${r.minecraft}`).join('; ')}.
-- **Fabric** wymaga Fabric Loader {meta.fabricLoader} lub nowszego oraz Fabric API {meta.fabricApi} lub nowszego.
+Wszystkie pliki są też na {cell(stores)}. Każdy wymaga co najmniej:
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{r.needs.neoforge}</td>
+				<td>{r.needs.fabricLoader}</td>
+				<td>{r.needs.fabricApi}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
 
 Nazwa pliku mówi, który masz: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> to NeoForge,
 <code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> to Fabric. Wrzuć go do folderu `mods` zarówno u klienta, jak i na serwerze. Nie

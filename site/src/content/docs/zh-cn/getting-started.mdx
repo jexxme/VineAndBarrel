@@ -8,10 +8,9 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/zh-cn';
-import { downloads } from '../../../data/code/downloads';
+import { downloads, stores } from '../../../data/code/downloads';
 
-export const cells = { 'next release': '下个版本', planned: '计划中' };
-export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
 export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
 export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
@@ -38,8 +37,21 @@ Vine & Barrel 为 Minecraft 带来葡萄园、酿酒坊和酒窖。你种下葡�
 	</tbody>
 </table>
 
-- **NeoForge** 需要 {downloads.map((r) => `NeoForge ${r.neoforgeNeeds?.replace(' or newer', ' 或更高版本') ?? `${meta.neoforge} 或更高版本`}（Minecraft ${r.minecraft}）`).join('；')}。
-- **Fabric** 需要 Fabric Loader {meta.fabricLoader} 或更高版本，以及 Fabric API {meta.fabricApi} 或更高版本。
+所有文件也都可以在 {cell(stores)} 下载。每个文件至少需要：
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{r.needs.neoforge}</td>
+				<td>{r.needs.fabricLoader}</td>
+				<td>{r.needs.fabricApi}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
 
 看文件名就知道你拿的是哪一个：<code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> 是 NeoForge 版，
 <code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> 是 Fabric 版。客户端和服务器的 `mods` 文件夹里都要放。

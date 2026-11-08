@@ -1,0 +1,44 @@
+{
+	"_": "The jars on the GitHub releases, one row per Minecraft branch (CONTRIBUTING.md, Minecraft versions), newest first. The wiki's download tables (src/data/code/downloads.ts) and the store pages and README read this, and build every link from it: the tag is <build>-<neoforge>, the files VineAndBarrel-<build>-<neoforge>.jar and VineAndBarrel-<build>-<fabric>.jar. After a release is up, set its versions here. From each branch's gradle.properties: release_game_versions (minecraft), minecraft_version (build), mod_version (neoforge), fabric_mod_version (fabric), the lower end of neo_version_range, fabric_loader_version, fabric_api_version without its +suffix. without: the optional mods with no build for that version and loader (left out of the branch's release.yml). curseforge: the file ids of the same jars on CurseForge (curseforge.com/minecraft/mc-mods/vine-and-barrel/files/<id>), for pages on CurseForge itself.",
+	"releases": [
+		{
+			"minecraft": ["26.3"],
+			"build": "26.3",
+			"neoforge": "1.0.1+neoforged.1",
+			"fabric": "1.0.1+fabric.1",
+			"curseforge": { "neoforge": 9515563, "fabric": 9515565 },
+			"needs": { "neoforge": "26.3.0.101", "fabricLoader": "0.20.1", "fabricApi": "0.165.2" },
+			"without": { "neoforge": [], "fabric": [] }
+		},
+		{
+			"minecraft": ["26.2"],
+			"build": "26.2",
+			"neoforge": "1.0.1+neoforged.1",
+			"fabric": "1.0.1+fabric.1",
+			"curseforge": { "neoforge": 9515612, "fabric": 9515613 },
+			"needs": { "neoforge": "26.2.0.93", "fabricLoader": "0.20.1", "fabricApi": "0.161.0" },
+			"without": { "neoforge": [], "fabric": ["Spice of Life Onion"] }
+		},
+		{
+			"minecraft": ["26.1.2"],
+			"build": "26.1.2",
+			"neoforge": "1.0.1+neoforged.1",
+			"fabric": "1.0.1+fabric.1",
+			"curseforge": { "neoforge": 9515609, "fabric": 9515610 },
+			"needs": { "neoforge": "26.1.2.126", "fabricLoader": "0.20.1", "fabricApi": "0.155.3" },
+			"without": { "neoforge": [], "fabric": ["Spice of Life Onion"] }
+		},
+		{
+			"minecraft": ["26.1", "26.1.1"],
+			"build": "26.1.1",
+			"neoforge": "1.0.1+neoforged.1",
+			"fabric": "1.0.1+fabric.1",
+			"curseforge": { "neoforge": 9515622, "fabric": 9515623 },
+			"needs": { "neoforge": "26.1.0.19-beta", "fabricLoader": "0.20.1", "fabricApi": "0.145.4" },
+			"without": {
+				"neoforge": ["Tough As Nails", "Thirst Was Taken 2", "Spice of Life Onion"],
+				"fabric": ["Tough As Nails", "Spice of Life Onion"]
+			}
+		}
+	]
+}

@@ -118,6 +118,22 @@ Small touches that work everywhere: Minecraft tooltips on anything with `data-ti
 it, the second follows the link), `data-copy="text"` makes a copy button, `.vb-chalk` and `.vb-board` give a chalkboard or
 a gilt signboard. Everything that moves respects "reduce motion".
 
+## Search and link previews
+
+`src/lib/seo.ts` holds what search results and link previews show; `src/lib/seo-route.ts` (a Starlight route middleware)
+writes it into every page's `<head>`.
+
+- **English titles and descriptions** are written for what players search ("minecraft beer mod", wine, brewing, tavern,
+  NeoForge, Fabric, the Minecraft version from `releases.json`). The page's own title and text stay as they are, so the
+  translated pages don't go stale. Translated pages keep their own; their home pages set a search title in `index.mdx`.
+- **Preview pictures** (`og:image`, 1200×630, items 600×600) are drawn at build time by `src/pages/og/[key].jpg.ts`: a
+  shot from the page, a render or a store board (`branding/store/`) on the plank wall, the brand sign for the home page.
+- **Structured data**: the mod as a free `SoftwareApplication` on the home page, breadcrumbs on the others.
+- Starlight writes the canonical URL and the hreflang links; `@astrojs/sitemap` the sitemap (with the languages); the
+  build adds `sitemap.xml` and `robots.txt`. `npm run check` fails on a page without a title, description, canonical
+  URL or built preview picture.
+- The repository variable `GOOGLE_SITE_VERIFICATION` adds Search Console's verification tag.
+
 ## Voice
 
 A player's guide, not a tech doc: second person, short sentences, gameplay words. Seconds, minutes and in-game days, never

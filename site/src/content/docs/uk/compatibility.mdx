@@ -5,7 +5,7 @@ description: З якими модами працює Vine & Barrel і що до�
 import Item from '../../../components/mc/Item.astro';
 import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/uk';
 import compat from '../../../data/gen/compat.json';
-import { optional } from '../../../data/code/downloads';
+import { optional, downloads, gaps } from '../../../data/code/downloads';
 
 export const bopNames = { 'biomesoplenty:field': 'Поле', 'biomesoplenty:pasture': 'Пасовище', 'biomesoplenty:prairie': 'Прерія', 'biomesoplenty:mediterranean_forest': 'Середземноморський ліс', 'biomesoplenty:orchard': 'Сад', 'biomesoplenty:woodland': 'Лісисті землі', 'biomesoplenty:seasonal_forest': 'Сезонний ліс', 'biomesoplenty:lavender_field': 'Лавандове поле', 'biomesoplenty:lavender_forest': 'Лавандовий ліс' };
 export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => bopNames[b.id] ?? b.name) }));
@@ -24,12 +24,26 @@ export const rowLabel = (items) => {
 };
 export const groups = { fruits: 'Фрукти', carbs: 'Вуглеводи', proteins: 'Білки', vegetables: 'Овочі', sugars: 'Цукри' };
 
-Vine & Barrel {meta.version} працює на **Minecraft {meta.minecraft}** із **NeoForge {meta.neoforge}** або новішим, чи з
-**Fabric Loader {meta.fabricLoader}** і **Fabric API {meta.fabricApi}** або новішим. Інші моди йому не потрібні.
+Vine & Barrel {meta.version} працює на **Minecraft {list(downloads.map((r) => r.minecraft))}**, із **NeoForge** або
+**Fabric**. У розділі [Встановлення](/getting-started/#встановлення) є файл для кожної версії та завантажувач, який він потребує. Інші моди йому не потрібні.
 Усе нижче необов'язкове й вмикається саме, коли встановлено відповідний мод:
 
 - **NeoForge:** {optional.neoforge.join(', ')}.
 - **Fabric:** {optional.fabric.join(', ')}.
+
+Деяких із них немає для частини версій Minecraft. Де вони працюють:
+
+<table>
+	<thead><tr><th></th>{downloads.map((r) => <th>{r.minecraft}</th>)}</tr></thead>
+	<tbody>
+		{gaps.map((g) => (
+			<tr>
+				<td>{g.mod}</td>
+				{g.cells.map((c) => <td>{c}</td>)}
+			</tr>
+		))}
+	</tbody>
+</table>
 
 Serene Seasons і Biomes O' Plenty працюють через теги.
 

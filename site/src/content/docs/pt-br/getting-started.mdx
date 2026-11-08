@@ -8,10 +8,9 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/pt-br';
-import { downloads } from '../../../data/code/downloads';
+import { downloads, stores } from '../../../data/code/downloads';
 
-export const cells = { 'next release': 'próxima versão', planned: 'planejado' };
-export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
 export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
 export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
@@ -39,8 +38,21 @@ Encontre a sua versão do Minecraft e o seu loader, e baixe a partir dessa célu
 	</tbody>
 </table>
 
-- **NeoForge** precisa de {downloads.map((r) => `NeoForge ${r.neoforgeNeeds ?? `${meta.neoforge} ou mais recente`} no Minecraft ${r.minecraft}`).join('; ')}.
-- **Fabric** precisa do Fabric Loader {meta.fabricLoader} ou mais recente e da Fabric API {meta.fabricApi} ou mais recente.
+Todos os arquivos também estão no {cell(stores)}. Cada um precisa de, no mínimo:
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{r.needs.neoforge}</td>
+				<td>{r.needs.fabricLoader}</td>
+				<td>{r.needs.fabricApi}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
 
 O nome do arquivo diz qual você tem: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> é NeoForge,
 <code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> é Fabric. Coloque-o na pasta `mods`, no cliente e no servidor. Ele

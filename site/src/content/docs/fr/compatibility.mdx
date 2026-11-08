@@ -5,7 +5,7 @@ description: Avec quels mods Vine & Barrel fonctionne et ce que chacun apporte.
 import Item from '../../../components/mc/Item.astro';
 import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/fr';
 import compat from '../../../data/gen/compat.json';
-import { optional } from '../../../data/code/downloads';
+import { optional, downloads, gaps } from '../../../data/code/downloads';
 
 export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
 export const seasonRows = Object.entries(seasons);
@@ -22,12 +22,26 @@ export const rowLabel = (items) => {
 };
 export const groups = { fruits: 'Fruits', carbs: 'Glucides', proteins: 'Protéines', vegetables: 'Légumes', sugars: 'Sucres' };
 
-Vine & Barrel {meta.version} tourne sur **Minecraft {meta.minecraft}** avec **NeoForge {meta.neoforge}** ou plus récent, ou avec
-**Fabric Loader {meta.fabricLoader}** et **Fabric API {meta.fabricApi}** ou plus récent. Il n'a besoin d'aucun autre mod.
+Vine & Barrel {meta.version} tourne sur **Minecraft {list(downloads.map((r) => r.minecraft))}**, avec **NeoForge** ou
+**Fabric**. La section [Installation](/getting-started/#installation) donne le fichier de chaque version et le chargeur qu'il demande. Il n'a besoin d'aucun autre mod.
 Tout ce qui suit est facultatif et s'active tout seul quand l'autre mod est installé :
 
 - **NeoForge :** {optional.neoforge.join(', ')}.
 - **Fabric :** {optional.fabric.join(', ')}.
+
+Quelques-uns n'existent pas pour toutes les versions de Minecraft. Là où ils fonctionnent :
+
+<table>
+	<thead><tr><th></th>{downloads.map((r) => <th>{r.minecraft}</th>)}</tr></thead>
+	<tbody>
+		{gaps.map((g) => (
+			<tr>
+				<td>{g.mod}</td>
+				{g.cells.map((c) => <td>{c}</td>)}
+			</tr>
+		))}
+	</tbody>
+</table>
 
 Serene Seasons et Biomes O' Plenty passent par les tags.
 

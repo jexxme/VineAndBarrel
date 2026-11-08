@@ -8,10 +8,9 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/ja';
-import { downloads } from '../../../data/code/downloads';
+import { downloads, stores } from '../../../data/code/downloads';
 
-export const cells = { 'next release': '次のリリース', planned: '予定' };
-export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
 export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
 export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
@@ -39,8 +38,21 @@ Minecraft のバージョンとローダーを選んで、そのセルからダ�
 	</tbody>
 </table>
 
-- **NeoForge** には {downloads.map((r) => `Minecraft ${r.minecraft} 用に NeoForge ${r.neoforgeNeeds?.replace(' or newer', ' 以降') ?? `${meta.neoforge} 以降`}`).join('、')} が必要です。
-- **Fabric** には Fabric Loader {meta.fabricLoader} 以降と Fabric API {meta.fabricApi} 以降が必要です。
+どのファイルも {cell(stores)} にもあります。それぞれ、少なくとも次のバージョンが必要です。
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{r.needs.neoforge}</td>
+				<td>{r.needs.fabricLoader}</td>
+				<td>{r.needs.fabricApi}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
 
 ファイル名でどちらか分かります。<code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> は NeoForge、
 <code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> は Fabric です。クライアントにもサーバーにも `mods` フォルダーに入れてください。

@@ -40,6 +40,7 @@ jobs:
       BASE_PATH: ${{ vars.DOCS_BASE_PATH || format('/{0}', github.event.repository.name) }}
       REPO_URL: ${{ github.server_url }}/${{ github.repository }}
       REPO_BRANCH: ${{ github.ref_name }}
+      GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}   # Search Console's HTML tag token, if set
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

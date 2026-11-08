@@ -4,6 +4,8 @@ import starlight from '@astrojs/starlight';
 import preact from '@astrojs/preact';
 import { visit } from 'unist-util-visit';
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sitemap from '@astrojs/sitemap';
 import { translateSidebar } from './src/i18n/sidebar.mjs';
 import { LOCALES } from './src/i18n/locales.mjs';
@@ -69,6 +71,26 @@ const translatedOrEnglish = (page) => {
 	return !codes.includes(loc) || p.startsWith(`${loc}/items`) || translated.has(p);
 };
 
+/**
+ * After the build: sitemap.xml next to @astrojs/sitemap's sitemap-index.xml (the address crawlers and people try
+ * first), and robots.txt pointing at it. A project site's robots.txt isn't the host's (crawlers read
+ * https://<owner>.github.io/robots.txt), so the sitemap also gets submitted in Search Console.
+ */
+const seoFiles = {
+	name: 'vb-seo-files',
+	hooks: {
+		'astro:build:done': ({ dir }) => {
+			const out = fileURLToPath(dir);
+			if (fs.existsSync(path.join(out, 'sitemap-index.xml'))) fs.copyFileSync(path.join(out, 'sitemap-index.xml'), path.join(out, 'sitemap.xml'));
+			fs.writeFileSync(path.join(out, 'robots.txt'), `User-agent: *
+Allow: /
+
+Sitemap: ${new URL(`${base}/sitemap.xml`, site).href}
+`);
+		},
+	},
+};
+
 export default defineConfig({
 	site,
 	base,
@@ -88,6 +110,11 @@ export default defineConfig({
 			description: 'The player guide to Vine & Barrel, a cozy brewing mod for Minecraft 26.x: grow grapes, hops and barley, brew in a copper kettle, let it age in oak barrels and share a round. Every number comes from the mod itself.',
 			logo: { src: './src/assets/ui/header.png', alt: 'Vine & Barrel', replacesTitle: true },
 			favicon: '/favicon.png',
+			// Google Search Console's "HTML tag" check: the repository variable GOOGLE_SITE_VERIFICATION (the docs workflow
+			// passes it) is the token from the tag it shows
+			head: process.env.GOOGLE_SITE_VERIFICATION
+				? [{ tag: 'meta', attrs: { name: 'google-site-verification', content: process.env.GOOGLE_SITE_VERIFICATION } }]
+				: [],
 			social: repo ? [{ icon: 'github', label: 'GitHub', href: repo }] : [],
 			editLink: repo ? { baseUrl: `${repo}/edit/${branch}/site/` } : undefined,
 			customCss: ['./src/styles/theme.css', './src/styles/mc.css'],
@@ -98,6 +125,8 @@ export default defineConfig({
 				LanguageSelect: './src/components/overrides/LanguageSelect.astro',
 			},
 			lastUpdated: false,
+			// Search titles and descriptions, link-preview pictures, structured data (src/lib/seo.ts)
+			routeMiddleware: './src/lib/seo-route.ts',
 			...(locales.length
 				? { defaultLocale: 'root', locales: { root: { label: 'English', lang: 'en' }, ...Object.fromEntries(locales.map((l) => [l.code, { label: l.label, lang: l.lang }])) } }
 				: {}),
@@ -149,5 +178,6 @@ export default defineConfig({
 				},
 			]),
 		}),
+		seoFiles,
 	],
 });

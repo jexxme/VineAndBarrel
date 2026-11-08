@@ -8,10 +8,9 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/ko';
-import { downloads } from '../../../data/code/downloads';
+import { downloads, stores } from '../../../data/code/downloads';
 
-export const cells = { 'next release': '다음 릴리스', planned: '계획 중' };
-export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
 export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
 export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
@@ -39,8 +38,21 @@ Minecraft 버전과 로더를 찾아서, 해당 칸에서 내려받으세요.
 	</tbody>
 </table>
 
-- **NeoForge** 필요 버전: {downloads.map((r) => `Minecraft ${r.minecraft}에서 NeoForge ${(r.neoforgeNeeds ?? `${meta.neoforge} or newer`).replace(' or newer', ' 이상')}`).join('; ')}.
-- **Fabric** 필요 버전: Fabric Loader {meta.fabricLoader} 이상, Fabric API {meta.fabricApi} 이상.
+모든 파일은 {cell(stores)}에도 있어요. 파일마다 필요한 최소 버전은 다음과 같아요.
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{r.needs.neoforge}</td>
+				<td>{r.needs.fabricLoader}</td>
+				<td>{r.needs.fabricApi}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
 
 파일 이름을 보면 어느 쪽인지 알 수 있어요. <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code>은 NeoForge용,
 <code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code>은 Fabric용입니다. 클라이언트와 서버 모두 `mods` 폴더에 넣으세요. 다른 모드는

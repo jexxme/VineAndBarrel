@@ -8,12 +8,9 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/tr';
-import { downloads } from '../../../data/code/downloads';
+import { downloads, stores } from '../../../data/code/downloads';
 
-export const cells = { 'next release': 'sonraki sürüm', planned: 'planlanıyor' };
-export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
-
-export const needs = (s) => s.replace(' or newer', ' veya üzeri').replace(/^(.+) to (.+)$/, '$1 ile $2 arası');
+export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
 export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
 export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
@@ -39,8 +36,21 @@ Minecraft sürümünü ve mod yükleyicini bul, indirmeyi o hücreden yap:
 	</tbody>
 </table>
 
-- **NeoForge** için gerekenler: {downloads.map((r) => `Minecraft ${r.minecraft} üzerinde NeoForge ${r.neoforgeNeeds ? needs(r.neoforgeNeeds) : `${meta.neoforge} veya üzeri`}`).join('; ')}.
-- **Fabric** için Fabric Loader {meta.fabricLoader} veya üzeri ve Fabric API {meta.fabricApi} veya üzeri gerekir.
+Tüm dosyalar {cell(stores)} üzerinde de var. Her biri için en az şunlar gerekir:
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{r.needs.neoforge}</td>
+				<td>{r.needs.fabricLoader}</td>
+				<td>{r.needs.fabricApi}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
 
 Dosya adı hangisine sahip olduğunu söyler: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> NeoForge, <code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> Fabric dosyasıdır. Dosyayı hem istemcide hem sunucuda `mods` klasörüne koy. Başka hiçbir mod gerekmez. Birlikte çalıştığı her şey isteğe bağlıdır ve kendiliğinden devreye girer: bkz. [Uyumluluk](/compatibility/).
 

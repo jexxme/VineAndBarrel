@@ -8,10 +8,9 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/it';
-import { downloads } from '../../../data/code/downloads';
+import { downloads, stores } from '../../../data/code/downloads';
 
-export const cells = { 'next release': 'prossima versione', planned: 'previsto' };
-export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
 export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
 export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
@@ -39,8 +38,21 @@ Trova la tua versione di Minecraft e il tuo loader, e scarica da quella cella:
 	</tbody>
 </table>
 
-- **NeoForge** richiede {downloads.map((r) => `NeoForge ${r.neoforgeNeeds ?? `${meta.neoforge} o successivo`} su Minecraft ${r.minecraft}`).join('; ')}.
-- **Fabric** richiede Fabric Loader {meta.fabricLoader} o successivo e Fabric API {meta.fabricApi} o successivo.
+Tutti i file sono anche su {cell(stores)}. Ognuno richiede almeno:
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{r.needs.neoforge}</td>
+				<td>{r.needs.fabricLoader}</td>
+				<td>{r.needs.fabricApi}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
 
 Il nome del file ti dice quale hai: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> è per NeoForge,
 <code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> è per Fabric. Mettilo nella cartella `mods`, sia sul client che sul server. Non

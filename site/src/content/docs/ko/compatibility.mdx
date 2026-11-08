@@ -5,7 +5,7 @@ description: Vine & Barrel이 함께 작동하는 모드와 각 모드가 더해
 import Item from '../../../components/mc/Item.astro';
 import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/ko';
 import compat from '../../../data/gen/compat.json';
-import { optional } from '../../../data/code/downloads';
+import { optional, downloads, gaps } from '../../../data/code/downloads';
 
 export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
 export const seasonRows = Object.entries(seasons);
@@ -22,12 +22,26 @@ export const rowLabel = (items) => {
 };
 export const groups = { fruits: '과일', carbs: '탄수화물', proteins: '단백질', vegetables: '채소', sugars: '당류' };
 
-Vine & Barrel {meta.version}은 **Minecraft {meta.minecraft}**에서 **NeoForge {meta.neoforge}** 이상, 또는
-**Fabric Loader {meta.fabricLoader}**와 **Fabric API {meta.fabricApi}** 이상으로 실행돼요. 다른 모드는 필요 없어요.
+Vine & Barrel {meta.version}은 **Minecraft {list(downloads.map((r) => r.minecraft))}**에서 **NeoForge** 또는
+**Fabric**으로 실행돼요. 버전별 파일과 필요한 로더는 [설치](/getting-started/#설치)에 있어요. 다른 모드는 필요 없어요.
 아래는 모두 선택 사항이고, 해당 모드가 설치되어 있으면 저절로 켜져요.
 
 - **NeoForge:** {optional.neoforge.join(', ')}.
 - **Fabric:** {optional.fabric.join(', ')}.
+
+몇몇 모드는 일부 Minecraft 버전용 빌드가 없어요. 작동하는 곳은 다음과 같아요.
+
+<table>
+	<thead><tr><th></th>{downloads.map((r) => <th>{r.minecraft}</th>)}</tr></thead>
+	<tbody>
+		{gaps.map((g) => (
+			<tr>
+				<td>{g.mod}</td>
+				{g.cells.map((c) => <td>{c}</td>)}
+			</tr>
+		))}
+	</tbody>
+</table>
 
 Serene Seasons와 Biomes O' Plenty는 태그로 작동해요.
 

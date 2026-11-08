@@ -84,4 +84,30 @@ for (const f of files) {
 }
 for (const [u, pages] of missing) console.log('missing anchor', u, '←', [...pages].slice(0, 3).join(', '), pages.size > 3 ? `(+${pages.size - 3})` : '');
 console.log(`${missing.size} missing anchors`);
-process.exit(bad || broken.size || missing.size ? 1 : 0);
+// Search and link previews (src/lib/seo.ts): every page has a title, a description, a canonical URL and a preview
+// picture that was built, and its structured data parses. Redirect stubs and the 404 page don't count.
+const seo = [];
+for (const f of files) {
+	const html = fs.readFileSync(f, 'utf8');
+	const rel = path.relative(root, f).replaceAll('\\', '/');
+	if (/http-equiv="refresh"/.test(html) || /(^|\/)404(\/index)?\.html$/.test(rel)) continue;
+	const head = html.slice(0, html.indexOf('</head>'));
+	const problems = [];
+	if (!/<title>[^<]+<\/title>/.test(head)) problems.push('no title');
+	if (!/<meta name="description" content="[^"]+"/.test(head)) problems.push('no description');
+	if (!/<link rel="canonical" href="https:\/\/[^"]+"/.test(head)) problems.push('no canonical');
+	const og = head.match(/<meta property="og:image" content="([^"]+)"/)?.[1];
+	if (!og) problems.push('no og:image');
+	else if (!fs.existsSync(path.join(root, decodeURIComponent(new URL(og).pathname.slice(BASE.length))))) problems.push(`og:image not built: ${og}`);
+	for (const m of head.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+		try {
+			JSON.parse(m[1]);
+		} catch {
+			problems.push('JSON-LD does not parse');
+		}
+	}
+	if (problems.length) seo.push(`${rel} → ${problems.join(', ')}`);
+}
+for (const s of seo.slice(0, 20)) console.log('seo', s);
+console.log(`${seo.length} pages with missing search metadata`);
+process.exit(bad || broken.size || missing.size || seo.length ? 1 : 0);

@@ -8,10 +8,9 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/de';
-import { downloads } from '../../../data/code/downloads';
+import { downloads, stores } from '../../../data/code/downloads';
 
-export const cells = { 'next release': 'nächstes Release', planned: 'geplant' };
-export const cell = (c) => (typeof c === 'string' ? (cells[c] ?? c) : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
+export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
 export const young = [...new Map(drinks.filter((d) => d.stage === 'young' && !d.fdOnly).map((d) => [d.id, d])).values()];
 export const fdExtra = [...new Map(drinks.filter((d) => d.stage === 'young' && d.fdOnly && !young.some((y) => y.id === d.id)).map((d) => [d.id, d])).values()];
@@ -39,8 +38,21 @@ Such dir deine Minecraft-Version und deinen Loader aus und lade aus dieser Zelle
 	</tbody>
 </table>
 
-- **NeoForge** braucht {downloads.map((r) => `NeoForge ${r.neoforgeNeeds?.replace(' or newer', ' oder neuer') ?? `${meta.neoforge} oder neuer`} für Minecraft ${r.minecraft}`).join('; ')}.
-- **Fabric** braucht den Fabric Loader {meta.fabricLoader} oder neuer und die Fabric API {meta.fabricApi} oder neuer.
+Alle Dateien gibt es auch auf {cell(stores)}. Jede braucht mindestens:
+
+<table>
+	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<tbody>
+		{downloads.map((r) => (
+			<tr>
+				<td>{r.minecraft}</td>
+				<td>{r.needs.neoforge}</td>
+				<td>{r.needs.fabricLoader}</td>
+				<td>{r.needs.fabricApi}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
 
 Am Dateinamen erkennst du, welche du hast: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> ist NeoForge,
 <code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> ist Fabric. Leg sie in den Ordner `mods`, auf Client und Server. Sie

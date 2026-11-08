@@ -11,6 +11,7 @@ import fdnShot from '../assets/fdn/kitchen.jpg';
 import fdnLogo from '../assets/fdn/banner.png';
 import { meta, FDN_WIKI, url, pageUrl, itemList, CATEGORIES, iconOf, rules, roman, duration } from '../lib/data';
 import { t, localeOf } from '../lib/i18n';
+import { span } from '../data/code/downloads';
 
 const locale = localeOf(Astro.currentLocale);
 // The category names, one literal each (the key is the English name from CATEGORIES)
@@ -83,7 +84,7 @@ const chapters = [
 				</a>
 			))}
 		</nav>
-		<p class="corner left">{t('Vine & Barrel {version} · Minecraft {minecraft}', locale, { version: meta.version, minecraft: meta.minecraft })}</p>
+		<p class="corner left">{t('Vine & Barrel {version} · Minecraft {minecraft}', locale, { version: meta.version, minecraft: span })}</p>
 		<p class="corner right">{t('Not an official Minecraft product', locale)}</p>
 	</section>
 

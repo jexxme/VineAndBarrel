@@ -5,7 +5,7 @@ description: Vine & Barrelが連携するMODと、それぞれが加えるもの
 import Item from '../../../components/mc/Item.astro';
 import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/ja';
 import compat from '../../../data/gen/compat.json';
-import { optional } from '../../../data/code/downloads';
+import { optional, downloads, gaps } from '../../../data/code/downloads';
 
 export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
 export const seasonRows = Object.entries(seasons);
@@ -23,12 +23,26 @@ export const rowLabel = (items) => {
 };
 export const groups = { fruits: '果物', carbs: '炭水化物', proteins: 'タンパク質', vegetables: '野菜', sugars: '糖類' };
 
-Vine & Barrel {meta.version} は **Minecraft {meta.minecraft}** 上で、**NeoForge {meta.neoforge}** 以降、または
-**Fabric Loader {meta.fabricLoader}** と **Fabric API {meta.fabricApi}** 以降で動きます。ほかのMODは不要です。
+Vine & Barrel {meta.version} は **Minecraft {list(downloads.map((r) => r.minecraft))}** 上で、**NeoForge** または
+**Fabric** で動きます。各バージョンのファイルと必要なローダーは[インストール](/getting-started/#インストール)にあります。ほかのMODは不要です。
 以下はすべて任意で、相手のMODが入っていれば自動で有効になります:
 
 - **NeoForge:** {optional.neoforge.join(', ')}。
 - **Fabric:** {optional.fabric.join(', ')}。
+
+いくつかは一部の Minecraft バージョン向けのビルドがありません。動く組み合わせは次のとおりです:
+
+<table>
+	<thead><tr><th></th>{downloads.map((r) => <th>{r.minecraft}</th>)}</tr></thead>
+	<tbody>
+		{gaps.map((g) => (
+			<tr>
+				<td>{g.mod}</td>
+				{g.cells.map((c) => <td>{c}</td>)}
+			</tr>
+		))}
+	</tbody>
+</table>
 
 Serene SeasonsとBiomes O' Plentyはタグ経由で連携します。
 

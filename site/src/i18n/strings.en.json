@@ -72,7 +72,7 @@
 	"All {n} items & blocks": "components/Landing.astro",
 	"All {n} items and blocks, one tab per category. Hover a slot to see what it is, click it to open its page.": "components/Landing.astro",
 	"All {n} items in Vine & Barrel {version}. Hover an item for its id, click it for its full page: recipes, uses, where to find it, and every stat. Type to filter, or press {key} to search the whole site.": "components/items/ItemIndex.astro",
-	"All items & blocks": "components/Landing.astro, components/items/ItemIndex.astro, sidebar",
+	"All items & blocks": "components/Landing.astro, components/items/ItemIndex.astro, lib/seo-route.ts, sidebar",
 	"All items by category": "components/Landing.astro",
 	"All recipes": "components/Landing.astro, sidebar",
 	"Also by Jexxme": "components/Landing.astro",
