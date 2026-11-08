@@ -1,0 +1,132 @@
+---
+// The mod's loop at a glance: grow, brew, age, serve. Four chalkboard cards with the real block or item, what happens
+// there and how long it takes (from the recipes and rules), each linking to its page.
+import { t, localeOf } from '../../lib/i18n';
+import { byType, rules, iconOf, pageUrl, seconds, days, duration, renderOf } from '../../lib/data';
+
+const locale = localeOf(Astro.currentLocale);
+const brew = byType('vineandbarrel:brewing').find((r) => !r.fdOnly)!;
+const age = byType('vineandbarrel:aging').find((r) => !r.fdOnly)!;
+const steps = [
+	{ n: t('Grow', locale), href: '/crops/', img: renderOf('blocks/grape_bush') ?? iconOf('vineandbarrel:red_grapes')!.src, what: t('Grapes, hops and barley, picked again and again', locale), time: t('from wild seeds', locale) },
+	{ n: t('Brew', locale), href: '/brew-kettle/', img: renderOf('blocks/brew_kettle')!, what: t('Juice or wort, {n} servings a batch', locale, { n: brew.servings! }), time: t('{time} over a fire', locale, { time: seconds(brew.brewingTime!, locale) }) },
+	{ n: t('Age', locale), href: '/aging-barrel/', img: renderOf('blocks/aging_barrel')!, what: t('Ferments, then ages, {n} servings a barrel', locale, { n: rules.barrelCapacity }), time: t('{ferment} + {age}', locale, { ferment: days(age.fermentingTime!, locale), age: days(age.agingTime!, locale) }) },
+	{ n: t('Serve', locale), href: '/drinks/', img: iconOf('vineandbarrel:aged_red_wine')!.src, what: t('Tap a mug or glass, drink, say cheers', locale), time: t('buff for {young}, aged {aged}', locale, { young: duration(rules.youngBuffTicks, locale), aged: duration(rules.agedBuffTicks, locale) }) },
+];
+---
+<ol class="vb-loop not-content">
+	{steps.map((s, i) => (
+		<li>
+			<a href={pageUrl(s.href, locale)} class="card vb-chalk">
+				<span class="n">{i + 1}. {s.n}</span>
+				<img src={s.img} alt="" width="96" height="96" loading="lazy" />
+				<span class="what">{s.what}</span>
+				<span class="time">{s.time}</span>
+			</a>
+		</li>
+	))}
+</ol>
+<style>
+	.vb-loop {
+		list-style: none;
+		padding: 0;
+		margin: 28px 0;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 20px;
+	}
+	li {
+		margin: 0 !important;
+		position: relative;
+	}
+	/* the arrow from one card to the next */
+	li + li::before {
+		content: '>';
+		position: absolute;
+		left: -16px;
+		top: 50%;
+		transform: translateY(-50%);
+		color: var(--sl-color-text-accent);
+	}
+	.card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		height: 100%;
+		box-sizing: border-box;
+		padding: 6px 8px 4px;
+		text-align: center;
+		text-decoration: none;
+		box-shadow: 6px 6px 0 rgb(0 0 0 / 0.35);
+		transition: transform 0.15s cubic-bezier(0.3, 1.6, 0.5, 1);
+	}
+	.card:hover,
+	.card:focus-visible {
+		transform: translateY(-4px);
+		outline: none;
+	}
+	.n {
+		color: var(--vb-chalk-yellow);
+		text-shadow: 2px 0 0 currentColor;
+		letter-spacing: 2px;
+	}
+	img {
+		width: 96px;
+		height: 96px;
+		image-rendering: pixelated;
+		transition: transform 0.15s;
+	}
+	.card:hover img {
+		transform: scale(1.06);
+	}
+	.what {
+		color: var(--vb-chalk);
+		line-height: 24px;
+	}
+	.time {
+		color: var(--vb-chalk-orange);
+		line-height: 24px;
+		margin-top: auto;
+	}
+	@media (max-width: 50rem) {
+		.vb-loop {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		li:nth-child(3)::before {
+			display: none;
+		}
+	}
+	/* Phones: one column, each card a row (picture left, words right) so the four steps stay short */
+	@media (max-width: 26rem) {
+		.vb-loop {
+			grid-template-columns: 1fr;
+			gap: 12px;
+		}
+		li + li::before {
+			display: none;
+		}
+		.card {
+			display: grid;
+			grid-template-columns: 64px 1fr;
+			grid-template-areas: 'img n' 'img what' 'img time';
+			align-items: center;
+			column-gap: 12px;
+			text-align: left;
+		}
+		.n {
+			grid-area: n;
+		}
+		img {
+			grid-area: img;
+			width: 64px;
+			height: 64px;
+		}
+		.what {
+			grid-area: what;
+		}
+		.time {
+			grid-area: time;
+		}
+	}
+</style>

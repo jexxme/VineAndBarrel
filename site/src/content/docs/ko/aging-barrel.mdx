@@ -1,0 +1,111 @@
+---
+title: 숙성 통
+description: 붓고, 발효하고, 숙성하고, 따르기. 숙성 통의 작동 방식, 걸리는 시간, 통으로 저장고를 짓는 방법.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import AgingTimeline from '../../../components/brewing/AgingTimeline.astro';
+import { rules, byType, days, list, nameOf } from '../../../lib/l10n/ko';
+
+export const aging = byType('vineandbarrel:aging');
+export const a = aging[0];
+export const sameTimes = aging.every((r) => r.fermentingTime === a.fermentingTime && r.agingTime === a.agingTime);
+
+<Render name="scenes/barrel-rack" float="right" size={256} alt="나란히 놓여 선반으로 이어진 숙성 통 세 개" />
+
+<Item id="aging_barrel" />은 Vine & Barrel의 심장이에요. 화면이 없어서, 붓고, 기다리고, 따르는 모든 일을 월드에서
+직접 해요. 꼭지가 이쪽을 향하게 놓여요.
+
+## 채우기
+
+[양조 솥](/brew-kettle/)에서 만든 베이스를 들고 통을 우클릭하세요.
+
+- 양동이는 **{rules.servingsPerBucket}인분**, 병은 **{rules.servingsPerBottle}인분**을 부어요.
+- 통에는 **{rules.barrelCapacity}인분**이 들어가요. 양동이 두 개나 병 여덟 개예요.
+
+아직 발효 중이라면 같은 베이스를 더 부어 채울 수 있어요. 잘못 부었나요? 배치가 술이 되기 전이라면 빈 양동이나 병으로
+다시 꺼낼 수 있어요.
+
+## 발효와 숙성
+
+{sameTimes && <p>모든 배치는 같은 두 단계를 거쳐요.</p>}
+
+1. **발효**는 **{days(a.fermentingTime)}** 동안 해요. 배치가 <Item id="red_wine" /> 같은 *어린* 술이 돼요.
+2. **숙성**은 **{days(a.agingTime)}** 더 해요. 통에 남은 술은 <Item id="aged_red_wine" /> 같은 *숙성된* 술이 되고, 버프가 더 강하고 더 오래 가요.
+
+<AgingTimeline />
+
+{aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
+
+시간은 게임 시간으로 흐르니, 밤에 잠을 자도 계산돼요. 숙성 단계 중에도 어린 술을 따를 수 있지만, 따른 인분만큼
+숙성될 술이 줄어요. Farmer's Delight와 함께라면 FD의 사과주(같은 하드 사이더가 돼요)와 수박 주스도 발효해요.
+[Farmer's Delight](/farmers-delight/)를 참고하세요.
+
+<Shot src="cellar.jpg" caption="선술집 벽을 따라 늘어선 저장고. 통이 이어져 선반이 되고, 두 번째 줄이 그 위에 쌓여 있다. 한 통의 에어락에서 거품이 올라오고, 밀랍 봉인은 숙성된 배치를 나타낸다." />
+
+## 상태 보기
+
+아무것도 열지 않고도 통의 상태를 알 수 있어요.
+
+- **빈손으로 우클릭**하면 *페일 에일 · 5인분 · 숙성 중, 3일 뒤 완료* 같은 상태 줄이 나와요. 모루에서 통 이름을 바꾸면
+  이름도 거기에 표시돼요.
+- **위쪽 마개**가 단계를 알려 줘요. 비어 있거나 어린 술이 마실 준비가 됐으면 코르크, 발효 중에는 거품이 올라오는
+  유리 에어락, 숙성이 끝나면 붉은 밀랍 봉인이에요.
+- **앞쪽 유리창**은 술의 색으로 얼마나 찼는지 보여 줘요.
+- **소리와 방울:** 발효 중에는 거품 소리가 나고, 꼭지에서 가끔 방울이 떨어지고, 배치가 숙성되면 코르크가 살짝 *뻥* 터져요.
+
+<Stages prefix="barrel-bung" title="마개" labels={['코르크', '에어락: 발효 중', '밀랍: 숙성됨']} />
+<Stages prefix="barrel-fill" title="유리창" only={['0', '2', '4', '6', '8']} labels={['빔', '2', '4', '6', '가득']} />
+
+## 따르기
+
+빈 <Item id="wine_glass" />(와인)이나 <Item id="mug" />(맥주, 벌꿀술, 사이더)로 통을 우클릭하면 1인분을 따라요.
+꼭지 손잡이가 돌아가고 술이 손에 들어와요.
+
+- 잔이 맞지 않나요? 통이 어느 잔을 써야 하는지 알려 줘요(*레드 와인: 와인잔에 담아 마셔요*). 아무것도 소모되지 않아요.
+- 아직 발효 중인가요? 언제 준비되는지 알려 줘요.
+- 마지막 1인분까지 따르면 통이 비고, 새 배치를 받을 준비가 돼요.
+
+## 저장고 짓기
+
+<Render name="scenes/barrel-cellar" float="right" size={256} alt="통 두 줄, 위 줄이 아래 줄 위에 얹혀 있다" />
+
+- **선반:** 같은 방향으로 나란히 놓은 통은 받침이 이어져 긴 선반이 돼요.
+- **쌓기:** 다른 통 위에 올린 통은 받침을 없애고 쐐기 위에 놓여서, 통으로 된 벽을 통째로 쌓을 수 있어요.
+- **비교기:** 남은 인분 수를 읽어요. 0(빔)부터 15(전부 {rules.barrelCapacity}인분)까지예요.
+- **가득 찬 채로 부수면** 배치와 모루 이름이 그대로 남아요. 아이템의 툴팁에 술, 인분 수, 단계가 나와요.
+  아이템인 동안은 숙성이 멈추고, 다시 놓으면 이어져요. 가득 찬 통은 다른 통과 겹쳐 쌓이지 않아요.
+- 통은 나무라서, 도끼로 캐세요.
+
+## 자동화
+
+- 위의 **호퍼**는 베이스를 부어 줘요. 옆과 아래의 호퍼는 빈 맥주잔과 와인잔을 넣어 주고, 따라진 술과 붓고 남은
+  빈 양동이와 병을 꺼내 가요.
+- **발사기**가 통을 향하면 빈 맥주잔이나 와인잔으로 1인분을 따르거나, 베이스가 든 양동이나 병을 부어요.
+
+## 알아 두면 좋아요
+
+- **일찍 채우세요.** 첫 번째로 부을 때만 시계가 시작돼요. 나중에 더 넣은 베이스는 그 배치의 나이를 이어받아서, 더
+  짧은 시간에 발효돼요. 배치가 술이 되면, 통이 다 빌 때까지 더는 아무것도 받지 않아요.
+- **통 하나에 베이스 하나.** 다른 베이스를 부으면 거절당하고(*이 통에 든 것: 적포도 주스*) 아무것도 소모되지 않아요.
+- **거의 찼나요?** 양동이를 쓰려면 {rules.servingsPerBucket}인분이 들어갈 자리가 있어야 해서, 이미
+  {rules.barrelCapacity - rules.servingsPerBucket}인분보다 많이 차 있으면 거절당해요. 나머지는 병으로 채우세요. 반대도
+  마찬가지예요. 빈 양동이로 베이스를 다시 꺼내려면 통에 {rules.servingsPerBucket}인분 이상 있어야 해요.
+- **자리를 비워도 숙성돼요.** 통은 게임 시간으로 돌아가서, 멀리 떨어져 있거나 접속을 끊어도 계속 진행돼요. 코르크 소리만
+  놓칠 뿐이에요.
+- **저장고는 오버월드에 지으세요.** 네더와 디 엔드에는 잠으로 넘길 낮이 없어서 잠을 자도 통이 빨리 돌아가지 않고,
+  상태 줄도 "내일 아침" 대신 일수로 세어요.
+- **인벤토리가 가득 찼나요?** 따른 술은 발치에 떨어져요.
+- **크리에이티브 모드:** 가득 찬 통을 부수면 아무것도 떨어지지 않아요. 블록 선택(Ctrl + 마우스 가운데 클릭)으로 배치까지 복사하세요.
+- **크리퍼는 멀리.** 폭발은 통을 배치째로 부술 수 있어요.
+- **호퍼 팁:** 위의 호퍼는 통이 지금 받을 수 있는 것만 붓기 때문에, 잘못된 베이스는 호퍼를 막지 않고 기다려요. 따르는
+  장치 아래에는 호퍼를 두어, 완성된 술이 다음 술을 막지 않게 하세요.
+- **불 걱정 없어요.** 통은 불에 타지 않아요. 빈 통은 화로 연료로 쓸 수도 있지만, 가득 찬 통은 안 돼요.
+
+## 제작법
+
+<Recipe id="aging_barrel" />

@@ -1,0 +1,82 @@
+// A loader project (neoforge, fabric): compiles the common sources into its own jar, with its own glue code on top.
+// The common project hands over its source folders (not a jar), so each loader compiles everything in one go and the
+// IDE still sees every file in exactly one module (the MultiLoader-Template way).
+plugins {
+    id 'vb-java'
+}
+
+base {
+    archivesName = "VineAndBarrel" // the version tells the loaders apart: VineAndBarrel-26.3-0.9.0+fabric.1.jar
+}
+
+configurations {
+    commonJava { canBeResolved = true; canBeConsumed = false }
+    commonResources { canBeResolved = true; canBeConsumed = false }
+}
+
+dependencies {
+    commonJava(project(path: ':common', configuration: 'commonJava'))
+    commonResources(project(path: ':common', configuration: 'commonResources'))
+}
+
+tasks.named('compileJava', JavaCompile) {
+    dependsOn(configurations.commonJava)
+    source(configurations.commonJava)
+}
+
+tasks.named('processResources', ProcessResources) {
+    dependsOn(configurations.commonResources)
+    from(configurations.commonResources) {
+        exclude '.cache'
+        // Each loader ships only its own access file: the access transformer on NeoForge, the class tweaker on Fabric
+        exclude(project.name == 'fabric' ? 'META-INF/accesstransformer.cfg' : 'vineandbarrel.classtweaker')
+    }
+}
+
+// The wiki exporter is dev-only (runDocsExport); it never ships in a jar
+tasks.named('jar', Jar) {
+    exclude 'jexxme/vineandbarrel/gametest/VBDocsExport*'
+}
+
+// Ship our MIT license and the Farmer's Delight MIT notice (for the FD art we use) inside the jar
+tasks.named('jar', Jar).configure {
+    from(rootProject.file('LICENSE')) {
+        rename { 'LICENSE_vineandbarrel' }
+    }
+    from(rootProject.file('NOTICE_farmersdelight.txt'))
+}
+
+// The metadata files (neoforge.mods.toml, fabric.mod.json) get the mod's properties from gradle.properties
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            fabric_loader_version  : fabric_loader_version,
+            // Fabric API's own version without the "+26.3" build suffix, for fabric.mod.json's "depends"
+            fabric_api_min_version : fabric_api_version.tokenize('+')[0],
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : loaderModVersion,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml', 'fabric.mod.json']) {
+        expand replaceProperties
+    }
+}
+
+// At most two games at once across both loaders (GameTest servers, smoke clients; Gradle runs tasks in parallel), so
+// a whole verify run fits next to everything else on the machine. One service for the whole build (VbGameSlots).
+def gameSlots = gradle.sharedServices.registerIfAbsent('vbGameSlots', VbGameSlots) {
+    maxParallelUsages = 2
+}
+tasks.withType(JavaExec).configureEach { task ->
+    if (task.name.startsWith('run')) {
+        task.usesService(gameSlots)
+    }
+}

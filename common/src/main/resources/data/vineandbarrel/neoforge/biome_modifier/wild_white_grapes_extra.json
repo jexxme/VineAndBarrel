@@ -1,0 +1,6 @@
+{
+  "type": "vineandbarrel:add_features_by_filter",
+  "allowed_biomes": "#vineandbarrel:wild_white_grapes_extra",
+  "features": "vineandbarrel:patch_wild_white_grapes",
+  "step": "vegetal_decoration"
+}

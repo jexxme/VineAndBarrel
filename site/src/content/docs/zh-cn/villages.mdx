@@ -1,0 +1,55 @@
+---
+title: 村庄与酒馆
+description: 有现成酒桶可放酒的村庄酒馆，种着葡萄、啤酒花和大麦的村庄农田，种子交易和箱子战利品。
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import VillageInfo from '../../../components/data/VillageInfo.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, roman } from '../../../lib/l10n/zh-cn';
+
+<Render name="scenes/tavern" float="right" size={256} alt="酒馆一角" />
+
+## 酒馆
+
+每种村庄都可能有一家按自己风格建造的**酒馆**，有两种布局。大约每三个村庄里有一个，偶尔一个村庄里有两家。没有两家完全一样：酒桶里装什么、桌上摆什么酒，以及花、旗帜和蜡烛，每家都不同。
+
+找门上挂着的招牌。里面有地方走动：壁炉边的桌子，吧台前的凳子，吧台后面营火上的酿造锅。吧台后面有楼梯通向下面的**酒桶酒窖**，那是大厅下面一间拱顶、点着火把的房间，里面都是酒桶。
+
+每种村庄各有一处特色：
+
+- **平原：**啤酒花藤棚架下摆着长桌的啤酒花园。
+- **沙漠：**沿外面的楼梯上去的屋顶露台。
+- **热带草原：**遮荫的凉廊吧台，有自己的柜台。
+- **雪原：**带大壁炉和毛皮地毯的炉边房间。
+- **针叶林：**有长桌的蜜酒厅，屋檐下堆着柴火。
+
+它的酒桶**已经装满**：走进去，拿一个啤酒杯或高脚杯，放一杯酒就行。其中几桶是陈酿的。酒馆的箱子里有种子、啤酒杯和高脚杯，还有几杯当地的饮品，开始自己酿酒所需的一切都有了。
+
+<Shot src="taverns/plains.jpg" caption="平原：啤酒花园，啤酒花藤棚架下的长桌。" />
+<Shot src="taverns/desert.jpg" caption="沙漠：屋顶露台，沿外面的楼梯上去。" />
+<Shot src="taverns/savanna.jpg" caption="热带草原：凉廊吧台，大厅敞开的活板门下的柜台。" />
+<Shot src="taverns/snowy.jpg" caption="雪原：炉边房间，三座并排的壁炉，毛皮地毯和扶手椅。" />
+<Shot src="taverns/taiga.jpg" caption="针叶林：蜜酒厅的长桌。" />
+<Shot src="taverns/cellar.jpg" caption="大厅下面的酒桶酒窖：石拱顶下成排的酒桶，墙上有火把。" />
+
+### 小贴士
+
+- 酒馆的酒桶已经过了发酵期，所以不能再添酒。放空一桶，再装上你自己的酒：用你自己装的桶陈酿出酒，才能获得*好酒不怕等*。
+- 酒馆里较新的酒桶会像任何酒桶一样继续陈酿，所以放着不管几天的酒馆，陈酿的酒会更多。
+- 在村庄里放任何一个桶里的酒，不管是酒馆的还是你自己的，都能获得*开桶畅饮*。
+- 请清醒时交易：从微醺 {roman(rules.tipsy.rowdyLevel - 1)} 起，村民和商人不会跟你做买卖。见[微醺](/tipsy/#发酒疯)。
+
+## 村庄农田
+
+村庄农田会根据气候，在原版作物之外种上我们的作物：温暖的地方种红葡萄，平原和针叶林的村庄种白葡萄，凉爽的地方种啤酒花，几乎到处都种大麦。
+
+<VillageInfo show="farms" />
+
+## 交易
+
+<VillageInfo show="trades" />
+
+## 箱子战利品
+
+<VillageInfo show="loot" />

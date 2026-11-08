@@ -1,0 +1,568 @@
+---
+// The Aging Barrel over time: pick a base, drag the slider through the days (or press play) and watch the barrel the way
+// you would in the game: the bung (cork, bubbling airlock, wax seal), the sky going round, the status line on the action
+// bar worded like the game words it (src/data/code/barrel.ts), and what a tap would give you right now.
+// All times come from the aging recipes; the barrel is filled to the brim when the slider starts.
+import Slot from '../mc/Slot.astro';
+import { byType, nameOf, iconOf, url, rules, days, gameText } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
+import { barrelStatus } from '../../data/code/barrel';
+
+const locale = localeOf(Astro.currentLocale);
+const list = byType('vineandbarrel:aging').filter((r) => !r.fdOnly && r.loaded);
+const DAY = rules.dayTicks as number;
+// Poured in an hour after sunrise
+const START = 1000;
+const conf = list.map((r) => ({
+	id: r.id.split('/').pop()!,
+	young: nameOf(r.young!.id, locale),
+	aged: nameOf(r.aged!.id, locale),
+	ferment: r.fermentingTime!,
+	age: r.agingTime!,
+}));
+const longest = Math.max(...list.map((r) => r.fermentingTime! + r.agingTime!));
+const max = longest + DAY / 2;
+const step = DAY / 24;
+const dayMarks = Array.from({ length: Math.floor(max / DAY) + 1 }, (_, i) => i);
+const first = list[0];
+// The status line is the game's own text (message.vineandbarrel.aging_barrel.*), with %1 style placeholders for the script
+const E = barrelStatus.text;
+const K = 'message.vineandbarrel.aging_barrel.';
+const g = (key: string, en: string) => gameText(K + key, en, locale).replace(/%(\d)\$s/g, '%$1').replace(/%s/g, '%1');
+const text = {
+	status: g('status', E.status),
+	servings: g('servings', E.servings),
+	fermenting: g('fermenting', E.fermenting),
+	aging: g('aging', E.aging),
+	aged: g('aged', E.aged),
+	stillFermenting: g('still_fermenting', E.stillFermenting),
+	soon: g('when.soon', E.soon),
+	inDays: g('when.in_days', E.inDays),
+	today: Object.fromEntries(Object.entries(E.today).map(([p, en]) => [p, g('when.today.' + p, en)])),
+	tomorrow: Object.fromEntries(Object.entries(E.tomorrow).map(([p, en]) => [p, g('when.tomorrow.' + p, en)])),
+};
+// Words for the script (it can't call t())
+const words = {
+	tapNow: t('Tap it now', locale),
+	tapGives: t('A tap now gives', locale),
+	play: t('Let it age', locale),
+	pause: t('Pause', locale),
+	clock: t('Day {n}, {part}', locale),
+	parts: { morning: t('morning', locale), afternoon: t('afternoon', locale), evening: t('evening', locale), night: t('night', locale) },
+	caption: t('Drag the slider, or let it age. {young} ferments, then ages into {aged}.', locale),
+};
+// "day 3": the word hides on phones, so it is split off the number
+const [dayPre, dayPost] = t('day {n}', locale, { n: '\u0000' }).split('\u0000');
+const bung = (n: number) => url(`/renders/stages/barrel-bung-${n}.png`);
+---
+<figure class="vb-aging not-content" data-conf={JSON.stringify(conf)} data-start={START} data-day={DAY} data-text={JSON.stringify(text)} data-words={JSON.stringify(words)} data-soon={barrelStatus.soon} data-parts={JSON.stringify(barrelStatus.parts)} data-capacity={rules.barrelCapacity}>
+	<div class="pick" role="group" aria-label={t("What's in the barrel", locale)}>
+		{list.map((r, i) => (
+			<button type="button" class="mc-button pick-btn" aria-pressed={i === 0 ? 'true' : 'false'} data-id={r.id.split('/').pop()} data-tip-items={`${nameOf(r.base!.id, locale)}~`} data-tip-sub={t('becomes {name}', locale, { name: nameOf(r.young!.id, locale) })}>
+				<img src={iconOf(r.base!.id)?.src} alt="" width="32" height="32" />
+				<span>{nameOf(r.young!.id, locale)}</span>
+			</button>
+		))}
+	</div>
+	<div class="scene" data-stage="fermenting">
+		<div class="sky" aria-hidden="true"><div class="orbit"><span class="sun"></span><span class="moon"></span></div></div>
+		<div class="barrel">
+			<img class="b b0" src={bung(0)} alt="" width="192" height="192" />
+			<img class="b b1" src={bung(1)} alt="" width="192" height="192" />
+			<img class="b b2" src={bung(2)} alt="" width="192" height="192" />
+			<span class="bubbles" aria-hidden="true"><i></i><i></i><i></i></span>
+			<span class="pop" aria-hidden="true">{t('*pop*', locale)}</span>
+		</div>
+		<div class="tap">
+			<p class="tap-h">{t('A tap now gives', locale)}</p>
+			{list.map((r, i) => (
+				<div class="tap-set" data-id={r.id.split('/').pop()} hidden={i !== 0}>
+					<span class="tap-s" data-s="young"><Slot id={r.young!.id} scale={3} /></span>
+					<span class="tap-s" data-s="aged"><Slot id={r.aged!.id} scale={3} /></span>
+				</div>
+			))}
+			<p class="tap-n" aria-live="polite"></p>
+		</div>
+		<p class="actionbar" aria-live="polite"></p>
+		<p class="clock"></p>
+	</div>
+	<div class="track">
+		<input type="range" min="0" max={max} step={step} value="0" aria-label={t('Time since the barrel was filled', locale)} />
+		<div class="ticks" aria-hidden="true">
+			{dayMarks.map((d) => <span class:list={[{ first: d === 0 }]} style={`left:${(d * DAY * 100) / max}%`}>{d === 0 ? t('filled', locale) : <>{dayPre && <b>{dayPre}</b>}{d}{dayPost && <b>{dayPost}</b>}</>}</span>)}
+		</div>
+		<button type="button" class="play" aria-pressed="false"><span class="i" aria-hidden="true"></span><span class="t">{words.play}</span></button>
+	</div>
+	<figcaption class="fd-kicker">
+		{t('Drag the slider, or let it age. {young} ferments for {ferment}, then ages {age} more.', locale, { young: nameOf(first.young!.id, locale), ferment: days(first.fermentingTime!, locale), age: days(first.agingTime!, locale) })}
+	</figcaption>
+</figure>
+
+<script>
+	type Conf = { id: string; young: string; aged: string; ferment: number; age: number };
+	for (const fig of document.querySelectorAll<HTMLElement>('.vb-aging')) {
+		const conf: Conf[] = JSON.parse(fig.dataset.conf!);
+		const T = JSON.parse(fig.dataset.text!);
+		const W = JSON.parse(fig.dataset.words!);
+		const parts: [number, string][] = JSON.parse(fig.dataset.parts!);
+		const START = +fig.dataset.start!;
+		const DAY = +fig.dataset.day!;
+		const SOON = +fig.dataset.soon!;
+		const cap = +fig.dataset.capacity!;
+		const range = fig.querySelector<HTMLInputElement>('input[type=range]')!;
+		const scene = fig.querySelector<HTMLElement>('.scene')!;
+		const bar = fig.querySelector<HTMLElement>('.actionbar')!;
+		const clock = fig.querySelector<HTMLElement>('.clock')!;
+		const tapN = fig.querySelector<HTMLElement>('.tap-n')!;
+		const sky = fig.querySelector<HTMLElement>('.sky')!;
+		const caption = fig.querySelector<HTMLElement>('figcaption')!;
+		const fmt = (s: string, ...a: (string | number)[]) => a.reduce<string>((out, v, i) => out.replace(`%${i + 1}`, String(v)), s);
+		const part = (t: number) => parts.find(([end]) => t < end)![1];
+		// BarrelStatus.when: "any minute now", "this evening", "tomorrow morning", "in 3 days"
+		const when = (now: number, left: number) => {
+			if (left <= SOON) return T.soon;
+			const target = now + left;
+			const d = Math.floor(target / DAY) - Math.floor(now / DAY);
+			const p = part(((target % DAY) + DAY) % DAY);
+			return d === 0 ? T.today[p] : d === 1 ? T.tomorrow[p] : fmt(T.inDays, d);
+		};
+		let cur = conf[0];
+		let stage = '';
+		const update = () => {
+			const t = +range.value;
+			const now = START + t;
+			const s = t < cur.ferment ? 'fermenting' : t < cur.ferment + cur.age ? 'young' : 'aged';
+			if (stage && s === 'aged' && stage !== 'aged') {
+				scene.classList.remove('popped');
+				void scene.offsetWidth;
+				scene.classList.add('popped');
+			}
+			stage = s;
+			scene.dataset.stage = s;
+			const state = s === 'fermenting' ? fmt(T.fermenting, when(now, cur.ferment - t)) : s === 'young' ? fmt(T.aging, when(now, cur.ferment + cur.age - t)) : T.aged;
+			bar.textContent = fmt(T.status, s === 'aged' ? cur.aged : cur.young, fmt(T.servings, cap), state);
+			tapN.textContent = s === 'fermenting' ? fmt(T.stillFermenting, cur.young, when(now, cur.ferment - t)) : s === 'young' ? cur.young : cur.aged;
+			fig.querySelector<HTMLElement>('.tap-h')!.textContent = s === 'fermenting' ? W.tapNow : W.tapGives;
+			tapN.classList.toggle('msg', s === 'fermenting');
+			for (const el of fig.querySelectorAll<HTMLElement>('.tap-s')) el.hidden = el.dataset.s !== s;
+			// the sky: sunrise at 0, noon 6000, sunset 12000, night from 13000
+			const tod = ((now % DAY) + DAY) % DAY;
+			const dayNo = Math.floor(now / DAY) + 1;
+			clock.textContent = W.clock.replace('{n}', String(dayNo)).replace('{part}', W.parts[part(tod)]);
+			const sunA = (tod / DAY) * 360; // 0 = rising in the east
+			sky.style.setProperty('--sun', `${sunA}deg`);
+			sky.style.setProperty('--light', String(Math.max(0, Math.min(1, Math.sin((tod / 12000) * Math.PI) * 1.6 + 0.15))));
+			range.style.setProperty('--f', `${(cur.ferment / +range.max) * 100}%`);
+			range.style.setProperty('--a', `${((cur.ferment + cur.age) / +range.max) * 100}%`);
+			range.style.setProperty('--v', `${(t / +range.max) * 100}%`);
+			range.setAttribute('aria-valuetext', `${clock.textContent}: ${bar.textContent}`);
+		};
+		range.addEventListener('input', () => {
+			stopPlay();
+			update();
+		});
+		for (const b of fig.querySelectorAll<HTMLButtonElement>('.pick-btn')) {
+			b.addEventListener('click', () => {
+				for (const o of fig.querySelectorAll('.pick-btn')) o.setAttribute('aria-pressed', String(o === b));
+				cur = conf.find((c) => c.id === b.dataset.id)!;
+				for (const set of fig.querySelectorAll<HTMLElement>('.tap-set')) set.hidden = set.dataset.id !== cur.id;
+				caption.textContent = W.caption.replace('{young}', cur.young).replace('{aged}', cur.aged);
+				stage = '';
+				update();
+			});
+		}
+		// Play: the whole run in a few seconds; a day takes about 1.8 s
+		const play = fig.querySelector<HTMLButtonElement>('.play')!;
+		let raf = 0;
+		let last = 0;
+		function stopPlay() {
+			cancelAnimationFrame(raf);
+			raf = 0;
+			play.setAttribute('aria-pressed', 'false');
+			play.querySelector('.t')!.textContent = W.play;
+		}
+		const tick = (ts: number) => {
+			const dt = last ? ts - last : 16;
+			last = ts;
+			const v = Math.min(+range.max, +range.value + (dt / 1800) * DAY);
+			range.value = String(v);
+			update();
+			if (v >= +range.max) return stopPlay();
+			raf = requestAnimationFrame(tick);
+		};
+		play.addEventListener('click', () => {
+			if (raf) return stopPlay();
+			if (+range.value >= +range.max) range.value = '0';
+			stage = '';
+			last = 0;
+			play.setAttribute('aria-pressed', 'true');
+			play.querySelector('.t')!.textContent = W.pause;
+			raf = requestAnimationFrame(tick);
+		});
+		new IntersectionObserver(([e]) => !e.isIntersecting && raf && stopPlay()).observe(fig);
+		update();
+	}
+</script>
+
+<style>
+	.vb-aging {
+		margin: 32px 0;
+	}
+	.pick {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-bottom: 14px;
+	}
+	.pick-btn {
+		gap: 8px;
+		padding: 2px 14px 4px 8px !important;
+	}
+	.pick-btn img {
+		image-rendering: pixelated;
+	}
+	.pick-btn[aria-pressed='true'] {
+		border-image-source: url('../../assets/ui/button-oak-on.png');
+		color: #fff0a8 !important;
+	}
+	/* The scene: sky behind, the barrel, what a tap gives, the action bar */
+	.scene {
+		position: relative;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: center;
+		gap: 8px 24px;
+		padding: 18px 24px 64px;
+		overflow: hidden;
+		border-style: solid;
+		border-width: 12px 16px 16px 12px;
+		border-image: url('../../assets/ui/board.png') 3 4 4 3 / 12px 16px 16px 12px repeat;
+		image-rendering: pixelated;
+		isolation: isolate;
+	}
+	.sky {
+		--light: 1;
+		--sun: 0deg;
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background:
+			linear-gradient(rgb(14 20 48 / calc(1 - var(--light))), rgb(14 20 48 / calc(1 - var(--light)))),
+			linear-gradient(#7aa6f2, #c4dcff 70%, #6b8f3a 70% 73%, #4a3018 73%);
+	}
+	/* The sun and the moon go round the middle of the scene, opposite each other, and set behind the horizon */
+	.orbit {
+		position: absolute;
+		inset: 0 0 30% 0;
+		overflow: hidden;
+	}
+	.sun,
+	.moon {
+		position: absolute;
+		left: 50%;
+		top: 100%;
+		width: 20px;
+		height: 20px;
+		margin: -10px;
+		transform: rotate(calc(var(--sun) - 90deg)) translateX(min(42vw, 300px)) rotate(calc(90deg - var(--sun)));
+	}
+	.sun {
+		background: #fff3a0;
+		box-shadow: 0 0 0 4px #ffd84a, 0 0 24px 8px rgb(255 220 120 / 0.6);
+	}
+	.moon {
+		background: #e8ecf4;
+		box-shadow: inset -6px 0 0 #b8c0d0;
+		transform: rotate(calc(var(--sun) + 90deg)) translateX(min(42vw, 300px)) rotate(calc(-90deg - var(--sun)));
+	}
+	.barrel {
+		position: relative;
+		width: 192px;
+		height: 192px;
+		grid-row: span 2;
+	}
+	.b {
+		position: absolute;
+		inset: 0;
+		width: 192px;
+		height: 192px;
+		image-rendering: pixelated;
+		opacity: 0;
+		transition: opacity 0.25s;
+	}
+	[data-stage='fermenting'] .b1,
+	[data-stage='young'] .b0,
+	[data-stage='aged'] .b2 {
+		opacity: 1;
+	}
+	/* Bubbles rise from the airlock while it ferments */
+	.bubbles {
+		position: absolute;
+		left: 50%;
+		top: 18px;
+		width: 24px;
+		height: 50px;
+		opacity: 0;
+		transition: opacity 0.3s;
+	}
+	[data-stage='fermenting'] .bubbles {
+		opacity: 1;
+	}
+	.bubbles i {
+		position: absolute;
+		bottom: 0;
+		width: 6px;
+		height: 6px;
+		background: rgb(255 255 255 / 0.85);
+		box-shadow: inset -2px -2px 0 rgb(160 200 255 / 0.8);
+		animation: bubble 1.6s ease-in infinite;
+		opacity: 0;
+	}
+	.bubbles i:nth-child(2) {
+		left: 10px;
+		animation-delay: 0.55s;
+	}
+	.bubbles i:nth-child(3) {
+		left: 4px;
+		animation-delay: 1.1s;
+	}
+	@keyframes bubble {
+		0% { transform: translateY(0); opacity: 0; }
+		15% { opacity: 1; }
+		100% { transform: translate(4px, -44px); opacity: 0; }
+	}
+	/* The cork pop when it turns aged */
+	.pop {
+		position: absolute;
+		left: 50%;
+		top: 0;
+		color: #ffff55;
+		text-shadow: 2px 2px 0 #3f3f00;
+		opacity: 0;
+		pointer-events: none;
+	}
+	.popped .pop {
+		animation: pop 1.1s ease-out;
+	}
+	@keyframes pop {
+		0% { opacity: 0; transform: translate(-50%, 10px) scale(0.6); }
+		20% { opacity: 1; transform: translate(-50%, -10px) scale(1.2); }
+		100% { opacity: 0; transform: translate(-50%, -40px) scale(1); }
+	}
+	.tap {
+		align-self: end;
+		justify-self: start;
+		padding: 8px 14px 6px;
+		background: rgb(16 0 16 / 0.82);
+		box-shadow: 0 0 0 2px rgb(16 0 16 / 0.82), inset 0 0 0 2px #5000ff50;
+		color: #fff;
+		text-shadow: 2px 2px 0 #3f3f3f;
+	}
+	.tap p {
+		margin: 0;
+		line-height: 30px;
+	}
+	.tap-h {
+		color: #a8a8a8;
+	}
+	.tap-set {
+		margin: 4px 0;
+	}
+	.tap-set[hidden],
+	.tap-s[hidden] {
+		display: none;
+	}
+	.tap-n {
+		color: #ffff55;
+		max-width: 16rem;
+	}
+	.tap-n.msg {
+		color: #fff;
+	}
+	.clock {
+		position: absolute;
+		top: 8px;
+		right: 12px;
+		margin: 0;
+		color: #fff;
+		text-shadow: 2px 2px 0 #3f3f3f;
+	}
+	/* The action bar: centred white text above where the hotbar would be */
+	.actionbar {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 14px;
+		margin: 0;
+		padding: 0 12px;
+		text-align: center;
+		color: #fff;
+		text-shadow: 2px 2px 0 #3f3f3f;
+		line-height: 28px;
+	}
+	/* The slider: a groove in two colours (fermenting, aging), a marker for "now", day ticks under it */
+	.track {
+		position: relative;
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: start;
+		gap: 4px 16px;
+		margin-top: 18px;
+	}
+	input[type='range'] {
+		--f: 25%;
+		--a: 90%;
+		--v: 0%;
+		grid-column: 1;
+		width: 100%;
+		height: 32px;
+		margin: 0;
+		background: transparent;
+		-webkit-appearance: none;
+		appearance: none;
+		cursor: pointer;
+	}
+	input[type='range']::-webkit-slider-runnable-track {
+		height: 16px;
+		background:
+			linear-gradient(rgb(255 255 255 / 0.18), rgb(255 255 255 / 0.18)) 0 0 / var(--v) 100% no-repeat,
+			linear-gradient(90deg, var(--vb-wine-bright) 0 var(--f), var(--vb-gilt-mid) var(--f) var(--a), #c9a6ff var(--a));
+		box-shadow: inset 2px 2px 0 rgb(0 0 0 / 0.45), 0 0 0 2px #000;
+	}
+	input[type='range']::-moz-range-track {
+		height: 16px;
+		background: linear-gradient(90deg, var(--vb-wine-bright) 0 var(--f), var(--vb-gilt-mid) var(--f) var(--a), #c9a6ff var(--a));
+		box-shadow: inset 2px 2px 0 rgb(0 0 0 / 0.45), 0 0 0 2px #000;
+	}
+	input[type='range']::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		width: 20px;
+		height: 32px;
+		margin-top: -8px;
+		background: #a67b45;
+		border: 2px solid #1a0f07;
+		box-shadow: inset 2px 2px 0 #e3bd84, inset -2px -2px 0 #3a2612;
+		border-radius: 0;
+	}
+	input[type='range']::-moz-range-thumb {
+		width: 16px;
+		height: 28px;
+		background: #a67b45;
+		border: 2px solid #1a0f07;
+		box-shadow: inset 2px 2px 0 #e3bd84, inset -2px -2px 0 #3a2612;
+		border-radius: 0;
+	}
+	input[type='range']:hover::-webkit-slider-thumb,
+	input[type='range']:focus-visible::-webkit-slider-thumb {
+		background: #c69a5e;
+		border-color: var(--vb-gilt);
+	}
+	input[type='range']:focus-visible {
+		outline: none;
+	}
+	.ticks {
+		grid-column: 1;
+		position: relative;
+		height: 28px;
+	}
+	.ticks b {
+		font-weight: 400;
+	}
+	.ticks span {
+		position: absolute;
+		top: 0;
+		transform: translateX(-50%);
+		white-space: nowrap;
+		color: var(--sl-color-gray-3);
+		font-size: 20px;
+	}
+	.ticks span:first-child {
+		transform: none;
+	}
+	.ticks span::before {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: -8px;
+		width: 2px;
+		height: 6px;
+		background: var(--sl-color-gray-4);
+	}
+	.ticks span:first-child::before {
+		left: 0;
+	}
+	.play {
+		grid-column: 2;
+		grid-row: 1;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font: inherit;
+		font-size: 20px;
+		color: var(--sl-color-text-accent);
+		background: none;
+		border: 0;
+		padding: 4px 0;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	.play:hover,
+	.play:focus-visible {
+		color: var(--sl-color-white);
+		outline: none;
+		text-decoration: underline;
+		text-underline-offset: 6px;
+		text-decoration-thickness: 2px;
+	}
+	.play .i {
+		width: 10px;
+		height: 12px;
+		background: currentColor;
+		clip-path: polygon(0 0, 100% 50%, 0 100%);
+	}
+	.play[aria-pressed='true'] .i {
+		clip-path: polygon(0 0, 35% 0, 35% 100%, 0 100%, 0 0, 65% 0, 100% 0, 100% 100%, 65% 100%, 65% 0);
+	}
+	figcaption {
+		margin-top: 6px;
+	}
+	@media (max-width: 40rem) {
+		.scene {
+			grid-template-columns: 1fr;
+			justify-items: center;
+			padding: 40px 10px 92px;
+		}
+		.barrel {
+			grid-row: auto;
+		}
+		.tap {
+			justify-self: center;
+		}
+		/* the action bar goes under the tap box instead of over it */
+		.scene {
+			padding-bottom: 14px;
+		}
+		.actionbar {
+			position: static;
+			padding: 0;
+		}
+		.ticks b,
+		.ticks .first {
+			display: none;
+		}
+		.track {
+			grid-template-columns: 1fr;
+		}
+		.play {
+			grid-column: 1;
+			grid-row: auto;
+			justify-self: start;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.bubbles i,
+		.popped .pop {
+			animation: none;
+		}
+	}
+</style>

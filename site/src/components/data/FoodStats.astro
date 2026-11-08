@@ -1,25 +1,27 @@
 ---
 // Hunger shanks (from the vanilla HUD sprites) plus a saturation gauge, for one food.
 import { url } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
 interface Props {
 	nutrition: number;
 	saturation: number;
 	compact?: boolean;
 }
 const { nutrition, saturation, compact = false } = Astro.props;
+const locale = localeOf(Astro.currentLocale);
 const full = Math.floor(nutrition / 2);
 const half = nutrition % 2;
 const icons = [...Array(full).fill('food_full'), ...Array(half).fill('food_half')];
 const satPct = Math.min(100, (saturation / 20) * 100);
 ---
 <div class:list={['fd-food', 'not-content', { compact }]}>
-	<div class="shanks" role="img" aria-label={`${nutrition} hunger points`} title={`${nutrition} hunger points (${nutrition / 2} shanks)`}>
+	<div class="shanks" role="img" aria-label={t('{n} hunger points', locale, { n: nutrition })} title={t('{n} hunger points ({shanks} shanks)', locale, { n: nutrition, shanks: nutrition / 2 })}>
 		{icons.map((i) => <img src={url(`/gui/mc/${i}.png`)} alt="" width="18" height="18" />)}
-		<span class="n">{nutrition} <small>hunger</small></span>
+		<span class="n">{nutrition} <small>{t('hunger', locale)}</small></span>
 	</div>
-	<div class="sat" title={`${+saturation.toFixed(2)} saturation (maximum 20)`}>
+	<div class="sat" title={t('{value} saturation (maximum 20)', locale, { value: +saturation.toFixed(2) })}>
 		<span class="bar"><span style={`width:${satPct}%`}></span></span>
-		<span class="n">{+saturation.toFixed(2)} <small>saturation</small></span>
+		<span class="n">{+saturation.toFixed(2)} <small>{t('saturation', locale)}</small></span>
 	</div>
 </div>
 <style>

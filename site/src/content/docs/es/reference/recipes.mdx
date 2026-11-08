@@ -1,0 +1,16 @@
+---
+title: Todas las recetas
+description: Todas las recetas de Vine & Barrel tal como aparecen en el juego, filtrables por estación y con búsqueda por resultado o ingrediente.
+tableOfContents: false
+---
+import RecipeBrowser from '../../../../components/reference/RecipeBrowser.astro';
+import { playableRecipes, byType } from '../../../../lib/l10n/es';
+
+export const fd = playableRecipes.filter((r) => r.fdOnly).length;
+
+Las {playableRecipes.length} recetas, dibujadas como las muestra el juego: {byType('vineandbarrel:brewing').length} para la
+[Marmita](/brew-kettle/), {byType('vineandbarrel:aging').length} para el [Barril de crianza](/aging-barrel/) y el resto para la
+mesa de crafteo. {fd} de ellas necesitan [Farmer's Delight](/farmers-delight/). Busca un resultado o un ingrediente, o elige una estación.
+Pasa el cursor sobre una casilla para ver el nombre del objeto; las casillas que van cambiando de objeto aceptan cualquiera de ellos.
+
+<RecipeBrowser />

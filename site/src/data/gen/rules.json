@@ -5,14 +5,17 @@
 	"kettleMaxServings": 64,
 	"kettleLiquidColors": {
 		"vineandbarrel:grape_juice": 7614586,
+		"vineandbarrel:white_grape_juice": 12896352,
 		"vineandbarrel:sweet_berry_juice": 13122140,
+		"vineandbarrel:apple_juice": 13665888,
 		"vineandbarrel:barley_wort_bottle": 9721374,
-		"vineandbarrel:wheat_wort_bottle": 13608012
+		"vineandbarrel:wheat_wort_bottle": 13608012,
+		"vineandbarrel:honey_must_bottle": 15711028
 	},
 	"barrelCapacity": 8,
 	"drinkStackSize": 16,
-	"youngBuffTicks": 3600,
-	"agedBuffTicks": 6000,
+	"youngBuffTicks": 900,
+	"agedBuffTicks": 1800,
 	"youngBuffAmplifier": 0,
 	"agedBuffAmplifier": 1,
 	"dayTicks": 24000,
@@ -21,15 +24,26 @@
 	"cheersBonusPercent": 20,
 	"fdMealNourishment": {
 		"vineandbarrel:beer_battered_fish": 3600,
-		"vineandbarrel:wine_braised_beef": 6000
+		"vineandbarrel:wine_braised_beef": 6000,
+		"vineandbarrel:cider_braised_pork": 6000,
+		"vineandbarrel:barley_mutton_broth": 6000,
+		"vineandbarrel:white_wine_risotto": 6000,
+		"vineandbarrel:coq_au_vin": 6000
 	},
 	"crops": {
 		"bushMaxAge": 3,
 		"bushPickedAge": 1,
-		"ropeMaxHeight": 3
+		"bushHalfRipeAge": 2,
+		"climbMaxHeight": 3
 	},
 	"villages": {
-		"tavernWeight": 3,
+		"tavernWeights": {
+			"desert": 52,
+			"plains": 90,
+			"savanna": 190,
+			"snowy": 51,
+			"taiga": 75
+		},
 		"farmCrops": {
 			"desert": [
 				{
@@ -53,6 +67,10 @@
 				{
 					"block": "vineandbarrel:hop_bush",
 					"chance": 0.05
+				},
+				{
+					"block": "vineandbarrel:white_grape_bush",
+					"chance": 0.03
 				}
 			],
 			"savanna": [
@@ -83,6 +101,10 @@
 				{
 					"block": "vineandbarrel:hop_bush",
 					"chance": 0.08
+				},
+				{
+					"block": "vineandbarrel:white_grape_bush",
+					"chance": 0.04
 				}
 			]
 		}
@@ -93,6 +115,10 @@
 			"count": [
 				2,
 				3
+			],
+			"halfRipe": [
+				1,
+				2
 			]
 		},
 		"hops": {
@@ -100,6 +126,21 @@
 			"count": [
 				2,
 				3
+			],
+			"halfRipe": [
+				1,
+				2
+			]
+		},
+		"white_grapes": {
+			"id": "vineandbarrel:white_grapes",
+			"count": [
+				2,
+				3
+			],
+			"halfRipe": [
+				1,
+				2
 			]
 		}
 	},
@@ -107,7 +148,7 @@
 		"vineandbarrel:wild_barley": [
 			{
 				"id": "vineandbarrel:barley",
-				"chance": 0.2,
+				"chance": 1,
 				"fortune": false
 			},
 			{
@@ -129,50 +170,469 @@
 				"chance": 1,
 				"fortune": true
 			}
+		],
+		"vineandbarrel:wild_white_grapes": [
+			{
+				"id": "vineandbarrel:white_grapes",
+				"chance": 1,
+				"fortune": true
+			}
 		]
 	},
 	"tipsy": {
 		"maxLevel": 5,
-		"hiccupLevel": 3,
-		"slurLevel": 4,
-		"stumbleLevel": 5,
-		"heavyLevel": 5,
-		"nauseaLevel": 3,
+		"hiccupLevel": 2,
+		"slurLevel": 3,
+		"blinkLevel": 3,
+		"longBlinkLevel": 4,
+		"nauseaLevel": 4,
 		"nauseaPulseTicks": 300,
 		"weaknessLevel": 4,
-		"wobbleStrength": 1.3,
 		"noBuffLevel": 4,
+		"slownessLevel": 5,
+		"miningFatigueLevel": 5,
+		"stumbleLevel": 5,
+		"cutOffLevel": 4,
+		"hiccupGapTicks": "40-80",
+		"tripCooldownTicks": 600,
+		"tripTicks": 49,
+		"tripDownTicks": 24,
+		"tripMonsterFree": 10,
+		"sprintTripOneIn": 8,
+		"levels": [
+			{
+				"level": 1,
+				"roll": 1.7,
+				"vignette": 0.16,
+				"blinkEveryTicks": 0,
+				"longBlinkOneIn": 0,
+				"knockbackResistance": 0.1,
+				"fallDamageReduction": 0.15,
+				"hiccupBoutOneIn": 0,
+				"hiccupsPerBoutMin": 0,
+				"hiccupsPerBoutMax": 0,
+				"slurs": false,
+				"nauseaOneIn": 0,
+				"weakness": false,
+				"slowness": -1,
+				"miningFatigue": -1,
+				"buffs": true,
+				"rowdySwingOneIn": 0,
+				"cutOff": false,
+				"legsOneIn": 0,
+				"tripOneIn": 0,
+				"drift": false,
+				"fovBreathing": false,
+				"tooltipGood": [
+					"+10% Knockback Resistance",
+					"-15% Fall Damage"
+				],
+				"tooltipBad": []
+			},
+			{
+				"level": 2,
+				"roll": 3,
+				"vignette": 0.32,
+				"blinkEveryTicks": 0,
+				"longBlinkOneIn": 0,
+				"knockbackResistance": 0.2,
+				"fallDamageReduction": 0.25,
+				"hiccupBoutOneIn": 900,
+				"hiccupsPerBoutMin": 2,
+				"hiccupsPerBoutMax": 3,
+				"slurs": false,
+				"nauseaOneIn": 0,
+				"weakness": false,
+				"slowness": -1,
+				"miningFatigue": -1,
+				"buffs": true,
+				"rowdySwingOneIn": 0,
+				"cutOff": false,
+				"legsOneIn": 0,
+				"tripOneIn": 0,
+				"drift": false,
+				"fovBreathing": false,
+				"tooltipGood": [
+					"+20% Knockback Resistance",
+					"-25% Fall Damage"
+				],
+				"tooltipBad": []
+			},
+			{
+				"level": 3,
+				"roll": 4.5,
+				"vignette": 0.4,
+				"blinkEveryTicks": 480,
+				"longBlinkOneIn": 0,
+				"knockbackResistance": 0.3,
+				"fallDamageReduction": 0.35,
+				"hiccupBoutOneIn": 700,
+				"hiccupsPerBoutMin": 3,
+				"hiccupsPerBoutMax": 5,
+				"slurs": true,
+				"nauseaOneIn": 0,
+				"weakness": false,
+				"slowness": -1,
+				"miningFatigue": -1,
+				"buffs": true,
+				"rowdySwingOneIn": 0,
+				"cutOff": false,
+				"legsOneIn": 0,
+				"tripOneIn": 0,
+				"drift": false,
+				"fovBreathing": false,
+				"tooltipGood": [
+					"+30% Knockback Resistance",
+					"-35% Fall Damage"
+				],
+				"tooltipBad": [
+					"Slurring"
+				]
+			},
+			{
+				"level": 4,
+				"roll": 7.8,
+				"vignette": 0.64,
+				"blinkEveryTicks": 320,
+				"longBlinkOneIn": 3,
+				"knockbackResistance": 0,
+				"fallDamageReduction": 0,
+				"hiccupBoutOneIn": 600,
+				"hiccupsPerBoutMin": 3,
+				"hiccupsPerBoutMax": 5,
+				"slurs": true,
+				"nauseaOneIn": 500,
+				"weakness": true,
+				"slowness": -1,
+				"miningFatigue": -1,
+				"buffs": false,
+				"rowdySwingOneIn": 600,
+				"cutOff": true,
+				"legsOneIn": 0,
+				"tripOneIn": 0,
+				"drift": false,
+				"fovBreathing": false,
+				"tooltipGood": [],
+				"tooltipBad": [
+					"Slurring",
+					"Weakness",
+					"Rowdy",
+					"No buffs",
+					"Cut off"
+				]
+			},
+			{
+				"level": 5,
+				"roll": 15.6,
+				"vignette": 0.8,
+				"blinkEveryTicks": 140,
+				"longBlinkOneIn": 2,
+				"knockbackResistance": 0,
+				"fallDamageReduction": 0,
+				"hiccupBoutOneIn": 500,
+				"hiccupsPerBoutMin": 3,
+				"hiccupsPerBoutMax": 5,
+				"slurs": true,
+				"nauseaOneIn": 200,
+				"weakness": true,
+				"slowness": 1,
+				"miningFatigue": 0,
+				"buffs": false,
+				"rowdySwingOneIn": 300,
+				"cutOff": true,
+				"legsOneIn": 60,
+				"tripOneIn": 20,
+				"drift": true,
+				"fovBreathing": true,
+				"tooltipGood": [],
+				"tooltipBad": [
+					"Slurring",
+					"Weakness",
+					"Rowdy",
+					"No buffs",
+					"Cut off",
+					"Sluggish",
+					"Stumbling",
+					"Tripping"
+				]
+			}
+		],
 		"vignette": [
 			0,
 			0.16,
 			0.32,
-			0.48,
+			0.4,
 			0.64,
 			0.8
 		],
-		"blinkLevel": 3,
-		"longBlinkLevel": 4,
 		"blackout": {
-			"ticks": 120,
-			"shakyTicks": 600
+			"ticks": 170,
+			"shakyTicks": 600,
+			"wakeAt": 100,
+			"unseenBonus": 3,
+			"pumpkinOneIn": 6,
+			"hungerLost": 8,
+			"ranges": {
+				"home": 128,
+				"openMin": 20,
+				"openMax": 60,
+				"animal": 64,
+				"hay": 40,
+				"tavern": 96,
+				"villager": 64,
+				"villagerNearBed": 16,
+				"roof": 32,
+				"roofMinHeight": 4,
+				"roofMaxHeight": 8,
+				"boat": 48,
+				"monsterFree": 8
+			},
+			"endings": [
+				{
+					"id": "home",
+					"weight": 30,
+					"pose": "bed",
+					"openSky": false,
+					"collectable": true,
+					"lines": [
+						"Home. Somehow.",
+						"Your own bed. Your shoes are still on.",
+						"Your feet knew the way home. You didn't.",
+						"Made it home. No idea how."
+					],
+					"souvenirs": [
+						"minecraft:cornflower",
+						"minecraft:bone",
+						"minecraft:string",
+						"minecraft:sweet_berries"
+					],
+					"lineKeys": [
+						"blackout.vineandbarrel.home.0",
+						"blackout.vineandbarrel.home.1",
+						"blackout.vineandbarrel.home.2",
+						"blackout.vineandbarrel.home.3"
+					]
+				},
+				{
+					"id": "in_the_open",
+					"weight": 20,
+					"pose": "ground",
+					"openSky": true,
+					"collectable": true,
+					"lines": [
+						"How did you get here?",
+						"Grass in your hair. Lots of grass.",
+						"You remember nothing. Probably for the best.",
+						"Someone has been singing. It was you."
+					],
+					"souvenirs": [
+						"minecraft:stick",
+						"minecraft:dandelion",
+						"minecraft:poppy",
+						"minecraft:brown_mushroom"
+					],
+					"lineKeys": [
+						"blackout.vineandbarrel.in_the_open.0",
+						"blackout.vineandbarrel.in_the_open.1",
+						"blackout.vineandbarrel.in_the_open.2",
+						"blackout.vineandbarrel.in_the_open.3"
+					]
+				},
+				{
+					"id": "farmyard",
+					"weight": 20,
+					"pose": "ground",
+					"openSky": true,
+					"collectable": true,
+					"lines": [
+						"The %s is staring at you.",
+						"The %s saw everything. It won't talk.",
+						"You smell like a barn.",
+						"You fit right in with the herd."
+					],
+					"souvenirs": [
+						"minecraft:feather",
+						"minecraft:egg",
+						"minecraft:white_wool",
+						"minecraft:carrot",
+						"minecraft:lead"
+					],
+					"lineKeys": [
+						"blackout.vineandbarrel.farmyard.0",
+						"blackout.vineandbarrel.farmyard.1",
+						"blackout.vineandbarrel.farmyard.2",
+						"blackout.vineandbarrel.farmyard.3"
+					]
+				},
+				{
+					"id": "in_the_hay",
+					"weight": 15,
+					"pose": "ground",
+					"openSky": true,
+					"collectable": true,
+					"lines": [
+						"Why do you smell like hay?",
+						"Itchy. Very itchy.",
+						"A fine bed, if you're a horse.",
+						"You'll be finding straw for days."
+					],
+					"souvenirs": [
+						"minecraft:wheat",
+						"minecraft:wheat_seeds",
+						"vineandbarrel:barley_seeds"
+					],
+					"lineKeys": [
+						"blackout.vineandbarrel.in_the_hay.0",
+						"blackout.vineandbarrel.in_the_hay.1",
+						"blackout.vineandbarrel.in_the_hay.2",
+						"blackout.vineandbarrel.in_the_hay.3"
+					]
+				},
+				{
+					"id": "tavern",
+					"weight": 10,
+					"pose": "ground",
+					"openSky": false,
+					"collectable": true,
+					"lines": [
+						"Back for one more?",
+						"You owe somebody an apology. Not sure who.",
+						"The barrels look smug.",
+						"Last orders were a while ago."
+					],
+					"souvenirs": [
+						"vineandbarrel:mug",
+						"vineandbarrel:wine_glass"
+					],
+					"lineKeys": [
+						"blackout.vineandbarrel.tavern.0",
+						"blackout.vineandbarrel.tavern.1",
+						"blackout.vineandbarrel.tavern.2",
+						"blackout.vineandbarrel.tavern.3"
+					]
+				},
+				{
+					"id": "someone_elses_bed",
+					"weight": 10,
+					"pose": "bed",
+					"openSky": false,
+					"collectable": true,
+					"lines": [
+						"This is not your bed.",
+						"Cozy. Also, not yours.",
+						"Someone wants their bed back.",
+						"The owner would like a word."
+					],
+					"souvenirs": [
+						"minecraft:bread",
+						"minecraft:potato",
+						"minecraft:flower_pot"
+					],
+					"lineKeys": [
+						"blackout.vineandbarrel.someone_elses_bed.0",
+						"blackout.vineandbarrel.someone_elses_bed.1",
+						"blackout.vineandbarrel.someone_elses_bed.2",
+						"blackout.vineandbarrel.someone_elses_bed.3"
+					]
+				},
+				{
+					"id": "on_the_roof",
+					"weight": 8,
+					"pose": "ground",
+					"openSky": true,
+					"collectable": true,
+					"lines": [
+						"How did you get up here?",
+						"Nice view. Now, the way down...",
+						"Your head hurts in a very specific way.",
+						"You were trying to reach the moon. It didn't work."
+					],
+					"souvenirs": [
+						"minecraft:feather",
+						"minecraft:stick",
+						"minecraft:vine"
+					],
+					"lineKeys": [
+						"blackout.vineandbarrel.on_the_roof.0",
+						"blackout.vineandbarrel.on_the_roof.1",
+						"blackout.vineandbarrel.on_the_roof.2",
+						"blackout.vineandbarrel.on_the_roof.3"
+					]
+				},
+				{
+					"id": "in_a_boat",
+					"weight": 8,
+					"pose": "seat",
+					"openSky": true,
+					"collectable": true,
+					"lines": [
+						"Ahoy?",
+						"Your shoes feel... damp.",
+						"You don't remember buying a boat. It's yours now.",
+						"Row, row, row... where to?"
+					],
+					"souvenirs": [
+						"minecraft:cod",
+						"minecraft:kelp",
+						"minecraft:lily_pad"
+					],
+					"lineKeys": [
+						"blackout.vineandbarrel.in_a_boat.0",
+						"blackout.vineandbarrel.in_a_boat.1",
+						"blackout.vineandbarrel.in_a_boat.2",
+						"blackout.vineandbarrel.in_a_boat.3"
+					]
+				},
+				{
+					"id": "right_here",
+					"weight": 0,
+					"pose": "ground",
+					"openSky": false,
+					"collectable": false,
+					"lines": [
+						"Never again. (Until next time.)",
+						"You didn't get far.",
+						"Your pockets feel heavier.",
+						"Your shoes feel... different."
+					],
+					"souvenirs": [
+						"minecraft:cornflower",
+						"minecraft:bone",
+						"minecraft:string",
+						"minecraft:sweet_berries",
+						"minecraft:stick",
+						"minecraft:dandelion",
+						"minecraft:poppy",
+						"minecraft:brown_mushroom",
+						"minecraft:feather",
+						"minecraft:egg",
+						"minecraft:white_wool",
+						"minecraft:carrot",
+						"minecraft:lead",
+						"minecraft:wheat",
+						"minecraft:wheat_seeds",
+						"vineandbarrel:barley_seeds",
+						"vineandbarrel:mug",
+						"vineandbarrel:wine_glass",
+						"minecraft:bread",
+						"minecraft:potato",
+						"minecraft:flower_pot",
+						"minecraft:vine",
+						"minecraft:cod",
+						"minecraft:kelp",
+						"minecraft:lily_pad"
+					],
+					"lineKeys": [
+						"blackout.vineandbarrel.right_here.0",
+						"blackout.vineandbarrel.right_here.1",
+						"blackout.vineandbarrel.right_here.2",
+						"blackout.vineandbarrel.right_here.3"
+					]
+				}
+			]
 		},
-		"courage": [
-			{
-				"level": 1,
-				"knockbackResistance": 0.05,
-				"fallDamageReduction": 0.1
-			},
-			{
-				"level": 2,
-				"knockbackResistance": 0.1,
-				"fallDamageReduction": 0.15
-			},
-			{
-				"level": 3,
-				"knockbackResistance": 0.15,
-				"fallDamageReduction": 0.2
-			}
-		],
+		"rowdyLevel": 4,
+		"rowdyPunchDamage": 1,
 		"config": {
 			"enabled": true,
 			"maxLevel": 5,
@@ -180,9 +640,13 @@
 			"slurredChat": true,
 			"stumbling": true,
 			"blackout": true,
+			"rowdy": true,
+			"rowdyPunches": true,
+			"cutOff": true,
 			"visionEffects": true,
 			"wobbleIntensity": 1,
-			"otherPlayersSway": true
+			"otherPlayersSway": true,
+			"heartbeatVolume": 1
 		}
 	},
 	"heat": {
@@ -213,7 +677,10 @@
 	},
 	"sobering": [
 		"minecraft:potion",
-		"vineandbarrel:grape_juice"
+		"vineandbarrel:apple_juice",
+		"vineandbarrel:grape_juice",
+		"vineandbarrel:sweet_berry_juice",
+		"vineandbarrel:white_grape_juice"
 	],
 	"tipsyEffect": {
 		"category": "NEUTRAL",

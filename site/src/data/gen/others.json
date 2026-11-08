@@ -1,4 +1,36 @@
 {
+	"minecraft:wheat": {
+		"id": "minecraft:wheat",
+		"name": "Wheat"
+	},
+	"minecraft:stick": {
+		"id": "minecraft:stick",
+		"name": "Stick"
+	},
+	"minecraft:carrot": {
+		"id": "minecraft:carrot",
+		"name": "Carrot"
+	},
+	"minecraft:bowl": {
+		"id": "minecraft:bowl",
+		"name": "Bowl"
+	},
+	"minecraft:apple": {
+		"id": "minecraft:apple",
+		"name": "Apple"
+	},
+	"minecraft:brown_mushroom": {
+		"id": "minecraft:brown_mushroom",
+		"name": "Brown Mushroom"
+	},
+	"farmersdelight:bone_broth": {
+		"id": "farmersdelight:bone_broth",
+		"name": "Bone Broth"
+	},
+	"farmersdelight:straw": {
+		"id": "farmersdelight:straw",
+		"name": "Straw"
+	},
 	"minecraft:acacia_planks": {
 		"id": "minecraft:acacia_planks",
 		"name": "Acacia Planks"
@@ -83,25 +115,21 @@
 		"id": "minecraft:sugar",
 		"name": "Sugar"
 	},
+	"minecraft:honey_bottle": {
+		"id": "minecraft:honey_bottle",
+		"name": "Honey Bottle"
+	},
 	"minecraft:sweet_berries": {
 		"id": "minecraft:sweet_berries",
 		"name": "Sweet Berries"
 	},
-	"minecraft:wheat": {
-		"id": "minecraft:wheat",
-		"name": "Wheat"
-	},
-	"minecraft:bowl": {
-		"id": "minecraft:bowl",
-		"name": "Bowl"
-	},
-	"minecraft:carrot": {
-		"id": "minecraft:carrot",
-		"name": "Carrot"
-	},
 	"minecraft:emerald": {
 		"id": "minecraft:emerald",
 		"name": "Emerald"
+	},
+	"minecraft:clock": {
+		"id": "minecraft:clock",
+		"name": "Clock"
 	},
 	"minecraft:red_bed": {
 		"id": "minecraft:red_bed",
@@ -150,6 +178,74 @@
 	"minecraft:glass_bottle": {
 		"id": "minecraft:glass_bottle",
 		"name": "Glass Bottle"
+	},
+	"minecraft:cornflower": {
+		"id": "minecraft:cornflower",
+		"name": "Cornflower"
+	},
+	"minecraft:bone": {
+		"id": "minecraft:bone",
+		"name": "Bone"
+	},
+	"minecraft:string": {
+		"id": "minecraft:string",
+		"name": "String"
+	},
+	"minecraft:dandelion": {
+		"id": "minecraft:dandelion",
+		"name": "Dandelion"
+	},
+	"minecraft:poppy": {
+		"id": "minecraft:poppy",
+		"name": "Poppy"
+	},
+	"minecraft:feather": {
+		"id": "minecraft:feather",
+		"name": "Feather"
+	},
+	"minecraft:egg": {
+		"id": "minecraft:egg",
+		"name": "Egg"
+	},
+	"minecraft:white_wool": {
+		"id": "minecraft:white_wool",
+		"name": "White Wool"
+	},
+	"minecraft:lead": {
+		"id": "minecraft:lead",
+		"name": "Lead"
+	},
+	"minecraft:wheat_seeds": {
+		"id": "minecraft:wheat_seeds",
+		"name": "Wheat Seeds"
+	},
+	"minecraft:bread": {
+		"id": "minecraft:bread",
+		"name": "Bread"
+	},
+	"minecraft:potato": {
+		"id": "minecraft:potato",
+		"name": "Potato"
+	},
+	"minecraft:flower_pot": {
+		"id": "minecraft:flower_pot",
+		"name": "Flower Pot"
+	},
+	"minecraft:vine": {
+		"id": "minecraft:vine",
+		"name": "Vines"
+	},
+	"minecraft:cod": {
+		"id": "minecraft:cod",
+		"name": "Raw Cod"
+	},
+	"minecraft:kelp": {
+		"id": "minecraft:kelp",
+		"name": "Kelp"
+	},
+	"minecraft:lily_pad": {
+		"id": "minecraft:lily_pad",
+		"name": "Lily Pad"
 	},
 	"minecraft:potion": {
 		"id": "minecraft:potion",

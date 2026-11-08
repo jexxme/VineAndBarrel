@@ -1,0 +1,47 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_base": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "vineandbarrel:grape_juice",
+              "vineandbarrel:grape_juice_bucket",
+              "vineandbarrel:sweet_berry_juice",
+              "vineandbarrel:sweet_berry_juice_bucket",
+              "vineandbarrel:barley_wort_bottle",
+              "vineandbarrel:barley_wort_bucket",
+              "vineandbarrel:wheat_wort_bottle",
+              "vineandbarrel:wheat_wort_bucket",
+              "vineandbarrel:white_grape_juice",
+              "vineandbarrel:white_grape_juice_bucket",
+              "vineandbarrel:apple_juice",
+              "vineandbarrel:apple_juice_bucket",
+              "vineandbarrel:honey_must_bottle",
+              "vineandbarrel:honey_must_bucket"
+            ]
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipes": "vineandbarrel:aging_barrel"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_base"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "vineandbarrel:aging_barrel"
+    ]
+  }
+}

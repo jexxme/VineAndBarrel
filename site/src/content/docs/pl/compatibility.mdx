@@ -1,0 +1,119 @@
+---
+title: Kompatybilność
+description: Z jakimi modami działa Vine & Barrel i co każdy z nich dodaje.
+---
+import Item from '../../../components/mc/Item.astro';
+import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/pl';
+import compat from '../../../data/gen/compat.json';
+import { optional } from '../../../data/code/downloads';
+
+export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
+export const seasonRows = Object.entries(seasons);
+export const seasonName = { spring: 'wiosna', summer: 'lato', autumn: 'jesień', winter: 'zima' };
+export const v = compat.versions;
+// Wheat beer feeds through Saturation: (level + 1) food and twice that in saturation per tick it lasts
+export const beer = drinks.filter((d) => d.effect.id === 'minecraft:saturation').map((d) => ({ ...d, food: (d.effect.amplifier + 1) * d.effect.duration }));
+export const young = beer.find((d) => d.stage === 'young');
+export const aged = beer.find((d) => d.stage === 'aged');
+// A row of the thirst table is all young drinks, all aged drinks, or a few named items
+export const stageOf = (id) => drinks.find((d) => d.id === id)?.stage;
+export const rowLabel = (items) => {
+	const all = (stage) => items.every((id) => stageOf(id) === stage) && items.length === drinks.filter((d) => d.stage === stage).length;
+	return all('young') ? 'Każdy młody napój' : all('aged') ? 'Każdy leżakowany napój' : null;
+};
+export const groups = { fruits: 'Owoce', carbs: 'Węglowodany', proteins: 'Białka', vegetables: 'Warzywa', sugars: 'Cukry' };
+
+Vine & Barrel {meta.version} działa na **Minecrafcie {meta.minecraft}** z **NeoForge {meta.neoforge}** lub nowszym albo z
+**Fabric Loader {meta.fabricLoader}** i **Fabric API {meta.fabricApi}** lub nowszym. Nie potrzebuje żadnych innych modów.
+Wszystko poniżej jest opcjonalne i włącza się samo, gdy zainstalowany jest dany mod:
+
+- **NeoForge:** {optional.neoforge.join(', ')}.
+- **Fabric:** {optional.fabric.join(', ')}.
+
+Serene Seasons i Biomes O' Plenty działają przez tagi.
+
+## Farmer's Delight
+
+Ciepło z kuchenki, pnącza na linach (jak na kratce ogrodowej), żyzna gleba, napoje z butelek FD, garść dań z garnka, uczta i chleb. Zobacz [Farmer's Delight](/farmers-delight/).
+
+## JEI
+
+JEI pokazuje kategorie receptur **kotła warzelnego** i **beczki do leżakowania**, z czasami warzenia i liczbą dni każdego etapu,
+oraz strony informacyjne beczki i dzikich upraw. Zbudowane z JEI {meta.jei}.
+
+## Jade
+
+Spójrz na kocioł lub beczkę, żeby zobaczyć, co jest w środku: napar lub napój, pozostałe porcje, jak daleko zaszło warzenie,
+czy kocioł jest podgrzany i na jakim etapie jest beczka. Zbudowane z Jade {meta.jade.split('+')[0]}.
+
+## AppleSkin
+
+Podpowiedź o jedzeniu i podgląd paska głodu z AppleSkin działają dla wszystkiego, co można zjeść lub wypić. Soki i dania
+pokazują własne wartości. <Item id={young.id} /> odżywia przez bonus Nasycenia, więc AppleSkin pokazuje, co ten bonus
+uzupełnia: **{young.food}** głodu i **{young.food * 2}** nasycenia, a dla <Item id={aged.id} /> **{aged.food}** i **{aged.food * 2}**.
+Pozostałe wina, piwa, cydry i miody pitne nie sycą, więc nie pokazują wartości jedzenia. Zbudowane z AppleSkin {v.appleskin}.
+
+## Pragnienie
+
+Z **Tough As Nails**, **Homeostatic** lub **Thirst Was Taken 2** napoje gaszą pragnienie: soki mocno, wina, piwa,
+cydry i miód pitny trochę, leżakowane nieco bardziej niż młode. W modach, które liczą też jedzenie, dania duszone, rosół i kogut w winie liczą się
+jak gulasz, a winogrona, czerwone lub białe, jak słodkie jagody.
+
+<table>
+	<thead>
+		<tr><th></th><th>Tough As Nails<br />pragnienie, nawodnienie</th><th>Homeostatic<br />woda, nasycenie</th><th>Thirst Was Taken 2<br />pragnienie, ugaszone</th></tr>
+	</thead>
+	<tbody>
+		{compat.thirst.map((row) => (
+			<tr>
+				<td>{rowLabel(row.items) ?? row.items.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</td>
+				<td>{row.tan ? `${row.tan.thirst}, ${row.tan.hydration}%` : '–'}</td>
+				<td>{row.homeostatic.amount}, {row.homeostatic.saturation.toFixed(1)}</td>
+				<td>{row.twt ? `${row.twt.thirst}, ${row.twt.quenched}` : '–'}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+Tough As Nails liczy tylko napoje. Przetestowane z Tough As Nails {v.toughasnails}, Homeostatic {v.homeostatic} i Thirst Was
+Taken 2 {v.thirstwastaken2}.
+
+## Nutritional Balance
+
+Tylko NeoForge. Każde jedzenie i napój liczy się do grup żywieniowych Nutritional Balance:
+
+<ul>
+	{Object.entries(compat.nutrients).map(([group, ids]) => (
+		<li><strong>{groups[group] ?? group}:</strong> {ids.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</li>
+	))}
+</ul>
+
+Wina, piwa, cydry i miody pitne nie mają własnej wartości odżywczej (piwo pszeniczne syci przez bonus Nasycenia, którego te mody nie liczą), więc grupy uzupełniają tylko winogrona, soki i dania. Surowy jęczmień liczy się jako
+węglowodany, więc wszystko, co inny mod z niego zrobi, też. Przetestowane z Nutritional Balance {v.nutritionalbalance}.
+
+Każdy napój i jedzenie ma też popularne tagi wspólne dla obu loaderów (napoje, soki, owoce, zupy), więc inne mody, które je czytają, widzą je
+tym, czym są.
+
+## Spice of Life Onion
+
+Działa bez zmian. Dania liczą się do różnorodności jedzenia jak każde jedzenie. Napoje nie mają własnej wartości odżywczej (bonus Nasycenia piwa pszenicznego
+się nie liczy), więc tak jak napoje z Farmer's Delight nie dodają różnorodności. Przetestowane ze Spice of Life Onion {v.solonion}.
+
+## Biomes O' Plenty
+
+Dzikie uprawy rosną w każdym biomie oznaczonym jako las, równina, sawanna, rzeka lub górski stok (tam, gdzie pasuje temperatura), więc modowe biomy z tymi tagami dostają je automatycznie.
+Z Biomes O' Plenty rosną też w kilku biomach, które do nich pasują:
+
+<ul>
+	{bop.map((b) => <li><Item id={b.crop} />: {list(b.biomes)}</li>)}
+</ul>
+
+## Serene Seasons
+
+Z Serene Seasons każda uprawa rośnie w swoich porach roku:
+
+<ul>
+	{['vineandbarrel:red_grapes', 'vineandbarrel:white_grapes', 'vineandbarrel:hops', 'vineandbarrel:barley_seeds'].map((id) => (
+		<li><Item id={id} />: {list(seasonRows.filter(([, ids]) => ids.includes(id)).map(([s]) => seasonName[s] ?? s))}</li>
+	))}
+</ul>

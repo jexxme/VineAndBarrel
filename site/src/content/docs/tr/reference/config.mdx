@@ -1,0 +1,73 @@
+---
+title: Yapılandırma
+description: Sunucu sahipleri ve her oyuncu için Vine & Barrel'ın her seçeneği, varsayılanı ve ne yaptığıyla.
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../../lib/l10n/tr';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+Vine & Barrel'ın iki yapılandırma dosyası var, ikisi de [Çakırkeyif](/tipsy/) ile ilgili. Tariflerden bir fıçının ne kadar
+sürdüğüne kadar geri kalan her şey mod nasıl geldiyse öyle çalışır ve her tarif gibi bir veri paketiyle değiştirilebilir.
+
+Oyunda ayar ekranından değiştir: NeoForge'da **Modlar**, Vine & Barrel, **Yapılandırma**; Fabric'te [Mod Menu](https://modrinth.com/mod/modmenu)
+kuruluysa aynı düğme görünür. Orada yaptığın değişiklikler hemen geçerli olur. Sunucu seçenekleri tek kişilik oyunda orada
+görünür (dünya LAN'a açılınca görünmez); bir sunucuda ise sunucunun değerleridir.
+
+Dosyalar: NeoForge'da seçenekler <code>[{configFiles.server.section}]</code> altında olan TOML dosyalarıdır. Fabric'te
+<code>config</code> klasöründeki düz <code>.properties</code> dosyalarıdır ve aynı seçenekler
+<code>{configFiles.server.section}.option=value</code> olarak yazılır. Fabric'te istemci dosyası oyun açılırken okunur, bu yüzden
+düzenledikten sonra yeniden başlat; sunucu dosyası <code>/reload</code> ile yeniden okunur.
+
+## Sunucu seçenekleri
+
+NeoForge'da <code>{configFiles.server.file}</code>, Fabric'te <code>{configFiles.server.fabricFile}</code>. Sunucunun
+değerleri katılan her oyuncuya gider, böylece herkes aynı kurallarla oynar. Bir dünyanın kendi kuralları olabilir: dosyayı o
+dünyanın <code>serverconfig</code> klasörüne koy; o dünya çalışırken <code>config</code> içindekinin yerine geçer.
+
+<table>
+	<thead><tr><th>Seçenek</th><th>Varsayılan</th><th>Ne yapar</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} ile {o.range[1]} arası</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Alkolsüz mod">
+`enabled = false` yap (Fabric'te `tipsy.enabled=false`) ve içecekler sade bonus içeceklerine döner: Çakırkeyif yok, hıçkırık yok, film kopması yok; adlar ve bonuslar aynı.
+Aile sunucusu için iyidir, ya da sallanmayı sevmiyorsan.
+</Aside>
+
+## İstemci seçenekleri
+
+NeoForge'da <code>{configFiles.client.file}</code>, Fabric'te <code>{configFiles.client.fabricFile}</code>. Her oyuncu bunları
+kendisi için ayarlar; yalnızca senin gördüğünü değiştirirler.
+
+<table>
+	<thead><tr><th>Seçenek</th><th>Varsayılan</th><th>Ne yapar</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} ile {o.range[1]} arası</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="Hareket hastalığı mı?">
+`wobbleIntensity = 0` yap (Fabric'te `tipsy.wobbleIntensity=0`). Sunucu ne derse desin Çakırkeyif ekranını artık oynatmaz: sallanma yok, sarsıntı yok, Bulantı nöbeti yok. Vanilla'nın Bozulma Efektleri ve Görüş Alanı Efektleri kaydırıcıları da onu azaltır. Düşünce yüzüstü yatman yine görünür, bu bir ekran efekti değil; Çakırkeyif'in geri kalanı olduğu gibi kalır.
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

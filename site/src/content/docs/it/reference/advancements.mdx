@@ -1,0 +1,12 @@
+---
+title: Progressi
+description: La scheda dei progressi di Vine & Barrel e come ottenere ciascuno.
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/it';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel ha una sua scheda di progressi, **{gameText(root.titleKey, root.title)}**: *{gameText(root.descriptionKey, root.description)}*
+
+<Advancements />

@@ -1,0 +1,119 @@
+// Shared by common, neoforge and fabric: Java 25, the compiler settings and the guards (Error Prone, forbidden patterns).
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'net.ltgt.errorprone'
+}
+
+// Each loader has its own mod version (gradle.properties: mod_version for NeoForge and common, fabric_mod_version for
+// Fabric), e.g. 26.3-0.9.0+neoforged.1 and 26.3-0.9.0+fabric.1
+ext.loaderModVersion = project.name == 'fabric' ? fabric_mod_version : mod_version
+version = "${minecraft_version}-${loaderModVersion}"
+group = 'jexxme.vineandbarrel'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+repositories {
+    mavenCentral()
+    exclusiveContent {
+        // Fabric's Mixin (both loaders ship it; common compiles its mixins against it), Loader and API
+        forRepository { maven { name = 'Fabric'; url = 'https://maven.fabricmc.net' } }
+        filter { includeGroupAndSubgroups('net.fabricmc') }
+    }
+    maven {
+        // JEI: BlameJared's Maven, which Farmer's Delight Neoforged also lists (the Progwml6 Maven has no 26.x builds)
+        name = "BlameJared"
+        url = "https://maven.blamejared.com"
+        content { includeGroup "mezz.jei"; includeGroup "net.mezzdev.config" }
+    }
+    exclusiveContent {
+        // Jade, Farmer's Delight Refabricated and the mods of the compat GameTest runs, from Modrinth's Maven
+        forRepository { maven { name = "Modrinth"; url = "https://api.modrinth.com/maven" } }
+        filter { includeGroup "maven.modrinth" }
+    }
+    exclusiveContent {
+        // AppleSkin, from its author's Maven (as in Farmer's Delight Neoforged)
+        forRepository { maven { name = "AppleSkin"; url = "https://maven.ryanliptak.com/" } }
+        filter { includeGroup "squeek.appleskin" }
+    }
+}
+
+dependencies {
+    errorprone "com.google.errorprone:error_prone_core:2.52.0"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xmaxerrs', '5000']
+    options.fork = true
+    options.forkOptions.jvmArgs += ['-Duser.language=en', '-Duser.country=US']
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
+
+//////////////// Guards (carried over from Farmer's Delight Neoforged, where each one caught a real bug)
+// Run with `./gradlew check`.
+
+// Every method that overrides something must say @Override, so a renamed or removed Minecraft hook fails the build.
+tasks.withType(JavaCompile).configureEach {
+    options.errorprone {
+        disableAllChecks = true
+        error('MissingOverride')
+    }
+}
+
+// Code patterns that compile fine but were real bugs in the FD 26.x port. Suppress a deliberate use with a
+// trailing `// guard:allow <rule>` comment on the same line.
+def forbiddenPatterns = [
+    [rule: 'bare-toStack',
+     regex: ~/\.toStack\(\)/,
+     why: 'ItemResource#toStack() is a COPY with count 1. Use toStack(handler.getAmountAsInt(slot)) and write changes back with handler.set(...).'],
+    [rule: 'empty-ingredient',
+     regex: ~/Ingredient\.of\(\s*\)/,
+     why: 'An empty Ingredient throws in 26.x (also when decoded on the client). Use Optional/empty lists instead.'],
+    [rule: 'empty-identity',
+     regex: ~/[=!]=\s*ItemStack\.EMPTY|ItemStack\.EMPTY\s*[=!]=/,
+     why: 'Empty stacks are not always the ItemStack.EMPTY instance (copyWithCount(0), split, shrink). Use isEmpty().'],
+    [rule: 'removed-hook-onRemove',
+     regex: ~/\bvoid\s+onRemove\s*\(/,
+     why: 'Block#onRemove no longer exists in 26.x. Drop contents in BlockEntity#preRemoveSideEffects, update neighbours in Block#affectNeighborsAfterRemoval.'],
+    [rule: 'vanilla-relativePos',
+     regex: ~/\bhelper(\.|::)relativePos\b/,
+     why: "Vanilla's GameTestHelper#relativePos turns by the wrong rotation (NeoForge patches it, Fabric does not). Use WorldGameTests.relativePos(helper, pos)."],
+]
+
+tasks.register('checkForbiddenPatterns') {
+    group = 'verification'
+    description = 'Fails on code patterns that caused bugs in 26.x mods (see build-logic/src/main/groovy/vb-java.gradle).'
+    def sources = fileTree('src/main/java') { include '**/*.java' }
+    def root = rootDir.toPath()
+    def patterns = forbiddenPatterns
+    inputs.files(sources)
+    doLast {
+        def problems = []
+        sources.each { File file ->
+            def lines = file.readLines('UTF-8')
+            def rel = root.relativize(file.toPath()).toString().replace(File.separatorChar, '/' as char)
+            lines.eachWithIndex { String line, int i ->
+                def code = line.replaceFirst(/\/\/.*$/, '')
+                patterns.each { p ->
+                    if (code =~ p.regex && !line.contains("guard:allow ${p.rule}")) {
+                        problems << "${rel}:${i + 1}: [${p.rule}] ${line.trim()}\n    ${p.why}"
+                    }
+                }
+            }
+        }
+        if (!problems.isEmpty()) {
+            throw new GradleException("Forbidden patterns found (${problems.size()}):\n" + problems.join('\n'))
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn 'checkForbiddenPatterns'
+}

@@ -2,11 +2,13 @@
 // Village farms, trades and chest loot, from the mod's data (runtime.json and the generated loot tables and trades).
 import Slot from '../mc/Slot.astro';
 import Item from '../mc/Item.astro';
-import { rules, trades, loot, nameOf, pct } from '../../lib/data';
+import { rules, trades, loot, nameOf, pct, num } from '../../lib/data';
+import { t, localeOf } from '../../lib/i18n';
 interface Props {
 	show: 'farms' | 'trades' | 'loot';
 }
 const { show } = Astro.props;
+const locale = localeOf(Astro.currentLocale);
 // The rules roll in order, each on what is still wheat: a crop's share of the farm is its chance times what the earlier
 // rules left (plains: barley 10%, then grapes 5% of the remaining 90% = 4.5%, then hops 5% of 85.5% = 4.275%)
 const farms = Object.entries(rules.villages.farmCrops as Record<string, { block: string; chance: number }[]>).map(([type, crops]) => {
@@ -17,21 +19,28 @@ const farms = Object.entries(rules.villages.farmCrops as Record<string, { block:
 		return { ...c, share };
 	})] as [string, { block: string; chance: number; share: number }[]];
 });
-const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
+const VILLAGE: Record<string, () => string> = {
+	desert: () => t('Desert', locale),
+	plains: () => t('Plains', locale),
+	savanna: () => t('Savanna', locale),
+	snowy: () => t('Snowy', locale),
+	taiga: () => t('Taiga', locale),
+};
+const villageName = (s: string) => (VILLAGE[s] ? VILLAGE[s]() : s);
 const cropItem: Record<string, string> = { 'vineandbarrel:grape_bush': 'vineandbarrel:red_grapes', 'vineandbarrel:hop_bush': 'vineandbarrel:hops', 'vineandbarrel:barley': 'vineandbarrel:barley' };
 const tavern = (Object.keys(loot) as string[]).filter((k) => k.includes('tavern'));
 const house = (Object.keys(loot) as string[]).filter((k) => k.includes('house'));
-const lootRows = (keys: string[]) => keys.map((k) => ({ type: cap(k.split('_')[1]), pools: loot[k] }));
+const lootRows = (keys: string[]) => keys.map((k) => ({ type: villageName(k.split('_')[1]), pools: loot[k] }));
 ---
 {
 	show === 'farms' && (
 		<table class="not-content">
-			<thead><tr><th>Village</th><th>Share of the farm's wheat that becomes</th></tr></thead>
+			<thead><tr><th>{t('Village', locale)}</th><th>{t("Share of the farm's wheat that becomes", locale)}</th></tr></thead>
 			<tbody>
 				{farms.map(([type, crops]) => (
 					<tr>
-						<td>{cap(type)}</td>
-						<td>{crops.map((c, i) => <>{i > 0 && ', '}<Item id={cropItem[c.block] ?? c.block} label={nameOf(c.block)} /> {pct(c.share, 1)}</>)}</td>
+						<td>{villageName(type)}</td>
+						<td>{crops.map((c, i) => <>{i > 0 && ', '}<Item id={cropItem[c.block] ?? c.block} label={nameOf(c.block, locale)} /> {pct(c.share, 1, locale)}</>)}</td>
 					</tr>
 				))}
 			</tbody>
@@ -41,14 +50,14 @@ const lootRows = (keys: string[]) => keys.map((k) => ({ type: cap(k.split('_')[1
 {
 	show === 'trades' && (
 		<table class="not-content">
-			<thead><tr><th>Who</th><th>Gives</th><th>For</th><th>Uses</th></tr></thead>
+			<thead><tr><th>{t('Who', locale)}</th><th>{t('Gives', locale)}</th><th>{t('For', locale)}</th><th>{t('Uses', locale)}</th></tr></thead>
 			<tbody>
-				{trades.map((t) => (
+				{trades.map((tr) => (
 					<tr>
-						<td>{t.profession === 'farmer' ? `Farmer (level ${t.level})` : 'Wandering trader'}</td>
-						<td><Slot id={t.gives.id} count={t.gives.count} /></td>
-						<td><Slot id={t.wants.id} count={t.wants.count} /></td>
-						<td>{t.maxUses}</td>
+						<td>{tr.profession === 'farmer' ? t('Farmer (level {level})', locale, { level: tr.level }) : t('Wandering trader', locale)}</td>
+						<td><Slot id={tr.gives.id} count={tr.gives.count} /></td>
+						<td><Slot id={tr.wants.id} count={tr.wants.count} /></td>
+						<td>{num(tr.maxUses, locale)}</td>
 					</tr>
 				))}
 			</tbody>
@@ -58,18 +67,18 @@ const lootRows = (keys: string[]) => keys.map((k) => ({ type: cap(k.split('_')[1
 {
 	show === 'loot' && (
 		<>
-			{[['Tavern chests', tavern], ['Village house chests', house]].map(([title, keys]) => (
+			{[[t('Tavern chests', locale), tavern], [t('Village house chests', locale), house]].map(([title, keys]) => (
 				<>
 					<h3>{title}</h3>
 					<table class="not-content">
-						<thead><tr><th>Village</th><th>What can be in it</th></tr></thead>
+						<thead><tr><th>{t('Village', locale)}</th><th>{t('What can be in it', locale)}</th></tr></thead>
 						<tbody>
 							{lootRows(keys as string[]).map((r) => (
 								<tr>
 									<td>{r.type}</td>
 									<td class="slots">
 										{r.pools.flatMap((p) => p.entries).map((e) => (
-											<Slot id={e.id} count={e.count[1]} note={`${e.count[0] === e.count[1] ? e.count[0] : `${e.count[0]} to ${e.count[1]}`} · ${pct(e.chance)} of the picks`} />
+											<Slot id={e.id} count={e.count[1]} note={t('{count} · {pct} of the picks', locale, { count: e.count[0] === e.count[1] ? num(e.count[0], locale) : t('{min} to {max}', locale, { min: e.count[0], max: e.count[1] }), pct: pct(e.chance, 0, locale) })} />
 										))}
 									</td>
 								</tr>

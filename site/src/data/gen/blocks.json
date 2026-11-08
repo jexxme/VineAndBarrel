@@ -1,7 +1,7 @@
 {
 	"vineandbarrel:grape_bush": {
 		"id": "vineandbarrel:grape_bush",
-		"name": "Grape Bush",
+		"name": "Red Grape Bush",
 		"item": "vineandbarrel:red_grapes",
 		"properties": {
 			"age": [
@@ -9,10 +9,17 @@
 				"1",
 				"2",
 				"3"
+			],
+			"support": [
+				"none",
+				"trellis_x",
+				"trellis_z",
+				"rope"
 			]
 		},
 		"defaultState": {
-			"age": "0"
+			"age": "0",
+			"support": "none"
 		},
 		"tags": [
 			"minecraft:bee_growables",
@@ -31,10 +38,17 @@
 				"1",
 				"2",
 				"3"
+			],
+			"support": [
+				"none",
+				"trellis_x",
+				"trellis_z",
+				"rope"
 			]
 		},
 		"defaultState": {
-			"age": "0"
+			"age": "0",
+			"support": "none"
 		},
 		"tags": [
 			"minecraft:bee_growables",
@@ -46,7 +60,7 @@
 	},
 	"vineandbarrel:grape_vine_on_rope": {
 		"id": "vineandbarrel:grape_vine_on_rope",
-		"name": "Grape Vine",
+		"name": "Red Grape Vine",
 		"item": null,
 		"properties": {
 			"age": [
@@ -91,6 +105,164 @@
 		],
 		"hardness": 0
 	},
+	"vineandbarrel:white_grape_bush": {
+		"id": "vineandbarrel:white_grape_bush",
+		"name": "White Grape Bush",
+		"item": "vineandbarrel:white_grapes",
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			],
+			"support": [
+				"none",
+				"trellis_x",
+				"trellis_z",
+				"rope"
+			]
+		},
+		"defaultState": {
+			"age": "0",
+			"support": "none"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:washed_away_by_fluids",
+			"sereneseasons:autumn_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:white_grape_vine_on_rope": {
+		"id": "vineandbarrel:white_grape_vine_on_rope",
+		"name": "White Grape Vine",
+		"item": null,
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			]
+		},
+		"defaultState": {
+			"age": "0"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:climbable",
+			"minecraft:fall_damage_resetting",
+			"sereneseasons:autumn_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:trellis": {
+		"id": "vineandbarrel:trellis",
+		"name": "Trellis",
+		"item": "vineandbarrel:trellis",
+		"properties": {
+			"axis": [
+				"x",
+				"z"
+			],
+			"waterlogged": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"axis": "x",
+			"waterlogged": "false"
+		},
+		"tags": [
+			"minecraft:mineable/axe",
+			"vineandbarrel:vine_supports"
+		],
+		"hardness": 0.4
+	},
+	"vineandbarrel:grape_vine_on_trellis": {
+		"id": "vineandbarrel:grape_vine_on_trellis",
+		"name": "Red Grape Vine",
+		"item": null,
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			],
+			"axis": [
+				"x",
+				"z"
+			]
+		},
+		"defaultState": {
+			"age": "0",
+			"axis": "x"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:mineable/axe",
+			"sereneseasons:autumn_crops"
+		],
+		"hardness": 0.4
+	},
+	"vineandbarrel:white_grape_vine_on_trellis": {
+		"id": "vineandbarrel:white_grape_vine_on_trellis",
+		"name": "White Grape Vine",
+		"item": null,
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			],
+			"axis": [
+				"x",
+				"z"
+			]
+		},
+		"defaultState": {
+			"age": "0",
+			"axis": "x"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:mineable/axe",
+			"sereneseasons:autumn_crops"
+		],
+		"hardness": 0.4
+	},
+	"vineandbarrel:hop_vine_on_trellis": {
+		"id": "vineandbarrel:hop_vine_on_trellis",
+		"name": "Hop Bine",
+		"item": null,
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			],
+			"axis": [
+				"x",
+				"z"
+			]
+		},
+		"defaultState": {
+			"age": "0",
+			"axis": "x"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:mineable/axe",
+			"sereneseasons:autumn_crops",
+			"sereneseasons:summer_crops"
+		],
+		"hardness": 0.4
+	},
 	"vineandbarrel:barley": {
 		"id": "vineandbarrel:barley",
 		"name": "Barley",
@@ -122,7 +294,7 @@
 	},
 	"vineandbarrel:wild_grapes": {
 		"id": "vineandbarrel:wild_grapes",
-		"name": "Wild Grapes",
+		"name": "Wild Red Grapes",
 		"item": "vineandbarrel:wild_grapes",
 		"properties": {},
 		"defaultState": {},
@@ -144,6 +316,26 @@
 		"id": "vineandbarrel:wild_hops",
 		"name": "Wild Hops",
 		"item": "vineandbarrel:wild_hops",
+		"properties": {},
+		"defaultState": {},
+		"tags": [
+			"c:flowers",
+			"c:flowers/small",
+			"farmersdelight:wild_crops",
+			"minecraft:enderman_holdable",
+			"minecraft:flowers",
+			"minecraft:replaceable_by_mushrooms",
+			"minecraft:replaceable_by_trees",
+			"minecraft:small_flowers",
+			"minecraft:washed_away_by_fluids",
+			"vineandbarrel:wild_crops"
+		],
+		"hardness": 0
+	},
+	"vineandbarrel:wild_white_grapes": {
+		"id": "vineandbarrel:wild_white_grapes",
+		"name": "Wild White Grapes",
+		"item": "vineandbarrel:wild_white_grapes",
 		"properties": {},
 		"defaultState": {},
 		"tags": [
@@ -182,13 +374,46 @@
 	},
 	"vineandbarrel:grape_crate": {
 		"id": "vineandbarrel:grape_crate",
-		"name": "Grape Crate",
+		"name": "Red Grape Crate",
 		"item": "vineandbarrel:grape_crate",
 		"properties": {},
 		"defaultState": {},
 		"tags": [
 			"c:storage_blocks",
 			"c:storage_blocks/grape",
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/axe"
+		],
+		"hardness": 2
+	},
+	"vineandbarrel:white_grape_crate": {
+		"id": "vineandbarrel:white_grape_crate",
+		"name": "White Grape Crate",
+		"item": "vineandbarrel:white_grape_crate",
+		"properties": {},
+		"defaultState": {},
+		"tags": [
+			"c:storage_blocks",
+			"c:storage_blocks/grape",
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/axe"
 		],
 		"hardness": 2
@@ -202,6 +427,16 @@
 		"tags": [
 			"c:storage_blocks",
 			"c:storage_blocks/hops",
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/axe"
 		],
 		"hardness": 2
@@ -224,8 +459,19 @@
 			"c:storage_blocks",
 			"c:storage_blocks/barley",
 			"farmersdelight:campfire_signal_smoke",
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/hoe",
-			"vineandbarrel:campfire_signal_smoke"
+			"vineandbarrel:campfire_signal_smoke",
+			"vineandbarrel:hay_bales"
 		],
 		"hardness": 0.5
 	},
@@ -269,6 +515,16 @@
 			"waterlogged": "false"
 		},
 		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/pickaxe",
 			"vineandbarrel:brew_kettles"
 		],
@@ -314,6 +570,16 @@
 			"waterlogged": "false"
 		},
 		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/pickaxe",
 			"vineandbarrel:brew_kettles"
 		],
@@ -359,6 +625,16 @@
 			"waterlogged": "false"
 		},
 		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/pickaxe",
 			"vineandbarrel:brew_kettles"
 		],
@@ -404,6 +680,16 @@
 			"waterlogged": "false"
 		},
 		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/pickaxe",
 			"vineandbarrel:brew_kettles"
 		],
@@ -449,6 +735,16 @@
 			"waterlogged": "false"
 		},
 		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/pickaxe",
 			"vineandbarrel:brew_kettles"
 		],
@@ -494,6 +790,16 @@
 			"waterlogged": "false"
 		},
 		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/pickaxe",
 			"vineandbarrel:brew_kettles"
 		],
@@ -539,6 +845,16 @@
 			"waterlogged": "false"
 		},
 		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/pickaxe",
 			"vineandbarrel:brew_kettles"
 		],
@@ -584,6 +900,16 @@
 			"waterlogged": "false"
 		},
 		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/pickaxe",
 			"vineandbarrel:brew_kettles"
 		],
@@ -643,6 +969,16 @@
 			"tapping": "false"
 		},
 		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
 			"minecraft:mineable/axe"
 		],
 		"hardness": 2.5
@@ -687,15 +1023,48 @@
 				"glass_full",
 				"mug_aged",
 				"glass_aged"
+			],
+			"waterlogged": [
+				"true",
+				"false"
 			]
 		},
 		"defaultState": {
 			"spot_0": "none",
 			"spot_1": "none",
 			"spot_2": "none",
-			"spot_3": "none"
+			"spot_3": "none",
+			"waterlogged": "false"
 		},
 		"tags": [],
 		"hardness": 0.1
+	},
+	"vineandbarrel:coq_au_vin_block": {
+		"id": "vineandbarrel:coq_au_vin_block",
+		"name": "Coq au Vin",
+		"item": "vineandbarrel:coq_au_vin_block",
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"servings": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"servings": "4"
+		},
+		"tags": [
+			"farmersdelight:feasts"
+		],
+		"hardness": 0.8
 	}
 }

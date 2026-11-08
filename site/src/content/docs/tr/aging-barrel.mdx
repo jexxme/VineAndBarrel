@@ -1,0 +1,97 @@
+---
+title: Yıllandırma Fıçısı
+description: Doldur, mayalandır, yıllandır ve çek. Yıllandırma Fıçısı nasıl çalışır, ne kadar sürer ve bunlardan nasıl bir mahzen kurulur.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import AgingTimeline from '../../../components/brewing/AgingTimeline.astro';
+import { rules, byType, days, list, nameOf } from '../../../lib/l10n/tr';
+
+export const aging = byType('vineandbarrel:aging');
+export const a = aging[0];
+export const sameTimes = aging.every((r) => r.fermentingTime === a.fermentingTime && r.agingTime === a.agingTime);
+
+<Render name="scenes/barrel-rack" float="right" size={256} alt="Yan yana duran, bir sıraya katılmış üç Yıllandırma Fıçısı" />
+
+<Item id="aging_barrel" /> Vine & Barrel'ın kalbidir. Ekranı yoktur: içine döker, beklersin ve ondan çekersin, hepsi dünyanın içinde. Musluğu sana bakacak şekilde yerleşir.
+
+## Doldurma
+
+[Kaynatma Kazanı](/brew-kettle/) bazlarından biriyle fıçıya sağ tıkla:
+
+- bir kova **{rules.servingsPerBucket} porsiyon** döker, bir şişe **{rules.servingsPerBottle}**,
+- fıçı **{rules.barrelCapacity} porsiyon** alır: iki kova ya da sekiz şişe.
+
+Hâlâ mayalanırken aynı bazdan daha fazla ekleyebilirsin. Yanlış bir şey mi döktün? Parti içeceğe dönüşene kadar boş bir kova ya da şişe onu geri alır.
+
+## Mayalanma ve yıllanma
+
+{sameTimes && <p>Her parti aynı iki aşamadan geçer:</p>}
+
+1. **Mayalanma**, **{days(a.fermentingTime)}** boyunca. Parti, <Item id="red_wine" /> gibi *genç* içeceğe dönüşür.
+2. **Yıllanma**, **{days(a.agingTime)}** daha. Fıçıda hâlâ kalan her şey, <Item id="aged_red_wine" /> gibi *yıllanmış* içeceğe dönüşür; etkisi daha güçlü ve daha uzun sürer.
+
+<AgingTimeline />
+
+{aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
+
+Saat oyun zamanıyla işler, yani geceyi uyuyarak geçirmek sayılır. Genç içecekleri yıllanma aşamasında da çekebilirsin ama aldığın her porsiyon, yıllanacak bir porsiyon eksiği demek. Farmer's Delight ile onun elma şırası (aynı Elma Şarabı olur) ve karpuz suyu da mayalanır: bkz.
+[Farmer's Delight](/farmers-delight/).
+
+<Shot src="cellar.jpg" caption="Meyhane duvarı boyunca bir mahzen: sıra olmuş fıçılar, üstünde ikinci bir sıra. Birinin hava kilidi kabarcıklanıyor; balmumu mühürler yıllanmış partileri gösteriyor." />
+
+## Nasıl gittiğini izlemek
+
+Bir fıçının nasıl gittiğini hiçbir şeyi açmadan anlayabilirsin:
+
+- **Boş elle sağ tık** bir durum satırı gösterir, örneğin *Pale Ale · 5 porsiyon · yıllanıyor, 3 gün sonra hazır*. Fıçıyı örsle yeniden adlandırırsan ad da orada görünür.
+- **Üstteki tıpa** aşamayı gösterir: fıçı boşken ya da içecek genç ve hazırken mantar, mayalanırken kabarcıklanan cam hava kilidi ve yıllanınca kırmızı bir balmumu mührü.
+- **Gözetleme camı** ön tarafta ne kadar dolu olduğunu, içeceğin renginde gösterir.
+- **Sesler ve damlamalar:** mayalanırken kabarcıklar, ara sıra damlayan musluk ve parti yıllandığında yumuşak bir mantar *pop* sesi.
+
+<Stages prefix="barrel-bung" title="Tıpa" labels={['mantar', 'hava kilidi: mayalanıyor', 'balmumu: yıllanmış']} />
+<Stages prefix="barrel-fill" title="Gözetleme camı" only={['0', '2', '4', '6', '8']} labels={['boş', '2', '4', '6', 'dolu']} />
+
+## Çekme
+
+Bir porsiyon çekmek için fıçıya boş bir <Item id="wine_glass" /> (şaraplar) ya da <Item id="mug" /> (biralar, bal şarabı ve elma şarabı) ile sağ tıkla. Musluk kolu döner ve içecek eline düşer.
+
+- Yanlış kap mı? Fıçı hangisini kullanman gerektiğini söyler (*Kırmızı Şarap: Şarap Kadehi ile servis edilir*) ve hiçbir şey harcanmaz.
+- Hâlâ mayalanıyor mu? Ne zaman hazır olacağını söyler.
+- Son porsiyon çekilince fıçı boşalır ve yeni bir partiye hazırdır.
+
+## Mahzen kurmak
+
+<Render name="scenes/barrel-cellar" float="right" size={256} alt="Üst sırası alttakinin üstünde duran iki sıra fıçı" />
+
+- **Sıralar:** yan yana, aynı yöne bakan fıçılar beşiklerini birleştirip uzun bir sıra olur.
+- **Yığınlar:** başka bir fıçının üstündeki fıçı beşiğini bırakır ve takozlara oturur, böylece koca bir fıçı duvarı kurabilirsin.
+- **Karşılaştırıcı:** kalan porsiyonları okur, 0'dan (boş) 15'e (tüm {rules.barrelCapacity} porsiyon).
+- **Doluyken kırarsan** partisini ve örs adını korur. Eşyanın bilgi kutusu içeceği, porsiyonları ve aşamayı gösterir. Eşya olduğu sürece yıllanma durur, yeniden koyunca devam eder. Dolu bir fıçı başkalarıyla yığılmaz.
+- Fıçılar tahtadandır: balta ile kır.
+
+## Otomasyon
+
+- Yukarıdan **huniler** bazları döker. Yanlardan ve alttan boş kupaları ve kadehleri besler, çekilen içecekleri ve dökmeden arta kalan boş kova ve şişeleri dışarı çeker.
+- Fıçıya bakan **fırlatıcılar** boş kupa ya da kadehle bir porsiyon çeker ya da bir kova ya da şişe baz döker.
+
+## Bilmekte fayda var
+
+- **Erken ekle.** Saati yalnızca ilk döküş başlatır: sonradan eklediğin baz partiye onun yaşında katılır, yani daha kısa sürede mayalanır. Parti içeceğe dönüştükten sonra fıçı, boşalana kadar çekilmedikçe başka bir şey almaz.
+- **Her fıçıda tek baz.** Başka bir baz dökmek reddedilir (*Bu fıçıda şu var: Üzüm Suyu*) ve hiçbir şey harcanmaz.
+- **Neredeyse dolu mu?** Bir kova {rules.servingsPerBucket} porsiyonun hepsi için yer ister, yani içinde {rules.barrelCapacity - rules.servingsPerBucket} porsiyondan fazla olan fıçı onu reddeder. Kalanı için şişe kullan. Tersi de geçerli: boş bir kova bazı ancak içeride en az {rules.servingsPerBucket} porsiyon olunca geri alır.
+- **Sen yokken de yıllanır.** Fıçı oyun zamanıyla işler, yani sen uzaktayken ya da çevrimdışıyken de devam eder. Tek kaçırdığın mantar patlaması.
+- **Mahzenini Overworld'de kur.** Nether'da ve End'de uyuyarak geçirilecek bir gün yok; bu yüzden orada uyumak fıçıyı hızlandırmaz ve durum satırı "yarın sabah" yerine gün sayar.
+- **Envanter dolu mu?** Çekilen içecek ayaklarının dibine düşer.
+- **Yaratıcı mod:** dolu bir fıçıyı kırmak hiçbir şey düşürmez. Onu partisiyle kopyalamak için blok seç (Ctrl ile orta tık).
+- **Creeper'ları uzak tut.** Bir patlama fıçıyı, partisiyle birlikte tamamen yok edebilir.
+- **Huni ipuçları:** üstteki huni yalnızca fıçının alacağını döker, yani yanlış baz huniyi tıkamak yerine içinde bekler. Çekme düzeneğinin altında bir huni tut, böylece biten içecekler sıradakileri engellemez.
+- **Yangın riski yok.** Fıçılar asla tutuşmaz. Boş olan fırında yakıt olarak bile yanar; dolu olan yanmaz.
+
+## Tarif
+
+<Recipe id="aging_barrel" />

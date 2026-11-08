@@ -1,0 +1,84 @@
+---
+title: Napoje
+description: Każde wino, piwo, cydr i miód pitny w Vine & Barrel, z czego się je robi, w czym podaje i jaki bonus dają.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/pl';
+
+export const sample = items[drinks[0].id];
+
+Każdy napój działa według tych samych zasad:
+
+- Daje **jeden bonus** i jeden poziom [Rauszyka](/tipsy/). Napój, który zabiera cię do Rauszyka {roman(rules.tipsy.noBuffLevel - 1)} lub wyżej, nie daje
+  żadnego bonusu: jesteś zbyt pijany, by się nim cieszyć.
+- Zawsze możesz go wypić, nawet gdy jesteś syty. Trwa to {sample.consumable.seconds} s, a puste naczynie
+  <Item id="mug" /> lub <Item id="wine_glass" /> wraca do ciebie.
+- Układa się w stosy po **{sample.stack}**.
+- Bonus **młodego** napoju ma poziom {roman(rules.youngBuffAmplifier)} i trwa **{duration(rules.youngBuffTicks)}**. Wersja **leżakowana** ma głębszy
+  kolor, mieni się jak zaklęty przedmiot, a jej bonus ma poziom **{roman(rules.agedBuffAmplifier)} i trwa {duration(rules.agedBuffTicks)}**. Nasycenie
+  piwa pszenicznego działa za to od razu: kilka punktów głodu.
+- Napój postawiony na stole, jeśli jest leżakowany, mieni się jak zaklęty przedmiot, więc od razu odróżnisz go od młodego.
+
+## Kolory
+
+Każdy napój ma swój kolor: widać go we wzierniku beczki oraz w kuflach i kieliszkach na stole. Leżakowane
+napoje są o odcień ciemniejsze.
+
+<DrinkSwatches />
+
+## Wina, piwa, cydr i miód pitny
+
+<DrinkTable />
+
+Nasycenie działa inaczej niż pozostałe bonusy: nie trwa, a każdy jego tyk od razu uzupełnia jeden punkt głodu (i trochę
+nasycenia). Dlatego piwo pszeniczne pokazuje punkty głodu zamiast czasu.
+
+## Z Farmer's Delight
+
+Fermentują też butelki z Farmer's Delight. Jego sok jabłkowy zamienia się w ten sam cydr co nasz sok z jabłek, a sok
+arbuzowy w wino arbuzowe, które zrobisz tylko z zainstalowanym FD (sam przedmiot istnieje zawsze). Zobacz
+[Farmer's Delight](/farmers-delight/).
+
+<DrinkTable fd />
+
+## Naczynia
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Kufle i kieliszki na bloku" />
+
+Wino idzie do naczynia <Item id="wine_glass" />; piwo, cydr i miód pitny do naczynia <Item id="mug" />. Oba układają się w stosy po {items['vineandbarrel:mug'].stack}.
+
+**Postaw je:** skradaj się i kliknij prawym przyciskiem górę bloku kuflem lub kieliszkiem, pełnym albo pustym, by go tam postawić. Do czterech
+mieści się na jednym bloku, każdy ze swoim napojem, a napój widać przez szkło. Kliknij pustą ręką, by któryś z powrotem podnieść.
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="Kufle i kieliszki postawione na stołach, do czterech na blok." />
+
+## Zaplanuj partię
+
+Ile potrzebujesz na kolejkę? Planer w [Budowie piwnicy](/guides/cellar/#zaplanuj-partię) wylicza uprawy,
+partie z kotła, wiadra, beczki i czas oczekiwania dla dowolnej liczby porcji.
+
+## Na zdrowie!
+
+Gdy co najmniej dwóch graczy skończy napój w ciągu {rules.cheersWindowTicks / 20} sekund i w promieniu {rules.cheersRadius} bloków od
+siebie, szkło brzęka, w górę lecą iskry, a bonus z tego napoju trwa u każdego **o {rules.cheersBonusPercent}% dłużej**.
+
+Liczy się tylko między graczami w tym samym świecie, raz na napój, a twoje własne dwa napoje nie tworzą kolejki. Bonus to
+{rules.cheersBonusPercent}% pełnego czasu bonusu z tego napoju, dodane do tego, co zostało; jeśli bonus dopiero się skończył, wraca na tyle czasu.
+
+## Warto wiedzieć
+
+- **Za dużo?** Napój, który zabiera cię do Rauszyka {roman(rules.tipsy.noBuffLevel - 1)}, nie daje bonusu, a do tego odbiera
+  bonusy, które dały ci wcześniejsze napoje. Efekty z mikstur zostają.
+- **Stoły:** napój trafia na tę ćwiartkę bloku, w którą celujesz, albo na najbliższą wolną, i tylko na solidną powierzchnię.
+  Kliknięcie pustą ręką podnosi ten, w który celujesz; gdy coś trzymasz, używasz tego przedmiotu jak zwykle, więc możesz pić
+  przy stole. Zniszczenie bloku, tłok albo utrata bloku pod spodem wyrzuca je wszystkie.
+- **Napoje jako składniki** (w garnku z Farmer's Delight) zwracają kufel lub kieliszek.
+- **Pełny żołądek?** Nie szkodzi: zawsze możesz pić.

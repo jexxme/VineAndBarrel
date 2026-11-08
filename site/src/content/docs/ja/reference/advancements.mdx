@@ -1,0 +1,12 @@
+---
+title: 進捗
+description: Vine & Barrelの進捗タブと、それぞれの達成方法。
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/ja';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrelには専用の進捗タブ、<strong>{gameText(root.titleKey, root.title)}</strong>があります: <em>{gameText(root.descriptionKey, root.description)}</em>
+
+<Advancements />

@@ -1,0 +1,18 @@
+{
+  "type": "vineandbarrel:brewing",
+  "recipe_book_tab": "worts",
+  "ingredients": [
+    "minecraft:honey_bottle",
+    "minecraft:honey_bottle",
+    "minecraft:honey_bottle"
+  ],
+  "result": {
+    "id": "vineandbarrel:honey_must_bottle",
+    "count": 4
+  },
+  "bucket": {
+    "id": "vineandbarrel:honey_must_bucket"
+  },
+  "experience": 0.35,
+  "brewingtime": 200
+}

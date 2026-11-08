@@ -1,0 +1,11 @@
+---
+// The item pages in every translated language: /<code>/items/<item id path>/
+import ItemPage from '../../../components/items/ItemPage.astro';
+import { itemList, type Item } from '../../../lib/data';
+import { activeLocales } from '../../../lib/locales-active';
+export function getStaticPaths() {
+	return activeLocales().flatMap((locale) => itemList.map((item) => ({ params: { locale, slug: item.slug }, props: { item, locale } })));
+}
+const { item, locale } = Astro.props as { item: Item; locale: string };
+---
+<ItemPage item={item} locale={locale} />

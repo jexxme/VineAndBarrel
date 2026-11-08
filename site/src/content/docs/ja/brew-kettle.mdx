@@ -1,0 +1,124 @@
+---
+title: 醸造釜
+description: 醸造釜がブドウ、ベリー、リンゴ、ハチミツ、大麦、小麦をジュース、もろみ、麦汁に変える仕組みと、加熱、充填、自動化の方法。
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/ja';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="焚き火の上の鉄のトレイに載った銅の醸造釜" />
+
+<Item id="brew_kettle" />は、すべての飲み物の出発点です。熱源の上に置いて材料を入れると、数秒でジュース、もろみ、麦汁が1バッチぶん
+できあがり、瓶に詰められます。Farmer's Delight の鍋で料理したことがあれば、使い方はもう分かっています。
+
+## 熱
+
+釜は、すぐ下のブロックが熱いときだけ醸造します。
+
+- **{heatNames(rules.heat.tray)}**: 釜はこの上の鉄のトレイに載ります。
+- **{heatNames(direct)}**: そのまま上に載ります。
+- **{heatNames(rules.heat.conductors)}を通して**: 熱が上に伝わるので、釜と熱源のあいだにホッパーを挟んでも醸造でき、
+  材料も送り込めます。
+- Farmer's Delight があれば、その**コンロ**でも釜が温まります。
+
+焚き火には火がついている必要があります。釜の画面の小さな炎は、熱が届くと灯ります。
+
+<Render name="scenes/kettle-on-magma" size={192} caption="マグマブロックの上" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="ホッパー越しの熱" />
+<Render name="scenes/kettle-hanging" size={192} caption="取っ手で吊るした状態" />
+
+**吊るす:** 素手でスニークしながら釜を右クリックすると、トレイが鉄の取っ手に替わります。ブロックの下面に向けて置いても吊るせます。
+吊るした釜も、真下の火で醸造できます。鎖の下に吊るすと見栄えも抜群です。
+
+## 醸造
+
+右クリックで釜を開き、材料を入れます。右側のゲージには醸造中の色と釜の残量が出ます。カーソルを合わせると杯数が分かります。
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+どのレシピも**{rules.servingsPerBucket}杯分**ができ、**{seconds(brews[0].brewingTime)}**かかります。熱した釜は、醸造中の液か、その材料が入っていると湯気を立てて泡立ちます(それ以外は静かです)。
+醸造中はふたもガタガタ鳴り、できあがるとシューッと湯気が出ます。材料があるかぎり、釜は
+続けて醸造し、合計{rules.kettleMaxServings}杯分まで入ります。
+
+<BrewFlow />
+
+醸造が終わるとふたが開いたままになり、中の飲み物が見えます。取り出すにつれて水面が下がります。醸造中はふたが閉まっていて、
+最後の1杯を取り出すと閉まります。
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="ふたが開き、中の飲み物が見える釜" />
+
+## 瓶詰め
+
+大釜と同じです。空の容器で釜を右クリックします。
+
+- <Item id="glass_bottle" />は**{rules.servingsPerBottle}杯分**を取ります。
+- 空の<Item id="bucket" />は**{rules.servingsPerBucket}杯分**を取るので、釜にそれだけ入っている必要があります。
+
+ジュースや麦汁の入ったバケツは、ミルクと同じでワールドに流せません。
+
+## 飲めるジュース
+
+<Item id="grape_juice" />、<Item id="white_grape_juice" />、<Item id="sweet_berry_juice" />、<Item id="apple_juice" />はそれだけで
+飲み物です。飲むのに{juice.consumable.seconds}秒かかり、いつでも飲めて、満腹度を少し回復します。
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+どのジュースも[ほろ酔い](/tipsy/)を1レベル下げます。麦汁とハチミツもろみは、まず発酵させる必要があり、飲めません。
+
+## 自動化
+
+ホッパーで釜を自動で動かせます。
+
+- **上から**は、材料と空の瓶やバケツを送り込みます。
+- **横から**は、空の瓶やバケツを送り込みます。
+- 釜は醸造した飲み物を容器に詰め、**下のホッパー**が詰まったものを引き出します。
+
+材料や飲み物そのものを引き出すものはありません。
+
+釜の隣のコンパレーターは、材料、飲み物、容器のどれかが中に入ると信号を出し、全体が増えるほど強くなります。
+飲み物だけのときは弱い信号しか出ないので、杯数を数えるより、「何か入っている」と「空」を見分けるのに使ってください。
+
+## 銅
+
+釜は銅でできていて、銅と同じように変化します。
+
+<Stages prefix="kettle-weathering" title="風化" labels={['銅', '風化', '錆び', '酸化']} />
+
+- 時間がたつと、風化、錆び、酸化の順に変わっていきます。どの段階でも醸造の性能は同じです。
+- **ハニカム**でワックスがけすると風化が止まります。**斧**でワックスや風化を1段階はがせて、雷でもきれいになります。
+- **中身が入ったまま壊す**と、飲み物が残ります。アイテムのツールチップと充填バーで分かり、別の場所に置いて続きができます。
+  材料と待機中の瓶やバケツは地面に落ちます。
+- 誰かが画面を開いているあいだは風化しません。
+
+## 知っておくと便利なこと
+
+- **火が消えた?** 熱がなくなってもバッチは最初に戻りませんが、矢印は進んだときの2倍の速さで戻ります。
+  材料はバッチが完成したときにだけ消費されるので、無駄になりません。
+- **一度に1つの醸造。** 釜の中に別の飲み物が残っているときは、その上に違う飲み物を醸造しません。材料には手を付けず、
+  古い飲み物を瓶に詰め出すまで待ちます。{rules.kettleMaxServings}杯分に達したときも待ちます。
+- **レシピ以外を入れない。** レシピで使わないアイテムがあると釜が止まります。ほかのレシピの余りも同じです。
+  上のホッパーは持っているものを何でも押し込むので、材料だけを入れてください。
+- **経験値はどこ?** バッチごとに少しだけ経験値が入ります。釜がためておき、次に誰かが手で瓶やバケツに詰めたときに渡すか、
+  壊されたときに落とします。
+- **バケツに足りない?** バケツでクリックしても画面が開くだけです。瓶やバケツを持ってスニークしても何も起きません。
+- **1つのホッパーで2つの仕事:** 釜の下のホッパーは、焚き火の熱を上に伝えながら、詰まった容器も集めます。
+- **素手でスニークしながら右クリック**すると釜を取っ手で吊るせて、もう一度で元に戻ります。
+- 釜は水の中に置け、どの道具でもすぐ壊せて(つるはしが最速)、金床での名前は残り、スタックしません。爆発で、中身ごと壊れることがあります。
+- **レシピブック:** 主な作物を拾うと醸造レシピが解放され、ジュース、麦汁、その他に分かれます。
+
+## レシピ
+
+<Recipe id="brew_kettle" />

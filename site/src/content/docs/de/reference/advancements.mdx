@@ -1,0 +1,12 @@
+---
+title: Fortschritte
+description: Der Fortschritts-Tab von Vine & Barrel und wie du jeden Fortschritt bekommst.
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/de';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel hat einen eigenen Fortschritts-Tab, <strong>{gameText(root.titleKey, root.title)}</strong>: <em>{gameText(root.descriptionKey, root.description)}</em>
+
+<Advancements />

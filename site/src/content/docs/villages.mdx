@@ -6,24 +6,50 @@ import Item from '../../components/mc/Item.astro';
 import Render from '../../components/mc/Render.astro';
 import VillageInfo from '../../components/data/VillageInfo.astro';
 import Shot from '../../components/mc/Shot.astro';
-import { rules } from '../../lib/data';
+import { rules, roman } from '../../lib/data';
 
 <Render name="scenes/tavern" float="right" size={256} alt="A tavern corner" />
 
 ## Taverns
 
-Every village type, from plains to snowy, can have a **tavern** built in its own style. You'll find one in roughly every
-second village, and now and then two.
+Every village type can have a **tavern**, built in its own style, in one of two layouts. You'll find one in about one
+village in three, and now and then a village has two. No two are quite alike: what's in the casks, the drinks on the
+tables, the flowers, banners and candles change from tavern to tavern.
 
-Its barrels are **already full**: walk in, grab a mug or glass, and tap a drink. One of them is even aged. The tavern chest holds seeds, mugs and glasses, and a few drinks of the region,
-everything you need to start brewing yourself.
+Look for the hanging sign over the door. Inside there's room to move: a table by the fire, stools at the bar, the kettle
+on its campfire behind it. Behind the bar, stairs lead down to the **barrel cellar**, a vaulted, torch-lit room under the
+hall, racked with casks.
 
-<Shot src="terrace.jpg" caption="A tavern terrace: tables of drinks under the pergolas, the barrel cellar against the wall." />
+Each village type has a feature of its own:
+
+- **Plains:** a beer garden, long tables under a pergola of hop bines.
+- **Desert:** a roof terrace, up the outside stairs.
+- **Savanna:** a veranda bar in the shade, with a counter of its own.
+- **Snowy:** a hearth room with a big fireplace and fur rugs.
+- **Taiga:** a mead hall with a long table, and a woodpile under the eaves.
+
+Its barrels are **already full**: walk in, grab a mug or glass, and tap a drink. A couple of them are aged. The tavern
+chest holds seeds, mugs and glasses, and a few drinks of the region, everything you need to start brewing yourself.
+
+<Shot src="taverns/plains.jpg" caption="Plains: the beer garden, long tables under a pergola of hop bines." />
+<Shot src="taverns/desert.jpg" caption="Desert: the roof terrace, up the outside stairs." />
+<Shot src="taverns/savanna.jpg" caption="Savanna: the veranda bar, a counter under the hall's open hatches." />
+<Shot src="taverns/snowy.jpg" caption="Snowy: the hearth room, three fires wide, fur rugs and armchairs." />
+<Shot src="taverns/taiga.jpg" caption="Taiga: the mead hall's long table." />
+<Shot src="taverns/cellar.jpg" caption="The barrel cellar under the hall: racked casks under a stone vault, torches on the walls." />
+
+### Good to know
+
+- Tavern barrels are already past fermenting, so they can't be topped up. Tap one empty and fill it with your own brew:
+  an aged drink from a barrel you filled yourself is what earns *Patience Pays*.
+- The young tavern barrels keep aging like any barrel, so a tavern you leave alone for a few days ends up with more aged drinks.
+- Tapping any barrel in a village, a tavern's or your own, earns *On Tap*.
+- Do your trading sober: from Tipsy {roman(rules.tipsy.rowdyLevel - 1)}, villagers and traders won't deal with you. See [Tipsy](/tipsy/#rowdy).
 
 ## Village farms
 
-Village farms grow our crops alongside the vanilla ones, depending on the climate: grapes where it's warm, hops where it's cool,
-barley nearly everywhere.
+Village farms grow our crops alongside the vanilla ones, depending on the climate: red grapes where it's warm, white grapes
+in plains and taiga villages, hops where it's cool, barley nearly everywhere.
 
 <VillageInfo show="farms" />
 

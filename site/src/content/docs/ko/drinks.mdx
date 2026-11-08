@@ -1,0 +1,83 @@
+---
+title: 술
+description: Vine & Barrel의 모든 와인, 맥주, 사이더, 벌꿀술. 무엇으로 만들고, 무엇에 담아 마시고, 어떤 버프를 주는지.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/ko';
+
+export const sample = items[drinks[0].id];
+
+모든 술은 같은 규칙을 따라요.
+
+- **버프 하나**와 [알딸딸함](/tipsy/) 한 단계를 줘요. 알딸딸함 {roman(rules.tipsy.noBuffLevel - 1)} 이상이 되는 술은
+  버프가 전혀 없어요. 너무 취해서 즐길 수 없거든요.
+- 언제든 마실 수 있어요. 배가 불러도 괜찮아요. 마시는 데 {sample.consumable.seconds}초가 걸리고, 빈
+  <Item id="mug" />이나 <Item id="wine_glass" />은 돌려받아요.
+- **{sample.stack}**개까지 겹쳐 쌓여요.
+- **어린** 술의 버프는 레벨 {roman(rules.youngBuffAmplifier)}에 **{duration(rules.youngBuffTicks)}** 동안 가요. **숙성된** 술은 색이
+  더 짙고, 마법이 부여된 아이템처럼 반짝이며, 버프는 레벨 **{roman(rules.agedBuffAmplifier)}에 {duration(rules.agedBuffTicks)}** 동안 가요. 밀맥주의
+  포화는 대신 바로 작용해요. 허기가 몇 칸 차요.
+- 탁자에 내려놓으면 숙성된 술은 마법이 부여된 아이템처럼 반짝여서, 어린 술과 한눈에 구분할 수 있어요.
+
+## 색
+
+술마다 자기만의 색이 있어요. 통의 유리창과 탁자 위 맥주잔, 와인잔에서 볼 수 있어요. 숙성된 술은 한 톤 더 짙어요.
+
+<DrinkSwatches />
+
+## 와인, 맥주, 사이더, 벌꿀술
+
+<DrinkTable />
+
+포화는 다른 버프와 달리 지속되지 않아요. 틱마다 허기가 한 칸(과 포화도 조금) 바로 차올라요. 그래서 밀맥주에는
+시간 대신 허기 칸 수가 표시돼요.
+
+## Farmer's Delight와 함께
+
+Farmer's Delight의 병도 발효돼요. FD의 사과주는 이 모드의 사과 주스와 같은 하드 사이더가 되고, 수박 주스는
+수박 와인이 돼요. 수박 와인은 FD가 설치되어 있어야만 만들 수 있어요(아이템 자체는 항상 있어요).
+[Farmer's Delight](/farmers-delight/)를 참고하세요.
+
+<DrinkTable fd />
+
+## 잔
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="블록 위의 맥주잔과 와인잔" />
+
+와인은 <Item id="wine_glass" />에, 맥주, 사이더, 벌꿀술은 <Item id="mug" />에 담아요. 둘 다 {items['vineandbarrel:mug'].stack}개까지 겹쳐 쌓여요.
+
+**내려놓기:** 웅크린 채 블록 윗면을 가득 찬 잔이나 빈 잔으로 우클릭하면 그 자리에 놓여요. 한 블록에 최대 네 개가
+놓이고, 각각 자기 술을 담고 있으며, 유리 너머로 술이 보여요. 빈손으로 우클릭하면 다시 집어 들어요.
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="탁자 위에 내려놓은 맥주잔과 와인잔. 블록당 최대 네 개." />
+
+## 배치 계획
+
+한 순배에 얼마나 필요할까요? [저장고 짓기](/guides/cellar/#배치-계획)의 계획기가 몇 인분이든 필요한 작물, 솥 배치 수,
+양동이, 통, 기다리는 시간을 계산해 줘요.
+
+## 건배!
+
+두 명 이상의 플레이어가 서로 {rules.cheersRadius}블록 안에서 {rules.cheersWindowTicks / 20}초 안에 술을 다 마시면, 잔이 부딪히고
+반짝이가 조금 올라가고, 모두가 그 술에서 받은 버프가 **{rules.cheersBonusPercent}% 더 오래** 가요.
+
+같은 월드에 있는 플레이어끼리만 해당되고, 술 한 잔당 한 번이며, 혼자서 두 잔을 마신다고 한 순배가 되진 않아요.
+보너스는 그 술의 전체 버프 시간의 {rules.cheersBonusPercent}%이고, 남은 시간에 더해져요. 버프가 막 끝났다면 그만큼의 시간으로 되돌아와요.
+
+## 알아 두면 좋아요
+
+- **너무 많이 마셨나요?** 알딸딸함 {roman(rules.tipsy.noBuffLevel - 1)} 단계에 이르게 하는 술은 버프가 없고, 앞서 마신 술에서 받은
+  버프도 사라지게 해요. 물약의 효과는 그대로예요.
+- **탁자:** 술은 조준한 블록 사분면에 놓이고, 거기가 차 있으면 가장 가까운 빈 곳에 놓여요. 튼튼한 윗면에만 놓을 수
+  있어요. 빈손으로 우클릭하면 조준한 잔을 집어 들고, 손에 뭔가 들고 있으면 그 아이템을 평소처럼 써서 탁자에서 바로
+  마실 수 있어요. 블록을 부수거나, 피스톤이 밀거나, 아래 블록이 사라지면 전부 떨어져요.
+- **재료로 쓴 술**(Farmer's Delight의 조리용 냄비에서)은 맥주잔이나 와인잔을 돌려줘요.
+- **배가 부른가요?** 상관없어요. 언제든 마실 수 있어요.

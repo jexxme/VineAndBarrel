@@ -1,0 +1,73 @@
+---
+title: Configuración
+description: Todas las opciones de Vine & Barrel, para dueños de servidor y para cada jugador, con su valor por defecto y lo que hacen.
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../../lib/l10n/es';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+Vine & Barrel tiene dos archivos de configuración, los dos sobre [Achispado](/tipsy/). Todo lo demás, desde las recetas hasta lo que
+tarda un barril, funciona como lo trae el mod y se puede cambiar con un datapack como cualquier receta.
+
+En el juego, cámbialos en la pantalla de ajustes: **Mods**, Vine & Barrel, **Configuración** en NeoForge; en Fabric aparece el mismo botón
+con [Mod Menu](https://modrinth.com/mod/modmenu) instalado. Los cambios ahí se aplican al instante. Las opciones del servidor
+aparecen ahí en un jugador (no cuando el mundo está abierto a LAN); en un servidor son las del servidor.
+
+Los archivos en sí: en NeoForge son archivos TOML con las opciones bajo <code>[{configFiles.server.section}]</code>. En
+Fabric son archivos <code>.properties</code> normales en la carpeta <code>config</code>, con las mismas opciones escritas como
+<code>{configFiles.server.section}.opción=valor</code>. En Fabric el archivo de cliente se lee al iniciar el juego, así que
+reinicia tras editarlo; el archivo de servidor se vuelve a leer con <code>/reload</code>.
+
+## Opciones del servidor
+
+En <code>{configFiles.server.file}</code> en NeoForge, <code>{configFiles.server.fabricFile}</code> en Fabric. Los valores del servidor
+llegan a todos los jugadores que entran, así que todos juegan con las mismas reglas. Un mundo puede tener los suyos: pon el archivo en la
+carpeta <code>serverconfig</code> de ese mundo, y prevalece sobre el de <code>config</code> mientras ese mundo esté en marcha.
+
+<table>
+	<thead><tr><th>Opción</th><th>Por defecto</th><th>Qué hace</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">de {o.range[0]} a {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Modo sin alcohol">
+Pon `enabled = false` (`tipsy.enabled=false` en Fabric) y las bebidas pasan a ser bebidas de mejoras sin más: sin Achispado, sin hipo, sin lagunas, pero con los mismos nombres y mejoras.
+Bueno para un servidor familiar, o si simplemente no te gusta el bamboleo.
+</Aside>
+
+## Opciones del cliente
+
+En <code>{configFiles.client.file}</code> en NeoForge, <code>{configFiles.client.fabricFile}</code> en Fabric. Cada jugador
+las ajusta para sí mismo; solo cambian lo que ves.
+
+<table>
+	<thead><tr><th>Opción</th><th>Por defecto</th><th>Qué hace</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">de {o.range[0]} a {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="¿Mareo por movimiento?">
+Pon `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` en Fabric). Achispado deja de mover tu pantalla, diga lo que diga el servidor: sin balanceo, sin sacudidas, sin ataques de Náusea. Los deslizadores de Efectos de distorsión y Efectos de campo de visión de vanilla también lo suavizan. Quedarte tumbado de bruces tras una caída se sigue viendo, no es un efecto de pantalla; todo lo demás de Achispado se queda igual.
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

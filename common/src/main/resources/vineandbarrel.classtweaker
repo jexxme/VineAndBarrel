@@ -1,0 +1,30 @@
+classTweaker v2 official
+
+# The same access as META-INF/accesstransformer.cfg (NeoForge), for Fabric: VillageStructures adds our buildings to the
+# vanilla village pools and our crops to the village farm processors.
+accessible field net/minecraft/world/level/levelgen/structure/pools/StructureTemplatePool rawTemplates Ljava/util/List;
+mutable field net/minecraft/world/level/levelgen/structure/pools/StructureTemplatePool rawTemplates Ljava/util/List;
+accessible field net/minecraft/world/level/levelgen/structure/pools/StructureTemplatePool templates Lit/unimi/dsi/fastutil/objects/ObjectArrayList;
+accessible field net/minecraft/world/level/levelgen/structure/templatesystem/StructureProcessorList list Ljava/util/List;
+mutable field net/minecraft/world/level/levelgen/structure/templatesystem/StructureProcessorList list Ljava/util/List;
+
+# Our blocks burn through vanilla's own fire table (VBFlammability)
+accessible method net/minecraft/world/level/block/FireBlock setFlammable (Lnet/minecraft/world/level/block/Block;II)V
+accessible method net/minecraft/world/level/block/FireBlock getBurnOdds (Lnet/minecraft/world/level/block/state/BlockState;)I
+accessible method net/minecraft/world/level/block/FireBlock getIgniteOdds (Lnet/minecraft/world/level/block/state/BlockState;)I
+
+# Access NeoForge opens up (see the access transformer)
+accessible field net/minecraft/world/entity/Mob goalSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
+accessible field net/minecraft/world/item/crafting/RecipeManager recipes Lnet/minecraft/world/item/crafting/RecipeMap;
+accessible class net/minecraft/world/item/CreativeModeTab$Output
+accessible method net/minecraft/client/gui/screens/recipebook/GhostSlots setInput (Lnet/minecraft/world/inventory/Slot;Lnet/minecraft/util/context/ContextMap;Lnet/minecraft/world/item/crafting/display/SlotDisplay;)V
+
+# The Brew Kettle's own recipe book type and search tab (NeoForge: META-INF/enumextensions.json and an event); the
+# fabric module's enum mixins create the constants
+extend-enum net/minecraft/world/inventory/RecipeBookType VINEANDBARREL_BREWING
+extend-enum net/minecraft/client/gui/screens/recipebook/SearchRecipeBookCategory VINEANDBARREL_BREWING
+
+# Blackout: the villager whose bed you woke up in shakes its head, and a blacked-out player's movement keys are held
+# still on the client
+accessible method net/minecraft/world/entity/npc/villager/Villager setUnhappy ()V
+accessible field net/minecraft/client/player/ClientInput moveVector Lnet/minecraft/world/phys/Vec2;

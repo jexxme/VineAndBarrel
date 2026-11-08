@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "jexxme.vineandbarrel.smoke.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ForcedBlackoutEndingMixin"
+  ],
+  "client": [
+    "AbstractContainerScreenAccessor",
+    "DrawnTooltipMixin",
+    "EffectTooltipCaptureMixin",
+    "HiddenWindowMixin",
+    "LoopbackLanMixin",
+    "MouseHandlerAccessor",
+    "HiddenMouseMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}

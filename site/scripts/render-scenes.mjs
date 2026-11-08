@@ -62,6 +62,7 @@ for (const [id, b] of Object.entries(runtime.blocks)) {
 // Growth stages, standing on the block they grow on
 const crops = [
 	['vineandbarrel:grape_bush', 'minecraft:grass_block', {}, GRASS],
+	['vineandbarrel:white_grape_bush', 'minecraft:grass_block', {}, GRASS],
 	['vineandbarrel:hop_bush', 'minecraft:grass_block', {}, GRASS],
 	['vineandbarrel:barley', 'minecraft:farmland', { moisture: '7' }],
 ];
@@ -104,15 +105,27 @@ const scenes = {
 		...place('minecraft:oak_planks', {}, [2, 0, 0]), ...table(['mug_full', 'mug_full', 'glass_full', 'none'], ['barley_ale', 'wheat_beer', 'red_wine', null], [2, 1, 0]),
 		...place('minecraft:oak_planks', {}, [3, 0, 0]), ...table(['glass_full', 'none', 'mug', 'glass_full'], ['sweet_berry_wine', null, null, 'aged_red_wine'], [3, 1, 0]),
 	],
-	'storage': [...place('vineandbarrel:grape_crate'), ...place('vineandbarrel:hops_crate', {}, [1, 0, 0]), ...place('vineandbarrel:barley_bale', { axis: 'y' }, [2, 0, 0])],
+	'storage': [...place('vineandbarrel:grape_crate'), ...place('vineandbarrel:white_grape_crate', {}, [1, 0, 0]), ...place('vineandbarrel:hops_crate', {}, [2, 0, 0]),
+		...place('vineandbarrel:barley_bale', { axis: 'y' }, [3, 0, 0])],
 	'wild-crops': [
-		...[0, 1, 2].flatMap((x) => place('minecraft:grass_block', {}, [x, 0, 0], GRASS)),
-		...place('vineandbarrel:wild_grapes', {}, [0, 1, 0]), ...place('vineandbarrel:wild_hops', {}, [1, 1, 0]), ...place('vineandbarrel:wild_barley', {}, [2, 1, 0]),
+		...[0, 1, 2, 3].flatMap((x) => place('minecraft:grass_block', {}, [x, 0, 0], GRASS)),
+		...place('vineandbarrel:wild_grapes', {}, [0, 1, 0]), ...place('vineandbarrel:wild_white_grapes', {}, [1, 1, 0]), ...place('vineandbarrel:wild_hops', {}, [2, 1, 0]),
+		...place('vineandbarrel:wild_barley', {}, [3, 1, 0]),
+	],
+	// A vineyard row on trellises: ripe red grapes, half-ripe red grapes, ripe hops, and a bare trellis waiting for a bush
+	'trellis': [
+		...[0, 1, 2, 3].flatMap((x) => place('minecraft:grass_block', {}, [x, 0, 0], GRASS)),
+		...[['grape', '3', 0], ['grape', '2', 1], ['hop', '3', 2]].flatMap(([crop, age, x]) => [
+			...place(`vineandbarrel:${crop}_bush`, { age, support: 'trellis_x' }, [x, 1, 0]),
+			...place(`vineandbarrel:${crop}_vine_on_trellis`, { age, axis: 'x' }, [x, 2, 0]),
+			...place(`vineandbarrel:${crop}_vine_on_trellis`, { age, axis: 'x' }, [x, 3, 0]),
+		]),
+		...place('vineandbarrel:trellis', { axis: 'x' }, [3, 1, 0]), ...place('vineandbarrel:trellis', { axis: 'x' }, [3, 2, 0]),
 	],
 	'garden': [
 		...[0, 1, 2].flatMap((x) => place('minecraft:farmland', { moisture: '7' }, [x, 0, 1])),
 		...[0, 1, 2].flatMap((x) => place('minecraft:grass_block', {}, [x, 0, 0], GRASS)),
-		...place('vineandbarrel:grape_bush', { age: '3' }, [0, 1, 0]), ...place('vineandbarrel:hop_bush', { age: '3' }, [1, 1, 0]), ...place('vineandbarrel:grape_bush', { age: '2' }, [2, 1, 0]),
+		...place('vineandbarrel:grape_bush', { age: '3' }, [0, 1, 0]), ...place('vineandbarrel:hop_bush', { age: '3' }, [1, 1, 0]), ...place('vineandbarrel:white_grape_bush', { age: '3' }, [2, 1, 0]),
 		...place('vineandbarrel:barley', { age: '7' }, [0, 1, 1]), ...place('vineandbarrel:barley', { age: '7' }, [1, 1, 1]), ...place('vineandbarrel:barley', { age: '5' }, [2, 1, 1]),
 	],
 };

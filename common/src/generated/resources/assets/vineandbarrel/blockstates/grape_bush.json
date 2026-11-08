@@ -1,0 +1,56 @@
+{
+  "variants": {
+    "age=0,support=none": {
+      "model": "vineandbarrel:block/grape_bush_stage0"
+    },
+    "age=0,support=rope": {
+      "model": "vineandbarrel:block/grape_bush_on_rope_stage0"
+    },
+    "age=0,support=trellis_x": {
+      "model": "vineandbarrel:block/grape_bush_on_trellis_stage0"
+    },
+    "age=0,support=trellis_z": {
+      "model": "vineandbarrel:block/grape_bush_on_trellis_stage0",
+      "y": 90
+    },
+    "age=1,support=none": {
+      "model": "vineandbarrel:block/grape_bush_stage1"
+    },
+    "age=1,support=rope": {
+      "model": "vineandbarrel:block/grape_bush_on_rope_stage1"
+    },
+    "age=1,support=trellis_x": {
+      "model": "vineandbarrel:block/grape_bush_on_trellis_stage1"
+    },
+    "age=1,support=trellis_z": {
+      "model": "vineandbarrel:block/grape_bush_on_trellis_stage1",
+      "y": 90
+    },
+    "age=2,support=none": {
+      "model": "vineandbarrel:block/grape_bush_stage2"
+    },
+    "age=2,support=rope": {
+      "model": "vineandbarrel:block/grape_bush_on_rope_stage2"
+    },
+    "age=2,support=trellis_x": {
+      "model": "vineandbarrel:block/grape_bush_on_trellis_stage2"
+    },
+    "age=2,support=trellis_z": {
+      "model": "vineandbarrel:block/grape_bush_on_trellis_stage2",
+      "y": 90
+    },
+    "age=3,support=none": {
+      "model": "vineandbarrel:block/grape_bush_stage3"
+    },
+    "age=3,support=rope": {
+      "model": "vineandbarrel:block/grape_bush_on_rope_stage3"
+    },
+    "age=3,support=trellis_x": {
+      "model": "vineandbarrel:block/grape_bush_on_trellis_stage3"
+    },
+    "age=3,support=trellis_z": {
+      "model": "vineandbarrel:block/grape_bush_on_trellis_stage3",
+      "y": 90
+    }
+  }
+}

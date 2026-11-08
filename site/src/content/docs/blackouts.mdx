@@ -1,0 +1,73 @@
+---
+title: Blackouts
+description: "One drink too many: what happens when you black out, every place you can wake up, how likely each is, and the souvenirs you bring back."
+---
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Item from '../../components/mc/Item.astro';
+import BlackoutEndings from '../../components/data/BlackoutEndings.astro';
+import { rules, roman, seconds } from '../../lib/data';
+
+export const t = rules.tipsy;
+export const b = t.blackout;
+export const count = b.endings.filter((e) => e.collectable).length;
+
+<Aside type="caution" title="Spoilers">
+This page tells you every way a night can end. If you'd rather find out for yourself, stop here: the
+[Tipsy](/tipsy/#one-drink-too-many) page only hints at it.
+</Aside>
+
+Already at Tipsy {roman(t.maxLevel - 1)} and still drinking? One more and you **black out**. It's harmless: nothing you had
+is ever lost, you never wake up anywhere unsafe, no time passes, and nobody else is affected. Server owners can switch it
+off with the `blackout` option (see [Configuration](/reference/config/)).
+
+## What happens
+
+<Steps>
+
+1. **You keel over.** Your eyes fall shut and you tip over. Everyone around you sees you lying there, stars circling
+   your head.
+2. **Black.** For a few seconds you can't move, and Tipsy lets you be: no sway, no hiccups, no swirl. Nobody can hurt
+   you either, no mob and no player, and falling over doesn't. Only what would hurt anyone lying there still counts,
+   like lava or the void, so where you black out matters; where you *wake up* is always safe.
+3. **You wake up somewhere.** While the screen is still black, the game picks where your night ended (see below) and
+   puts you there: lying on the ground, in a bed, or sitting in a boat. Your eyes open slowly, then you get up.
+4. **A line on the screen** says how it went, *{b.endings.find((e) => e.id === 'in_the_hay')?.lines[0]}* or one of many others.
+
+</Steps>
+
+The whole thing takes about {seconds(b.ticks)}. You wake up:
+
+- **back at Tipsy I**, and without the buffs your drinks gave you,
+- **hungry:** {b.hungerLost / 2} hunger shanks lighter, and nothing in your saturation,
+- **shaky** for {seconds(b.shakyTicks)}: a little dizzy and slow,
+- **with a souvenir** in your pockets, something that fits where you woke up (at your feet if your pockets are full),
+- and, one time in {b.pumpkinOneIn}, **with a carved pumpkin on your head**, if you weren't wearing a helmet.
+
+## Where you wake up
+
+There are {count} places a night can end, plus one for when none of them works out. Each has its own chance, but only the
+ones that are possible where you blacked out are in the draw: no water nearby, no boat; no village, no tavern.
+
+- **New ones first:** an ending you haven't had yet is {b.unseenBonus} times as likely as one you have.
+- **Never twice in a row,** unless nothing else is possible.
+- **Always safe:** solid ground, room to stand, no lava or water, nothing that burns or pricks next to you, no monster
+  within {b.ranges.monsterFree} blocks, inside the world border.
+- **Never inside someone's build:** the outdoor endings need open sky above, glass and leaves included. The two indoor
+  ones only use what the world built for everyone, a village tavern and a villager's bed in a village house, and your own bed.
+- **In the Nether and the End** there's no open sky, so most nights end right where you fell.
+
+The odds below are for your first blackout with every ending possible. After that they shift: the endings you haven't
+had yet get more likely, and the one you just had steps aside.
+
+<BlackoutEndings />
+
+## Collect them all
+
+The first blackout earns *Where Am I?*. Wake up in all {count} places (*Right here* doesn't count) for the challenge
+*Lost Weekend*. The game remembers which ones you've had, even through death.
+
+<Aside type="tip" title="Hunting for a particular ending?">
+Set the stage before the last drink: a bed of your own nearby for *Home*, a hay or <Item id="barley_bale" /> stack outside
+for *In the hay*, a pond for *In a boat*, a village with a tavern for the indoor ones. Endings you've already had are less
+likely, so the rare ones come up sooner than you'd think.
+</Aside>

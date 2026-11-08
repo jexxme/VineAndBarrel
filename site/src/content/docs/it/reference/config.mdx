@@ -1,0 +1,73 @@
+---
+title: Configurazione
+description: Ogni opzione di Vine & Barrel, per i proprietari del server e per ogni giocatore, con il suo valore predefinito e cosa fa.
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../../lib/l10n/it';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+Vine & Barrel ha due file di configurazione, entrambi su [Brillo](/tipsy/). Tutto il resto, dalle ricette al tempo che
+impiega una botte, funziona come la mod lo fornisce e si può cambiare con un datapack come qualsiasi ricetta.
+
+Nel gioco, si cambiano dalla schermata delle impostazioni: **Mods**, Vine & Barrel, **Config** su NeoForge; su Fabric lo stesso pulsante
+compare con [Mod Menu](https://modrinth.com/mod/modmenu) installato. Le modifiche lì si applicano subito. Le opzioni del server
+si vedono lì in giocatore singolo (non quando il mondo è aperto alla LAN); su un server sono quelle del server.
+
+I file veri e propri: su NeoForge sono file TOML con le opzioni sotto <code>[{configFiles.server.section}]</code>. Su
+Fabric sono semplici file <code>.properties</code> nella cartella <code>config</code>, con le stesse opzioni scritte come
+<code>{configFiles.server.section}.opzione=valore</code>. Su Fabric il file client viene letto all'avvio del gioco, quindi
+riavvia dopo averlo modificato; il file del server viene riletto con <code>/reload</code>.
+
+## Opzioni del server
+
+In <code>{configFiles.server.file}</code> su NeoForge, <code>{configFiles.server.fabricFile}</code> su Fabric. I valori del server
+vanno a ogni giocatore che entra, così tutti giocano con le stesse regole. Un singolo mondo può avere le sue: metti il file nella
+cartella <code>serverconfig</code> di quel mondo, e vale più di quello in <code>config</code> finché quel mondo è in esecuzione.
+
+<table>
+	<thead><tr><th>Opzione</th><th>Predefinito</th><th>Cosa fa</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">da {o.range[0]} a {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Modalità analcolica">
+Imposta `enabled = false` (`tipsy.enabled=false` su Fabric) e le bevande diventano semplici bevande con bonus: niente Brillo, niente singhiozzo, niente vuoti di memoria, ma gli stessi nomi e bonus.
+Ottimo per un server per famiglie, o se semplicemente non ti piace il dondolio.
+</Aside>
+
+## Opzioni del client
+
+In <code>{configFiles.client.file}</code> su NeoForge, <code>{configFiles.client.fabricFile}</code> su Fabric. Ogni giocatore
+le imposta per sé; cambiano solo ciò che vedi tu.
+
+<table>
+	<thead><tr><th>Opzione</th><th>Predefinito</th><th>Cosa fa</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">da {o.range[0]} a {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="Mal di movimento?">
+Imposta `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` su Fabric). Brillo smette di muovere lo schermo, qualunque cosa dica il server: niente ondeggiamento, niente scossoni, niente giramenti di Nausea. Anche i cursori Effetti di distorsione ed Effetti sul campo visivo di vanilla lo attenuano. Restare a faccia a terra dopo un capitombolo si vede comunque, non è un effetto sullo schermo; tutto il resto di Brillo resta.
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

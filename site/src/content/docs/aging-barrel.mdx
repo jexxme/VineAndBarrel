@@ -8,6 +8,7 @@ import Render from '../../components/mc/Render.astro';
 import Recipe from '../../components/recipes/Recipe.astro';
 import Stages from '../../components/data/Stages.astro';
 import Shot from '../../components/mc/Shot.astro';
+import AgingTimeline from '../../components/brewing/AgingTimeline.astro';
 import { rules, byType, days, list, nameOf } from '../../lib/data';
 
 export const aging = byType('vineandbarrel:aging');
@@ -36,10 +37,13 @@ into a drink, an empty bucket or bottle takes it back out.
 1. **Fermenting**, for **{days(a.fermentingTime)}**. The batch becomes the *young* drink, such as <Item id="red_wine" />.
 2. **Aging**, for **{days(a.agingTime)}** more. Whatever is still in the barrel becomes the *aged* drink, such as <Item id="aged_red_wine" />, whose buff is stronger and lasts longer.
 
+<AgingTimeline />
+
 {aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
 
 The clock runs on in-game time, so sleeping through the night counts. You can tap young drinks during the aging stage, but
-every serving you take is one less that ages. With Farmer's Delight, its apple cider and melon juice ferment too: see
+every serving you take is one less that ages. With Farmer's Delight, its apple cider (into the same Hard Cider) and melon
+juice ferment too: see
 [Farmer's Delight](/farmers-delight/).
 
 <Shot src="cellar.jpg" caption="A cellar along the tavern wall: barrels joined into a rack, a second row stacked on top. The airlock on one of them bubbles; the wax seals mark the aged batches." />
@@ -48,7 +52,7 @@ every serving you take is one less that ages. With Farmer's Delight, its apple c
 
 You can tell how a barrel is doing without opening anything:
 
-- **Empty-hand right-click** shows a status line, e.g. *Barley Ale · 5 servings · aging, aged in 3 days*. Rename a barrel in
+- **Empty-hand right-click** shows a status line, e.g. *Pale Ale · 5 servings · aging, aged in 3 days*. Rename a barrel in
   an anvil and the name shows up there too.
 - **The bung on top** shows the stage: a cork when it's empty or the drink is young and ready, a glass airlock that bubbles
   while it ferments, and a red wax seal once it's aged.
@@ -60,7 +64,7 @@ You can tell how a barrel is doing without opening anything:
 
 ## Tapping
 
-Right-click the barrel with an empty <Item id="wine_glass" /> (wines) or <Item id="mug" /> (beers and cider) to tap one serving.
+Right-click the barrel with an empty <Item id="wine_glass" /> (wines) or <Item id="mug" /> (beers, mead and cider) to tap one serving.
 The tap handle turns and the drink lands in your hand.
 
 - Wrong vessel? The barrel tells you which one to use (*Red Wine is served in a Wine Glass*), and nothing is used up.
@@ -74,8 +78,8 @@ The tap handle turns and the drink lands in your hand.
 - **Racks:** barrels side by side, facing the same way, join their cradles into one long rack.
 - **Stacks:** a barrel on top of another drops its cradle and rests on chocks, so you can build a whole wall of casks.
 - **Comparator:** reads the servings left, from 0 (empty) to 15 (all {rules.barrelCapacity}).
-- **Break it full** and it keeps its batch. The item's tooltip shows the drink, servings and stage. Aging pauses while it's
-  an item and carries on when you place it again.
+- **Break it full** and it keeps its batch, and its anvil name. The item's tooltip shows the drink, servings and stage.
+  Aging pauses while it's an item and carries on when you place it again. A full barrel doesn't stack with others.
 - Barrels are wooden: mine them with an axe.
 
 ## Automation
@@ -83,6 +87,25 @@ The tap handle turns and the drink lands in your hand.
 - **Hoppers** from above pour bases in. From the sides and below, they feed in empty mugs and glasses and pull out the
   tapped drinks, and the empty buckets and bottles left over from pouring.
 - **Dispensers** facing a barrel tap a serving with an empty mug or glass, or pour in a bucket or bottle of base.
+
+## Good to know
+
+- **Top up early.** Only the first pour starts the clock: base you add later joins the batch at its age, so it ferments
+  in less time. Once the batch is a drink, the barrel takes nothing more until it's tapped empty.
+- **One base per barrel.** Pouring a different base is refused (*This barrel holds Grape Juice*) and nothing is used up.
+- **Nearly full?** A bucket needs room for all {rules.servingsPerBucket} servings, so a barrel with more than
+  {rules.barrelCapacity - rules.servingsPerBucket} in refuses it. Use bottles for the rest. The same goes the other way: an
+  empty bucket only takes base back out when there are at least {rules.servingsPerBucket} servings in.
+- **It ages while you're away.** The barrel runs on game time, so it keeps going while you're far off or offline. You
+  only miss the cork pop.
+- **Build your cellar in the Overworld.** In the Nether and the End there's no day to sleep through, so sleeping doesn't
+  speed a barrel up there, and its status line counts in days instead of "tomorrow morning".
+- **Full inventory?** A tapped drink drops at your feet instead.
+- **Creative mode:** breaking a full barrel drops nothing. Pick-block it (middle-click with Ctrl) to copy it with its batch.
+- **Keep creepers out.** An explosion can destroy a barrel outright, batch and all.
+- **Hopper tips:** a hopper on top only pours in what the barrel will take, so a wrong base waits in the hopper instead
+  of jamming it. Keep a hopper below a tapping setup, so finished drinks don't block the next ones.
+- **No fire risk.** Barrels never catch fire. An empty one even burns as furnace fuel; a full one doesn't.
 
 ## Recipe
 

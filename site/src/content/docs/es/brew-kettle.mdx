@@ -1,0 +1,128 @@
+---
+title: Marmita
+description: Cómo la marmita convierte uvas, bayas, manzanas, miel, cebada y trigo en zumo y mosto, y cómo calentarla, llenarla y automatizarla.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/es';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="Una marmita de cobre sobre su bandeja de hierro encima de una hoguera" />
+
+La <Item id="brew_kettle" /> es donde empieza toda bebida. Ponla sobre una fuente de calor, añade los ingredientes, y unos segundos
+después contiene una tanda de zumo o de mosto, lista para embotellar. Si alguna vez has cocinado en la olla de cocción de Farmer's Delight, ya
+sabes cómo funciona.
+
+## Calor
+
+La marmita solo elabora mientras el bloque que tiene justo debajo está caliente:
+
+- **{heatNames(rules.heat.tray)}**: la marmita se apoya en una bandeja de hierro sobre ellos.
+- **{heatNames(direct)}**: se coloca justo encima.
+- **{heatNames(rules.heat.conductors)}**: el calor pasa a través de ella, así que puede haber una entre la marmita y la
+  fuente de calor y seguir alimentándola.
+- Con Farmer's Delight, su **cocina** también calienta la marmita.
+
+Una hoguera tiene que estar encendida. La llamita de la pantalla de la marmita se enciende cuando está caliente.
+
+<Render name="scenes/kettle-on-magma" size={192} caption="Sobre un bloque de magma" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="Calor a través de una tolva" />
+<Render name="scenes/kettle-hanging" size={192} caption="Colgada de su asa" />
+
+**Cuélgala:** agáchate y haz clic derecho en la marmita con la mano vacía para cambiar la bandeja por un asa de hierro, o colócala contra
+la cara inferior de un bloque. Una marmita colgada sigue elaborando sobre un fuego justo debajo, y queda genial bajo una cadena.
+
+## Elaboración
+
+Abre la marmita con un clic derecho y mete los ingredientes. El indicador de la derecha muestra la tanda con su color y lo
+llena que está la marmita; pasa el cursor por encima para ver las raciones.
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+Cada receta da **{rules.servingsPerBucket} raciones** y tarda **{seconds(brews[0].brewingTime)}**. Una marmita caliente echa vapor
+y burbujea cuando tiene una tanda o los ingredientes de una (si no, se queda callada); mientras elabora una tanda, la tapa traquetea también, y al terminar suelta una bocanada de vapor. La marmita sigue elaborando
+más tandas mientras haya ingredientes, hasta {rules.kettleMaxServings} raciones en total.
+
+<BrewFlow />
+
+Cuando una tanda termina, la tapa se queda levantada y la ves dentro, bajando a medida que sacas raciones. Mientras elabora una tanda, la
+tapa está cerrada; cuando sale la última ración, se cierra.
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="La marmita con la tapa abierta, mostrando la tanda" />
+
+## Embotellado
+
+Como un caldero: haz clic derecho en la marmita con un recipiente vacío.
+
+- un <Item id="glass_bottle" /> recoge **{rules.servingsPerBottle} ración**,
+- un <Item id="bucket" /> vacío recoge **{rules.servingsPerBucket} raciones**, así que la marmita necesita al menos tantas.
+
+Los cubos de zumo y de mosto no se pueden verter en el mundo, como la leche.
+
+## Zumo para beber
+
+<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" /> y <Item id="apple_juice" /> son
+bebidas por sí solos: tardas {juice.consumable.seconds} s en beberlos, siempre puedes beberlos, y llenan un poco de hambre.
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+Todo zumo también baja un nivel de [Achispado](/tipsy/). El mosto y el mosto de miel tienen que fermentar primero; no se pueden beber.
+
+## Automatización
+
+Las tolvas pueden hacer funcionar la marmita solas:
+
+- **Desde arriba**, una tolva mete ingredientes, y frascos o cubos vacíos.
+- **Desde los lados**, mete frascos o cubos vacíos.
+- La marmita los llena con la tanda, y **una tolva debajo** saca los llenos.
+
+Nada saca los ingredientes ni la propia tanda.
+
+Un comparador junto a la marmita da señal en cuanto hay algo dentro, ingredientes, tanda o recipientes, y una
+más fuerte cuanto más se llena todo. Una tanda sola solo da una señal débil, así que úsalo para distinguir «hay algo
+dentro» de «vacía» más que para contar raciones.
+
+## Cobre
+
+La marmita es de cobre, y envejece como el cobre.
+
+<Stages prefix="kettle-weathering" title="Desgaste" labels={['Cobre', 'Expuesta', 'Degradada', 'Oxidada']} />
+
+- Con el tiempo pasa a expuesta, degradada y por fin oxidada. Elabora igual en todas las fases.
+- El **panal** la encera y detiene el desgaste. Un **hacha** raspa la cera o una fase de desgaste, y un rayo la limpia.
+- **Rómpela llena** y conserva su tanda: la descripción del objeto y su barra de llenado lo muestran, y puedes colocarla en otro sitio
+  y seguir. Los ingredientes y los frascos o cubos que esperaban caen al suelo.
+- No se desgasta mientras alguien tiene su pantalla abierta.
+
+## Conviene saber
+
+- **¿Se apagó el fuego?** Quitar el calor no reinicia una tanda, pero la flecha retrocede al doble de velocidad a la que se llenó.
+  Los ingredientes solo se gastan cuando termina una tanda, así que no se desperdicia nada.
+- **Una tanda a la vez.** La marmita no elabora una bebida distinta encima de una tanda que aún tiene dentro: espera, con los
+  ingredientes intactos, hasta que hayas embotellado la anterior. Con {rules.kettleMaxServings} raciones también espera.
+- **Mantén la rejilla limpia.** Cualquier objeto que la receta no use detiene la marmita, incluidos los sobrantes de otra receta. Una
+  tolva arriba mete lo que lleve, así que dale solo ingredientes.
+- **¿Dónde está mi experiencia?** Cada tanda da un poco de experiencia. La marmita la guarda y se la da al siguiente jugador que llene
+  un frasco o un cubo a mano, o la suelta cuando se rompe.
+- **¿No hay suficiente para un cubo?** Un clic con un cubo solo abre la pantalla. Agacharse con un frasco o un cubo no hace nada.
+- **Una tolva, dos trabajos:** una tolva bajo la marmita pasa el calor de la hoguera hacia arriba y recoge los recipientes llenos.
+- **Agáchate y haz clic derecho con la mano vacía** para colgar la marmita de su asa, y otra vez para ponerla de pie.
+- La marmita puede estar en el agua, se rompe rápido con cualquier herramienta (la más rápida es el pico), conserva su nombre del yunque y no
+  se apila. Una explosión puede destruirla, tanda incluida.
+- **Libro de recetas:** las tandas se desbloquean al recoger su cultivo principal, ordenadas en Zumos, Mostos y Varios.
+
+## Receta
+
+<Recipe id="brew_kettle" />

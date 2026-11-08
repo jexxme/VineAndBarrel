@@ -1,0 +1,84 @@
+---
+title: Bebidas
+description: Todo vinho, cerveja, sidra e hidromel de Vine & Barrel, do que é feito, em que é servido e o bônus que dá.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/pt-br';
+
+export const sample = items[drinks[0].id];
+
+Toda bebida segue as mesmas regras:
+
+- Ela dá **um bônus** e um nível de [Alegrinho](/tipsy/). Uma bebida que leva você ao Alegrinho {roman(rules.tipsy.noBuffLevel - 1)} ou mais não dá
+  bônus nenhum: você já bebeu demais para aproveitar.
+- Você sempre pode bebê-la, mesmo de barriga cheia. Leva {sample.consumable.seconds} s, e você recebe de volta a
+  <Item id="mug" /> ou <Item id="wine_glass" /> vazia.
+- Ela empilha até **{sample.stack}**.
+- O bônus de uma bebida **jovem** é de nível {roman(rules.youngBuffAmplifier)} por **{duration(rules.youngBuffTicks)}**. A versão **envelhecida** tem uma cor
+  mais profunda, brilha como um item encantado, e o bônus dela é de nível **{roman(rules.agedBuffAmplifier)} por {duration(rules.agedBuffTicks)}**. A Saturação da
+  cerveja de trigo age na hora: alguns pontos de comida.
+- Apoiada numa mesa, uma bebida envelhecida brilha como um item encantado, então você a distingue de uma jovem num relance.
+
+## Cores
+
+Cada bebida tem a sua cor: você a vê no visor do barril e nas canecas e taças sobre uma mesa. As bebidas envelhecidas
+são um tom mais profundas.
+
+<DrinkSwatches />
+
+## Vinhos, cervejas, sidra e hidromel
+
+<DrinkTable />
+
+A Saturação funciona diferente dos outros bônus: ela não dura, cada tique dela enche um ponto de fome (e um pouco de
+saturação) na hora. Por isso a cerveja de trigo mostra pontos de comida em vez de um tempo.
+
+## Com Farmer's Delight
+
+Os frascos do próprio Farmer's Delight também fermentam. A sidra de maçã dele vira a mesma Sidra que o nosso Suco de Maçã, e o suco de melancia
+dele vira Vinho de Melancia, que você só consegue fazer com o FD instalado (o item sempre existe). Veja
+[Farmer's Delight](/farmers-delight/).
+
+<DrinkTable fd />
+
+## Recipientes
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Canecas e taças num bloco" />
+
+Vinho vai numa <Item id="wine_glass" />; cerveja, sidra e hidromel numa <Item id="mug" />. Os dois empilham até {items['vineandbarrel:mug'].stack}.
+
+**Apoie-os:** esgueire-se e clique com o botão direito no topo de um bloco com uma caneca ou taça, cheia ou vazia, para deixá-la ali. Até quatro
+dividem um bloco, cada uma com a sua bebida, e dá para ver a bebida através do vidro. Clique com o botão direito com a mão vazia para pegar uma de volta.
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="Canecas e taças apoiadas nas mesas, até quatro por bloco." />
+
+## Planeje uma leva
+
+De quanto você precisa para uma rodada? O planejador em [Construindo uma adega](/guides/cellar/#planeje-a-leva) calcula as plantações,
+levas na tina, baldes, barris e tempo de espera para qualquer número de porções.
+
+## Saúde!
+
+Quando dois ou mais jogadores terminam uma bebida em até {rules.cheersWindowTicks / 20} segundos e a {rules.cheersRadius} blocos um do
+outro, os copos tilintam, algumas faíscas sobem e o bônus daquela bebida para todos dura **{rules.cheersBonusPercent}% mais**.
+
+Só vale entre jogadores do mesmo mundo, uma vez por bebida, e as suas próprias duas bebidas não formam uma rodada. O bônus é de
+{rules.cheersBonusPercent}% do tempo total do bônus daquela bebida, somado ao que resta; se o bônus acabou de acabar, você o recebe de volta por esse tempo.
+
+## Bom saber
+
+- **Demais?** A bebida que leva você ao Alegrinho {roman(rules.tipsy.noBuffLevel - 1)} não dá bônus, e também tira os
+  bônus que suas bebidas anteriores deram. Os efeitos de poções continuam.
+- **Mesas:** uma bebida vai no quarto do bloco para onde você mira, ou no mais próximo que estiver livre, e só numa superfície firme.
+  Um clique direito com a mão vazia pega a que você está mirando; segurando algo, você usa esse item normalmente, então dá para beber
+  na mesa. Quebrar o bloco, um pistão ou perder o bloco de baixo solta todas.
+- **Bebidas como ingredientes** (na panela de cozinha do Farmer's Delight) devolvem a caneca ou a taça.
+- **Barriga cheia?** Não importa: você sempre pode beber.

@@ -1,0 +1,73 @@
+---
+title: Konfiguration
+description: Jede Option von Vine & Barrel, für Serverbetreiber und für jeden Spieler, mit Standardwert und Wirkung.
+---
+import { Aside } from '@astrojs/starlight/components';
+import { rules, LOCALE } from '../../../../lib/l10n/de';
+import { configFiles } from '../../../../data/code/config';
+
+export const exported = rules.tipsy.config;
+export const value = (o) => String(exported[o.key] ?? o.fallback);
+export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+
+Vine & Barrel hat zwei Konfigurationsdateien, beide rund um [Schwips](/tipsy/). Alles andere, von Rezepten bis zur Dauer im Fass,
+funktioniert so, wie die Mod ausgeliefert wird, und lässt sich wie jedes Rezept mit einem Datapack ändern.
+
+Im Spiel änderst du sie auf dem Einstellungsbildschirm: **Mods**, Vine & Barrel, **Config** bei NeoForge; bei Fabric erscheint derselbe Knopf,
+wenn [Mod Menu](https://modrinth.com/mod/modmenu) installiert ist. Änderungen dort gelten sofort. Die Serveroptionen
+zeigen sich dort im Einzelspieler (nicht mehr, sobald die Welt für LAN geöffnet ist); auf einem Server gehören sie dem Server.
+
+Die Dateien selbst: Bei NeoForge sind es TOML-Dateien mit den Optionen unter <code>[{configFiles.server.section}]</code>. Bei
+Fabric sind es einfache <code>.properties</code>-Dateien im Ordner <code>config</code>, mit denselben Optionen als
+<code>{configFiles.server.section}.option=wert</code>. Bei Fabric wird die Client-Datei beim Spielstart gelesen, starte also
+nach dem Bearbeiten neu; die Server-Datei wird bei <code>/reload</code> erneut gelesen.
+
+## Serveroptionen
+
+In <code>{configFiles.server.file}</code> bei NeoForge, <code>{configFiles.server.fabricFile}</code> bei Fabric. Die Werte des Servers
+gehen an jeden Spieler, der beitritt, alle spielen also nach denselben Regeln. Eine Welt kann eigene haben: Leg die Datei in den Ordner
+<code>serverconfig</code> dieser Welt, dann gilt sie statt der in <code>config</code>, solange diese Welt läuft.
+
+<table>
+	<thead><tr><th>Option</th><th>Standard</th><th>Wirkung</th></tr></thead>
+	<tbody>
+		{rows(configFiles.server).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} bis {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Alkoholfreier Modus">
+Setze `enabled = false` (`tipsy.enabled=false` bei Fabric), und Getränke werden zu schlichten Bonus-Getränken: kein Schwips, kein Schluckauf, keine Filmrisse, aber dieselben Namen und Boni.
+Gut für einen Familienserver oder wenn dir das Schwanken einfach nicht gefällt.
+</Aside>
+
+## Client-Optionen
+
+In <code>{configFiles.client.file}</code> bei NeoForge, <code>{configFiles.client.fabricFile}</code> bei Fabric. Jeder Spieler
+stellt sie für sich ein; sie ändern nur, was du siehst.
+
+<table>
+	<thead><tr><th>Option</th><th>Standard</th><th>Wirkung</th></tr></thead>
+	<tbody>
+		{rows(configFiles.client).map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code>{o.range && <><br /><span class="soft">{o.range[0]} bis {o.range[1]}</span></>}</td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside type="tip" title="Bewegungskrankheit?">
+Setze `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` bei Fabric). Schwips bewegt deinen Bildschirm dann nicht mehr, egal was der Server sagt: kein Schwanken, keine Rucke, keine Übelkeitsphasen. Auch die Vanilla-Regler Verzerrungseffekte und Sichtfeldeffekte schwächen es ab. Dass du nach einem Stolpern auf dem Gesicht liegst, siehst du weiterhin, das ist kein Bildschirmeffekt; alles andere an Schwips bleibt.
+</Aside>
+
+<style>{`
+.soft { color: var(--vb-chalk-dim); }
+`}</style>

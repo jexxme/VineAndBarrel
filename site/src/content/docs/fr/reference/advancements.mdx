@@ -1,0 +1,12 @@
+---
+title: Progrès
+description: L'onglet de progrès de Vine & Barrel et comment obtenir chacun.
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/fr';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel a son propre onglet de progrès, <strong>{gameText(root.titleKey, root.title)}</strong> : <em>{gameText(root.descriptionKey, root.description)}</em>
+
+<Advancements />

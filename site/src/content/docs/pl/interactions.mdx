@@ -1,0 +1,92 @@
+---
+title: Interakcje
+description: Wszystkie drobiazgi, które robią bloki i napoje w Vine & Barrel, każdy działający tak, jak coś, co już jest w podstawowej grze albo w Farmer's Delight.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Advancements from '../../../components/data/Advancements.astro';
+import { rules } from '../../../lib/l10n/pl';
+
+Vine & Barrel stara się być częścią gry. Prawie wszystko poniżej działa jak coś, co znasz z podstawowej gry albo z
+Farmer's Delight, więc sterowanie możesz odgadnąć bez czytania. Ta strona zbiera to w jednym miejscu; strony o
+mechanikach tłumaczą szczegóły.
+
+## Beczka do leżakowania
+
+<Render name="scenes/barrel-cellar" float="right" size={224} alt="Ściana ułożonych beczek" />
+
+- **Stawia się przodem do ciebie**, jak piec.
+- **Stojaki:** beczki obok siebie, zwrócone w tę samą stronę, łączą swoje kołyski, jak płoty.
+- **Stosy:** beczka na beczce opiera się na klinach zamiast na kołysce. Zbuduj ścianę piwnicy.
+- **Szpunt pokazuje etap:** korek, bulgocząca rurka fermentacyjna w trakcie fermentacji, czerwony wosk po leżakowaniu.
+- **Fermentację słychać:** bąbelki z rurki, coraz rzadsze pod koniec.
+- **Kranik kapie** od czasu do czasu, gdy w środku jest napój, w kolorze napoju, jak miód z ula.
+- **Moment gotowości:** cichy strzał korka, gdy partia staje się leżakowana.
+- **Wlewasz** wiadrem albo butelką, jak do kotła. Dopóki to nie napój, puste wiadro lub butelka zabierają zawartość z powrotem.
+- **Nalewasz** pustym kuflem lub kieliszkiem, jak porcję z uczty Farmer's Delight. Złe naczynie dostaje podpowiedź i nie jest zużywane.
+- **Wiersz stanu** po kliknięciu prawym przyciskiem pustą ręką. Nazwa z kowadła się w nim pojawia.
+- **Komparator** odczytuje pozostałe porcje.
+- **Złamana pełna** zachowuje swoją partię, jak skrzynia Shulkera. Leżakowanie wstrzymuje się do ponownego postawienia.
+- **Dozowniki** nalewają naczyniem albo wlewają bazę. **Leje** zasilają ją i opróżniają.
+
+Zobacz [Beczka do leżakowania](/aging-barrel/).
+
+## Kocioł warzelny
+
+- **Podpory jak w garnku:** żelazna taca nad ogniskiem, ogniem albo lawą; przy innych źródłach ciepła na równi z
+  blokiem; skradaj się i kliknij prawym przyciskiem pustą ręką, żeby zawiesić go na uchwycie.
+- **Pokrywka się unosi,** gdy ktoś ma otwarty ekran, jak w skrzyni. Gotowy napar trzyma ją w górze, a wnętrze widać,
+  jak opada w miarę nalewania porcji.
+- **Podczas warzenia** spod pokrywki unosi się para, a pokrywka grzechocze. **Gdy skończy**, buchnięcie pary.
+- **Kliknij prawym przyciskiem butelką lub wiadrem**, żeby napełnić, jak kocioł.
+- **Złamany pełny** zachowuje zawartość.
+- **Komparator** daje sygnał, gdy cokolwiek jest w środku. **Leje** wsypują składniki i puste naczynia od góry, a wyciągają pełne od dołu.
+- **Miedź:** z czasem się starzeje; plaster miodu ją woskuje, siekiera zdrapuje, piorun czyści.
+- **Księga receptur** na jego ekranie.
+
+Zobacz [Kocioł warzelny](/brew-kettle/).
+
+## Napoje i naczynia
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Kufle i kieliszki na bloku" />
+
+- **Odstaw napój:** skradaj się i kliknij prawym przyciskiem górę bloku kuflem lub kieliszkiem, pełnym albo pustym. Do czterech
+  na blok, jak świece. Kliknij pustą ręką, żeby podnieść.
+- **Na zdrowie!** Dwóch lub więcej graczy kończących napój w ciągu {rules.cheersWindowTicks / 20} s i w odległości
+  {rules.cheersRadius} bloków od siebie stuka się szkłem, a bonus wszystkich trwa o {rules.cheersBonusPercent}% dłużej.
+- **Picie** brzmi i wygląda jak picie mikstury, a puste naczynie wraca do ciebie.
+- **Wiader z sokiem i brzeczką** nie można wylać jako płynu, jak mleka.
+
+## Rauszyk
+
+- **Inni gracze widzą, jak się kołyszesz,** oraz twoją czkawkę, zataczanie i potknięcia.
+- **Odśpij to:** przespanie nocy czyści Rauszyk.
+- **Mleko** go czyści; **woda lub dowolny sok** obniża o jeden poziom.
+- **Najedź na efekt** w ekwipunku, żeby zobaczyć, co robi twój poziom.
+- **O jeden drink za dużo** na najwyższym poziomie i urywa ci się film. Gdzie się obudzisz, nie wie nikt.
+
+Zobacz [Rauszyk](/tipsy/).
+
+## Uprawy i życie na wsi
+
+- Krzewy zbiera się prawym przyciskiem (także półdojrzałe) i wracają o etap wstecz, jak słodkie jagody. Kratka ogrodowa nad krzewem pozwala mu się pnąć.
+- Pszczoły pomagają rosnąć winogronom, chmielowi i jęczmieniowi.
+- Jęczmień karmi i rozmnaża zwierzęta jak pszenica; jego nasiona karmią kury i papugi.
+- Osadnicy rolnicy sadzą i zbierają jęczmień.
+- Lisy zrywają winogrona z krzewów, czerwone i białe, tak jak słodkie jagody.
+- Każda uprawa się kompostuje.
+- <Item id="barley_bale" /> łagodzi upadek i podnosi dym z ogniska jak snop siana.
+
+Zobacz [Uprawy](/crops/).
+
+## Świat
+
+- **Wioskowe karczmy** mają beczki, które są już pełne i czekają na nalanie. Zobacz [Wioski i karczmy](/villages/).
+- **JEI** pokazuje receptury warzenia i leżakowania oraz strony informacyjne beczki i dzikich upraw. **Jade** pokazuje, co jest w
+  kotle lub beczce, gdy na nie patrzysz. Zobacz [Kompatybilność](/compatibility/).
+
+## Osiągnięcia
+
+Vine & Barrel ma własną kartę osiągnięć:
+
+<Advancements />

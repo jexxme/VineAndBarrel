@@ -1,0 +1,112 @@
+---
+title: Barril de crianza
+description: Llena, fermenta, madura y sirve. Cómo funciona el barril de crianza, cuánto tarda y cómo montar una bodega con ellos.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import AgingTimeline from '../../../components/brewing/AgingTimeline.astro';
+import { rules, byType, days, list, nameOf } from '../../../lib/l10n/es';
+
+export const aging = byType('vineandbarrel:aging');
+export const a = aging[0];
+export const sameTimes = aging.every((r) => r.fermentingTime === a.fermentingTime && r.agingTime === a.agingTime);
+
+<Render name="scenes/barrel-rack" float="right" size={256} alt="Tres barriles de crianza uno al lado del otro, unidos en un estante" />
+
+El <Item id="aging_barrel" /> es el corazón de Vine & Barrel. No tiene pantalla: viertes, esperas y sirves, todo en
+el mundo. Se coloca con el grifo mirando hacia ti.
+
+## Llenar
+
+Haz clic derecho en el barril con una base de la [marmita](/brew-kettle/):
+
+- un cubo vierte **{rules.servingsPerBucket} raciones**, un frasco **{rules.servingsPerBottle}**,
+- el barril admite **{rules.barrelCapacity} raciones**: dos cubos u ocho frascos.
+
+Puedes añadir más de la misma base mientras todavía fermenta. ¿Has vertido lo que no era? Hasta que la tanda se haya convertido
+en una bebida, un cubo o un frasco vacío lo vuelve a sacar.
+
+## Fermentar y madurar
+
+{sameTimes && <p>Todas las tandas pasan por las mismas dos fases:</p>}
+
+1. **Fermentación**, durante **{days(a.fermentingTime)}**. La tanda se convierte en la bebida *joven*, como <Item id="red_wine" />.
+2. **Crianza**, durante **{days(a.agingTime)}** más. Lo que siga en el barril se convierte en la bebida *añeja*, como <Item id="aged_red_wine" />, cuya mejora es más fuerte y dura más.
+
+<AgingTimeline />
+
+{aging.filter((r) => !r.fdOnly).map((r) => <Recipe recipe={r} />)}
+
+El reloj corre con el tiempo del juego, así que dormir toda la noche cuenta. Puedes servir bebidas jóvenes durante la crianza, pero
+cada ración que sacas es una menos que madura. Con Farmer's Delight, su sidra de manzana (en la misma Sidra) y su zumo de
+melón también fermentan: mira
+[Farmer's Delight](/farmers-delight/).
+
+<Shot src="cellar.jpg" caption="Una bodega a lo largo de la pared de la taberna: barriles unidos en un estante, una segunda fila apilada encima. La esclusa de uno de ellos burbujea; los sellos de cera marcan las tandas añejas." />
+
+## Cómo ver que funciona
+
+Puedes saber cómo va un barril sin abrir nada:
+
+- **El clic derecho con la mano vacía** muestra una línea de estado, p. ej. *Pale Ale · 5 raciones · madurando, listo en 3 días*. Renombra un barril en
+  un yunque y el nombre también aparece ahí.
+- **El tapón de arriba** muestra la fase: un corcho cuando está vacío o la bebida es joven y está lista, una esclusa de cristal que burbujea
+  mientras fermenta, y un sello de cera roja cuando ya es añeja.
+- **El visor** del frente muestra cuánto contiene, con el color de la bebida.
+- **Sonidos y goteos:** burbujas mientras fermenta, el grifo gotea de vez en cuando, y un suave *pop* de corcho cuando la tanda se vuelve añeja.
+
+<Stages prefix="barrel-bung" title="El tapón" labels={['corcho', 'esclusa: fermentando', 'cera: añejo']} />
+<Stages prefix="barrel-fill" title="Visor" only={['0', '2', '4', '6', '8']} labels={['vacío', '2', '4', '6', 'lleno']} />
+
+## Servir
+
+Haz clic derecho en el barril con una <Item id="wine_glass" /> vacía (vinos) o una <Item id="mug" /> (cervezas, hidromiel y sidra) para servir una ración.
+La manilla del grifo gira y la bebida cae en tu mano.
+
+- ¿Recipiente equivocado? El barril te dice cuál usar (*Vino tinto se sirve en Copa de vino*), y no se gasta nada.
+- ¿Sigue fermentando? Te dice cuándo estará listo.
+- Cuando se sirve la última ración, el barril queda vacío y listo para una tanda nueva.
+
+## Construir una bodega
+
+<Render name="scenes/barrel-cellar" float="right" size={256} alt="Dos filas de barriles, la de arriba apoyada sobre la de abajo" />
+
+- **Estantes:** los barriles uno al lado del otro, mirando en la misma dirección, unen sus cunas en un estante largo.
+- **Pilas:** un barril sobre otro pierde su cuna y se apoya en calzos, así que puedes montar un muro entero de toneles.
+- **Comparador:** lee las raciones que quedan, de 0 (vacío) a 15 (las {rules.barrelCapacity} completas).
+- **Rómpelo lleno** y conserva su tanda y su nombre del yunque. La descripción del objeto muestra la bebida, las raciones y la fase.
+  La crianza se detiene mientras es un objeto y sigue cuando lo vuelves a colocar. Un barril lleno no se apila con otros.
+- Los barriles son de madera: se pican con un hacha.
+
+## Automatización
+
+- **Las tolvas** desde arriba vierten bases. Desde los lados y desde abajo, meten jarras y copas vacías y sacan las
+  bebidas servidas, y los cubos y frascos vacíos que quedan tras verter.
+- **Los dispensadores** orientados a un barril sirven una ración con una jarra o una copa vacía, o vierten un cubo o un frasco de base.
+
+## Conviene saber
+
+- **Rellena pronto.** Solo el primer vertido pone en marcha el reloj: la base que añades después se une a la tanda con su edad, así que fermenta
+  en menos tiempo. Cuando la tanda ya es una bebida, el barril no admite nada más hasta que se sirve del todo.
+- **Una base por barril.** Verter una base distinta se rechaza (*Este barril contiene Zumo de uva*) y no se gasta nada.
+- **¿Casi lleno?** Un cubo necesita sitio para las {rules.servingsPerBucket} raciones, así que un barril con más de
+  {rules.barrelCapacity - rules.servingsPerBucket} lo rechaza. Usa frascos para el resto. Lo mismo al revés: un
+  cubo vacío solo saca la base cuando hay al menos {rules.servingsPerBucket} raciones dentro.
+- **Madura mientras no estás.** El barril corre con el tiempo del juego, así que sigue aunque estés lejos o desconectado. Solo
+  te pierdes el pop del corcho.
+- **Construye tu bodega en el Overworld.** En el Nether y en el End no hay día que dormir, así que dormir no
+  acelera un barril allí, y su línea de estado cuenta en días en lugar de «mañana por la mañana».
+- **¿Inventario lleno?** Una bebida servida cae a tus pies.
+- **Modo creativo:** romper un barril lleno no suelta nada. Elige el bloque (clic central con Ctrl) para copiarlo con su tanda.
+- **Mantén a los creepers lejos.** Una explosión puede destruir un barril de golpe, tanda incluida.
+- **Consejos con tolvas:** una tolva arriba solo vierte lo que el barril admite, así que una base equivocada espera en la tolva en lugar
+  de atascarla. Pon una tolva debajo en una instalación de servido, para que las bebidas terminadas no bloqueen a las siguientes.
+- **Sin riesgo de incendio.** Los barriles nunca se incendian. Uno vacío incluso arde como combustible de horno; uno lleno no.
+
+## Receta
+
+<Recipe id="aging_barrel" />

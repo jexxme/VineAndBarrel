@@ -1,0 +1,128 @@
+---
+title: Tina de Brassagem
+description: Como a Tina de Brassagem transforma uvas, bagas, maçãs, mel, cevada e trigo em suco, mosto e mosto de cereal, e como aquecer, encher e automatizar.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/pt-br';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="Uma Tina de Brassagem de cobre sobre a bandeja de ferro, em cima de uma Fogueira" />
+
+A <Item id="brew_kettle" /> é onde toda bebida começa. Coloque-a sobre uma fonte de calor, adicione os ingredientes e, alguns segundos
+depois, ela guarda uma leva de suco, mosto ou mosto de cereal, pronta para engarrafar. Se você já cozinhou na panela de cozinha do Farmer's Delight,
+já sabe como funciona.
+
+## Calor
+
+A tina só prepara enquanto o bloco logo abaixo dela está quente:
+
+- **{heatNames(rules.heat.tray)}**: a tina fica sobre uma bandeja de ferro acima deles.
+- **{heatNames(direct)}**: ela fica direto em cima.
+- **Através de um {heatNames(rules.heat.conductors)}**: o calor passa por ele, então um Funil pode ficar entre a tina e a
+  fonte de calor e ainda alimentá-la.
+- Com Farmer's Delight, o **fogão** dele também aquece a tina.
+
+Uma Fogueira precisa estar acesa. A chama pequena na tela da tina acende quando ela está aquecida.
+
+<Render name="scenes/kettle-on-magma" size={192} caption="Sobre um Bloco de Magma" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="Calor através de um Funil" />
+<Render name="scenes/kettle-hanging" size={192} caption="Pendurada pela alça" />
+
+**Pendure:** esgueire-se e clique com o botão direito na tina com a mão vazia para trocar a bandeja por uma alça de ferro, ou coloque-a contra
+a parte de baixo de um bloco. Uma tina pendurada ainda prepara sobre um fogo logo abaixo, e fica ótima sob uma corrente.
+
+## Preparando
+
+Abra a tina com um clique direito e coloque os ingredientes. O medidor à direita mostra a leva na cor dela e o quanto a
+tina está cheia; passe o mouse por cima para ver as porções.
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+Cada receita rende **{rules.servingsPerBucket} porções** e leva **{seconds(brews[0].brewingTime)}**. Uma tina aquecida solta vapor
+e borbulha quando guarda uma leva ou os ingredientes de uma (senão, fica quieta); enquanto uma leva prepara, a tampa também chacoalha, e quando termina ela solta uma baforada de vapor. A tina continua preparando
+mais levas enquanto houver ingredientes, até {rules.kettleMaxServings} porções no total.
+
+<BrewFlow />
+
+Quando uma leva termina, a tampa fica levantada e você a vê lá dentro, baixando conforme você retira porções. Enquanto uma leva prepara, a
+tampa fica abaixada; quando a última porção sai, ela fecha.
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="A tina com a tampa aberta, mostrando a leva" />
+
+## Engarrafando
+
+Como um caldeirão: clique com o botão direito na tina com um recipiente vazio.
+
+- um <Item id="glass_bottle" /> leva **{rules.servingsPerBottle} porção**,
+- um <Item id="bucket" /> vazio leva **{rules.servingsPerBucket} porções**, então a tina precisa ter pelo menos essa quantidade.
+
+Baldes de suco e de mosto não podem ser derramados no mundo, como o leite.
+
+## Suco para beber
+
+<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" /> e <Item id="apple_juice" /> são
+bebidas por si só: levam {juice.consumable.seconds} s para beber, você sempre pode bebê-los, e eles matam um pouco da fome.
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+Todo suco também reduz o [Alegrinho](/tipsy/) em um nível. O mosto e o mosto de mel precisam fermentar primeiro; você não pode bebê-los.
+
+## Automação
+
+Funis podem operar a tina sozinhos:
+
+- **Por cima**, um Funil alimenta os ingredientes e os frascos ou baldes vazios.
+- **Pelos lados**, ele alimenta frascos ou baldes vazios.
+- A tina os enche com a leva, e **um Funil embaixo** puxa os cheios.
+
+Nada puxa os ingredientes nem a leva em si.
+
+Um Comparador de Redstone ao lado da tina dá um sinal assim que há qualquer coisa dentro, ingredientes, leva ou recipientes, e um
+mais forte quanto mais cheio tudo fica. Uma leva sozinha dá só um sinal fraco, então use-o para distinguir "tem algo
+aí" de "vazio" em vez de contar porções.
+
+## Cobre
+
+A tina é de cobre, e envelhece como cobre.
+
+<Stages prefix="kettle-weathering" title="Desgaste" labels={['Cobre', 'Exposto', 'Desgastado', 'Oxidado']} />
+
+- Com o tempo ela fica exposta, desgastada e, por fim, oxidada. Ela prepara igual em todas as fases.
+- **Favo de Mel** a encera e para o desgaste. Um **machado** raspa a cera ou uma fase de desgaste, e um raio a limpa.
+- **Quebre-a cheia** e ela guarda a leva: a dica do item e a barra de enchimento mostram, e você pode colocá-la em outro lugar
+  e continuar. Ingredientes e frascos ou baldes à espera caem no chão.
+- Ela não se desgasta enquanto alguém está com a tela dela aberta.
+
+## Bom saber
+
+- **Perdeu o fogo?** Tirar o calor não zera uma leva, mas a seta volta duas vezes mais rápido do que enchia.
+  Os ingredientes só são gastos quando uma leva termina, então nada se perde.
+- **Uma leva de cada vez.** A tina não prepara uma bebida diferente por cima de uma leva que ainda está lá dentro: ela espera, com os
+  ingredientes intactos, até você engarrafar a antiga. Com {rules.kettleMaxServings} porções ela também espera.
+- **Mantenha a grade limpa.** Qualquer item que a receita não usa trava a tina, inclusive sobras de outra receita. Um
+  Funil em cima empurra o que quer que tenha, então alimente-o só com ingredientes.
+- **Cadê meu XP?** Cada leva rende um pouco de experiência. A tina guarda e entrega ao próximo jogador que enche
+  um frasco ou balde à mão, ou solta quando é quebrada.
+- **Não tem o bastante para um balde?** Um clique com o balde só abre a tela. Esgueirar-se com um frasco ou balde não faz nada.
+- **Um Funil, dois trabalhos:** um Funil sob a tina passa o calor da Fogueira para cima e recolhe os recipientes cheios.
+- **Esgueire-se e clique com o botão direito com a mão vazia** para pendurar a tina pela alça, e de novo para pô-la de pé.
+- A tina pode ficar na água, quebra rápido com qualquer ferramenta (a picareta é a mais rápida), guarda o nome da Bigorna e não
+  empilha. Uma explosão pode destruí-la, leva e tudo.
+- **Livro de receitas:** as levas são desbloqueadas quando você pega a plantação principal delas, organizadas em Sucos, Mostos e Diversos.
+
+## Receita
+
+<Recipe id="brew_kettle" />

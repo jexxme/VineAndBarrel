@@ -1,0 +1,99 @@
+---
+title: Tu primera bebida
+description: Un primer paso a paso con Vine & Barrel, desde las primeras uvas silvestres hasta una copa de vino tinto añejo.
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/es';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="Un rincón de taberna con barriles y bebidas sobre una mesa" />
+
+Esta guía te lleva desde un mundo recién creado hasta tu primera copa de vino tinto, y luego hasta una añeja. Para empezar solo
+necesitas materiales de vanilla; las uvas llegan por el camino. Cada paso enlaza con la página que tiene todos los detalles.
+
+<Steps>
+
+1. **Encuentra uvas silvestres.** Las plantas silvestres crecen en manchas por el mundo, cada una en su tipo de lugar. Para el vino quieres
+   <Item id="wild_grapes" />: rómpela a mano y te da <Item id="red_grapes" plural />.
+
+   <WildCrops />
+
+   ¿No encuentras ninguna? Los granjeros de las aldeas y el comerciante errante venden uvas, y los cofres de las aldeas suelen guardar algunas. Mira
+   [Aldeas y tabernas](/villages/).
+
+2. **Planta unos cuantos arbustos.** Planta las uvas en hierba, tierra o tierra de cultivo, como las bayas dulces. El arbusto crece solo;
+   cuando está maduro, haz clic derecho para recoger de {h.grapes.count[0]} a {h.grapes.count[1]} uvas. Vuelve a una fase anterior y
+   da fruto otra vez, así que nunca hace falta replantar. El polvo de hueso lo acelera.
+
+   <Stages prefix="grape_bush" title="Un arbusto de uvas creciendo" labels={['plantado', 'creciendo', 'medio maduro', 'maduro']} />
+
+   Una tanda de zumo lleva {grapesPerBatch} uvas y un azúcar, así que unos pocos arbustos bastan para empezar. Más en
+   [Cultivos](/crops/).
+
+3. **Construye una marmita y ponla sobre un fuego.** La <Item id="brew_kettle" /> es de cobre. Solo elabora mientras
+   el bloque que tiene justo debajo está caliente: una hoguera encendida sirve desde el primer día. Se apoya en una bandeja de hierro sobre las llamas.
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **Elabora zumo de uva.** Haz clic derecho en la marmita para abrirla y mete {grapesPerBatch} uvas y un azúcar. La flecha
+   se va llenando mientras la marmita está caliente, sale vapor por debajo de la tapa, y al cabo de {seconds(juice.brewingTime)} el indicador
+   muestra {juice.servings} raciones de <Item id="grape_juice" />. Si metes más, sigue elaborando tandas. Mira
+   [Marmita](/brew-kettle/).
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **Sácalo.** Haz clic derecho en la marmita con un frasco de cristal para una ración, o con un cubo para {rules.servingsPerBucket}.
+   El zumo de uva ya es una bebida por sí solo: le quita hierro al [Achispado](/tipsy/).
+
+6. **Llena un barril de crianza.** Coloca un <Item id="aging_barrel" /> y haz clic derecho con el cubo o los frascos. Admite
+   {rules.barrelCapacity} raciones: dos cubos lo llenan hasta el borde. No pasa nada por añadir más zumo del mismo tipo
+   mientras fermenta.
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **Espera a que fermente.** Pasados **{days(wine.fermentingTime)}**, el zumo se ha convertido en <Item id="red_wine" />. El barril
+   te dice cómo va: la esclusa de cristal de arriba burbujea mientras fermenta, y un clic derecho con la mano vacía
+   muestra una línea de estado como *Vino tinto · 8 raciones · fermentando, listo mañana por la mañana*. El reloj corre con el tiempo
+   del juego, así que dormir toda la noche cuenta. Mira [Barril de crianza](/aging-barrel/).
+
+8. **Sirve una copa.** Haz clic derecho en el barril con una <Item id="wine_glass" /> vacía para servir una ración. El vino va en una copa,
+   la cerveza, la hidromiel y la sidra en una <Item id="mug" />; el barril te avisa si llevas la equivocada.
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **Bébelo.** <Item id="red_wine" /> te da <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> y un nivel de
+   <EffectBadge id="vineandbarrel:tipsy" name="Achispado" />. Te quedas con la copa. Si bebes a la vez que un amigo cercano,
+   consigues un **¡Salud!**: la mejora de todos dura un {rules.cheersBonusPercent}% más.
+
+10. **Deja el resto madurar.** Deja el barril en paz **{days(wine.agingTime)}** más y lo que quede se convierte en
+    <Item id="aged_red_wine" />: un rojo más profundo que reluce, y <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
+    Un suave pop de corcho y un sello de cera roja arriba te dicen que ya está.
+
+</Steps>
+
+<Aside type="tip" title="¿No puedes esperar?">
+Cada copa que sirves durante la crianza es una menos que madura. Llena dos barriles: bebe de uno y deja el otro
+en paz hasta que esté añejo. O busca la taberna de una aldea, cuyos barriles ya están llenos, un par de ellos añejos. Mira
+[Aldeas y tabernas](/villages/).
+</Aside>
+
+## A dónde ir después
+
+- Elabora las demás bebidas: uvas blancas para el vino blanco, bayas dulces para el vino de bayas dulces, cebada y lúpulo para la Pale Ale,
+  trigo y lúpulo para la cerveza de trigo, miel para la hidromiel, manzanas para la sidra. Mira
+  [Bebidas](/drinks/) y [Cultivos](/crops/).
+- Pon varios barriles uno al lado del otro y monta una bodega como es debido: [Construir una bodega](/guides/cellar/).
+- Conoce tus límites: qué hace cada nivel de [Achispado](/tipsy/) y cómo espabilarte.
+- Con Farmer's Delight, elabora sobre su cocina y cocina con tu vino: [Farmer's Delight](/farmers-delight/).

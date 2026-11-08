@@ -1,0 +1,83 @@
+---
+title: 酒类
+description: Vine & Barrel 里的每一种葡萄酒、啤酒、苹果西打和蜂蜜酒：用什么酿、用什么盛，以及带来什么增益。
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import DrinkTable from '../../../components/data/DrinkTable.astro';
+import DrinkSwatches from '../../../components/data/DrinkSwatches.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, drinks, roman, duration } from '../../../lib/l10n/zh-cn';
+
+export const sample = items[drinks[0].id];
+
+每一种酒都遵循同样的规则：
+
+- 它带来 **一个增益**和一级[微醺](/tipsy/)。喝到 {roman(rules.tipsy.noBuffLevel - 1)} 级微醺或更高时，
+  就不再有任何增益：你已经醉得无心享受了。
+- 任何时候都能喝，吃饱了也行。喝一次要 {sample.consumable.seconds} 秒，喝完你会拿回空的
+  <Item id="mug" />或<Item id="wine_glass" />。
+- 最多堆叠到 **{sample.stack}**。
+- **新酿**的增益为 {roman(rules.youngBuffAmplifier)} 级，持续 **{duration(rules.youngBuffTicks)}**。**陈酿**的酒颜色更深，
+  像附魔物品一样闪光，增益为 **{roman(rules.agedBuffAmplifier)} 级，持续 {duration(rules.agedBuffTicks)}**。小麦啤酒的
+  饱和则是立刻生效：几点饥饿值。
+- 放在桌上时，陈酿的酒也像附魔物品一样闪光，所以你一眼就能把它和新酿的区分开。
+
+## 颜色
+
+每种酒都有自己的颜色：你能在酒桶的观察窗里，以及桌上的啤酒杯和高脚杯里看到它。陈酿的酒颜色更深一些。
+
+<DrinkSwatches />
+
+## 葡萄酒、啤酒、苹果西打和蜂蜜酒
+
+<DrinkTable />
+
+饱和和其他增益不一样：它不会持续，每一刻都会立刻填上一点饥饿值（以及一些饱和度）。
+这就是小麦啤酒显示的是饥饿值而不是时间的原因。
+
+## 搭配 Farmer's Delight
+
+Farmer's Delight 自己的瓶装饮品也能发酵。它的苹果酒会变成和我们的苹果汁同一种苹果西打，它的西瓜汁
+则会变成西瓜酒，只有装了 FD 才能酿出西瓜酒（这个物品始终存在）。详见
+[Farmer's Delight](/farmers-delight/)。
+
+<DrinkTable fd />
+
+## 酒具
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="方块上的啤酒杯和高脚杯" />
+
+葡萄酒装在<Item id="wine_glass" />里；啤酒、苹果西打和蜂蜜酒装在<Item id="mug" />里。两者都最多堆叠到 {items['vineandbarrel:mug'].stack}。
+
+**摆在桌上**：潜行并右键方块顶面，用啤酒杯或高脚杯（满的空的都行）放下。每个方块最多放四个，
+每个各自保留自己的酒，你能透过杯子看到里面的酒。空手右键可以把它拿回来。
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />
+
+<Shot src="tables.jpg" caption="摆在桌上的啤酒杯和高脚杯，每个方块最多四个。" />
+
+## 规划一批酒
+
+请大家喝一轮要备多少？[搭建酒窖](/guides/cellar/#规划一批酒)里的规划器，可以为任意份数算出
+所需的作物、酿造批数、桶数、酒桶数和等待时间。
+
+## 干杯！
+
+两名或更多玩家在 {rules.cheersWindowTicks / 20} 秒内、彼此相距 {rules.cheersRadius} 格以内喝完一杯酒时，
+杯子会碰响，冒出几点火花，所有人由这杯酒得到的增益都会延长 **{rules.cheersBonusPercent}%**。
+
+只在同一个世界的玩家之间生效，每杯酒只算一次，你自己喝的两杯酒也不算一轮。增益延长的时间是
+这杯酒完整增益时间的 {rules.cheersBonusPercent}%，加在剩余时间上；如果增益刚刚结束，你就会把它找回这么长的时间。
+
+## 小贴士
+
+- **喝多了？** 让你达到 {roman(rules.tipsy.noBuffLevel - 1)} 级微醺的那杯酒没有增益，还会收走你之前几杯酒给你的
+  增益。药水带来的效果则会保留。
+- **桌子**：酒会放在你瞄准的那一格四分之一方块上，或者最近的空位，而且只能放在牢固的顶面上。
+  空手右键会拿起你瞄准的那一杯；手里拿着东西时，则照常使用那件物品，所以你可以在桌边直接喝。
+  破坏方块、活塞推动，或者下面的方块消失，都会让它们全部掉落。
+- **把酒当材料**（用在 Farmer's Delight 的厨锅里）会还你啤酒杯或高脚杯。
+- **吃饱了？** 没关系：任何时候都能喝。

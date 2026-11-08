@@ -1,0 +1,99 @@
+---
+title: Twój pierwszy napój
+description: Start z Vine & Barrel krok po kroku, od pierwszych dzikich winogron do kieliszka leżakowanego czerwonego wina.
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/pl';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="Kącik karczmy z beczkami i napojami na stole" />
+
+Ten poradnik prowadzi od świeżego świata do pierwszego kieliszka czerwonego wina, a potem do leżakowanego. Na początek
+wystarczą vanillowe materiały; winogrona zdobędziesz po drodze. Każdy krok odsyła do strony ze wszystkimi szczegółami.
+
+<Steps>
+
+1. **Znajdź dzikie winogrona.** Dzikie rośliny rosną w skupiskach w świecie, każda w swoim rodzaju miejsca. Do wina potrzebujesz
+   rośliny <Item id="wild_grapes" />: zerwij ją ręką, a dostaniesz <Item id="red_grapes" />.
+
+   <WildCrops />
+
+   Nie możesz żadnych znaleźć? Wiejscy rolnicy i wędrowny handlarz sprzedają winogrona, a w wiejskich skrzyniach często jakieś leżą. Zobacz
+   [Wioski i karczmy](/villages/).
+
+2. **Zasadź kilka krzewów.** Posadź winogrona na trawie, ziemi lub zaoranym polu, tak jak słodkie jagody. Krzew rośnie sam;
+   gdy dojrzeje, kliknij go prawym przyciskiem, by zebrać od {h.grapes.count[0]} do {h.grapes.count[1]} winogron. Cofa się o etap i
+   owocuje znowu, więc nigdy nie musisz sadzić od nowa. Mączka kostna go przyspiesza.
+
+   <Stages prefix="grape_bush" title="Rosnący krzew winogron" labels={['zasadzony', 'rośnie', 'półdojrzały', 'dojrzały']} />
+
+   Jedna partia soku potrzebuje winogron w liczbie: {grapesPerBatch}, i cukru, więc garść krzewów na początek w zupełności wystarczy. Więcej w
+   [Uprawy](/crops/).
+
+3. **Zbuduj kocioł warzelny i postaw go nad ogniem.** <Item id="brew_kettle" /> jest zrobiony z miedzi. Warzy tylko wtedy, gdy
+   blok tuż pod nim jest gorący: zapalone ognisko działa od pierwszego dnia. Kocioł stoi na żelaznej tacy nad płomieniami.
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **Uwarz sok z winogron.** Kliknij kocioł prawym przyciskiem, żeby go otworzyć, i włóż winogrona (liczba: {grapesPerBatch}) oraz cukier. Strzałka
+   wypełnia się, gdy kocioł jest gorący, spod pokrywki unosi się para, a po {seconds(juice.brewingTime)} wskaźnik
+   pokazuje porcje (liczba: {juice.servings}) napoju <Item id="grape_juice" />. Jeśli włożysz więcej, kocioł warzy kolejne partie. Zobacz
+   [Kocioł warzelny](/brew-kettle/).
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **Wyjmij go.** Kliknij kocioł prawym przyciskiem szklaną butelką, by nabrać jedną porcję, lub wiadrem, by nabrać porcje (liczba: {rules.servingsPerBucket}).
+   Sok z winogron to już napój sam w sobie: łagodzi [Rauszyk](/tipsy/).
+
+6. **Napełnij beczkę do leżakowania.** Postaw <Item id="aging_barrel" /> i kliknij ją prawym przyciskiem wiadrem lub butelkami. Mieści
+   {rules.barrelCapacity} porcji, więc dwa wiadra napełniają ją po brzegi. Dolewanie tego samego soku w trakcie
+   fermentacji jest w porządku.
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **Poczekaj na fermentację.** Po czasie **{days(wine.fermentingTime)}** sok zamienia się w <Item id="red_wine" />. Beczka
+   pokazuje, jak jej idzie: szklany korek fermentacyjny na górze bulgocze, gdy trwa fermentacja, a kliknięcie pustą ręką
+   wyświetla linię stanu, na przykład *Czerwone wino · Porcje: 8 · fermentuje, gotowe jutro rano*. Zegar chodzi według czasu
+   gry, więc przespana noc się liczy. Zobacz [Beczka do leżakowania](/aging-barrel/).
+
+8. **Nalej kieliszek.** Kliknij beczkę prawym przyciskiem pustym naczyniem <Item id="wine_glass" />, by nalać jedną porcję. Wino idzie do kieliszka,
+   a piwo, miód pitny i cydr do naczynia <Item id="mug" />; beczka powie ci, jeśli trzymasz niewłaściwe.
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **Wypij.** <Item id="red_wine" /> daje ci <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> i jeden poziom
+   <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />. Naczynie zostaje ci w ręku. Wypij w tej samej chwili co przyjaciel
+   w pobliżu, a usłyszysz **Na zdrowie!**: bonus każdego z was trwa o {rules.cheersBonusPercent}% dłużej.
+
+10. **Resztę zostaw do leżakowania.** Zostaw beczkę w spokoju na kolejne **{days(wine.agingTime)}**, a to, co zostało, zamieni się w
+    <Item id="aged_red_wine" />: głębszą czerwień, która mieni się w szkle, z efektem <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
+    Cichy pstryk korka i czerwona woskowa pieczęć na wierzchu dają znać, że gotowe.
+
+</Steps>
+
+<Aside type="tip" title="Nie możesz się doczekać?">
+Każdy kieliszek nalany w trakcie leżakowania to o jeden mniej do zleżakowania. Napełnij dwie beczki: pij z jednej, a drugą zostaw
+w spokoju, aż dojrzeje. Albo znajdź wiejską karczmę, której beczki są już pełne, a kilka z nich leżakowanych. Zobacz
+[Wioski i karczmy](/villages/).
+</Aside>
+
+## Co dalej
+
+- Uwarz inne napoje: białe winogrona na białe wino, słodkie jagody na wino ze słodkich jagód, jęczmień i chmiel na pale ale,
+  pszenica i chmiel na piwo pszeniczne, miód na miód pitny, jabłka na cydr. Zobacz
+  [Napoje](/drinks/) i [Uprawy](/crops/).
+- Ustaw kilka beczek obok siebie i zbuduj prawdziwą piwnicę: [Budowa piwnicy](/guides/cellar/).
+- Znaj swoje granice: co robi każdy poziom [Rauszyka](/tipsy/) i jak wytrzeźwieć.
+- Z Farmer's Delight warz na jego kuchence i gotuj z własnym winem: [Farmer's Delight](/farmers-delight/).

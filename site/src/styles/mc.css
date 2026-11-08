@@ -137,6 +137,9 @@
 #mc-tooltip .t-blue {
 	color: #5555ff;
 }
+#mc-tooltip .t-red {
+	color: #ff5555;
+}
 #mc-tooltip .t-gold {
 	color: #ffaa00;
 }
@@ -169,6 +172,18 @@ a.fd-item {
 a.fd-item:hover {
 	background: var(--sl-color-accent-low);
 	text-decoration-color: var(--sl-color-accent);
+}
+/* Links that leave the site (Farmer's Delight items go to its own wiki): a small arrow out */
+a.fd-item.ext::after {
+	content: '';
+	width: 10px;
+	height: 10px;
+	margin-left: 2px;
+	align-self: flex-start;
+	margin-top: 6px;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 5' shape-rendering='crispEdges'%3E%3Cpath d='M1 0h4v4h-1v-2h-1v1h-1v1h-1v-1h1v-1h1v-1h-2z'/%3E%3C/svg%3E") 0 0 / 100% 100%;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 5' shape-rendering='crispEdges'%3E%3Cpath d='M1 0h4v4h-1v-2h-1v1h-1v1h-1v-1h1v-1h1v-1h-2z'/%3E%3C/svg%3E") 0 0 / 100% 100%;
 }
 .fd-item img {
 	width: 32px;

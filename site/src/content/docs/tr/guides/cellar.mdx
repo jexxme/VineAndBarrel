@@ -1,0 +1,69 @@
+---
+title: Mahzen kurmak
+description: "Tek fıçıdan mahzene: bir parti planla, hunilerle çalışan bir bira evi kur, fıçı sıraları ve duvarları yap, otomatik çek ve bir tur ısmarla."
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Shot from '../../../../components/mc/Shot.astro';
+import CellarPlanner from '../../../../components/brewing/CellarPlanner.astro';
+import { rules, recipe, days } from '../../../../lib/l10n/tr';
+
+export const wine = recipe('aging/red_wine');
+
+<Render name="scenes/barrel-cellar" float="right" size={230} alt="Üst sırası alttakinin üstünde duran iki sıra Yıllandırma Fıçısı" />
+
+Tek fıçı bir başlangıçtır. Mahzen ise kendi kendine çalışan bir kazandan dolan, düşünmeden çektiğin içeceklerle dolu bir fıçı sırasıdır. Bu rehber onu ihtiyacın olan sırayla kurar; her bölüm, tüm ayrıntıların olduğu sayfaya bağlanır.
+
+## Partiyi planla
+
+Ne kadar lazım? Bir içecek ve bir porsiyon sayısı seç, siparişin tamamı çıkar: ne yetiştireceğin, kaç kazan partisi, kaç kova ve şişe, kaç fıçı ve ne kadar bekleyeceğin. Düğmeler fıçı fıçı ilerler.
+
+<CellarPlanner />
+
+## Kendi kendine çalışan bir bira evi
+
+<Render name="scenes/kettle-on-hopper" float="right" size={192} alt="Bir ateşin üstünde, huninin üzerinde duran Kaynatma Kazanı" />
+
+[Kaynatma Kazanı](/brew-kettle/) her yanından hunilerle çalışır:
+
+- **Altta bir huni iki iş yapar.** Altındaki ateşin ısısını kazana iletir ve dolan şişeleri ve kovaları dışarı çeker. Yani sıra: ateş, huni, kazan, üst üste.
+- **Üstteki huni malzemeleri** ve boş şişe ya da kovaları **besler**. Onu yalnızca malzeme için kullan: tarifin kullanmadığı her şey, başka bir tariften kalan bir artık bile olsa, sen çıkarana kadar kazanı durdurur.
+- **Yanlardan huniler** boş şişe ya da kova besler.
+- Kazan, malzeme geldikçe en çok {rules.kettleMaxServings} porsiyona kadar demlemeye devam eder.
+
+<Aside type="tip" title="Deneyimini topla">
+Her parti biraz XP kazandırır ama kazan bunu yalnızca biri elle şişe ya da kova doldurduğunda ya da kırıldığında verir. Ara sıra elle bir tane doldur.
+</Aside>
+
+## Sıralar ve duvarlar
+
+<Shot src="cellar.jpg" caption="Meyhane duvarı boyunca bir mahzen: sıra olmuş fıçılar, üstünde ikinci bir sıra." />
+
+- **Sıralar:** Yere yan yana, aynı yöne bakacak şekilde konan [Yıllandırma Fıçıları](/aging-barrel/) beşiklerini birleştirip uzun bir sıra olur.
+- **Duvarlar:** Başka bir fıçının üstündeki fıçı beşik yerine takozlara oturur, böylece onları duvar gibi üst üste dizebilirsin. İlk üst üste fıçın *Mahzen Ustası* kazandırır.
+- **Adlandır.** Bir fıçıyı örsle yeniden adlandırırsan ad durum satırında görünür, böylece *Düğün Şarabı* kolay bulunur. Fıçıyı kırıp yeniden koyduğunda ad kalır.
+- **Bir bakışta oku:** Üstteki tıpa her fıçının ne kadar ilerlediğini söyler (mantar, kabarcıklanan hava kilidi, kırmızı balmumu), ön taraftaki gözetleme camı ise ne kadar dolu olduğunu, içeceğin renginde gösterir.
+- **Karşılaştırıcılar** bir fıçının porsiyonlarını okur: bir porsiyonda 1, doluyken 15.
+
+## Makineyle doldurmak ve çekmek
+
+- **Üstteki huni bazı döker.** Yalnızca fıçının o an alabileceğini döker, yanlış baz huninin içinde bekler.
+- **Yanlardaki huniler** boş kupa ya da kadehleri besler; fıçı onları dolu çeker. Bira, bal şarabı ve elma şarabı için kupa, şarap için kadeh: yanlışlar, fıçıyı kırana kadar takılı kalır.
+- **Alttaki huni** çekilen içecekleri ve dökmeden arta kalan boş kova ve şişeleri dışarı çeker. Orada bir tane tut, yoksa biten içecekler sıradakileri tıkar.
+- Fıçıya bakan **fırlatıcılar** boş kupa ya da kadehle bir porsiyon çeker ya da bir kova ya da şişe baz döker.
+
+## Nereye kurmalı
+
+- **Overworld'de.** Fıçılar oyun zamanıyla işler ve geceyi uyuyarak geçirmek sayılır, ama Nether'da ve End'de atlayacak gece yok.
+- **Creeper'lardan uzak.** Bir patlama fıçıyı, partisiyle birlikte yok edebilir.
+- **Bunun dışında istediğin yere:** fıçılar sen uzaktayken ya da çevrimdışıyken de yıllanmaya devam eder ve asla yanmaz. Tek kaçırdığın, parti yıllandığında duyulan yumuşak mantar patlaması.
+- **Her birinden iki tane doldur.** Mayalanması {days(wine.fermentingTime)}, yıllanması {days(wine.agingTime)} daha sürer ve arada çektiğin her kadeh, yıllanacak bir porsiyon eksiği demek. Bir fıçıdan iç, diğerine dokunma.
+
+## Bir tur ısmarlamak
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Bir bloğun üstüne konmuş kupalar ve kadehler" />
+
+- **Sofrayı kur:** Eğilip bir bloğun üstüne kupa ya da kadehle sağ tıklayarak oraya koy; blok başına dört tane. Yıllanmış içecekler masada bile parıldar.
+- **Şerefe!** Yakınındaki arkadaşlarınla aynı anda bir içeceği bitirirsen herkesin etkisi %{rules.cheersBonusPercent} daha uzun sürer. Bkz. [İçecekler](/drinks/#şerefe).
+- **Seviyelere dikkat.** Her içecek bir [Çakırkeyif](/tipsy/) seviyesi ekler. Yanında biraz <Item id="grape_juice" /> ya da su bulundur: her biri bir seviye alır.

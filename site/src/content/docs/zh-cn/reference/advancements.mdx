@@ -1,0 +1,12 @@
+---
+title: 进度
+description: Vine & Barrel 的进度标签页，以及每个进度的获得方法。
+---
+import Advancements from '../../../../components/data/Advancements.astro';
+import { advancements, gameText } from '../../../../lib/l10n/zh-cn';
+
+export const root = advancements.find((a) => !a.parent);
+
+Vine & Barrel 有自己的进度标签页，名为 <strong>{gameText(root.titleKey, root.title)}</strong>：<em>{gameText(root.descriptionKey, root.description)}</em>
+
+<Advancements />

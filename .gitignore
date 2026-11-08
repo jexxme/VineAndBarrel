@@ -18,7 +18,7 @@ build
 .gradle
 
 # datagen cache
-src/generated/resources/.cache
+common/src/generated/resources/.cache
 
 # other
 eclipse
@@ -35,6 +35,12 @@ playtest/
 # Internal dev material: never committed (design doc, art workshop, previews, review page)
 /docs/
 /art/
+
+# Maintainer dev tooling: its own repository, checked out here as dev/ where it is used
+/dev/
+
+# The parity checklist, written by scripts/multiloader/parity.py (verify-all.sh --full)
+/PARITY.md
 
 # Farmer's Delight GameTest run (runGameTestServerFd)
 run-fd

@@ -1,0 +1,131 @@
+---
+title: Plantações
+description: Arbustos de uva tinta e branca, arbustos de lúpulo, treliças, cevada, plantas silvestres e tudo ao redor delas, das abelhas à composteira.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import WildCrops from '../../../components/data/WildCrops.astro';
+import Shot from '../../../components/mc/Shot.astro';
+import { rules, items, blocks, animals, seasons, nameOf, list, pct } from '../../../lib/l10n/pt-br';
+
+export const c = rules.crops;
+export const h = rules.harvest;
+// Quem come o quê: as tags de comida dos nossos itens (animals.json), como os animais que essas tags alimentam
+export const ANIMALS = { cow_food: 'vacas', sheep_food: 'ovelhas', goat_food: 'cabras', horse_food: 'cavalos', llama_food: 'lhamas', chicken_food: 'galinhas', parrot_food: 'papagaios', fox_food: 'raposas' };
+export const eaters = (id) => Object.keys(ANIMALS).filter((k) => animals[`minecraft:${k}`]?.includes(id)).map((k) => ANIMALS[k]);
+export const barleyStages = blocks['vineandbarrel:barley'].properties.age.length;
+export const SEASON_NAMES = { spring: 'na primavera', summer: 'no verão', autumn: 'no outono', winter: 'no inverno' };
+export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons[s].includes(id)).map((s) => SEASON_NAMES[s] ?? s));
+
+<Render name="scenes/garden" float="right" size={256} alt="Arbustos de uva e de lúpulo atrás de um campo de cevada" />
+
+Quatro plantações nossas alimentam as bebidas: <Item id="red_grapes" plural /> para o vinho tinto, <Item id="white_grapes" plural /> para o
+vinho branco, <Item id="hops" /> para as duas cervejas e <Item id="barley" /> para a Pale Ale. Os outros ingredientes vêm do jogo base:
+<Item id="sweet_berries" /> para o vinho de bagas doces, <Item id="wheat" /> para a cerveja de trigo, <Item id="apple" plural /> para a sidra
+e <Item id="honey_bottle" plural /> para o hidromel.
+
+<Shot src="vineyard.jpg" caption="Um vinhedo cercado de arbustos de uva maduros, com postes de lanterna nas pontas das fileiras." />
+
+## Arbustos de uva e de lúpulo
+
+Plante <Item id="red_grapes" plural />, <Item id="white_grapes" plural /> ou <Item id="hops" /> em grama, terra ou terra arada,
+como Bagas Doces. O arbusto cresce por {c.bushMaxAge + 1} estágios, no ritmo do arbusto de Bagas Doces. As uvas tintas e brancas
+crescem do mesmo jeito; só o fruto maduro mostra a diferença.
+
+<Stages prefix="grape_bush" title="Arbusto de uvas tintas" labels={['plantado', 'crescendo', 'meio maduro', 'maduro']} />
+<Stages prefix="white_grape_bush" title="Arbusto de uvas brancas" labels={['plantado', 'crescendo', 'meio maduro', 'maduro']} />
+<Stages prefix="hop_bush" title="Arbusto de lúpulo" labels={['plantado', 'crescendo', 'meio maduro', 'maduro']} />
+
+- **Colha** um arbusto maduro com um clique direito: ele dá de {h.grapes.count[0]} a {h.grapes.count[1]} uvas (ou
+  de {h.hops.count[0]} a {h.hops.count[1]} <Item id="hops" />) e volta ao segundo estágio, então continua dando frutos. Você
+  não precisa replantar.
+- **Com pressa?** Colha meio maduro, como Bagas Doces: de {h.grapes.halfRipe[0]} a {h.grapes.halfRipe[1]} no lugar, e ele
+  volta do mesmo jeito.
+- **Farinha de Osso** avança o arbusto um estágio.
+- Os arbustos pegam fogo tão fácil quanto os de Bagas Doces, então mantenha Fogueiras e lava longe do vinhedo.
+
+## Treliça
+
+<Render name="scenes/trellis" float="right" size={256} alt="Videiras de uva e de lúpulo em treliças, e uma treliça vazia" />
+
+Ponha uma <Item id="trellis" /> em cima de um arbusto, e quando o arbusto estiver maduro ele sobe, até {c.climbMaxHeight} blocos de altura,
+dando frutos por todo o caminho. Uma treliça fica virada para você quando a coloca e se alinha com a de baixo, então as fileiras ficam retas.
+
+- Cada videira cresce, dá frutos e é colhida como o arbusto, meio madura também. Farinha de Osso num arbusto maduro começa a subida na hora.
+- Quebrar uma videira dá o fruto dela e deixa a treliça de pé.
+- Uma treliça não é uma escada: tudo nela fica ao alcance do chão.
+
+<Recipe id="trellis" />
+
+<Aside title="Com Farmer's Delight: cordas também servem">
+Uma corda do Farmer's Delight acima de um arbusto funciona como uma treliça, do jeito que os tomates do FD sobem. Veja [Farmer's Delight](/farmers-delight/).
+</Aside>
+
+## Cevada
+
+Semeie <Item id="barley_seeds" /> em terra arada. A cevada cresce exatamente como o trigo, por {barleyStages} estágios, e
+rende do mesmo jeito: <Item id="barley" /> quando madura, mais sementes extras.
+
+<Stages prefix="barley" title="Cevada" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', 'madura']} />
+
+## Plantas silvestres
+
+<Render name="scenes/wild-crops" float="right" size={256} alt="Uvas tintas silvestres, uvas brancas silvestres, lúpulo silvestre e cevada silvestre na grama" />
+
+Suas primeiras sementes vêm de plantas silvestres. Elas crescem em manchas, por bioma e temperatura, então também aparecem em
+biomas de outros mods que estejam marcados do jeito usual. Quebre uma para pegar o produto, ou use uma Tesoura para levar a planta inteira para casa como decoração.
+
+<WildCrops />
+
+Fazendeiros e o mercador ambulante também vendem sementes, e os baús das aldeias às vezes têm algumas. Veja [Aldeias e tavernas](/villages/).
+
+## Vida na fazenda
+
+- **Abelhas** polinizam uvas, lúpulo e cevada e ajudam no crescimento, como fazem com as plantações do jogo base.
+- **Animais:** <Item id="barley" /> alimenta e reproduz {list(eaters('vineandbarrel:barley').filter((a) => a !== 'cavalos' && a !== 'lhamas'))}, como o trigo.
+  Cavalos e lhamas se curam e crescem com ela, como com o trigo, e com o <Item id="barley_bale" /> como com um Fardo de Feno.
+  <Item id="barley_seeds" /> alimenta {list(eaters('vineandbarrel:barley_seeds'))}, e você pode reproduzir {list(eaters('vineandbarrel:red_grapes'))} com uvas.
+- **Raposas** adoram uvas, tintas e brancas: elas colhem as uvas dos arbustos, como atacam os arbustos de Bagas Doces. Videiras no alto de uma
+  treliça ou corda ficam fora do alcance delas, e elas param quando o vandalismo de mobs está desligado.
+- **Fazendeiros** plantam e colhem cevada nos seus campos e compostam as sementes que sobram. Uvas e lúpulo eles deixam para você.
+- **Composteira:** toda plantação compostável com as chances do jogo base.
+
+<table>
+	<thead><tr><th>Item</th><th>Chance de adicionar uma camada</th></tr></thead>
+	<tbody>{Object.values(items).filter((i) => i.compost).map((i) => <tr><td><Item id={i.id} /></td><td>{pct(i.compost)}</td></tr>)}</tbody>
+</table>
+
+<Shot src="fields.jpg" caption="Cevada em terra arada irrigada ao lado do jardim de lúpulo, pronta para a colheita." />
+
+## Blocos de armazenamento
+
+<Render name="scenes/storage" float="right" size={256} alt="Caixote de Uvas Tintas, Caixote de Uvas Brancas, Caixote de Lúpulo e Fardo de Cevada" />
+
+Junte nove de uma plantação num <Item id="grape_crate" />, <Item id="white_grape_crate" />, <Item id="hops_crate" /> ou
+<Item id="barley_bale" />, e desfaça de novo
+na bancada de criação. O <Item id="barley_bale" /> é um Fardo de Feno em tudo: amortece uma queda, uma Fogueira em cima
+dele manda a fumaça para o alto, e lhamas e cavalos o comem.
+
+<Recipe id="grape_crate" /> <Recipe id="barley_bale" />
+
+## Bom saber
+
+- **Colha, não quebre.** Quebrar um arbusto novo não dá nada, e a planta se perde. Quebrar um com fruto dá o
+  fruto (mais com Fortuna), mas um clique direito colhe e mantém o arbusto.
+- **Passe direto.** Arbustos de uva e de lúpulo não espetam nem atrasam você como os de Bagas Doces.
+- **Luz e água:** um arbusto só cresce com boa luz. A água leva os arbustos embora, e pistões os arrancam.
+- **Uvas são um lanche,** como as Bagas Doces.
+- **Mais plantas silvestres:** Farinha de Osso numa planta silvestre costuma plantar outra por perto, um jeito fácil de conseguir as primeiras sementes.
+  A cevada silvestre dá uma cevada e uma semente.
+- **Terra arada sob a cevada** nunca volta a ser terra, como com qualquer plantação.
+- **Videiras** também precisam de luz: no escuro elas quebram, e a treliça ou a corda fica. Farinha de Osso numa planta
+  totalmente crescida passa para a videira acima dela. Uma videira numa corda pode ser escalada como a corda.
+- **Abelhas** nunca fazem um arbusto subir; só você pode começar isso.
+
+## Estações
+
+Com o Serene Seasons instalado, as plantações têm suas estações: as uvas, tintas e brancas, crescem {seasonsOf('vineandbarrel:red_grapes')}, o lúpulo
+{seasonsOf('vineandbarrel:hops')} e a cevada {seasonsOf('vineandbarrel:barley_seeds')}. Veja [Compatibilidade](/compatibility/).

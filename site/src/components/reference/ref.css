@@ -1,7 +1,7 @@
 /*
- * Shared pieces for the reference components, in the site's Farmer's Delight / Minecraft look
+ * Shared pieces for the reference components, in the site's tavern / Minecraft look
  * (src/styles/theme.css): FD Pixel at 20/30/40 px, square corners, hard 4px shadows, framed boards,
- * Minecraft text fields and stone buttons. Imported by the components in src/components/reference/.
+ * Minecraft text fields and the tavern's oak buttons. Imported by the components in src/components/reference/.
  */
 
 /* Minecraft text field */
@@ -41,7 +41,7 @@ select.ref-field {
 	margin: 0;
 }
 
-/* Stone buttons, for filters and toggles */
+/* Oak buttons, for filters and toggles (pressed: painted wine red) */
 .ref-btns {
 	display: flex;
 	flex-wrap: wrap;
@@ -54,11 +54,11 @@ select.ref-field {
 	font-size: 20px;
 	line-height: 24px;
 	color: #fff;
-	text-shadow: 2px 2px 0 #3f3f3f;
+	text-shadow: 2px 2px 0 #1a0f07;
 	padding: 0 10px 2px;
 	border-style: solid;
 	border-width: 6px;
-	border-image: url('/FarmersDelight-Neoforged/ui/button.png') 3 fill / 6px stretch;
+	border-image: url('../../assets/ui/button-oak.png') 3 fill / 6px stretch;
 	image-rendering: pixelated;
 	background: none;
 	border-radius: 0;
@@ -69,14 +69,14 @@ select.ref-field {
 }
 .ref-btn:hover,
 .ref-btn:focus-visible {
-	border-image-source: url('/FarmersDelight-Neoforged/ui/button-hover.png');
+	border-image-source: url('../../assets/ui/button-oak-hover.png');
 	color: #ffffa0;
 	outline: none;
 }
 .ref-btn.on,
 .ref-btn[aria-pressed='true'] {
-	border-image-source: url('/FarmersDelight-Neoforged/ui/button-hover.png');
-	color: #ffff55;
+	border-image-source: url('../../assets/ui/button-oak-on.png');
+	color: #fff0a8;
 }
 .ref-btn .n {
 	color: #c0c0c0;

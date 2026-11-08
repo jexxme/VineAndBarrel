@@ -1,13 +1,45 @@
-## 0.1.0
+## 1.0.0
 
-- Project skeleton: build, headless GameTests and release workflow.
-- Crops: red grape and hop bushes (planted from the produce, picked with a right-click like sweet berries), barley on farmland, and wild grapes, hops and barley in the world.
+- **Fabric:** Vine & Barrel runs on Fabric for Minecraft 26.3 too (Fabric Loader 0.20.1 and Fabric API 0.165.2 or newer), with all the same content, per-world server settings included. There, Farmer's Delight Refabricated takes the place of Farmer's Delight Neoforged.
+- **Twelve more languages:** German, Spanish, French, Italian, Japanese, Korean, Polish, Brazilian Portuguese, Russian, Turkish, Ukrainian and Simplified Chinese.
+- New drinks: White Wine from white grapes (their own bush, wild where it's a little cooler, and a crate), Mead from honey bottles, and Hard Cider from Apple Juice without Farmer's Delight (FD's apple cider still makes the same cider). New advancements Mead Hall and Cider House; Vintner asks for white wine too.
+- The grape blocks are called Red Grape Bush, Red Grape Vine, Wild Red Grapes and Red Grape Crate, next to the white ones. Barley Ale is called Pale Ale (Aged Pale Ale). Existing items keep working.
+- The Trellis (five sticks make four): put one above a grape or hop bush and the ripe bush climbs it, up to 3 blocks tall, fruiting all the way up, no Farmer's Delight needed. FD ropes work the same way. It holds water and burns like a ladder.
+- Grape and hop bushes can be picked half-ripe, like sweet berries: fewer fruit, and the bush drops back a stage. Foxes pick half-ripe grapes too.
+- Drink buffs last 45 s (young) and 90 s (aged), still level I and level II.
+- Too drunk for buffs takes only the buffs your drinks gave: potions, beacons and golden apples stay as they were.
+- Every juice lowers Tipsy by one, not just grape juice.
+- Tipsy tidied up: hiccups in bouts from Tipsy II, Tipsy III is the best of the night (slurred chat, the most liquid courage, no Nausea yet), Tipsy IV the turn, and at Tipsy V your legs give way: you drift, stumble and now and then trip flat on your face (it never hurts). The effect's tooltip shows the courage in numbers. Client option `wobbleIntensity` 0 keeps your screen still entirely (Nausea spells and other players' sway included), and vanilla's Distortion Effects, FOV Effects and Darkness Pulsing sliders tone Tipsy down too.
+- Blackouts: you keel over with stars circling your head and wake up in one of eight places (your own bed, out in the open, a farmyard, the hay, a tavern, someone else's bed, a roof, a boat) or right where you fell. Advancement Lost Weekend for finding them all. Home is never more than 128 blocks away, so a blackout is no way to travel. Blacked out, mobs, players and falls can't hurt you; everything else still can.
+- At Tipsy V you hear your own heart (client option `heartbeatVolume`, 0 turns it off), and waking up sounds like where you are.
+- Server options: `rowdy` still turns Rowdy off entirely; the new `rowdyPunches` and `cutOff` turn off just the punches or just being cut off at the bar.
+- Drinks sound like what they're in: mugs deeper than wine glasses, glasses ring and mugs clunk when you cheer, a cork pops when a barrel ages, the airlock bubbles, pours sound like the drink, the tap pours a short stream, and a full drink knocked off a table spills.
+- Drinks can stand under water, and breaking them in creative drops nothing.
+- The Brew Kettle steams in soft wisps, out of the open pot or curling from under the lid, only while it holds a brew or a batch that brews. Campfire smoke no longer comes up through it (signal fires keep their column).
+- A settings screen: the Config button in the mod list on NeoForge, and in Mod Menu on Fabric.
+- Village taverns rebuilt, two layouts per village type: a roomy hall with the bar, stairs behind the bar down to a vaulted barrel cellar, and a feature of their own (a beer garden, a roof terrace, a veranda bar, a hearth room, a mead hall). No two are the same: casks, drinks, flowers, banners and candles change from tavern to tavern. About one village in three has one. Villages laid out before the update finish their old taverns as they were.
+- More with Farmer's Delight: Coq au Vin, a feast in its iron pot that serves four bowls; Cider-Braised Pork, Barley Mutton Broth and White Wine Risotto from the cooking pot; Beer Bread from wheat and beer; and FD's knife cuts straw from ripe barley and, on the cutting board, from wild barley. Every cooking pot meal shows up in the pot's recipe book.
+- Without Farmer's Delight, its meals, the feast, beer bread and melon wine are hidden from the creative tab and JEI.
+- Wild barley always drops a barley along with its seed, so one patch makes a wort. Farmers pick up the barley they harvest.
+- The Brew Kettle's heat icon names what heats it, and its arrow greys out while the ingredients in it make nothing.
+- The mug recipe unlocks once you have glass; the Aging Barrel recipe unlocks with any of the seven bases.
+- Fixes: a broken barrel you filled yourself still earns Patience Pays once you place it again and tap it aged; rain and snow stop on crates, Aging Barrels and Brew Kettles; a cheers adds no buff time to a drink that gave no buff; JEI no longer offers a bucket for Farmer's Delight's bottles; breaking a vine on a rope plays its sound and particles once; a barrel first filled with a renamed bottle takes plain bottles of the same base.
+
+## 0.9.0
+
+The first release, for NeoForge.
+
+- Crops: grape and hop bushes (planted from the produce, picked with a right-click like sweet berries), barley on farmland, and wild grapes, hops and barley in the world.
 - With Farmer's Delight: ripe grape and hop bushes climb FD ropes and fruit along them; FD rich soil speeds them up.
 - Farm life: bees help the crops grow, barley feeds animals like wheat, farmers grow barley, foxes pick ripe grapes, everything composts, and there are a Grape Crate, a Hops Crate and a Barley Bale.
 - Serene Seasons and Biomes O' Plenty support through tags.
-- Tipsy: a sway that grows with every level, darker screen edges, heavy-eyed blinks from level 3 (client option `visionEffects`), queasy spells that come more often the drunker you are, and from Tipsy IV drinks give no buff. Hover over the effect to see what your level does.
+- The Brew Kettle brews juices and worts over heat and works like a cauldron: right-click it with a bottle or bucket to fill it. Its screen keeps the ingredients, heat and progress and shows the brew in a gauge; a finished brew waits under the raised lid in its colour. Hoppers feed ingredients and empty containers in and pull the filled ones out below. It weathers like vanilla copper.
+- The Aging Barrel ferments a brew and ages it, then you tap it into mugs and wine glasses. Barrels stack.
+- Drinks: Red Wine, Sweet Berry Wine, Barley Ale and Wheat Beer, young and aged, plus Hard Cider and Melon Wine from Farmer's Delight's apple cider and melon juice. Each gives a buff, stronger once aged. Mugs are crafted from glass, 5 glass for 3 mugs, like wine glasses. Drinks stand on tables in clear glassware.
+- With Farmer's Delight: Beer-Battered Fish and Wine-Braised Beef from the cooking pot.
+- Tipsy: a sway that grows with every level, darker screen edges, heavy-eyed blinks (client option `visionEffects`), liquid courage, hiccups, slurred chat, queasy spells, and from Tipsy IV drinks give no buff and you get Rowdy (server option `rowdy`). Hover over the effect to see what your level does. Milk clears it, water or grape juice takes the edge off, and a night's sleep sets you right.
+- Cheers: drink at the same time as a friend nearby and your buffs last longer.
 - One drink too many at the top level and you black out, then wake up at your bed or somewhere nearby (advancement Where Am I?, server option `blackout`).
-- Mugs are crafted from glass, 5 glass for 3 mugs, like wine glasses.
-- Weathering patina on the Brew Kettle like vanilla copper, and clear glassware on tables with the drink showing through.
-- The Brew Kettle works like a cauldron: right-click it with a bottle or bucket to fill it. Its screen keeps the ingredients, heat and progress and shows the brew in a gauge; a finished brew waits under the raised lid in its colour. Hoppers feed ingredients and empty containers in and pull the filled ones out below.
+- Village taverns in all five village types, with barrels of drinks ready to tap.
+- JEI and Jade support.
 - Works with AppleSkin (wheat beer's food preview), Tough As Nails, Homeostatic and Thirst Was Taken 2 (drinks quench thirst), Nutritional Balance and Spice of Life Onion.

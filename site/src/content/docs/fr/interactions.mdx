@@ -1,0 +1,92 @@
+---
+title: Interactions
+description: Toutes les petites choses que font les blocs et les boissons dans Vine & Barrel, chacune fonctionnant comme quelque chose qui existe déjà dans Minecraft ou dans Farmer's Delight.
+---
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Advancements from '../../../components/data/Advancements.astro';
+import { rules } from '../../../lib/l10n/fr';
+
+Vine & Barrel cherche à faire partie du jeu. Presque tout ce qui suit marche comme quelque chose que tu connais déjà dans
+Minecraft ou dans Farmer's Delight, donc tu peux deviner les commandes sans rien lire. Cette page les réunit toutes au même endroit ; les
+pages de mécaniques les expliquent plus en détail.
+
+## Fût de vieillissement
+
+<Render name="scenes/barrel-cellar" float="right" size={224} alt="Un mur de fûts empilés" />
+
+- **Posé face à toi,** robinet vers toi, comme un fourneau.
+- **Chantiers :** des fûts côte à côte, dans le même sens, joignent leurs berceaux, comme les barrières se connectent.
+- **Piles :** un fût sur un fût repose sur des cales au lieu d'un berceau. Construis un mur de cave.
+- **La bonde montre l'étape :** liège, sas qui bulle pendant la fermentation, cire rouge une fois vieilli.
+- **La fermentation s'entend :** des bulles dans le sas, de plus en plus rares à mesure que ça se termine.
+- **Le robinet goutte** de temps en temps tant qu'il y a de la boisson dedans, de la couleur de la boisson, comme le miel d'une ruche.
+- **Le moment du vieillissement :** un doux pop de bouchon quand le lot devient vieilli.
+- **Verse** avec un seau ou une fiole, comme pour remplir un chaudron. Tant que ce n'est pas une boisson, un seau ou une fiole vide la reprend.
+- **Tire** avec une chope ou un verre vide, comme pour prendre une portion d'un festin de Farmer's Delight. Le mauvais récipient reçoit un indice et n'est pas consommé.
+- **Ligne d'état** au clic droit à mains nues. Un nom donné à l'enclume y apparaît.
+- **Le comparateur de redstone** lit les portions restantes.
+- **Casse-le plein** et il garde son lot, comme une boîte de shulker. Le vieillissement s'arrête jusqu'à ce que tu le reposes.
+- **Les distributeurs** tirent avec un récipient ou versent une base. **Les entonnoirs** le remplissent et le vident.
+
+Voir [Fût de vieillissement](/aging-barrel/).
+
+## Cuve de brassage
+
+- **Supports, comme la marmite :** un plateau en fer au-dessus d'un feu de camp, d'un feu ou de lave ; posée à ras sur les autres sources de chaleur ; accroupis-toi et fais un clic droit
+  à mains nues pour la suspendre à une poignée.
+- **Le couvercle se soulève** tant que quelqu'un a l'écran ouvert, comme un coffre. Une préparation terminée le garde levé, et tu vois la
+  préparation à l'intérieur, qui descend à mesure que tu prends des portions.
+- **Pendant le brassage,** de la vapeur s'enroule sous le couvercle et le couvercle tressaute. **Une fois terminé,** un petit nuage de vapeur.
+- **Clic droit avec une fiole ou un seau** pour la remplir, comme un chaudron.
+- **Casse-la pleine** et elle garde son contenu.
+- **Le comparateur de redstone** donne un signal tant qu'il y a quelque chose dedans. **Les entonnoirs** y font entrer les ingrédients et les récipients vides, et sortent les pleins par en dessous.
+- **Cuivre :** il s'oxyde avec le temps ; le rayon de miel le cire, une hache le gratte, la foudre le nettoie.
+- **Livre de recettes** dans son écran.
+
+Voir [Cuve de brassage](/brew-kettle/).
+
+## Boissons et récipients
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Des chopes et des verres posés sur un bloc" />
+
+- **Poser des boissons :** accroupis-toi et fais un clic droit sur le dessus d'un bloc avec une chope ou un verre, plein ou vide. Jusqu'à quatre par bloc,
+  comme les bougies. Clic droit à mains nues pour en reprendre un.
+- **Santé !** Deux joueurs ou plus qui finissent un verre à moins de {rules.cheersWindowTicks / 20} secondes d'écart et à moins de {rules.cheersRadius}
+  blocs l'un de l'autre trinquent, et le bonus de chacun dure {rules.cheersBonusPercent} % de plus.
+- **Boire** sonne et ressemble à une potion, et tu récupères le récipient vide.
+- **Les seaux de jus et de moût** ne peuvent pas être vidés comme un liquide, comme le lait.
+
+## Pompette
+
+- **Les autres joueurs te voient te balancer** et voient tes hoquets, tes titubements et tes chutes.
+- **Cuver :** dormir toute la nuit efface Pompette.
+- **Le lait** l'efface ; **l'eau ou n'importe quel jus** la baisse d'un niveau.
+- **Passe la souris sur l'effet** dans ton inventaire pour voir ce que fait ton niveau.
+- **Un verre de trop** au niveau maximum et tu fais un trou noir. Où tu te réveilles, personne ne peut le dire.
+
+Voir [Pompette](/tipsy/).
+
+## Cultures et vie à la ferme
+
+- Les buissons se cueillent d'un clic droit (mi-mûrs aussi) et reculent d'une étape, comme les baies sucrées. Un treillis au-dessus d'un buisson le laisse grimper.
+- Les abeilles aident les raisins, le houblon et l'orge à pousser.
+- L'orge nourrit et fait se reproduire les animaux comme le blé ; ses graines nourrissent les poules et les perroquets.
+- Les villageois fermiers plantent et récoltent l'orge.
+- Les renards cueillent les raisins sur les buissons, rouges et blancs, comme ils le font avec les baies sucrées.
+- Toutes les cultures se compostent.
+- <Item id="barley_bale" /> amortit une chute et fait monter la fumée des feux de camp, comme une botte de paille.
+
+Voir [Cultures](/crops/).
+
+## Monde
+
+- **Les tavernes de village** ont des fûts déjà pleins, qui n'attendent que d'être tirés. Voir [Villages et tavernes](/villages/).
+- **JEI** affiche les recettes de brassage et de vieillissement, plus des pages d'infos sur le fût et les cultures sauvages. **Jade** montre ce qu'il y a dans une
+  cuve ou un fût quand tu le regardes. Voir [Compatibilité](/compatibility/).
+
+## Progrès
+
+Vine & Barrel a son propre onglet de progrès :
+
+<Advancements />

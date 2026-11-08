@@ -1,0 +1,118 @@
+---
+title: Uyumluluk
+description: Vine & Barrel'ın hangi modlarla çalıştığı ve her birinin ne eklediği.
+---
+import Item from '../../../components/mc/Item.astro';
+import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/tr';
+import compat from '../../../data/gen/compat.json';
+import { optional } from '../../../data/code/downloads';
+
+export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
+export const seasonRows = Object.entries(seasons);
+export const v = compat.versions;
+// Wheat beer feeds through Saturation: (level + 1) food and twice that in saturation per tick it lasts
+export const beer = drinks.filter((d) => d.effect.id === 'minecraft:saturation').map((d) => ({ ...d, food: (d.effect.amplifier + 1) * d.effect.duration }));
+export const young = beer.find((d) => d.stage === 'young');
+export const aged = beer.find((d) => d.stage === 'aged');
+// A row of the thirst table is all young drinks, all aged drinks, or a few named items
+export const stageOf = (id) => drinks.find((d) => d.id === id)?.stage;
+export const rowLabel = (items) => {
+	const all = (stage) => items.every((id) => stageOf(id) === stage) && items.length === drinks.filter((d) => d.stage === stage).length;
+	return all('young') ? 'Her genç içecek' : all('aged') ? 'Her yıllanmış içecek' : null;
+};
+export const groups = { fruits: 'Meyveler', carbs: 'Karbonhidratlar', proteins: 'Proteinler', vegetables: 'Sebzeler', sugars: 'Şekerler' };
+
+Vine & Barrel {meta.version}, **Minecraft {meta.minecraft}** üzerinde **NeoForge {meta.neoforge}** ya da daha yenisiyle, veya
+**Fabric Loader {meta.fabricLoader}** ve **Fabric API {meta.fabricApi}** ya da daha yenisiyle çalışır. Başka mod gerektirmez.
+Aşağıdakilerin hepsi isteğe bağlıdır ve diğer mod kurulunca kendiliğinden devreye girer:
+
+- **NeoForge:** {optional.neoforge.join(', ')}.
+- **Fabric:** {optional.fabric.join(', ')}.
+
+Serene Seasons ve Biomes O' Plenty etiketler üzerinden çalışır.
+
+## Farmer's Delight
+
+Soba ısısı, halatlarda asmalar (bahçe kafesi gibi), zengin toprak, FD şişelerinden içecekler, bir avuç tencere yemeği, bir ziyafet ve bir ekmek. Bkz. [Farmer's Delight](/farmers-delight/).
+
+## JEI
+
+JEI bir **Kaynatma Kazanı** ve bir **Yıllandırma Fıçısı** tarif kategorisi, demleme süreleri ve her aşamanın kaç gün sürdüğünü,
+ayrıca fıçı ve yabani ürünler için bilgi sayfalarını gösterir. JEI {meta.jei} sürümüne göre yapıldı.
+
+## Jade
+
+Bir kazana ya da fıçıya bak ve içindekini gör: demleme ya da içecek, kalan porsiyonlar, demlemenin ne kadar ilerlediği, kazanın
+ısıtılıp ısıtılmadığı ve fıçının hangi aşamada olduğu. Jade {meta.jade.split('+')[0]} sürümüne göre yapıldı.
+
+## AppleSkin
+
+AppleSkin'in yiyecek ipucu ve açlık çubuğu önizlemesi yiyip içebildiğin her şey için çalışır. Meyve suları ve yemekler kendi
+yiyeceklerini gösterir. <Item id={young.id} />, Doygunluk bonusuyla doyurur, bu yüzden AppleSkin o bonusun doldurduğunu gösterir:
+**{young.food}** açlık ve **{young.food * 2}** doygunluk, <Item id={aged.id} /> için ise **{aged.food}** ve **{aged.food * 2}**. Diğer
+şaraplar, biralar, elma şarapları ve bal şarapları doyurmaz, bu yüzden yiyecek göstermez. AppleSkin {v.appleskin} sürümüne göre yapıldı.
+
+## Susuzluk
+
+**Tough As Nails**, **Homeostatic** veya **Thirst Was Taken 2** ile içecekler susuzluğu giderir: meyve suları çok, şaraplar,
+biralar, elma şarapları ve bal şarabı az, yıllanmış olanlar gençlerden biraz daha fazla. Yiyeceği de sayan modlarda kapamalar, çorba ve şaraplı tavuk
+bir güveç gibi, üzümler (kırmızı ya da beyaz) ise Tatlı Orman Meyveleri gibi sayılır.
+
+<table>
+	<thead>
+		<tr><th></th><th>Tough As Nails<br />susuzluk, nem</th><th>Homeostatic<br />su, doygunluk</th><th>Thirst Was Taken 2<br />susuzluk, giderilen</th></tr>
+	</thead>
+	<tbody>
+		{compat.thirst.map((row) => (
+			<tr>
+				<td>{rowLabel(row.items) ?? row.items.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</td>
+				<td>{row.tan ? `${row.tan.thirst}, ${row.tan.hydration}%` : '–'}</td>
+				<td>{row.homeostatic.amount}, {row.homeostatic.saturation.toFixed(1)}</td>
+				<td>{row.twt ? `${row.twt.thirst}, ${row.twt.quenched}` : '–'}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+Tough As Nails yalnızca içecekleri sayar. Tough As Nails {v.toughasnails}, Homeostatic {v.homeostatic} ve Thirst Was
+Taken 2 {v.thirstwastaken2} ile denendi.
+
+## Nutritional Balance
+
+Yalnızca NeoForge. Her yiyecek ve içecek Nutritional Balance'ın yiyecek gruplarına sayılır:
+
+<ul>
+	{Object.entries(compat.nutrients).map(([group, ids]) => (
+		<li><strong>{groups[group] ?? group}:</strong> {ids.map((id, i) => <>{i > 0 && ', '}<Item id={id} /></>)}</li>
+	))}
+</ul>
+
+Şaraplar, biralar, elma şarapları ve bal şarabının kendi yiyecek değeri yoktur (buğday birası Doygunluk bonusuyla doyurur, bu modlar onu saymaz), bu yüzden gruplarını yalnızca üzümler, meyve suları ve yemekler doldurur. Çiğ arpa
+karbonhidrat sayılır, yani başka bir modun ondan yaptığı her şey de öyle. Nutritional Balance {v.nutritionalbalance} sürümüyle denendi.
+
+Her içecek ve yiyecek, iki yükleyicinin de paylaştığı ortak etiketleri taşır (içecekler, meyve suları, meyve, çorbalar); bunları okuyan diğer modlar
+onları olduklarıyla görür.
+
+## Spice of Life Onion
+
+Olduğu gibi çalışır. Yemekler, her yiyecek gibi yiyecek çeşitliliğine sayılır. İçeceklerin kendi yiyecek değeri yoktur (buğday birasının
+Doygunluk bonusu sayılmaz), bu yüzden Farmer's Delight'ın içecekleri gibi çeşitliliğe katkı vermezler. Spice of Life Onion {v.solonion} sürümüyle denendi.
+
+## Biomes O' Plenty
+
+Yabani ürünler orman, ova, savana, nehir ya da dağ yamacı etiketli her biyomda (sıcaklık uygunsa) yetişir; yani bu etiketlere sahip modlu biyomlarda kendiliğinden bulunurlar.
+Biomes O' Plenty ile onlara uyan birkaç biyomda daha yetişirler:
+
+<ul>
+	{bop.map((b) => <li><Item id={b.crop} />: {list(b.biomes)}</li>)}
+</ul>
+
+## Serene Seasons
+
+Serene Seasons ile her ürün kendi mevsimlerinde yetişir:
+
+<ul>
+	{['vineandbarrel:red_grapes', 'vineandbarrel:white_grapes', 'vineandbarrel:hops', 'vineandbarrel:barley_seeds'].map((id) => (
+		<li><Item id={id} />: {list(seasonRows.filter(([, ids]) => ids.includes(id)).map(([s]) => s))}</li>
+	))}
+</ul>

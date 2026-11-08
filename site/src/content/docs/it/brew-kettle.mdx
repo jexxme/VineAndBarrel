@@ -1,0 +1,128 @@
+---
+title: Bollitore
+description: Come il Bollitore trasforma uva, bacche, mele, miele, orzo e grano in succo, mosto e mosto di miele, e come scaldarlo, riempirlo e automatizzarlo.
+---
+import { Aside } from '@astrojs/starlight/components';
+import Item from '../../../components/mc/Item.astro';
+import Render from '../../../components/mc/Render.astro';
+import Recipe from '../../../components/recipes/Recipe.astro';
+import Stages from '../../../components/data/Stages.astro';
+import KettleScreen from '../../../components/brewing/KettleScreen.astro';
+import BrewFlow from '../../../components/brewing/BrewFlow.astro';
+import FoodStats from '../../../components/data/FoodStats.astro';
+import { rules, items, byType, seconds, nameOf, list } from '../../../lib/l10n/it';
+
+export const brews = byType('vineandbarrel:brewing');
+export const heatNames = (ids) => list(ids.map(nameOf));
+export const juice = items['vineandbarrel:grape_juice'];
+export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes(b));
+
+<Render name="scenes/kettle-on-campfire" float="right" size={256} alt="Un Bollitore di rame sul suo vassoio di ferro sopra un falò" />
+
+Il <Item id="brew_kettle" /> è dove comincia ogni bevanda. Mettilo su una fonte di calore, aggiungi gli ingredienti e pochi secondi
+dopo contiene una partita di succo, mosto o mosto di miele, pronta da imbottigliare. Se hai mai cucinato nella pentola di cottura di Farmer's Delight, sai
+già come funziona.
+
+## Calore
+
+Il bollitore prepara solo se il blocco subito sotto è caldo:
+
+- **{heatNames(rules.heat.tray)}**: il bollitore sta su un vassoio di ferro sopra di essi.
+- **{heatNames(direct)}**: sta direttamente sopra.
+- **Attraverso: {heatNames(rules.heat.conductors)}**: il calore sale attraverso di esso, quindi una tramoggia può stare tra il bollitore e la
+  fonte di calore e alimentarlo comunque.
+- Con Farmer's Delight, anche i suoi **fornelli** scaldano il bollitore.
+
+Un falò deve essere acceso. La piccola fiamma nella schermata del bollitore si accende quando è riscaldato.
+
+<Render name="scenes/kettle-on-magma" size={192} caption="Su un blocco di magma" />
+<Render name="scenes/kettle-on-hopper" size={192} caption="Calore attraverso una tramoggia" />
+<Render name="scenes/kettle-hanging" size={192} caption="Appeso al manico" />
+
+**Appendilo:** accovacciati e clicca con il tasto destro sul bollitore a mani vuote per sostituire il vassoio con un manico di ferro, oppure posizionalo contro
+la faccia inferiore di un blocco. Un bollitore appeso prepara comunque sopra un fuoco subito sotto, e sta benissimo sotto una catena.
+
+## Preparazione
+
+Apri il bollitore con un clic destro e inserisci gli ingredienti. L'indicatore a destra mostra la preparazione nel suo colore e quanto
+è pieno il bollitore; passaci sopra il cursore per vedere le porzioni.
+
+<KettleScreen recipe="brewing/barley_wort" />
+
+Ogni ricetta dà **{rules.servingsPerBucket} porzioni** e richiede **{seconds(brews[0].brewingTime)}**. Un bollitore riscaldato fuma
+e gorgoglia appena contiene una preparazione o gli ingredienti per farne una (altrimenti resta tranquillo); mentre una partita è in preparazione il coperchio vibra, e quando è pronta sbuffa vapore. Il bollitore continua a preparare
+altre partite finché ci sono ingredienti, fino a {rules.kettleMaxServings} porzioni in tutto.
+
+<BrewFlow />
+
+Quando una preparazione è finita, il coperchio resta alzato e la vedi all'interno, che scende man mano che prelevi porzioni. Mentre una partita è in preparazione, il
+coperchio è abbassato; quando l'ultima porzione è andata, si chiude.
+
+{brews.map((r) => <Recipe recipe={r} />)}
+
+<Render name="scenes/kettle-open" float="right" size={192} alt="Il bollitore con il coperchio aperto, che mostra la preparazione" />
+
+## Imbottigliare
+
+Come un calderone: clicca con il tasto destro sul bollitore con un contenitore vuoto.
+
+- un'<Item id="glass_bottle" /> prende **{rules.servingsPerBottle} porzione**,
+- un <Item id="bucket" /> vuoto prende **{rules.servingsPerBucket} porzioni**, quindi il bollitore ne deve avere almeno altrettante.
+
+I secchi di succo e di mosto non si possono versare nel mondo, come il latte.
+
+## Succo da bere
+
+<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" /> e <Item id="apple_juice" /> sono
+bevande a sé: si bevono in {juice.consumable.seconds} s, puoi berle sempre e saziano un po' la fame.
+
+<FoodStats nutrition={juice.food.nutrition} saturation={juice.food.saturation} />
+
+Ogni succo abbassa anche il [Brillo](/tipsy/) di un livello. Il mosto e il mosto di miele devono prima fermentare; non si possono bere.
+
+## Automazione
+
+Le tramogge possono far funzionare il bollitore da sole:
+
+- **Dall'alto**, una tramoggia porta gli ingredienti, e le ampolle o i secchi vuoti.
+- **Dai lati**, porta ampolle o secchi vuoti.
+- Il bollitore li riempie con la preparazione, e **una tramoggia sotto** estrae quelli pieni.
+
+Niente estrae gli ingredienti né la preparazione stessa.
+
+Un comparatore accanto al bollitore dà un segnale appena c'è qualcosa dentro, ingredienti, preparazione o contenitori, e uno
+più forte quanto più si riempie il tutto. Una preparazione da sola dà solo un segnale debole, quindi usalo per distinguere "c'è qualcosa
+dentro" da "vuoto" più che per contare le porzioni.
+
+## Rame
+
+Il bollitore è di rame e si ossida come il rame.
+
+<Stages prefix="kettle-weathering" title="Ossidazione" labels={['Rame', 'Esposto', 'Corroso', 'Ossidato']} />
+
+- Col tempo diventa esposto, corroso e infine ossidato. Prepara allo stesso modo a ogni stadio.
+- **Il favo** lo cera e ferma l'ossidazione. Un'**ascia** raschia via la cera o uno stadio di ossidazione, e un fulmine lo ripulisce.
+- **Rompilo pieno** e conserva la sua preparazione: la descrizione dell'oggetto e la barra di riempimento la mostrano, e puoi posizionarlo altrove
+  e andare avanti. Gli ingredienti e le ampolle o i secchi in attesa cadono a terra.
+- Non si ossida mentre qualcuno ha la sua schermata aperta.
+
+## Da sapere
+
+- **Hai perso il fuoco?** Togliere il calore non azzera una partita, ma la freccia torna indietro al doppio della velocità con cui si era riempita.
+  Gli ingredienti si consumano solo quando una partita finisce, quindi non si spreca niente.
+- **Una preparazione alla volta.** Il bollitore non prepara una bevanda diversa sopra una preparazione che è ancora dentro: aspetta, con gli
+  ingredienti intatti, finché non hai imbottigliato la vecchia. A {rules.kettleMaxServings} porzioni aspetta anche lui.
+- **Tieni pulita la griglia.** Qualsiasi oggetto che la ricetta non usa ferma il bollitore, anche gli avanzi di un'altra ricetta. Una
+  tramoggia in cima spinge dentro tutto ciò che contiene, quindi dalle solo ingredienti.
+- **Dov'è la mia XP?** Ogni partita dà un po' di esperienza. Il bollitore la accumula e la dà al prossimo giocatore che riempie
+  a mano un'ampolla o un secchio, oppure la fa cadere quando viene rotto.
+- **Non basta per un secchio?** Un clic con un secchio apre solo la schermata. Accovacciarsi con un'ampolla o un secchio non fa niente.
+- **Una tramoggia, due lavori:** una tramoggia sotto il bollitore passa su il calore del falò e raccoglie i contenitori pieni.
+- **Accovacciati e clicca con il tasto destro a mani vuote** per appendere il bollitore al manico, e di nuovo per rimetterlo in piedi.
+- Il bollitore può stare nell'acqua, si rompe in fretta con qualsiasi attrezzo (il piccone è il più veloce), conserva il nome dell'incudine e non
+  si impila. Un'esplosione può distruggerlo, preparazione compresa.
+- **Ricettario:** le preparazioni si sbloccano quando raccogli la loro coltura principale, ordinate in Succhi, Mosti e Varie.
+
+## Ricetta
+
+<Recipe id="brew_kettle" />

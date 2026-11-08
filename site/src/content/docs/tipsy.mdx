@@ -6,53 +6,74 @@ import { Aside } from '@astrojs/starlight/components';
 import Item from '../../components/mc/Item.astro';
 import TipsyLevels from '../../components/data/TipsyLevels.astro';
 import EffectBadge from '../../components/data/EffectBadge.astro';
-import { rules, nameOf } from '../../lib/data';
+import { rules, nameOf, roman } from '../../lib/data';
 
 export const t = rules.tipsy;
 export const cfg = t.config;
+export const rowdyLevel = t.rowdyLevel;
+export const punchHearts = t.rowdyPunchDamage / 2;
 
-Every wine, beer and cider gives you its buff **and one level of <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. It's
-fun at first: a sway, hiccups, and a little liquid courage. Keep going and it starts to cost you: dark edges, heavy eyes,
-queasy spells, weak arms, then heavy legs and stumbling. It tops out at level {t.maxLevel}.
+Every wine, beer, cider and mead gives you its buff **and one level of <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. It's
+fun at first: a sway, hiccups, a little liquid courage, and at Tipsy {roman(t.slurLevel - 1)} you're at your best (and
+your chat isn't), though your eyes start to get heavy. Keep going and it starts to cost you: queasy spells, weak arms,
+and at the top, legs that barely carry you home. It tops out at level {t.maxLevel}.
 
 ## Levels
 
 <TipsyLevels />
 
-Other players see you sway a little and see your hiccups too. Hover over the Tipsy effect in your inventory to see what
+Other players see you sway, hiccup, stumble and trip too. Hover over the Tipsy effect in your inventory to see what
 your current level does.
 
 ## One drink too many
 
-Already at level {t.maxLevel} and still drinking? You **black out**. Your eyes fall shut, and for a few seconds nothing can
-hurt you. Then you wake up somewhere else, usually at your bed. You'll be hungry and shaky for a while, back at Tipsy I,
-and your pockets may hold something you don't remember picking up.
+Already at level {t.maxLevel} and still drinking? You **black out**. Your eyes fall shut and you keel over, stars
+circling your head for everyone to see. For those few seconds nobody can hurt you, no mob and no player, and keeling
+over doesn't either; the rest of the world still counts, so don't pass out in lava. Then you wake up. Where? That
+depends on the night, and there are more ways to wake up than you'd think…
+
+You'll be hungry and shaky for a while, back at Tipsy I, and your pockets may hold something you don't remember picking
+up. Nothing you had is ever lost.
+
+## Rowdy
+
+From Tipsy {roman(rowdyLevel - 1)}, you get rowdy. Now and then your arm swings by itself and throws a real punch at
+whatever is right in front of you: {punchHearts === 0.5 ? 'half a heart' : `${punchHearts} hearts`} of damage
+and a shove, whatever you're holding. It never hits tamed pets, iron golems or armor stands, and it only hits other players
+where PvP is on. Villagers and passers-by are fair game, though, and they remember it.
+
+You're also **cut off**: from Tipsy {roman(t.cutOffLevel - 1)}, villagers and wandering traders shake their heads and won't
+trade with you until you've sobered up. Do your trading before the {t.cutOffLevel === 4 ? 'fourth' : `${t.cutOffLevel}th`} drink.
 
 ## Sobering up
 
-- **Wait:** each level wears off after **{cfg.secondsPerLevel} seconds**, one level at a time. A new drink resets the clock
-  of your current level.
-- **Milk** clears it completely, like any effect.
-- **A water bottle or <Item id="grape_juice" />** lowers it by one level.
-- **Sleep it off:** going to bed and sleeping through the night clears it.
+- **Wait:** each level wears off after **{cfg.secondsPerLevel} seconds**, one level at a time. A new drink gives every level
+  a fresh clock, so at Tipsy {roman(t.maxLevel - 1)} you're sober again after about {Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10} minutes
+  without another drop.
+- **Milk** clears it completely, like any effect. It clears your drink buffs too.
+- **A water bottle or any juice** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
+  <Item id="apple_juice" />) lowers it by one level right away. Only a plain water bottle works, no other potion.
+- **Sleep it off:** go to bed and sleep through the night. It has to be a night that's really skipped: get up early, or lie
+  awake while the others on the server stay up, and you wake up as tipsy as you went to bed.
+
+## Good to know
+
+- **Sneak** at Tipsy {roman(t.stumbleLevel - 1)} and your legs hold: no drift, no stumbles, no trips. Swimming, riding and
+  flying are safe too.
+- **A trip never hurts** and never puts you anywhere you didn't walk. You only go down on flat, open ground with no
+  monster near, and not twice within {Math.round(t.tripCooldownTicks / 20)} seconds; anywhere else it stays a stumble.
+- **Water gets you out of the bad levels fast,** but the levels below keep their own time, so it doesn't make you sober
+  sooner overall.
+- Tipsy only looks after its own side effects: a Slowness or Nausea from a potion or a command is left alone.
+- Chat links, commands and @mentions are never slurred.
+- Other players see you sway, hear your hiccups and see your stumbles, trips and rowdy swings, but not your dark screen
+  edges or your blinks.
+- **Want the whole story of a blackout?** Every place you can wake up, the odds and the souvenirs are on
+  [Blackouts](/blackouts/). Spoilers, of course.
 
 ## Settings
 
-Server owners can change Tipsy in `vineandbarrel-tipsy-server.toml`:
-
-| Setting | Default | What it does |
-|---|---|---|
-| `enabled` | <code>{String(cfg.enabled)}</code> | `false` is the non-alcoholic mode: drinks never make you tipsy, but keep their buffs and names. |
-| `maxLevel` | <code>{cfg.maxLevel}</code> | The highest level drinks can stack to. |
-| `secondsPerLevel` | <code>{cfg.secondsPerLevel}</code> | How long each level lasts. |
-| `slurredChat` | <code>{String(cfg.slurredChat)}</code> | Slurred chat from level {t.slurLevel}. |
-| `stumbling` | <code>{String(cfg.stumbling)}</code> | Stumbling at level {t.stumbleLevel}. |
-| `blackout` | <code>{String(cfg.blackout)}</code> | Black out after one drink too many at the top level. |
-
-And every player can tune the visuals in `vineandbarrel-tipsy-client.toml`:
-
-| Setting | Default | What it does |
-|---|---|---|
-| `wobbleIntensity` | <code>{cfg.wobbleIntensity}</code> | Camera sway strength, from 0 (off) to 2. Set it to 0 if motion makes you queasy; it always wins over the server. |
-| `otherPlayersSway` | <code>{String(cfg.otherPlayersSway)}</code> | Show tipsy players swaying. |
-| `visionEffects` | <code>{String(cfg.visionEffects)}</code> | The dark screen edges and the heavy-eyed blinks. |
+Server owners can switch Tipsy off entirely (the non-alcoholic mode) or turn off slurred chat, stumbling (with the trips
+and the drift), blackouts, Rowdy's punches and the cut-off one by one. Every player can tone down how much Tipsy moves
+their screen, down to not at all, and switch off the vision effects; vanilla's Distortion Effects, FOV Effects and Darkness Pulsing
+sliders count too. All options and defaults are on [Configuration](/reference/config/).

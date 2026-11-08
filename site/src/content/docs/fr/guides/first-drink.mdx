@@ -1,0 +1,98 @@
+---
+title: Ta première boisson
+description: Un départ pas à pas avec Vine & Barrel, des premiers raisins sauvages à un verre de vin rouge vieilli.
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../../../components/mc/Item.astro';
+import Render from '../../../../components/mc/Render.astro';
+import Recipe from '../../../../components/recipes/Recipe.astro';
+import Stages from '../../../../components/data/Stages.astro';
+import WildCrops from '../../../../components/data/WildCrops.astro';
+import EffectBadge from '../../../../components/data/EffectBadge.astro';
+import { rules, recipe, drinks, days, seconds, duration, roman } from '../../../../lib/l10n/fr';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+export const young = drinks.find((d) => d.id === 'vineandbarrel:red_wine');
+export const aged = drinks.find((d) => d.id === 'vineandbarrel:aged_red_wine');
+export const h = rules.harvest;
+export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('vineandbarrel:red_grapes')).length;
+
+<Render name="scenes/tavern" float="right" size={230} alt="Un coin de taverne avec des fûts et des boissons sur une table" />
+
+Ce guide t'emmène d'un monde tout neuf à ton premier verre de vin rouge, puis à un vin vieilli. Il te suffit de
+matériaux vanilla pour commencer ; les raisins arrivent en chemin. Chaque étape renvoie à la page qui donne tous les détails.
+
+<Steps>
+
+1. **Trouve des raisins sauvages.** Les plantes sauvages poussent en bouquets dans le monde, chacune dans son genre d'endroit. Pour le vin, il te faut
+   des <Item id="wild_grapes" /> : casses-en un à la main pour obtenir des <Item id="red_grapes" plural />.
+
+   <WildCrops />
+
+   Tu n'en trouves pas ? Les fermiers de village et le marchand ambulant vendent des raisins, et les coffres de village en contiennent souvent. Voir
+   [Villages et tavernes](/villages/).
+
+2. **Plante quelques buissons.** Plante les raisins sur de l'herbe, de la terre ou de la terre labourée, comme les baies sucrées. Un buisson pousse tout seul ;
+   une fois mûr, fais un clic droit dessus pour cueillir {h.grapes.count[0]} à {h.grapes.count[1]} raisins. Il revient d'un stade en arrière et
+   refait des fruits, donc tu n'as jamais besoin de replanter. La poudre d'os l'accélère.
+
+   <Stages prefix="grape_bush" title="Un buisson de raisin qui pousse" labels={['planté', 'en croissance', 'mi-mûr', 'mûr']} />
+
+   Un lot de jus demande {grapesPerBatch} raisins et un sucre, donc une poignée de buissons suffit largement pour commencer. Plus de détails dans
+   [Cultures](/crops/).
+
+3. **Construis une cuve de brassage et mets-la au-dessus d'un feu.** La <Item id="brew_kettle" /> est en cuivre. Elle ne brasse que si
+   le bloc juste en dessous est chaud : un feu de camp allumé fonctionne dès le premier jour. Elle repose sur un plateau en fer au-dessus des flammes.
+
+   <div class="not-content" style="display:flex;flex-wrap:wrap;gap:30px 40px"><Recipe id="brew_kettle" /></div>
+
+4. **Brasse du jus de raisin.** Fais un clic droit sur la cuve pour l'ouvrir et mets-y {grapesPerBatch} raisins et un sucre. La flèche
+   se remplit tant que la cuve est chaude, de la vapeur s'échappe de sous le couvercle, et au bout de {seconds(juice.brewingTime)} la jauge
+   affiche {juice.servings} portions de <Item id="grape_juice" />. Si tu en mets plus, elle continue de brasser des lots. Voir
+   [Cuve de brassage](/brew-kettle/).
+
+   <div class="not-content"><Recipe id="brewing/grape_juice" /></div>
+
+5. **Sors-le.** Fais un clic droit sur la cuve avec une fiole pour une portion, ou avec un seau pour {rules.servingsPerBucket}.
+   Le jus de raisin est déjà une boisson à part entière : il atténue [Pompette](/tipsy/).
+
+6. **Remplis un fût de vieillissement.** Pose un <Item id="aging_barrel" /> et fais un clic droit dessus avec le seau ou les fioles. Il
+   contient {rules.barrelCapacity} portions : deux seaux le remplissent à ras bord. Tu peux le compléter avec le même jus
+   pendant qu'il fermente.
+
+   <div class="not-content"><Recipe id="aging_barrel" /></div>
+
+7. **Attends la fermentation.** Au bout de **{days(wine.fermentingTime)}**, le jus est devenu du <Item id="red_wine" />. Le fût
+   t'indique où il en est : le barboteur en verre sur le dessus bouillonne pendant la fermentation, et un clic droit à mains nues
+   affiche une ligne d'état comme *Vin rouge · 8 portions · fermente, c'est prêt demain matin*. L'horloge suit le temps de jeu, donc dormir pendant la nuit compte. Voir [Fût de vieillissement](/aging-barrel/).
+
+8. **Tire un verre.** Fais un clic droit sur le fût avec un <Item id="wine_glass" /> vide pour tirer une portion. Le vin se sert dans un verre,
+   la bière, l'hydromel et le cidre dans une <Item id="mug" /> ; le fût te dit si tu tiens le mauvais récipient.
+
+   <div class="not-content"><Recipe id="wine_glass" /></div>
+
+9. **Bois-le.** Le <Item id="red_wine" /> te donne <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> et un niveau de
+   <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />. Tu gardes le verre. Bois en même temps qu'un ami à proximité
+   et vous obtenez un **Santé !** : le bonus de chacun dure {rules.cheersBonusPercent} % de plus.
+
+10. **Laisse le reste vieillir.** Ne touche plus au fût pendant **{days(wine.agingTime)}** de plus et ce qu'il reste devient
+    du <Item id="aged_red_wine" /> : un rouge plus profond qui scintille, et <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
+    Un petit bruit de bouchon et un sceau de cire rouge sur le dessus t'indiquent que c'est prêt.
+
+</Steps>
+
+<Aside type="tip" title="Tu ne peux pas attendre ?">
+Chaque verre que tu tires pendant le vieillissement, c'est un verre de moins qui vieillit. Remplis deux fûts : bois dans l'un, et ne touche pas à l'autre
+jusqu'à ce qu'il soit vieilli. Ou trouve une taverne de village, dont les fûts sont déjà pleins, quelques-uns vieillis. Voir
+[Villages et tavernes](/villages/).
+</Aside>
+
+## Et ensuite
+
+- Brasse les autres boissons : raisins blancs pour le vin blanc, baies sucrées pour le vin de baies sucrées, orge et houblon pour la pale ale,
+  blé et houblon pour la bière blanche, miel pour l'hydromel, pommes pour le cidre brut. Voir
+  [Boissons](/drinks/) et [Cultures](/crops/).
+- Mets quelques fûts côte à côte et construis une vraie cave : [Construire une cave](/guides/cellar/).
+- Connais tes limites : ce que fait chaque niveau de [Pompette](/tipsy/), et comment dessoûler.
+- Avec Farmer's Delight, brasse sur son four et cuisine avec ton vin : [Farmer's Delight](/farmers-delight/).
