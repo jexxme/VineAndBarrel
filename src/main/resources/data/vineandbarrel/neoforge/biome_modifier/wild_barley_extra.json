@@ -1,0 +1,6 @@
+{
+  "type": "vineandbarrel:add_features_by_filter",
+  "allowed_biomes": "#vineandbarrel:wild_barley_extra",
+  "features": "vineandbarrel:patch_wild_barley",
+  "step": "vegetal_decoration"
+}

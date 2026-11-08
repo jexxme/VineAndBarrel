@@ -1,0 +1,206 @@
+[
+	{
+		"id": "vineandbarrel:barley_ale",
+		"name": "Barley Ale",
+		"stage": "young",
+		"base": "vineandbarrel:barley_wort_bottle",
+		"bucket": "vineandbarrel:barley_wort_bucket",
+		"vessel": "vineandbarrel:mug",
+		"color": "#cc6c1c",
+		"effect": {
+			"id": "minecraft:haste",
+			"name": "Haste",
+			"duration": 3600,
+			"amplifier": 0
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/barley_ale"
+	},
+	{
+		"id": "vineandbarrel:aged_barley_ale",
+		"name": "Aged Barley Ale",
+		"stage": "aged",
+		"base": "vineandbarrel:barley_wort_bottle",
+		"bucket": "vineandbarrel:barley_wort_bucket",
+		"vessel": "vineandbarrel:mug",
+		"color": "#b4590e",
+		"effect": {
+			"id": "minecraft:haste",
+			"name": "Haste",
+			"duration": 6000,
+			"amplifier": 1
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/barley_ale"
+	},
+	{
+		"id": "vineandbarrel:hard_cider",
+		"name": "Hard Cider",
+		"stage": "young",
+		"base": "farmersdelight:apple_cider",
+		"bucket": null,
+		"vessel": "vineandbarrel:mug",
+		"color": "#d4684a",
+		"effect": {
+			"id": "minecraft:absorption",
+			"name": "Absorption",
+			"duration": 3600,
+			"amplifier": 0
+		},
+		"fdOnly": true,
+		"aging": "vineandbarrel:aging/hard_cider"
+	},
+	{
+		"id": "vineandbarrel:aged_hard_cider",
+		"name": "Aged Hard Cider",
+		"stage": "aged",
+		"base": "farmersdelight:apple_cider",
+		"bucket": null,
+		"vessel": "vineandbarrel:mug",
+		"color": "#cb4925",
+		"effect": {
+			"id": "minecraft:absorption",
+			"name": "Absorption",
+			"duration": 6000,
+			"amplifier": 1
+		},
+		"fdOnly": true,
+		"aging": "vineandbarrel:aging/hard_cider"
+	},
+	{
+		"id": "vineandbarrel:melon_wine",
+		"name": "Melon Wine",
+		"stage": "young",
+		"base": "farmersdelight:melon_juice",
+		"bucket": null,
+		"vessel": "vineandbarrel:wine_glass",
+		"color": "#a0cc5c",
+		"effect": {
+			"id": "minecraft:fire_resistance",
+			"name": "Fire Resistance",
+			"duration": 3600,
+			"amplifier": 0
+		},
+		"fdOnly": true,
+		"aging": "vineandbarrel:aging/melon_wine"
+	},
+	{
+		"id": "vineandbarrel:aged_melon_wine",
+		"name": "Aged Melon Wine",
+		"stage": "aged",
+		"base": "farmersdelight:melon_juice",
+		"bucket": null,
+		"vessel": "vineandbarrel:wine_glass",
+		"color": "#8bc533",
+		"effect": {
+			"id": "minecraft:fire_resistance",
+			"name": "Fire Resistance",
+			"duration": 6000,
+			"amplifier": 1
+		},
+		"fdOnly": true,
+		"aging": "vineandbarrel:aging/melon_wine"
+	},
+	{
+		"id": "vineandbarrel:red_wine",
+		"name": "Red Wine",
+		"stage": "young",
+		"base": "vineandbarrel:grape_juice",
+		"bucket": "vineandbarrel:grape_juice_bucket",
+		"vessel": "vineandbarrel:wine_glass",
+		"color": "#8e1a2e",
+		"effect": {
+			"id": "minecraft:regeneration",
+			"name": "Regeneration",
+			"duration": 3600,
+			"amplifier": 0
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/red_wine"
+	},
+	{
+		"id": "vineandbarrel:aged_red_wine",
+		"name": "Aged Red Wine",
+		"stage": "aged",
+		"base": "vineandbarrel:grape_juice",
+		"bucket": "vineandbarrel:grape_juice_bucket",
+		"vessel": "vineandbarrel:wine_glass",
+		"color": "#7d0f22",
+		"effect": {
+			"id": "minecraft:regeneration",
+			"name": "Regeneration",
+			"duration": 6000,
+			"amplifier": 1
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/red_wine"
+	},
+	{
+		"id": "vineandbarrel:sweet_berry_wine",
+		"name": "Sweet Berry Wine",
+		"stage": "young",
+		"base": "vineandbarrel:sweet_berry_juice",
+		"bucket": "vineandbarrel:sweet_berry_juice_bucket",
+		"vessel": "vineandbarrel:wine_glass",
+		"color": "#f27a92",
+		"effect": {
+			"id": "minecraft:speed",
+			"name": "Speed",
+			"duration": 3600,
+			"amplifier": 0
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/sweet_berry_wine"
+	},
+	{
+		"id": "vineandbarrel:aged_sweet_berry_wine",
+		"name": "Aged Sweet Berry Wine",
+		"stage": "aged",
+		"base": "vineandbarrel:sweet_berry_juice",
+		"bucket": "vineandbarrel:sweet_berry_juice_bucket",
+		"vessel": "vineandbarrel:wine_glass",
+		"color": "#f63a60",
+		"effect": {
+			"id": "minecraft:speed",
+			"name": "Speed",
+			"duration": 6000,
+			"amplifier": 1
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/sweet_berry_wine"
+	},
+	{
+		"id": "vineandbarrel:wheat_beer",
+		"name": "Wheat Beer",
+		"stage": "young",
+		"base": "vineandbarrel:wheat_wort_bottle",
+		"bucket": "vineandbarrel:wheat_wort_bucket",
+		"vessel": "vineandbarrel:mug",
+		"color": "#f2d06a",
+		"effect": {
+			"id": "minecraft:saturation",
+			"name": "Saturation",
+			"duration": 5,
+			"amplifier": 0
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/wheat_beer"
+	},
+	{
+		"id": "vineandbarrel:aged_wheat_beer",
+		"name": "Aged Wheat Beer",
+		"stage": "aged",
+		"base": "vineandbarrel:wheat_wort_bottle",
+		"bucket": "vineandbarrel:wheat_wort_bucket",
+		"vessel": "vineandbarrel:mug",
+		"color": "#f8c52b",
+		"effect": {
+			"id": "minecraft:saturation",
+			"name": "Saturation",
+			"duration": 4,
+			"amplifier": 1
+		},
+		"fdOnly": false,
+		"aging": "vineandbarrel:aging/wheat_beer"
+	}
+]

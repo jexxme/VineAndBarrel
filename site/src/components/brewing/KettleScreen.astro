@@ -1,0 +1,116 @@
+---
+// The Brew Kettle's real screen (the mod's own GUI texture) with a recipe's ingredients in the grid and, in the gauge,
+// the brew they make, filled the way the screen fills it. The grid and the gauge are labelled, with a legend beside it.
+import Slot from '../mc/Slot.astro';
+import Sprite from '../mc/Sprite.astro';
+import { kettleScreen as k } from '../../data/code/kettle';
+import { recipe, rules } from '../../lib/data';
+interface Props {
+	recipe: string;
+}
+const r = recipe(Astro.props.recipe);
+const s = 2;
+const W = 176;
+const H = 80; // the kettle part of the screen; the player inventory below is vanilla
+const at = (x: number, y: number) => `position:absolute;left:${x * s}px;top:${y * s}px`;
+const ing = r.ingredients!;
+// The gauge as BrewKettleScreen draws it: the brew's colour from the bottom, its share of the kettle's servings
+const color = rules.kettleLiquidColors?.[r.result!.id] ?? 0x3f76e4;
+const hex = '#' + color.toString(16).padStart(6, '0');
+const surface = '#' + [16, 8, 0].map((b) => (((color >> b) & 255) + 255) >> 1).map((c) => c.toString(16).padStart(2, '0')).join('');
+const [lx, ly, lw, lh] = k.liquid;
+const fill = Math.min(lh, Math.max(1, Math.ceil((r.servings * lh) / rules.kettleMaxServings)));
+---
+<div class="fd-kettle not-content">
+	<div class="gui" style={`width:${W * s}px;height:${H * s}px`} role="img" aria-label="Brew Kettle screen">
+		<Sprite src="/gui/brew_kettle.png" x={0} y={0} w={W} h={H} scale={s} />
+		<span class="title" style={at(k.titleX, 6)}>Brew Kettle</span>
+		{ing.map((g, i) => (
+			<div style={at(k.inputs[0] + (i % 3) * k.step, k.inputs[1] + Math.floor(i / 3) * k.step)}>
+				<Slot ingredient={g} bare scale={s} />
+			</div>
+		))}
+		<div style={at(k.heat[0], k.heat[1])} data-tip-items="Heated~" tabindex="0">
+			<Sprite src="/gui/brew_kettle.png" x={k.heat[4]} y={k.heat[5]} w={k.heat[2]} h={k.heat[3]} scale={s} />
+		</div>
+		<div style={at(k.arrow[0], k.arrow[1])}>
+			<Sprite src="/gui/brew_kettle.png" x={k.arrow[4]} y={k.arrow[5]} w={k.arrow[2]} h={k.arrow[3]} scale={s} class="fd-arrow" />
+		</div>
+		<div
+			class="liquid"
+			style={`${at(lx, ly + lh - fill)};width:${lw * s}px;height:${fill * s}px;background:${hex};border-top:${s}px solid ${surface}`}
+			data-tip-items={`${r.servings} servings`}
+			tabindex="0"
+		></div>
+		<div style={at(lx, ly)}>
+			<Sprite src="/gui/brew_kettle.png" x={k.glass[0]} y={k.glass[1]} w={lw} h={lh} scale={s} />
+		</div>
+		{[
+			['A', k.inputs[0] - 1, k.inputs[1] - 1 + 2 * k.step, 'in'],
+			['B', k.gauge[0] + k.gauge[2] + 1, k.gauge[1] + 2, 'brew'],
+		].map(([n, x, y, c]) => <span class:list={['mk', c]} style={at(+x, +y)}>{n}</span>)}
+	</div>
+	<dl class="legend">
+		<dt class="in">A</dt><dd>{rules.kettleIngredientSlots} ingredient slots</dd>
+		<dt class="brew">B</dt><dd>The brew in the kettle, up to {rules.kettleMaxServings} servings</dd>
+	</dl>
+</div>
+<style>
+	.fd-kettle {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 20px 30px;
+		align-items: center;
+		margin: 30px 0;
+	}
+	.gui {
+		position: relative;
+		flex: none;
+		outline: 2px solid #000;
+		image-rendering: pixelated;
+	}
+	.title {
+		font-size: 20px;
+		line-height: 20px;
+		color: #404040;
+		white-space: nowrap;
+	}
+	.mk {
+		position: absolute;
+		font-size: 20px;
+		line-height: 20px;
+		color: #fff;
+		background: var(--c);
+		padding: 0 4px;
+		text-shadow: 2px 2px 0 #000;
+	}
+	.in {
+		--c: #4f9a34;
+	}
+	.brew {
+		--c: #a8283f;
+	}
+	.liquid {
+		box-sizing: border-box;
+	}
+	.legend {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 4px 14px;
+		margin: 0;
+		font-size: 20px;
+		line-height: 30px;
+		flex: 1 1 16rem;
+	}
+	.legend dt {
+		color: #fff;
+		background: var(--c);
+		padding: 0 6px;
+		text-align: center;
+		text-shadow: 2px 2px 0 #000;
+	}
+	.legend dd {
+		margin: 0;
+		color: var(--sl-color-gray-2);
+	}
+</style>

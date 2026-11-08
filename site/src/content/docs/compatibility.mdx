@@ -1,0 +1,45 @@
+---
+title: Compatibility
+description: Which mods Vine & Barrel works with and what each one adds.
+---
+import Item from '../../components/mc/Item.astro';
+import { meta, worldgen, seasons, nameOf, list } from '../../lib/data';
+
+export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
+export const seasonRows = Object.entries(seasons);
+
+Vine & Barrel {meta.modVersion} runs on **Minecraft {meta.minecraft}** with **NeoForge {meta.neoforge}** or newer. It needs no
+other mods. Everything below is optional and switches on by itself when the other mod is installed.
+
+## Farmer's Delight
+
+Stove heat, vines on ropes, rich soil, drinks from FD's bottles and two cooking pot meals. See [Farmer's Delight](/farmers-delight/).
+
+## JEI
+
+JEI shows a **Brew Kettle** and an **Aging Barrel** recipe category, with brewing times and the days each stage takes,
+plus info pages for the barrel and for the wild crops. Built against JEI {meta.jei}.
+
+## Jade
+
+Look at a kettle or barrel to see what's inside: the brew or drink, the servings left, how far the brew has got, whether the
+kettle is heated, and what stage the barrel is at. Built against Jade {meta.jade}.
+
+## Biomes O' Plenty
+
+Wild crops grow in every biome tagged as a forest, plains, savanna or river (where the temperature suits them), so modded biomes with those tags get them automatically.
+With Biomes O' Plenty they also grow in a few biomes that suit them:
+
+<ul>
+	{bop.map((b) => <li><Item id={b.crop} />: {list(b.biomes)}</li>)}
+</ul>
+
+## Serene Seasons
+
+With Serene Seasons, each crop grows in its own seasons:
+
+<ul>
+	{['vineandbarrel:red_grapes', 'vineandbarrel:hops', 'vineandbarrel:barley_seeds'].map((id) => (
+		<li><Item id={id} />: {list(seasonRows.filter(([, ids]) => ids.includes(id)).map(([s]) => s))}</li>
+	))}
+</ul>

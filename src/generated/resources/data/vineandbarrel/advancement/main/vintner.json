@@ -1,0 +1,67 @@
+{
+  "parent": "vineandbarrel:main/patience_pays",
+  "criteria": {
+    "aged_red_wine": {
+      "conditions": {
+        "item": {
+          "items": "vineandbarrel:aged_red_wine"
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    },
+    "aged_sweet_berry_wine": {
+      "conditions": {
+        "item": {
+          "items": "vineandbarrel:aged_sweet_berry_wine"
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    },
+    "red_wine": {
+      "conditions": {
+        "item": {
+          "items": "vineandbarrel:red_wine"
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    },
+    "sweet_berry_wine": {
+      "conditions": {
+        "item": {
+          "items": "vineandbarrel:sweet_berry_wine"
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.vineandbarrel.vintner.description"
+    },
+    "frame": "challenge",
+    "icon": {
+      "id": "vineandbarrel:aged_sweet_berry_wine"
+    },
+    "title": {
+      "translate": "advancements.vineandbarrel.vintner.title"
+    }
+  },
+  "requirements": [
+    [
+      "red_wine"
+    ],
+    [
+      "aged_red_wine"
+    ],
+    [
+      "sweet_berry_wine"
+    ],
+    [
+      "aged_sweet_berry_wine"
+    ]
+  ],
+  "rewards": {
+    "experience": 100
+  },
+  "sends_telemetry_event": true
+}

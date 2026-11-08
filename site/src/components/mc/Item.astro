@@ -1,0 +1,19 @@
+---
+// Inline item: icon + name, linked to the page that explains it. <Item id="red_wine" />
+// Farmer's Delight items show as text and link to the FD Neoforged wiki (its textures aren't redistributed here).
+import { nameOf, iconOf, pageOf, fullId, isFd } from '../../lib/data';
+interface Props {
+	id: string;
+	count?: number;
+	label?: string;
+	plural?: boolean;
+}
+const { id: raw, count, label, plural } = Astro.props;
+const id = fullId(raw);
+const ic = iconOf(id);
+const href = pageOf(id);
+let text = label ?? nameOf(id);
+if (plural && !label && !/s$/.test(text)) text += 's';
+const Tag = href ? 'a' : 'span';
+---
+<Tag class:list={['fd-item', { ext: isFd(id) }]} href={href ?? undefined} data-tip-items={`${nameOf(id)}~${id}`}>{ic && <img src={ic.src} alt="" width="20" height="20" loading="lazy" />}{count ? `${count}× ` : ''}{text}</Tag>

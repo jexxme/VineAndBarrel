@@ -1,0 +1,92 @@
+---
+title: Interactions
+description: All the small things blocks and drinks do in Vine & Barrel, each one working the way something in vanilla or Farmer's Delight already does.
+---
+import Item from '../../components/mc/Item.astro';
+import Render from '../../components/mc/Render.astro';
+import Advancements from '../../components/data/Advancements.astro';
+import { rules } from '../../lib/data';
+
+Vine & Barrel tries to feel like part of the game. Almost everything below works like something you already know from
+vanilla or Farmer's Delight, so you can guess the controls without reading. This page lists them all in one place; the
+mechanic pages explain them in more detail.
+
+## Aging Barrel
+
+<Render name="scenes/barrel-cellar" float="right" size={224} alt="A wall of stacked barrels" />
+
+- **Placed facing you**, tap toward you, like a furnace.
+- **Racks:** barrels side by side with the same facing join their cradles, like fences connect.
+- **Stacks:** a barrel on a barrel rests on chocks instead of a cradle. Build a cellar wall.
+- **The bung shows the stage:** cork, bubbling airlock while fermenting, red wax once aged.
+- **Fermenting is audible:** bubbles from the airlock, getting rarer as it finishes.
+- **The tap drips** now and then while there's drink inside, in the drink's colour, like honey from a hive.
+- **The aged moment:** a soft cork pop when the batch turns aged.
+- **Pour in** with a bucket or bottle, like filling a cauldron. Until it's a drink, an empty bucket or bottle takes it back.
+- **Tap** with an empty mug or glass, like taking a serving from a Farmer's Delight feast. The wrong vessel gets a hint and isn't used up.
+- **Status line** on an empty-hand right-click. An anvil name shows up in it.
+- **Comparator** reads the servings left.
+- **Break it full** and it keeps its batch, like a shulker box. Aging pauses until you place it again.
+- **Dispensers** tap with a vessel or pour in a base. **Hoppers** feed it and empty it.
+
+See [Aging Barrel](/aging-barrel/).
+
+## Brew Kettle
+
+- **Supports, like the cooking pot:** an iron tray over a campfire, fire or lava; flush on other heat; sneak and right-click
+  with an empty hand to hang it from a handle.
+- **The lid lifts** while someone has the screen open, like a chest. A finished brew keeps it up, and you can see the
+  brew inside, sinking as you take servings.
+- **While brewing**, steam curls from under the lid and the lid rattles. **When done**, a puff of steam.
+- **Right-click with a bottle or bucket** to fill it, like a cauldron.
+- **Break it full** and it keeps its contents.
+- **Comparator** reads its contents. **Hoppers** feed ingredients and empty containers in, and pull the filled ones out below.
+- **Copper:** it weathers over time; honeycomb waxes it, an axe scrapes it, lightning cleans it.
+- **Recipe book** in its screen.
+
+See [Brew Kettle](/brew-kettle/).
+
+## Drinks and vessels
+
+<Render name="scenes/placed-drinks" float="right" size={192} alt="Mugs and glasses on a block" />
+
+- **Set drinks down:** sneak and right-click the top of a block with a mug or glass, full or empty. Up to four per block,
+  like candles. Right-click with an empty hand to pick one up.
+- **Cheers!** Two or more players finishing a drink within {rules.cheersWindowTicks / 20} seconds and {rules.cheersRadius}
+  blocks of each other clink glasses, and everyone's buff lasts {rules.cheersBonusPercent}% longer.
+- **Drinking** sounds and looks like a potion, and you get the empty vessel back.
+- **Buckets of juice and wort** can't be poured out as a liquid, like milk.
+
+## Tipsy
+
+- **Other players see you sway** and see your hiccups.
+- **Sleep it off:** sleeping through the night clears Tipsy.
+- **Milk** clears it; **water or grape juice** lowers it by one level.
+- **Hover over the effect** in your inventory to see what your level does.
+- **One drink too many** at the top level and you black out, then wake up somewhere else.
+
+See [Tipsy](/tipsy/).
+
+## Crops and farm life
+
+- Bushes are picked with a right-click and drop back a stage, like sweet berries.
+- Bees help grapes, hops and barley grow.
+- Barley feeds and breeds animals like wheat; its seeds feed chickens and parrots.
+- Farmer villagers plant and harvest barley.
+- Foxes pick ripe grapes, like they do sweet berries.
+- Every crop composts.
+- The <Item id="barley_bale" /> softens a fall and lifts campfire smoke like a hay bale.
+
+See [Crops](/crops/).
+
+## World
+
+- **Village taverns** have barrels that are already full, waiting to be tapped. See [Villages & taverns](/villages/).
+- **JEI** shows brewing and aging recipes, plus info pages for the barrel and the wild crops. **Jade** shows what's in a
+  kettle or barrel when you look at it. See [Compatibility](/compatibility/).
+
+## Advancements
+
+Vine & Barrel has its own advancement tab:
+
+<Advancements />

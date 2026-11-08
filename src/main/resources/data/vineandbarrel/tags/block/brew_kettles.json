@@ -1,0 +1,12 @@
+{
+  "values": [
+    "vineandbarrel:brew_kettle",
+    "vineandbarrel:exposed_brew_kettle",
+    "vineandbarrel:weathered_brew_kettle",
+    "vineandbarrel:oxidized_brew_kettle",
+    "vineandbarrel:waxed_brew_kettle",
+    "vineandbarrel:waxed_exposed_brew_kettle",
+    "vineandbarrel:waxed_weathered_brew_kettle",
+    "vineandbarrel:waxed_oxidized_brew_kettle"
+  ]
+}

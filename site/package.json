@@ -1,0 +1,28 @@
+{
+  "name": "vine-and-barrel-docs",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "data": "node scripts/extract.mjs && node scripts/render-icons.mjs && node scripts/render-scenes.mjs && node scripts/copy-gui.mjs && node scripts/make-ui.mjs && node scripts/make-font.mjs",
+    "check": "node scripts/check-dist.mjs",
+    "shots": "node scripts/import-shots.mjs"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.6",
+    "@astrojs/preact": "^6.1.2",
+    "@astrojs/starlight": "^0.42.9",
+    "astro": "^7.3.6",
+    "fflate": "^0.8.3",
+    "preact": "^11.1.1",
+    "sharp": "^0.35.3",
+    "unist-util-visit": "^5.2.0"
+  },
+  "private": true,
+  "devDependencies": {
+    "opentype.js": "^2.0.0"
+  }
+}

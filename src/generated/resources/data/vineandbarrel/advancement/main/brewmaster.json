@@ -1,0 +1,67 @@
+{
+  "parent": "vineandbarrel:main/patience_pays",
+  "criteria": {
+    "aged_barley_ale": {
+      "conditions": {
+        "item": {
+          "items": "vineandbarrel:aged_barley_ale"
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    },
+    "aged_wheat_beer": {
+      "conditions": {
+        "item": {
+          "items": "vineandbarrel:aged_wheat_beer"
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    },
+    "barley_ale": {
+      "conditions": {
+        "item": {
+          "items": "vineandbarrel:barley_ale"
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    },
+    "wheat_beer": {
+      "conditions": {
+        "item": {
+          "items": "vineandbarrel:wheat_beer"
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.vineandbarrel.brewmaster.description"
+    },
+    "frame": "challenge",
+    "icon": {
+      "id": "vineandbarrel:aged_barley_ale"
+    },
+    "title": {
+      "translate": "advancements.vineandbarrel.brewmaster.title"
+    }
+  },
+  "requirements": [
+    [
+      "barley_ale"
+    ],
+    [
+      "aged_barley_ale"
+    ],
+    [
+      "wheat_beer"
+    ],
+    [
+      "aged_wheat_beer"
+    ]
+  ],
+  "rewards": {
+    "experience": 100
+  },
+  "sends_telemetry_event": true
+}

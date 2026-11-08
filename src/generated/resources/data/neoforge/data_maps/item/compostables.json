@@ -1,0 +1,29 @@
+{
+  "values": {
+    "vineandbarrel:barley": {
+      "chance": 0.65
+    },
+    "vineandbarrel:barley_bale": {
+      "chance": 0.85
+    },
+    "vineandbarrel:barley_seeds": {
+      "can_villager_compost": true,
+      "chance": 0.3
+    },
+    "vineandbarrel:hops": {
+      "chance": 0.3
+    },
+    "vineandbarrel:red_grapes": {
+      "chance": 0.3
+    },
+    "vineandbarrel:wild_barley": {
+      "chance": 0.65
+    },
+    "vineandbarrel:wild_grapes": {
+      "chance": 0.65
+    },
+    "vineandbarrel:wild_hops": {
+      "chance": 0.65
+    }
+  }
+}

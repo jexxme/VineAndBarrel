@@ -1,0 +1,222 @@
+{
+	"servingsPerBucket": 4,
+	"servingsPerBottle": 1,
+	"kettleIngredientSlots": 6,
+	"kettleMaxServings": 64,
+	"kettleLiquidColors": {
+		"vineandbarrel:grape_juice": 7614586,
+		"vineandbarrel:sweet_berry_juice": 13122140,
+		"vineandbarrel:barley_wort_bottle": 9721374,
+		"vineandbarrel:wheat_wort_bottle": 13608012
+	},
+	"barrelCapacity": 8,
+	"drinkStackSize": 16,
+	"youngBuffTicks": 3600,
+	"agedBuffTicks": 6000,
+	"youngBuffAmplifier": 0,
+	"agedBuffAmplifier": 1,
+	"dayTicks": 24000,
+	"cheersWindowTicks": 60,
+	"cheersRadius": 5,
+	"cheersBonusPercent": 20,
+	"fdMealNourishment": {
+		"vineandbarrel:beer_battered_fish": 3600,
+		"vineandbarrel:wine_braised_beef": 6000
+	},
+	"crops": {
+		"bushMaxAge": 3,
+		"bushPickedAge": 1,
+		"ropeMaxHeight": 3
+	},
+	"villages": {
+		"tavernWeight": 3,
+		"farmCrops": {
+			"desert": [
+				{
+					"block": "vineandbarrel:grape_bush",
+					"chance": 0.08
+				},
+				{
+					"block": "vineandbarrel:barley",
+					"chance": 0.05
+				}
+			],
+			"plains": [
+				{
+					"block": "vineandbarrel:barley",
+					"chance": 0.1
+				},
+				{
+					"block": "vineandbarrel:grape_bush",
+					"chance": 0.05
+				},
+				{
+					"block": "vineandbarrel:hop_bush",
+					"chance": 0.05
+				}
+			],
+			"savanna": [
+				{
+					"block": "vineandbarrel:barley",
+					"chance": 0.1
+				},
+				{
+					"block": "vineandbarrel:grape_bush",
+					"chance": 0.08
+				}
+			],
+			"snowy": [
+				{
+					"block": "vineandbarrel:barley",
+					"chance": 0.1
+				},
+				{
+					"block": "vineandbarrel:hop_bush",
+					"chance": 0.06
+				}
+			],
+			"taiga": [
+				{
+					"block": "vineandbarrel:barley",
+					"chance": 0.1
+				},
+				{
+					"block": "vineandbarrel:hop_bush",
+					"chance": 0.08
+				}
+			]
+		}
+	},
+	"harvest": {
+		"grapes": {
+			"id": "vineandbarrel:red_grapes",
+			"count": [
+				2,
+				3
+			]
+		},
+		"hops": {
+			"id": "vineandbarrel:hops",
+			"count": [
+				2,
+				3
+			]
+		}
+	},
+	"wildDrops": {
+		"vineandbarrel:wild_barley": [
+			{
+				"id": "vineandbarrel:barley",
+				"chance": 0.2,
+				"fortune": false
+			},
+			{
+				"id": "vineandbarrel:barley_seeds",
+				"chance": 1,
+				"fortune": true
+			}
+		],
+		"vineandbarrel:wild_grapes": [
+			{
+				"id": "vineandbarrel:red_grapes",
+				"chance": 1,
+				"fortune": true
+			}
+		],
+		"vineandbarrel:wild_hops": [
+			{
+				"id": "vineandbarrel:hops",
+				"chance": 1,
+				"fortune": true
+			}
+		]
+	},
+	"tipsy": {
+		"maxLevel": 5,
+		"hiccupLevel": 3,
+		"slurLevel": 4,
+		"stumbleLevel": 5,
+		"heavyLevel": 5,
+		"nauseaLevel": 3,
+		"nauseaPulseTicks": 300,
+		"weaknessLevel": 4,
+		"wobbleStrength": 1.3,
+		"noBuffLevel": 4,
+		"vignette": [
+			0,
+			0.16,
+			0.32,
+			0.48,
+			0.64,
+			0.8
+		],
+		"blinkLevel": 3,
+		"longBlinkLevel": 4,
+		"blackout": {
+			"ticks": 120,
+			"shakyTicks": 600
+		},
+		"courage": [
+			{
+				"level": 1,
+				"knockbackResistance": 0.05,
+				"fallDamageReduction": 0.1
+			},
+			{
+				"level": 2,
+				"knockbackResistance": 0.1,
+				"fallDamageReduction": 0.15
+			},
+			{
+				"level": 3,
+				"knockbackResistance": 0.15,
+				"fallDamageReduction": 0.2
+			}
+		],
+		"config": {
+			"enabled": true,
+			"maxLevel": 5,
+			"secondsPerLevel": 90,
+			"slurredChat": true,
+			"stumbling": true,
+			"blackout": true,
+			"visionEffects": true,
+			"wobbleIntensity": 1,
+			"otherPlayersSway": true
+		}
+	},
+	"heat": {
+		"sources": [
+			"minecraft:campfire",
+			"minecraft:fire",
+			"minecraft:lava",
+			"minecraft:lava_cauldron",
+			"minecraft:magma_block",
+			"minecraft:soul_campfire",
+			"minecraft:soul_fire"
+		],
+		"tray": [
+			"minecraft:campfire",
+			"minecraft:fire",
+			"minecraft:lava",
+			"minecraft:soul_campfire",
+			"minecraft:soul_fire"
+		],
+		"conductors": [
+			"minecraft:hopper"
+		],
+		"containers": [
+			"minecraft:bucket",
+			"minecraft:glass_bottle"
+		],
+		"fdSources": true
+	},
+	"sobering": [
+		"minecraft:potion",
+		"vineandbarrel:grape_juice"
+	],
+	"tipsyEffect": {
+		"category": "NEUTRAL",
+		"color": 15245884
+	}
+}

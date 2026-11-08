@@ -1,0 +1,71 @@
+---
+// Where each wild crop grows (the mod's biome modifiers and biome tags) and what it drops.
+import Item from '../mc/Item.astro';
+import { worldgen, rules, list, pct } from '../../lib/data';
+const tagName = (t: string) => {
+	const p = t.replace(/^#c:is_/, '').replaceAll('_', ' ');
+	return p === 'underground' ? 'caves' : p === 'mushroom' ? 'mushroom fields' : /s$/.test(p) ? p : `${p}s`;
+};
+const main = worldgen.filter((w) => !w.extra);
+const temp = (w: any) =>
+	w.minTemperature != null && w.maxTemperature != null
+		? `temperature ${w.minTemperature} to ${w.maxTemperature}`
+		: w.minTemperature != null
+			? `temperature ${w.minTemperature} or warmer`
+			: w.maxTemperature != null
+				? `temperature ${w.maxTemperature} or colder`
+				: '';
+const rows = main.map((w) => ({
+	w,
+	extra: worldgen.find((x) => x.name === `${w.name}_extra`),
+	denied: w.deniedTags.filter((t: string) => !t.includes('vineandbarrel:')),
+}));
+---
+<div class="fd-table-wrap not-content">
+	<table>
+		<thead><tr><th>Wild crop</th><th>Grows in</th><th>Drops</th></tr></thead>
+		<tbody>
+			{rows.map(({ w, extra, denied }) => (
+				<tr>
+					<td><Item id={w.crop} /></td>
+					<td>
+						{list(w.allowedTags.map(tagName))}{temp(w) ? ` (${temp(w)})` : ''}
+						{denied.length > 0 && <span class="soft">; never in {list(denied.map(tagName))}</span>}
+						{extra && extra.optional.length > 0 && <span class="soft">. With Biomes O&apos; Plenty also: {list(extra.optional.map((b: any) => b.name))}</span>}
+					</td>
+					<td>
+						{rules.wildDrops[w.crop].map((d: any, i: number) => (
+							<>{i > 0 && <br />}<Item id={d.id} />{d.chance < 1 ? ` (${pct(d.chance)} chance)` : ''}{d.fortune ? ', more with Fortune' : ''}</>
+						))}
+					</td>
+				</tr>
+			))}
+		</tbody>
+	</table>
+</div>
+<style>
+	.fd-table-wrap {
+		overflow-x: auto;
+		margin: 1rem 0;
+	}
+	table {
+		border-collapse: collapse;
+		width: 100%;
+		font-size: 20px;
+	}
+	th {
+		text-align: left;
+		color: var(--fd-heading-ink);
+		font-weight: 400;
+		border-bottom: 2px solid var(--fd-rule);
+		padding: 4px 10px;
+	}
+	td {
+		padding: 6px 10px;
+		border-bottom: 1px solid var(--fd-border);
+		vertical-align: top;
+	}
+	.soft {
+		color: var(--sl-color-gray-3);
+	}
+</style>

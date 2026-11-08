@@ -1,0 +1,38 @@
+{
+	"minecraft:chicken_food": [
+		"vineandbarrel:barley_seeds"
+	],
+	"minecraft:cow_food": [
+		"vineandbarrel:barley"
+	],
+	"minecraft:sheep_food": [
+		"vineandbarrel:barley"
+	],
+	"minecraft:goat_food": [
+		"vineandbarrel:barley"
+	],
+	"minecraft:horse_food": [
+		"vineandbarrel:barley",
+		"vineandbarrel:barley_bale"
+	],
+	"minecraft:llama_food": [
+		"vineandbarrel:barley",
+		"vineandbarrel:barley_bale"
+	],
+	"minecraft:parrot_food": [
+		"vineandbarrel:barley_seeds"
+	],
+	"minecraft:fox_food": [
+		"vineandbarrel:red_grapes"
+	],
+	"minecraft:villager_plantable_seeds": [
+		"vineandbarrel:barley_seeds"
+	],
+	"minecraft:bee_growables": [
+		"vineandbarrel:barley",
+		"vineandbarrel:grape_bush",
+		"vineandbarrel:grape_vine_on_rope",
+		"vineandbarrel:hop_bush",
+		"vineandbarrel:hop_vine_on_rope"
+	]
+}

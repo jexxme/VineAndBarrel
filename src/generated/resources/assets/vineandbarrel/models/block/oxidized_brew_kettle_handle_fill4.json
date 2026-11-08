@@ -1,0 +1,11 @@
+{
+  "parent": "vineandbarrel:block/template_brew_kettle_handle_fill4",
+  "textures": {
+    "bottom": "vineandbarrel:block/oxidized_brew_kettle_bottom",
+    "brew": "vineandbarrel:block/brew_liquid",
+    "handle": "vineandbarrel:block/brew_kettle_handle",
+    "inside": "vineandbarrel:block/oxidized_brew_kettle_bottom",
+    "side": "vineandbarrel:block/oxidized_brew_kettle_side",
+    "top": "vineandbarrel:block/oxidized_brew_kettle_top"
+  }
+}

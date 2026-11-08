@@ -1,0 +1,75 @@
+---
+// Every drink, generated from the mod: base, vessel, buff and how long it lasts, young and aged side by side.
+import Slot from '../mc/Slot.astro';
+import Item from '../mc/Item.astro';
+import EffectBadge from './EffectBadge.astro';
+import { drinks } from '../../lib/data';
+interface Props {
+	fd?: boolean;
+}
+const { fd = false } = Astro.props;
+const rows = drinks.filter((d) => d.stage === 'young' && d.fdOnly === fd).map((y) => ({ young: y, aged: drinks.find((d) => d.aging === y.aging && d.stage === 'aged')! }));
+---
+<div class="fd-table-wrap not-content">
+	<table>
+		<thead>
+			<tr><th>From</th><th>Drink, young and aged</th><th>Buff</th></tr>
+		</thead>
+		<tbody>
+			{rows.map(({ young, aged }) => (
+				<tr id={young.id.split(':')[1].replaceAll('_', '-')}>
+					<td><Item id={young.base} /><br /><span class="soft">in a </span><Item id={young.vessel} /></td>
+					<td>
+						{[young, aged].map((d) => (
+							<span class="cell"><Slot id={d.id} /><span>{d.name}</span></span>
+						))}
+					</td>
+					<td>
+						{[young, aged].map((d) => (
+							<span class="cell buff"><EffectBadge id={d.effect.id} name={d.effect.name} ticks={d.effect.duration} amplifier={d.effect.amplifier} /></span>
+						))}
+					</td>
+				</tr>
+			))}
+		</tbody>
+	</table>
+</div>
+<style>
+	.fd-table-wrap {
+		overflow-x: auto;
+		margin: 1rem 0;
+	}
+	table {
+		border-collapse: collapse;
+		width: 100%;
+		font-size: 20px;
+	}
+	th {
+		text-align: left;
+		color: var(--fd-heading-ink);
+		font-weight: 400;
+		border-bottom: 2px solid var(--fd-rule);
+		padding: 4px 10px;
+		white-space: nowrap;
+	}
+	td {
+		padding: 6px 10px;
+		border-bottom: 1px solid var(--fd-border);
+		vertical-align: middle;
+	}
+	.cell {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		white-space: nowrap;
+	}
+	.cell + .cell {
+		margin-top: 4px;
+	}
+	.buff {
+		height: 36px;
+	}
+	.soft {
+		color: var(--sl-color-gray-3);
+	}
+</style>

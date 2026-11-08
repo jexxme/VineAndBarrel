@@ -1,0 +1,37 @@
+---
+// The catalog: every Vine & Barrel item and block, filterable by name, category and properties.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Catalog from '../../components/islands/Catalog.tsx';
+import { itemList, iconOf, CATEGORIES, url, meta } from '../../lib/data';
+
+const rows = itemList.map((i) => ({
+	id: i.id,
+	slug: i.slug,
+	name: i.name,
+	category: i.category,
+	icon: iconOf(i.id)?.src ?? '',
+	flat: iconOf(i.id)?.flat ?? true,
+	nutrition: i.food?.nutrition ?? null,
+	saturation: i.food?.saturation ?? null,
+	effects: i.consumable?.effects.map((e) => e.name) ?? [],
+	block: !!i.block && i.block.split(':')[1] === i.id.split(':')[1],
+	stack: i.stack,
+	tags: i.tags as string[],
+}));
+const cats = Object.entries(CATEGORIES)
+	.filter(([k]) => rows.some((r) => r.category === k))
+	.map(([k, v]) => ({ key: k, label: v.label, blurb: v.blurb, count: rows.filter((r) => r.category === k).length }));
+---
+<StarlightPage
+	frontmatter={{
+		title: 'All items & blocks',
+		description: `Every one of the ${meta.counts.items} items and blocks in Vine & Barrel, with filters by category, food and block.`,
+		tableOfContents: false,
+	}}
+>
+	<p>
+		All {rows.length} items in Vine &amp; Barrel {meta.modVersion}. Hover an item for its id, click it for its full page:
+		recipes, uses, where to find it, and every stat. Type to filter, or press <kbd>/</kbd> to search the whole site.
+	</p>
+	<Catalog client:load rows={rows} cats={cats} base={url('/items/')} />
+</StarlightPage>

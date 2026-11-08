@@ -1,0 +1,56 @@
+---
+title: Getting started
+description: From the first wild grape to your first glass of aged red wine, step by step.
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Item from '../../components/mc/Item.astro';
+import Render from '../../components/mc/Render.astro';
+import Recipe from '../../components/recipes/Recipe.astro';
+import Shot from '../../components/mc/Shot.astro';
+import { rules, recipe, days, seconds, meta } from '../../lib/data';
+
+export const juice = recipe('brewing/grape_juice');
+export const wine = recipe('aging/red_wine');
+
+<Shot src="hero.jpg" caption="A Vine & Barrel homestead: the tavern with its barrel cellar and pergolas, a vineyard, hops on trellis poles and a barley field." />
+
+Vine & Barrel adds one loop: **grow → brew → age → serve**. You need two blocks for it, the
+<Item id="brew_kettle" /> and the <Item id="aging_barrel" />, and something to drink from: a <Item id="wine_glass" /> or a <Item id="mug" />.
+
+<Render name="scenes/garden" float="right" size={256} alt="Grape and hop bushes next to a barley field" />
+
+<Steps>
+
+1. **Find seeds.** Wild grapes, hops and barley grow out in the world: grapes in warm forests and plains, hops in forests and
+   along rivers, barley on plains and savannas. Village farmers and the wandering trader sell them too, and village
+   chests often hold a few. See [Crops](/crops/).
+
+2. **Plant and harvest.** Plant <Item id="red_grapes" plural /> or <Item id="hops" /> like sweet berries and pick them with
+   a right-click once ripe. Sow <Item id="barley_seeds" /> on farmland like wheat.
+
+3. **Build a kettle and heat it.** Put the <Item id="brew_kettle" /> on a campfire, fire, lava, a magma block or a lava
+   cauldron. With Farmer's Delight, its stove works too.
+
+4. **Brew.** Put the ingredients in and wait {seconds(juice.brewingTime)}. Then fill a glass bottle (1 serving) or a bucket
+   (all {juice.servings}). See [Brew Kettle](/brew-kettle/).
+
+   <Recipe id="brewing/grape_juice" />
+
+5. **Pour it into a barrel.** Right-click an <Item id="aging_barrel" /> with the bucket or bottles. It holds
+   {rules.barrelCapacity} servings. After **{days(wine.fermentingTime)}** it has fermented into <Item id="red_wine" />, and after
+   **{days(wine.agingTime)}** more, whatever is left becomes <Item id="aged_red_wine" />. See [Aging Barrel](/aging-barrel/).
+
+6. **Tap and share.** Right-click the barrel with an empty <Item id="wine_glass" /> (wine) or <Item id="mug" /> (beer) to
+   tap one serving. Drink it at the same time as a friend for a **Cheers!**, and mind the [Tipsy](/tipsy/) effect.
+
+</Steps>
+
+<Aside title="Don't want to wait four days?">
+Find a village tavern. Its barrels are already filled with drinks to tap, one of them aged. See [Villages & taverns](/villages/).
+</Aside>
+
+## Crafting the basics
+
+<Recipe id="brew_kettle" /> <Recipe id="aging_barrel" />
+
+<Recipe id="wine_glass" /> <Recipe id="mug" />

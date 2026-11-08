@@ -1,0 +1,863 @@
+/*
+ * Farmer's Delight / Minecraft look, taken from the mod's logo (branding/make_branding.py):
+ * oak-plank wood, checkered canvas-sign paper with a dark brown frame, the orange "Neoforged" sign,
+ * opaque 1-pixel drop shadows, and pixel lettering (FD Pixel, scripts/make-font.mjs).
+ * FD Pixel is drawn on a 10 px em: text sizes are multiples of 10 px so every font pixel lands on whole screen pixels.
+ */
+@font-face {
+	font-family: 'FD Pixel';
+	src: url('../assets/fonts/fd-pixel.otf') format('opentype');
+	font-display: block;
+}
+
+:root {
+	--fd-px: 2px; /* one font pixel at body size */
+	--sl-font: 'FD Pixel', ui-monospace, monospace;
+	--sl-font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+	--fd-font-display: 'FD Pixel', ui-monospace, monospace;
+	--fd-font-mono: 'FD Pixel', ui-monospace, monospace;
+	--fd-font-pixel: 'FD Pixel', ui-monospace, monospace;
+
+	--sl-text-2xs: 20px;
+	--sl-text-xs: 20px;
+	--sl-text-sm: 20px;
+	--sl-text-base: 20px;
+	--sl-text-lg: 20px;
+	--sl-text-xl: 30px;
+	--sl-text-2xl: 30px;
+	--sl-text-3xl: 40px;
+	--sl-text-4xl: 40px;
+	--sl-text-5xl: 50px;
+	--sl-text-6xl: 60px;
+	--sl-text-body: 20px;
+	--sl-text-body-sm: 20px;
+	--sl-text-code: 15px;
+	--sl-text-code-sm: 14px;
+	--sl-text-h1: 40px;
+	--sl-text-h2: 30px;
+	--sl-text-h3: 20px;
+	--sl-text-h4: 20px;
+	--sl-text-h5: 20px;
+	--sl-line-height: 1.5;
+	--sl-line-height-headings: 1.5;
+	--sl-nav-height: 5.5rem;
+	--sl-sidebar-width: 20rem;
+	--sl-content-width: 52rem;
+
+	/* Sign palette (the logo's "Farmer's Delight" sign) */
+	--fd-paper: #d4bea4;
+	--fd-paper-2: #ceb597;
+	--fd-paper-edge: #c3a888;
+	--fd-frame-light: #b18e65;
+	--fd-frame: #483015;
+	--fd-ink: #553a1f;
+	--fd-ink-soft: #785836;
+	/* Orange "Neoforged" sign */
+	/* Vine & Barrel: FDN's orange sign is a wine-red sign here (same texture, scripts/make-ui.mjs) */
+	--fd-orange-paper: #b0303f;
+	--fd-orange-edge: #8e1a2e;
+	--fd-orange: #cf4259;
+	--fd-orange-frame: #2e0710;
+	--fd-orange-ink: #fff0f2;
+	--fd-orange-text: #f27e8e;
+
+	--fd-shadow: 4px 4px 0 #000;
+	--fd-hero-glow: none;
+	--fd-green-low: transparent;
+	--fd-gold-low: transparent;
+}
+
+/* Dark: a wine cellar, lit by the kettle's copper (FDN's cabinet browns, shifted toward wine) */
+:root,
+:root[data-theme='dark'] {
+	--sl-color-accent-low: #4e1622;
+	--sl-color-accent: #f0a066;
+	--sl-color-accent-high: #ffd2a0;
+	--sl-color-white: #f3e6d2;
+	--sl-color-gray-1: #eadbc4;
+	--sl-color-gray-2: #d4bea4;
+	--sl-color-gray-3: #b39a7b;
+	--sl-color-gray-4: #85694a;
+	--sl-color-gray-5: #5c3a2e;
+	--sl-color-gray-6: #3a2219;
+	--sl-color-gray-7: #2b1812;
+	--sl-color-black: #21120f;
+	--sl-color-text-accent: #f0a066;
+	--sl-color-bg-nav: #3a2219;
+	--sl-color-bg-sidebar: #1a0d0b;
+	--sl-color-hairline: #4a2a20;
+	--sl-color-hairline-light: #5c3a2e;
+	--sl-color-hairline-shade: #000;
+
+	--fd-green: #9ccf5e;
+	--fd-gold: #ffcf4d;
+	--fd-surface: #2b1812;
+	--fd-surface-2: #331d15;
+	--fd-border: #5c3a2e;
+	--fd-rule: #b18e65;
+	--fd-heading-ink: #f3e6d2;
+}
+
+/* Light: canvas-sign paper */
+:root[data-theme='light'] {
+	--sl-color-accent-low: #f2ba84;
+	--sl-color-accent: #8e1a2e;
+	--sl-color-accent-high: #4a1d07;
+	--sl-color-white: #2a1a0b;
+	--sl-color-gray-1: #3b2712;
+	--sl-color-gray-2: #553a1f;
+	--sl-color-gray-3: #6e5032;
+	--sl-color-gray-4: #8c6c4a;
+	--sl-color-gray-5: #b18e65;
+	--sl-color-gray-6: #c3a888;
+	--sl-color-gray-7: #ceb597;
+	--sl-color-black: #d4bea4;
+	--sl-color-text-accent: #8e1a2e;
+	--sl-color-bg-nav: #3a2816;
+	--sl-color-bg-sidebar: #c3a888;
+	--sl-color-hairline: #b18e65;
+	--sl-color-hairline-light: #c3a888;
+	--sl-color-hairline-shade: #483015;
+
+	--fd-green: #3d6b1c;
+	--fd-gold: #8a5a00;
+	--fd-surface: #ceb597;
+	--fd-surface-2: #c3a888;
+	--fd-border: #b18e65;
+	--fd-rule: #483015;
+	--fd-heading-ink: #483015;
+}
+
+html {
+	-webkit-font-smoothing: none;
+}
+body {
+	background: var(--sl-color-black);
+	color: var(--sl-color-gray-2);
+	font-kerning: none;
+}
+:root[data-theme='light'] body {
+	color: var(--fd-ink);
+}
+
+/* ---------------------------------------------------------------- header: the side of an Aging Barrel */
+/* Vine & Barrel: the barrel's own staves, one texture tall, so its two iron hoops run along the top and bottom edge */
+header.header {
+	background: #835d31 url('../assets/ui/barrel-staves.png') 0 50% / var(--sl-nav-height) var(--sl-nav-height) repeat-x;
+	image-rendering: pixelated;
+	border-bottom: 0;
+	box-shadow: 0 4px 0 #2a2a31, 0 7px 0 #000;
+}
+.site-title img {
+	image-rendering: pixelated;
+	height: 68px !important;
+	width: auto !important;
+	max-width: none;
+}
+/* Phones: a little smaller so the search and menu buttons fit beside it */
+@media (max-width: 30rem) {
+	.site-title img {
+		height: 54px !important;
+	}
+}
+/* Search box and theme picker as Minecraft text fields */
+site-search > button,
+starlight-theme-select select {
+	background-color: #000 !important;
+	border: 2px solid #a0a0a0 !important;
+	border-radius: 0 !important;
+	color: #e0e0e0 !important;
+	font-family: var(--sl-font);
+	font-size: 20px;
+	box-shadow: none !important;
+}
+site-search > button:hover {
+	border-color: #fff !important;
+}
+site-search kbd {
+	background: none !important;
+	border: 0 !important;
+	color: #a0a0a0 !important;
+	font-family: var(--sl-font);
+}
+header .social-icons a {
+	color: #fff;
+	filter: drop-shadow(2px 2px 0 #000);
+}
+header starlight-theme-select svg {
+	color: #e0e0e0;
+}
+/* Search sits with the other controls on the right (as the creative search field does), not at the sidebar edge */
+header .header > :nth-child(2) {
+	justify-content: flex-end;
+}
+@media (min-width: 50rem) {
+	site-search > button {
+		width: 20rem;
+	}
+}
+/* Same height as the search field; a GitHub icon you can actually see */
+starlight-theme-select select {
+	height: 40px;
+	padding-block: 0 !important;
+}
+/* Search, GitHub and theme read as one toolbar: three black text-field boxes, same height, same gaps */
+@media (min-width: 50rem) {
+	header .header {
+		column-gap: 8px;
+	}
+	header .right-group {
+		gap: 8px;
+	}
+	header .social-icons::after {
+		display: none;
+	}
+}
+/* GitHub as a square box like the theme button (header and the phone menu) */
+.social-icons a {
+	width: 40px;
+	height: 40px;
+	padding: 0 !important;
+	margin: 0 !important;
+	display: grid !important;
+	place-items: center;
+	background: #000;
+	border: 2px solid #a0a0a0;
+	color: #fff !important;
+	filter: none !important;
+}
+.social-icons a:hover {
+	border-color: #fff;
+}
+header .social-icons svg {
+	width: 24px;
+	height: 24px;
+}
+
+/* The phone menu button: the same square black box as search, GitHub and theme */
+.sl-menu-button {
+	width: 40px !important;
+	height: 40px !important;
+	display: grid !important;
+	place-items: center;
+	padding: 0 !important;
+	background: #000 !important;
+	border: 2px solid #a0a0a0 !important;
+	border-radius: 0 !important;
+	color: #fff !important;
+	box-shadow: none !important;
+}
+.sl-menu-button {
+	/* vertically centred in the header, level with the search box */
+	top: calc((var(--sl-nav-height) - 40px) / 2) !important;
+}
+@media (max-width: 50rem) {
+	site-search > button {
+		width: 40px;
+		height: 40px;
+		justify-content: center;
+	}
+}
+.sl-menu-button:hover,
+.sl-menu-button[aria-expanded='true'] {
+	border-color: #fff !important;
+}
+.sl-menu-button svg {
+	width: 24px;
+	height: 24px;
+}
+
+/* Opening search hides the page scrollbar; keep its space so the page doesn't jump sideways */
+html {
+	scrollbar-gutter: stable;
+}
+
+/* ---------------------------------------------------------------- search dialog, like the creative "Search Items" tab */
+#starlight__search .pagefind-ui__result-inner > .pagefind-ui__result-title {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+#starlight__search .fd-search-icon {
+	width: 32px;
+	height: 32px;
+	flex: none;
+	image-rendering: pixelated;
+}
+/* The sub-result that only repeats the page title: keep its text, drop the repeated name */
+#starlight__search .fd-dup .pagefind-ui__result-link {
+	font-size: 0;
+	line-height: 0;
+}
+#starlight__search .fd-dup .pagefind-ui__result-title {
+	height: 0;
+	line-height: 0;
+}
+site-search dialog {
+	background: #c6c6c6 !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: inset 4px 4px 0 #fff, inset -4px -4px 0 #555, 0 0 0 4px #000, 8px 8px 0 4px #000 !important;
+}
+@media (min-width: 50rem) {
+	site-search dialog {
+		min-height: 0 !important;
+	}
+}
+site-search button[data-close-modal] {
+	color: #404040;
+}
+#starlight__search {
+	--pagefind-ui-primary: #404040;
+	--pagefind-ui-text: #404040;
+	--pagefind-ui-font: var(--sl-font);
+	--pagefind-ui-border-radius: 0;
+	--sl-search-result-pad-inline-start: 16px;
+	--sl-search-corners: 0;
+}
+#starlight__search .pagefind-ui__search-input {
+	background: #000;
+	border: 2px solid #a0a0a0;
+	border-radius: 0;
+	color: #e0e0e0;
+	font-size: 20px;
+}
+#starlight__search .pagefind-ui__search-input:focus {
+	border-color: #fff;
+}
+#starlight__search .pagefind-ui__search-input::placeholder {
+	color: #a0a0a0;
+	opacity: 1; /* Pagefind dims it to 0.2 */
+}
+#starlight__search .pagefind-ui__form::before {
+	background-color: #e0e0e0;
+}
+#starlight__search .pagefind-ui__search-clear::before {
+	background-color: #e0e0e0;
+}
+/* Empty dialog: say what you can search for instead of a blank panel */
+#starlight__search .pagefind-ui__form:not(:has(.pagefind-ui__results-area))::after {
+	content: 'Search every page. Try "red wine", "kettle" or "tipsy".';
+	display: block;
+	margin-top: 20px;
+	color: #404040;
+	font-size: 20px;
+	line-height: 30px;
+}
+#starlight__search .pagefind-ui__message {
+	color: #404040;
+	font-size: 20px;
+}
+/* The pixel font is only crisp at multiples of 10 px; Pagefind's own sizes (18 px and smaller) blur it */
+#starlight__search .pagefind-ui__result-title,
+#starlight__search .pagefind-ui__result-link {
+	font-size: 20px;
+	line-height: 30px;
+}
+/* Results as slot-grey cards with Minecraft's white GUI text */
+#starlight__search .pagefind-ui__result-inner > .pagefind-ui__result-title::before,
+#starlight__search .pagefind-ui__result-nested::before {
+	display: none;
+}
+#starlight__search .pagefind-ui__result {
+	background: #8b8b8b;
+	box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff;
+	padding: 2px;
+}
+#starlight__search .pagefind-ui__result-inner > * {
+	background: transparent;
+}
+#starlight__search .pagefind-ui__result-nested {
+	border-top: 2px solid #6f6f6f;
+	padding-inline-start: 32px;
+}
+#starlight__search .pagefind-ui__result-link {
+	--pagefind-ui-text: #fff;
+	color: #fff;
+	font-weight: 400;
+	text-shadow: 2px 2px 0 #3f3f3f;
+}
+#starlight__search .pagefind-ui__result-inner > .pagefind-ui__result-title:hover .pagefind-ui__result-link,
+#starlight__search .pagefind-ui__result-nested:hover .pagefind-ui__result-link {
+	color: #ffffa0;
+}
+#starlight__search .pagefind-ui__result-inner > .pagefind-ui__result-title:hover,
+#starlight__search .pagefind-ui__result-nested:hover {
+	background: #9d9d9d;
+}
+#starlight__search .pagefind-ui__result-excerpt {
+	color: #e0e0e0;
+	font-size: 20px;
+	line-height: 30px;
+	text-shadow: 2px 2px 0 #3f3f3f;
+}
+#starlight__search mark {
+	color: #ffff55;
+	background: none;
+	font-weight: 400;
+}
+
+/* ---------------------------------------------------------------- sidebar */
+.sidebar-pane {
+	background: var(--sl-color-bg-sidebar);
+	border-inline-end: 5px solid #000 !important;
+}
+.sidebar-content a {
+	border-radius: 0 !important;
+}
+.sidebar-content a[aria-current='page'],
+.sidebar-content a[aria-current='page']:hover {
+	background: var(--fd-orange-paper) !important;
+	color: var(--fd-orange-ink) !important;
+	box-shadow: inset 0 0 0 2px var(--fd-orange-frame);
+}
+.sidebar-content summary .group-label span {
+	color: var(--fd-orange-text);
+}
+:root[data-theme='light'] .sidebar-content summary .group-label span {
+	color: var(--fd-orange-frame);
+}
+.sidebar-content .large {
+	font-size: 20px !important;
+}
+
+/* ---------------------------------------------------------------- headings */
+h1#_top {
+	display: inline-block;
+	font-family: var(--fd-font-display);
+	font-weight: 400;
+	font-size: 40px;
+	line-height: 1.25;
+	color: #483015;
+	padding: 6px 20px 2px;
+	border-style: solid;
+	border-width: 8px 12px 12px 8px;
+	border-image: url('../assets/ui/sign.png') 2 3 3 2 fill / 8px 12px 12px 8px repeat;
+	image-rendering: pixelated;
+	max-width: 100%;
+}
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
+	font-family: var(--fd-font-display);
+	font-weight: 400;
+	letter-spacing: 0;
+	color: var(--fd-heading-ink);
+}
+.sl-markdown-content h2:not(:where(.not-content *)) {
+	display: inline-block;
+	font-size: 30px;
+	line-height: 1.4;
+	margin: 0;
+	padding: 4px 14px 0;
+	color: var(--fd-orange-ink);
+	border-style: solid;
+	border-width: 6px 9px 9px 6px;
+	border-image: url('../assets/ui/sign-orange.png') 2 3 3 2 fill / 6px 9px 9px 6px repeat;
+	image-rendering: pixelated;
+}
+.sl-markdown-content h3:not(:where(.not-content *)) {
+	font-size: 20px;
+	margin: 0;
+	color: var(--sl-color-text-accent);
+	text-shadow: 2px 0 0 currentColor;
+	letter-spacing: 2px;
+}
+.sl-markdown-content h4:not(:where(.not-content *)) {
+	font-size: 20px;
+	color: var(--sl-color-gray-3);
+}
+
+/* Bold the Minecraft way: the glyph drawn twice, one font pixel apart */
+strong,
+b {
+	font-weight: 400;
+	text-shadow: var(--fd-px) 0 0 currentColor;
+	letter-spacing: var(--fd-px);
+}
+
+/* Links */
+.sl-markdown-content a:not(:where(.not-content *)) {
+	color: var(--sl-color-text-accent);
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 4px;
+}
+.sl-markdown-content a:not(:where(.not-content *)):hover {
+	color: var(--sl-color-white);
+}
+
+/* Body text */
+.sl-markdown-content {
+	font-size: 20px;
+	line-height: 30px;
+}
+.sl-markdown-content code:not(pre code) {
+	font-family: var(--sl-font);
+	font-size: 20px;
+	background: var(--fd-surface-2);
+	color: var(--sl-color-white);
+	padding: 0 4px;
+	border-radius: 0;
+	border: 0;
+}
+
+/* Tables: a framed board with a dark header row */
+.sl-markdown-content table:not(:where(.not-content *)) {
+	display: table;
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 20px;
+	border: 3px solid var(--fd-frame);
+	box-shadow: 4px 4px 0 #000;
+	background: var(--fd-surface);
+}
+.sl-markdown-content :is(th, td):not(:where(.not-content *)) {
+	border: 0;
+	border-bottom: 2px solid var(--fd-border);
+	padding: 6px 12px;
+	background: none;
+	line-height: 30px;
+}
+.sl-markdown-content th:not(:where(.not-content *)) {
+	background: var(--fd-frame);
+	color: var(--fd-paper);
+	font-weight: 400;
+	text-align: left;
+	border-bottom: 3px solid #000;
+}
+@media (max-width: 50rem) {
+	.sl-markdown-content table:not(:where(.not-content *)) {
+		display: block;
+		overflow-x: auto;
+	}
+}
+
+/* Asides: signs. Notes on canvas, cautions on the orange sign */
+.starlight-aside {
+	border-radius: 0;
+	padding: 12px 18px 8px;
+	color: #483015;
+	border-style: solid !important;
+	border-width: 8px 12px 12px 8px !important;
+	border-image: url('../assets/ui/sign.png') 2 3 3 2 fill / 8px 12px 12px 8px repeat !important;
+	image-rendering: pixelated;
+	background: none !important;
+}
+.starlight-aside--caution,
+.starlight-aside--danger {
+	border-image-source: url('../assets/ui/sign-orange.png') !important;
+	color: #682c10;
+}
+.starlight-aside a,
+.starlight-aside code {
+	color: #6e3214 !important;
+}
+.starlight-aside code {
+	background: rgb(0 0 0 / 0.08) !important;
+}
+.starlight-aside__title {
+	font-family: var(--sl-font);
+	font-size: 20px;
+	color: #483015 !important;
+	text-shadow: 2px 0 0 currentColor;
+	letter-spacing: 2px;
+}
+.starlight-aside__icon {
+	display: none;
+}
+
+/* Starlight steps: square markers */
+.sl-steps > li::before {
+	border-radius: 0 !important;
+	font-family: var(--sl-font);
+	background: var(--fd-orange-paper) !important;
+	color: var(--fd-orange-ink) !important;
+	box-shadow: inset 0 0 0 2px var(--fd-orange-frame), 3px 3px 0 #000 !important;
+	border: 0 !important;
+}
+.sl-steps > li::after {
+	border-radius: 0 !important;
+	background: var(--fd-border) !important;
+	width: 4px !important;
+}
+
+/* Square everything Starlight draws */
+.sl-markdown-content :is(pre, .expressive-code .frame, figure),
+.card,
+.sl-link-card,
+.pagination-links a,
+starlight-tabs [role='tab'] {
+	border-radius: 0 !important;
+}
+.pagination-links a {
+	border: 3px solid var(--fd-frame) !important;
+	box-shadow: 4px 4px 0 #000 !important;
+	background: var(--fd-surface) !important;
+}
+#starlight__on-this-page {
+	font-family: var(--sl-font);
+	font-size: 20px !important;
+	color: var(--sl-color-white);
+}
+
+/* Minecraft button (vanilla widget sprite, 9-slice) */
+.mc-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 40px;
+	padding: 4px 24px 6px;
+	border-style: solid;
+	border-width: 6px;
+	border-image: url('../assets/ui/button.png') 3 fill / 6px stretch;
+	image-rendering: pixelated;
+	color: #fff !important;
+	text-shadow: 2px 2px 0 #3f3f3f;
+	font-family: var(--sl-font);
+	font-size: 20px;
+	text-decoration: none !important;
+	line-height: 1;
+	white-space: nowrap;
+}
+.mc-button:hover,
+.mc-button:focus-visible {
+	border-image-source: url('../assets/ui/button-hover.png');
+	color: #ffffa0 !important;
+	outline: none;
+}
+
+/* Shared helpers used by components */
+.fd-kicker {
+	font-size: 20px;
+	color: var(--sl-color-gray-3);
+	margin: 0;
+}
+.fd-source {
+	font-size: 20px;
+	color: var(--sl-color-gray-3);
+}
+img.pixel,
+.pixel img {
+	image-rendering: pixelated;
+}
+.fd-val {
+	white-space: nowrap;
+}
+.fd-sign {
+	display: inline-block;
+	color: #483015;
+	padding: 6px 14px 2px;
+	border-style: solid;
+	border-width: 8px 12px 12px 8px;
+	border-image: url('../assets/ui/sign.png') 2 3 3 2 fill / 8px 12px 12px 8px repeat;
+	image-rendering: pixelated;
+}
+.fd-sign.orange {
+	color: #682c10;
+	border-image-source: url('../assets/ui/sign-orange.png');
+}
+.fd-board,
+.fd-card {
+	background: var(--fd-surface);
+	border: 3px solid var(--fd-frame);
+	border-radius: 0;
+	box-shadow: 4px 4px 0 #000;
+}
+
+/* Long source chips must not push tables past the content column */
+.sl-markdown-content :is(td, th) .fd-src {
+	white-space: normal;
+	word-break: break-all;
+}
+.sl-markdown-content table:not(:where(.not-content *)) {
+	max-width: 100%;
+}
+
+
+/* Scrollbars like the creative-inventory scroller: a grey bevelled thumb in a dark slot */
+/* Firefox (Chromium ignores ::-webkit-scrollbar once scrollbar-color is set, so only use it where those don't exist) */
+@supports not selector(::-webkit-scrollbar) {
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: #c6c6c6 #1a1109;
+	}
+	:root[data-theme='light'] * {
+		scrollbar-color: #8b8b8b #b18e65;
+	}
+}
+::-webkit-scrollbar {
+	width: 14px;
+	height: 14px;
+}
+::-webkit-scrollbar-track {
+	background: #1a1109;
+	box-shadow: inset 2px 2px 0 #000;
+}
+::-webkit-scrollbar-thumb {
+	background: #c6c6c6;
+	border: 2px solid #000;
+	box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #555;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: #d8d8d8;
+}
+::-webkit-scrollbar-corner {
+	background: #1a1109;
+}
+:root[data-theme='light'] ::-webkit-scrollbar-track {
+	background: #b18e65;
+	box-shadow: inset 2px 2px 0 #483015;
+}
+
+/* Heading rhythm: the sign sits on one line with its anchor link; even space above, a little below */
+.sl-markdown-content .sl-heading-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.sl-markdown-content .sl-heading-wrapper.level-h2 {
+	margin-top: 56px;
+	margin-bottom: 4px;
+}
+.sl-markdown-content .sl-heading-wrapper.level-h3 {
+	margin-top: 36px;
+}
+.sl-markdown-content .sl-heading-wrapper.level-h4 {
+	margin-top: 28px;
+}
+.sl-markdown-content .sl-heading-wrapper + * {
+	margin-top: 16px !important;
+}
+
+/* Wide tables scroll inside the column instead of running under the side panel; words never break mid-word */
+.sl-markdown-content table:not(:where(.not-content *)) {
+	display: block;
+	width: max-content;
+	max-width: 100%;
+	overflow-x: auto;
+}
+.sl-markdown-content td {
+	overflow-wrap: normal;
+	min-width: 4ch;
+}
+
+/* Headings written without Starlight's anchor wrapper (generated item pages) get the same rhythm */
+.sl-markdown-content > h2:not(:where(.not-content *)) {
+	margin-top: 56px;
+	margin-bottom: 4px;
+}
+.sl-markdown-content > h2 + * {
+	margin-top: 16px !important;
+}
+.sl-markdown-content > h3:not(:where(.not-content *)) {
+	margin-top: 36px;
+}
+
+/* ==================================================================================================
+ * Layout system (supersedes the heading and spacing rules above)
+ * Hierarchy: page title = canvas sign · section = plain 30px heading on a rule · sub-section = 20px accent.
+ * Rhythm on an 8px grid: blocks 20px apart, sections 64px, heading to text 12px, visuals 28px around.
+ * ================================================================================================== */
+.sl-markdown-content {
+	line-height: 28px;
+}
+.sl-markdown-content :is(p, li) {
+	line-height: 28px;
+}
+
+/* Section headings: no sign box, a full-width rule above instead */
+.sl-markdown-content h2:not(:where(.not-content *)) {
+	display: block;
+	width: 100%;
+	font-size: 30px;
+	line-height: 40px;
+	color: var(--fd-heading-ink);
+	padding: 16px 0 0;
+	border: 0;
+	border-top: 4px solid var(--fd-border);
+	border-image: none;
+	margin: 0;
+}
+.sl-markdown-content .sl-heading-wrapper.level-h2 {
+	margin-top: 64px;
+	margin-bottom: 0;
+}
+.sl-markdown-content > h2:not(:where(.not-content *)) {
+	margin-top: 64px;
+}
+.sl-markdown-content h3:not(:where(.not-content *)) {
+	font-size: 20px;
+	line-height: 28px;
+	color: var(--sl-color-text-accent);
+	text-shadow: 2px 0 0 currentColor;
+	letter-spacing: 2px;
+	margin: 0;
+}
+.sl-markdown-content .sl-heading-wrapper.level-h3 {
+	margin-top: 40px;
+}
+.sl-markdown-content .sl-heading-wrapper + *,
+.sl-markdown-content > :is(h2, h3) + * {
+	margin-top: 12px !important;
+}
+/* The anchor link only shows on hover, so it doesn't add noise next to every heading */
+.sl-markdown-content .sl-anchor-link {
+	opacity: 0;
+}
+.sl-markdown-content .sl-heading-wrapper:hover .sl-anchor-link,
+.sl-markdown-content .sl-anchor-link:focus-visible {
+	opacity: 1;
+}
+
+/* Visual blocks get room around them; text blocks stay close together */
+.sl-markdown-content > :is(figure, .fd-recipes, .fd-stages, .fd-shot, table, .not-content, astro-island, .expressive-code) {
+	margin-top: 28px !important;
+}
+.sl-markdown-content > :is(figure, .fd-recipes, .fd-stages, .fd-shot, table, .not-content, astro-island, .expressive-code) + :is(p, ul, ol) {
+	margin-top: 28px !important;
+}
+.sl-markdown-content > :is(p, ul, ol) + :is(p, ul, ol) {
+	margin-top: 16px;
+}
+.sl-markdown-content li + li {
+	margin-top: 6px;
+}
+
+/* Asides: compact */
+.starlight-aside {
+	margin-top: 28px !important;
+	padding: 8px 16px 6px;
+}
+.starlight-aside__content p {
+	line-height: 28px;
+}
+
+/* Sidebar: quieter, tighter */
+.sidebar-content ul ul {
+	margin-top: 2px;
+}
+.sidebar-content a {
+	padding-block: 1px !important;
+	line-height: 26px;
+}
+.sidebar-content summary {
+	padding-block: 4px !important;
+}
+.sidebar-content details + details,
+.sidebar-content li + li > details {
+	margin-top: 10px;
+}
+
+/* Right-hand "On this page": smaller weight than content */
+starlight-toc a,
+starlight-toc h2 {
+	line-height: 26px !important;
+}
+
+/* Long words (ids, commands, links) never widen the page on phones */
+.sl-markdown-content :is(p, li, dd, td, .starlight-aside, figcaption) {
+	overflow-wrap: anywhere;
+}
+.sl-markdown-content svg[viewBox] {
+	max-width: 100%;
+	height: auto;
+}

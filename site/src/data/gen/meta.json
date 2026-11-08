@@ -1,0 +1,16 @@
+{
+	"modVersion": "0.1.0",
+	"minecraft": "26.3",
+	"neoforge": "26.3.0.101",
+	"modId": "vineandbarrel",
+	"license": "MIT License",
+	"jei": "31.14.0.72",
+	"jade": "26.3.5+neoforge",
+	"counts": {
+		"items": 43,
+		"drinks": 12,
+		"brewing": 4,
+		"aging": 6,
+		"advancements": 10
+	}
+}
