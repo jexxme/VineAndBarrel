@@ -79,9 +79,13 @@ public final class VBBlocks
 	private VBBlocks() {
 	}
 
-	/** The sweet berry bush's properties (no collision, berry-bush sounds, popped by pistons). */
+	/**
+	 * The sweet berry bush's properties (no collision, berry-bush sounds), but pistons move it whole like its vines instead
+	 * of popping it, so a trellis in it is never lost under a piston head (pushed off its soil it breaks and leaves the
+	 * trellis).
+	 */
 	private static BlockBehaviour.Properties bush() {
-		return BlockBehaviour.Properties.ofFullCopy(Blocks.SWEET_BERRY_BUSH);
+		return BlockBehaviour.Properties.ofFullCopy(Blocks.SWEET_BERRY_BUSH).pushReaction(PushReaction.NORMAL);
 	}
 
 	/**

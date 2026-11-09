@@ -325,6 +325,29 @@ header .social-icons svg {
 	justify-content: flex-start !important;
 	column-gap: 8px !important;
 }
+/* Below Starlight's md breakpoint only (it starts at exactly 50rem, so "< 50rem", not max-width) */
+@media (width < 50rem) {
+	/* ...and always in view at the bottom of the open menu, not below the last link where nobody scrolls */
+	.sidebar-content > div:has(> .mobile-preferences) {
+		position: sticky;
+		bottom: 0;
+		z-index: 1;
+		margin-top: auto;
+		background: var(--vb-panel);
+		padding-bottom: env(safe-area-inset-bottom, 0px);
+	}
+	/* The start page has no menu: its language button sits in the header beside search (theme stays on the other pages) */
+	:root:not([data-has-sidebar]) header .right-group {
+		display: flex !important;
+		gap: 8px;
+	}
+	:root:not([data-has-sidebar]) header .right-group > :not(.fd-lang) {
+		display: none !important;
+	}
+	:root:not([data-has-sidebar]) header .header {
+		column-gap: 8px;
+	}
+}
 @media (max-width: 50rem) {
 	/* Phones only: from 50rem on, the sidebar is there and Starlight hides the button (it would float over the toolbar) */
 	.sl-menu-button {
@@ -986,7 +1009,15 @@ starlight-tabs [role='tab'] {
 	font-size: 20px;
 	text-decoration: none !important;
 	line-height: 1;
-	white-space: nowrap;
+	/* one line when it fits; a label longer than the room wraps inside the button instead of spilling over its border or
+	   pushing the page wider than the screen */
+	max-width: 100%;
+	text-align: center;
+}
+@media (max-width: 30rem) {
+	.mc-button {
+		line-height: 1.2;
+	}
 }
 .mc-button:hover,
 .mc-button:focus-visible {

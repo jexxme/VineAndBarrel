@@ -9,7 +9,7 @@ evidence that the mod works.
       workflow's full tier (a `ci/full/...` branch): it runs every box of this section (the quick tier is not enough
       for a release)
 - [ ] `./gradlew build`: compiles; Error Prone and the forbidden-pattern checks pass
-- [ ] `./gradlew runData` leaves `common/src/generated` unchanged (`src/generated` on the older branches)
+- [ ] `./gradlew runData` leaves `common/src/generated` unchanged
 - [ ] `./gradlew gameTestsAll`: every test passes on both loaders without Farmer's Delight, with it, and in the compat
       run, **and** the logs have no `ERROR` lines
 - [ ] `./gradlew :fabric:smokeAll`: the Fabric smoke tests
@@ -38,9 +38,8 @@ Fabric, a short one: the built jar with Fabric API and Farmer's Delight Refabric
 
 ## 3. Every Minecraft branch
 
-- [ ] Every change on `26.3` since the last release is ported to `26.2`, `26.1.2` and `26.1` with
-      `scripts/multiloader/backport.sh` (see CONTRIBUTING.md), and each branch's tests are green. Those branches stay
-      NeoForge only
+- [ ] Every change on `26.3` since the last release is cherry-picked to `26.2`, `26.1.2` and `26.1` (see
+      CONTRIBUTING.md), and each branch's full verify is green. Every branch releases both jars, NeoForge and Fabric
 
 ## 4. Publish
 
@@ -48,20 +47,20 @@ The release workflow (`.github/workflows/release.yml`) does the uploading. On ea
 
 - [ ] Bump `mod_version` in `gradle.properties` (`<version>+neoforged.<n>`, the same on every branch) and add the entry
       at the top of `changelog.md`: that section becomes the release notes
-- [ ] On `26.3` also bump `fabric_mod_version` (`<version>+fabric.<n>`): the same `<version>` before the `+` as
+- [ ] Also bump `fabric_mod_version` (`<version>+fabric.<n>`): the same `<version>` before the `+` as
       `mod_version`
 - [ ] `release_game_versions` lists exactly the Minecraft versions this jar runs on
-- [ ] Tag and push: `git tag <minecraft_version>-<mod_version>` (e.g. `26.3-0.9.0+neoforged.1`), then
-      `git push origin <tag>`. The workflow refuses a tag that doesn't match `gradle.properties` (on `26.3` it checks
-      both versions), builds and tests again, then publishes to GitHub, Modrinth and CurseForge. On `26.3` that is two
-      jars: `neoforge/build/libs/VineAndBarrel-26.3-0.9.0+neoforged.1.jar` and
-      `fabric/build/libs/VineAndBarrel-26.3-0.9.0+fabric.1.jar` (full releases on Modrinth and CurseForge, like the NeoForge jar), on the same projects
+- [ ] Tag and push: `git tag <minecraft_version>-<mod_version>` (e.g. `26.3-1.0.2+neoforged.1`), then
+      `git push origin <tag>`. The workflow refuses a tag that doesn't match `gradle.properties` (it checks both
+      versions), builds and tests again, then publishes to GitHub, Modrinth and CurseForge. That is two jars per
+      branch, e.g. `neoforge/build/libs/VineAndBarrel-26.3-1.0.2+neoforged.1.jar` and
+      `fabric/build/libs/VineAndBarrel-26.3-1.0.2+fabric.1.jar`, full releases on the same projects
 
 Names, so loader and version can't be mixed up: every release, version and file title reads loader first, as
-`Vine & Barrel <version> · <Loader> · Minecraft <minecraft_version>`, e.g. `Vine & Barrel 0.9.0 · NeoForge · Minecraft 26.3`
-and `Vine & Barrel 0.9.0 · Fabric · Minecraft 26.3`. Backport releases from `26.2`, `26.1.2` and `26.1` follow it too
-(`Vine & Barrel 0.9.0 · NeoForge · Minecraft 26.2`). The jar names stay as they are
-(`VineAndBarrel-26.3-0.9.0+neoforged.1.jar`, `VineAndBarrel-26.3-0.9.0+fabric.1.jar`). The workflow generates the rest:
+`Vine & Barrel <version> · <Loader> · Minecraft <minecraft_version>`, e.g. `Vine & Barrel 1.0.2 · NeoForge · Minecraft 26.3`
+and `Vine & Barrel 1.0.2 · Fabric · Minecraft 26.3`. Releases from `26.2`, `26.1.2` and `26.1` follow it too
+(`Vine & Barrel 1.0.2 · NeoForge · Minecraft 26.2`, and `Minecraft 26.1, 26.1.1` for the `26.1` branch). The jar names
+stay as they are (`VineAndBarrel-26.3-1.0.2+neoforged.1.jar`, `VineAndBarrel-26.3-1.0.2+fabric.1.jar`). The workflow generates the rest:
 the GitHub release body starts with a "Which file do I need?" table (Loader | Minecraft | File | Needs), and the first
 line of each Modrinth and CurseForge changelog names its loader.
 

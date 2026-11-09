@@ -120,6 +120,8 @@ All optional. They switch on by themselves.
 - **Serene Seasons** and **Biomes O' Plenty:** crop seasons, and wild crops in more biomes.
 - **Mod Menu** (Fabric): the settings screen.
 
+A few of them aren't out for every Minecraft version: the [wiki](https://jexxme.github.io/VineAndBarrel/compatibility/) shows where each one works.
+
 <p align="center" style="text-align:center"><img src="branding/store/h-settings.png" width="800" alt="Settings"></p>
 
 - **Non-alcoholic mode.** One server setting turns Tipsy off. The drinks keep their names and their buffs.
@@ -131,21 +133,32 @@ All optional. They switch on by themselves.
 
 <p align="center" style="text-align:center"><img src="branding/store/h-download.png" width="800" alt="Which file do I need?"></p>
 
-Pick the loader your game or modpack uses, NeoForge or Fabric. Put the same file on the server and in every player's `mods` folder.
+Find your Minecraft version and the loader your game or modpack uses, NeoForge or Fabric. Put the same file on the server and in every player's `mods` folder.
 
 | Minecraft | NeoForge | Fabric |
 |:--|:--|:--|
-| **26.3** | ✅ Vine & Barrel 1.0 | ✅ Vine & Barrel 1.0 |
+| **26.3** | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.0.2%2Bneoforged.1/VineAndBarrel-26.3-1.0.2%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.0.2%2Bneoforged.1/VineAndBarrel-26.3-1.0.2%2Bfabric.1.jar) |
+| **26.2** | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.0.2%2Bneoforged.1/VineAndBarrel-26.2-1.0.2%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.0.2%2Bneoforged.1/VineAndBarrel-26.2-1.0.2%2Bfabric.1.jar) |
+| **26.1.2** | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.0.2%2Bneoforged.1/VineAndBarrel-26.1.2-1.0.2%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.0.2%2Bneoforged.1/VineAndBarrel-26.1.2-1.0.2%2Bfabric.1.jar) |
+| **26.1 / 26.1.1** | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.0.2%2Bneoforged.1/VineAndBarrel-26.1.1-1.0.2%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.0.2%2Bneoforged.1/VineAndBarrel-26.1.1-1.0.2%2Bfabric.1.jar) |
 
-Older Minecraft versions (26.1–26.2, NeoForge): planned.
+Or pick from the full file list on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/vine-and-barrel/files).
 
-- **Minecraft 26.3** needs NeoForge 26.3.0.101 or newer, or Fabric Loader 0.20.1 and [Fabric API](https://modrinth.com/mod/fabric-api) 0.165.2 or newer.
-- The file name tells you the loader: `…+neoforged.1.jar` is NeoForge, `…+fabric.1.jar` is Fabric.
+Each file needs at least:
+
+| Minecraft | NeoForge | Fabric Loader | [Fabric API](https://modrinth.com/mod/fabric-api) |
+|:--|:--|:--|:--|
+| 26.3 | 26.3.0.101 | 0.20.1 | 0.165.2 |
+| 26.2 | 26.2.0.93 | 0.20.1 | 0.161.0 |
+| 26.1.2 | 26.1.2.126 | 0.20.1 | 0.155.3 |
+| 26.1 / 26.1.1 | 26.1.0.19-beta | 0.20.1 | 0.145.4 |
+
+The file name tells you the loader: `…+neoforged.1.jar` is NeoForge, `…+fabric.1.jar` is Fabric.
 
 <p align="center" style="text-align:center"><img src="branding/store/h-faq.png" width="800" alt="FAQ"></p>
 
 - **Do I need Farmer's Delight?** No. Vine & Barrel is a complete mod on its own.
-- **NeoForge or Fabric?** Both, with the same content, and both are full releases on Minecraft 26.3. NeoForge builds for older Minecraft versions are planned.
+- **NeoForge or Fabric?** Both, with the same content, on every Minecraft version from 26.1 to 26.3.
 - **Can I use it in my modpack?** Yes, go ahead. It's MIT licensed.
 - **Is this part of Farmer's Delight?** No. Farmer's Delight is vectorwing's mod. Vine & Barrel is a separate project made to sit next to it, and it isn't affiliated with or endorsed by vectorwing.
 - **Found a bug, or have an idea?** Open an issue on [GitHub](https://github.com/jexxme/VineAndBarrel/issues). The [wiki](https://jexxme.github.io/VineAndBarrel/) has every recipe and every number, in 12 languages.

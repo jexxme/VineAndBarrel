@@ -38,6 +38,19 @@ public enum VillageType
 		return Identifier.withDefaultNamespace("farm_" + name);
 	}
 
+	/**
+	 * {@code minecraft:zombie_<type>}, the processor list every piece of an abandoned (zombie) village of this type is placed
+	 * with, its farms included: vanilla gives it the same farm rules as {@link #farmProcessors()}.
+	 */
+	public Identifier zombieProcessors() {
+		return Identifier.withDefaultNamespace("zombie_" + name);
+	}
+
+	/** Both lists a farm of this village type can be placed with: a living village's and an abandoned one's. */
+	public java.util.List<Identifier> farmProcessorLists() {
+		return java.util.List.of(farmProcessors(), zombieProcessors());
+	}
+
 	/** The vanilla house chest of this village type. */
 	public ResourceKey<LootTable> vanillaHouseLoot() {
 		return vanillaHouseLoot;
