@@ -28,6 +28,7 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.GatherEffectScreenTooltipsEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RecipesReceivedEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
@@ -69,6 +70,11 @@ public final class NeoForgeClient
 		modBus.addListener(EntityRenderersEvent.RegisterRenderers.class, event -> registerAll(NeoForgeClientRegistrar.renderers(event)));
 
 		modBus.addListener(RegisterClientExtensionsEvent.class, NeoForgeClient::registerClientExtensions);
+		// Vines on fences, walls, chains and bars draw the block they hold under their leaves
+		modBus.addListener(ModelEvent.ModifyBakingResult.class, SupportedVineModel::wrap);
+		// Trellis rows draw their frame (end posts, top rail) from their neighbours
+		modBus.addListener(ModelEvent.RegisterStandalone.class, TrellisFrameModel::registerParts);
+		modBus.addListener(ModelEvent.ModifyBakingResult.class, TrellisFrameModel::wrap);
 		modBus.addListener(RegisterGuiLayersEvent.class, event -> {
 			event.registerAbove(VanillaGuiLayers.CAMERA_OVERLAYS, TipsyClient.VISION_LAYER, TipsyClient::renderVision);
 			event.registerAboveAll(BlackoutClient.LAYER, BlackoutClient::renderBlackout);

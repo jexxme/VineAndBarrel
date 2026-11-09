@@ -7,9 +7,15 @@
     "BeeGrowCropGoalMixin",
     "CampfireSignalSmokeMixin",
     "CampfireUnderKettleMixin",
+    "FenceBlockMixin",
+    "FenceGateBlockMixin",
     "HorseFoodMixin",
+    "IronBarsBlockMixin",
+    "LeadItemMixin",
+    "LeashFenceKnotEntityMixin",
     "SleepStatusMixin",
-    "ValidateNearbyPoiMixin"
+    "ValidateNearbyPoiMixin",
+    "WallBlockMixin"
   ],
   "client": [
     "CameraMixin"

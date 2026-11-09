@@ -256,6 +256,17 @@ public final class SmokeClient implements ClientModInitializer
 				return "no setting " + keyValue[0];
 			}, null, false));
 		}
+		// Trellis 2.0: vines on a fence and a wall keep those blocks (the client knows them, and draws them), a trellis row's frame
+		steps.add(new Step("vines_on_fences_walls_and_trellises", 60, mc -> command(mc, "vbsmoke vines"), mc -> {
+			BlockPos o = origin(mc);
+			StringBuilder problems = new StringBuilder();
+			for (BlockPos pos : new BlockPos[] {o.offset(SmokeCommands.VINE_FENCE), o.offset(SmokeCommands.VINE_WALL)}) {
+				if (!(mc.level.getBlockEntity(pos) instanceof jexxme.vineandbarrel.block.VineSupportBlockEntity vine) || vine.support() == null) {
+					problems.append("no vine on a support with its block on the client at ").append(pos).append("; ");
+				}
+			}
+			return problems.isEmpty() ? null : problems.toString();
+		}, "vines", false).polled());
 		steps.add(new Step("jade_on_the_kettle", 60, mc -> command(mc, "vbsmoke look kettle"),
 			mc -> FabricLoader.getInstance().isModLoaded("jade") ? null : "Jade is not loaded", "jade_kettle", true));
 		steps.add(new Step("jade_on_the_drinks", 60, mc -> command(mc, "vbsmoke look drinks"), null, "jade_drinks", true));

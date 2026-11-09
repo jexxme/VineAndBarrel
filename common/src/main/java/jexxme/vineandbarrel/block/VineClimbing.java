@@ -16,11 +16,12 @@ import java.util.Optional;
  * Climbing a support: our Trellis, or a Farmer's Delight rope. Adapted from FD's tomatoes ({@code TomatoBlock#climbRopeAbove},
  * {@code HangingTomatoBlock#placeRope}; Farmer's Delight by vectorwing, MIT, see NOTICE_farmersdelight.txt).
  * <p>
- * What counts as a support is the {@code #vineandbarrel:vine_supports} tag: the Trellis, plus {@code #farmersdelight:ropes}
+ * The full supports are the {@code #vineandbarrel:vine_supports} tag: the Trellis, plus {@code #farmersdelight:ropes}
  * as an optional entry. A rope grows the vine-on-rope block (which puts the rope back when it goes), the Trellis the
- * vine-on-trellis block (which puts the trellis back). Anything else added to the tag is ignored: a vine needs a block
- * of its own that draws and restores that support. There is no compile-time dependency on FD: without FD the rope tag is
- * empty and only the Trellis remains.
+ * vine-on-trellis block (which puts the trellis back). Anything else added to that tag is ignored: those vines draw
+ * their support themselves. Fences, walls, upright chains and bars ({@code #vineandbarrel:makeshift_vine_supports}, see
+ * {@link VineSupports}) grow the vine-on-support block, which keeps that exact block and puts it back. There is no
+ * compile-time dependency on FD: without FD the rope tag is empty.
  * <p>
  * The height limit holds however a vine got there: a vine taller than {@link #MAX_HEIGHT} (a piston pushed it onto
  * another plant) can't survive, drops its fruit and leaves its support.
@@ -59,14 +60,23 @@ public final class VineClimbing
 	/** True when there is a support directly above {@code pos} and the plant may still grow one block taller. */
 	public static boolean canClimb(LevelReader level, BlockPos pos, ClimbingCropBlock crop) {
 		BlockState above = level.getBlockState(pos.above());
-		return isSupport(above) && crop.vineOn(above) != null && heightAt(level, pos, crop) < MAX_HEIGHT;
+		return (isSupport(above) || VineSupports.isMakeshift(above)) && crop.vineOn(above) != null && heightAt(level, pos, crop) < MAX_HEIGHT;
 	}
 
-	/** Grows the vine onto the support above. The support is now inside the vine block (its model draws it). */
+	/**
+	 * Grows the vine onto the support above. The support is now inside the vine block: its model draws a rope or a trellis,
+	 * a vine on a fence, wall, chain or bars keeps that exact block in its block entity.
+	 */
 	public static void climb(Level level, BlockPos pos, ClimbingCropBlock crop) {
 		BlockPos above = pos.above();
-		BlockState vine = crop.vineOn(level.getBlockState(above));
-		if (vine != null) {
+		BlockState support = level.getBlockState(above);
+		BlockState vine = crop.vineOn(support);
+		if (vine == null) {
+			return;
+		}
+		if (vine.getBlock() instanceof VineOnSupportBlock) {
+			VineOnSupportBlock.place(level, above, vine, support, false);
+		} else {
 			level.setBlockAndUpdate(above, vine);
 		}
 	}

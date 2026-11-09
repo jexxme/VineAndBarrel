@@ -29,6 +29,12 @@ public final class VBTags
 	 * back). Anything else in the tag is ignored (see {@code VineClimbing}).
 	 */
 	public static final TagKey<Block> VINE_SUPPORTS = block(VineAndBarrel.MODID, "vine_supports");
+	/**
+	 * Blocks a grape or hop plant also climbs, with one fewer fruit per pick than on a trellis: fences, walls, chains
+	 * (standing upright) and bars, plus whatever a pack adds. The vine keeps the exact block inside and gives it back
+	 * (see {@code VineSupports}).
+	 */
+	public static final TagKey<Block> MAKESHIFT_VINE_SUPPORTS = block(VineAndBarrel.MODID, "makeshift_vine_supports");
 	public static final TagKey<Item> WILD_CROPS_ITEM = item(VineAndBarrel.MODID, "wild_crops");
 	/** FD's straw (empty without FD), and the tools that cut it from ripe barley: FD's straw harvesters, its knives. */
 	public static final TagKey<Item> STRAW = item(VineAndBarrel.MODID, "straw");
@@ -56,6 +62,11 @@ public final class VBTags
 	public static final TagKey<Item> FD_WILD_CROPS_ITEM = item(FARMERS_DELIGHT, "wild_crops");
 	public static final TagKey<Item> FD_STRAW_HARVESTERS = item(FARMERS_DELIGHT, "straw_harvesters");
 	public static final TagKey<Block> FD_FEASTS = block(FARMERS_DELIGHT, "feasts");
+	/**
+	 * What FD's tomato vines climb besides ropes, where Farmer's Delight Neoforged reads it (NeoForge): we put the Trellis
+	 * in it. FD Refabricated doesn't read it, so on Fabric tomatoes stay on ropes.
+	 */
+	public static final TagKey<Block> FD_TOMATO_SUPPORTS = block(FARMERS_DELIGHT, "tomato_supports");
 	public static final TagKey<Item> FD_FEASTS_ITEM = item(FARMERS_DELIGHT, "feasts");
 	/** FD's own rope block: put back when a vine on a rope is removed (FD's "rope permanence"). */
 	public static final Identifier FD_ROPE = Identifier.fromNamespaceAndPath(FARMERS_DELIGHT, "rope");

@@ -4,6 +4,7 @@ import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.block.ClimbingBushBlock;
 import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.block.TrellisBlock;
+import jexxme.vineandbarrel.block.VineOnSupportBlock;
 import jexxme.vineandbarrel.block.VineOnTrellisBlock;
 import jexxme.vineandbarrel.kettle.BrewKettleBlock;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
@@ -64,6 +65,12 @@ public class VBModels extends ModelProvider
 			Optional.empty(), VINE);
 	private static final ModelTemplate BUSH_ON_ROPE = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_bush_on_rope")),
 			Optional.empty(), TextureSlot.CROP);
+	private static final ModelTemplate VINE_ON_THIN_SUPPORT = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_vine_on_thin_support")),
+			Optional.empty(), VINE);
+	private static final ModelTemplate VINE_ON_WIDE_SUPPORT = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_vine_on_wide_support")),
+			Optional.empty(), VINE);
+	private static final ModelTemplate VINE_WOUND = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_vine_wound")),
+			Optional.empty(), TextureSlot.CROP);
 
 	public VBModels(PackOutput output) {
 		super(output, VineAndBarrel.MODID);
@@ -105,6 +112,10 @@ public class VBModels extends ModelProvider
 		vineOnTrellis(blockModels, VBBlocks.GRAPE_VINE_ON_TRELLIS.get());
 		vineOnTrellis(blockModels, VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS.get());
 		vineOnTrellis(blockModels, VBBlocks.HOP_VINE_ON_TRELLIS.get());
+		// Vines on fences, walls, chains and bars: only the leaves (the block they hold is drawn by the loader's model wrapper)
+		vineOnSupport(blockModels, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), "grape");
+		vineOnSupport(blockModels, VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT.get(), "white_grape");
+		vineOnSupport(blockModels, VBBlocks.HOP_VINE_ON_SUPPORT.get(), "hop");
 
 		// Barley like wheat (also generates the barley_seeds item model)
 		blockModels.createCropBlock(VBBlocks.BARLEY.get(), CropBlock.AGE, 0, 1, 2, 3, 4, 5, 6, 7);
@@ -221,8 +232,8 @@ public class VBModels extends ModelProvider
 					case Z -> plainVariant(inTrellis.get(age)).with(BlockModelGenerators.Y_ROT_90);
 					case NONE -> switch (support) {
 						case NONE -> plainVariant(round.get(age));
-						case TRELLIS_X -> plainVariant(onTrellis.get(age));
-						case TRELLIS_Z -> plainVariant(onTrellis.get(age)).with(BlockModelGenerators.Y_ROT_90);
+						case TRELLIS_X, FACES_X -> plainVariant(onTrellis.get(age));
+						case TRELLIS_Z, FACES_Z -> plainVariant(onTrellis.get(age)).with(BlockModelGenerators.Y_ROT_90);
 						case ROPE -> plainVariant(onRope.get(age));
 					};
 				})));
@@ -242,6 +253,41 @@ public class VBModels extends ModelProvider
 		blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(block).with(PropertyDispatch.initial(ClimbingCropBlock.AGE, VineOnTrellisBlock.AXIS)
 				.generate((age, axis) -> axis == Direction.Axis.X ? plainVariant(models.get(age))
 						: plainVariant(models.get(age)).with(BlockModelGenerators.Y_ROT_90))));
+	}
+
+	/**
+	 * A vine on a fence, wall, chain or bars: only its leaves, per age, as a vine or as the plant's root (planted into the
+	 * support): spread across both faces of a fence or bars (thin) or a wall (wide), turned for the row, with the trellis
+	 * vine's art (the trellis bush's art at the root), or wound round a chain or a lone post with the rope vine's art (the
+	 * rope bush's at the root). The block it holds is drawn by the loaders' model wrappers.
+	 */
+	private static void vineOnSupport(BlockModelGenerators blockModels, Block block, String crop) {
+		Map<String, Identifier> models = new HashMap<>();
+		for (int age = 0; age <= ClimbingCropBlock.MAX_AGE; age++) {
+			String stage = "_stage" + age;
+			for (boolean base : new boolean[] {false, true}) {
+				String root = base ? "_base" : "";
+				Material faces = new Material(VineAndBarrel.id("block/" + crop + (base ? "_bush_on_trellis" : "_vine_on_trellis") + stage));
+				Material wound = new Material(VineAndBarrel.id("block/" + crop + (base ? "_bush_on_rope" : "_vine_on_rope") + stage));
+				models.put("thin" + root + age, VINE_ON_THIN_SUPPORT.createWithSuffix(block, "_thin" + root + stage,
+						new TextureMapping().put(VINE, faces), blockModels.modelOutput));
+				models.put("wide" + root + age, VINE_ON_WIDE_SUPPORT.createWithSuffix(block, "_wide" + root + stage,
+						new TextureMapping().put(VINE, faces), blockModels.modelOutput));
+				models.put("wound" + root + age, (base ? BUSH_ON_ROPE : VINE_WOUND).createWithSuffix(block, "_wound" + root + stage,
+						new TextureMapping().put(TextureSlot.CROP, wound), blockModels.modelOutput));
+			}
+		}
+		blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(block)
+				.with(PropertyDispatch.initial(ClimbingCropBlock.AGE, VineOnSupportBlock.BASE, VineOnSupportBlock.LOOK).generate((age, base, look) -> {
+					String root = base ? "_base" : "";
+					return switch (look) {
+						case CROSS -> plainVariant(models.get("wound" + root + age));
+						case THIN_X -> plainVariant(models.get("thin" + root + age));
+						case THIN_Z -> plainVariant(models.get("thin" + root + age)).with(BlockModelGenerators.Y_ROT_90);
+						case WIDE_X -> plainVariant(models.get("wide" + root + age));
+						case WIDE_Z -> plainVariant(models.get("wide" + root + age)).with(BlockModelGenerators.Y_ROT_90);
+					};
+				})));
 	}
 
 	private static void vineOnRope(BlockModelGenerators blockModels, Block block, String coiledRope) {

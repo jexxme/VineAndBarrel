@@ -57,12 +57,28 @@ ripe it climbs the trellises stacked above it, up to {c.climbMaxHeight} blocks t
 - Breaking a vine or the bush gives you its fruit and leaves the trellis standing.
 - A trellis on top of a bush works too.
 - A trellis isn't a ladder: everything on it is in reach from the ground.
+- A row frames itself: posts where it ends, a rail along the top.
 
 <Recipe id="trellis" />
 
 <Aside title="With Farmer's Delight: ropes work too">
 A Farmer's Delight rope above a bush works just like a trellis, the way FD's tomatoes climb. See [Farmer's Delight](/farmers-delight/).
 </Aside>
+
+## Fences, walls, chains and bars
+
+<Render name="scenes/supports" float="right" size={256} alt="Grape and hop vines grown into an oak fence row and a mossy wall" />
+
+No trellis at hand? Grapes and hops also climb **fences, walls, chains and bars**, both ways round, like a trellis:
+right-click one that stands on grass, dirt or farmland with grapes or hops, or right-click a bush with one. The plant then
+climbs what is stacked above it, up to {c.climbMaxHeight} blocks tall.
+
+- Each pick gives one fewer than on a trellis: {h.grapes_on_support.count[0]} to {h.grapes_on_support.count[1]} when
+  ripe, {h.grapes_on_support.halfRipe[0]} when half-ripe. The trellis stays the best support.
+- The block stays exactly as it was: a spruce fence stays a spruce fence, fences and walls keep connecting, a lead stays
+  tied. Breaking the plant leaves it standing.
+- Chains only count standing upright. Ladders, glass panes and fence gates hold nothing.
+- Other mods' fences and walls work too, and packs can add blocks to the `#vineandbarrel:makeshift_vine_supports` tag.
 
 ## Barley
 
