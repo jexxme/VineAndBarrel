@@ -67,7 +67,7 @@ public final class VBTagProviders
 			// C2: bees help them grow (barley through #minecraft:crops, like wheat; the bushes like the sweet berry bush)
 			add(tag(BlockTags.BEE_GROWABLES), VBBlocks.GRAPE_BUSH, VBBlocks.WHITE_GRAPE_BUSH, VBBlocks.HOP_BUSH, VBBlocks.GRAPE_VINE_ON_ROPE,
 					VBBlocks.WHITE_GRAPE_VINE_ON_ROPE, VBBlocks.HOP_VINE_ON_ROPE, VBBlocks.GRAPE_VINE_ON_TRELLIS, VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS,
-					VBBlocks.HOP_VINE_ON_TRELLIS);
+					VBBlocks.HOP_VINE_ON_TRELLIS, VBBlocks.GRAPE_VINE_ON_SUPPORT, VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT, VBBlocks.HOP_VINE_ON_SUPPORT);
 			add(tag(BlockTags.CROPS), VBBlocks.BARLEY);
 			// the bushes too: a trellis in one is solid, and farmland under it would otherwise dry out to dirt
 			add(tag(BlockTags.MAINTAINS_FARMLAND), VBBlocks.BARLEY, VBBlocks.GRAPE_BUSH, VBBlocks.WHITE_GRAPE_BUSH, VBBlocks.HOP_BUSH);
@@ -78,9 +78,14 @@ public final class VBTagProviders
 			// The Trellis is wood like a ladder, and a vine on it still has the trellis inside. Not #minecraft:climbable (unlike a
 			// vine on an FD rope): a plant is at most three blocks tall, all within reach from the ground
 			add(tag(BlockTags.MINEABLE_WITH_AXE), VBBlocks.TRELLIS, VBBlocks.GRAPE_VINE_ON_TRELLIS, VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS,
-					VBBlocks.HOP_VINE_ON_TRELLIS);
+					VBBlocks.HOP_VINE_ON_TRELLIS, VBBlocks.GRAPE_VINE_ON_SUPPORT, VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT, VBBlocks.HOP_VINE_ON_SUPPORT);
 			// What the bushes climb: the Trellis, and FD's ropes when FD is there
 			add(tag(VBTags.VINE_SUPPORTS).addOptionalTag(VBTags.FD_ROPES), VBBlocks.TRELLIS);
+			// ... and, with one fewer fruit per pick, fences, walls, chains (upright) and bars; packs add their own here
+			tag(VBTags.MAKESHIFT_VINE_SUPPORTS).addTag(BlockTags.FENCES).addTag(BlockTags.WALLS).addTag(BlockTags.CHAINS).addTag(BlockTags.BARS);
+			// FD tomatoes climb the Trellis where Farmer's Delight Neoforged reads this tag (its tomato vines keep the trellis
+			// and give it back); without it the file does nothing
+			add(tag(VBTags.FD_TOMATO_SUPPORTS), VBBlocks.TRELLIS);
 			// B16: the Aging Barrel is mined fastest with an axe, like the vanilla barrel
 			add(tag(BlockTags.MINEABLE_WITH_AXE), BarrelRegistry.AGING_BARREL);
 			add(tag(BlockTags.MINEABLE_WITH_HOE), VBBlocks.BARLEY_BALE);
@@ -99,9 +104,11 @@ public final class VBTagProviders
 
 			// Serene Seasons (DESIGN 3): grapes (red and white) autumn, hops summer + autumn, barley spring + summer
 			add(tag(VBTags.SEASONS_AUTUMN_CROPS), VBBlocks.GRAPE_BUSH, VBBlocks.GRAPE_VINE_ON_ROPE, VBBlocks.GRAPE_VINE_ON_TRELLIS,
-					VBBlocks.WHITE_GRAPE_BUSH, VBBlocks.WHITE_GRAPE_VINE_ON_ROPE, VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS, VBBlocks.HOP_BUSH,
-					VBBlocks.HOP_VINE_ON_ROPE, VBBlocks.HOP_VINE_ON_TRELLIS);
-			add(tag(VBTags.SEASONS_SUMMER_CROPS), VBBlocks.HOP_BUSH, VBBlocks.HOP_VINE_ON_ROPE, VBBlocks.HOP_VINE_ON_TRELLIS, VBBlocks.BARLEY);
+					VBBlocks.GRAPE_VINE_ON_SUPPORT, VBBlocks.WHITE_GRAPE_BUSH, VBBlocks.WHITE_GRAPE_VINE_ON_ROPE, VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS,
+					VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT, VBBlocks.HOP_BUSH, VBBlocks.HOP_VINE_ON_ROPE, VBBlocks.HOP_VINE_ON_TRELLIS,
+					VBBlocks.HOP_VINE_ON_SUPPORT);
+			add(tag(VBTags.SEASONS_SUMMER_CROPS), VBBlocks.HOP_BUSH, VBBlocks.HOP_VINE_ON_ROPE, VBBlocks.HOP_VINE_ON_TRELLIS,
+					VBBlocks.HOP_VINE_ON_SUPPORT, VBBlocks.BARLEY);
 			add(tag(VBTags.SEASONS_SPRING_CROPS), VBBlocks.BARLEY);
 
 			add(tag(commonBlock("storage_blocks/barley")), VBBlocks.BARLEY_BALE);

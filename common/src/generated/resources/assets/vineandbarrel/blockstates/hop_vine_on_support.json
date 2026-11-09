@@ -1,0 +1,140 @@
+{
+  "variants": {
+    "age=0,base=false,look=cross": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wound_stage0"
+    },
+    "age=0,base=false,look=thin_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_stage0"
+    },
+    "age=0,base=false,look=thin_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_stage0",
+      "y": 90
+    },
+    "age=0,base=false,look=wide_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_stage0"
+    },
+    "age=0,base=false,look=wide_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_stage0",
+      "y": 90
+    },
+    "age=0,base=true,look=cross": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wound_base_stage0"
+    },
+    "age=0,base=true,look=thin_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_base_stage0"
+    },
+    "age=0,base=true,look=thin_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_base_stage0",
+      "y": 90
+    },
+    "age=0,base=true,look=wide_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_base_stage0"
+    },
+    "age=0,base=true,look=wide_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_base_stage0",
+      "y": 90
+    },
+    "age=1,base=false,look=cross": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wound_stage1"
+    },
+    "age=1,base=false,look=thin_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_stage1"
+    },
+    "age=1,base=false,look=thin_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_stage1",
+      "y": 90
+    },
+    "age=1,base=false,look=wide_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_stage1"
+    },
+    "age=1,base=false,look=wide_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_stage1",
+      "y": 90
+    },
+    "age=1,base=true,look=cross": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wound_base_stage1"
+    },
+    "age=1,base=true,look=thin_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_base_stage1"
+    },
+    "age=1,base=true,look=thin_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_base_stage1",
+      "y": 90
+    },
+    "age=1,base=true,look=wide_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_base_stage1"
+    },
+    "age=1,base=true,look=wide_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_base_stage1",
+      "y": 90
+    },
+    "age=2,base=false,look=cross": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wound_stage2"
+    },
+    "age=2,base=false,look=thin_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_stage2"
+    },
+    "age=2,base=false,look=thin_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_stage2",
+      "y": 90
+    },
+    "age=2,base=false,look=wide_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_stage2"
+    },
+    "age=2,base=false,look=wide_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_stage2",
+      "y": 90
+    },
+    "age=2,base=true,look=cross": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wound_base_stage2"
+    },
+    "age=2,base=true,look=thin_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_base_stage2"
+    },
+    "age=2,base=true,look=thin_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_base_stage2",
+      "y": 90
+    },
+    "age=2,base=true,look=wide_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_base_stage2"
+    },
+    "age=2,base=true,look=wide_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_base_stage2",
+      "y": 90
+    },
+    "age=3,base=false,look=cross": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wound_stage3"
+    },
+    "age=3,base=false,look=thin_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_stage3"
+    },
+    "age=3,base=false,look=thin_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_stage3",
+      "y": 90
+    },
+    "age=3,base=false,look=wide_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_stage3"
+    },
+    "age=3,base=false,look=wide_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_stage3",
+      "y": 90
+    },
+    "age=3,base=true,look=cross": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wound_base_stage3"
+    },
+    "age=3,base=true,look=thin_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_base_stage3"
+    },
+    "age=3,base=true,look=thin_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_thin_base_stage3",
+      "y": 90
+    },
+    "age=3,base=true,look=wide_x": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_base_stage3"
+    },
+    "age=3,base=true,look=wide_z": {
+      "model": "vineandbarrel:block/hop_vine_on_support_wide_base_stage3",
+      "y": 90
+    }
+  }
+}

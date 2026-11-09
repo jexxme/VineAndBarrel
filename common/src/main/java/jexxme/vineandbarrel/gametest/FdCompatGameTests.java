@@ -287,7 +287,7 @@ public final class FdCompatGameTests
 
 	/**
 	 * With FD our bushes climb FD's real rope (in {@code #farmersdelight:ropes}), and FD's rope comes back when the vine
-	 * goes. Without FD there is no FD rope and a ripe bush under any other block stays a bush.
+	 * goes. Without FD there is no FD rope, and a ripe bush under a block that holds no vine (a glass pane) stays a bush.
 	 */
 	private static void vinesClimbRealRope(GameTestHelper helper) {
 		BlockPos bush = new BlockPos(2, 1, 2);
@@ -296,11 +296,11 @@ public final class FdCompatGameTests
 		Optional<Block> fdRope = fdBlock("rope");
 		assertFdThing(helper, fdRope, "FD's rope");
 		if (fdRope.isEmpty()) {
-			helper.setBlock(bush.above(), Blocks.OAK_FENCE);
+			helper.setBlock(bush.above(), Blocks.GLASS_PANE);
 			for (int i = 0; i < 300; i++) {
 				helper.randomTick(bush);
 			}
-			helper.assertBlockPresent(Blocks.OAK_FENCE, bush.above());
+			helper.assertBlockPresent(Blocks.GLASS_PANE, bush.above());
 			helper.succeed();
 			return;
 		}

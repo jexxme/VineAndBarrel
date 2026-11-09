@@ -3,11 +3,14 @@
     "vineandbarrel:grape_bush",
     "vineandbarrel:grape_vine_on_rope",
     "vineandbarrel:grape_vine_on_trellis",
+    "vineandbarrel:grape_vine_on_support",
     "vineandbarrel:white_grape_bush",
     "vineandbarrel:white_grape_vine_on_rope",
     "vineandbarrel:white_grape_vine_on_trellis",
+    "vineandbarrel:white_grape_vine_on_support",
     "vineandbarrel:hop_bush",
     "vineandbarrel:hop_vine_on_rope",
-    "vineandbarrel:hop_vine_on_trellis"
+    "vineandbarrel:hop_vine_on_trellis",
+    "vineandbarrel:hop_vine_on_support"
   ]
 }

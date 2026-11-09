@@ -1,0 +1,6 @@
+{
+  "parent": "vineandbarrel:block/template_vine_wound",
+  "textures": {
+    "crop": "vineandbarrel:block/hop_vine_on_rope_stage1"
+  }
+}

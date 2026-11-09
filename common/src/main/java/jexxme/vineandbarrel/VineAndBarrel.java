@@ -33,6 +33,7 @@ public final class VineAndBarrel
 	public static void init() {
 		VBBlocks.register();
 		VBItems.register();
+		jexxme.vineandbarrel.registry.VBBlockEntities.register();
 		VBCreativeTabs.register();
 		jexxme.vineandbarrel.tipsy.TipsyRegistry.register();
 		jexxme.vineandbarrel.kettle.KettleRegistry.register();

@@ -58,12 +58,24 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 - 破坏一节藤或灌木会得到它的果实，棚架仍然立着。
 - 放在灌木顶上的棚架也可以。
 - 棚架不是梯子：上面的一切站在地上都够得着。
+- 一排架子会自己搭出框：尽头立柱子，顶上架横杆。
 
 <Recipe id="trellis" />
 
 <Aside title="搭配 Farmer's Delight：绳子也行">
 Farmer's Delight 的绳子挂在灌木上方，作用和棚架一样，就像 FD 的番茄那样往上爬。详见 [Farmer's Delight](/farmers-delight/)。
 </Aside>
+
+## 栅栏、墙、锁链和铁栏杆
+
+<Render name="scenes/supports" float="right" size={256} alt="长进一排橡木栅栏和一段苔藓墙里的葡萄藤和啤酒花藤" />
+
+手边没有棚架？葡萄和啤酒花也能爬**栅栏、墙、锁链和铁栏杆**，两种方式都行，和棚架一样：拿着葡萄或啤酒花右键立在草方块、泥土或耕地上的这些方块，或者拿着其中一种方块右键灌木。这样植物就会顺着上面叠放的东西往上爬，最高 {c.climbMaxHeight} 格。
+
+- 每次采摘比棚架少一个：成熟时 {h.grapes_on_support.count[0]} 到 {h.grapes_on_support.count[1]} 个，半熟时 {h.grapes_on_support.halfRipe[0]} 个。棚架仍然是最好的支撑。
+- 方块保持原样：云杉栅栏还是云杉栅栏，栅栏和墙照样相连，拴绳也还拴着。破坏植物后，它仍然立着。
+- 锁链只有竖直立着才算。梯子、玻璃板和栅栏门什么都撑不住。
+- 其他模组的栅栏和墙也可以，数据包还能往 `#vineandbarrel:makeshift_vine_supports` 标签里添加方块。
 
 ## 大麦
 

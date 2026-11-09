@@ -71,6 +71,10 @@ public class VBBlockLoot extends BlockLootSubProvider
 		add(VBBlocks.GRAPE_VINE_ON_TRELLIS.get(), block -> fruit(block, VBItems.RED_GRAPES.get()));
 		add(VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS.get(), block -> fruit(block, VBItems.WHITE_GRAPES.get()));
 		add(VBBlocks.HOP_VINE_ON_TRELLIS.get(), block -> fruit(block, VBItems.HOPS.get()));
+		// On a fence, wall, chain or bars: one fewer than on a trellis (the block it held stays in place, as with a trellis)
+		add(VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), block -> fewerFruit(block, VBItems.RED_GRAPES.get()));
+		add(VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT.get(), block -> fewerFruit(block, VBItems.WHITE_GRAPES.get()));
+		add(VBBlocks.HOP_VINE_ON_SUPPORT.get(), block -> fewerFruit(block, VBItems.HOPS.get()));
 		dropSelf(VBBlocks.TRELLIS.get());
 
 		// Barley like wheat, and like FD's straw_from_mature_wheat: FD's knife also cuts a straw from ripe barley (#vineandbarrel:straw
@@ -108,6 +112,13 @@ public class VBBlockLoot extends BlockLootSubProvider
 		return applyExplosionDecay(block, LootTable.lootTable()
 				.withPool(fruitPool(block, fruit, ClimbingCropBlock.MAX_AGE, 2, 3))
 				.withPool(fruitPool(block, fruit, ClimbingCropBlock.HALF_RIPE_AGE, 1, 2)));
+	}
+
+	/** One fewer than the sweet berry bush, for a vine on a fence, wall, chain or bars: 1-2 when ripe, 1 when half-ripe, plus Fortune. */
+	private LootTable.Builder fewerFruit(Block block, Item fruit) {
+		return applyExplosionDecay(block, LootTable.lootTable()
+				.withPool(fruitPool(block, fruit, ClimbingCropBlock.MAX_AGE, 1, 2))
+				.withPool(fruitPool(block, fruit, ClimbingCropBlock.HALF_RIPE_AGE, 1, 1)));
 	}
 
 	private LootPool.Builder fruitPool(Block block, Item fruit, int age, int min, int max) {

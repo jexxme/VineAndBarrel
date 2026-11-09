@@ -28,6 +28,10 @@ public final class VineAndBarrelFabricClient implements ClientModInitializer
 		KettleClient.register(registrar);
 		BarrelClient.register(registrar);
 		TipsyClient.register(registrar);
+		// Vines on fences, walls, chains and bars draw the block they hold under their leaves
+		SupportedVineModel.register();
+		// Trellis rows draw their frame (end posts, top rail) from their neighbours
+		TrellisFrameModel.register();
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
 			TipsyClient.onClientTick();

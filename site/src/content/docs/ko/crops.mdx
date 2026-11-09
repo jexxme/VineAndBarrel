@@ -58,12 +58,24 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 - 덩굴이나 덤불을 부수면 열매가 나오고 격자 지지대는 그대로 서 있어요.
 - 덤불 위에 놓은 격자 지지대도 돼요.
 - 격자 지지대는 사다리가 아니에요. 그 위의 모든 것은 땅에서 손이 닿아요.
+- 줄은 스스로 틀을 만들어요. 끝에는 기둥이 서고, 위에는 가로대가 걸려요.
 
 <Recipe id="trellis" />
 
 <Aside title="Farmer's Delight와 함께: 밧줄도 돼요">
 덤불 위의 Farmer's Delight 밧줄도 격자 지지대와 똑같이 작동해요. FD의 토마토가 타고 오르는 것처럼요. [Farmer's Delight](/farmers-delight/)를 참고하세요.
 </Aside>
+
+## 울타리, 담장, 사슬, 철 창살
+
+<Render name="scenes/supports" float="right" size={256} alt="참나무 울타리 줄과 이끼 낀 담장을 타고 자란 포도 덩굴과 홉 덩굴" />
+
+격자 지지대가 없나요? 포도와 홉은 **울타리, 담장, 사슬, 철 창살**도 타고 올라요. 격자 지지대처럼 양쪽 방법 모두 돼요. 잔디 블록, 흙, 경작지 위에 서 있는 그 블록을 포도나 홉을 들고 우클릭하거나, 그 블록을 들고 덤불을 우클릭하세요. 그러면 식물이 그 위에 쌓은 것을 타고 최대 {c.climbMaxHeight}블록 높이까지 올라가요.
+
+- 한 번 딸 때 격자 지지대보다 하나 적게 나와요. 다 익으면 {h.grapes_on_support.count[0]}~{h.grapes_on_support.count[1]}개, 반쯤 익으면 {h.grapes_on_support.halfRipe[0]}개예요. 가장 좋은 지지대는 여전히 격자 지지대예요.
+- 블록은 그대로예요. 가문비나무 울타리는 가문비나무 울타리로 남고, 울타리와 담장은 계속 이어지고, 끈도 묶인 채로 있어요. 식물을 부숴도 그대로 서 있어요.
+- 사슬은 똑바로 세워진 것만 쳐요. 사다리, 유리판, 울타리 문은 아무것도 받치지 못해요.
+- 다른 모드의 울타리와 담장도 돼요. 팩은 `#vineandbarrel:makeshift_vine_supports` 태그에 블록을 추가할 수 있어요.
 
 ## 보리
 

@@ -541,17 +541,17 @@ final class VBCropTests
 		});
 	}
 
-	/** Without a rope (FD not installed, or another block above) a ripe bush never climbs. */
+	/** Under a block that holds no vine (a glass pane: no rope, trellis, fence, wall, chain or bars) a ripe bush never climbs. */
 	private static void noRopeNoClimbing(GameTestHelper helper) {
 		BlockPos pos = new BlockPos(2, 1, 2);
 		helper.setBlock(pos.below(), Blocks.GRASS_BLOCK);
 		helper.setBlock(pos, VBBlocks.GRAPE_BUSH.get().defaultBlockState().setValue(ClimbingCropBlock.AGE, 3));
-		helper.setBlock(pos.above(), Blocks.OAK_FENCE);
+		helper.setBlock(pos.above(), Blocks.GLASS_PANE);
 		for (int i = 0; i < 300; i++) {
 			helper.randomTick(pos);
 		}
-		helper.assertBlockPresent(Blocks.OAK_FENCE, pos.above());
-		helper.assertFalse(boneMeal(helper, pos), "Bone meal must not be used on a ripe bush under a fence");
+		helper.assertBlockPresent(Blocks.GLASS_PANE, pos.above());
+		helper.assertFalse(boneMeal(helper, pos), "Bone meal must not be used on a ripe bush under a glass pane");
 		helper.succeed();
 	}
 

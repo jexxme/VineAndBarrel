@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -79,11 +80,15 @@ public class VineOnRopeBlock extends ClimbingCropBlock implements PlayerDestroyH
 		return level.setBlock(pos, VineClimbing.ropeState(level, pos), level.isClientSide() ? Block.UPDATE_ALL_IMMEDIATE : Block.UPDATE_ALL);
 	}
 
-	/** Puts the rope back when the vine was removed by anything other than a player (who is handled above). */
+	/**
+	 * Puts the rope back when the vine was removed by anything other than a player (who is handled above), burnt away too
+	 * (as a trellis is).
+	 */
 	@Override
 	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
 		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
-		if (!movedByPiston && level.getBlockState(pos).isAir()) {
+		BlockState now = level.getBlockState(pos);
+		if (!movedByPiston && (now.isAir() || now.is(BlockTags.FIRE))) {
 			BlockState rope = VineClimbing.ropeState(level, pos);
 			if (!rope.isAir()) {
 				level.setBlock(pos, rope, Block.UPDATE_ALL);
