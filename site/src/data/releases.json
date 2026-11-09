@@ -6,7 +6,7 @@
 			"build": "26.3",
 			"neoforge": "1.0.2+neoforged.1",
 			"fabric": "1.0.2+fabric.1",
-			"curseforge": { "neoforge": 9515563, "fabric": 9515565 },
+			"curseforge": { "neoforge": 9520791, "fabric": 9520792 },
 			"needs": { "neoforge": "26.3.0.101", "fabricLoader": "0.20.1", "fabricApi": "0.165.2" },
 			"without": { "neoforge": [], "fabric": [] }
 		},
@@ -15,7 +15,7 @@
 			"build": "26.2",
 			"neoforge": "1.0.2+neoforged.1",
 			"fabric": "1.0.2+fabric.1",
-			"curseforge": { "neoforge": 9515612, "fabric": 9515613 },
+			"curseforge": { "neoforge": 9520793, "fabric": 9520794 },
 			"needs": { "neoforge": "26.2.0.93", "fabricLoader": "0.20.1", "fabricApi": "0.161.0" },
 			"without": { "neoforge": [], "fabric": ["Spice of Life Onion"] }
 		},
@@ -24,7 +24,7 @@
 			"build": "26.1.2",
 			"neoforge": "1.0.2+neoforged.1",
 			"fabric": "1.0.2+fabric.1",
-			"curseforge": { "neoforge": 9515609, "fabric": 9515610 },
+			"curseforge": { "neoforge": 9520787, "fabric": 9520789 },
 			"needs": { "neoforge": "26.1.2.126", "fabricLoader": "0.20.1", "fabricApi": "0.155.3" },
 			"without": { "neoforge": [], "fabric": ["Spice of Life Onion"] }
 		},
@@ -33,7 +33,7 @@
 			"build": "26.1.1",
 			"neoforge": "1.0.2+neoforged.1",
 			"fabric": "1.0.2+fabric.1",
-			"curseforge": { "neoforge": 9515622, "fabric": 9515623 },
+			"curseforge": { "neoforge": 9520782, "fabric": 9520783 },
 			"needs": { "neoforge": "26.1.0.19-beta", "fabricLoader": "0.20.1", "fabricApi": "0.145.4" },
 			"without": {
 				"neoforge": ["Tough As Nails", "Thirst Was Taken 2", "Spice of Life Onion"],
