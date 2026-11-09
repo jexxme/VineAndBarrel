@@ -185,30 +185,30 @@
 				"fortune": false
 			},
 			{
-				"id": "vineandbarrel:barley_seeds",
+				"id": "vineandbarrel:wild_barley",
 				"chance": 1,
-				"fortune": true
+				"fortune": false
 			}
 		],
 		"vineandbarrel:wild_grapes": [
 			{
-				"id": "vineandbarrel:red_grapes",
+				"id": "vineandbarrel:wild_grapes",
 				"chance": 1,
-				"fortune": true
+				"fortune": false
 			}
 		],
 		"vineandbarrel:wild_hops": [
 			{
-				"id": "vineandbarrel:hops",
+				"id": "vineandbarrel:wild_hops",
 				"chance": 1,
-				"fortune": true
+				"fortune": false
 			}
 		],
 		"vineandbarrel:wild_white_grapes": [
 			{
-				"id": "vineandbarrel:white_grapes",
+				"id": "vineandbarrel:wild_white_grapes",
 				"chance": 1,
-				"fortune": true
+				"fortune": false
 			}
 		]
 	},

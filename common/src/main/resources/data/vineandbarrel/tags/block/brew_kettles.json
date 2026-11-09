@@ -7,6 +7,22 @@
     "vineandbarrel:waxed_brew_kettle",
     "vineandbarrel:waxed_exposed_brew_kettle",
     "vineandbarrel:waxed_weathered_brew_kettle",
-    "vineandbarrel:waxed_oxidized_brew_kettle"
+    "vineandbarrel:waxed_oxidized_brew_kettle",
+    "vineandbarrel:brew_kettle_part",
+    "vineandbarrel:exposed_brew_kettle_part",
+    "vineandbarrel:weathered_brew_kettle_part",
+    "vineandbarrel:oxidized_brew_kettle_part",
+    "vineandbarrel:waxed_brew_kettle_part",
+    "vineandbarrel:waxed_exposed_brew_kettle_part",
+    "vineandbarrel:waxed_weathered_brew_kettle_part",
+    "vineandbarrel:waxed_oxidized_brew_kettle_part",
+    "vineandbarrel:brew_kettle_chimney",
+    "vineandbarrel:exposed_brew_kettle_chimney",
+    "vineandbarrel:weathered_brew_kettle_chimney",
+    "vineandbarrel:oxidized_brew_kettle_chimney",
+    "vineandbarrel:waxed_brew_kettle_chimney",
+    "vineandbarrel:waxed_exposed_brew_kettle_chimney",
+    "vineandbarrel:waxed_weathered_brew_kettle_chimney",
+    "vineandbarrel:waxed_oxidized_brew_kettle_chimney"
   ]
 }

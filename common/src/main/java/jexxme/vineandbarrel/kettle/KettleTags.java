@@ -55,10 +55,16 @@ public final class KettleTags
 			return false;
 		}
 		BlockState above = level.getBlockState(campfire.above());
-		if (above.getBlock() instanceof BrewKettleBlock) {
+		if (isKettleBottom(above)) {
 			return true;
 		}
-		return above.is(HEAT_CONDUCTORS) && level.getBlockState(campfire.above(2)).getBlock() instanceof BrewKettleBlock;
+		return above.is(HEAT_CONDUCTORS) && isKettleBottom(level.getBlockState(campfire.above(2)));
+	}
+
+	/** A single kettle, or a bottom block of a big one. */
+	private static boolean isKettleBottom(BlockState state) {
+		return state.getBlock() instanceof BrewKettleBlock
+			|| state.getBlock() instanceof BrewKettlePartBlock && BrewKettlePartBlock.part(state).isBottom();
 	}
 
 	private static boolean isLit(BlockState state) {

@@ -65,8 +65,10 @@ public final class VineAndBarrelFabric implements ModInitializer
 		WeatherState[] stages = WeatherState.values();
 		for (WeatherState stage : stages) {
 			OxidizableBlocksRegistry.registerWaxable(KettleRegistry.KETTLES.get(stage).get(), KettleRegistry.WAXED_KETTLES.get(stage).get());
+			OxidizableBlocksRegistry.registerWaxable(KettleRegistry.PARTS.get(stage).get(), KettleRegistry.WAXED_PARTS.get(stage).get());
 			if (stage.ordinal() + 1 < stages.length) {
 				OxidizableBlocksRegistry.registerNextStage(KettleRegistry.KETTLES.get(stage).get(), KettleRegistry.KETTLES.get(stages[stage.ordinal() + 1]).get());
+				OxidizableBlocksRegistry.registerNextStage(KettleRegistry.PARTS.get(stage).get(), KettleRegistry.PARTS.get(stages[stage.ordinal() + 1]).get());
 			}
 		}
 		// 26.2: composter chances and burn times (NeoForge: the compostables and furnace_fuels data maps); a barrel with a

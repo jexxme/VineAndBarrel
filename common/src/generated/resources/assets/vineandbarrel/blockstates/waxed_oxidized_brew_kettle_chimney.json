@@ -1,0 +1,184 @@
+{
+  "variants": {
+    "facing=east,flashing=false,size=1,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1",
+      "y": 90
+    },
+    "facing=east,flashing=false,size=1,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_top",
+      "y": 90
+    },
+    "facing=east,flashing=false,size=2,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2",
+      "y": 90
+    },
+    "facing=east,flashing=false,size=2,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_top",
+      "y": 90
+    },
+    "facing=east,flashing=false,size=3,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3",
+      "y": 90
+    },
+    "facing=east,flashing=false,size=3,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_top",
+      "y": 90
+    },
+    "facing=east,flashing=true,size=1,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_flashing",
+      "y": 90
+    },
+    "facing=east,flashing=true,size=1,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_top_flashing",
+      "y": 90
+    },
+    "facing=east,flashing=true,size=2,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_flashing",
+      "y": 90
+    },
+    "facing=east,flashing=true,size=2,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_top_flashing",
+      "y": 90
+    },
+    "facing=east,flashing=true,size=3,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_flashing",
+      "y": 90
+    },
+    "facing=east,flashing=true,size=3,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_top_flashing",
+      "y": 90
+    },
+    "facing=north,flashing=false,size=1,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1"
+    },
+    "facing=north,flashing=false,size=1,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_top"
+    },
+    "facing=north,flashing=false,size=2,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2"
+    },
+    "facing=north,flashing=false,size=2,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_top"
+    },
+    "facing=north,flashing=false,size=3,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3"
+    },
+    "facing=north,flashing=false,size=3,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_top"
+    },
+    "facing=north,flashing=true,size=1,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_flashing"
+    },
+    "facing=north,flashing=true,size=1,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_top_flashing"
+    },
+    "facing=north,flashing=true,size=2,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_flashing"
+    },
+    "facing=north,flashing=true,size=2,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_top_flashing"
+    },
+    "facing=north,flashing=true,size=3,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_flashing"
+    },
+    "facing=north,flashing=true,size=3,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_top_flashing"
+    },
+    "facing=south,flashing=false,size=1,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1",
+      "y": 180
+    },
+    "facing=south,flashing=false,size=1,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_top",
+      "y": 180
+    },
+    "facing=south,flashing=false,size=2,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2",
+      "y": 180
+    },
+    "facing=south,flashing=false,size=2,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_top",
+      "y": 180
+    },
+    "facing=south,flashing=false,size=3,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3",
+      "y": 180
+    },
+    "facing=south,flashing=false,size=3,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_top",
+      "y": 180
+    },
+    "facing=south,flashing=true,size=1,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_flashing",
+      "y": 180
+    },
+    "facing=south,flashing=true,size=1,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_top_flashing",
+      "y": 180
+    },
+    "facing=south,flashing=true,size=2,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_flashing",
+      "y": 180
+    },
+    "facing=south,flashing=true,size=2,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_top_flashing",
+      "y": 180
+    },
+    "facing=south,flashing=true,size=3,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_flashing",
+      "y": 180
+    },
+    "facing=south,flashing=true,size=3,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_top_flashing",
+      "y": 180
+    },
+    "facing=west,flashing=false,size=1,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1",
+      "y": 270
+    },
+    "facing=west,flashing=false,size=1,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_top",
+      "y": 270
+    },
+    "facing=west,flashing=false,size=2,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2",
+      "y": 270
+    },
+    "facing=west,flashing=false,size=2,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_top",
+      "y": 270
+    },
+    "facing=west,flashing=false,size=3,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3",
+      "y": 270
+    },
+    "facing=west,flashing=false,size=3,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_top",
+      "y": 270
+    },
+    "facing=west,flashing=true,size=1,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_flashing",
+      "y": 270
+    },
+    "facing=west,flashing=true,size=1,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_1_top_flashing",
+      "y": 270
+    },
+    "facing=west,flashing=true,size=2,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_flashing",
+      "y": 270
+    },
+    "facing=west,flashing=true,size=2,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_2_top_flashing",
+      "y": 270
+    },
+    "facing=west,flashing=true,size=3,top=false": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_flashing",
+      "y": 270
+    },
+    "facing=west,flashing=true,size=3,top=true": {
+      "model": "vineandbarrel:block/oxidized_brew_kettle_chimney_3_top_flashing",
+      "y": 270
+    }
+  }
+}

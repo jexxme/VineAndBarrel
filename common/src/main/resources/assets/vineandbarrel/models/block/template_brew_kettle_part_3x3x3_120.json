@@ -1,0 +1,140 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "#plate"
+	},
+	"elements": [
+		{
+			"from": [
+				0,
+				0,
+				2
+			],
+			"to": [
+				16,
+				10,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						6,
+						16,
+						16
+					],
+					"texture": "#plate"
+				}
+			},
+			"name": "body"
+		},
+		{
+			"from": [
+				0,
+				8,
+				1.5
+			],
+			"to": [
+				16,
+				10,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						16,
+						2
+					],
+					"texture": "#band"
+				},
+				"up": {
+					"uv": [
+						0,
+						1.5,
+						16,
+						16
+					],
+					"texture": "#band"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						16,
+						14.5
+					],
+					"texture": "#band"
+				}
+			},
+			"name": "rim"
+		},
+		{
+			"from": [
+				0,
+				10,
+				3
+			],
+			"to": [
+				16,
+				12,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						16,
+						2
+					],
+					"texture": "#trim"
+				},
+				"up": {
+					"uv": [
+						0,
+						3,
+						16,
+						16
+					],
+					"texture": "#cut"
+				}
+			},
+			"name": "hood"
+		},
+		{
+			"from": [
+				0,
+				12,
+				7
+			],
+			"to": [
+				16,
+				13.5,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						16,
+						1.5
+					],
+					"texture": "#trim"
+				},
+				"up": {
+					"uv": [
+						0,
+						7,
+						16,
+						16
+					],
+					"texture": "#cut"
+				}
+			},
+			"name": "hood"
+		}
+	]
+}

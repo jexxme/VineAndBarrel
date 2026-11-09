@@ -164,11 +164,11 @@
 		]
 	},
 	"versions": {
-		"appleskin": "3.0.10",
-		"toughasnails": "21.11.0.11",
-		"homeostatic": "2.13.1.0",
+		"appleskin": "3.0.9",
+		"toughasnails": "21.11.0.6",
+		"homeostatic": "2.13.0.1",
 		"thirstwastaken2": "1.10.0",
-		"nutritionalbalance": "10.0.1",
-		"solonion": "1.6.0"
+		"nutritionalbalance": "8.0.1",
+		"solonion": "1.5.6"
 	}
 }

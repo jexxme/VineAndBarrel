@@ -1,0 +1,147 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "#plate"
+	},
+	"elements": [
+		{
+			"from": [
+				2,
+				0,
+				0
+			],
+			"to": [
+				16,
+				16,
+				16
+			],
+			"faces": {
+				"west": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#plate"
+				},
+				"down": {
+					"uv": [
+						2,
+						0,
+						16,
+						16
+					],
+					"texture": "#plate"
+				}
+			},
+			"name": "body"
+		},
+		{
+			"from": [
+				1.5,
+				1,
+				0
+			],
+			"to": [
+				16,
+				2.5,
+				16
+			],
+			"faces": {
+				"west": {
+					"uv": [
+						0,
+						0,
+						16,
+						1.5
+					],
+					"texture": "#band"
+				},
+				"up": {
+					"uv": [
+						1.5,
+						0,
+						16,
+						16
+					],
+					"texture": "#band"
+				},
+				"down": {
+					"uv": [
+						1.5,
+						0,
+						16,
+						16
+					],
+					"texture": "#band"
+				}
+			},
+			"name": "foot"
+		},
+		{
+			"from": [
+				0,
+				-0.001,
+				0
+			],
+			"to": [
+				16,
+				-0.001,
+				16
+			],
+			"faces": {
+				"up": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_top"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_top"
+				}
+			}
+		},
+		{
+			"from": [
+				0,
+				-16,
+				0
+			],
+			"to": [
+				0,
+				0,
+				16
+			],
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_side"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_side"
+				}
+			}
+		}
+	]
+}

@@ -101,7 +101,7 @@ public class SteamParticle extends SingleQuadParticle
 		double top = this.y + this.getQuadSize(0.0F) + 0.05D;
 		BlockPos pos = this.probe.set(this.x, top, this.z);
 		BlockState state = this.level.getBlockState(pos);
-		if (state.isAir() || state.getBlock() instanceof BrewKettleBlock) {
+		if (state.isAir() || state.getBlock() instanceof BrewKettleBlock || state.getBlock() instanceof jexxme.vineandbarrel.kettle.BrewKettlePartBlock) {
 			return false;
 		}
 		if (state.isCollisionShapeFullBlock(this.level, pos)) {

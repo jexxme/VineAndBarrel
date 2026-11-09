@@ -49,18 +49,59 @@ voll der Kessel ist; fahr darüber, um die Portionen zu sehen.
 
 <KettleScreen recipe="brewing/barley_wort" />
 
-Jedes Rezept ergibt **{rules.servingsPerBucket} Portionen** und dauert **{seconds(brews[0].brewingTime)}**. Ein erhitzter Kessel dampft
-und blubbert, sobald er einen Sud oder die Zutaten für einen enthält (sonst bleibt er still); während ein Ansatz braut, klappert zusätzlich der Deckel, und wenn er fertig ist, lässt er eine Dampfwolke ab. Der Kessel braut
-weitere Ansätze, solange Zutaten da sind, insgesamt bis zu {rules.kettleMaxServings} Portionen.
+Jedes Rezept ergibt **{rules.servingsPerBucket} Portionen** und dauert **{seconds(brews[0].brewingTime)}**. Der Kessel
+braut weitere Ansätze, solange Zutaten da sind, insgesamt bis zu {rules.kettleMaxServings} Portionen.
+
+Du siehst schon von Weitem, was ein Kessel gerade tut:
+
+- **Braut:** Dampf steigt aus seinem Schornstein, er kocht und blubbert. Ist ein Ansatz fertig, lässt er eine
+  Dampfwolke ab.
+- **Fertig:** Der Dampf hört auf, und der Hahn tropft ab und zu. Das Schauglas neben dem Hahn zeigt, wie voll er ist.
+- **Auf einem brennenden Feuer, ohne etwas zu brauen:** Der Rauch des Feuers zieht durch den Schornstein nach oben.
 
 <BrewFlow />
 
-Ist ein Gebräu fertig, bleibt der Deckel oben, und du siehst es darin, wie es sinkt, wenn du Portionen entnimmst. Während ein Ansatz braut,
-ist der Deckel unten; ist die letzte Portion weg, schließt er sich.
+Das Schauglas neben dem Hahn zeigt das Gebräu in seiner Farbe und sinkt, wenn du Portionen entnimmst. Solange du den
+Bildschirm des Kessels geöffnet hast, ist sein Deckel oben, und du siehst das Gebräu darin.
 
 {brews.map((r) => <Recipe recipe={r} />)}
 
 <Render name="scenes/kettle-open" float="right" size={192} alt="Der Kessel mit offenem Deckel, man sieht das Gebräu" />
+
+## Große Kessel
+
+<Render name="scenes/kettle-family" size={384} caption="Ein Riesiger, ein Großer und ein einfacher Braukessel" />
+
+Stell Kessel zu einem Würfel zusammen, und sie werden zu einem: **8 Kessel in einem 2×2×2-Würfel** ergeben einen
+**Großen Braukessel**, **27 in einem 3×3×3-Würfel** einen **Riesigen Braukessel**. Sie verbinden sich, wenn du den
+letzten Kessel des Würfels setzt, und ein Großer Kessel in einem Würfel aus 27 wächst zu einem Riesigen Kessel. Kessel
+mit unterschiedlichen Gebräuen verbinden sich nicht.
+
+- **Größere Ansätze.** Jeder Block bringt einen Ansatz: Ein Großer Kessel braut 32 Portionen auf einmal, ein Riesiger
+  108. Das sind vier beziehungsweise dreizehn Fässer.
+- **Feuer.** Ein Feuer darunter genügt. Jedes weitere Feuer unter der untersten Schicht macht ihn schneller: Mit einem
+  Feuer unter jedem Block braut er einen vollen Ansatz in der halben (Groß) oder einem Drittel der (Riesig) Zeit eines
+  einzelnen Kessels. Zu wenig Zutaten? Er braut so viele Sätze, wie das Raster hergibt.
+- **Platz.** Er fasst 64 Portionen pro Block: 512 im Großen Kessel, 1728 im Riesigen Kessel.
+- **Jeder Block.** Jeder Block öffnet den Bildschirm, füllt Flaschen und Eimer, nimmt Trichter an und gibt ein
+  Komparatorsignal.
+- **Abbauen.** Baust du irgendeinen Block ab, zerfällt der Kessel in einzelne Kessel, die jeweils ihren Anteil am
+  Gebräu behalten; der abgebaute Block fällt mit seinem Anteil. Setzt du einen Kessel zurück in die Lücke, verbindet
+  er sich wieder.
+- **Ein Gefäß.** Er verwittert als Ganzes, und eine Honigwabe oder ein Axthieb verändert ihn komplett.
+
+<Render name="scenes/kettle-big" size={256} caption="Großer Braukessel" />
+<Render name="scenes/kettle-great" size={256} caption="Riesiger Braukessel mit höherem Schornstein" />
+
+## Schornstein
+
+<Render name="scenes/kettle-chimney" float="right" size={192} alt="Ein Kessel, dessen Schornstein durch ein Dach aus Brettern geht" />
+
+Klick den Kessel oder seinen Schornstein mit einem <Item id="copper_ingot" /> rechts an, und der Schornstein wächst um
+einen Block, bis zu 8. Er bricht durch einen Dachblock im Weg (der Block fällt als Gegenstand) und ein Kupferblech
+dichtet das Loch ringsum ab. Der Schornstein altert mit seinem Kessel. Baust du ein Stück ab, stürzt es mit allem
+darüber ein und gibt die Barren zurück; beim Abbauen des Kessels passiert dasselbe. Ein hängender Kessel hat keinen
+Platz dafür.
 
 ## Abfüllen
 
@@ -104,7 +145,7 @@ Der Kessel ist aus Kupfer und altert wie Kupfer.
 - **Honigwabe** wachst ihn und hält die Verwitterung auf. Eine **Axt** schabt Wachs oder eine Stufe Verwitterung ab, und ein Blitz reinigt ihn.
 - **Baust du ihn voll ab,** behält er sein Gebräu: Der Tooltip des Gegenstands und die Füllanzeige zeigen es, und du kannst ihn woanders aufstellen
   und weitermachen. Zutaten und wartende Flaschen oder Eimer fallen auf den Boden.
-- Er verwittert nicht, solange jemand seinen Bildschirm geöffnet hat.
+- Er verwittert nicht, solange jemand seinen Bildschirm geöffnet hat (ein einzelner Kessel).
 
 ## Gut zu wissen
 

@@ -56,6 +56,7 @@ public final class VineAndBarrel
 			jexxme.vineandbarrel.gametest.TipsyGameTests.register();
 			jexxme.vineandbarrel.gametest.BlackoutGameTests.register();
 			jexxme.vineandbarrel.gametest.KettleGameTests.register();
+			jexxme.vineandbarrel.gametest.MultiKettleGameTests.register();
 			jexxme.vineandbarrel.gametest.BarrelGameTests.register();
 			jexxme.vineandbarrel.gametest.CauldronGameTests.register();
 			jexxme.vineandbarrel.gametest.FdCompatGameTests.register();
