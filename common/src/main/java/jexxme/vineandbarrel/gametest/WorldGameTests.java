@@ -1,6 +1,8 @@
 package jexxme.vineandbarrel.gametest;
 
+import com.mojang.serialization.JsonOps;
 import jexxme.vineandbarrel.VineAndBarrel;
+import jexxme.vineandbarrel.world.village.FarmCropProcessor;
 import jexxme.vineandbarrel.barrel.AgingBarrelBlock;
 import jexxme.vineandbarrel.barrel.AgingBarrelBlockEntity;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
@@ -73,6 +75,7 @@ import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
 import net.minecraft.world.level.levelgen.structure.templatesystem.LiquidSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorList;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -181,11 +184,14 @@ public final class WorldGameTests
 	// ------------------------------------------------------------------ 1. village farms
 
 	/**
-	 * Each village type's farm processor list carries our processor, first. Vanilla's large plains farm placed with that
-	 * list, 16 times at different spots (each block draws by its position, like 16 farms in 16 villages), grows exactly
-	 * that type's crops, each in a fair share, on farmland they can live on; vanilla's own crops still grow there too,
-	 * and with Farmer's Delight installed its crops as well (neither crowds the other out). Checks the lists as the
-	 * server start left them: nothing here adds the processor itself.
+	 * Each village type's farm processor list carries our processor, once and first. Vanilla's large plains farm placed
+	 * with that list, 16 times at different spots, grows exactly what our rule picks for each of its wheat blocks and
+	 * nothing of ours anywhere else; with Farmer's Delight installed its farm rules stay in the list after ours. Checks
+	 * the lists as the server start left them: nothing here adds the processor itself.
+	 * <p>
+	 * Nothing here counts on a draw: our rule's pick is fixed by a block's position, so every wheat block is checked
+	 * against it one by one, wherever the GameTest framework happens to put this test; the shares are checked on a fixed
+	 * stretch of positions that is the same in every run ({@link #farmShares}).
 	 */
 	private static void farmProcessors(GameTestHelper helper) {
 		farms(helper, VillageType::farmProcessors, true);
@@ -194,7 +200,7 @@ public final class WorldGameTests
 	/**
 	 * The same for abandoned villages: their farms are placed with the type's zombie processor list, which carries
 	 * vanilla's farm rules too, so it gets our processor, first, and grows the same crops in the same shares. Farmer's
-	 * Delight adds its crops only to living villages' farms, so its crops aren't expected here.
+	 * Delight adds its crops only to living villages' farms, so its rules aren't expected here.
 	 */
 	private static void zombieFarmProcessors(GameTestHelper helper) {
 		farms(helper, VillageType::zombieProcessors, false);
@@ -208,7 +214,6 @@ public final class WorldGameTests
 		BlockPos origin = helper.absolutePos(new BlockPos(1, 0, 1));
 		boolean fd = jexxme.vineandbarrel.platform.Services.PLATFORM.isModLoaded("farmersdelight");
 		Set<Block> ours = Set.of(VBBlocks.BARLEY.get(), VBBlocks.GRAPE_BUSH.get(), VBBlocks.HOP_BUSH.get(), VBBlocks.WHITE_GRAPE_BUSH.get());
-		Set<Block> vanilla = Set.of(Blocks.WHEAT, Blocks.CARROTS, Blocks.POTATOES, Blocks.BEETROOTS, Blocks.MELON_STEM, Blocks.PUMPKIN_STEM);
 		for (VillageType type : VillageType.values()) {
 			Identifier listId = listOf.apply(type);
 			StructureProcessorList list = lists.getValue(listId);
@@ -216,58 +221,66 @@ public final class WorldGameTests
 			long count = list.list().stream().filter(VillageStructures::isOurFarmProcessor).count();
 			helper.assertValueEqual((int) count, 1, "our farm processors in " + listId);
 			helper.assertTrue(VillageStructures.isOurFarmProcessor(list.list().getFirst()), "ours runs first in " + listId);
+			// Farmer's Delight's farm rules stay in a living village's list next to ours (its crops, in its codec)
+			if (fd && fdToo) {
+				helper.assertTrue(list.list().stream().anyMatch(processor -> StructureProcessorType.SINGLE_CODEC.encodeStart(JsonOps.INSTANCE, processor)
+					.result().map(json -> json.toString().contains("\"farmersdelight:")).orElse(false)), "Farmer's Delight's farm rules are in " + listId);
+			}
 
-			Map<Block, Integer> found = new HashMap<>();
-			int wheatSpots = 0;
-			int vanillaCrops = 0;
-			int fdCrops = 0;
+			// Our rule, built on its own from the crop table: the test's reference for every wheat block
+			FarmCropProcessor rule = (FarmCropProcessor) VillageStructures.farmCropProcessor(VillageStructures.FARM_CROPS.get(type));
+			int checked = 0;
 			for (int i = 0; i < 16; i++) {
 				BlockPos at = origin.offset((i % 4) * 4, 0, (i / 4) * 5);
 				StructurePlaceSettings settings = new StructurePlaceSettings().setKnownShape(true); // as a village places its pieces
 				list.list().forEach(settings::addProcessor);
 				farm.placeInWorld(level, at, at, settings, RandomSource.create(1L), Block.UPDATE_CLIENTS);
-				for (BlockPos pos : BlockPos.betweenClosed(at, at.offset(farm.getSize()).offset(-1, -1, -1))) {
-					BlockState state = level.getBlockState(pos);
-					if (!level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
-						continue;
+				// the template's wheat, where it landed: our crop exactly where our rule picks one, nothing of ours elsewhere
+				for (StructureTemplate.StructureBlockInfo wheat : farm.filterBlocks(at, new StructurePlaceSettings(), Blocks.WHEAT)) {
+					BlockState placed = level.getBlockState(wheat.pos());
+					BlockState pick = rule.pick(wheat.pos());
+					if (pick != null) {
+						helper.assertTrue(placed.is(pick.getBlock()), "our rule picks " + pick.getBlock() + " at " + wheat.pos() + " in a " + listId + " farm, it grew " + placed);
+						helper.assertTrue(placed.canSurvive(level, wheat.pos()), placed + " can't live on farmland in a " + listId + " farm");
+					} else {
+						helper.assertFalse(ours.contains(placed.getBlock()), "nothing of ours where our rule picks nothing: " + placed + " at " + wheat.pos()
+							+ " in a " + listId + " farm");
 					}
-					wheatSpots++;
-					if (ours.contains(state.getBlock())) {
-						found.merge(state.getBlock(), 1, Integer::sum);
-						helper.assertTrue(state.canSurvive(level, pos), state + " can't live on farmland in a " + listId + " farm");
-					} else if (vanilla.contains(state.getBlock())) {
-						vanillaCrops++;
-					} else if (BuiltInRegistries.BLOCK.getKey(state.getBlock()).getNamespace().equals("farmersdelight")) {
-						fdCrops++;
-					}
+					checked++;
 				}
 			}
-			Set<Block> expected = new HashSet<>();
-			VillageStructures.FARM_CROPS.get(type).forEach(crop -> expected.add(crop.crop().get()));
-			helper.assertValueEqual(found.keySet(), expected, "our crops in 16 " + listId + " farms (" + found + ")");
-			// expected share of each rule: its chance of the wheat its earlier rules left. The 16 placements overlap and
-			// every block draws by its position, so the same spots are counted several times and the counts swing far more
-			// than independent draws would: the floor is a quarter of the expected share (still catches a crop that
-			// stopped spawning or a rule that lost most of its chance)
-			float left = 1.0F;
-			for (VillageStructures.FarmCrop crop : VillageStructures.FARM_CROPS.get(type)) {
-				double mean = wheatSpots * left * crop.chance();
-				int min = (int) Math.max(1, mean * 0.25);
-				helper.assertTrue(found.getOrDefault(crop.crop().get(), 0) >= min,
-					crop.crop().get() + " in 16 " + listId + " farms: " + found + ", expected at least " + min + " of " + wheatSpots);
-				left *= 1.0F - crop.chance();
-			}
-			// we take our share and no more: the farm's own crops (vanilla's, and FD's when installed) keep most of it
-			int ourTotal = found.values().stream().mapToInt(Integer::intValue).sum();
-			helper.assertTrue(ourTotal <= wheatSpots * (1.0F - left) * 1.5F, "our crops stay within their share of " + listId + " farms: "
-				+ ourTotal + " of " + wheatSpots);
-			helper.assertTrue(vanillaCrops + fdCrops > wheatSpots / 2, "the farm's own crops keep most of a " + listId + " farm: vanilla "
-				+ vanillaCrops + ", FD " + fdCrops + " of " + wheatSpots);
-			if (fd && fdToo) {
-				helper.assertTrue(fdCrops > 0, "Farmer's Delight's crops grow in " + listId + " farms too");
-			}
+			helper.assertTrue(checked > 0, "the farm has wheat to check");
+			farmShares(helper, type, rule);
 		}
 		helper.succeed();
+	}
+
+	/**
+	 * Our rule's shares on a fixed stretch of 20,000 positions, the same in every run: each crop gets its chance of the
+	 * wheat the earlier rules left, all of them together no more than their share, so the farm's own crops keep the rest.
+	 */
+	private static void farmShares(GameTestHelper helper, VillageType type, FarmCropProcessor rule) {
+		Map<Block, Integer> found = new HashMap<>();
+		int spots = 0;
+		for (int x = 0; x < 200; x++) {
+			for (int z = 0; z < 100; z++) {
+				BlockState pick = rule.pick(new BlockPos(x, 64, z));
+				if (pick != null) {
+					found.merge(pick.getBlock(), 1, Integer::sum);
+				}
+				spots++;
+			}
+		}
+		float left = 1.0F;
+		for (VillageStructures.FarmCrop crop : VillageStructures.FARM_CROPS.get(type)) {
+			double mean = spots * left * crop.chance();
+			int got = found.getOrDefault(crop.crop().get(), 0);
+			helper.assertTrue(got >= mean * 0.85 && got <= mean * 1.15, crop.crop().get() + " in " + type.id() + " farms: " + got + " of " + spots
+				+ ", expected about " + Math.round(mean));
+			left *= 1.0F - crop.chance();
+		}
+		int ourTotal = found.values().stream().mapToInt(Integer::intValue).sum();
+		helper.assertTrue(ourTotal <= spots * (1.0F - left) * 1.1F, "our crops stay within their share of " + type.id() + " farms: " + ourTotal + " of " + spots);
 	}
 
 	// ------------------------------------------------------------------ 2. trades
@@ -286,22 +299,27 @@ public final class WorldGameTests
 		assertInSet(helper, sets, TradeSets.WANDERING_TRADER_COMMON, VillageData.WANDERING_TRADER_BARLEY_SEEDS);
 		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_1, VillageData.FARMER_1_BARLEY_EMERALD);
 		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_2, VillageData.FARMER_2_RED_GRAPES_EMERALD);
-		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_3, VillageData.FARMER_3_HOPS_EMERALD);
-		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_4, VillageData.FARMER_4_WHITE_GRAPES_EMERALD);
-		// One crop to buy per level at most: every level keeps most of its vanilla trades (two drawn per level)
-		for (ResourceKey<TradeSet> farmerLevel : List.of(TradeSets.FARMER_LEVEL_1, TradeSets.FARMER_LEVEL_2, TradeSets.FARMER_LEVEL_3, TradeSets.FARMER_LEVEL_4,
-				TradeSets.FARMER_LEVEL_5)) {
-			long buys = sets.getValue(farmerLevel).getTrades().stream().filter(h -> h.unwrapKey().map(k -> k.identifier().getNamespace().equals(VineAndBarrel.MODID)
-				&& k.identifier().getPath().endsWith("_emerald")).orElse(false)).count();
-			helper.assertTrue(buys <= 1, farmerLevel.identifier() + " has " + buys + " of our buying trades");
-		}
-
 		Villager villager = helper.spawn(EntityTypes.VILLAGER, new BlockPos(4, 1, 4));
 		LootContext context = new LootContext.Builder(new LootParams.Builder(level)
 			.withParameter(LootContextParams.ORIGIN, villager.position())
 			.withParameter(LootContextParams.THIS_ENTITY, villager)
 			.withParameter(LootContextParams.ADDITIONAL_COST_COMPONENT_ALLOWED, Unit.INSTANCE)
 			.create(LootContextParamSets.VILLAGER_TRADE)).create(Optional.empty());
+		// Every vanilla trade a farmer is sure to offer stays sure: a level that draws as many trades as vanilla gives it
+		// (or more) gets nothing of ours, and a level that already draws at random gets at most one of our buying trades
+		for (ResourceKey<TradeSet> farmerLevel : List.of(TradeSets.FARMER_LEVEL_1, TradeSets.FARMER_LEVEL_2, TradeSets.FARMER_LEVEL_3, TradeSets.FARMER_LEVEL_4,
+				TradeSets.FARMER_LEVEL_5)) {
+			TradeSet set = sets.getValue(farmerLevel);
+			long vanilla = set.getTrades().stream().filter(h -> h.unwrapKey().map(k -> k.identifier().getNamespace().equals("minecraft")).orElse(false)).count();
+			long ours = set.getTrades().stream().filter(h -> h.unwrapKey().map(k -> k.identifier().getNamespace().equals(VineAndBarrel.MODID)).orElse(false)).count();
+			long buys = set.getTrades().stream().filter(h -> h.unwrapKey().map(k -> k.identifier().getNamespace().equals(VineAndBarrel.MODID)
+				&& k.identifier().getPath().endsWith("_emerald")).orElse(false)).count();
+			int drawn = set.calculateNumberOfTrades(context);
+			if (vanilla <= drawn) {
+				helper.assertValueEqual((int) ours, 0, farmerLevel.identifier() + " offers all " + vanilla + " of its vanilla trades, so none of ours");
+			}
+			helper.assertTrue(buys <= 1, farmerLevel.identifier() + " has " + buys + " of our buying trades");
+		}
 		assertOffer(helper, context, VillageData.FARMER_1_BARLEY_SEEDS, VBItems.BARLEY_SEEDS.get(), 6, 16);
 		assertOffer(helper, context, VillageData.FARMER_2_RED_GRAPES, VBItems.RED_GRAPES.get(), 3, 16);
 		assertOffer(helper, context, VillageData.FARMER_2_HOPS, VBItems.HOPS.get(), 3, 16);
@@ -313,11 +331,9 @@ public final class WorldGameTests
 		// Farmers buy the harvest like vanilla's wheat and FD's crops: 20 for an emerald
 		assertBuys(helper, context, VillageData.FARMER_1_BARLEY_EMERALD, VBItems.BARLEY.get(), 20, 16);
 		assertBuys(helper, context, VillageData.FARMER_2_RED_GRAPES_EMERALD, VBItems.RED_GRAPES.get(), 20, 16);
-		assertBuys(helper, context, VillageData.FARMER_3_HOPS_EMERALD, VBItems.HOPS.get(), 20, 12);
-		assertBuys(helper, context, VillageData.FARMER_4_WHITE_GRAPES_EMERALD, VBItems.WHITE_GRAPES.get(), 20, 12);
 		long ours = level.registryAccess().lookupOrThrow(Registries.VILLAGER_TRADE).listElementIds()
 			.filter(key -> key.identifier().getNamespace().equals(VineAndBarrel.MODID)).count();
-		helper.assertValueEqual((int) ours, 12, "our villager trades");
+		helper.assertValueEqual((int) ours, 10, "our villager trades");
 		helper.succeed();
 	}
 

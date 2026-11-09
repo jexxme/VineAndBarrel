@@ -23,8 +23,6 @@ public class VBTradeTags extends TagsProvider<VillagerTrade>
 		tag(VillagerTradeTags.FARMER_LEVEL_1).add(VillageData.FARMER_1_BARLEY_SEEDS).add(VillageData.FARMER_1_BARLEY_EMERALD);
 		tag(VillagerTradeTags.FARMER_LEVEL_2).add(VillageData.FARMER_2_RED_GRAPES).add(VillageData.FARMER_2_HOPS).add(VillageData.FARMER_2_WHITE_GRAPES)
 			.add(VillageData.FARMER_2_RED_GRAPES_EMERALD);
-		tag(VillagerTradeTags.FARMER_LEVEL_3).add(VillageData.FARMER_3_HOPS_EMERALD);
-		tag(VillagerTradeTags.FARMER_LEVEL_4).add(VillageData.FARMER_4_WHITE_GRAPES_EMERALD);
 		tag(VillagerTradeTags.WANDERING_TRADER_COMMON).add(VillageData.WANDERING_TRADER_RED_GRAPES).add(VillageData.WANDERING_TRADER_HOPS).add(VillageData.WANDERING_TRADER_BARLEY_SEEDS)
 			.add(VillageData.WANDERING_TRADER_WHITE_GRAPES);
 	}

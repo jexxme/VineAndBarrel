@@ -48,11 +48,9 @@ public final class VillageData
 	public static final ResourceKey<VillagerTrade> WANDERING_TRADER_HOPS = trade("wandering_trader/hops");
 	public static final ResourceKey<VillagerTrade> WANDERING_TRADER_WHITE_GRAPES = trade("wandering_trader/white_grapes");
 	public static final ResourceKey<VillagerTrade> WANDERING_TRADER_BARLEY_SEEDS = trade("wandering_trader/barley_seeds");
-	// Farmers also buy the harvest, like vanilla's wheat and FD's onions, tomatoes, cabbages and rice
+	// Farmers also buy barley (novice) and red grapes (apprentice), like vanilla's wheat and FD's cabbages and rice
 	public static final ResourceKey<VillagerTrade> FARMER_1_BARLEY_EMERALD = trade("farmer/1/barley_emerald");
 	public static final ResourceKey<VillagerTrade> FARMER_2_RED_GRAPES_EMERALD = trade("farmer/2/red_grapes_emerald");
-	public static final ResourceKey<VillagerTrade> FARMER_3_HOPS_EMERALD = trade("farmer/3/hops_emerald");
-	public static final ResourceKey<VillagerTrade> FARMER_4_WHITE_GRAPES_EMERALD = trade("farmer/4/white_grapes_emerald");
 
 	private VillageData() {
 	}
@@ -75,13 +73,12 @@ public final class VillageData
 		context.register(WANDERING_TRADER_HOPS, sells(VBItems.HOPS.get(), 1, 12, 1));
 		context.register(WANDERING_TRADER_WHITE_GRAPES, sells(VBItems.WHITE_GRAPES.get(), 1, 12, 1));
 		context.register(WANDERING_TRADER_BARLEY_SEEDS, sells(VBItems.BARLEY_SEEDS.get(), 1, 12, 1));
-		// Buying, 20 for an emerald, one crop per level so no level's vanilla trades get crowded out (a farmer offers two per
-		// level): barley at novice like vanilla's wheat (16 uses, 2 xp), red grapes at apprentice like FD's cabbages and
-		// rice (16 uses, 5 xp), hops at journeyman and white grapes at expert with those levels' vanilla uses and xp
+		// Buying, 20 for an emerald. A farmer offers two trades per level: journeyman, expert and master have exactly two
+		// vanilla ones, so a farmer always offers both, and we leave those levels alone. Novice and apprentice already
+		// draw at random, so each takes one buy of ours: barley at novice like vanilla's wheat (16 uses, 2 xp), red grapes
+		// at apprentice like FD's cabbages and rice (16 uses, 5 xp)
 		context.register(FARMER_1_BARLEY_EMERALD, buys(VBItems.BARLEY.get(), 20, 16, 2));
 		context.register(FARMER_2_RED_GRAPES_EMERALD, buys(VBItems.RED_GRAPES.get(), 20, 16, 5));
-		context.register(FARMER_3_HOPS_EMERALD, buys(VBItems.HOPS.get(), 20, 12, 20));
-		context.register(FARMER_4_WHITE_GRAPES_EMERALD, buys(VBItems.WHITE_GRAPES.get(), 20, 12, 15));
 	}
 
 	private static VillagerTrade buys(ItemLike item, int count, int maxUses, int xp) {
