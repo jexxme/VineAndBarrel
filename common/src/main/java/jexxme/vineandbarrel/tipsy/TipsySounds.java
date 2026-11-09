@@ -15,7 +15,7 @@ import org.jspecify.annotations.Nullable;
  * Every sound Tipsy makes, in one place, so the sound work can change them without touching the levels or the
  * movements: each method is one moment (one hiccup, one stumble...) and plays on the server for everyone nearby.
  * <p>
- * For now the hiccup is our own sound event ({@link TipsyRegistry#HICCUP_SOUND}, a placeholder in {@code sounds.json}),
+ * The hiccup is our own sound event ({@link TipsyRegistry#HICCUP_SOUND}): three takes of a real, dry hiccup (CC0),
  * and the legs use the vanilla foley of the block underfoot (its step for the scuff, its fall and vanilla's big fall for
  * the thud), so they always fit the ground. The blackout's wake-up sounds like the place you wake up in, and Tipsy V
  * has a heartbeat that only you hear ({@link #heartbeat}, the one sound played on the client).

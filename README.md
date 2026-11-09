@@ -137,10 +137,10 @@ Find your Minecraft version and the loader your game or modpack uses, NeoForge o
 
 | Minecraft | NeoForge | Fabric |
 |:--|:--|:--|
-| **26.3** | ✅ [Vine & Barrel 1.0.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.0.1%2Bneoforged.1/VineAndBarrel-26.3-1.0.1%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.0.1%2Bneoforged.1/VineAndBarrel-26.3-1.0.1%2Bfabric.1.jar) |
-| **26.2** | ✅ [Vine & Barrel 1.0.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.0.1%2Bneoforged.1/VineAndBarrel-26.2-1.0.1%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.0.1%2Bneoforged.1/VineAndBarrel-26.2-1.0.1%2Bfabric.1.jar) |
-| **26.1.2** | ✅ [Vine & Barrel 1.0.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.0.1%2Bneoforged.1/VineAndBarrel-26.1.2-1.0.1%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.0.1%2Bneoforged.1/VineAndBarrel-26.1.2-1.0.1%2Bfabric.1.jar) |
-| **26.1 / 26.1.1** | ✅ [Vine & Barrel 1.0.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.0.1%2Bneoforged.1/VineAndBarrel-26.1.1-1.0.1%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.0.1%2Bneoforged.1/VineAndBarrel-26.1.1-1.0.1%2Bfabric.1.jar) |
+| **26.3** | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.0.2%2Bneoforged.1/VineAndBarrel-26.3-1.0.2%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.0.2%2Bneoforged.1/VineAndBarrel-26.3-1.0.2%2Bfabric.1.jar) |
+| **26.2** | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.0.2%2Bneoforged.1/VineAndBarrel-26.2-1.0.2%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.0.2%2Bneoforged.1/VineAndBarrel-26.2-1.0.2%2Bfabric.1.jar) |
+| **26.1.2** | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.0.2%2Bneoforged.1/VineAndBarrel-26.1.2-1.0.2%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.0.2%2Bneoforged.1/VineAndBarrel-26.1.2-1.0.2%2Bfabric.1.jar) |
+| **26.1 / 26.1.1** | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.0.2%2Bneoforged.1/VineAndBarrel-26.1.1-1.0.2%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.0.2](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.0.2%2Bneoforged.1/VineAndBarrel-26.1.1-1.0.2%2Bfabric.1.jar) |
 
 Or pick from the full file list on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/vine-and-barrel/files).
 

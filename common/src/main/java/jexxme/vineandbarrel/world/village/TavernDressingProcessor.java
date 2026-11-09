@@ -34,13 +34,14 @@ import java.util.List;
 
 /**
  * Dresses a tavern as a village places it, so no two taverns are the same: every cask gets one of the batches its
- * template offers (another of the village's drinks, two to four servings; aged casks stay aged, so a tavern always has a
- * few), some drinks leave the tables and the rest swap places, the flowers and potted plants come from the village's
- * own, and the tavern picks one colour for its banners and one for its candles, which burn down to one to four.
+ * template offers (another of the village's drinks; aged casks stay aged, so a tavern always has a few), half the young
+ * ones drunk dry and the rest holding one or two servings, as do the aged ones; some drinks leave the tables and the rest
+ * swap places, the flowers and potted plants come from the village's own, and the tavern picks one colour for its banners
+ * and one for its candles, which burn down to one to four.
  * <p>
  * Each block draws from its own position, each whole-tavern choice from the tavern's origin, so the same tavern always
- * comes out the same, and two taverns hardly ever do. Everything a GameTest checks stays true: casks keep two or more
- * servings or none and their fill gauge, every table keeps at least one drink and shows what it holds.
+ * comes out the same, and two taverns hardly ever do. Everything a GameTest checks stays true: casks keep their fill
+ * gauge, every table keeps at least one drink and shows what it holds.
  */
 public final class TavernDressingProcessor implements StructureProcessor
 {
@@ -189,17 +190,17 @@ public final class TavernDressingProcessor implements StructureProcessor
 		if (batch == null) {
 			return new StructureTemplate.StructureBlockInfo(info.pos(), info.state(), out);
 		}
-		// a tavern that has been serving: aged casks (wax bung) hold two or three servings; of the young ones about a
-		// third are drunk dry and the rest hold one to three, so a tavern holds some thirty to forty servings
+		// a tavern that has been serving: aged casks (wax bung) hold one or two servings; of the young ones half are drunk
+		// dry and the rest hold one or two, so a tavern holds some fifteen to twenty servings
 		boolean aged = info.state().getValue(AgingBarrelBlock.BUNG) == jexxme.vineandbarrel.barrel.BungState.WAX;
-		if (!aged && random.nextFloat() < 0.3F) {
+		if (!aged && random.nextFloat() < 0.5F) {
 			out.remove("Batch");
 			out.remove("PausedAge");
 			BlockState empty = info.state().setValue(AgingBarrelBlock.FILL, 0)
 				.setValue(AgingBarrelBlock.BUNG, BarrelRegistry.AGING_BARREL.get().defaultBlockState().getValue(AgingBarrelBlock.BUNG));
 			return new StructureTemplate.StructureBlockInfo(info.pos(), empty, out);
 		}
-		int fill = aged ? 2 + random.nextInt(2) : 1 + random.nextInt(3);
+		int fill = 1 + random.nextInt(2);
 		Tag poured = batch.copy();
 		if (poured instanceof CompoundTag batchTag) {
 			batchTag.putInt("servings", fill);

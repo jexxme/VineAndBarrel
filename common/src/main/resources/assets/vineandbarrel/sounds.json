@@ -16,9 +16,16 @@
     "subtitle": "subtitles.vineandbarrel.entity.player.hiccup",
     "sounds": [
       {
-        "name": "minecraft:random/burp",
-        "pitch": 1.6,
-        "volume": 0.45
+        "name": "vineandbarrel:entity/player/hiccup1",
+        "volume": 0.3
+      },
+      {
+        "name": "vineandbarrel:entity/player/hiccup2",
+        "volume": 0.3
+      },
+      {
+        "name": "vineandbarrel:entity/player/hiccup3",
+        "volume": 0.3
       }
     ]
   },

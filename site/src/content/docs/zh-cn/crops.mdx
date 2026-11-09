@@ -51,11 +51,12 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 
 <Render name="scenes/trellis" float="right" size={256} alt="棚架上的葡萄藤和啤酒花藤，以及一个空棚架" />
 
-把<Item id="trellis" />放在灌木顶上，灌木成熟后就会往上爬，最高 {c.climbMaxHeight} 格，一路都结果。
+把<Item id="trellis" />插进灌木（拿着棚架右键灌木），或者把灌木种进立在地上的棚架里。灌木成熟后会顺着上面叠放的棚架往上爬，最高 {c.climbMaxHeight} 格，一路都结果。
 放置棚架时它会朝向你，并和下面那个对齐，所以一排排保持整齐。
 
 - 每一节藤的生长、结果和采摘都和灌木一样，半熟也能摘。对成熟的灌木使用骨粉，会立刻开始攀爬。
-- 破坏一节藤会得到它的果实，棚架仍然立着。
+- 破坏一节藤或灌木会得到它的果实，棚架仍然立着。
+- 放在灌木顶上的棚架也可以。
 - 棚架不是梯子：上面的一切站在地上都够得着。
 
 <Recipe id="trellis" />

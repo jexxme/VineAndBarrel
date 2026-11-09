@@ -1,6 +1,7 @@
 package jexxme.vineandbarrel.gametest;
 
 import jexxme.vineandbarrel.block.BushSupport;
+import jexxme.vineandbarrel.block.BushTrellis;
 import jexxme.vineandbarrel.block.ClimbingBushBlock;
 import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.block.VBFlammability;
@@ -69,6 +70,9 @@ final class VBTrellisTests
 		test("crops_trellis_pistons_and_the_height_limit", LARGE, 200, VBTrellisTests::pistonsAndHeightLimit);
 		test("crops_trellis_explosion_leaves_the_trellis", LARGE, 200, VBTrellisTests::explosionLeavesTrellis);
 		test("crops_trellis_holds_water_burns_and_turns", VBTrellisTests::waterFuelAndTurns);
+		test("crops_trellis_goes_into_the_bush_either_way", VBTrellisTests::intoTheBushEitherWay);
+		test("crops_trellis_bush_in_a_trellis_climbs_and_leaves_it", LARGE, 200, VBTrellisTests::bushInTrellisClimbsAndLeavesIt);
+		test("crops_trellis_in_a_bush_survives_fire_water_and_pistons", LARGE, 200, VBTrellisTests::trellisInBushSurvives);
 	}
 
 	// ------------------------------------------------------------------ helpers
@@ -297,6 +301,171 @@ final class VBTrellisTests
 		net.minecraft.world.phys.Vec3 at = net.minecraft.world.phys.Vec3.atCenterOf(helper.absolutePos(bush.above()));
 		helper.getLevel().explode(null, at.x, at.y, at.z, 1.0F, net.minecraft.world.level.Level.ExplosionInteraction.TNT);
 		helper.succeedWhen(() -> helper.assertBlockState(bush.above(), trellis(Direction.Axis.Z)));
+	}
+
+	// ------------------------------------------------------------------ a trellis in the bush's own block
+
+	private static BlockState bushIn(Block bush, int age, BushTrellis trellis) {
+		return bush.defaultBlockState().setValue(ClimbingCropBlock.AGE, age).setValue(ClimbingBushBlock.TRELLIS, trellis);
+	}
+
+	/**
+	 * The trellis goes into the plant, in either order. Grapes used on a trellis standing on soil plant a young bush into
+	 * it (the trellis stays, facing its way); not on stone, not under water. A trellis used on a bush goes into it, facing
+	 * the player, or lined up with the trellis above it. A trellis stacked on such a bush keeps its line; a quarter turn
+	 * turns it; you bump into its panel and mobs don't path through it.
+	 */
+	private static void intoTheBushEitherWay(GameTestHelper helper) {
+		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		// trellis first
+		BlockPos soil = new BlockPos(1, 1, 1);
+		helper.setBlock(soil.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(soil, trellis(Direction.Axis.Z));
+		ItemStack grapes = new ItemStack(VBItems.RED_GRAPES.get(), 4);
+		player.setItemInHand(InteractionHand.MAIN_HAND, grapes);
+		helper.useBlock(soil, player);
+		helper.assertBlockState(soil, bushIn(VBBlocks.GRAPE_BUSH.get(), 0, BushTrellis.Z));
+		helper.assertValueEqual(grapes.getCount(), 3, "grapes left after planting one into a trellis");
+		BlockPos stone = new BlockPos(3, 1, 1);
+		helper.setBlock(stone.below(), Blocks.STONE);
+		helper.setBlock(stone, trellis(Direction.Axis.X));
+		helper.useBlock(stone, player);
+		helper.assertBlockState(stone, trellis(Direction.Axis.X));
+		BlockPos wet = new BlockPos(5, 1, 1);
+		helper.setBlock(wet.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(wet, trellis(Direction.Axis.X).setValue(TrellisBlock.WATERLOGGED, true));
+		helper.useBlock(wet, player);
+		helper.assertTrue(state(helper, wet).is(VBBlocks.TRELLIS.get()), "nothing is planted into a trellis under water");
+		helper.assertValueEqual(grapes.getCount(), 3, "no grapes used on stone or under water");
+
+		// plant first
+		BlockPos bush = new BlockPos(1, 1, 3);
+		helper.setBlock(bush.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(bush, VBBlocks.HOP_BUSH.get().defaultBlockState().setValue(ClimbingCropBlock.AGE, 1));
+		ItemStack trellises = new ItemStack(VBItems.TRELLIS.get(), 4);
+		player.setItemInHand(InteractionHand.MAIN_HAND, trellises);
+		player.setYRot(0.0F); // looking south: the panel runs east-west
+		helper.useBlock(bush, player);
+		helper.assertBlockState(bush, bushIn(VBBlocks.HOP_BUSH.get(), 1, BushTrellis.X));
+		helper.assertValueEqual(trellises.getCount(), 3, "trellises left after putting one into a bush");
+		// a trellis stacked on it keeps its line, whichever way the player looks
+		player.setYRot(90.0F);
+		helper.placeAt(player, trellises, bush, Direction.UP);
+		helper.assertBlockState(bush.above(), trellis(Direction.Axis.X));
+		helper.assertValueEqual(state(helper, bush).getValue(ClimbingBushBlock.SUPPORT), BushSupport.TRELLIS_X, "and the bush knows the trellis above");
+		// lined up with a trellis already above it
+		BlockPos under = new BlockPos(3, 1, 3);
+		helper.setBlock(under.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(under, VBBlocks.GRAPE_BUSH.get().defaultBlockState().setValue(ClimbingCropBlock.AGE, 3));
+		helper.setBlock(under.above(), trellis(Direction.Axis.Z));
+		player.setYRot(0.0F);
+		helper.useBlock(under, player);
+		helper.assertValueEqual(state(helper, under).getValue(ClimbingBushBlock.TRELLIS), BushTrellis.Z, "a trellis put into a bush lines up with the one above");
+		helper.assertValueEqual(state(helper, under).getValue(ClimbingCropBlock.AGE), 3, "putting a trellis in picks nothing");
+
+		BlockState in = bushIn(VBBlocks.GRAPE_BUSH.get(), 2, BushTrellis.X);
+		helper.assertValueEqual(in.rotate(net.minecraft.world.level.block.Rotation.CLOCKWISE_90).getValue(ClimbingBushBlock.TRELLIS), BushTrellis.Z,
+				"a quarter turn turns the trellis in the bush");
+		helper.assertValueEqual(in.getCollisionShape(helper.getLevel(), helper.absolutePos(soil)), TrellisBlock.panel(Direction.Axis.X), "you bump into the panel");
+		helper.assertTrue(VBBlocks.GRAPE_BUSH.get().defaultBlockState().getCollisionShape(helper.getLevel(), helper.absolutePos(soil)).isEmpty(),
+				"a bush without a trellis lets you through, as before");
+		helper.assertFalse(in.isPathfindable(PathComputationType.LAND), "no path for mobs through a trellis in a bush");
+		helper.succeed();
+	}
+
+	/**
+	 * A ripe bush with a trellis in it climbs the trellises above to full height like any bush. A player breaking it gets
+	 * its fruit and leaves its trellis standing, facing the same way, and the vines above turn back into their trellises.
+	 * An explosion leaves the trellis too.
+	 */
+	private static void bushInTrellisClimbsAndLeavesIt(GameTestHelper helper) {
+		BlockPos bush = new BlockPos(2, 1, 2);
+		helper.setBlock(bush.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(bush, bushIn(VBBlocks.GRAPE_BUSH.get(), ClimbingCropBlock.MAX_AGE, BushTrellis.Z));
+		helper.setBlock(bush.above(), trellis(Direction.Axis.Z));
+		helper.setBlock(bush.above(2), trellis(Direction.Axis.Z));
+		helper.assertTrue(boneMeal(helper, bush), "bone meal makes it climb");
+		helper.assertTrue(state(helper, bush.above()).is(VBBlocks.GRAPE_VINE_ON_TRELLIS.get()), "it climbs the trellis above");
+		helper.assertTrue(boneMeal(helper, bush.above()) && boneMeal(helper, bush.above()) && boneMeal(helper, bush.above()) && boneMeal(helper, bush.above()),
+				"bone meal ripens the vine and makes it climb on");
+		helper.assertTrue(state(helper, bush.above(2)).is(VBBlocks.GRAPE_VINE_ON_TRELLIS.get()), "full height, the trellis in the bush counted with it");
+		helper.assertValueEqual(state(helper, bush).getValue(ClimbingBushBlock.TRELLIS), BushTrellis.Z, "climbing keeps the trellis in the bush");
+		// the vines above picked back to unripe, so whatever fruit drops below comes from the bush itself
+		for (BlockPos vine : List.of(bush.above(), bush.above(2))) {
+			helper.setBlock(vine, state(helper, vine).setValue(ClimbingCropBlock.AGE, ClimbingCropBlock.PICKED_AGE));
+		}
+
+		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		player.setGameMode(GameType.SURVIVAL);
+		player.gameMode.destroyBlock(helper.absolutePos(bush));
+		helper.assertBlockState(bush, trellis(Direction.Axis.Z));
+
+		BlockPos blown = new BlockPos(5, 1, 5);
+		helper.setBlock(blown.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(blown, bushIn(VBBlocks.HOP_BUSH.get(), 1, BushTrellis.X));
+		net.minecraft.world.phys.Vec3 at = net.minecraft.world.phys.Vec3.atCenterOf(helper.absolutePos(blown));
+		helper.getLevel().explode(null, at.x, at.y + 0.5, at.z, 1.0F, net.minecraft.world.level.Level.ExplosionInteraction.TNT);
+
+		helper.runAfterDelay(5, () -> {
+			helper.assertBlockState(bush.above(), trellis(Direction.Axis.Z));
+			helper.assertBlockState(bush.above(2), trellis(Direction.Axis.Z));
+			int grapes = collect(helper, bush, VBItems.RED_GRAPES.get());
+			helper.assertTrue(grapes >= 2, "breaking the ripe plant gives its fruit (and no trellis item), dropped " + grapes);
+			helper.assertBlockState(blown, trellis(Direction.Axis.X));
+			helper.succeed();
+		});
+	}
+
+	/**
+	 * However the plant goes, its trellis isn't lost: fire burning the plant leaves it, a water source flowing in leaves
+	 * it holding the water, flowing water washing the plant away drops it as an item. A piston moves the plant whole, like
+	 * its vines: onto soil it lives on with its trellis, off its soil it breaks and the trellis stays.
+	 */
+	private static void trellisInBushSurvives(GameTestHelper helper) {
+		BlockPos burnt = new BlockPos(1, 1, 1);
+		BlockPos soaked = new BlockPos(3, 1, 1);
+		BlockPos washed = new BlockPos(5, 1, 1);
+		for (BlockPos pos : List.of(burnt, soaked, washed)) {
+			helper.setBlock(pos.below(), Blocks.GRASS_BLOCK);
+			helper.setBlock(pos, bushIn(VBBlocks.GRAPE_BUSH.get(), 2, BushTrellis.X));
+		}
+		helper.assertValueEqual(VBBlocks.GRAPE_BUSH.get().defaultBlockState().getPistonPushReaction(), PushReaction.PUSH_PULL, "bush push reaction");
+		helper.setBlock(burnt, Blocks.FIRE);
+		helper.assertBlockState(burnt, trellis(Direction.Axis.X));
+		helper.setBlock(soaked, Blocks.WATER);
+		helper.assertBlockState(soaked, trellis(Direction.Axis.X).setValue(TrellisBlock.WATERLOGGED, true));
+		helper.setBlock(washed, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 2));
+		helper.assertItemEntityPresent(VBItems.TRELLIS.get(), washed, 1.5);
+		// its soil dug away: the bush breaks a tick later, drops its fruit and leaves the trellis
+		BlockPos dug = new BlockPos(16, 1, 16); // well away from the water above
+		helper.setBlock(dug.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(dug, bushIn(VBBlocks.GRAPE_BUSH.get(), ClimbingCropBlock.MAX_AGE, BushTrellis.X));
+		helper.setBlock(dug.below(), Blocks.AIR);
+		// on farmland the bush keeps it farmland, trellis or not (a trellis in it is solid)
+		BlockPos farm = new BlockPos(16, 1, 20);
+		helper.setBlock(farm.below(), Blocks.FARMLAND);
+		helper.setBlock(farm, bushIn(VBBlocks.HOP_BUSH.get(), 1, BushTrellis.Z));
+		helper.assertTrue(state(helper, farm).is(BlockTags.MAINTAINS_FARMLAND), "a bush keeps the farmland under it");
+		helper.assertBlockPresent(Blocks.FARMLAND, farm.below());
+
+		// pushed east onto grass: lives on; pushed east off its soil: breaks, the trellis stays
+		BlockPos moved = new BlockPos(2, 1, 4);
+		BlockPos dropped = new BlockPos(2, 1, 7);
+		helper.setBlock(moved.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(moved.east().below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(dropped.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(dropped.east().below(), Blocks.STONE);
+		for (BlockPos pos : List.of(moved, dropped)) {
+			helper.setBlock(pos, bushIn(VBBlocks.HOP_BUSH.get(), 1, BushTrellis.Z));
+			helper.setBlock(pos.west(), Blocks.PISTON.defaultBlockState().setValue(PistonBaseBlock.FACING, Direction.EAST));
+			helper.setBlock(pos.west(2), Blocks.REDSTONE_BLOCK);
+		}
+		helper.succeedWhen(() -> {
+			helper.assertBlockState(dug, trellis(Direction.Axis.X));
+			helper.assertItemEntityPresent(VBItems.RED_GRAPES.get(), dug, 1.5);
+			helper.assertBlockState(moved.east(), bushIn(VBBlocks.HOP_BUSH.get(), 1, BushTrellis.Z));
+			helper.assertBlockState(dropped.east(), trellis(Direction.Axis.Z));
+		});
 	}
 
 	// ------------------------------------------------------------------ climbing

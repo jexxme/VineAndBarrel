@@ -121,6 +121,7 @@ public final class WorldGameTests
 	static {
 		// under the open sky, so canSurvive judges the soil and not the light
 		register("world_farm_processors_grow_our_crops", LARGE, 100, true, WorldGameTests::farmProcessors);
+		register("world_zombie_village_farms_grow_our_crops", LARGE, 100, true, WorldGameTests::zombieFarmProcessors);
 		register("world_trades_sell_our_seeds", LARGE, 100, WorldGameTests::trades);
 		register("world_village_chests_gain_our_loot", LARGE, 100, WorldGameTests::houseLoot);
 		register("world_tavern_chest_loot", LARGE, 100, WorldGameTests::tavernLoot);
@@ -189,6 +190,19 @@ public final class WorldGameTests
 	 * server start left them: nothing here adds the processor itself.
 	 */
 	private static void farmProcessors(GameTestHelper helper) {
+		farms(helper, VillageType::farmProcessors, true);
+	}
+
+	/**
+	 * The same for abandoned villages: their farms are placed with the type's zombie processor list, which carries
+	 * vanilla's farm rules too, so it gets our processor, first, and grows the same crops in the same shares. Farmer's
+	 * Delight adds its crops only to living villages' farms, so its crops aren't expected here.
+	 */
+	private static void zombieFarmProcessors(GameTestHelper helper) {
+		farms(helper, VillageType::zombieProcessors, false);
+	}
+
+	private static void farms(GameTestHelper helper, java.util.function.Function<VillageType, Identifier> listOf, boolean fdToo) {
 		ServerLevel level = helper.getLevel();
 		Registry<StructureProcessorList> lists = level.registryAccess().lookupOrThrow(Registries.PROCESSOR_LIST);
 		StructureTemplate farm = level.getStructureTemplateManager().get(Identifier.withDefaultNamespace("village/plains/houses/plains_large_farm_1"))
@@ -198,11 +212,12 @@ public final class WorldGameTests
 		Set<Block> ours = Set.of(VBBlocks.BARLEY.get(), VBBlocks.GRAPE_BUSH.get(), VBBlocks.HOP_BUSH.get(), VBBlocks.WHITE_GRAPE_BUSH.get());
 		Set<Block> vanilla = Set.of(Blocks.WHEAT, Blocks.CARROTS, Blocks.POTATOES, Blocks.BEETROOTS, Blocks.MELON_STEM, Blocks.PUMPKIN_STEM);
 		for (VillageType type : VillageType.values()) {
-			StructureProcessorList list = lists.getValue(type.farmProcessors());
-			helper.assertTrue(list != null, "processor list " + type.farmProcessors());
+			Identifier listId = listOf.apply(type);
+			StructureProcessorList list = lists.getValue(listId);
+			helper.assertTrue(list != null, "processor list " + listId);
 			long count = list.list().stream().filter(VillageStructures::isOurFarmProcessor).count();
-			helper.assertValueEqual((int) count, 1, "our farm processors in " + type.farmProcessors());
-			helper.assertTrue(VillageStructures.isOurFarmProcessor(list.list().getFirst()), "ours runs first in " + type.farmProcessors());
+			helper.assertValueEqual((int) count, 1, "our farm processors in " + listId);
+			helper.assertTrue(VillageStructures.isOurFarmProcessor(list.list().getFirst()), "ours runs first in " + listId);
 
 			Map<Block, Integer> found = new HashMap<>();
 			int wheatSpots = 0;
@@ -221,7 +236,7 @@ public final class WorldGameTests
 					wheatSpots++;
 					if (ours.contains(state.getBlock())) {
 						found.merge(state.getBlock(), 1, Integer::sum);
-						helper.assertTrue(state.canSurvive(level, pos), state + " can't live on farmland in a " + type.id() + " farm");
+						helper.assertTrue(state.canSurvive(level, pos), state + " can't live on farmland in a " + listId + " farm");
 					} else if (vanilla.contains(state.getBlock())) {
 						vanillaCrops++;
 					} else if (BuiltInRegistries.BLOCK.getKey(state.getBlock()).getNamespace().equals("farmersdelight")) {
@@ -231,7 +246,7 @@ public final class WorldGameTests
 			}
 			Set<Block> expected = new HashSet<>();
 			VillageStructures.FARM_CROPS.get(type).forEach(crop -> expected.add(crop.crop().get()));
-			helper.assertValueEqual(found.keySet(), expected, "our crops in 16 " + type.id() + " farms (" + found + ")");
+			helper.assertValueEqual(found.keySet(), expected, "our crops in 16 " + listId + " farms (" + found + ")");
 			// expected share of each rule: its chance of the wheat its earlier rules left. The 16 placements overlap and
 			// every block draws by its position, so the same spots are counted several times and the counts swing far more
 			// than independent draws would: the floor is a quarter of the expected share (still catches a crop that
@@ -241,17 +256,17 @@ public final class WorldGameTests
 				double mean = wheatSpots * left * crop.chance();
 				int min = (int) Math.max(1, mean * 0.25);
 				helper.assertTrue(found.getOrDefault(crop.crop().get(), 0) >= min,
-					crop.crop().get() + " in 16 " + type.id() + " farms: " + found + ", expected at least " + min + " of " + wheatSpots);
+					crop.crop().get() + " in 16 " + listId + " farms: " + found + ", expected at least " + min + " of " + wheatSpots);
 				left *= 1.0F - crop.chance();
 			}
 			// we take our share and no more: the farm's own crops (vanilla's, and FD's when installed) keep most of it
 			int ourTotal = found.values().stream().mapToInt(Integer::intValue).sum();
-			helper.assertTrue(ourTotal <= wheatSpots * (1.0F - left) * 1.5F, "our crops stay within their share of " + type.id() + " farms: "
+			helper.assertTrue(ourTotal <= wheatSpots * (1.0F - left) * 1.5F, "our crops stay within their share of " + listId + " farms: "
 				+ ourTotal + " of " + wheatSpots);
-			helper.assertTrue(vanillaCrops + fdCrops > wheatSpots / 2, "the farm's own crops keep most of a " + type.id() + " farm: vanilla "
+			helper.assertTrue(vanillaCrops + fdCrops > wheatSpots / 2, "the farm's own crops keep most of a " + listId + " farm: vanilla "
 				+ vanillaCrops + ", FD " + fdCrops + " of " + wheatSpots);
-			if (fd) {
-				helper.assertTrue(fdCrops > 0, "Farmer's Delight's crops grow in " + type.id() + " farms too");
+			if (fd && fdToo) {
+				helper.assertTrue(fdCrops > 0, "Farmer's Delight's crops grow in " + listId + " farms too");
 			}
 		}
 		helper.succeed();
@@ -364,20 +379,22 @@ public final class WorldGameTests
 		throw helper.assertionException(layout.name() + " is not in " + layout.type().housesPool());
 	}
 
-	/** Applying again (a second server start in the same JVM) changes no pool and no farm processor list. */
+	/** Applying again (a second server start in the same JVM) changes no pool and no farm processor list, a zombie village's included. */
 	private static void applyIsIdempotent(GameTestHelper helper) {
 		var access = helper.getLevel().registryAccess();
 		Map<VillageType, List<Object>> before = new HashMap<>();
 		for (VillageType type : VillageType.values()) {
 			before.put(type, List.of(List.copyOf(access.lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool()).rawTemplates),
 				access.lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool()).templates.size(),
-				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.farmProcessors()).list())));
+				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.farmProcessors()).list()),
+				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.zombieProcessors()).list())));
 		}
 		VillageStructures.apply(access);
 		for (VillageType type : VillageType.values()) {
 			List<Object> after = List.of(List.copyOf(access.lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool()).rawTemplates),
 				access.lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool()).templates.size(),
-				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.farmProcessors()).list()));
+				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.farmProcessors()).list()),
+				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.zombieProcessors()).list()));
 			helper.assertValueEqual(after, before.get(type), type.id() + " pool and farm processors after applying again");
 		}
 		helper.succeed();
@@ -656,26 +673,28 @@ public final class WorldGameTests
 		helper.assertTrue(barrels.stream().anyMatch(pos -> level.getBlockState(pos).getValue(AgingBarrelBlock.STACKED)), "a barrel stack in the " + name + " tavern");
 		helper.assertTrue(barrels.stream().anyMatch(pos -> level.getBlockState(pos).getValue(AgingBarrelBlock.LEFT) && level.getBlockState(pos).getValue(AgingBarrelBlock.RIGHT)),
 			"a barrel rack in the " + name + " tavern");
-		// W1: after a tick the barrels know their age; tap each by hand
+		// W1: after a tick the barrels know their age. A tavern has been serving: half its young casks are drunk dry (which
+		// ones comes from each cask's position), the rest hold one or two servings, and its aged casks are never dry, so
+		// every tavern has stock. The rule is checked cask by cask, nothing here counts on a draw.
 		helper.runAfterDelay(3, () -> {
-			List<BlockPos> stock = barrels.stream().filter(pos -> ((AgingBarrelBlockEntity) level.getBlockEntity(pos)).servings() > 0)
-				.map(pos -> relativePos(helper, pos)).toList();
-			helper.assertTrue(stock.size() >= 6, "casks of tavern stock in the " + name + " tavern: " + stock.size());
+			List<BlockPos> stock = new java.util.ArrayList<>();
+			for (BlockPos pos : barrels) {
+				AgingBarrelBlockEntity be = (AgingBarrelBlockEntity) level.getBlockEntity(pos);
+				boolean waxed = level.getBlockState(pos).getValue(AgingBarrelBlock.BUNG) == jexxme.vineandbarrel.barrel.BungState.WAX;
+				helper.assertTrue(be.servings() <= 2, "at most two servings left in the cask at " + relativePos(helper, pos) + ": " + be.servings());
+				helper.assertTrue(!waxed || be.servings() >= 1, "the aged cask at " + relativePos(helper, pos) + " isn't drunk dry");
+				if (be.servings() > 0) {
+					stock.add(relativePos(helper, pos));
+				}
+			}
 			for (BlockPos barrel : stock) {
 				helper.assertFalse(helper.getBlockEntity(barrel, AgingBarrelBlockEntity.class).isHomeBrewed(), "tavern stock is not home-brewed at " + barrel);
 			}
-			int aged = 0;
-			for (BlockPos barrel : stock) {
-				aged += tapsByHand(helper, barrel) ? 1 : 0;
-			}
-			helper.assertTrue(aged >= 1 && aged <= 3, "a few aged casks in the " + name + " tavern: " + aged);
-			// they keep aging from where the template left them: the saved age is a start, not a frozen value (the ones still
-			// holding something after the taps; a cask tapped dry has no batch left to age)
-			List<BlockPos> left = stock.stream().filter(barrel -> helper.getBlockEntity(barrel, AgingBarrelBlockEntity.class).servings() > 0).toList();
-			helper.assertTrue(left.size() >= 3, "casks still holding something after a tap each: " + left.size());
+			// they keep aging from where the template left them: the saved age is a start, not a frozen value (every cask of
+			// stock, before any is tapped dry)
 			Map<BlockPos, Long> ages = new HashMap<>();
 			Map<BlockPos, Long> toNext = new HashMap<>();
-			for (BlockPos barrel : left) {
+			for (BlockPos barrel : stock) {
 				AgingBarrelBlockEntity be = helper.getBlockEntity(barrel, AgingBarrelBlockEntity.class);
 				ages.put(barrel, be.age());
 				toNext.put(barrel, be.ticksToNextStage());
@@ -683,7 +702,7 @@ public final class WorldGameTests
 			long start = level.getGameTime();
 			helper.runAfterDelay(20, () -> {
 				long waited = level.getGameTime() - start;
-				for (BlockPos barrel : left) {
+				for (BlockPos barrel : stock) {
 					AgingBarrelBlockEntity be = helper.getBlockEntity(barrel, AgingBarrelBlockEntity.class);
 					helper.assertTrue(be.age() >= ages.get(barrel) + waited, "the barrel at " + barrel + " aged " + (be.age() - ages.get(barrel))
 						+ " ticks in " + waited);
@@ -691,6 +710,12 @@ public final class WorldGameTests
 						helper.assertTrue(be.ticksToNextStage() <= toNext.get(barrel) - waited, "the young barrel at " + barrel + " comes closer to aged");
 					}
 				}
+				// then tap each by hand
+				int aged = 0;
+				for (BlockPos barrel : stock) {
+					aged += tapsByHand(helper, barrel) ? 1 : 0;
+				}
+				helper.assertTrue(aged >= 1 && aged <= 3, "a few aged casks in the " + name + " tavern: " + aged);
 				helper.succeed();
 			});
 		});
@@ -742,12 +767,11 @@ public final class WorldGameTests
 		Placed t = placeTavern(helper, layout);
 		String name = layout.name();
 		// the bar: in front of the tavern chest behind the counter; the cellar: in front of a cask on the cellar floor, down
-		// the stairs below the hall, that a villager can stand in front of
+		// the stairs below the hall, that a villager can stand in front of (full or drunk dry: the way there is the same)
 		BlockPos chest = t.find(s -> s.is(Blocks.CHEST)).getFirst();
 		BlockPos bar = chest.relative(level.getBlockState(chest).getValue(ChestBlock.FACING));
 		BlockPos cellar = t.find(s -> s.is(BarrelRegistry.AGING_BARREL.get())).stream()
-			.filter(pos -> pos.getY() < t.street().getY() - 1 && !level.getBlockState(pos.below()).is(BarrelRegistry.AGING_BARREL.get())
-				&& ((AgingBarrelBlockEntity) level.getBlockEntity(pos)).servings() > 0)
+			.filter(pos -> pos.getY() < t.street().getY() - 1 && !level.getBlockState(pos.below()).is(BarrelRegistry.AGING_BARREL.get()))
 			.sorted(java.util.Comparator.<BlockPos>comparingInt(pos -> -pos.getX()).thenComparingInt(pos -> -pos.getZ()))
 			.map(pos -> pos.relative(level.getBlockState(pos).getValue(AgingBarrelBlock.FACING)))
 			.filter(front -> level.getBlockState(front).isAir() && level.getBlockState(front.above()).isAir())
