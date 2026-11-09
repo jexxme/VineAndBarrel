@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1 Portion",
   "container.vineandbarrel.brew_kettle.servings": "%s Portionen",
   "container.vineandbarrel.brew_kettle.big": "Großer Braukessel",
-  "container.vineandbarrel.brew_kettle.great": "Riesiger Braukessel",
   "container.vineandbarrel.brew_kettle.batch": "Ein Sud ergibt %s Portionen",
   "container.vineandbarrel.recipe_book.brewable": "Braubares wird angezeigt",
   "tooltip.vineandbarrel.brew_kettle.empty": "Leer",

@@ -69,31 +69,29 @@ screen open, its lid is up and you can see the brew inside.
 
 ## Big kettles
 
-<Render name="scenes/kettle-family" size={384} caption="A Great, a Big and a plain Brew Kettle" />
+<Render name="scenes/kettle-family" size={384} caption="A Big and a plain Brew Kettle" />
 
-Place kettles together into a cube and they become one: **8 kettles in a 2×2×2 cube** make a **Big Brew Kettle**, **27 in
-a 3×3×3 cube** a **Great Brew Kettle**. They join when you place the last kettle of the cube, and a Big Kettle inside a cube
-of 27 grows into a Great Kettle. Kettles holding different brews don't join.
+Place **8 kettles in a 2×2×2 cube** and they become one **Big Brew Kettle**. They join when you place the last kettle of
+the cube. Kettles holding different brews, or of a different copper, don't join.
 
-- **Bigger batches.** Every block adds a batch: a Big Kettle brews 32 servings at once, a Great Kettle 108. That's four
-  and thirteen barrels.
+- **Bigger batches.** Every block adds a batch: a Big Kettle brews 32 servings at once. That's four barrels.
 - **Fire.** One fire under it is enough. Every fire under its bottom layer makes it faster: with a fire under every block it
-  brews a full batch in twice (Big) or three times (Great) the time of a single kettle. Short on ingredients? It brews as
+  brews a full batch in twice the time of a single kettle. Short on ingredients? It brews as
   many sets as the grid holds.
-- **Room.** It holds 64 servings per block: 512 in a Big Kettle, 1728 in a Great Kettle.
+- **Room.** It holds 64 servings per block: 512 in a Big Kettle.
 - **Any block.** Every block of it opens the screen, fills bottles and buckets, takes hoppers and gives a comparator signal.
 - **Breaking.** Break any block and the kettle falls apart into single kettles, each keeping its share of the brew; the
   broken one drops with its share. Put a kettle back into the gap and it joins again.
 - **One vessel.** It weathers as one, and one honeycomb or one axe scrape changes all of it.
 
 <Render name="scenes/kettle-big" size={256} caption="Big Brew Kettle" />
-<Render name="scenes/kettle-great" size={256} caption="Great Brew Kettle with a taller chimney" />
+<Render name="scenes/kettle-big-chimney" size={256} caption="Big Brew Kettle with a taller chimney" />
 
 ## Chimney
 
 <Render name="scenes/kettle-chimney" float="right" size={192} alt="A kettle whose chimney goes through a plank roof" />
 
-Right-click a kettle or its chimney with a <Item id="copper_ingot" /> and the chimney grows a block taller, up to 8. It
+Right-click a kettle or its chimney with a <Item id="copper_ingot" /> and the chimney grows a block taller, up to 8 blocks. It
 breaks through a roof block in its way (the block drops) and a copper flashing seals the hole around it. The chimney ages
 with its kettle. Mine a piece and it comes down with everything above it, giving the ingots back; breaking the kettle does
 the same. A hanging kettle has no room for one.
