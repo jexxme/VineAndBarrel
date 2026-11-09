@@ -10,6 +10,7 @@ import jexxme.vineandbarrel.platform.client.ClientRegistrar;
 import jexxme.vineandbarrel.tipsy.TipsyWobble;
 import jexxme.vineandbarrel.tipsy.client.BlackoutClient;
 import jexxme.vineandbarrel.tipsy.client.TipsyClient;
+import jexxme.vineandbarrel.watch.client.WatchClient;
 import net.minecraft.client.entity.ClientAvatarEntity;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
@@ -36,6 +37,10 @@ import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
+import net.neoforged.neoforge.client.event.RegisterPictureInPictureRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
 import net.neoforged.neoforge.client.event.RegisterRecipeBookSearchCategoriesEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
@@ -69,6 +74,9 @@ public final class NeoForgeClient
 		modBus.addListener(RegisterClientTooltipComponentFactoriesEvent.class, event -> registerAll(NeoForgeClientRegistrar.tooltips(event)));
 		modBus.addListener(RegisterColorHandlersEvent.BlockTintSources.class, event -> registerAll(NeoForgeClientRegistrar.tints(event)));
 		modBus.addListener(EntityRenderersEvent.RegisterRenderers.class, event -> registerAll(NeoForgeClientRegistrar.renderers(event)));
+		modBus.addListener(RegisterPictureInPictureRenderersEvent.class, event -> registerAll(NeoForgeClientRegistrar.pictures(event)));
+		modBus.addListener(RegisterKeyMappingsEvent.class, event -> registerAll(NeoForgeClientRegistrar.keys(event)));
+		modBus.addListener(AddClientReloadListenersEvent.class, event -> registerAll(NeoForgeClientRegistrar.reloads(event)));
 
 		modBus.addListener(RegisterClientExtensionsEvent.class, NeoForgeClient::registerClientExtensions);
 		// Vines on fences, walls, chains and bars draw the block they hold under their leaves
@@ -87,6 +95,14 @@ public final class NeoForgeClient
 		game.addListener(ClientTickEvent.Post.class, event -> {
 			TipsyClient.onClientTick();
 			BlackoutClient.onClientTick();
+			WatchClient.onClientTick();
+		});
+		// "Watch it": the tooltip line, and the key over an item in a screen
+		game.addListener(ItemTooltipEvent.class, event -> WatchClient.onTooltip(event.getItemStack(), event.getToolTip()));
+		game.addListener(ScreenEvent.KeyPressed.Pre.class, event -> {
+			if (WatchClient.onScreenKey(event.getScreen(), event.getKeyEvent())) {
+				event.setCanceled(true);
+			}
 		});
 		game.addListener(ViewportEvent.ComputeCameraAngles.class, event -> {
 			TipsyWobble.Angles angles = TipsyClient.cameraAngles(event.getCamera().entity(), (float) event.getPartialTick());
@@ -146,6 +162,7 @@ public final class NeoForgeClient
 		BarrelClient.register(registrar);
 		CauldronClient.register(registrar);
 		TipsyClient.register(registrar);
+		WatchClient.register(registrar);
 	}
 
 	/**

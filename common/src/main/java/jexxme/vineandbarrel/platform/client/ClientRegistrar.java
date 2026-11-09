@@ -1,14 +1,20 @@
 package jexxme.vineandbarrel.platform.client;
 
+import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.world.item.crafting.ExtendedRecipeBookCategory;
 import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
+import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.network.chat.Component;
@@ -40,6 +46,16 @@ public interface ClientRegistrar
 	void blockTints(List<BlockTintSource> tints, Block... blocks);
 
 	<T extends BlockEntity, S extends BlockEntityRenderState> void blockEntityRenderer(BlockEntityType<? extends T> type, BlockEntityRendererProvider<T, S> provider);
+
+	/** A key the player can rebind in the controls screen. */
+	void keyMapping(KeyMapping key);
+
+	/** Runs on each client resource reload (resource packs changed, F3+T). */
+	void reloadListener(Identifier id, PreparableReloadListener listener);
+
+	/** A 3D picture inside a screen (the "Watch it" scenes), drawn by vanilla's GUI renderer for states of this class. */
+	<T extends PictureInPictureRenderState> void pictureInPicture(Class<T> state,
+		Function<MultiBufferSource.BufferSource, PictureInPictureRenderer<T>> renderer);
 
 	/**
 	 * A recipe book search tab that shows these categories (the kettle's recipe book); returns the category the tab
