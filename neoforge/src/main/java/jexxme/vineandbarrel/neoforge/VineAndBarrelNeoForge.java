@@ -6,6 +6,7 @@ import jexxme.vineandbarrel.drink.DrankTogether;
 import jexxme.vineandbarrel.barrel.AgingRecipes;
 import jexxme.vineandbarrel.barrel.BarrelDispenserBehaviors;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
+import jexxme.vineandbarrel.cauldron.VBCauldrons;
 import jexxme.vineandbarrel.drink.Cheers;
 import jexxme.vineandbarrel.entity.VBEntityEvents;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
@@ -13,7 +14,9 @@ import jexxme.vineandbarrel.neoforge.client.NeoForgeClient;
 import jexxme.vineandbarrel.neoforge.transfer.NeoForgeItemAccess;
 import jexxme.vineandbarrel.tipsy.TipsyEvents;
 import jexxme.vineandbarrel.world.village.VillageStructures;
+import net.minecraft.core.cauldron.CauldronInteractions;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.ai.village.poi.PoiTypes;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
@@ -24,6 +27,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
+import net.neoforged.neoforge.common.world.poi.ExtendPoiTypesEvent;
 import net.neoforged.neoforge.event.ServerChatEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
@@ -52,8 +56,14 @@ public final class VineAndBarrelNeoForge
 		modEventBus.addListener(FMLCommonSetupEvent.class, event -> event.enqueueWork(() -> {
 			VineAndBarrel.setup();
 			BarrelDispenserBehaviors.register();
+			// Our bases in cauldrons: our dispatchers join vanilla's list, then the buckets and bottles go in. Here, not in
+			// NeoForge's cauldron events: NeoForge 26.1.0 (which this build supports) doesn't have them yet
+			VBCauldrons.registerDispatchers((id, dispatcher) -> CauldronInteractions.ID_MAPPER.put(id.toString(), dispatcher));
+			VBCauldrons.addInteractions();
 		}));
 		modEventBus.addListener(NeoForgeItemAccess::registerCapabilities);
+		// A cauldron of a base stays a leatherworker's job site, like every vanilla cauldron
+		modEventBus.addListener(ExtendPoiTypesEvent.class, event -> VBCauldrons.all().forEach(cauldron -> event.addBlockToPoi(PoiTypes.LEATHERWORKER, cauldron)));
 
 		IEventBus game = NeoForge.EVENT_BUS;
 		// 26.2: a barrel with a batch in it never burns (its burn time comes from the furnace_fuels data map)

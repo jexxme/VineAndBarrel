@@ -1,6 +1,7 @@
 package jexxme.vineandbarrel.fabric.client;
 
 import jexxme.vineandbarrel.barrel.client.BarrelClient;
+import jexxme.vineandbarrel.cauldron.client.CauldronClient;
 import jexxme.vineandbarrel.compat.jei.JeiRecipeCache;
 import jexxme.vineandbarrel.kettle.client.KettleClient;
 import jexxme.vineandbarrel.tipsy.client.BlackoutClient;
@@ -27,6 +28,7 @@ public final class VineAndBarrelFabricClient implements ClientModInitializer
 		FabricClientRegistrar registrar = new FabricClientRegistrar();
 		KettleClient.register(registrar);
 		BarrelClient.register(registrar);
+		CauldronClient.register(registrar);
 		TipsyClient.register(registrar);
 		// Vines on fences, walls, chains and bars draw the block they hold under their leaves
 		SupportedVineModel.register();

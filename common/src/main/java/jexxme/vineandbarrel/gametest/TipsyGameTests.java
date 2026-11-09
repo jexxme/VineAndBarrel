@@ -178,7 +178,7 @@ public final class TipsyGameTests
 	 * Vanilla's plain mock has no connection, and a ServerPlayer sends every effect change through it. It is not
 	 * added to the level, so tests drive its effect ticks themselves with {@link #tickEffectsOnce()}.
 	 */
-	private static final class TestPlayer extends ServerPlayer
+	static final class TestPlayer extends ServerPlayer
 	{
 		TestPlayer(MinecraftServer server, ServerLevel level, GameProfile profile) {
 			super(server, level, profile, ClientInformation.createDefault());
@@ -214,7 +214,7 @@ public final class TipsyGameTests
 		}
 	}
 
-	private static TestPlayer player(GameTestHelper helper) {
+	static TestPlayer player(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), "tipsy-test-player"), false);
 		TestPlayer player = new TestPlayer(level.getServer(), level, cookie.gameProfile());
@@ -238,7 +238,7 @@ public final class TipsyGameTests
 		}
 	}
 
-	private static void drink(TestPlayer player, ItemStack stack) {
+	static void drink(TestPlayer player, ItemStack stack) {
 		player.setItemInHand(InteractionHand.MAIN_HAND, stack);
 		player.drinkMainHand();
 	}

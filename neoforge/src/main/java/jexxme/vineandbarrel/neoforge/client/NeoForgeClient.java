@@ -3,6 +3,7 @@ package jexxme.vineandbarrel.neoforge.client;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.barrel.client.BarrelClient;
+import jexxme.vineandbarrel.cauldron.client.CauldronClient;
 import jexxme.vineandbarrel.compat.jei.JeiRecipeCache;
 import jexxme.vineandbarrel.kettle.client.KettleClient;
 import jexxme.vineandbarrel.platform.client.ClientRegistrar;
@@ -143,6 +144,7 @@ public final class NeoForgeClient
 	private static void registerAll(ClientRegistrar registrar) {
 		KettleClient.register(registrar);
 		BarrelClient.register(registrar);
+		CauldronClient.register(registrar);
 		TipsyClient.register(registrar);
 	}
 
