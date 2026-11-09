@@ -97,6 +97,7 @@ loom {
             source sourceSets.gametest
             runDir 'run/gametest'
             property 'fabric-api.gametest'
+            property 'fabric-api.gametest.filter', "${mod_id}:*" // only this mod's GameTests, never another mod's in the run
             property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest.xml" // for the parity checklist
         }
         // The same with Farmer's Delight Refabricated in run-fd/mods: ./gradlew :fabric:runGameTestFd
@@ -105,6 +106,7 @@ loom {
             source sourceSets.gametest
             runDir 'run-fd'
             property 'fabric-api.gametest'
+            property 'fabric-api.gametest.filter', "${mod_id}:*" // only this mod's GameTests, never another mod's in the run
             property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest-fd.xml"
             property 'vineandbarrel.expectFd', 'true'
         }

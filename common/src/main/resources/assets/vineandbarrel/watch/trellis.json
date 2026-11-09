@@ -17,7 +17,10 @@
       { "block": "vineandbarrel:trellis", "step": 2 },
       { "block": "vineandbarrel:grape_vine_on_trellis", "step": 4 },
       { "block": "vineandbarrel:white_grape_vine_on_trellis", "step": 4 },
-      { "block": "vineandbarrel:hop_vine_on_trellis", "step": 4 }
+      { "block": "vineandbarrel:hop_vine_on_trellis", "step": 4 },
+      { "block": "vineandbarrel:grape_vine_on_support", "step": 3 },
+      { "block": "vineandbarrel:white_grape_vine_on_support", "step": 3 },
+      { "block": "vineandbarrel:hop_vine_on_support", "step": 3 }
     ]
   },
   "also": ["vineandbarrel:aging_barrel", "vineandbarrel:farmers_delight"],
@@ -68,11 +71,12 @@
         { "type": "set_properties", "at": 75, "pos": [1, 1, 1], "properties": { "age": "3" } },
         { "type": "set_block", "at": 95, "pos": [1, 2, 1], "block": "vineandbarrel:grape_vine_on_trellis[axis=x,age=0]" },
         { "type": "sound", "at": 95, "sound": "minecraft:block.sweet_berry_bush.place", "volume": 0.6 },
-        { "type": "set_properties", "at": 105, "pos": [1, 2, 1], "properties": { "age": "2" } },
-        { "type": "set_block", "at": 115, "pos": [1, 3, 1], "block": "vineandbarrel:grape_vine_on_trellis[axis=x,age=0]" },
-        { "type": "sound", "at": 115, "sound": "minecraft:block.sweet_berry_bush.place", "volume": 0.6 },
-        { "type": "set_properties", "at": 125, "pos": [1, 2, 1], "properties": { "age": "3" } },
-        { "type": "set_properties", "at": 130, "pos": [1, 3, 1], "properties": { "age": "3" } },
+        { "type": "set_properties", "at": 103, "pos": [1, 2, 1], "properties": { "age": "2" } },
+        { "type": "set_properties", "at": 111, "pos": [1, 2, 1], "properties": { "age": "3" } },
+        { "type": "set_block", "at": 117, "pos": [1, 3, 1], "block": "vineandbarrel:grape_vine_on_trellis[axis=x,age=0]" },
+        { "type": "sound", "at": 117, "sound": "minecraft:block.sweet_berry_bush.place", "volume": 0.6 },
+        { "type": "set_properties", "at": 125, "pos": [1, 3, 1], "properties": { "age": "2" } },
+        { "type": "set_properties", "at": 133, "pos": [1, 3, 1], "properties": { "age": "3" } },
         { "type": "pointer", "at": 142, "ticks": 18, "pos": [1.5, 4.2, 1.5] }
       ]
     },

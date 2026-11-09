@@ -57,9 +57,15 @@ public final class VineClimbing
 		}
 	}
 
-	/** True when there is a support directly above {@code pos} and the plant may still grow one block taller. */
+	/**
+	 * True when there is a support directly above {@code pos} and the plant may still grow one block taller. A bush never
+	 * climbs a fence or wall on top of it: those go into the plant ({@link VineSupports#onlyFromInside}).
+	 */
 	public static boolean canClimb(LevelReader level, BlockPos pos, ClimbingCropBlock crop) {
 		BlockState above = level.getBlockState(pos.above());
+		if (VineSupports.onlyFromInside(above) && level.getBlockState(pos).is(crop.bushBlock())) {
+			return false;
+		}
 		return (isSupport(above) || VineSupports.isMakeshift(above)) && crop.vineOn(above) != null && heightAt(level, pos, crop) < MAX_HEIGHT;
 	}
 

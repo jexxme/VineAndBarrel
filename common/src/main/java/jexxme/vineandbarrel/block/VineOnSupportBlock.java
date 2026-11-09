@@ -55,6 +55,8 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 	private static final VoxelShape LEAVES_THIN_Z = Block.box(4.5, 0.0, 0.0, 11.5, 16.0, 16.0);
 	private static final VoxelShape LEAVES_WIDE_X = Block.box(0.0, 0.0, 3.0, 16.0, 16.0, 13.0);
 	private static final VoxelShape LEAVES_WIDE_Z = Block.box(3.0, 0.0, 0.0, 13.0, 16.0, 16.0);
+	/** The root's young shoot (age 0), as small as the bush's sapling. */
+	private static final VoxelShape SHOOT = Block.column(10.0, 0.0, 8.0);
 
 	private final Supplier<? extends ClimbingBushBlock> bush;
 
@@ -110,7 +112,7 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		BlockState support = VineSupports.supportAt(level, pos);
-		VoxelShape leaves = leaves(state.getValue(LOOK));
+		VoxelShape leaves = state.getValue(BASE) && state.getValue(AGE) == 0 ? SHOOT : leaves(state.getValue(LOOK));
 		return support == null ? leaves : Shapes.or(support.getShape(level, pos, context), leaves);
 	}
 

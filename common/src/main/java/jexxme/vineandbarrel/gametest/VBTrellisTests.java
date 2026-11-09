@@ -303,7 +303,9 @@ final class VBTrellisTests
 				.setValue(VineOnTrellisBlock.AXIS, Direction.Axis.Z));
 		net.minecraft.world.phys.Vec3 at = net.minecraft.world.phys.Vec3.atCenterOf(helper.absolutePos(bush.above()));
 		helper.getLevel().explode(null, at.x, at.y, at.z, 1.0F, net.minecraft.world.level.Level.ExplosionInteraction.TNT);
-		helper.succeedWhen(() -> helper.assertBlockState(bush.above(), trellis(Direction.Axis.Z)));
+		// checked at once: given time, the ripe bush below (if the blast spared it) would climb the trellis again
+		helper.assertBlockState(bush.above(), trellis(Direction.Axis.Z));
+		helper.succeed();
 	}
 
 	// ------------------------------------------------------------------ a trellis in the bush's own block
@@ -439,6 +441,9 @@ final class VBTrellisTests
 		helper.assertBlockState(soaked, trellis(Direction.Axis.X).setValue(TrellisBlock.WATERLOGGED, true));
 		helper.setBlock(washed, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 2));
 		helper.assertItemEntityPresent(VBItems.TRELLIS.get(), washed, 1.5);
+		// the water goes before it spreads (it would wash away the bushes the pistons push below)
+		helper.setBlock(soaked, Blocks.AIR);
+		helper.setBlock(washed, Blocks.AIR);
 		// its soil dug away: the bush breaks a tick later, drops its fruit and leaves the trellis
 		BlockPos dug = new BlockPos(16, 1, 16); // well away from the water above
 		helper.setBlock(dug.below(), Blocks.GRASS_BLOCK);
@@ -466,7 +471,9 @@ final class VBTrellisTests
 		helper.succeedWhen(() -> {
 			helper.assertBlockState(dug, trellis(Direction.Axis.X));
 			helper.assertItemEntityPresent(VBItems.RED_GRAPES.get(), dug, 1.5);
-			helper.assertBlockState(moved.east(), bushIn(VBBlocks.HOP_BUSH.get(), 1, BushTrellis.Z));
+			// the moved bush may have grown on the way: only that it lives on with its trellis matters
+			helper.assertTrue(state(helper, moved.east()).is(VBBlocks.HOP_BUSH.get())
+					&& state(helper, moved.east()).getValue(ClimbingBushBlock.TRELLIS) == BushTrellis.Z, "the bush pushed onto grass lives on with its trellis");
 			helper.assertBlockState(dropped.east(), trellis(Direction.Axis.Z));
 		});
 	}
@@ -592,13 +599,14 @@ final class VBTrellisTests
 		player.setGameMode(GameType.SURVIVAL);
 		player.gameMode.destroyBlock(helper.absolutePos(bush.above()));
 		helper.assertBlockState(bush.above(), trellis(Direction.Axis.Z));
-		helper.runAfterDelay(5, () -> {
-			helper.assertBlockState(bush.above(2), trellis(Direction.Axis.Z));
-			int hops = collect(helper, bush.above(), VBItems.HOPS.get());
-			helper.assertTrue(hops == 2 || hops == 3, "Breaking a ripe hop bine should drop 2-3 hops (and no trellis), dropped " + hops);
-			helper.assertBlockPresent(VBBlocks.HOP_BUSH.get(), bush);
-			helper.succeed();
-		});
+		// the vine above's tick, run now rather than a tick later: given time, the ripe bush could climb back in below it
+		BlockPos top = helper.absolutePos(bush.above(2));
+		helper.getLevel().getBlockState(top).tick(helper.getLevel(), top, helper.getLevel().getRandom());
+		helper.assertBlockState(bush.above(2), trellis(Direction.Axis.Z));
+		int hops = collect(helper, bush.above(), VBItems.HOPS.get());
+		helper.assertTrue(hops == 2 || hops == 3, "Breaking a ripe hop bine should drop 2-3 hops (and no trellis), dropped " + hops);
+		helper.assertBlockPresent(VBBlocks.HOP_BUSH.get(), bush);
+		helper.succeed();
 	}
 
 	// ------------------------------------------------------------------ half-ripe picking
