@@ -15,6 +15,10 @@ accessible method net/minecraft/world/level/block/FireBlock getIgniteOdds (Lnet/
 
 # Access NeoForge opens up (see the access transformer)
 accessible field net/minecraft/world/entity/Mob goalSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
+accessible method net/minecraft/core/cauldron/CauldronInteraction$Dispatcher put (Lnet/minecraft/world/item/Item;Lnet/minecraft/core/cauldron/CauldronInteraction;)V
+accessible method net/minecraft/core/cauldron/CauldronInteractions addDefaultInteractions (Lnet/minecraft/core/cauldron/CauldronInteraction$Dispatcher;)V
+accessible method net/minecraft/core/cauldron/CauldronInteractions emptyBucket (Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/sounds/SoundEvent;)Lnet/minecraft/world/InteractionResult;
+accessible method net/minecraft/core/cauldron/CauldronInteractions fillBucket (Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/Predicate;Lnet/minecraft/sounds/SoundEvent;)Lnet/minecraft/world/InteractionResult;
 accessible field net/minecraft/world/item/crafting/RecipeManager recipes Lnet/minecraft/world/item/crafting/RecipeMap;
 accessible class net/minecraft/world/item/CreativeModeTab$Output
 accessible method net/minecraft/client/gui/screens/recipebook/GhostSlots setInput (Lnet/minecraft/world/inventory/Slot;Lnet/minecraft/util/context/ContextMap;Lnet/minecraft/world/item/crafting/display/SlotDisplay;)V
@@ -32,3 +36,8 @@ accessible field net/minecraft/client/player/ClientInput moveVector Lnet/minecra
 # 26.1.2: block entity types are made with their constructor (private on this Minecraft; NeoForge opens it itself)
 accessible class net/minecraft/world/level/block/entity/BlockEntityType$BlockEntitySupplier
 accessible method net/minecraft/world/level/block/entity/BlockEntityType <init> (Lnet/minecraft/world/level/block/entity/BlockEntityType$BlockEntitySupplier;Ljava/util/Set;)V
+
+# Fabric only (NeoForge has events for both): our cauldrons join vanilla's list of cauldron dispatchers, and their states
+# the leatherworker's job site, through vanilla's own state map
+accessible field net/minecraft/core/cauldron/CauldronInteractions ID_MAPPER Lnet/minecraft/util/ExtraCodecs$LateBoundIdMapper;
+accessible method net/minecraft/world/entity/ai/village/poi/PoiTypes registerBlockStates (Lnet/minecraft/core/Holder;Ljava/util/Set;)V

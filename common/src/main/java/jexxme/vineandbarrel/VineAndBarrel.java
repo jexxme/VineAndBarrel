@@ -37,6 +37,7 @@ public final class VineAndBarrel
 		VBCreativeTabs.register();
 		jexxme.vineandbarrel.tipsy.TipsyRegistry.register();
 		jexxme.vineandbarrel.kettle.KettleRegistry.register();
+		jexxme.vineandbarrel.cauldron.VBCauldrons.register();
 		jexxme.vineandbarrel.barrel.BarrelRegistry.register();
 		jexxme.vineandbarrel.compat.farmersdelight.FDCompat.register();
 		jexxme.vineandbarrel.compat.ModCompat.register();
@@ -56,6 +57,7 @@ public final class VineAndBarrel
 			jexxme.vineandbarrel.gametest.BlackoutGameTests.register();
 			jexxme.vineandbarrel.gametest.KettleGameTests.register();
 			jexxme.vineandbarrel.gametest.BarrelGameTests.register();
+			jexxme.vineandbarrel.gametest.CauldronGameTests.register();
 			jexxme.vineandbarrel.gametest.FdCompatGameTests.register();
 			jexxme.vineandbarrel.gametest.WorldGameTests.register();
 			jexxme.vineandbarrel.gametest.AdvancementGameTests.register();

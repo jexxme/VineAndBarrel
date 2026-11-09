@@ -132,6 +132,8 @@ public final class FdCompatGameTests
 		test("fd_beer_bread", 20, FdCompatGameTests::beerBread);
 		test("fd_knife_cuts_straw_from_barley", 20, FdCompatGameTests::knifeCutsStraw);
 		test("fd_cutting_board_wild_barley", 100, FdCompatGameTests::cuttingBoardWildBarley);
+		test("fd_cutting_board_wild_grapes_and_hops", 200, FdCompatGameTests::cuttingBoardWildGrapesAndHops);
+		test("fd_drinks_sober_by_one", 20, FdCompatGameTests::fdDrinksSoberByOne);
 		test("fd_recipes_have_unlocks", 20, FdCompatGameTests::recipesHaveUnlocks);
 	}
 
@@ -812,6 +814,73 @@ public final class FdCompatGameTests
 		helper.assertValueEqual(barley, cuts, "one barley per cut");
 		// a straw half the time: 16 cuts with none or all would be a 1 in 32768 chance
 		helper.assertTrue(straw > 0 && straw < cuts, "a straw about half the time: " + straw + " of " + cuts);
+		helper.succeed();
+	}
+
+	/**
+	 * Wild grapes, wild white grapes and wild hops on FD's cutting board, like FD's own wild cabbages, carrots and
+	 * potatoes: the crop every cut, and two dyes of the plant's colour at 50% each (FD rolls every item of a chance stack).
+	 */
+	private static void cuttingBoardWildGrapesAndHops(GameTestHelper helper) {
+		record Cut(String recipe, Item wild, Item crop, Item dye) {
+		}
+		List<Cut> cuts = List.of(new Cut("cutting/wild_grapes", VBItems.WILD_GRAPES.get(), VBItems.RED_GRAPES.get(), Items.PURPLE_DYE),
+			new Cut("cutting/wild_white_grapes", VBItems.WILD_WHITE_GRAPES.get(), VBItems.WHITE_GRAPES.get(), Items.YELLOW_DYE),
+			new Cut("cutting/wild_hops", VBItems.WILD_HOPS.get(), VBItems.HOPS.get(), Items.LIME_DYE));
+		for (Cut cut : cuts) {
+			helper.assertValueEqual(recipe(helper, cut.recipe()).isPresent(), fd(), cut.recipe() + " loads exactly when FD is installed");
+		}
+		if (!fd()) {
+			helper.succeed();
+			return;
+		}
+		@SuppressWarnings("removal")
+		net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ItemStack knife = fdStack("flint_knife");
+		int times = 16;
+		BlockPos board = new BlockPos(2, 1, 2);
+		helper.setBlock(board.below(), Blocks.STONE);
+		helper.setBlock(board, fdBlock("cutting_board").orElseThrow());
+		for (Cut cut : cuts) {
+			for (int i = 0; i < times; i++) {
+				ItemStack wild = new ItemStack(cut.wild());
+				player.setItemInHand(InteractionHand.MAIN_HAND, wild);
+				helper.getBlockState(board).useItemOn(wild, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit(helper, board));
+				player.setItemInHand(InteractionHand.MAIN_HAND, knife);
+				helper.getBlockState(board).useItemOn(knife, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit(helper, board));
+			}
+			int crops = countAround(helper, board, cut.crop());
+			int dyes = countAround(helper, board, cut.dye());
+			helper.assertValueEqual(crops, times, cut.recipe() + ": one crop per cut");
+			// 32 dyes at 50% each: none or all of them would be a 1 in 2^31 chance
+			helper.assertTrue(dyes > 0 && dyes < 2 * times, cut.recipe() + ": each of the two dyes about half the time: " + dyes);
+			// the next crop counts its own drops
+			helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(helper.absolutePos(board)).inflate(3.0D)).forEach(ItemEntity::discard);
+		}
+		helper.succeed();
+	}
+
+	/**
+	 * FD's melon juice, apple cider and milk bottle lower Tipsy by exactly one level, like our juices and a water bottle.
+	 * The milk bottle would otherwise take one random effect, which could be all of Tipsy: Tipsy is in FD's
+	 * milk-bottle-ignored tag (FDN's and FD Refabricated's names), so only our one level goes.
+	 */
+	private static void fdDrinksSoberByOne(GameTestHelper helper) {
+		List<String> drinks = List.of("melon_juice", "apple_cider", "milk_bottle");
+		for (String id : drinks) {
+			assertFdThing(helper, fdItem(id), "farmersdelight:" + id);
+		}
+		if (!fd()) {
+			helper.succeed();
+			return;
+		}
+		for (String id : drinks) {
+			TipsyGameTests.TestPlayer player = TipsyGameTests.player(helper);
+			jexxme.vineandbarrel.tipsy.Tipsy.setLevel(player, 3);
+			helper.assertValueEqual(player.getActiveEffects().size(), 1, "only Tipsy before " + id);
+			TipsyGameTests.drink(player, fdStack(id));
+			helper.assertValueEqual(jexxme.vineandbarrel.tipsy.Tipsy.getLevel(player), 2, "Tipsy after " + id);
+		}
 		helper.succeed();
 	}
 
