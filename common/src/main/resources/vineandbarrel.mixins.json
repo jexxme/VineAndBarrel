@@ -18,7 +18,12 @@
     "WallBlockMixin"
   ],
   "client": [
-    "CameraMixin"
+    "AbstractContainerScreenAccessor",
+    "CameraMixin",
+    "GuiGraphicsExtractorAccessor",
+    "ParticleEngineAccessor",
+    "RecipeBookComponentAccessor",
+    "SceneParticleTargetMixin"
   ],
   "injectors": {
     "defaultRequire": 1

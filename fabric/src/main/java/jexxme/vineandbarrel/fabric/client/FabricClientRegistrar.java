@@ -4,12 +4,20 @@ import jexxme.vineandbarrel.fabric.FabricRecipeBook;
 import net.minecraft.client.gui.screens.recipebook.SearchRecipeBookCategory;
 import net.minecraft.world.item.crafting.ExtendedRecipeBookCategory;
 import jexxme.vineandbarrel.platform.client.ClientRegistrar;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleProviderRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockColorRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.ClientTooltipComponentCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry;
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -17,6 +25,7 @@ import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -29,6 +38,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /** {@link ClientRegistrar} on Fabric: everything is registered once, at client start. */
 final class FabricClientRegistrar implements ClientRegistrar
@@ -57,6 +67,21 @@ final class FabricClientRegistrar implements ClientRegistrar
 	@SuppressWarnings("unchecked")
 	public <T extends BlockEntity, S extends BlockEntityRenderState> void blockEntityRenderer(BlockEntityType<? extends T> type, BlockEntityRendererProvider<T, S> provider) {
 		BlockEntityRendererRegistry.register((BlockEntityType<T>) type, provider);
+	}
+
+	@Override
+	public void keyMapping(KeyMapping key) {
+		KeyMappingHelper.registerKeyMapping(key);
+	}
+
+	@Override
+	public void reloadListener(Identifier id, PreparableReloadListener listener) {
+		ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(id, listener);
+	}
+
+	@Override
+	public <T extends PictureInPictureRenderState> void pictureInPicture(Class<T> state, Supplier<PictureInPictureRenderer<T>> renderer) {
+		PictureInPictureRendererRegistry.register(context -> renderer.get());
 	}
 
 	/** The kettle book's own search tab constant ({@code SearchRecipeBookCategoryMixin}), showing these categories. */

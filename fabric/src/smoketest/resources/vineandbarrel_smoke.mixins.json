@@ -12,7 +12,8 @@
     "HiddenWindowMixin",
     "LoopbackLanMixin",
     "MouseHandlerAccessor",
-    "HiddenMouseMixin"
+    "HiddenMouseMixin",
+    "KeyboardHandlerInvoker"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,0 +1,96 @@
+{
+  "title": "block.vineandbarrel.trellis",
+  "icon": "vineandbarrel:trellis",
+  "width": 3,
+  "depth": 3,
+  "floor": "minecraft:grass_block",
+  "view": { "yaw": 135, "pitch": 26, "height": 3.3 },
+  "opens": {
+    "items": ["vineandbarrel:trellis", "vineandbarrel:red_grapes", "vineandbarrel:white_grapes", "vineandbarrel:hops"],
+    "blocks": [
+      { "block": "vineandbarrel:grape_bush", "when": { "trellis": "none", "support": "none" }, "step": 2, "now": "watch.vineandbarrel.trellis.now.bare" },
+      { "block": "vineandbarrel:white_grape_bush", "when": { "trellis": "none", "support": "none" }, "step": 2, "now": "watch.vineandbarrel.trellis.now.bare" },
+      { "block": "vineandbarrel:hop_bush", "when": { "trellis": "none", "support": "none" }, "step": 2, "now": "watch.vineandbarrel.trellis.now.bare" },
+      { "block": "vineandbarrel:grape_bush", "step": 3, "now": "watch.vineandbarrel.trellis.now.growing" },
+      { "block": "vineandbarrel:white_grape_bush", "step": 3, "now": "watch.vineandbarrel.trellis.now.growing" },
+      { "block": "vineandbarrel:hop_bush", "step": 3, "now": "watch.vineandbarrel.trellis.now.growing" },
+      { "block": "vineandbarrel:trellis", "step": 2 },
+      { "block": "vineandbarrel:grape_vine_on_trellis", "step": 4 },
+      { "block": "vineandbarrel:white_grape_vine_on_trellis", "step": 4 },
+      { "block": "vineandbarrel:hop_vine_on_trellis", "step": 4 }
+    ]
+  },
+  "also": ["vineandbarrel:aging_barrel", "vineandbarrel:farmers_delight"],
+  "steps": [
+    {
+      "caption": "watch.vineandbarrel.trellis.1",
+      "ticks": 80,
+      "actions": [
+        { "type": "figure", "pos": [0.35, 1.0, 0.6], "yaw": 0 },
+        { "type": "figure", "pos": [0.6, 1.0, 2.35], "ticks": 16 },
+        { "type": "hold", "item": "vineandbarrel:red_grapes" },
+        { "type": "look", "at": 17, "pos": [1.5, 1.0, 1.5] },
+        { "type": "swing", "at": 26 },
+        { "type": "place", "at": 28, "pos": [1, 1, 1], "block": "vineandbarrel:grape_bush[age=0]", "drop": false },
+        { "type": "sound", "at": 28, "sound": "minecraft:block.sweet_berry_bush.place" },
+        { "type": "pointer", "at": 32, "ticks": 48, "pos": [1.5, 1.7, 1.5] }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.trellis.2",
+      "ticks": 110,
+      "actions": [
+        { "type": "hold", "at": 4, "item": "vineandbarrel:trellis" },
+        { "type": "look", "at": 6, "pos": [1.5, 1.4, 1.5] },
+        { "type": "swing", "at": 20 },
+        { "type": "set_properties", "at": 22, "pos": [1, 1, 1], "properties": { "trellis": "x" } },
+        { "type": "sound", "at": 22, "sound": "minecraft:block.ladder.place" },
+        { "type": "look", "at": 34, "pos": [1.5, 2.5, 1.5] },
+        { "type": "swing", "at": 48 },
+        { "type": "place", "at": 50, "pos": [1, 2, 1], "block": "vineandbarrel:trellis[axis=x]", "drop": false },
+        { "type": "set_properties", "at": 50, "pos": [1, 1, 1], "properties": { "support": "trellis_x" } },
+        { "type": "sound", "at": 50, "sound": "minecraft:block.ladder.place" },
+        { "type": "look", "at": 60, "pos": [1.5, 3.5, 1.5] },
+        { "type": "swing", "at": 76 },
+        { "type": "place", "at": 78, "pos": [1, 3, 1], "block": "vineandbarrel:trellis[axis=x]", "drop": false },
+        { "type": "sound", "at": 78, "sound": "minecraft:block.ladder.place" },
+        { "type": "hold", "at": 92, "item": "minecraft:air" }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.trellis.3",
+      "ticks": 160,
+      "actions": [
+        { "type": "look", "at": 4, "pos": [1.5, 2.6, 1.5] },
+        { "type": "timelapse", "ticks": 140, "days": 3 },
+        { "type": "set_properties", "at": 25, "pos": [1, 1, 1], "properties": { "age": "1" } },
+        { "type": "set_properties", "at": 50, "pos": [1, 1, 1], "properties": { "age": "2" } },
+        { "type": "set_properties", "at": 75, "pos": [1, 1, 1], "properties": { "age": "3" } },
+        { "type": "set_block", "at": 95, "pos": [1, 2, 1], "block": "vineandbarrel:grape_vine_on_trellis[axis=x,age=0]" },
+        { "type": "sound", "at": 95, "sound": "minecraft:block.sweet_berry_bush.place", "volume": 0.6 },
+        { "type": "set_properties", "at": 105, "pos": [1, 2, 1], "properties": { "age": "2" } },
+        { "type": "set_block", "at": 115, "pos": [1, 3, 1], "block": "vineandbarrel:grape_vine_on_trellis[axis=x,age=0]" },
+        { "type": "sound", "at": 115, "sound": "minecraft:block.sweet_berry_bush.place", "volume": 0.6 },
+        { "type": "set_properties", "at": 125, "pos": [1, 2, 1], "properties": { "age": "3" } },
+        { "type": "set_properties", "at": 130, "pos": [1, 3, 1], "properties": { "age": "3" } },
+        { "type": "pointer", "at": 142, "ticks": 18, "pos": [1.5, 4.2, 1.5] }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.trellis.4",
+      "ticks": 100,
+      "actions": [
+        { "type": "look", "at": 4, "pos": [1.5, 2.5, 1.5] },
+        { "type": "swing", "at": 18 },
+        { "type": "set_properties", "at": 20, "pos": [1, 2, 1], "properties": { "age": "1" } },
+        { "type": "sound", "at": 20, "sound": "minecraft:block.sweet_berry_bush.pick_berries" },
+        { "type": "hold", "at": 20, "item": "vineandbarrel:red_grapes" },
+        { "type": "look", "at": 30, "pos": [1.5, 3.5, 1.5] },
+        { "type": "swing", "at": 46 },
+        { "type": "set_properties", "at": 48, "pos": [1, 3, 1], "properties": { "age": "1" } },
+        { "type": "sound", "at": 48, "sound": "minecraft:block.sweet_berry_bush.pick_berries" },
+        { "type": "look", "at": 64, "pos": [3.4, 2.4, 3.4] }
+      ]
+    }
+  ]
+}

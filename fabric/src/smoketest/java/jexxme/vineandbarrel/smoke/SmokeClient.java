@@ -1,7 +1,12 @@
 package jexxme.vineandbarrel.smoke;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.network.chat.Component;
+import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.tipsy.TipsyInfo;
+import jexxme.vineandbarrel.smoke.mixin.KeyboardHandlerInvoker;
 import jexxme.vineandbarrel.smoke.mixin.MouseHandlerAccessor;
 import jexxme.vineandbarrel.smoke.mixin.AbstractContainerScreenAccessor;
 import com.google.gson.GsonBuilder;
@@ -15,6 +20,10 @@ import jexxme.vineandbarrel.drink.DrinkItems;
 import jexxme.vineandbarrel.tipsy.Blackout;
 import jexxme.vineandbarrel.tipsy.client.BlackoutClient;
 import jexxme.vineandbarrel.tipsy.client.TipsyClient;
+import jexxme.vineandbarrel.watch.client.ScenePlayer;
+import jexxme.vineandbarrel.watch.client.WatchClient;
+import jexxme.vineandbarrel.watch.client.WatchIndex;
+import jexxme.vineandbarrel.watch.client.WatchScreen;
 import net.minecraft.client.gui.screens.InBedChatScreen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
@@ -48,6 +57,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.server.MinecraftServer;
@@ -496,6 +507,85 @@ public final class SmokeClient implements ClientModInitializer
 		}, "after_blackout", true).polled());
 		steps.add(new Step("sober_again", 40, mc -> command(mc, "vbsmoke sober"),
 			mc -> mc.player.hasEffect(TipsyRegistry.TIPSY) ? "still tipsy" : null, null, true).polled());
+		// "Watch it": the tooltip offers the scene; at the scene's barrel in the world the key opens it where that barrel is
+		steps.add(new Step("watch_it_on_the_tooltip", 1, mc -> {
+		}, mc -> {
+			ItemStack barrel = new ItemStack(BarrelRegistry.AGING_BARREL_ITEM.get());
+			List<Component> lines = barrel.getTooltipLines(Item.TooltipContext.of(mc.level), mc.player, TooltipFlag.NORMAL);
+			String watch = Component.translatable("watch.vineandbarrel.press", WatchClient.KEY.getTranslatedKeyMessage()).getString();
+			return lines.stream().anyMatch(line -> line.getString().equals(watch)) ? null : "no \"" + watch + "\" in " + lines;
+		}, null, false));
+		// As a player does it: the pointer over the barrel in the inventory, then G (through the game's own key handling)
+		steps.add(new Step("watch_it_hover_the_barrel", 10, mc -> {
+			// survival: a creative player gets the creative inventory instead
+			command(mc, "gamemode survival");
+			command(mc, "item replace entity @s hotbar.8 with vineandbarrel:aging_barrel");
+		}, null, null, false));
+		steps.add(new Step("watch_it_open_the_inventory", 5, mc -> {
+			mc.gui.setScreen(new InventoryScreen(mc.player));
+		}, null, null, false));
+		steps.add(new Step("watch_it_key_over_the_barrel", 10, mc -> {
+			if (mc.gui.screen() instanceof InventoryScreen screen) {
+				AbstractContainerScreenAccessor panel = (AbstractContainerScreenAccessor) screen;
+				Slot slot = screen.getMenu().slots.stream().filter(s -> s.container == mc.player.getInventory() && s.getContainerSlot() == 8).findFirst().orElseThrow();
+				MouseHandlerAccessor mouse = (MouseHandlerAccessor) mc.mouseHandler;
+				double x = panel.vineandbarrel_smoke$leftPos() + slot.x + 8, y = panel.vineandbarrel_smoke$topPos() + slot.y + 8;
+				mouse.vineandbarrel_smoke$setXpos(x * mc.getWindow().getScreenWidth() / mc.getWindow().getGuiScaledWidth());
+				mouse.vineandbarrel_smoke$setYpos(y * mc.getWindow().getScreenHeight() / mc.getWindow().getGuiScaledHeight());
+			}
+		}, null, "watch_tooltip", false));
+		steps.add(new Step("watch_it_opens_from_the_inventory", 20, mc ->
+			((KeyboardHandlerInvoker) mc.keyboardHandler).vineandbarrel_smoke$keyPress(mc.getWindow().handle(), InputConstants.PRESS,
+				new KeyEvent(InputConstants.KEY_G, 0, 0)),
+			mc -> mc.gui.screen() instanceof WatchScreen ? null : "G over the barrel: the screen is " + mc.gui.screen(), null, false));
+		steps.add(new Step("watch_it_goes_back_to_the_inventory", 5, mc -> {
+			if (mc.gui.screen() != null) {
+				mc.gui.screen().onClose();
+			}
+		}, mc -> mc.gui.screen() instanceof InventoryScreen ? null : "after Escape the screen is " + mc.gui.screen(), null, false));
+		steps.add(new Step("watch_it_done", 2, mc -> {
+			mc.gui.setScreen(null);
+			command(mc, "gamemode creative");
+		}, null, null, true));
+		steps.add(new Step("watch_it_opens_at_the_barrel", 40, mc -> {
+			mc.gui.setScreen(null);
+			BlockPos barrel = origin(mc).offset(SmokeCommands.BARREL);
+			WatchIndex.INSTANCE.forBlock(mc.level, barrel, mc.level.getBlockState(barrel)).ifPresent(entry ->
+				WatchScreen.open(entry.scene(), entry.step(), entry.now().map(Component::translatable).orElse(null), null));
+		}, mc -> {
+			BlockPos barrel = origin(mc).offset(SmokeCommands.BARREL);
+			BlockState state = mc.level.getBlockState(barrel);
+			var entry = WatchIndex.INSTANCE.forBlock(mc.level, barrel, state);
+			if (entry.isEmpty()) {
+				return "no scene for the barrel " + state;
+			}
+			if (!(mc.gui.screen() instanceof WatchScreen screen)) {
+				return "the screen is " + mc.gui.screen();
+			}
+			return screen.player().step() == entry.get().step() ? null : "the scene opened at step " + screen.player().step() + " for " + state;
+		}, "watch_barrel_from_the_world", false));
+		// It plays: the brewer, the real blocks, particles and sounds in a 3D view
+		steps.add(new Step("watch_it_plays", 60, mc -> {
+			mc.gui.setScreen(null);
+			if (WatchScreen.open(VineAndBarrel.id("aging_barrel")) && mc.gui.screen() instanceof WatchScreen screen) {
+				screen.player().jumpTo(1);
+			}
+		}, mc -> {
+			if (!(mc.gui.screen() instanceof WatchScreen screen)) {
+				return "the screen is " + mc.gui.screen();
+			}
+			ScenePlayer player = screen.player();
+			if (player.scene().steps().size() != 5) {
+				return "the barrel scene has " + player.scene().steps().size() + " steps instead of 5";
+			}
+			return player.step() == 1 && player.tick() > 30 ? null : "the scene is at step " + player.step() + ", tick " + player.tick();
+		}, "watch_barrel", false));
+		// The kettle's scene (its steam step), and with Farmer's Delight its own scene (the vine on the ropes)
+		steps.add(watchScene("watch_kettle_plays", "brew_kettle", 3, "watch_kettle"));
+		if (FabricLoader.getInstance().isModLoaded("farmersdelight")) {
+			steps.add(watchScene("watch_farmers_delight_plays", "farmers_delight", 1, "watch_farmers_delight"));
+		}
+		steps.add(new Step("watch_it_closes", 5, mc -> mc.gui.setScreen(null), mc -> mc.gui.screen() == null ? null : "still open: " + mc.gui.screen(), null, true));
 		// A real plains village grown by the game with our tavern in it; its casks reach the client
 		// Growing villages until one has a tavern can keep the server busy for a while (with FD, up to ten tries)
 		steps.add(new Step("a_village_with_a_tavern", 600, mc -> {
@@ -512,6 +602,22 @@ public final class SmokeClient implements ClientModInitializer
 			}
 			return barrels >= 2 ? null : "only " + barrels + " barrels near the tavern at " + at;
 		}, "tavern_village", true).polled());
+	}
+
+	/** A scene opens at a step and plays there for a few seconds, its screenshot taken. */
+	private static Step watchScene(String name, String scene, int step, String shot) {
+		return new Step(name, 60, mc -> {
+			mc.gui.setScreen(null);
+			if (WatchScreen.open(VineAndBarrel.id(scene)) && mc.gui.screen() instanceof WatchScreen screen) {
+				screen.player().jumpTo(step);
+			}
+		}, mc -> {
+			if (!(mc.gui.screen() instanceof WatchScreen screen)) {
+				return "the " + scene + " scene didn't open: the screen is " + mc.gui.screen();
+			}
+			return screen.player().step() == step && screen.player().tick() > 30 ? null
+				: "the scene is at step " + screen.player().step() + ", tick " + screen.player().tick();
+		}, shot, false);
 	}
 
 	// ------------------------------------------------------------------ running it
