@@ -4,6 +4,7 @@ import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.barrel.AgingRecipes;
 import jexxme.vineandbarrel.barrel.BarrelDispenserBehaviors;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
+import jexxme.vineandbarrel.cauldron.VBCauldrons;
 import jexxme.vineandbarrel.drink.Cheers;
 import jexxme.vineandbarrel.entity.VBEntityEvents;
 import jexxme.vineandbarrel.fabric.transfer.FabricItemAccess;
@@ -22,7 +23,10 @@ import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.fabricmc.fabric.api.recipe.v1.sync.RecipeSynchronization;
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.fabricmc.fabric.api.registry.VillagerInteractionRegistries;
+import net.minecraft.core.cauldron.CauldronInteractions;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.world.entity.ai.village.poi.PoiTypes;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.storage.loot.LootPool;
@@ -36,6 +40,7 @@ import net.minecraft.world.level.storage.loot.entries.NestedLootTable;
 public final class VineAndBarrelFabric implements ModInitializer
 {
 	private static boolean dispenserBehaviorsAdded;
+	private static boolean leatherworkerStatesAdded;
 
 	@Override
 	public void onInitialize() {
@@ -45,6 +50,10 @@ public final class VineAndBarrelFabric implements ModInitializer
 		FabricRecipeBook.register();
 		FabricPlatform.registerAll();
 		VineAndBarrel.setup();
+		// Our bases in cauldrons, on both sides so the client predicts the click, and our dispatchers in vanilla's list of
+		// them, so other mods that reach every cauldron reach ours (NeoForge: its cauldron events)
+		VBCauldrons.addInteractions();
+		VBCauldrons.registerDispatchers((id, dispatcher) -> CauldronInteractions.ID_MAPPER.put(id.toString(), dispatcher));
 		FabricItemAccess.register();
 		registerContent();
 		registerEvents();
@@ -110,6 +119,12 @@ public final class VineAndBarrelFabric implements ModInitializer
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
 			FabricConfig.loadServer(server);
 			VillageStructures.onServerAboutToStart(server);
+			if (!leatherworkerStatesAdded) {
+				// A cauldron of a base stays a leatherworker's job site, like every vanilla cauldron: vanilla's own state
+				// map, once the point-of-interest types exist (NeoForge: ExtendPoiTypesEvent)
+				leatherworkerStatesAdded = true;
+				PoiTypes.registerBlockStates(BuiltInRegistries.POINT_OF_INTEREST_TYPE.getOrThrow(PoiTypes.LEATHERWORKER), VBCauldrons.states());
+			}
 			if (!dispenserBehaviorsAdded) {
 				// After every mod's items exist (Fabric has no common setup event after all mods)
 				dispenserBehaviorsAdded = true;

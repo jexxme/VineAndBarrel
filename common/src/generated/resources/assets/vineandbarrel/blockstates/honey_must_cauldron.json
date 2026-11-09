@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "level=1": {
+      "model": "vineandbarrel:block/base_cauldron_level1"
+    },
+    "level=2": {
+      "model": "vineandbarrel:block/base_cauldron_level2"
+    },
+    "level=3": {
+      "model": "vineandbarrel:block/base_cauldron_level3"
+    },
+    "level=4": {
+      "model": "vineandbarrel:block/base_cauldron_level4"
+    }
+  }
+}

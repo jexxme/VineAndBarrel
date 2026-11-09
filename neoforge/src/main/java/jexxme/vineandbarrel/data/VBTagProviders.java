@@ -89,6 +89,8 @@ public final class VBTagProviders
 			// B16: the Aging Barrel is mined fastest with an axe, like the vanilla barrel
 			add(tag(BlockTags.MINEABLE_WITH_AXE), BarrelRegistry.AGING_BARREL);
 			add(tag(BlockTags.MINEABLE_WITH_HOE), VBBlocks.BARLEY_BALE);
+			// Our bases' cauldrons are cauldrons, like vanilla's water cauldron: pickaxe, motion-blocking, mobs path around them
+			VBDataGenerators.CAULDRON_BLOCKS.forEach(cauldron -> tag(BlockTags.CAULDRONS).add(cauldron.get().builtInRegistryHolder().key()));
 
 			add(tag(VBTags.WILD_CROPS), VBBlocks.WILD_GRAPES, VBBlocks.WILD_WHITE_GRAPES, VBBlocks.WILD_HOPS, VBBlocks.WILD_BARLEY);
 			// (26.2 has no #minecraft:blocks_motion_no_leaves: the bale, crates, barrel and kettles block motion by being solid)

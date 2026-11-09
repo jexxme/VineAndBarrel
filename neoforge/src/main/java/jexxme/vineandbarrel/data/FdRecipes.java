@@ -66,21 +66,13 @@ public class FdRecipes implements DataProvider
 			any(BARLEY_ALE, AGED_BARLEY_ALE, WHEAT_BEER, AGED_WHEAT_BEER)));
 		bread.add("result", result(FDCompat.BEER_BREAD, 2));
 		rows.add(new Row("beer_bread", bread, List.of(BARLEY_ALE, AGED_BARLEY_ALE, WHEAT_BEER, AGED_WHEAT_BEER)));
-		// Wild barley on FD's cutting board, exactly like FD's wild rice: the grain, and a straw half the time. The
-		// cutting board has no recipe book, so (as FD's own) no unlock
-		JsonObject cutting = new JsonObject();
-		cutting.addProperty("type", "farmersdelight:cutting");
-		cutting.add("ingredients", array(item("vineandbarrel:wild_barley")));
-		JsonObject straw = new JsonObject();
-		straw.addProperty("chance", 0.5F);
-		JsonObject strawItem = new JsonObject();
-		strawItem.addProperty("id", "farmersdelight:straw");
-		straw.add("item", strawItem);
-		JsonObject grain = new JsonObject();
-		grain.add("item", result(() -> jexxme.vineandbarrel.registry.VBItems.BARLEY.get(), 1));
-		cutting.add("result", array(grain, straw));
-		cutting.addProperty("tool", "#c:tools/knife");
-		rows.add(new Row("cutting/wild_barley", cutting, List.of()));
+		// Wild crops on FD's cutting board, like every one of FD's own: wild barley exactly like FD's wild rice (the grain,
+		// and a straw half the time); grapes and hops like FD's wild cabbages, carrots and potatoes (the crop, and two dyes of
+		// the plant's colour at 50% each). The cutting board has no recipe book, so (as FD's own) no unlock
+		rows.add(wildCutting("wild_barley", () -> jexxme.vineandbarrel.registry.VBItems.BARLEY.get(), "farmersdelight:straw", 1));
+		rows.add(wildCutting("wild_grapes", () -> jexxme.vineandbarrel.registry.VBItems.RED_GRAPES.get(), "minecraft:purple_dye", 2));
+		rows.add(wildCutting("wild_white_grapes", () -> jexxme.vineandbarrel.registry.VBItems.WHITE_GRAPES.get(), "minecraft:yellow_dye", 2));
+		rows.add(wildCutting("wild_hops", () -> jexxme.vineandbarrel.registry.VBItems.HOPS.get(), "minecraft:lime_dye", 2));
 		return rows;
 	}
 
@@ -104,6 +96,26 @@ public class FdRecipes implements DataProvider
 	}
 
 	// ------------------------------------------------------------------ JSON
+
+	/** A wild crop on the cutting board with a knife: its crop, and {@code count} of {@code extra} at 50% each. */
+	private static Row wildCutting(String wild, Supplier<? extends Item> crop, String extra, int count) {
+		JsonObject cutting = new JsonObject();
+		cutting.addProperty("type", "farmersdelight:cutting");
+		cutting.add("ingredients", array(item("vineandbarrel:" + wild)));
+		JsonObject grain = new JsonObject();
+		grain.add("item", result(crop, 1));
+		JsonObject bonus = new JsonObject();
+		bonus.addProperty("chance", 0.5F);
+		JsonObject bonusItem = new JsonObject();
+		if (count > 1) {
+			bonusItem.addProperty("count", count);
+		}
+		bonusItem.addProperty("id", extra);
+		bonus.add("item", bonusItem);
+		cutting.add("result", array(grain, bonus));
+		cutting.addProperty("tool", "#c:tools/knife");
+		return new Row("cutting/" + wild, cutting, List.of());
+	}
 
 	private static Row cooking(String name, Supplier<? extends Item> result, float experience, int cookingTime, List<String> unlockedBy, JsonElement... ingredients) {
 		JsonObject recipe = new JsonObject();
