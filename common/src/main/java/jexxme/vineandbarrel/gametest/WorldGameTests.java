@@ -52,6 +52,11 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.WallHangingSignBlock;
 import net.minecraft.world.level.block.CeilingHangingSignBlock;
 import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.state.properties.Half;
+import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.pathfinder.Path;
@@ -138,6 +143,7 @@ public final class WorldGameTests
 			register(n + "_villagers_find_their_way", TALL, 100, helper -> villagersFindTheirWay(helper, layout));
 			register(n + "_is_lit", TALL, 100, helper -> tavernIsLit(helper, layout));
 			register(n + "_has_room_to_walk", TALL, 100, helper -> tavernHasRoomToWalk(helper, layout));
+			register(n + "_is_built_whole", TALL, 100, helper -> tavernIsBuiltWhole(helper, layout));
 			register(n + "_closes_its_stairwell_without_room_for_a_cellar", TALL, 100, helper -> tavernWithoutCellar(helper, layout));
 			register(n + "_takes_a_village_plot", LARGE, 100, helper -> tavernTakesAVillagePlot(helper, layout));
 		}
@@ -801,6 +807,122 @@ public final class WorldGameTests
 	}
 
 	/**
+	 * Built whole (Jexxme's review, 2026-11-09). Every table stands: a table top on its own, or a row of them, rests on a
+	 * leg (an upside-down stair) instead of hanging over the floor. The hearth burns inside, walled on every side but its
+	 * mouth, its chimney closed round the smoke all the way up and standing on stone, never on the roof's stairs or over
+	 * open air. No bare ground shows in the cellar.
+	 */
+	private static void tavernIsBuiltWhole(GameTestHelper helper, VillageStructures.TavernLayout layout) {
+		ServerLevel level = helper.getLevel();
+		Placed t = placeTavern(helper, layout);
+		String name = layout.name();
+		BoundingBox house = BoundingBox.fromCorners(t.origin(), t.origin().offset(t.template().getSize()).offset(-1, -1, -1));
+
+		// the tables (a trapdoor up under the eaves, with nothing under it, is trim, not a table)
+		for (BlockPos top : t.find(WorldGameTests::isTableTop)) {
+			if (level.getBlockState(top.below()).isFaceSturdy(level, top.below(), Direction.UP)) {
+				helper.assertTrue(tableStands(level, top), "the " + name + " table at " + top.subtract(t.origin()) + " floats: no leg under it or its row");
+			}
+		}
+
+		// the hearth and its chimney
+		List<BlockPos> hearths = t.find(s -> s.is(Blocks.CAMPFIRE) && s.getValue(CampfireBlock.SIGNAL_FIRE));
+		helper.assertFalse(hearths.isEmpty(), name + " has a hearth");
+		for (BlockPos fire : hearths) {
+			BlockPos at = fire.subtract(t.origin());
+			long open = Direction.Plane.HORIZONTAL.stream().filter(d -> !blocks(level, fire.relative(d))).count();
+			helper.assertTrue(open <= 1, "the " + name + " hearth at " + at + " is open on " + open + " sides, not just its mouth");
+			// the chimney's top: the highest layer where anything still stands beside the smoke (snow lying on it doesn't)
+			int top = fire.getY();
+			for (BlockPos p = fire.above(); p.getY() <= house.maxY(); p = p.above()) {
+				for (Direction d : Direction.Plane.HORIZONTAL) {
+					if (blocks(level, p.relative(d))) {
+						top = p.getY();
+					}
+				}
+			}
+			// above the mouth and its lintel, walled round all the way up
+			for (BlockPos p = fire.above(2); p.getY() <= top; p = p.above()) {
+				for (Direction d : Direction.Plane.HORIZONTAL) {
+					helper.assertFalse(level.getBlockState(p.relative(d)).isAir(),
+						"the " + name + " chimney is open beside the smoke at " + p.relative(d).subtract(t.origin()));
+				}
+			}
+			// its stones stand on stone: a full block, a corbel or a top slab under each, or air only inside the house
+			for (int dx = -1; dx <= 1; dx++) {
+				for (int dz = -1; dz <= 1; dz++) {
+					for (int y = fire.getY() + 3; y <= top + 1; y++) {
+						BlockPos p = new BlockPos(fire.getX() + dx, y, fire.getZ() + dz);
+						BlockState stone = level.getBlockState(p);
+						if ((dx == 0 && dz == 0) || !stone.is(BlockTags.MINEABLE_WITH_PICKAXE) || !stone.isCollisionShapeFullBlock(level, p)) {
+							continue;
+						}
+						BlockPos under = p.below();
+						BlockState below = level.getBlockState(under);
+						boolean holds = below.isCollisionShapeFullBlock(level, under)
+							|| (below.getBlock() instanceof StairBlock && below.getValue(StairBlock.HALF) == Half.TOP)
+							|| (below.getBlock() instanceof SlabBlock && below.getValue(SlabBlock.TYPE) != SlabType.BOTTOM)
+							|| (below.isAir() && !openToTheOutside(level, under, house));
+						helper.assertTrue(holds, "the " + name + " chimney's stone at " + p.subtract(t.origin()) + " stands on " + below + ", seen from outside");
+					}
+				}
+			}
+		}
+
+		// the cellar: no bare ground beside its room
+		StructureTemplate cellar = level.getStructureManager().get(layout.cellarId()).orElseThrow();
+		BlockPos cellarAt = t.origin().below(VillageStructures.CELLAR_HEIGHT);
+		for (StructureTemplate.StructureBlockInfo info : cellar.filterBlocks(BlockPos.ZERO, new StructurePlaceSettings(), Blocks.AIR)) {
+			for (Direction d : Direction.values()) {
+				BlockPos next = cellarAt.offset(info.pos()).relative(d);
+				BlockState wall = level.getBlockState(next);
+				helper.assertFalse(wall.is(BlockTags.DIRT) || wall.is(BlockTags.SAND) || wall.is(Blocks.GRAVEL),
+					"bare " + BuiltInRegistries.BLOCK.getKey(wall.getBlock()).getPath() + " in the " + name + " cellar wall at " + next.subtract(cellarAt));
+			}
+		}
+		helper.succeed();
+	}
+
+	/** A table top: a closed trapdoor in the top half of its block. */
+	private static boolean isTableTop(BlockState state) {
+		return state.getBlock() instanceof TrapDoorBlock && !state.getValue(TrapDoorBlock.OPEN)
+			&& state.getValue(TrapDoorBlock.HALF) == Half.TOP;
+	}
+
+	/** Whether this table top, or the row of table tops it is in, has a leg: an upside-down stair at the same height. */
+	private static boolean tableStands(ServerLevel level, BlockPos top) {
+		for (Direction d : Direction.Plane.HORIZONTAL) {
+			for (BlockPos p = top.relative(d); ; p = p.relative(d)) {
+				BlockState s = level.getBlockState(p);
+				if (s.getBlock() instanceof StairBlock) {
+					if (s.getValue(StairBlock.HALF) == Half.TOP) {
+						return true;
+					}
+					break;
+				}
+				if (!isTableTop(s)) {
+					break;
+				}
+			}
+		}
+		return false;
+	}
+
+	/** Whether open air runs straight out from this spot, along any side, past the house's walls. */
+	private static boolean openToTheOutside(ServerLevel level, BlockPos pos, BoundingBox house) {
+		for (Direction d : Direction.Plane.HORIZONTAL) {
+			BlockPos p = pos;
+			while (house.isInside(p) && level.getBlockState(p).isAir()) {
+				p = p.relative(d);
+			}
+			if (!house.isInside(p)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * No villager gets trapped and the door works for them: a villager coming in from the street finds a path through
 	 * the door to the bar and into the barrel cellar, and one in the cellar finds its way back out.
 	 */
@@ -1022,7 +1144,7 @@ public final class WorldGameTests
 		List<BlockPos> holes = new ArrayList<>();
 		for (BlockPos pos : BlockPos.betweenClosed(origin, origin.offset(template.getSize().getX() - 1, 0, template.getSize().getZ() - 1))) {
 			BlockState state = level.getBlockState(pos);
-			if (state.isAir() || state.getBlock() instanceof net.minecraft.world.level.block.StairBlock) {
+			if (state.isAir() || state.getBlock() instanceof StairBlock) {
 				holes.add(pos.subtract(origin));
 			}
 		}
