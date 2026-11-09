@@ -10,6 +10,7 @@ import jexxme.vineandbarrel.drink.DrinkItem;
 import jexxme.vineandbarrel.kettle.KettleTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import jexxme.vineandbarrel.watch.WatchPath;
 import jexxme.vineandbarrel.watch.WatchScene;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -22,15 +23,18 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 /**
  * Every scene the loaded resource packs have ({@code assets/<namespace>/watch/*.json}), read on each resource reload,
- * and what opens which: an item's tooltip key, a block in the world, a JEI category.
+ * and what opens which: an item's tooltip key, a block in the world, a JEI category. Also the Brewer's path
+ * ({@code watch/path.json}, merged over all namespaces, ours first).
  */
 public final class WatchIndex implements ResourceManagerReloadListener
 {
@@ -39,6 +43,7 @@ public final class WatchIndex implements ResourceManagerReloadListener
 	private static final String FOLDER = "watch";
 
 	private volatile Map<Identifier, WatchScene> scenes = Map.of();
+	private volatile WatchPath path = WatchPath.EMPTY;
 
 	private WatchIndex() {
 	}
@@ -46,8 +51,19 @@ public final class WatchIndex implements ResourceManagerReloadListener
 	@Override
 	public void onResourceManagerReload(ResourceManager resources) {
 		Map<Identifier, WatchScene> read = new LinkedHashMap<>();
+		Map<String, WatchPath> paths = new TreeMap<>();
 		for (Map.Entry<Identifier, Resource> entry : resources.listResources(FOLDER, id -> id.getPath().endsWith(".json")).entrySet()) {
 			Identifier file = entry.getKey();
+			if (file.getPath().equals(FOLDER + "/" + WatchPath.FILE)) {
+				try (Reader reader = entry.getValue().openAsReader()) {
+					WatchPath.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader))
+						.resultOrPartial(error -> VineAndBarrel.LOGGER.error("Watch it: path {} can't be read: {}", file, error))
+						.ifPresent(parsed -> paths.put(file.getNamespace(), parsed));
+				} catch (Exception e) {
+					VineAndBarrel.LOGGER.error("Watch it: path {} can't be read", file, e);
+				}
+				continue;
+			}
 			Identifier id = file.withPath(path -> path.substring(FOLDER.length() + 1, path.length() - ".json".length()));
 			try (Reader reader = entry.getValue().openAsReader()) {
 				JsonElement json = JsonParser.parseReader(reader);
@@ -63,6 +79,29 @@ public final class WatchIndex implements ResourceManagerReloadListener
 			}
 		}
 		scenes = Map.copyOf(read);
+		// ours first: our file sets the stations, the others add branches
+		WatchPath merged = paths.getOrDefault(VineAndBarrel.MODID, WatchPath.EMPTY);
+		for (Map.Entry<String, WatchPath> other : paths.entrySet()) {
+			if (!other.getKey().equals(VineAndBarrel.MODID)) {
+				merged = merged.with(other.getValue());
+			}
+		}
+		path = merged;
+	}
+
+	/** {@return the Brewer's path, as the loaded resource packs give it (stations and branches may name missing scenes)} */
+	public WatchPath path() {
+		return path;
+	}
+
+	/** {@return the id a loaded scene goes by} */
+	public @Nullable Identifier idOf(WatchScene scene) {
+		for (Map.Entry<Identifier, WatchScene> entry : scenes.entrySet()) {
+			if (entry.getValue() == scene) {
+				return entry.getKey();
+			}
+		}
+		return null;
 	}
 
 	public Optional<WatchScene> scene(Identifier id) {

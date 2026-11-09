@@ -2,6 +2,7 @@ package jexxme.vineandbarrel.watch.client;
 
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState;
+import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -19,13 +20,14 @@ public record SceneRenderState(
 	int x1,
 	int y1,
 	float scale,
+	@Nullable BlockPos outline,
 	@Nullable ScreenRectangle scissorArea,
 	@Nullable ScreenRectangle bounds
 ) implements PictureInPictureRenderState
 {
 	public SceneRenderState(ScenePlayer player, SceneView view, float partialTick, int x0, int y0, int x1, int y1, float scale,
-							@Nullable ScreenRectangle scissorArea) {
-		this(player, view.yaw, view.pitch, view.zoom, partialTick, x0, y0, x1, y1, scale, scissorArea,
+							@Nullable BlockPos outline, @Nullable ScreenRectangle scissorArea) {
+		this(player, view.yaw, view.pitch, view.zoom, partialTick, x0, y0, x1, y1, scale, outline, scissorArea,
 			PictureInPictureRenderState.getBounds(x0, y0, x1, y1, scissorArea));
 	}
 }

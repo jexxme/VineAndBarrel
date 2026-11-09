@@ -182,6 +182,17 @@
     "vineandbarrel:aging_barrel",
     "vineandbarrel:farmers_delight"
   ],
+  "needs": [
+    "minecraft:campfire",
+    "vineandbarrel:brew_kettle",
+    {
+      "recipe": "vineandbarrel:brewing/grape_juice",
+      "part": "ingredient"
+    },
+    "minecraft:sugar",
+    "minecraft:glass_bottle",
+    "minecraft:bucket"
+  ],
   "steps": [
     {
       "caption": "watch.vineandbarrel.brew_kettle.1",
@@ -348,6 +359,11 @@
     },
     {
       "caption": "watch.vineandbarrel.brew_kettle.3",
+      "anchor": [
+        1.5,
+        2.85,
+        1.5
+      ],
       "ticks": 100,
       "actions": [
         {
@@ -524,6 +540,11 @@
     },
     {
       "caption": "watch.vineandbarrel.brew_kettle.5",
+      "anchor": [
+        1.5,
+        2.5,
+        1.5
+      ],
       "ticks": 110,
       "actions": [
         {

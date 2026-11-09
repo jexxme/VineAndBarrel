@@ -1,27 +1,34 @@
 package jexxme.vineandbarrel.watch.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.mixin.GuiGraphicsExtractorAccessor;
+import jexxme.vineandbarrel.platform.Services;
 import jexxme.vineandbarrel.watch.WatchScene;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.SpriteIconButton;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.PageButton;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.locale.Language;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -30,50 +37,76 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /**
- * "Watch it": a short scene of the real blocks, one step at a time. A wide vanilla panel with a dark window onto a
- * small stage, the step's one caption line under it and a scrub bar (one segment per step, click to jump). Drag to
- * turn, scroll to zoom, hover a block for its name; arrow keys step, space pauses, R plays it again.
+ * "Watch it": a short scene of the real blocks, one step at a time, in a window in vanilla's container look. The
+ * stage shows the scene; each step's caption sits beside the block it is about (outlined as in the world), tied to it
+ * by a short line. One row under the stage: what you need (click for recipes), the steps between the book's page arrows
+ * (click one to jump, hover for its caption), the Brewer's path and Done. A small button in the stage's corner pauses
+ * and plays (so does Space, or a click on the scene); drag to turn, scroll to zoom, double-click to set the view back.
+ * At the end the scene keeps its last frame, and a small box offers what's next.
  */
 public class WatchScreen extends Screen
 {
-	private static final Identifier PANEL = VineAndBarrel.id("watch/panel");
-	private static final Identifier WINDOW = VineAndBarrel.id("watch/window");
-	private static final Identifier POINTER = VineAndBarrel.id("watch/pointer");
-	private static final int INK = 0xFF404040;
-	private static final int INK_MUTED = 0xFF606060;
-	/** The window when no days pass: a dim cellar. */
-	private static final int CELLAR = 0xFF1D2327;
+	/** The window's size in GUI pixels, as vanilla's screens have one: the GUI scale sets how big it is on screen. */
+	private static final int WINDOW_W = 400, WINDOW_H = 240;
+
+	/** The line and the outline that tie a caption to its block. */
+	static final int ACCENT = 0xFFFFFFFF;
+	private static final int INK = 0xFFFFFFFF;
+	private static final int INK_MUTED = 0xFFA0A0A0;
+	private static final int TITLE_INK = 0xFF404040;
+	private static final int TITLE_MUTED = 0xFF707070;
+	private static final int HIGHLIGHT = 0xFFFFFF55;
+	/** The stage when no days pass: a dim cellar. */
+	private static final int STAGE = 0xFF1D2327;
 	private static final int NIGHT = 0xFF141C30;
 	private static final int DAY = 0xFF79A6DC;
-	private static final int BAR = 0xFF8B8B8B;
-	private static final int BAR_FILLED = 0xFF404040;
-	private static final int PAD = 8;
-	private static final int TITLE_H = 16;
-	private static final int BAR_H = 3;
-	private static final int LINE_H = 10;
-	private static final int BUTTON = 12;
+	private static final Identifier PANEL = VineAndBarrel.id("watch/panel");
+	private static final Identifier INSET = VineAndBarrel.id("watch/window");
+	private static final Identifier SLOT = Identifier.withDefaultNamespace("container/slot");
 
-	private static final int NOW = 0xFFFFFF55;
-	private static final int ICON = 16;
+	private static final int HEADER = 20;
+	private static final int FOOTER = 36;
+	private static final int CHIP = 20;
+	private static final int ARROW = 23;
+	private static final int DONE_W = 64;
+	private static final int SLOT_SIZE = 18;
+	private static final int LINE_H = 10;
+	private static final int TAG_PAD = 6;
+	/** A caption's widest line: about 35 characters. */
+	private static final int TAG_MAX = 200;
+	private static final int FADE_MS = 150;
+	private static final int END_W = 156;
 
 	private final ScenePlayer player;
 	private final SceneView view;
 	/** What the player's own block is doing, said while the scene is at the step it opened at (opened from a block). */
 	private final @Nullable Component now;
 	private final int nowStep;
-	/** Where Escape goes back to: the inventory or JEI page the scene was opened from. */
+	/** Where Escape goes back to: the inventory, JEI page or path the scene was opened from. */
 	private final @Nullable Screen parent;
-	private int panelX, panelY, panelW, panelH;
-	private int winX, winY, winW, winH;
-	/** How wide a caption may run (room is kept for "Also watch" on its right) and how many lines the longest needs. */
-	private int captionW, captionLines;
-	private boolean dragging;
-	private @Nullable SpriteIconButton pause, play;
+	/** Watching the Brewer's path in order: its stations' scenes, this one among them (null: a single scene). */
+	private @Nullable List<Identifier> chapters;
+
+	private int ox, oy, ow, oh;
+	private int stageX, stageY, stageW, stageH;
+	private int footerY, railX, railY, chipsX;
+	private int tagW, tagH;
+	private int cardX, cardY, cardW, cardH;
+	private boolean tagOnLeft;
+	private int tagStep = -1;
+	private long stepShownAt;
+	/** The game may pause behind this screen: the scene keeps its own clock between ticks. */
+	private long lastTick = Util.getNanos();
+	private boolean dragging, moved;
+	private double pressX, pressY;
+	private @Nullable SpriteIconButton pauseButton, playButton;
+	private final List<Button> endButtons = new ArrayList<>();
 
 	public WatchScreen(ScenePlayer player, @Nullable Component now, @Nullable Screen parent) {
 		super(Component.translatable(player.scene().title()));
@@ -84,15 +117,10 @@ public class WatchScreen extends Screen
 		this.parent = parent;
 	}
 
-	/** Opens a scene from the start ({@code vineandbarrel:aging_barrel} is {@code assets/vineandbarrel/watch/aging_barrel.json}). */
 	public static boolean open(Identifier id) {
 		return open(id, 0, null, null);
 	}
 
-	/**
-	 * Opens a scene at a step (0 = the first), maybe with a line about the player's own block, going back to
-	 * {@code parent} when closed.
-	 */
 	public static boolean open(Identifier id, int step, @Nullable Component now, @Nullable Screen parent) {
 		Minecraft minecraft = Minecraft.getInstance();
 		Optional<WatchScene> scene = WatchIndex.INSTANCE.scene(id);
@@ -107,100 +135,220 @@ public class WatchScreen extends Screen
 		return true;
 	}
 
-	@Override
-	public void onClose() {
-		minecraft.gui.setScreen(parent);
+	/** Plays the path's scenes in order like chapters, starting at {@code id}. */
+	static boolean openChapters(Identifier id, List<Identifier> chapters, @Nullable Screen parent) {
+		if (!open(id, 0, null, parent)) {
+			return false;
+		}
+		if (Minecraft.getInstance().gui.screen() instanceof WatchScreen screen) {
+			screen.chapters = List.copyOf(chapters);
+			screen.rebuildWidgets();
+		}
+		return true;
 	}
 
-	/** {@return the scene playing here} */
+	/** {@return the window's size on a screen this big (GUI pixels): its own, or the screen less a margin if smaller} */
+	static int[] windowSize(int width, int height) {
+		return new int[] {Math.min(WINDOW_W, width - 16), Math.min(WINDOW_H, height - 16)};
+	}
+
+	/** {@return where Done leads from a guide screen: past the scenes and the path, to where the guide was opened} */
+	static @Nullable Screen outside(@Nullable Screen from) {
+		Screen to = from;
+		while (to instanceof WatchScreen || to instanceof WatchPathScreen) {
+			to = to instanceof WatchScreen watch ? watch.parent : ((WatchPathScreen) to).parent();
+		}
+		return to;
+	}
+
 	public ScenePlayer player() {
 		return player;
 	}
 
 	@Override
+	public void onClose() {
+		minecraft.gui.setScreen(parent);
+	}
+
+	// ------------------------------------------------------------------ layout
+
+	@Override
 	protected void init() {
-		panelW = Mth.clamp(width * 2 / 3, Math.min(width - 16, 300), 520);
-		panelH = Math.min(height - 16, Math.max(panelW * 3 / 4, 200));
-		panelX = (width - panelW) / 2;
-		panelY = (height - panelH) / 2;
-		winX = panelX + PAD;
-		winY = panelY + PAD + TITLE_H;
-		winW = panelW - 2 * PAD;
-		// the longest caption (in this language) sets the caption area's height, so nothing jumps between steps
-		captionW = winW - (alsoScenes().isEmpty() ? 0 : alsoWidth() + 8);
-		captionLines = 1;
+		int[] size = windowSize(width, height);
+		ow = size[0];
+		oh = size[1];
+		ox = (width - ow) / 2;
+		oy = (height - oh) / 2;
+		stageX = ox + 8;
+		stageY = oy + HEADER;
+		stageW = ow - 16;
+		footerY = oy + oh - FOOTER;
+		stageH = footerY - 4 - stageY;
+		railY = footerY + 12;
+
+		// The caption is as wide and as tall as the scene's longest one needs, so it never changes size between steps, and
+		// never wider than the room beside a block in the middle of the stage (half the stage, less the block's half-width
+		// at this scale and the line): it sits beside its block, never over it, and in a narrow stage it wraps instead
+		int beside = Math.round(stageW / 2.0F - 0.8F * sceneScale()) - 16 - 8;
+		int max = Math.max(90, Math.min(TAG_MAX, Math.min(stageW / 2 - 24, beside)));
+		int lines = 1;
+		int widest = 0;
 		for (WatchScene.Step step : player.scene().steps()) {
-			captionLines = Math.max(captionLines, font.split(Component.translatable(step.caption()), captionW).size());
-		}
-		winH = panelH - 2 * PAD - TITLE_H - BAR_H - captionArea();
-
-		// back, pause or play, next, replay: the title row's right end
-		int y = panelY + PAD - 3;
-		int x = panelX + panelW - PAD - BUTTON;
-		addRenderableWidget(control("replay", x, y, () -> {
-			player.restart();
-			view.reset();
-		}));
-		x -= BUTTON + 2;
-		addRenderableWidget(control("next", x, y, () -> {
-			if (player.step() + 1 < player.scene().steps().size()) {
-				player.jumpTo(player.step() + 1);
+			List<FormattedCharSequence> split = font.split(Component.translatable(step.caption()), max);
+			lines = Math.max(lines, split.size());
+			for (FormattedCharSequence line : split) {
+				widest = Math.max(widest, font.width(line));
 			}
-		}));
-		x -= BUTTON + 2;
-		pause = addRenderableWidget(control("pause", x, y, () -> player.setPaused(true)));
-		play = addRenderableWidget(control("play", x, y, () -> {
-			if (player.isFinished()) {
-				player.restart();
-			}
-			player.setPaused(false);
-		}));
-		x -= BUTTON + 2;
-		addRenderableWidget(control("back", x, y, this::back));
-		updatePlayPause();
+		}
+		tagW = widest + 2 * TAG_PAD;
+		tagH = lines * LINE_H + 2 * TAG_PAD - 2;
+
+		// One row under the stage: what you need (left), the steps between the book's arrows (middle), the path and Done
+		// (right). The steps sit in the middle unless the slots would touch them; then they move right. Only when even
+		// that doesn't fit, the slots give way (the brewer's hands still show what is in use).
+		int rowY = footerY + 12;
+		int steps = player.scene().steps().size();
+		int chipsW = steps * (CHIP + 2) - 2;
+		int group = ARROW + 6 + chipsW + 6 + ARROW;
+		int railW = needs().size() * SLOT_SIZE;
+		int left = ox + 8 + railW + 8;
+		int right = ox + ow - 8 - DONE_W - 4 - 20 - 8;
+		int start = ox + (ow - group) / 2;
+		railX = -1;
+		if (railW > 0 && left + group <= right) {
+			railX = ox + 8;
+			start = Math.max(start, left);
+		} else {
+			start = Math.max(start, ox + 8);
+		}
+		chipsX = start + ARROW + 6;
+		addRenderableWidget(new PageButton(chipsX - ARROW - 6, rowY + 4, false, b -> back(), true));
+		addRenderableWidget(new PageButton(chipsX + chipsW + 6, rowY + 4, true, b -> next(), true));
+		SpriteIconButton path = addRenderableWidget(icon("watch/big/path", Component.translatable("watch.vineandbarrel.path"), 20, b -> openPath()));
+		path.setPosition(ox + ow - 8 - DONE_W - 4 - 20, rowY);
+		path.visible = WatchPathScreen.available();
+		addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> minecraft.gui.setScreen(outside(parent)))
+			.bounds(ox + ow - 8 - DONE_W, rowY, DONE_W, 20).build());
+
+		// pause and play: a small button in the stage's corner, so a new player sees how (Space and a click work too)
+		pauseButton = addRenderableWidget(icon("watch/big/pause", keyHint("watch.vineandbarrel.pause"), 18, b -> togglePause()));
+		pauseButton.setPosition(stageX + 6, stageY + 6);
+		playButton = addRenderableWidget(icon("watch/big/play", keyHint("watch.vineandbarrel.play"), 18, b -> togglePause()));
+		playButton.setPosition(stageX + 6, stageY + 6);
+		layoutEndCard();
+		updateButtons();
 	}
 
-	private SpriteIconButton control(String name, int x, int y, Runnable action) {
-		SpriteIconButton button = SpriteIconButton.builder(Component.translatable("watch.vineandbarrel." + name), b -> {
-			action.run();
-			updatePlayPause();
-		}, true).sprite(VineAndBarrel.id("watch/" + name), 8, 8).size(BUTTON, BUTTON).withTootip().build();
-		button.setPosition(x, y);
-		return button;
+	private static SpriteIconButton icon(String sprite, Component name, int size, Button.OnPress action) {
+		return SpriteIconButton.builder(name, action, true).sprite(VineAndBarrel.id(sprite), 14, 14).size(size, size).withTootip().build();
 	}
 
-	/** Pause while it plays, play once it is paused or over. */
-	private void updatePlayPause() {
-		if (pause != null && play != null) {
-			boolean playing = !player.isPaused() && !player.isFinished();
-			pause.visible = playing;
-			play.visible = !playing;
+	/** "Pause (Space)": the action and its key, in the player's language. */
+	private static Component keyHint(String action) {
+		return Component.translatable(action).append(" (").append(Component.translatable("key.keyboard.space")).append(")");
+	}
+
+	/** The end box at the stage's top right: what's next, play again, the path, and the scene's other offers. */
+	private void layoutEndCard() {
+		endButtons.forEach(this::removeWidget);
+		endButtons.clear();
+		List<Identifier> also = alsoScenes();
+		int alsoLines = Math.max(0, also.size() - 1);
+		cardW = END_W;
+		cardH = also.isEmpty() ? 76 : 112 + (alsoLines > 0 ? 12 + alsoLines * 18 : 0);
+		cardX = stageX + stageW - cardW - 8;
+		cardY = stageY + 8;
+		int y = cardY + (also.isEmpty() ? 28 : 44);
+		if (!also.isEmpty()) {
+			Identifier next = also.getFirst();
+			endButtons.add(addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.watch_next"), b -> {
+				if (chapters != null) {
+					openChapters(next, chapters, parent);
+				} else {
+					open(next, 0, null, parent);
+				}
+			}).bounds(cardX + 8, y, cardW - 16, 20).build()));
+			y += 22;
+		}
+		endButtons.add(addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.replay"), b -> replay())
+			.bounds(cardX + 8, y, cardW - 16, 20).build()));
+		if (WatchPathScreen.available()) {
+			endButtons.add(addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.path"), b -> openPath())
+				.bounds(cardX + 8, y + 22, cardW - 16, 20).build()));
 		}
 	}
 
-	/** Back: to the start of this step, or to the step before if this one has only just begun. */
+	private void updateButtons() {
+		boolean playing = !player.isPaused() && !player.isFinished();
+		if (pauseButton != null && playButton != null) {
+			pauseButton.visible = playing;
+			playButton.visible = !playing && !player.isFinished();
+		}
+		for (Button button : endButtons) {
+			button.visible = player.isFinished();
+		}
+	}
+
+	private void togglePause() {
+		if (player.isFinished()) {
+			replay();
+		} else {
+			player.setPaused(!player.isPaused());
+		}
+		updateButtons();
+	}
+
 	private void back() {
 		player.jumpTo(player.tick() > 10 || player.step() == 0 ? player.step() : player.step() - 1);
+		updateButtons();
 	}
 
-	private int captionArea() {
-		return 6 + captionLines * LINE_H;
+	private void next() {
+		if (player.step() + 1 < player.scene().steps().size()) {
+			player.jumpTo(player.step() + 1);
+			updateButtons();
+		}
 	}
+
+	private void replay() {
+		player.restart();
+		player.setPaused(false);
+		view.reset();
+		updateButtons();
+	}
+
+	private void openPath() {
+		minecraft.gui.setScreen(new WatchPathScreen(this));
+	}
+
+	// ------------------------------------------------------------------ ticking
 
 	@Override
 	public void tick() {
 		int step = player.step();
+		boolean finished = player.isFinished();
 		player.clientTick();
-		updatePlayPause();
+		lastTick = Util.getNanos();
 		if (player.step() != step) {
 			// the narrator reads each new step's caption, as it reads a screen's title
 			minecraft.getNarrator().saySystemQueued(Component.translatable(player.currentStep().caption()));
 		}
+		if (player.isFinished() != finished) {
+			updateButtons();
+			if (player.isFinished() && !endButtons.isEmpty()) {
+				setFocused(endButtons.getFirst());
+			}
+		}
+	}
+
+	/** {@return how far between two scene ticks it is now (the game's own partial tick stands still while it pauses)} */
+	private float partialTick() {
+		return Mth.clamp((Util.getNanos() - lastTick) / 50_000_000.0F, 0.0F, 1.0F);
 	}
 
 	@Override
 	public boolean isPauseScreen() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -208,198 +356,367 @@ public class WatchScreen extends Screen
 		return true;
 	}
 
+	// ------------------------------------------------------------------ drawing
+
+	@Override
+	public void extractBackground(GuiGraphicsExtractor gui, int mouseX, int mouseY, float a) {
+		extractBlurredBackground(gui);
+		extractMenuBackground(gui);
+		gui.fill(0, 0, width, height, 0x60000000);
+		gui.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL, ox, oy, ow, oh);
+		gui.fill(stageX, stageY, stageX + stageW, stageY + stageH, STAGE);
+	}
+
+	@Override
+	public void extractRenderState(GuiGraphicsExtractor gui, int mouseX, int mouseY, float frameTicks) {
+		float a = partialTick();
+		// the title where a container has it, top left (watching the path: which station of how many)
+		int titleRoom = ow - 16;
+		Component chapter = chapters == null ? null
+			: Component.translatable("watch.vineandbarrel.path.chapter", chapters.indexOf(sceneId()) + 1, chapters.size());
+		if (chapter != null) {
+			titleRoom -= font.width(chapter) + 6;
+		}
+		FormattedCharSequence titleLine = font.width(title) <= titleRoom ? title.getVisualOrderText()
+			: Language.getInstance().getVisualOrder(FormattedText.composite(font.substrByWidth(title, titleRoom - font.width("…")), FormattedText.of("…")));
+		gui.text(font, titleLine, ox + 8, oy + 6, TITLE_INK, false);
+		if (chapter != null) {
+			gui.text(font, chapter, ox + 8 + font.width(titleLine) + 6, oy + 6, TITLE_MUTED, false);
+		}
+
+		extractSky(gui, a);
+		int sx = sceneX(), sy = sceneY();
+		// finished, the scene keeps its last frame: what came of it, and what's next beside it
+		((GuiGraphicsExtractorAccessor) gui).vineandbarrel$guiRenderState().addPicturesInPictureState(
+			new SceneRenderState(player, view, a, sx, sy, sx + sceneW(), sy + sceneH(), sceneScale(), player.isFinished() ? null : anchorBlock(a), null));
+		gui.nextStratum();
+		gui.blitSprite(RenderPipelines.GUI_TEXTURED, INSET, stageX - 2, stageY - 2, stageW + 4, stageH + 4);
+
+		int topY = stageY + 8;
+		if (now != null && player.step() == nowStep && !player.isFinished()) {
+			int w = font.width(now) + 12;
+			int x = stageX + (stageW - w) / 2;
+			gui.fill(x, topY, x + w, topY + 16, 0xC0000000);
+			gui.centeredText(font, now, stageX + stageW / 2, topY + 4, HIGHLIGHT);
+			topY += 20;
+		}
+		if (player.isPaused() && !player.isFinished()) {
+			Component paused = Component.translatable("watch.vineandbarrel.paused");
+			int w = font.width(paused) + 12;
+			gui.fill(stageX + (stageW - w) / 2, topY, stageX + (stageW + w) / 2, topY + 14, 0xA0000000);
+			gui.centeredText(font, paused, stageX + stageW / 2, topY + 3, INK);
+		}
+		if (player.isFinished()) {
+			gui.fill(cardX, cardY, cardX + cardW, cardY + cardH, 0xD0000000);
+			extractEndCard(gui);
+		} else {
+			extractTag(gui, a);
+		}
+		extractRail(gui);
+		extractSteps(gui, mouseX, mouseY, a);
+		super.extractRenderState(gui, mouseX, mouseY, frameTicks);
+		extractHover(gui, mouseX, mouseY);
+	}
+
+	/** The scene's own area: the stage less a margin. */
+	private int sceneX() {
+		return stageX + 8;
+	}
+
+	private int sceneY() {
+		return stageY + 8;
+	}
+
+	private int sceneW() {
+		return stageW - 16;
+	}
+
+	private int sceneH() {
+		return stageH - 16;
+	}
+
 	private float sceneScale() {
-		return SceneView.scale(player.scene(), winW, winH);
+		return SceneView.scale(player.scene(), sceneW(), sceneH()) * 0.86F;
 	}
 
 	private Vec3 centre() {
 		return SceneView.centre(player.scene());
 	}
 
-	@Override
-	public void extractRenderState(GuiGraphicsExtractor gui, int mouseX, int mouseY, float a) {
-		gui.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL, panelX, panelY, panelW, panelH);
-		WatchScene scene = player.scene();
-		Component counter = Component.literal((player.step() + 1) + " / " + scene.steps().size());
-		int controls = 4 * (BUTTON + 2) - 2;
-		int counterX = panelX + panelW - PAD - controls - 6 - font.width(counter);
-		gui.text(font, counter, counterX, panelY + PAD + 1, INK_MUTED, false);
-		// a title too long for its room (a long translation) ends in an ellipsis rather than running into the counter
-		int titleRoom = counterX - 8 - (panelX + PAD);
-		FormattedCharSequence titleLine = font.width(title) <= titleRoom ? title.getVisualOrderText()
-			: Language.getInstance().getVisualOrder(FormattedText.composite(font.substrByWidth(title, titleRoom - font.width("…")), FormattedText.of("…")));
-		gui.text(font, titleLine, panelX + PAD, panelY + PAD + 1, INK, false);
-		super.extractRenderState(gui, mouseX, mouseY, a);
+	private Vector3f toGui(Vec3 stagePoint) {
+		Vector3f v = SceneView.project(SceneView.viewMatrix(view.yaw, view.pitch, view.zoom), stagePoint.subtract(centre()), sceneScale());
+		return v.add(sceneX() + sceneW() / 2.0F, sceneY() + sceneH() / 2.0F, 0.0F);
+	}
 
-		extractSky(gui, a);
-		((GuiGraphicsExtractorAccessor) gui).vineandbarrel$guiRenderState().addPicturesInPictureState(
-			new SceneRenderState(player, view, a, winX, winY, winX + winW, winY + winH, sceneScale(), null));
-		gui.nextStratum();
-		gui.blitSprite(RenderPipelines.GUI_TEXTURED, WINDOW, winX - 2, winY - 2, winW + 4, winH + 4);
-		extractPointer(gui, a);
-		extractScrubBar(gui, a);
-		Component caption = Component.translatable(player.currentStep().caption());
-		int lineY = winY + winH + BAR_H + 6;
-		for (FormattedCharSequence line : font.split(caption, captionW)) {
-			gui.text(font, line, panelX + PAD, lineY, INK, false);
-			lineY += LINE_H;
+	/** The block the caption is about: the one at its point, or just under it (a pointer floats above what it shows). */
+	private @Nullable BlockPos anchorBlock(float a) {
+		Optional<Vec3> point = player.anchor(a);
+		if (point.isEmpty() || player.currentStep().anchor().flatMap(WatchScene.Anchor::figure).isPresent()) {
+			return null;
 		}
-		if (now != null && player.step() == nowStep) {
-			List<FormattedCharSequence> lines = font.split(now, winW - 24);
-			int w = lines.stream().mapToInt(font::width).max().orElse(0) + 8;
-			int x = winX + (winW - w) / 2;
-			gui.fill(x, winY + 4, x + w, winY + 7 + lines.size() * LINE_H + 2, 0xB0000000);
-			int y = winY + 7;
-			for (FormattedCharSequence line : lines) {
-				gui.centeredText(font, line, winX + winW / 2, y, NOW);
-				y += LINE_H;
+		BlockPos at = BlockPos.containing(point.get());
+		for (int i = 0; i < 2; i++) {
+			if (!player.world().getBlockState(at).isAir()) {
+				return at;
 			}
+			at = at.below();
 		}
-		extractAlso(gui, mouseX, mouseY);
+		return null;
+	}
 
-		if (dragging) {
-			gui.requestCursor(CursorTypes.RESIZE_ALL);
-		} else if (isInWindow(mouseX, mouseY)) {
-			BlockPos hovered = blockUnder(mouseX, mouseY);
-			if (hovered != null) {
-				gui.setTooltipForNextFrame(font, player.world().getBlockState(hovered).getBlock().getName(), mouseX, mouseY);
+	/** Where the caption's line ends: the point the step names, else its block's middle, else the anchor (a figure's hands). */
+	private Optional<Vec3> anchorPoint(float a) {
+		Optional<Vec3> named = player.currentStep().anchor().flatMap(WatchScene.Anchor::pos);
+		if (named.isPresent()) {
+			return named;
+		}
+		BlockPos block = anchorBlock(a);
+		if (block != null) {
+			VoxelShape shape = player.world().getBlockState(block).getShape(player.world(), block, CollisionContext.empty());
+			return Optional.of(shape.isEmpty() ? Vec3.atCenterOf(block) : shape.bounds().getCenter().add(block.getX(), block.getY(), block.getZ()));
+		}
+		return player.anchor(a);
+	}
+
+	private void extractTag(GuiGraphicsExtractor gui, float a) {
+		if (tagStep != player.step()) {
+			tagStep = player.step();
+			stepShownAt = Util.getMillis();
+		}
+		// it fades in and rises a little, unless the player turned Distortion Effects off
+		float fade = minecraft.options.screenEffectScale().get() <= 0.0 ? 1.0F
+			: Mth.clamp((Util.getMillis() - stepShownAt) / (float) FADE_MS, 0.0F, 1.0F);
+		float alpha = 1.0F - (1.0F - fade) * (1.0F - fade);
+		int rise = Math.round((1.0F - alpha) * 4.0F);
+		List<FormattedCharSequence> lines = font.split(Component.translatable(player.currentStep().caption()), tagW - 2 * TAG_PAD);
+		Optional<Vec3> anchor = anchorPoint(a);
+		int x, y;
+		if (anchor.isPresent()) {
+			Vector3f p = toGui(anchor.get());
+			int px = Math.round(p.x), py = Math.round(p.y);
+			int[] box = anchorBox(a, px, py);
+			// The knot sits on the edge of the outlined thing at the height the step names (the tap: low on the barrel), and
+			// the line runs straight out to the caption. It never crosses the thing, nor a figure (then it takes the other side).
+			int ky = Mth.clamp(py, box[1] + 3, box[3] - 3);
+			int right = box[2] + 16, left = box[0] - 16 - tagW;
+			boolean fitsRight = right + tagW <= stageX + stageW - 8 && !figureBetween(box[2], right + tagW, ky);
+			boolean fitsLeft = left >= stageX + 8 && !figureBetween(left, box[0], ky);
+			tagOnLeft = tagOnLeft ? fitsLeft || !fitsRight : !fitsRight && fitsLeft;
+			x = Mth.clamp(tagOnLeft ? left : right, stageX + 8, stageX + stageW - 8 - tagW);
+			int kx = tagOnLeft ? box[0] : box[2];
+			y = Mth.clamp(ky - tagH / 2, stageY + 8, stageY + stageH - tagH - 8);
+			int lineY = Mth.clamp(ky, y + 3, y + tagH - 4);
+			int edge = tagOnLeft ? x + tagW : x;
+			int drawn = Math.round(alpha * Math.abs(edge - kx));
+			int x0 = tagOnLeft ? kx - drawn : kx, x1 = tagOnLeft ? kx : kx + drawn;
+			int lineColor = mulAlpha(ACCENT, alpha), shadow = mulAlpha(0x80000000, alpha);
+			if (lineY != ky) {
+				gui.fill(kx + 1, Math.min(ky, lineY) + 1, kx + 2, Math.max(ky, lineY) + 2, shadow);
+				gui.fill(kx, Math.min(ky, lineY), kx + 1, Math.max(ky, lineY) + 1, lineColor);
 			}
-		} else if (segmentAt(mouseX, mouseY) >= 0) {
-			gui.requestCursor(CursorTypes.POINTING_HAND);
+			gui.fill(x0 + 1, lineY + 1, x1 + 2, lineY + 2, shadow);
+			gui.fill(x0, lineY, x1 + 1, lineY + 1, lineColor);
+			gui.fill(kx - 1, ky - 1, kx + 2, ky + 2, lineColor);
+		} else {
+			x = stageX + (stageW - tagW) / 2;
+			y = stageY + stageH - tagH - 12;
+		}
+		y += rise;
+		gui.fill(x, y, x + tagW, y + tagH, mulAlpha(0xC0000000, alpha));
+		int ty = y + TAG_PAD;
+		for (FormattedCharSequence line : lines) {
+			gui.text(font, line, x + TAG_PAD + (tagOnLeft ? 0 : 1), ty, mulAlpha(INK, Math.max(alpha, 0.05F)), false);
+			ty += LINE_H;
 		}
 	}
 
-	/** The scrub bar's segment under the mouse, or -1. */
-	private int segmentAt(double x, double y) {
-		int barY = winY + winH + 3;
-		if (y < barY - 3 || y >= barY + BAR_H + 3 || x < winX || x >= winX + winW) {
+	/** Whether a figure stands across a caption's line (from x0 to x1 at height y) on the screen. */
+	private boolean figureBetween(int x0, int x1, int y) {
+		for (SceneFigure figure : player.figures()) {
+			Vec3 feet = figure.entity().position().subtract(ScenePlayer.PARTICLE_ORIGIN);
+			int[] box = screenBox(feet.add(-0.3, 0.0, -0.3), feet.add(0.3, 1.9, 0.3));
+			if (y >= box[1] - 4 && y <= box[3] + 4 && Math.max(x0, box[0]) < Math.min(x1, box[2])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** The screen box (x0, y0, x1, y1) around what the caption is about: its block's shape, or a figure's body. */
+	private int[] anchorBox(float a, int px, int py) {
+		BlockPos block = anchorBlock(a);
+		if (block != null) {
+			VoxelShape shape = player.world().getBlockState(block).getShape(player.world(), block, CollisionContext.empty());
+			AABB box = shape.isEmpty() ? new AABB(block) : shape.bounds().move(block);
+			return screenBox(new Vec3(box.minX, box.minY, box.minZ), new Vec3(box.maxX, box.maxY, box.maxZ));
+		}
+		if (player.currentStep().anchor().flatMap(WatchScene.Anchor::figure).isPresent()) {
+			Vec3 feet = player.anchor(a).orElseThrow().subtract(0.0, 1.05, 0.0);
+			return screenBox(feet.add(-0.3, 0.0, -0.3), feet.add(0.3, 1.9, 0.3));
+		}
+		return new int[] {px - 4, py - 4, px + 4, py + 4};
+	}
+
+	private int[] screenBox(Vec3 min, Vec3 max) {
+		int x0 = Integer.MAX_VALUE, y0 = Integer.MAX_VALUE, x1 = Integer.MIN_VALUE, y1 = Integer.MIN_VALUE;
+		for (int i = 0; i < 8; i++) {
+			Vector3f c = toGui(new Vec3((i & 1) == 0 ? min.x : max.x, (i & 2) == 0 ? min.y : max.y, (i & 4) == 0 ? min.z : max.z));
+			x0 = Math.min(x0, Math.round(c.x));
+			y0 = Math.min(y0, Math.round(c.y));
+			x1 = Math.max(x1, Math.round(c.x));
+			y1 = Math.max(y1, Math.round(c.y));
+		}
+		return new int[] {x0, y0, x1, y1};
+	}
+
+	/** The steps as vanilla buttons: playing = highlighted with how far it has played, done = plain, ahead = disabled. */
+	private void extractSteps(GuiGraphicsExtractor gui, int mouseX, int mouseY, float a) {
+		int steps = player.scene().steps().size();
+		int hovered = stepAt(mouseX, mouseY);
+		int y = footerY + 12;
+		for (int i = 0; i < steps; i++) {
+			int x = stepX(i);
+			boolean current = i == player.step() && !player.isFinished();
+			boolean past = player.isFinished() || i < player.step();
+			Identifier sprite = Identifier.withDefaultNamespace(current || i == hovered ? "widget/button_highlighted" : past ? "widget/button" : "widget/button_disabled");
+			gui.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, CHIP, CHIP);
+			if (current) {
+				gui.fill(x + 3, y + CHIP - 4, x + 3 + Math.round((CHIP - 6) * player.stepProgress(a)), y + CHIP - 3, INK);
+			}
+			Component number = Component.literal(String.valueOf(i + 1));
+			if (current) {
+				number = number.copy().withStyle(ChatFormatting.BOLD);
+			}
+			gui.text(font, number, x + (CHIP - font.width(number)) / 2 + 1, y + 6, past || current ? INK : INK_MUTED, true);
+		}
+		if (hovered >= 0) {
+			gui.requestCursor(CursorTypes.POINTING_HAND);
+			gui.setComponentTooltipForNextFrame(font, List.of(
+				Component.translatable("watch.vineandbarrel.step", hovered + 1, steps).withStyle(s -> s.withColor(HIGHLIGHT)),
+				Component.translatable(player.scene().steps().get(hovered).caption())), mouseX, mouseY);
+		}
+	}
+
+	private int stepX(int i) {
+		return chipsX + i * (CHIP + 2);
+	}
+
+	private int stepAt(double x, double y) {
+		if (y < footerY + 12 || y >= footerY + 12 + CHIP) {
 			return -1;
 		}
-		int steps = player.scene().steps().size();
-		for (int i = 0; i < steps; i++) {
-			if (x < segmentX(i + 1)) {
+		for (int i = 0; i < player.scene().steps().size(); i++) {
+			if (x >= stepX(i) && x < stepX(i) + CHIP) {
 				return i;
 			}
 		}
-		return steps - 1;
+		return -1;
 	}
 
-	private int alsoWidth() {
-		return font.width(Component.translatable("watch.vineandbarrel.also")) + 4 + alsoScenes().size() * (ICON + 2);
+	// ------------------------------------------------------------------ what you need
+
+	private List<ItemStack> needs() {
+		return player.scene().needs().stream().map(SceneItems::resolve).filter(stack -> !stack.isEmpty()).toList();
 	}
 
-	/** At the end: "Also watch" and the other scenes' icons, on the caption line's right. */
-	private void extractAlso(GuiGraphicsExtractor gui, int mouseX, int mouseY) {
-		List<Identifier> also = alsoScenes();
-		if (!player.isFinished() || also.isEmpty()) {
+	/** "What you need": a container's row of slots with its label above; what the brewer holds now is framed. */
+	private void extractRail(GuiGraphicsExtractor gui) {
+		if (railX < 0) {
 			return;
 		}
-		int y = winY + winH + BAR_H + 2;
-		int x = panelX + panelW - PAD - also.size() * (ICON + 2);
-		Component label = Component.translatable("watch.vineandbarrel.also");
-		gui.text(font, label, x - 4 - font.width(label), y + 4, INK_MUTED, false);
-		for (Identifier id : also) {
-			gui.item(WatchIndex.INSTANCE.icon(id), x, y);
-			if (mouseX >= x && mouseX < x + ICON && mouseY >= y && mouseY < y + ICON) {
-				gui.fill(x, y, x + ICON, y + ICON, 0x80FFFFFF);
+		gui.text(font, Component.translatable("watch.vineandbarrel.needs"), railX, footerY + 2, TITLE_INK, false);
+		List<ItemStack> held = player.heldItems();
+		int x = railX;
+		for (ItemStack stack : needs()) {
+			gui.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT, x, railY, SLOT_SIZE, SLOT_SIZE);
+			gui.item(stack, x + 1, railY + 1);
+			if (held.stream().anyMatch(h -> ItemStack.isSameItem(h, stack))) {
+				gui.outline(x - 1, railY - 1, SLOT_SIZE + 2, SLOT_SIZE + 2, INK);
+				gui.outline(x - 2, railY - 2, SLOT_SIZE + 4, SLOT_SIZE + 4, 0xFF000000);
+			}
+			x += SLOT_SIZE;
+		}
+	}
+
+	private int railSlotAt(double mx, double my) {
+		if (railX < 0 || my < railY || my >= railY + SLOT_SIZE || mx < railX) {
+			return -1;
+		}
+		int i = (int) Math.floor((mx - railX) / SLOT_SIZE);
+		return i < needs().size() ? i : -1;
+	}
+
+	private static boolean jei() {
+		return Services.PLATFORM.isModLoaded("jei");
+	}
+
+	// ------------------------------------------------------------------ hover
+
+	private void extractHover(GuiGraphicsExtractor gui, int mouseX, int mouseY) {
+		if (dragging && moved) {
+			gui.requestCursor(CursorTypes.RESIZE_ALL);
+			return;
+		}
+		int slot = railSlotAt(mouseX, mouseY);
+		if (slot >= 0) {
+			ItemStack stack = needs().get(slot);
+			List<Component> lines = new ArrayList<>(Screen.getTooltipFromItem(minecraft, stack));
+			if (jei()) {
+				lines.add(Component.translatable("watch.vineandbarrel.click_recipes").withStyle(s -> s.withColor(INK_MUTED)));
 				gui.requestCursor(CursorTypes.POINTING_HAND);
-				WatchIndex.INSTANCE.scene(id).ifPresent(scene ->
-					gui.setTooltipForNextFrame(font, Component.translatable(scene.title()), mouseX, mouseY));
 			}
-			x += ICON + 2;
-		}
-	}
-
-	/** The scenes offered at the end that exist (a resource pack may have left one out) and have an icon. */
-	private List<Identifier> alsoScenes() {
-		return player.scene().also().stream()
-			.filter(id -> WatchIndex.INSTANCE.scene(id).isPresent() && !WatchIndex.INSTANCE.icon(id).isEmpty())
-			.toList();
-	}
-
-	/** The window's sky: a dim cellar, or while days pass, the days and nights going by with the sun and the moon. */
-	private void extractSky(GuiGraphicsExtractor gui, float a) {
-		Optional<ScenePlayer.Lapse> lapse = player.timelapse(a);
-		if (lapse.isEmpty()) {
-			gui.fill(winX, winY, winX + winW, winY + winH, CELLAR);
+			gui.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
 			return;
 		}
-		float day = lapse.get().dayFraction();
-		// sunrise at 0, noon at 0.25, sunset at 0.5, midnight at 0.75
-		float light = Mth.clamp(Mth.sin(day * Mth.TWO_PI) * 1.6F + 0.5F, 0.0F, 1.0F);
-		gui.fill(winX, winY, winX + winW, winY + winH, ARGB.srgbLerp(light, NIGHT, DAY));
-		boolean sunUp = day < 0.5F;
-		float along = sunUp ? day * 2.0F : (day - 0.5F) * 2.0F;
-		int size = 12;
-		int x = winX + 8 + (int) (along * (winW - 16 - size));
-		int y = winY + winH / 2 - (int) (Mth.sin(along * Mth.PI) * (winH / 2.0F - 12)) - size / 2;
-		// a square sun and moon, the way the sky draws them
-		if (sunUp) {
-			gui.fill(x, y, x + size, y + size, 0xFFFFE36A);
-			gui.fill(x + 2, y + 2, x + size - 2, y + size - 2, 0xFFFFF6C4);
-		} else {
-			gui.fill(x, y, x + size, y + size, 0xFFDCE3EC);
-			gui.fill(x + 3, y + 2, x + 6, y + 5, 0xFFB4BCC8);
-			gui.fill(x + 6, y + 7, x + 9, y + 10, 0xFFB4BCC8);
-		}
-		// one small mark per day that has passed: what the window shows, never how many are left
-		int passed = (int) (lapse.get().days() * lapse.get().progress());
-		for (int d = 0; d < Mth.ceil(lapse.get().days()); d++) {
-			int dx = winX + 6 + d * 8;
-			gui.fill(dx, winY + 6, dx + 4, winY + 10, d < passed ? 0xFFFFE36A : 0x40FFFFFF);
-		}
-	}
-
-	private void extractPointer(GuiGraphicsExtractor gui, float a) {
-		Optional<Vec3> target = player.pointer();
-		if (target.isEmpty()) {
+		if (!isInStage(mouseX, mouseY) || player.isFinished() && isInCard(mouseX, mouseY) || isOverButton(mouseX, mouseY)) {
 			return;
 		}
-		Vector3f at = toGui(target.get());
-		float bob = Mth.sin((player.tick() + a) * 0.25F) * 2.0F;
-		int x = Math.round(at.x) - 4;
-		int y = Math.round(at.y + bob) - 12;
-		if (x >= winX && x + 9 <= winX + winW && y >= winY && y + 7 <= winY + winH) {
-			gui.blitSprite(RenderPipelines.GUI_TEXTURED, POINTER, x, y, 9, 7);
+		ItemStack inHand = heldUnder(mouseX, mouseY);
+		if (!inHand.isEmpty()) {
+			gui.setTooltipForNextFrame(font, inHand, mouseX, mouseY);
+			return;
+		}
+		BlockPos hovered = blockUnder(mouseX, mouseY);
+		if (hovered != null) {
+			BlockState state = player.world().getBlockState(hovered);
+			List<Component> lines = new ArrayList<>();
+			lines.add(state.getBlock().getName());
+			if (sceneOf(state).isPresent()) {
+				lines.add(Component.translatable("watch.vineandbarrel.click_watch").withStyle(s -> s.withColor(INK_MUTED)));
+				gui.requestCursor(CursorTypes.POINTING_HAND);
+			}
+			gui.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
 		}
 	}
 
-	private void extractScrubBar(GuiGraphicsExtractor gui, float a) {
-		int steps = player.scene().steps().size();
-		int y = winY + winH + 3;
-		for (int i = 0; i < steps; i++) {
-			int x0 = segmentX(i);
-			int x1 = segmentX(i + 1) - 2;
-			gui.fill(x0, y, x1, y + BAR_H, BAR);
-			float filled = i < player.step() ? 1.0F : i == player.step() ? player.stepProgress(a) : 0.0F;
-			if (filled > 0.0F) {
-				gui.fill(x0, y, x0 + Math.round((x1 - x0) * filled), y + BAR_H, BAR_FILLED);
+	private boolean isOverButton(double x, double y) {
+		return pauseButton != null && pauseButton.isMouseOver(x, y) || playButton != null && playButton.isMouseOver(x, y);
+	}
+
+	/** The scene a block on the stage has of its own (not this one), if any. */
+	private Optional<Identifier> sceneOf(BlockState state) {
+		return WatchIndex.INSTANCE.forItem(new ItemStack(state.getBlock().asItem())).filter(id -> !id.equals(sceneId()));
+	}
+
+	/** What a figure holds, if the mouse is on its hands. */
+	private ItemStack heldUnder(double mx, double my) {
+		for (SceneFigure figure : player.figures()) {
+			ItemStack stack = figure.entity().getMainHandItem();
+			if (!stack.isEmpty()) {
+				Vector3f hand = toGui(figure.entity().position().subtract(ScenePlayer.PARTICLE_ORIGIN).add(0.0, 1.0, 0.0));
+				if (Math.abs(mx - hand.x) < 12 && Math.abs(my - hand.y) < 12) {
+					return stack;
+				}
 			}
 		}
+		return ItemStack.EMPTY;
 	}
 
-	private int segmentX(int i) {
-		return winX + Math.round((float) i * (winW + 2) / player.scene().steps().size());
-	}
-
-	// ------------------------------------------------------------------ the view's math (the same as the renderer's)
-
-	private Matrix4f viewMatrix() {
-		return SceneView.viewMatrix(view.yaw, view.pitch, view.zoom);
-	}
-
-	/** Where a stage point is on the screen. */
-	private Vector3f toGui(Vec3 stagePoint) {
-		Vector3f v = SceneView.project(viewMatrix(), stagePoint.subtract(centre()), sceneScale());
-		return v.add(winX + winW / 2.0F, winY + winH / 2.0F, 0.0F);
-	}
-
-	/** The block under the mouse: a ray from the screen into the stage, the nearest block shape it hits. */
 	private @Nullable BlockPos blockUnder(double mouseX, double mouseY) {
-		Matrix4f inverse = viewMatrix().invert();
+		Matrix4f inverse = SceneView.viewMatrix(view.yaw, view.pitch, view.zoom).invert();
 		float scale = sceneScale();
-		float mx = (float) (mouseX - (winX + winW / 2.0F)) / scale;
-		float my = (float) (mouseY - (winY + winH / 2.0F)) / scale;
+		float mx = (float) (mouseX - (sceneX() + sceneW() / 2.0F)) / scale;
+		float my = (float) (mouseY - (sceneY() + sceneH() / 2.0F)) / scale;
 		Vector3f near = inverse.transformPosition(mx, my, -50.0F, new Vector3f());
 		Vector3f far = inverse.transformPosition(mx, my, 50.0F, new Vector3f());
 		Vec3 from = centre().add(near.x, near.y, near.z);
@@ -408,7 +725,6 @@ public class WatchScreen extends Screen
 		double bestDistance = Double.MAX_VALUE;
 		for (Map.Entry<BlockPos, BlockState> entry : player.world().blocks().entrySet()) {
 			if (entry.getKey().getY() == 0 && player.scene().floor().isPresent()) {
-				// the floor is the stage, not something to name
 				continue;
 			}
 			VoxelShape shape = entry.getValue().getShape(player.world(), entry.getKey(), CollisionContext.empty());
@@ -424,44 +740,151 @@ public class WatchScreen extends Screen
 		return best;
 	}
 
-	private boolean isInWindow(double x, double y) {
-		return x >= winX && x < winX + winW && y >= winY && y < winY + winH;
+	private boolean isInStage(double x, double y) {
+		return x >= stageX && x < stageX + stageW && y >= stageY && y < stageY + stageH;
+	}
+
+	private boolean isInCard(double x, double y) {
+		return x >= cardX && x < cardX + cardW && y >= cardY && y < cardY + cardH;
+	}
+
+	// ------------------------------------------------------------------ sky and end box
+
+	/** Days passing: the sky fills the stage, the sun or moon crosses it, and a dot per day counts them. */
+	private void extractSky(GuiGraphicsExtractor gui, float a) {
+		Optional<ScenePlayer.Lapse> lapse = player.timelapse(a);
+		if (lapse.isEmpty()) {
+			return;
+		}
+		float day = lapse.get().dayFraction();
+		float light = Mth.clamp(Mth.sin(day * Mth.TWO_PI) * 1.6F + 0.5F, 0.0F, 1.0F);
+		gui.fill(stageX, stageY, stageX + stageW, stageY + stageH, (ARGB.srgbLerp(light, NIGHT, DAY) & 0xFFFFFF) | 0xA0000000);
+		boolean sunUp = day < 0.5F;
+		float along = sunUp ? day * 2.0F : (day - 0.5F) * 2.0F;
+		int size = 16;
+		int x = stageX + 16 + (int) (along * (stageW - 32 - size));
+		int y = stageY + stageH / 2 - (int) (Mth.sin(along * Mth.PI) * (stageH / 2.0F - 20)) - size / 2;
+		if (sunUp) {
+			gui.fill(x, y, x + size, y + size, 0xFFFFE36A);
+			gui.fill(x + 3, y + 3, x + size - 3, y + size - 3, 0xFFFFF6C4);
+		} else {
+			gui.fill(x, y, x + size, y + size, 0xFFDCE3EC);
+			gui.fill(x + 4, y + 3, x + 8, y + 7, 0xFFB4BCC8);
+			gui.fill(x + 8, y + 9, x + 12, y + 13, 0xFFB4BCC8);
+		}
+		int days = Mth.ceil(lapse.get().days());
+		int passed = (int) (lapse.get().days() * lapse.get().progress());
+		for (int d = 0; d < days; d++) {
+			int dx = stageX + stageW - 12 - (days - d) * 8;
+			gui.fill(dx, stageY + 8, dx + 4, stageY + 12, d < passed ? 0xFFFFE36A : 0x40FFFFFF);
+		}
+	}
+
+	private void extractEndCard(GuiGraphicsExtractor gui) {
+		List<Identifier> also = alsoScenes();
+		if (also.isEmpty()) {
+			gui.text(font, Component.translatable("watch.vineandbarrel.finished"), cardX + 8, cardY + 10, INK, true);
+			return;
+		}
+		Identifier next = also.getFirst();
+		gui.text(font, Component.translatable("watch.vineandbarrel.next_up"), cardX + 8, cardY + 6, INK_MUTED, false);
+		gui.item(WatchIndex.INSTANCE.icon(next), cardX + 8, cardY + 18);
+		gui.text(font, titleOf(next).copy().withStyle(ChatFormatting.BOLD), cardX + 28, cardY + 18, INK, true);
+		int steps = WatchIndex.INSTANCE.scene(next).map(scene -> scene.steps().size()).orElse(0);
+		gui.text(font, Component.translatable("watch.vineandbarrel.steps", steps), cardX + 28, cardY + 29, INK_MUTED, false);
+		if (also.size() > 1) {
+			gui.text(font, Component.translatable("watch.vineandbarrel.also"), cardX + 8, cardY + 114, INK_MUTED, false);
+			for (int i = 1; i < also.size(); i++) {
+				int y = alsoY(i);
+				gui.item(WatchIndex.INSTANCE.icon(also.get(i)), cardX + 8, y);
+				gui.text(font, titleOf(also.get(i)), cardX + 28, y + 4, INK, false);
+			}
+		}
+	}
+
+	private int alsoY(int i) {
+		return cardY + 124 + (i - 1) * 18;
+	}
+
+	private static Component titleOf(Identifier scene) {
+		return WatchIndex.INSTANCE.scene(scene).map(s -> (Component) Component.translatable(s.title())).orElse(Component.empty());
+	}
+
+	/** {@return what the end offers: watching the path, its next station; else the scene's own offers that are here} */
+	private List<Identifier> alsoScenes() {
+		if (chapters != null) {
+			int at = chapters.indexOf(sceneId());
+			return at >= 0 && at + 1 < chapters.size() ? List.of(chapters.get(at + 1)) : List.of();
+		}
+		return player.scene().also().stream()
+			.filter(id -> WatchIndex.INSTANCE.scene(id).isPresent() && !WatchIndex.INSTANCE.icon(id).isEmpty())
+			.toList();
+	}
+
+	private @Nullable Identifier sceneId() {
+		return WatchIndex.INSTANCE.idOf(player.scene());
+	}
+
+	private static int mulAlpha(int color, float alpha) {
+		return ((int) (((color >>> 24) & 0xFF) * alpha) << 24) | (color & 0xFFFFFF);
 	}
 
 	// ------------------------------------------------------------------ input
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && player.isFinished()) {
+		if (super.mouseClicked(event, doubleClick)) {
+			return true;
+		}
+		if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
+			return false;
+		}
+		int step = stepAt(event.x(), event.y());
+		if (step >= 0) {
+			player.jumpTo(step);
+			updateButtons();
+			return true;
+		}
+		int slot = railSlotAt(event.x(), event.y());
+		if (slot >= 0) {
+			return jei() && jexxme.vineandbarrel.compat.jei.VBJeiPlugin.showRecipes(needs().get(slot));
+		}
+		if (player.isFinished() && isInCard(event.x(), event.y())) {
 			List<Identifier> also = alsoScenes();
-			int y = winY + winH + BAR_H + 2;
-			int x = panelX + panelW - PAD - also.size() * (ICON + 2);
-			for (Identifier id : also) {
-				if (event.x() >= x && event.x() < x + ICON && event.y() >= y && event.y() < y + ICON) {
-					return open(id, 0, null, parent);
+			for (int i = 1; i < also.size(); i++) {
+				int y = alsoY(i);
+				if (event.x() >= cardX + 8 && event.x() < cardX + cardW - 8 && event.y() >= y && event.y() < y + 16) {
+					return open(also.get(i), 0, null, parent);
 				}
-				x += ICON + 2;
 			}
+			return true;
 		}
-		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-			int segment = segmentAt(event.x(), event.y());
-			if (segment >= 0) {
-				player.jumpTo(segment);
-				updatePlayPause();
+		if (isInStage(event.x(), event.y())) {
+			if (doubleClick) {
+				view.reset();
 				return true;
 			}
-			if (isInWindow(event.x(), event.y())) {
-				dragging = true;
-				return true;
+			BlockPos hovered = blockUnder(event.x(), event.y());
+			if (hovered != null) {
+				Optional<Identifier> own = sceneOf(player.world().getBlockState(hovered));
+				if (own.isPresent()) {
+					return open(own.get(), 0, null, this);
+				}
 			}
+			dragging = true;
+			moved = false;
+			pressX = event.x();
+			pressY = event.y();
+			return true;
 		}
-		return super.mouseClicked(event, doubleClick);
+		return false;
 	}
 
 	@Override
 	public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
 		if (dragging) {
 			view.turn((float) dx * 1.2F, (float) dy * 0.8F);
+			moved |= Math.abs(event.x() - pressX) + Math.abs(event.y() - pressY) > 3;
 			return true;
 		}
 		return super.mouseDragged(event, dx, dy);
@@ -469,13 +892,17 @@ public class WatchScreen extends Screen
 
 	@Override
 	public boolean mouseReleased(MouseButtonEvent event) {
+		if (dragging && !moved && !player.isFinished()) {
+			// a click on the scene, not a turn: pause or play
+			togglePause();
+		}
 		dragging = false;
 		return super.mouseReleased(event);
 	}
 
 	@Override
 	public boolean mouseScrolled(double x, double y, double scrollX, double scrollY) {
-		if (isInWindow(x, y) && scrollY != 0.0) {
+		if (isInStage(x, y) && scrollY != 0.0) {
 			view.zoomBy(scrollY > 0.0 ? 1.1F : 1.0F / 1.1F);
 			return true;
 		}
@@ -485,38 +912,22 @@ public class WatchScreen extends Screen
 	@Override
 	public boolean keyPressed(KeyEvent event) {
 		switch (event.key()) {
-			case InputConstants.KEY_LEFT -> {
-				back();
-				return true;
-			}
-			case InputConstants.KEY_RIGHT -> {
-				if (player.step() + 1 < player.scene().steps().size()) {
-					player.jumpTo(player.step() + 1);
-				}
-				return true;
-			}
-			case InputConstants.KEY_SPACE -> {
-				if (player.isFinished()) {
-					player.restart();
-				}
-				player.setPaused(!player.isPaused() && !player.isFinished());
-				updatePlayPause();
-				return true;
-			}
-			case InputConstants.KEY_R -> {
-				player.restart();
-				view.reset();
-				return true;
-			}
+			case InputConstants.KEY_LEFT -> back();
+			case InputConstants.KEY_RIGHT -> next();
+			case InputConstants.KEY_SPACE -> togglePause();
+			case InputConstants.KEY_R -> replay();
+			case InputConstants.KEY_HOME -> view.reset();
 			default -> {
 				return super.keyPressed(event);
 			}
 		}
+		return true;
 	}
 
 	@Override
 	public Component getNarrationMessage() {
+		Component step = Component.translatable("watch.vineandbarrel.step", player.step() + 1, player.scene().steps().size());
 		Component caption = Component.translatable(player.currentStep().caption());
-		return now != null ? CommonComponents.joinForNarration(title, now, caption) : CommonComponents.joinForNarration(title, caption);
+		return now != null ? CommonComponents.joinForNarration(title, step, now, caption) : CommonComponents.joinForNarration(title, step, caption);
 	}
 }

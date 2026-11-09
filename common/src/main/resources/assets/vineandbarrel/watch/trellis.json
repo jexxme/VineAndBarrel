@@ -24,6 +24,7 @@
     ]
   },
   "also": ["vineandbarrel:aging_barrel", "vineandbarrel:farmers_delight"],
+  "needs": ["vineandbarrel:red_grapes", "vineandbarrel:trellis"],
   "steps": [
     {
       "caption": "watch.vineandbarrel.trellis.1",
@@ -41,6 +42,7 @@
     },
     {
       "caption": "watch.vineandbarrel.trellis.2",
+      "anchor": [1.5, 2.5, 1.5],
       "ticks": 110,
       "actions": [
         { "type": "hold", "at": 4, "item": "vineandbarrel:trellis" },
@@ -82,6 +84,7 @@
     },
     {
       "caption": "watch.vineandbarrel.trellis.4",
+      "anchor": [1.5, 2.5, 1.5],
       "ticks": 100,
       "actions": [
         { "type": "look", "at": 4, "pos": [1.5, 2.5, 1.5] },
