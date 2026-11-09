@@ -17,10 +17,7 @@
       { "block": "vineandbarrel:trellis", "step": 2 },
       { "block": "vineandbarrel:grape_vine_on_trellis", "step": 4 },
       { "block": "vineandbarrel:white_grape_vine_on_trellis", "step": 4 },
-      { "block": "vineandbarrel:hop_vine_on_trellis", "step": 4 },
-      { "block": "vineandbarrel:grape_vine_on_support", "step": 3 },
-      { "block": "vineandbarrel:white_grape_vine_on_support", "step": 3 },
-      { "block": "vineandbarrel:hop_vine_on_support", "step": 3 }
+      { "block": "vineandbarrel:hop_vine_on_trellis", "step": 4 }
     ]
   },
   "also": ["vineandbarrel:aging_barrel", "vineandbarrel:farmers_delight"],

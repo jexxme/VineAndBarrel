@@ -36,6 +36,13 @@ public final class VineSupports
 	private static final double THIN_HALF_WIDTH = 2.5;
 	private static final Map<Level, Map<BlockPos, Stashed>> STASH = new WeakHashMap<>();
 
+	/**
+	 * The switch for fences, walls, chains and bars as vine supports. Off for 1.1.0 (they need more work); everything
+	 * here stays, dormant, and {@code true} brings it all back. While off nothing is a makeshift support
+	 * ({@link #isMakeshift}), so no plant goes into one, climbs one or is drawn as the foot of one.
+	 */
+	public static final boolean ENABLED = false;
+
 	private VineSupports() {
 	}
 
@@ -44,7 +51,7 @@ public final class VineSupports
 	 * standing upright if it has an axis (a chain lying on its side holds nothing).
 	 */
 	public static boolean isMakeshift(BlockState state) {
-		if (!state.is(VBTags.MAKESHIFT_VINE_SUPPORTS) || state.getBlock() instanceof VineOnSupportBlock) {
+		if (!ENABLED || !state.is(VBTags.MAKESHIFT_VINE_SUPPORTS) || state.getBlock() instanceof VineOnSupportBlock) {
 			return false;
 		}
 		return !state.hasProperty(BlockStateProperties.AXIS) || state.getValue(BlockStateProperties.AXIS) == Direction.Axis.Y;
