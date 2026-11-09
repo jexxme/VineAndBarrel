@@ -128,9 +128,25 @@ public final class WatchIndex implements ResourceManagerReloadListener
 	}
 
 	public Optional<BlockEntry> forBlock(Level level, BlockPos pos, BlockState state) {
+		// a big kettle's blocks and chimney pieces open what their kettle opens, as a kettle of their copper and level,
+		// heated if any fire under it is
+		Optional<Boolean> kettleHeat = Optional.empty();
+		if (state.getBlock() instanceof jexxme.vineandbarrel.kettle.BrewKettlePartBlock || state.getBlock() instanceof jexxme.vineandbarrel.kettle.KettleChimneyBlock) {
+			jexxme.vineandbarrel.kettle.BrewKettleBlockEntity kettle = jexxme.vineandbarrel.kettle.KettleMultiblock.controllerUnder(level, pos);
+			if (kettle == null) {
+				return Optional.empty();
+			}
+			BlockState own = kettle.getBlockState();
+			state = own.getBlock() instanceof jexxme.vineandbarrel.kettle.BrewKettleBlock ? own
+				: jexxme.vineandbarrel.kettle.KettleRegistry.singleOf(own.getBlock()).defaultBlockState()
+					.setValue(jexxme.vineandbarrel.kettle.BrewKettleBlock.FILL, jexxme.vineandbarrel.kettle.BrewKettleBlockEntity.fillLevel(kettle.getServings()));
+			kettleHeat = Optional.of(kettle.isHeated());
+		}
+		final BlockState look = state;
+		final Optional<Boolean> heat = kettleHeat;
 		for (Map.Entry<Identifier, WatchScene> entry : scenes.entrySet()) {
 			for (WatchScene.Entry block : entry.getValue().opens().blocks()) {
-				if (block.fits(state) && block.heated().map(heated -> heated == KettleTags.isHeated(level, pos)).orElse(true)) {
+				if (block.fits(look) && block.heated().map(heated -> heated == heat.orElseGet(() -> KettleTags.isHeated(level, pos))).orElse(true)) {
 					int step = Math.min(block.step(), entry.getValue().steps().size()) - 1;
 					return Optional.of(new BlockEntry(entry.getKey(), step, block.now()));
 				}

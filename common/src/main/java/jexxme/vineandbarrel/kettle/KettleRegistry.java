@@ -57,6 +57,12 @@ public final class KettleRegistry
 	public static final Map<WeatherState, DeferredBlock<BrewKettleBlock>> WAXED_KETTLES = new EnumMap<>(WeatherState.class);
 	public static final Map<WeatherState, DeferredItem<BrewKettleItem>> KETTLE_ITEMS = new EnumMap<>(WeatherState.class);
 	public static final Map<WeatherState, DeferredItem<BrewKettleItem>> WAXED_KETTLE_ITEMS = new EnumMap<>(WeatherState.class);
+	/** The blocks of big kettles (no items: a broken part drops the kettle of its stage). */
+	public static final Map<WeatherState, DeferredBlock<WeatheringBrewKettlePartBlock>> PARTS = new EnumMap<>(WeatherState.class);
+	public static final Map<WeatherState, DeferredBlock<BrewKettlePartBlock>> WAXED_PARTS = new EnumMap<>(WeatherState.class);
+	/** A chimney's extension blocks (technical: no items; each drops the copper ingot it was made from). */
+	public static final Map<WeatherState, DeferredBlock<KettleChimneyBlock>> CHIMNEYS = new EnumMap<>(WeatherState.class);
+	public static final Map<WeatherState, DeferredBlock<KettleChimneyBlock>> WAXED_CHIMNEYS = new EnumMap<>(WeatherState.class);
 
 	static {
 		for (WeatherState stage : WeatherState.values()) {
@@ -67,6 +73,10 @@ public final class KettleRegistry
 			WAXED_KETTLES.put(stage, waxed);
 			KETTLE_ITEMS.put(stage, ITEMS.registerItem(name, p -> new BrewKettleItem(block.get(), p), p -> p.stacksTo(1).useBlockDescriptionPrefix()));
 			WAXED_KETTLE_ITEMS.put(stage, ITEMS.registerItem("waxed_" + name, p -> new BrewKettleItem(waxed.get(), p), p -> p.stacksTo(1).useBlockDescriptionPrefix()));
+			PARTS.put(stage, BLOCKS.registerBlock(name + "_part", p -> new WeatheringBrewKettlePartBlock(stage, p), () -> partProperties(stage)));
+			WAXED_PARTS.put(stage, BLOCKS.registerBlock("waxed_" + name + "_part", p -> new BrewKettlePartBlock(stage, p), () -> partProperties(stage)));
+			CHIMNEYS.put(stage, BLOCKS.registerBlock(name + "_chimney", p -> new KettleChimneyBlock(stage, false, p), () -> partProperties(stage)));
+			WAXED_CHIMNEYS.put(stage, BLOCKS.registerBlock("waxed_" + name + "_chimney", p -> new KettleChimneyBlock(stage, true, p), () -> partProperties(stage)));
 		}
 	}
 
@@ -80,6 +90,77 @@ public final class KettleRegistry
 		};
 		return BlockBehaviour.Properties.of().mapColor(color).strength(0.5F, 6.0F).sound(SoundType.COPPER)
 			.noOcclusion();
+	}
+
+	/** A part never moves on its own: pistons would tear a big kettle apart. */
+	private static BlockBehaviour.Properties partProperties(WeatherState stage) {
+		return kettleProperties(stage).pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK).noLootTable();
+	}
+
+	/** All eight part blocks, unwaxed first, each in weathering order. */
+	public static List<Block> allPartBlocks() {
+		List<Block> blocks = new ArrayList<>();
+		PARTS.values().forEach(b -> blocks.add(b.get()));
+		WAXED_PARTS.values().forEach(b -> blocks.add(b.get()));
+		return blocks;
+	}
+
+	/** All eight chimney extension blocks. */
+	public static List<Block> allChimneyBlocks() {
+		List<Block> blocks = new ArrayList<>();
+		CHIMNEYS.values().forEach(b -> blocks.add(b.get()));
+		WAXED_CHIMNEYS.values().forEach(b -> blocks.add(b.get()));
+		return blocks;
+	}
+
+	/** The single kettle of a kettle block's look (a part's or chimney piece's stage and wax; a single kettle is itself). */
+	public static Block singleOf(Block block) {
+		if (block instanceof BrewKettlePartBlock part) {
+			return (part.isWaxed() ? WAXED_KETTLES : KETTLES).get(part.getWeatherState()).get();
+		}
+		if (block instanceof KettleChimneyBlock chimney) {
+			return (chimney.isWaxed() ? WAXED_KETTLES : KETTLES).get(chimney.getWeatherState()).get();
+		}
+		return block;
+	}
+
+	/** The chimney extension block of a single kettle's look. */
+	public static Block chimneyOf(Block single) {
+		BrewKettleBlock kettle = (BrewKettleBlock) singleOf(single);
+		return (kettle.isWaxed() ? WAXED_CHIMNEYS : CHIMNEYS).get(kettle.getWeatherState()).get();
+	}
+
+	/** The part block of a single kettle's look. */
+	public static Block partOf(Block single) {
+		if (single instanceof BrewKettlePartBlock) {
+			return single;
+		}
+		BrewKettleBlock kettle = (BrewKettleBlock) single;
+		return (kettle.isWaxed() ? WAXED_PARTS : PARTS).get(kettle.getWeatherState()).get();
+	}
+
+	/** The next weathering stage of an unwaxed single kettle, or null (oxidized, or waxed). */
+	public static @org.jspecify.annotations.Nullable Block nextStage(Block single) {
+		if (!(single instanceof BrewKettleBlock kettle) || kettle.isWaxed() || kettle.getWeatherState() == WeatherState.OXIDIZED) {
+			return null;
+		}
+		return KETTLES.get(WeatherState.values()[kettle.getWeatherState().ordinal() + 1]).get();
+	}
+
+	/** The waxed twin of an unwaxed single kettle, or null. */
+	public static @org.jspecify.annotations.Nullable Block waxedOf(Block single) {
+		return single instanceof BrewKettleBlock kettle && !kettle.isWaxed() ? WAXED_KETTLES.get(kettle.getWeatherState()).get() : null;
+	}
+
+	/** One step back with an axe, as for a single kettle: wax off first, otherwise one stage of oxidation; null if clean. */
+	public static @org.jspecify.annotations.Nullable Block scrapedOf(Block single) {
+		if (!(single instanceof BrewKettleBlock kettle)) {
+			return null;
+		}
+		if (kettle.isWaxed()) {
+			return KETTLES.get(kettle.getWeatherState()).get();
+		}
+		return kettle.getWeatherState() == WeatherState.UNAFFECTED ? null : KETTLES.get(WeatherState.values()[kettle.getWeatherState().ordinal() - 1]).get();
 	}
 
 	/** All eight kettle blocks, unwaxed first, each in weathering order. */
@@ -109,7 +190,11 @@ public final class KettleRegistry
 	// ------------------------------------------------------------------ block entity, menu
 
 	public static final Supplier<BlockEntityType<BrewKettleBlockEntity>> BREW_KETTLE_BE = BLOCK_ENTITY_TYPES.register("brew_kettle",
-		() -> new BlockEntityType<>(BrewKettleBlockEntity::new, java.util.Set.copyOf(allKettleBlocks())));
+		() -> {
+			java.util.Set<Block> valid = new java.util.HashSet<>(allKettleBlocks());
+			valid.addAll(allPartBlocks());
+			return new BlockEntityType<>(BrewKettleBlockEntity::new, valid);
+		});
 
 	public static final Supplier<MenuType<BrewKettleMenu>> BREW_KETTLE_MENU = MENU_TYPES.register("brew_kettle",
 		() -> Services.PLATFORM.blockMenuType(BrewKettleMenu::new));
@@ -145,7 +230,6 @@ public final class KettleRegistry
 
 	public static final Supplier<SoundEvent> BOIL = sound("block.brew_kettle.boil");
 	public static final Supplier<SoundEvent> BOIL_BREW = sound("block.brew_kettle.boil_brew");
-	public static final Supplier<SoundEvent> LID_RATTLE = sound("block.brew_kettle.rattle");
 	public static final Supplier<SoundEvent> LID_OPEN = sound("block.brew_kettle.open");
 	public static final Supplier<SoundEvent> LID_CLOSE = sound("block.brew_kettle.close");
 	public static final Supplier<SoundEvent> BREW_FINISHED = sound("block.brew_kettle.finish");

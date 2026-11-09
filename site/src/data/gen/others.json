@@ -31,6 +31,18 @@
 		"id": "farmersdelight:straw",
 		"name": "Straw"
 	},
+	"minecraft:purple_dye": {
+		"id": "minecraft:purple_dye",
+		"name": "Purple Dye"
+	},
+	"minecraft:lime_dye": {
+		"id": "minecraft:lime_dye",
+		"name": "Lime Dye"
+	},
+	"minecraft:yellow_dye": {
+		"id": "minecraft:yellow_dye",
+		"name": "Yellow Dye"
+	},
 	"minecraft:acacia_planks": {
 		"id": "minecraft:acacia_planks",
 		"name": "Acacia Planks"
@@ -70,10 +82,6 @@
 	"minecraft:pale_oak_planks": {
 		"id": "minecraft:pale_oak_planks",
 		"name": "Pale Oak Planks"
-	},
-	"minecraft:poplar_planks": {
-		"id": "minecraft:poplar_planks",
-		"name": "Poplar Planks"
 	},
 	"minecraft:spruce_planks": {
 		"id": "minecraft:spruce_planks",

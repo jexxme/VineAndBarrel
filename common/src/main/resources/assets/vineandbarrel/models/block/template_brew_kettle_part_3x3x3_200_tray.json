@@ -1,0 +1,197 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "#plate"
+	},
+	"elements": [
+		{
+			"from": [
+				0,
+				0,
+				2
+			],
+			"to": [
+				14,
+				16,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						2,
+						0,
+						16,
+						16
+					],
+					"texture": "#plate"
+				},
+				"east": {
+					"uv": [
+						0,
+						0,
+						14,
+						16
+					],
+					"texture": "#plate"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						14,
+						14
+					],
+					"texture": "#plate"
+				}
+			},
+			"name": "body"
+		},
+		{
+			"from": [
+				0,
+				1,
+				1.5
+			],
+			"to": [
+				14.5,
+				2.5,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						1.5,
+						0,
+						16.0,
+						1.5
+					],
+					"texture": "#band"
+				},
+				"east": {
+					"uv": [
+						0,
+						0,
+						14.5,
+						1.5
+					],
+					"texture": "#band"
+				},
+				"up": {
+					"uv": [
+						0,
+						1.5,
+						14.5,
+						16
+					],
+					"texture": "#band"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						14.5,
+						14.5
+					],
+					"texture": "#band"
+				}
+			},
+			"name": "foot"
+		},
+		{
+			"from": [
+				0,
+				-0.001,
+				0
+			],
+			"to": [
+				16,
+				-0.001,
+				16
+			],
+			"faces": {
+				"up": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_top"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_top"
+				}
+			}
+		},
+		{
+			"from": [
+				0,
+				-16,
+				0
+			],
+			"to": [
+				16,
+				0,
+				0
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_side"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_side"
+				}
+			}
+		},
+		{
+			"from": [
+				16,
+				-16,
+				0
+			],
+			"to": [
+				16,
+				0,
+				16
+			],
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_side"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#tray_side"
+				}
+			}
+		}
+	]
+}

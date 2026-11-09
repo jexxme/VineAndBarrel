@@ -1,0 +1,296 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "#plate"
+	},
+	"elements": [
+		{
+			"from": [
+				2,
+				0,
+				2
+			],
+			"to": [
+				16,
+				10,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						6,
+						14,
+						16
+					],
+					"texture": "#plate"
+				},
+				"west": {
+					"uv": [
+						2,
+						6,
+						16,
+						16
+					],
+					"texture": "#plate"
+				}
+			},
+			"name": "body"
+		},
+		{
+			"from": [
+				1.5,
+				8,
+				1.5
+			],
+			"to": [
+				16,
+				10,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						14.5,
+						2
+					],
+					"texture": "#band"
+				},
+				"west": {
+					"uv": [
+						1.5,
+						0,
+						16.0,
+						2
+					],
+					"texture": "#band"
+				},
+				"up": {
+					"uv": [
+						1.5,
+						1.5,
+						16,
+						16
+					],
+					"texture": "#band"
+				},
+				"down": {
+					"uv": [
+						1.5,
+						0,
+						16,
+						14.5
+					],
+					"texture": "#band"
+				}
+			},
+			"name": "rim"
+		},
+		{
+			"from": [
+				3,
+				10,
+				3
+			],
+			"to": [
+				16,
+				12,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						13,
+						2
+					],
+					"texture": "#trim"
+				},
+				"west": {
+					"uv": [
+						3,
+						0,
+						16,
+						2
+					],
+					"texture": "#trim"
+				},
+				"up": {
+					"uv": [
+						3,
+						3,
+						16,
+						16
+					],
+					"texture": "#cut"
+				}
+			},
+			"name": "hood"
+		},
+		{
+			"from": [
+				7,
+				12,
+				7
+			],
+			"to": [
+				16,
+				13.5,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						9,
+						1.5
+					],
+					"texture": "#trim"
+				},
+				"west": {
+					"uv": [
+						7,
+						0,
+						16,
+						1.5
+					],
+					"texture": "#trim"
+				},
+				"up": {
+					"uv": [
+						7,
+						7,
+						16,
+						16
+					],
+					"texture": "#cut"
+				}
+			},
+			"name": "hood"
+		},
+		{
+			"from": [
+				13.0,
+				13.5,
+				13.0
+			],
+			"to": [
+				19.0,
+				14.5,
+				19.0
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						1.0
+					],
+					"texture": "#band"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						1.0
+					],
+					"texture": "#band"
+				},
+				"east": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						1.0
+					],
+					"texture": "#band"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						1.0
+					],
+					"texture": "#band"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						6.0
+					],
+					"texture": "#band"
+				}
+			},
+			"name": "collar"
+		},
+		{
+			"from": [
+				13.5,
+				14.5,
+				13.5
+			],
+			"to": [
+				18.5,
+				16,
+				18.5
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						1.5
+					],
+					"texture": "#pipe"
+				},
+				"south": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						1.5
+					],
+					"texture": "#pipe"
+				},
+				"east": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						1.5
+					],
+					"texture": "#pipe"
+				},
+				"west": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						1.5
+					],
+					"texture": "#pipe"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						5.0,
+						5.0
+					],
+					"texture": "#dark"
+				}
+			},
+			"name": "chimney"
+		}
+	]
+}

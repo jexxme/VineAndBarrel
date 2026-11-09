@@ -1,4 +1,23 @@
-## Unreleased
+## 1.1.0
+
+- **Watch it:** press G over an item, a JEI recipe or a block, and a short animated scene shows how it's done. A brewer in your own skin grows grapes up a trellis, fills and taps an Aging Barrel, brews in a Brew Kettle and raises a round of Cheers. With Farmer's Delight, the kettle heats on a stove and grapes grow up a rope.
+- **Grapes and hops climb fences, walls, chains and bars too:** plant them into one standing on soil, or put one into a bush. They give one fewer fruit per pick than on a trellis, and the block stays exactly as it was: fences and walls keep connecting, leads stay tied.
+- Trellis rows frame themselves: a post where a row ends, a rail along the top.
+- Vines on a burning trellis or rope burn away and leave the trellis or rope standing.
+- Cauldrons take juice, wort and honey must the way they take water. A bucket fills one, a bottle adds a serving, and empty bottles or a bucket take it back out. A cauldron holds four servings, a bucket's worth.
+- Farmers buy barley and red grapes, as they buy wheat and pumpkins.
+- With Farmer's Delight: the knife cuts wild grapes, wild white grapes and wild hops on the cutting board, like FD's own wild crops. FD's milk bottle, melon juice and apple cider lower Tipsy by one level, like our juices.
+
+## 1.0.2
+
+- **The trellis goes into the plant:** right-click a grape or hop bush with a trellis, or right-click a trellis standing on the ground with grapes or hops to plant the bush into it. The plant climbs the trellises above from there. Breaking the plant leaves the trellis standing, and a trellis on top of a bush still works.
+- Pistons move grape and hop bushes whole, like their vines, instead of popping them.
+- Half-ripe hops have green cones, so they no longer look ripe.
+- Hiccups sound like hiccups: a real recording instead of a pitched-up burp.
+- Taverns hold about half as much drink in their casks.
+- The farms of abandoned villages grow barley, grapes and hops too.
+
+## 1.0.1
 
 - Placed mugs no longer flicker at the bottom with shaders, and aged ones lose the flickering line between beer and foam.
 - Tipsy V: you trip a little more often (sprinting too); the 30-second break between trips stays.
@@ -6,7 +25,7 @@
 
 ## 1.0.0
 
-- **Fabric:** Vine & Barrel runs on Fabric for Minecraft 26.3 too (Fabric Loader 0.20.1 and Fabric API 0.165.2 or newer), with all the same content, per-world server settings included. There, Farmer's Delight Refabricated takes the place of Farmer's Delight Neoforged.
+- **Minecraft 26.2:** the same content as on 26.3, for NeoForge and for Fabric (Fabric Loader 0.20.1 and Fabric API 0.161.0 or newer), per-world server settings included. Farmer's Delight is the optional extra on both: Farmer's Delight Neoforged on NeoForge, Farmer's Delight Refabricated on Fabric.
 - **Twelve more languages:** German, Spanish, French, Italian, Japanese, Korean, Polish, Brazilian Portuguese, Russian, Turkish, Ukrainian and Simplified Chinese.
 - New drinks: White Wine from white grapes (their own bush, wild where it's a little cooler, and a crate), Mead from honey bottles, and Hard Cider from Apple Juice without Farmer's Delight (FD's apple cider still makes the same cider). New advancements Mead Hall and Cider House; Vintner asks for white wine too.
 - The grape blocks are called Red Grape Bush, Red Grape Vine, Wild Red Grapes and Red Grape Crate, next to the white ones. Barley Ale is called Pale Ale (Aged Pale Ale). Existing items keep working.

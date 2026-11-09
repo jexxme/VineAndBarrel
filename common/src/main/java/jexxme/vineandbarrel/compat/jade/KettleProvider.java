@@ -30,8 +30,15 @@ public enum KettleProvider implements IBlockComponentProvider
 
 	@Override
 	public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
-		if (!(accessor.getBlockEntity() instanceof BrewKettleBlockEntity kettle)) {
+		// a big kettle's brew lives in its controller: any of its blocks shows it
+		BrewKettleBlockEntity kettle = jexxme.vineandbarrel.kettle.KettleMultiblock.controller(accessor.getLevel(), accessor.getPosition());
+		if (kettle == null) {
 			return;
+		}
+		jexxme.vineandbarrel.kettle.KettleShape shape = kettle.shape();
+		if (shape != jexxme.vineandbarrel.kettle.KettleShape.SINGLE) {
+			tooltip.add(Component.translatable("jade.vineandbarrel.brew_kettle.size", kettle.getName(), kettle.capacity()));
+			tooltip.add(Component.translatable("jade.vineandbarrel.brew_kettle.fires", kettle.heatedBlocks(), shape.bottomBlocks()).withStyle(ChatFormatting.GRAY));
 		}
 		ItemStack brew = kettle.getBrew();
 		if (!brew.isEmpty()) {
@@ -39,7 +46,7 @@ public enum KettleProvider implements IBlockComponentProvider
 		}
 		KettleDataProvider.INSTANCE.decodeFromData(accessor).filter(progress -> progress.time() > 0 && progress.total() > 0).ifPresent(progress ->
 			tooltip.add(Component.translatable("jade.vineandbarrel.brew_kettle.brewing", Math.min(100, progress.time() * 100 / progress.total()))));
-		if (kettle.hasIngredients() && !kettle.isHeated()) {
+		if (kettle.hasIngredients() && kettle.heatedBlocks() == 0) {
 			tooltip.add(Component.translatable("container.vineandbarrel.brew_kettle.not_heated").withStyle(ChatFormatting.GRAY));
 		}
 	}

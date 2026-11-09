@@ -5,6 +5,8 @@ import jexxme.vineandbarrel.kettle.BaseItems;
 import jexxme.vineandbarrel.kettle.BrewKettleBlock;
 import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
 import jexxme.vineandbarrel.kettle.BrewKettleItem;
+import jexxme.vineandbarrel.kettle.BrewKettlePartBlock;
+import jexxme.vineandbarrel.kettle.KettleMultiblock;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
 import net.minecraft.world.item.crafting.ExtendedRecipeBookCategory;
 import net.minecraft.client.color.block.BlockTintSource;
@@ -40,10 +42,13 @@ public final class KettleClient
 		registrar.particle(KettleRegistry.STEAM.get(), SteamParticle.Provider::new);
 		registrar.tooltip(BrewKettleItem.KettleTooltipData.class, KettleTooltip::new);
 		// K2: the open kettle shows its brew in the brew's colour, water while it only holds ingredients
-		registrar.blockTints(List.of(new BrewTint()), KettleRegistry.allKettleBlocks().toArray(Block[]::new));
+		registrar.blockTints(List.of(new BrewTint(Set.of(BrewKettleBlock.OPEN, BrewKettleBlock.FILL))), KettleRegistry.allKettleBlocks().toArray(Block[]::new));
+		// a big kettle's hatch shows its brew the same way (the brew is in the controller's block entity)
+		registrar.blockTints(List.of(new BrewTint(Set.of(BrewKettlePartBlock.LEVEL))), KettleRegistry.allPartBlocks().toArray(Block[]::new));
 	}
 
-	private static final class BrewTint implements BlockTintSource
+	/** The brew's colour; {@code relevant} are the state properties that show it (a kettle's lid, a big kettle's sight glass). */
+	private record BrewTint(Set<Property<?>> relevant) implements BlockTintSource
 	{
 		@Override
 		public int color(BlockState state) {
@@ -52,7 +57,7 @@ public final class KettleClient
 
 		@Override
 		public int colorInWorld(BlockState state, BlockAndTintGetter level, BlockPos pos) {
-			if (level.getBlockEntity(pos) instanceof BrewKettleBlockEntity kettle) {
+			if (KettleMultiblock.controller(level, pos) instanceof BrewKettleBlockEntity kettle) {
 				int brew = BaseItems.liquidColor(kettle.getBrew());
 				if (brew != -1) {
 					return 0xFF000000 | brew;
@@ -66,7 +71,7 @@ public final class KettleClient
 
 		@Override
 		public Set<Property<?>> relevantProperties() {
-			return Set.of(BrewKettleBlock.OPEN, BrewKettleBlock.FILL);
+			return relevant;
 		}
 	}
 }

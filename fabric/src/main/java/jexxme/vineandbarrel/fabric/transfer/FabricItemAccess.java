@@ -4,6 +4,7 @@ import jexxme.vineandbarrel.barrel.AgingBarrelBlockEntity;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.inventory.ItemSlots;
 import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
+import jexxme.vineandbarrel.kettle.KettleMultiblock;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
 import jexxme.vineandbarrel.platform.SlotAccess;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
@@ -40,8 +41,15 @@ public final class FabricItemAccess implements SlotAccess
 
 	/** Once, after registration. */
 	public static void register() {
-		ItemStorage.SIDED.registerForBlockEntity((be, side) -> sideView(be.getInventory(), BrewKettleBlockEntity.automationSide(side), true),
-			KettleRegistry.BREW_KETTLE_BE.get());
+		// Every kettle block, single or part of a big kettle, hands out its kettle's inventory (the controller's), with the
+		// rules of the side it is asked from. One provider for all of them: a block-entity provider would claim the parts
+		// too, and most parts have no block entity.
+		java.util.List<net.minecraft.world.level.block.Block> kettles = new java.util.ArrayList<>(KettleRegistry.allKettleBlocks());
+		kettles.addAll(KettleRegistry.allPartBlocks());
+		ItemStorage.SIDED.registerForBlocks((level, pos, state, be, side) -> {
+			BrewKettleBlockEntity kettle = KettleMultiblock.controller(level, pos);
+			return kettle == null ? null : sideView(kettle.getInventory(), BrewKettleBlockEntity.automationSide(side), true);
+		}, kettles.toArray(net.minecraft.world.level.block.Block[]::new));
 		ItemStorage.SIDED.registerForBlockEntity((be, side) -> sideView(be.getInventory(), AgingBarrelBlockEntity.automationSide(side), false),
 			BarrelRegistry.AGING_BARREL_BE.get());
 	}

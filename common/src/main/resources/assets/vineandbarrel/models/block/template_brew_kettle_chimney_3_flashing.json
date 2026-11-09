@@ -1,0 +1,197 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "#plate"
+	},
+	"elements": [
+		{
+			"from": [
+				5.0,
+				0,
+				5.0
+			],
+			"to": [
+				11.0,
+				16,
+				11.0
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						5.0,
+						0,
+						11.0,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"south": {
+					"uv": [
+						5.0,
+						0,
+						11.0,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"east": {
+					"uv": [
+						5.0,
+						0,
+						11.0,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"west": {
+					"uv": [
+						5.0,
+						0,
+						11.0,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"up": {
+					"uv": [
+						5.0,
+						5.0,
+						11.0,
+						11.0
+					],
+					"texture": "#dark"
+				}
+			},
+			"name": "chimney"
+		},
+		{
+			"from": [
+				4.5,
+				0,
+				4.5
+			],
+			"to": [
+				11.5,
+				1,
+				11.5
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						4.5,
+						0,
+						11.5,
+						1
+					],
+					"texture": "#band"
+				},
+				"south": {
+					"uv": [
+						4.5,
+						0,
+						11.5,
+						1
+					],
+					"texture": "#band"
+				},
+				"east": {
+					"uv": [
+						4.5,
+						0,
+						11.5,
+						1
+					],
+					"texture": "#band"
+				},
+				"west": {
+					"uv": [
+						4.5,
+						0,
+						11.5,
+						1
+					],
+					"texture": "#band"
+				},
+				"up": {
+					"uv": [
+						4.5,
+						4.5,
+						11.5,
+						11.5
+					],
+					"texture": "#band"
+				},
+				"down": {
+					"uv": [
+						4.5,
+						4.5,
+						11.5,
+						11.5
+					],
+					"texture": "#band"
+				}
+			},
+			"name": "ring"
+		},
+		{
+			"from": [
+				-1,
+				16,
+				-1
+			],
+			"to": [
+				17,
+				17,
+				17
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						18,
+						1
+					],
+					"texture": "#trim"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						18,
+						1
+					],
+					"texture": "#trim"
+				},
+				"east": {
+					"uv": [
+						0,
+						0,
+						18,
+						1
+					],
+					"texture": "#trim"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						18,
+						1
+					],
+					"texture": "#trim"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						18,
+						18
+					],
+					"texture": "#cut"
+				}
+			},
+			"name": "flashing"
+		}
+	]
+}

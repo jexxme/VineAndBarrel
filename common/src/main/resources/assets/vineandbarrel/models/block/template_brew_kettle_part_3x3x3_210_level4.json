@@ -1,0 +1,500 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "#plate"
+	},
+	"elements": [
+		{
+			"from": [
+				0,
+				0,
+				2
+			],
+			"to": [
+				14,
+				16,
+				16
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						2,
+						0,
+						16,
+						16
+					],
+					"texture": "#plate"
+				},
+				"east": {
+					"uv": [
+						0,
+						0,
+						14,
+						16
+					],
+					"texture": "#plate"
+				}
+			},
+			"name": "body"
+		},
+		{
+			"from": [
+				-0.82,
+				-13,
+				0.75
+			],
+			"to": [
+				4.18,
+				-12,
+				2
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						12,
+						5.0,
+						13
+					],
+					"texture": "#tap"
+				},
+				"south": {
+					"uv": [
+						0,
+						12,
+						5.0,
+						13
+					],
+					"texture": "#tap"
+				},
+				"east": {
+					"uv": [
+						14,
+						12,
+						15.25,
+						13
+					],
+					"texture": "#tap"
+				},
+				"west": {
+					"uv": [
+						0.75,
+						12,
+						2,
+						13
+					],
+					"texture": "#tap"
+				},
+				"up": {
+					"uv": [
+						0,
+						0.75,
+						5.0,
+						2
+					],
+					"texture": "#tap"
+				},
+				"down": {
+					"uv": [
+						0,
+						14,
+						5.0,
+						15.25
+					],
+					"texture": "#tap"
+				}
+			},
+			"name": "gauge_cap"
+		},
+		{
+			"from": [
+				-0.82,
+				23,
+				0.75
+			],
+			"to": [
+				4.18,
+				24,
+				2
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						8,
+						5.0,
+						9
+					],
+					"texture": "#tap"
+				},
+				"south": {
+					"uv": [
+						0,
+						8,
+						5.0,
+						9
+					],
+					"texture": "#tap"
+				},
+				"east": {
+					"uv": [
+						14,
+						8,
+						15.25,
+						9
+					],
+					"texture": "#tap"
+				},
+				"west": {
+					"uv": [
+						0.75,
+						8,
+						2,
+						9
+					],
+					"texture": "#tap"
+				},
+				"up": {
+					"uv": [
+						0,
+						0.75,
+						5.0,
+						2
+					],
+					"texture": "#tap"
+				},
+				"down": {
+					"uv": [
+						0,
+						14,
+						5.0,
+						15.25
+					],
+					"texture": "#tap"
+				}
+			},
+			"name": "gauge_cap"
+		},
+		{
+			"from": [
+				0.43,
+				-12,
+				1.0
+			],
+			"to": [
+				2.93,
+				0,
+				1.6
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						13.07,
+						0,
+						15.57,
+						12
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"south": {
+					"uv": [
+						0.43,
+						0,
+						2.93,
+						12
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"east": {
+					"uv": [
+						14.4,
+						0,
+						15.0,
+						12
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"west": {
+					"uv": [
+						1.0,
+						0,
+						1.6,
+						12
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"up": {
+					"uv": [
+						0.43,
+						1.0,
+						2.93,
+						1.6
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				}
+			},
+			"name": "gauge_brew"
+		},
+		{
+			"from": [
+				0.43,
+				0,
+				1.0
+			],
+			"to": [
+				2.93,
+				16,
+				1.6
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						13.07,
+						0,
+						15.57,
+						16
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"south": {
+					"uv": [
+						0.43,
+						0,
+						2.93,
+						16
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"east": {
+					"uv": [
+						14.4,
+						0,
+						15.0,
+						16
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"west": {
+					"uv": [
+						1.0,
+						0,
+						1.6,
+						16
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"up": {
+					"uv": [
+						0.43,
+						1.0,
+						2.93,
+						1.6
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				}
+			},
+			"name": "gauge_brew"
+		},
+		{
+			"from": [
+				0.43,
+				16,
+				1.0
+			],
+			"to": [
+				2.93,
+				23.0,
+				1.6
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						13.07,
+						0,
+						15.57,
+						7.0
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"south": {
+					"uv": [
+						0.43,
+						0,
+						2.93,
+						7.0
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"east": {
+					"uv": [
+						14.4,
+						0,
+						15.0,
+						7.0
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"west": {
+					"uv": [
+						1.0,
+						0,
+						1.6,
+						7.0
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				},
+				"up": {
+					"uv": [
+						0.43,
+						1.0,
+						2.93,
+						1.6
+					],
+					"texture": "#brew",
+					"tintindex": 0
+				}
+			},
+			"name": "gauge_brew"
+		},
+		{
+			"from": [
+				0.18,
+				-12,
+				0.9
+			],
+			"to": [
+				3.18,
+				0,
+				1.7
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						12.82,
+						0,
+						15.82,
+						12
+					],
+					"texture": "#glass"
+				},
+				"east": {
+					"uv": [
+						14.3,
+						0,
+						15.1,
+						12
+					],
+					"texture": "#glass"
+				},
+				"west": {
+					"uv": [
+						0.9,
+						0,
+						1.7,
+						12
+					],
+					"texture": "#glass"
+				}
+			},
+			"name": "gauge_glass"
+		},
+		{
+			"from": [
+				0.18,
+				0,
+				0.9
+			],
+			"to": [
+				3.18,
+				16,
+				1.7
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						12.82,
+						0,
+						15.82,
+						16
+					],
+					"texture": "#glass"
+				},
+				"east": {
+					"uv": [
+						14.3,
+						0,
+						15.1,
+						16
+					],
+					"texture": "#glass"
+				},
+				"west": {
+					"uv": [
+						0.9,
+						0,
+						1.7,
+						16
+					],
+					"texture": "#glass"
+				}
+			},
+			"name": "gauge_glass"
+		},
+		{
+			"from": [
+				0.18,
+				16,
+				0.9
+			],
+			"to": [
+				3.18,
+				23,
+				1.7
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						12.82,
+						9,
+						15.82,
+						16
+					],
+					"texture": "#glass"
+				},
+				"east": {
+					"uv": [
+						14.3,
+						9,
+						15.1,
+						16
+					],
+					"texture": "#glass"
+				},
+				"west": {
+					"uv": [
+						0.9,
+						9,
+						1.7,
+						16
+					],
+					"texture": "#glass"
+				}
+			},
+			"name": "gauge_glass"
+		}
+	]
+}
