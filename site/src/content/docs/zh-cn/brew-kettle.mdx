@@ -47,9 +47,7 @@ export const direct = rules.heat.sources.filter((b) => !rules.heat.tray.includes
 
 <KettleScreen recipe="brewing/barley_wort" />
 
-每个配方酿出 **{rules.servingsPerBucket} 份**，耗时 **{seconds(brews
-[0].brewingTime)}**。只要还有材料，酿造锅就会接着酿下一批，总共最多 {rules.kettleM
-axServings} 份。
+每个配方酿出 **{rules.servingsPerBucket} 份**，耗时 **{seconds(brews[0].brewingTime)}**。只要还有材料，酿造锅就会接着酿下一批，总共最多 {rules.kettleMaxServings} 份。
 
 酿造锅在做什么，隔着房间就能看出来：
 
