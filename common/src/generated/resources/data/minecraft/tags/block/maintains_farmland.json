@@ -1,5 +1,8 @@
 {
   "values": [
-    "vineandbarrel:barley"
+    "vineandbarrel:barley",
+    "vineandbarrel:grape_bush",
+    "vineandbarrel:white_grape_bush",
+    "vineandbarrel:hop_bush"
   ]
 }

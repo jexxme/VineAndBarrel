@@ -1,3 +1,12 @@
+## 1.0.2
+
+- **The trellis goes into the plant:** right-click a grape or hop bush with a trellis, or right-click a trellis standing on the ground with grapes or hops to plant the bush into it. The plant climbs the trellises above from there. Breaking the plant leaves the trellis standing, and a trellis on top of a bush still works.
+- Pistons move grape and hop bushes whole, like their vines, instead of popping them.
+- Half-ripe hops have green cones, so they no longer look ripe.
+- Hiccups sound like hiccups: a real recording instead of a pitched-up burp.
+- Taverns hold about half as much drink in their casks.
+- The farms of abandoned villages grow barley, grapes and hops too.
+
 ## 1.0.1
 
 - Placed mugs no longer flicker at the bottom with shaders, and aged ones lose the flickering line between beer and foam.

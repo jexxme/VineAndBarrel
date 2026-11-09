@@ -58,8 +58,13 @@ public class VineOnTrellisBlock extends ClimbingCropBlock implements PlayerDestr
 
 	/** The bare trellis this vine grew on, facing the same way: what is left when the vine goes. */
 	public BlockState trellisState(BlockState vine) {
+		return trellisState(vine.getValue(AXIS));
+	}
+
+	/** A bare trellis whose panel runs along {@code axis}. */
+	public BlockState trellisState(Direction.Axis axis) {
 		BlockState bare = trellis.get().defaultBlockState();
-		return bare.hasProperty(AXIS) ? bare.setValue(AXIS, vine.getValue(AXIS)) : bare;
+		return bare.hasProperty(AXIS) ? bare.setValue(AXIS, axis) : bare;
 	}
 
 	@Override

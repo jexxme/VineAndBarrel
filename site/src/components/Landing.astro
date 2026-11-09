@@ -538,7 +538,8 @@ const chapters = [
 			width: 268px;
 		}
 	}
-	@media (max-width: 40rem) {
+	/* below 50rem the picture (28rem) and the text (16rem at least) no longer fit side by side */
+	@media (width < 50rem) {
 		.sister {
 			grid-template-columns: 1fr;
 		}

@@ -15,11 +15,17 @@
 				"trellis_x",
 				"trellis_z",
 				"rope"
+			],
+			"trellis": [
+				"none",
+				"x",
+				"z"
 			]
 		},
 		"defaultState": {
 			"age": "0",
-			"support": "none"
+			"support": "none",
+			"trellis": "none"
 		},
 		"tags": [
 			"minecraft:bee_growables",
@@ -44,11 +50,17 @@
 				"trellis_x",
 				"trellis_z",
 				"rope"
+			],
+			"trellis": [
+				"none",
+				"x",
+				"z"
 			]
 		},
 		"defaultState": {
 			"age": "0",
-			"support": "none"
+			"support": "none",
+			"trellis": "none"
 		},
 		"tags": [
 			"minecraft:bee_growables",
@@ -121,11 +133,17 @@
 				"trellis_x",
 				"trellis_z",
 				"rope"
+			],
+			"trellis": [
+				"none",
+				"x",
+				"z"
 			]
 		},
 		"defaultState": {
 			"age": "0",
-			"support": "none"
+			"support": "none",
+			"trellis": "none"
 		},
 		"tags": [
 			"minecraft:bee_growables",

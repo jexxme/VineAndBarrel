@@ -69,7 +69,8 @@ public final class VBTagProviders
 					VBBlocks.WHITE_GRAPE_VINE_ON_ROPE, VBBlocks.HOP_VINE_ON_ROPE, VBBlocks.GRAPE_VINE_ON_TRELLIS, VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS,
 					VBBlocks.HOP_VINE_ON_TRELLIS);
 			add(tag(BlockTags.CROPS), VBBlocks.BARLEY);
-			add(tag(BlockTags.MAINTAINS_FARMLAND), VBBlocks.BARLEY);
+			// the bushes too: a trellis in one is solid, and farmland under it would otherwise dry out to dirt
+			add(tag(BlockTags.MAINTAINS_FARMLAND), VBBlocks.BARLEY, VBBlocks.GRAPE_BUSH, VBBlocks.WHITE_GRAPE_BUSH, VBBlocks.HOP_BUSH);
 			// FD: wild crops are small flowers, a vine on a rope stays climbable like the rope
 			add(tag(BlockTags.SMALL_FLOWERS), VBBlocks.WILD_GRAPES, VBBlocks.WILD_WHITE_GRAPES, VBBlocks.WILD_HOPS, VBBlocks.WILD_BARLEY);
 			add(tag(BlockTags.CLIMBABLE), VBBlocks.GRAPE_VINE_ON_ROPE, VBBlocks.WHITE_GRAPE_VINE_ON_ROPE, VBBlocks.HOP_VINE_ON_ROPE);

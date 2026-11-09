@@ -51,50 +51,39 @@ which only fits if that checkout is on the same Minecraft version.
 ## Minecraft versions
 
 Minecraft and NeoForge change too many APIs within 26.x for one jar, so each supported version has its own branch,
-the same way as Farmer's Delight Neoforged. Only `26.3` has the multiloader layout and a Fabric jar; the older branches
-are NeoForge only, with the single-loader layout (everything in `src/`).
+the same way as Farmer's Delight Neoforged. Every branch has the same multiloader layout and builds both jars,
+NeoForge and Fabric.
 
-| Branch | Minecraft | NeoForge | Farmer's Delight Neoforged |
-|---|---|---|---|
-| `26.3` (default) | 26.3 | 26.3.0.101+ | branch `26.3` |
-| `26.2` | 26.2 | 26.2.0.93+ | branch `26.2` |
-| `26.1.2` | 26.1.2 | 26.1.2.126+ | branch `26.1.2` |
-| `26.1` | 26.1, 26.1.1 | 26.1.0.19-beta to 26.1.1 | branch `26.1` |
+| Branch | Minecraft | NeoForge | Fabric API | Farmer's Delight Neoforged |
+|---|---|---|---|---|
+| `26.3` (default) | 26.3 | 26.3.0.101+ | 0.165.2+ | branch `26.3` |
+| `26.2` | 26.2 | 26.2.0.93+ | 0.161.0+ | branch `26.2` |
+| `26.1.2` | 26.1.2 | 26.1.2.126+ | 0.155.3+ | branch `26.1.2` |
+| `26.1` | 26.1, 26.1.1 | 26.1.0.19-beta to 26.1.1 | 0.145.4+ | branch `26.1` |
 
-- Open pull requests against `26.3`. Fixes and features are then backported to each older branch (`26.2`, then
-  `26.1.2`, then `26.1`), adapted where the API differs, and only merged there when that branch's tests are green.
+Every branch needs Fabric Loader 0.20.1+ for the Fabric jar.
+
+- Open pull requests against `26.3`. Fixes and features are then cherry-picked to each older branch (`26.2`, then
+  `26.1.2`, then `26.1`) with `git cherry-pick -x`, adapted where the API differs, and only merged there when that
+  branch's tests are green. The layout is the same everywhere, so a cherry-pick applies straight down.
 - Each older branch changes only what its Minecraft version needs. Keep those changes small and leave the code around
-  them as on `26.3`, so the next backport applies cleanly.
-- After a backport that touches data generation, run `./gradlew runData` on that branch and commit the result:
-  `src/generated` is always written in that branch's own data formats.
+  them as on `26.3`, so the next cherry-pick applies cleanly.
+- After a cherry-pick that touches data generation, run `./gradlew runData` on that branch and commit the result:
+  `common/src/generated` is always written in that branch's own data formats.
 - Structure templates (`.nbt`) stay exactly as `26.3` saves them; the older branches convert them while building.
 - Content that needs a newer Minecraft (a block or API that doesn't exist in an older version) stays on the branches
   that have it.
-- `README.md` and `CONTRIBUTING.md` are the same on every branch: change them on `26.3`, then copy them.
-
-### Backports
-
-Port changes to `26.2`, `26.1.2` and `26.1` **only** with the backport script:
-
-```bash
-bash scripts/multiloader/backport.sh <target-branch> <commit-or-range>
-```
-
-It maps `common/src/*` and `neoforge/src/*` to `src/*`, refuses changes under `fabric/`, and applies the commits with
-`git format-patch` and `git am -3`. If a path doesn't exist on the target, it stops and lists those paths instead of
-letting git guess a file. Never cherry-pick across the two layouts by hand: git's rename detection can put an edit in
-the wrong file (an edit to `apple_juice.json` once landed in `wheat_wort.json`).
+- `README.md`, `CONTRIBUTING.md` and `RELEASING.md` are the same on every branch: change them on `26.3`, then copy them.
 
 ## Versions and releases
 
-The mod version (`0.9.0+neoforged.1`: content version plus build number, like FD Neoforged) is the same on every
-branch. On `26.3` the Fabric jar has its own `fabric_mod_version` (`0.9.0+fabric.1`), with the same version before the
-`+`. A release is tagged per branch as `<minecraft_version>-<mod_version>`
-(for example `26.3-0.9.0+neoforged.1`), which is also the version in the jar name, and `release_game_versions` in
-`gradle.properties` lists the Minecraft versions that jar is published for (`26.1` branch: `26.1,26.1.1`). Pushing the
-tag runs the release workflow, which builds and tests again and publishes the jars. Release titles name the loader
-first: `Vine & Barrel 0.9.0 · NeoForge · Minecraft 26.3`, `Vine & Barrel 0.9.0 · Fabric · Minecraft 26.3`. See
-`RELEASING.md`.
+The mod version (`1.0.2+neoforged.1`: content version plus build number, like FD Neoforged) is the same on every
+branch. The Fabric jar has its own `fabric_mod_version` (`1.0.2+fabric.1`), with the same version before the `+`. A
+release is tagged per branch as `<minecraft_version>-<mod_version>` (for example `26.3-1.0.2+neoforged.1`), which is
+also the version in the jar name, and `release_game_versions` in `gradle.properties` lists the Minecraft versions that
+branch's jars are published for (`26.1` branch: `26.1,26.1.1`). Pushing the tag runs the release workflow, which
+builds and tests again and publishes both jars. Release titles name the loader first:
+`Vine & Barrel 1.0.2 · NeoForge · Minecraft 26.3`, `Vine & Barrel 1.0.2 · Fabric · Minecraft 26.3`. See `RELEASING.md`.
 
 ## Playtesting
 
