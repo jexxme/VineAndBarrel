@@ -223,7 +223,9 @@ public final class TavernWalk
 			BlockState s = state(p);
 			BlockPos pos = p.immutable();
 			boolean drinksOn = state(pos.above()).is(BarrelRegistry.PLACED_DRINKS.get());
-			if (s.getBlock() instanceof TrapDoorBlock && !s.getValue(TrapDoorBlock.OPEN) && s.getValue(TrapDoorBlock.HALF) == Half.TOP) {
+			// a table: a trapdoor top, or its leg (an upside-down stair) with drinks on it
+			if ((s.getBlock() instanceof TrapDoorBlock && !s.getValue(TrapDoorBlock.OPEN) && s.getValue(TrapDoorBlock.HALF) == Half.TOP)
+				|| (drinksOn && s.getBlock() instanceof StairBlock && s.getValue(StairBlock.HALF) == Half.TOP)) {
 				tables.add(pos);
 			} else if (drinksOn && top(pos) >= 0.9 && !(s.getBlock() instanceof StairBlock)) {
 				counters.add(pos);
