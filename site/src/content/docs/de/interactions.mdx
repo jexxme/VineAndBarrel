@@ -46,6 +46,19 @@ Siehe [Reifefass](/aging-barrel/).
 
 Siehe [Braukessel](/brew-kettle/).
 
+## Kessel
+
+<Render name="scenes/cauldrons" float="right" size={192} alt="Kessel mit Honigmost, Gerstenwürze und Traubensaft" />
+
+Ein Kessel nimmt Saft, Würze und Honigmost auf, so wie Wasser.
+
+- **Einfüllen** mit einem Eimer füllt ihn, mit einer Flasche um eine Stufe. Eine leere Flasche nimmt eine Stufe heraus, ein leerer
+  Eimer einen vollen Kessel.
+- **{rules.servingsPerBucket} Stufen**, eine pro Portion, so wird ein Eimer zu Flaschen, und Flaschen werden wieder zu einem Eimer.
+- **Eimer ersetzen,** was in einem Kessel ist, wie bei Wasser und Lava. Flaschen kommen nur in einen leeren Kessel oder in einen
+  mit derselben Sorte.
+- **Wie Wasser** löscht er einen brennenden Mob, ein Komparator liest die Stufe ab, und abgebaut bleibt ein normaler Kessel übrig.
+
 ## Getränke und Gefäße
 
 <Render name="scenes/placed-drinks" float="right" size={192} alt="Krüge und Gläser auf einem Block" />
@@ -55,13 +68,14 @@ Siehe [Braukessel](/brew-kettle/).
 - **Prost!** Zwei oder mehr Spieler, die innerhalb von {rules.cheersWindowTicks / 20} Sekunden und {rules.cheersRadius}
   Blöcken voneinander ein Getränk austrinken, stoßen an, und der Bonus aller hält {rules.cheersBonusPercent} % länger.
 - **Trinken** klingt und sieht aus wie bei einem Trank, und du bekommst das leere Gefäß zurück.
-- **Eimer mit Saft und Würze** lassen sich nicht als Flüssigkeit ausgießen, wie Milch.
+- **Eimer mit Saft und Würze** lassen sich nicht als Flüssigkeit ausgießen, wie Milch, aber sie füllen einen [Kessel](#kessel).
 
 ## Schwips
 
 - **Andere Spieler sehen dich schwanken** und sehen deinen Schluckauf, dein Torkeln und Stolpern.
 - **Ausschlafen:** Durch die Nacht zu schlafen löscht Schwips.
-- **Milch** löscht ihn; **Wasser oder jeder Saft** senkt ihn um eine Stufe.
+- **Milch** löscht ihn; **Wasser oder jeder Saft** senkt ihn um eine Stufe. Mit Farmer's Delight tun das auch dessen Milchflasche,
+  Melonensaft und Apfelcidre.
 - **Fahr im Inventar über den Effekt,** um zu sehen, was deine Stufe bewirkt.
 - **Ein Drink zu viel** auf der höchsten Stufe, und du hast einen Filmriss. Wo du aufwachst, weiß keiner.
 
@@ -72,7 +86,7 @@ Siehe [Schwips](/tipsy/).
 - Sträucher erntest du mit einem Rechtsklick (auch halbreif), und sie fallen eine Stufe zurück, wie Süßbeeren. Ein Rankgitter in oder über einem Strauch lässt ihn hochranken: Rechtsklick damit auf den Strauch oder mit Trauben oder Hopfen auf das Rankgitter. Ein Zaun, eine Mauer, eine Kette oder ein Eisengitter geht genauso, mit einer Frucht weniger pro Ernte.
 - Bienen helfen Trauben, Hopfen und Gerste beim Wachsen.
 - Gerste füttert und vermehrt Tiere wie Weizen; ihre Samen füttern Hühner und Papageien.
-- Bauern-Dorfbewohner pflanzen und ernten Gerste.
+- Bauern-Dorfbewohner pflanzen und ernten Gerste und kaufen Gerste, Trauben und Hopfen, so wie sie Weizen kaufen.
 - Füchse pflücken Trauben von den Sträuchern, rote und weiße, wie sie es mit Süßbeeren tun.
 - Jede Pflanze lässt sich kompostieren.
 - Der <Item id="barley_bale" /> federt einen Sturz ab und lässt Lagerfeuerrauch aufsteigen wie ein Strohballen.

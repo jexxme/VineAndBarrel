@@ -3197,6 +3197,230 @@
         "vineandbarrel:brew_kettles"
       ]
     },
+    "vineandbarrel:grape_juice_cauldron": {
+      "class": "jexxme.vineandbarrel.cauldron.BaseCauldronBlock",
+      "hardness": 2.0,
+      "blastResistance": 2.0,
+      "item": "minecraft:air",
+      "properties": {
+        "level": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "defaultState": {
+        "level": "1"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:cauldrons",
+        "minecraft:causes_suffocation",
+        "minecraft:cushion_uses_collision_shape",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe"
+      ]
+    },
+    "vineandbarrel:white_grape_juice_cauldron": {
+      "class": "jexxme.vineandbarrel.cauldron.BaseCauldronBlock",
+      "hardness": 2.0,
+      "blastResistance": 2.0,
+      "item": "minecraft:air",
+      "properties": {
+        "level": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "defaultState": {
+        "level": "1"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:cauldrons",
+        "minecraft:causes_suffocation",
+        "minecraft:cushion_uses_collision_shape",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe"
+      ]
+    },
+    "vineandbarrel:sweet_berry_juice_cauldron": {
+      "class": "jexxme.vineandbarrel.cauldron.BaseCauldronBlock",
+      "hardness": 2.0,
+      "blastResistance": 2.0,
+      "item": "minecraft:air",
+      "properties": {
+        "level": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "defaultState": {
+        "level": "1"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:cauldrons",
+        "minecraft:causes_suffocation",
+        "minecraft:cushion_uses_collision_shape",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe"
+      ]
+    },
+    "vineandbarrel:apple_juice_cauldron": {
+      "class": "jexxme.vineandbarrel.cauldron.BaseCauldronBlock",
+      "hardness": 2.0,
+      "blastResistance": 2.0,
+      "item": "minecraft:air",
+      "properties": {
+        "level": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "defaultState": {
+        "level": "1"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:cauldrons",
+        "minecraft:causes_suffocation",
+        "minecraft:cushion_uses_collision_shape",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe"
+      ]
+    },
+    "vineandbarrel:barley_wort_cauldron": {
+      "class": "jexxme.vineandbarrel.cauldron.BaseCauldronBlock",
+      "hardness": 2.0,
+      "blastResistance": 2.0,
+      "item": "minecraft:air",
+      "properties": {
+        "level": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "defaultState": {
+        "level": "1"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:cauldrons",
+        "minecraft:causes_suffocation",
+        "minecraft:cushion_uses_collision_shape",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe"
+      ]
+    },
+    "vineandbarrel:wheat_wort_cauldron": {
+      "class": "jexxme.vineandbarrel.cauldron.BaseCauldronBlock",
+      "hardness": 2.0,
+      "blastResistance": 2.0,
+      "item": "minecraft:air",
+      "properties": {
+        "level": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "defaultState": {
+        "level": "1"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:cauldrons",
+        "minecraft:causes_suffocation",
+        "minecraft:cushion_uses_collision_shape",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe"
+      ]
+    },
+    "vineandbarrel:honey_must_cauldron": {
+      "class": "jexxme.vineandbarrel.cauldron.BaseCauldronBlock",
+      "hardness": 2.0,
+      "blastResistance": 2.0,
+      "item": "minecraft:air",
+      "properties": {
+        "level": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "defaultState": {
+        "level": "1"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:cauldrons",
+        "minecraft:causes_suffocation",
+        "minecraft:cushion_uses_collision_shape",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe"
+      ]
+    },
     "vineandbarrel:aging_barrel": {
       "class": "jexxme.vineandbarrel.barrel.AgingBarrelBlock",
       "hardness": 2.5,
@@ -13733,18 +13957,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:blocks_fluid_flow": [
         "minecraft:acacia_door",
@@ -14774,18 +15005,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:blocks_lava_fire_spread": [
         "minecraft:acacia_door",
@@ -15789,18 +16027,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:blocks_motion": [
         "minecraft:acacia_door",
@@ -16804,18 +17049,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:blocks_motion_in_heightmap": [
         "minecraft:acacia_door",
@@ -17819,18 +18071,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:blocks_motion_in_heightmap_no_leaves": [
         "minecraft:acacia_door",
@@ -18820,18 +19079,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:blocks_motion_no_leaves": [
         "minecraft:acacia_door",
@@ -19821,18 +20087,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:blocks_wind_charge_explosions": [
         "minecraft:barrier",
@@ -20020,7 +20293,14 @@
         "minecraft:cauldron",
         "minecraft:lava_cauldron",
         "minecraft:powder_snow_cauldron",
-        "minecraft:water_cauldron"
+        "minecraft:water_cauldron",
+        "vineandbarrel:apple_juice_cauldron",
+        "vineandbarrel:barley_wort_cauldron",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
+        "vineandbarrel:sweet_berry_juice_cauldron",
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:causes_continuous_geyser_eruptions": [
         "minecraft:lava"
@@ -21030,18 +21310,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:cave_vines": [
         "minecraft:cave_vines",
@@ -21358,7 +21645,14 @@
         "minecraft:hopper",
         "minecraft:lava_cauldron",
         "minecraft:powder_snow_cauldron",
-        "minecraft:water_cauldron"
+        "minecraft:water_cauldron",
+        "vineandbarrel:apple_juice_cauldron",
+        "vineandbarrel:barley_wort_cauldron",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
+        "vineandbarrel:sweet_berry_juice_cauldron",
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:dampens_vibrations": [
         "minecraft:black_carpet",
@@ -22638,18 +22932,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:fall_damage_resetting": [
         "minecraft:cave_vines",
@@ -23966,18 +24267,25 @@
         "minecraft:yellow_wool_slab",
         "minecraft:yellow_wool_stairs",
         "vineandbarrel:aging_barrel",
+        "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_bale",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
         "vineandbarrel:weathered_brew_kettle",
-        "vineandbarrel:white_grape_crate"
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:ice_spike_replaceable": [
         "minecraft:coarse_dirt",
@@ -25498,14 +25806,21 @@
         "minecraft:yellow_glazed_terracotta",
         "minecraft:yellow_shulker_box",
         "minecraft:yellow_terracotta",
+        "vineandbarrel:apple_juice_cauldron",
+        "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:grape_juice_cauldron",
+        "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
         "vineandbarrel:waxed_exposed_brew_kettle",
         "vineandbarrel:waxed_oxidized_brew_kettle",
         "vineandbarrel:waxed_weathered_brew_kettle",
-        "vineandbarrel:weathered_brew_kettle"
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:wheat_wort_cauldron",
+        "vineandbarrel:white_grape_juice_cauldron"
       ],
       "minecraft:mineable/shovel": [
         "minecraft:black_concrete_powder",

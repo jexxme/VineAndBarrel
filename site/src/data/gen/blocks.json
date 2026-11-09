@@ -1049,6 +1049,230 @@
 		],
 		"hardness": 0.5
 	},
+	"vineandbarrel:grape_juice_cauldron": {
+		"id": "vineandbarrel:grape_juice_cauldron",
+		"name": "Grape Juice Cauldron",
+		"item": null,
+		"properties": {
+			"level": [
+				"1",
+				"2",
+				"3",
+				"4"
+			]
+		},
+		"defaultState": {
+			"level": "1"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:cauldrons",
+			"minecraft:causes_suffocation",
+			"minecraft:cushion_uses_collision_shape",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe"
+		],
+		"hardness": 2
+	},
+	"vineandbarrel:white_grape_juice_cauldron": {
+		"id": "vineandbarrel:white_grape_juice_cauldron",
+		"name": "White Grape Juice Cauldron",
+		"item": null,
+		"properties": {
+			"level": [
+				"1",
+				"2",
+				"3",
+				"4"
+			]
+		},
+		"defaultState": {
+			"level": "1"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:cauldrons",
+			"minecraft:causes_suffocation",
+			"minecraft:cushion_uses_collision_shape",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe"
+		],
+		"hardness": 2
+	},
+	"vineandbarrel:sweet_berry_juice_cauldron": {
+		"id": "vineandbarrel:sweet_berry_juice_cauldron",
+		"name": "Sweet Berry Juice Cauldron",
+		"item": null,
+		"properties": {
+			"level": [
+				"1",
+				"2",
+				"3",
+				"4"
+			]
+		},
+		"defaultState": {
+			"level": "1"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:cauldrons",
+			"minecraft:causes_suffocation",
+			"minecraft:cushion_uses_collision_shape",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe"
+		],
+		"hardness": 2
+	},
+	"vineandbarrel:apple_juice_cauldron": {
+		"id": "vineandbarrel:apple_juice_cauldron",
+		"name": "Apple Juice Cauldron",
+		"item": null,
+		"properties": {
+			"level": [
+				"1",
+				"2",
+				"3",
+				"4"
+			]
+		},
+		"defaultState": {
+			"level": "1"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:cauldrons",
+			"minecraft:causes_suffocation",
+			"minecraft:cushion_uses_collision_shape",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe"
+		],
+		"hardness": 2
+	},
+	"vineandbarrel:barley_wort_cauldron": {
+		"id": "vineandbarrel:barley_wort_cauldron",
+		"name": "Barley Wort Cauldron",
+		"item": null,
+		"properties": {
+			"level": [
+				"1",
+				"2",
+				"3",
+				"4"
+			]
+		},
+		"defaultState": {
+			"level": "1"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:cauldrons",
+			"minecraft:causes_suffocation",
+			"minecraft:cushion_uses_collision_shape",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe"
+		],
+		"hardness": 2
+	},
+	"vineandbarrel:wheat_wort_cauldron": {
+		"id": "vineandbarrel:wheat_wort_cauldron",
+		"name": "Wheat Wort Cauldron",
+		"item": null,
+		"properties": {
+			"level": [
+				"1",
+				"2",
+				"3",
+				"4"
+			]
+		},
+		"defaultState": {
+			"level": "1"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:cauldrons",
+			"minecraft:causes_suffocation",
+			"minecraft:cushion_uses_collision_shape",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe"
+		],
+		"hardness": 2
+	},
+	"vineandbarrel:honey_must_cauldron": {
+		"id": "vineandbarrel:honey_must_cauldron",
+		"name": "Honey Must Cauldron",
+		"item": null,
+		"properties": {
+			"level": [
+				"1",
+				"2",
+				"3",
+				"4"
+			]
+		},
+		"defaultState": {
+			"level": "1"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:cauldrons",
+			"minecraft:causes_suffocation",
+			"minecraft:cushion_uses_collision_shape",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe"
+		],
+		"hardness": 2
+	},
 	"vineandbarrel:aging_barrel": {
 		"id": "vineandbarrel:aging_barrel",
 		"name": "Aging Barrel",

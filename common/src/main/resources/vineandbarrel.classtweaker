@@ -15,6 +15,7 @@ accessible method net/minecraft/world/level/block/FireBlock getIgniteOdds (Lnet/
 
 # Access NeoForge opens up (see the access transformer)
 accessible field net/minecraft/world/entity/Mob goalSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
+accessible method net/minecraft/core/cauldron/CauldronInteraction$Dispatcher put (Lnet/minecraft/world/item/Item;Lnet/minecraft/core/cauldron/CauldronInteraction;)V
 accessible field net/minecraft/world/item/crafting/RecipeManager recipes Lnet/minecraft/world/item/crafting/RecipeMap;
 accessible class net/minecraft/world/item/CreativeModeTab$Output
 accessible method net/minecraft/client/gui/screens/recipebook/GhostSlots setInput (Lnet/minecraft/world/inventory/Slot;Lnet/minecraft/util/context/ContextMap;Lnet/minecraft/world/item/crafting/display/SlotDisplay;)V
@@ -28,3 +29,8 @@ extend-enum net/minecraft/client/gui/screens/recipebook/SearchRecipeBookCategory
 # still on the client
 accessible method net/minecraft/world/entity/npc/villager/Villager setUnhappy ()V
 accessible field net/minecraft/client/player/ClientInput moveVector Lnet/minecraft/world/phys/Vec2;
+
+# Fabric only (NeoForge has events for both): our cauldrons join vanilla's list of cauldron dispatchers, and their states
+# the leatherworker's job site, through vanilla's own state map
+accessible field net/minecraft/core/cauldron/CauldronInteractions ID_MAPPER Lnet/minecraft/util/ExtraCodecs$LateBoundIdMapper;
+accessible method net/minecraft/world/entity/ai/village/poi/PoiTypes registerBlockStates (Lnet/minecraft/core/Holder;Ljava/util/Set;)V

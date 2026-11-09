@@ -51,7 +51,13 @@ const liquid = (id) => {
 	return [(c >> 16) & 255, (c >> 8) & 255, c & 255];
 };
 
-// Every block in its default look (waxed kettles look like their unwaxed stage)
+// A cauldron of a base, full, in the base's colour (barley_wort_cauldron: the barley_wort_bottle's colour)
+const cauldronLiquid = (slug) => {
+	const base = `vineandbarrel:${slug.replace(/_cauldron$/, '')}`;
+	return liquid(base in runtime.rules.kettleLiquidColors ? base : `${base}_bottle`);
+};
+
+// Every block in its default look (waxed kettles look like their unwaxed stage; a cauldron of a base full and tinted)
 const KETTLE = { facing: 'north', open: 'false', fill: '0', support: 'none', waterlogged: 'false' };
 const BARREL = { facing: 'north', bung: 'cork', fill: '0', left: 'false', right: 'false', stacked: 'false', tapping: 'false' };
 for (const [id, b] of Object.entries(runtime.blocks)) {
@@ -60,7 +66,9 @@ for (const [id, b] of Object.entries(runtime.blocks)) {
 	if (slug.startsWith('waxed_') || slug === 'placed_drinks' || slug.endsWith('_on_rope') || slug.endsWith('_on_support')) continue;
 	const state = { ...b.defaultState, ...facingNorth(id) };
 	if ('age' in state) state.age = String(Math.max(...ageValues(id).map(Number)));
-	await save(`blocks/${slug}`, place(id, state));
+	const cauldron = slug.endsWith('_cauldron');
+	if (cauldron) state.level = String(Math.max(...ageValues(id, 'level').map(Number)));
+	await save(`blocks/${slug}`, place(id, state, [0, 0, 0], cauldron ? [cauldronLiquid(slug)] : undefined));
 }
 
 // Growth stages, standing on the block they grow on
@@ -102,6 +110,10 @@ const scenes = {
 	'barrel-rack': rack(0, false),
 	'barrel-cellar': [...rack(0, false), ...rack(1, true)],
 	'placed-drinks': [...place('minecraft:oak_planks'), ...table(['mug_full', 'glass_full', 'glass', 'mug_full'], ['barley_ale', 'red_wine', null, 'wheat_beer'], [0, 1, 0])],
+	// Our bases in cauldrons: honey must and grape juice full, barley wort three servings (the front one is grape juice,
+	// full, so the rim doesn't hide it)
+	'cauldrons': [['honey_must', '4'], ['barley_wort', '3'], ['grape_juice', '4']].flatMap(([base, level], x) =>
+		place(`vineandbarrel:${base}_cauldron`, { level }, [x, 0, 0], [cauldronLiquid(`${base}_cauldron`)])),
 	// The camera looks from the north-west: low x and low z are in front
 	'tavern': [
 		...place('vineandbarrel:grape_crate', {}, [0, 0, 1]), ...place('vineandbarrel:hops_crate', {}, [0, 1, 1]), ...place('vineandbarrel:barley_bale', { axis: 'y' }, [0, 0, 2]),

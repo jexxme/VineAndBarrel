@@ -1204,6 +1204,96 @@
 		]
 	},
 	{
+		"id": "vineandbarrel:cutting/wild_grapes",
+		"type": "farmersdelight:cutting",
+		"loaded": false,
+		"fdOnly": true,
+		"ingredients": [
+			{
+				"items": [
+					"vineandbarrel:wild_grapes"
+				]
+			}
+		],
+		"tool": {
+			"tag": "c:tools/knife",
+			"items": [],
+			"label": "Any knife"
+		},
+		"results": [
+			{
+				"id": "vineandbarrel:red_grapes",
+				"count": 1,
+				"chance": 1
+			},
+			{
+				"id": "minecraft:purple_dye",
+				"count": 2,
+				"chance": 0.5
+			}
+		]
+	},
+	{
+		"id": "vineandbarrel:cutting/wild_hops",
+		"type": "farmersdelight:cutting",
+		"loaded": false,
+		"fdOnly": true,
+		"ingredients": [
+			{
+				"items": [
+					"vineandbarrel:wild_hops"
+				]
+			}
+		],
+		"tool": {
+			"tag": "c:tools/knife",
+			"items": [],
+			"label": "Any knife"
+		},
+		"results": [
+			{
+				"id": "vineandbarrel:hops",
+				"count": 1,
+				"chance": 1
+			},
+			{
+				"id": "minecraft:lime_dye",
+				"count": 2,
+				"chance": 0.5
+			}
+		]
+	},
+	{
+		"id": "vineandbarrel:cutting/wild_white_grapes",
+		"type": "farmersdelight:cutting",
+		"loaded": false,
+		"fdOnly": true,
+		"ingredients": [
+			{
+				"items": [
+					"vineandbarrel:wild_white_grapes"
+				]
+			}
+		],
+		"tool": {
+			"tag": "c:tools/knife",
+			"items": [],
+			"label": "Any knife"
+		},
+		"results": [
+			{
+				"id": "vineandbarrel:white_grapes",
+				"count": 1,
+				"chance": 1
+			},
+			{
+				"id": "minecraft:yellow_dye",
+				"count": 2,
+				"chance": 0.5
+			}
+		]
+	},
+	{
 		"id": "vineandbarrel:grape_crate",
 		"type": "crafting_shaped",
 		"loaded": true,

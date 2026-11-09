@@ -2,6 +2,7 @@ package jexxme.vineandbarrel.data;
 
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.advancement.VBAdvancementGenerator;
+import jexxme.vineandbarrel.cauldron.VBCauldrons;
 import jexxme.vineandbarrel.registry.VBBlocks;
 import jexxme.vineandbarrel.registry.VBItems;
 import jexxme.vineandbarrel.world.village.VillageData;
@@ -48,6 +49,9 @@ public final class VBDataGenerators
 			VBBlocks.HOP_VINE_ON_SUPPORT, VBBlocks.BARLEY, VBBlocks.WILD_GRAPES,
 			VBBlocks.WILD_WHITE_GRAPES, VBBlocks.WILD_HOPS, VBBlocks.WILD_BARLEY, VBBlocks.GRAPE_CRATE, VBBlocks.WHITE_GRAPE_CRATE,
 			VBBlocks.HOPS_CRATE, VBBlocks.BARLEY_BALE);
+	/** Our bases' cauldrons (no items): block states, the shared level models and the loot (the cauldron itself). */
+	static final List<DeferredBlock<? extends Block>> CAULDRON_BLOCKS = List.of(VBCauldrons.GRAPE_JUICE, VBCauldrons.WHITE_GRAPE_JUICE,
+			VBCauldrons.SWEET_BERRY_JUICE, VBCauldrons.APPLE_JUICE, VBCauldrons.BARLEY_WORT, VBCauldrons.WHEAT_WORT, VBCauldrons.HONEY_MUST);
 	static final List<DeferredItem<? extends Item>> CROP_ITEMS = List.of(VBItems.RED_GRAPES, VBItems.WHITE_GRAPES, VBItems.HOPS, VBItems.TRELLIS,
 			VBItems.BARLEY_SEEDS, VBItems.BARLEY, VBItems.WILD_GRAPES, VBItems.WILD_WHITE_GRAPES, VBItems.WILD_HOPS, VBItems.WILD_BARLEY,
 			VBItems.GRAPE_CRATE, VBItems.WHITE_GRAPE_CRATE, VBItems.HOPS_CRATE, VBItems.BARLEY_BALE);

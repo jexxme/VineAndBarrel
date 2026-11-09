@@ -55,6 +55,19 @@
 		"profession": "farmer",
 		"level": 1,
 		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "vineandbarrel:barley",
+			"count": 20
+		},
+		"maxUses": 16
+	},
+	{
+		"profession": "farmer",
+		"level": 1,
+		"gives": {
 			"id": "vineandbarrel:barley_seeds",
 			"count": 6
 		},
@@ -94,6 +107,19 @@
 		"profession": "farmer",
 		"level": 2,
 		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "vineandbarrel:red_grapes",
+			"count": 20
+		},
+		"maxUses": 16
+	},
+	{
+		"profession": "farmer",
+		"level": 2,
+		"gives": {
 			"id": "vineandbarrel:white_grapes",
 			"count": 3
 		},
@@ -102,5 +128,31 @@
 			"count": 1
 		},
 		"maxUses": 16
+	},
+	{
+		"profession": "farmer",
+		"level": 3,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "vineandbarrel:hops",
+			"count": 20
+		},
+		"maxUses": 12
+	},
+	{
+		"profession": "farmer",
+		"level": 4,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "vineandbarrel:white_grapes",
+			"count": 20
+		},
+		"maxUses": 12
 	}
 ]

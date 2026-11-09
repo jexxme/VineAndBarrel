@@ -46,6 +46,19 @@ Zobacz [Beczka do leżakowania](/aging-barrel/).
 
 Zobacz [Kocioł warzelny](/brew-kettle/).
 
+## Kotły
+
+<Render name="scenes/cauldrons" float="right" size={192} alt="Kotły z brzeczką miodową, brzeczką jęczmienną i sokiem z winogron" />
+
+Kocioł przyjmuje sok, brzeczkę i brzeczkę miodową tak jak wodę.
+
+- **Wlewasz** wiadrem, żeby go napełnić, albo butelką, o jeden poziom. Pusta butelka zabiera jeden poziom, puste
+  wiadro cały pełny kocioł.
+- **Poziomy: {rules.servingsPerBucket}**, jeden na porcję, więc wiadro dzieli się na butelki, a z butelek znów powstaje wiadro.
+- **Wiadra zastępują** to, co jest w kotle, jak woda i lawa. Butelki wchodzą tylko do pustego kotła albo do takiego
+  z tą samą zawartością.
+- **Jak woda** gasi płonącego moba, komparator odczytuje poziom, a po rozbiciu zostaje zwykły kocioł.
+
 ## Napoje i naczynia
 
 <Render name="scenes/placed-drinks" float="right" size={192} alt="Kufle i kieliszki na bloku" />
@@ -55,13 +68,14 @@ Zobacz [Kocioł warzelny](/brew-kettle/).
 - **Na zdrowie!** Dwóch lub więcej graczy kończących napój w ciągu {rules.cheersWindowTicks / 20} s i w odległości
   {rules.cheersRadius} bloków od siebie stuka się szkłem, a bonus wszystkich trwa o {rules.cheersBonusPercent}% dłużej.
 - **Picie** brzmi i wygląda jak picie mikstury, a puste naczynie wraca do ciebie.
-- **Wiader z sokiem i brzeczką** nie można wylać jako płynu, jak mleka.
+- **Wiader z sokiem i brzeczką** nie można wylać jako płynu, jak mleka, ale napełniają [kocioł](#kotły).
 
 ## Rauszyk
 
 - **Inni gracze widzą, jak się kołyszesz,** oraz twoją czkawkę, zataczanie i potknięcia.
 - **Odśpij to:** przespanie nocy czyści Rauszyk.
-- **Mleko** go czyści; **woda lub dowolny sok** obniża o jeden poziom.
+- **Mleko** go czyści; **woda lub dowolny sok** obniża o jeden poziom. Z Farmer's Delight obniżają go też jego butelka mleka,
+  sok z arbuza i cydr jabłkowy.
 - **Najedź na efekt** w ekwipunku, żeby zobaczyć, co robi twój poziom.
 - **O jeden drink za dużo** na najwyższym poziomie i urywa ci się film. Gdzie się obudzisz, nie wie nikt.
 
@@ -72,7 +86,7 @@ Zobacz [Rauszyk](/tipsy/).
 - Krzewy zbiera się prawym przyciskiem (także półdojrzałe) i wracają o etap wstecz, jak słodkie jagody. Kratka ogrodowa w krzewie lub nad nim pozwala mu się pnąć: prawy przycisk na krzewie z kratką albo na kratce z winogronami lub chmielem. Płot, murek, łańcuch lub żelazne kraty działają tak samo, z jednym owocem mniej przy zbiorze.
 - Pszczoły pomagają rosnąć winogronom, chmielowi i jęczmieniowi.
 - Jęczmień karmi i rozmnaża zwierzęta jak pszenica; jego nasiona karmią kury i papugi.
-- Osadnicy rolnicy sadzą i zbierają jęczmień.
+- Osadnicy rolnicy sadzą i zbierają jęczmień, a także kupują jęczmień, winogrona i chmiel, tak jak pszenicę.
 - Lisy zrywają winogrona z krzewów, czerwone i białe, tak jak słodkie jagody.
 - Każda uprawa się kompostuje.
 - <Item id="barley_bale" /> łagodzi upadek i podnosi dym z ogniska jak snop siana.

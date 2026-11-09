@@ -286,6 +286,17 @@ public final class WorldGameTests
 		assertInSet(helper, sets, TradeSets.WANDERING_TRADER_COMMON, VillageData.WANDERING_TRADER_WHITE_GRAPES);
 		assertInSet(helper, sets, TradeSets.WANDERING_TRADER_COMMON, VillageData.WANDERING_TRADER_HOPS);
 		assertInSet(helper, sets, TradeSets.WANDERING_TRADER_COMMON, VillageData.WANDERING_TRADER_BARLEY_SEEDS);
+		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_1, VillageData.FARMER_1_BARLEY_EMERALD);
+		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_2, VillageData.FARMER_2_RED_GRAPES_EMERALD);
+		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_3, VillageData.FARMER_3_HOPS_EMERALD);
+		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_4, VillageData.FARMER_4_WHITE_GRAPES_EMERALD);
+		// One crop to buy per level at most: every level keeps most of its vanilla trades (two drawn per level)
+		for (ResourceKey<TradeSet> farmerLevel : List.of(TradeSets.FARMER_LEVEL_1, TradeSets.FARMER_LEVEL_2, TradeSets.FARMER_LEVEL_3, TradeSets.FARMER_LEVEL_4,
+				TradeSets.FARMER_LEVEL_5)) {
+			long buys = sets.getValue(farmerLevel).trades().stream().filter(h -> h.unwrapKey().map(k -> k.identifier().getNamespace().equals(VineAndBarrel.MODID)
+				&& k.identifier().getPath().endsWith("_emerald")).orElse(false)).count();
+			helper.assertTrue(buys <= 1, farmerLevel.identifier() + " has " + buys + " of our buying trades");
+		}
 
 		Villager villager = helper.spawn(EntityTypes.VILLAGER, new BlockPos(4, 1, 4));
 		LootContext context = new LootContext.Builder(new LootParams.Builder(level)
@@ -301,10 +312,27 @@ public final class WorldGameTests
 		assertOffer(helper, context, VillageData.WANDERING_TRADER_BARLEY_SEEDS, VBItems.BARLEY_SEEDS.get(), 1, 12);
 		assertOffer(helper, context, VillageData.FARMER_2_WHITE_GRAPES, VBItems.WHITE_GRAPES.get(), 3, 16);
 		assertOffer(helper, context, VillageData.WANDERING_TRADER_WHITE_GRAPES, VBItems.WHITE_GRAPES.get(), 1, 12);
+		// Farmers buy the harvest like vanilla's wheat and FD's crops: 20 for an emerald
+		assertBuys(helper, context, VillageData.FARMER_1_BARLEY_EMERALD, VBItems.BARLEY.get(), 20, 16);
+		assertBuys(helper, context, VillageData.FARMER_2_RED_GRAPES_EMERALD, VBItems.RED_GRAPES.get(), 20, 16);
+		assertBuys(helper, context, VillageData.FARMER_3_HOPS_EMERALD, VBItems.HOPS.get(), 20, 12);
+		assertBuys(helper, context, VillageData.FARMER_4_WHITE_GRAPES_EMERALD, VBItems.WHITE_GRAPES.get(), 20, 12);
 		long ours = level.registryAccess().lookupOrThrow(Registries.VILLAGER_TRADE).listElementIds()
 			.filter(key -> key.identifier().getNamespace().equals(VineAndBarrel.MODID)).count();
-		helper.assertValueEqual((int) ours, 8, "our villager trades");
+		helper.assertValueEqual((int) ours, 12, "our villager trades");
 		helper.succeed();
+	}
+
+	/** A trade where the villager takes {@code count} of {@code wants} for one emerald. */
+	private static void assertBuys(GameTestHelper helper, LootContext context, ResourceKey<VillagerTrade> key, Item wants, int count, int maxUses) {
+		VillagerTrade trade = helper.getLevel().registryAccess().lookupOrThrow(Registries.VILLAGER_TRADE).getValue(key);
+		helper.assertTrue(trade != null, "trade " + key.identifier());
+		MerchantOffer offer = trade.getOffer(context);
+		helper.assertTrue(offer != null, "an offer from " + key.identifier());
+		helper.assertTrue(offer.getCostA().is(wants) && offer.getCostA().getCount() == count && offer.getCostB().isEmpty(),
+			key.identifier() + " wants " + offer.getCostA() + " + " + offer.getCostB());
+		helper.assertTrue(offer.getResult().is(Items.EMERALD) && offer.getResult().getCount() == 1, key.identifier() + " gives " + offer.getResult());
+		helper.assertValueEqual(offer.getMaxUses(), maxUses, key.identifier() + " uses");
 	}
 
 	private static void assertInSet(GameTestHelper helper, Registry<TradeSet> sets, ResourceKey<TradeSet> set, ResourceKey<VillagerTrade> trade) {

@@ -46,8 +46,11 @@ public class VBBlockLoot extends BlockLootSubProvider
 
 	@Override
 	protected Iterable<Block> getKnownBlocks() {
-		return java.util.stream.Stream.concat(VBDataGenerators.CROP_BLOCKS.stream().map(block -> (Block) block.get()),
-				java.util.stream.Stream.of(FDCompat.COQ_AU_VIN_BLOCK.get())).toList();
+		java.util.List<Block> blocks = new java.util.ArrayList<>();
+		VBDataGenerators.CROP_BLOCKS.forEach(block -> blocks.add(block.get()));
+		blocks.add(FDCompat.COQ_AU_VIN_BLOCK.get());
+		VBDataGenerators.CAULDRON_BLOCKS.forEach(block -> blocks.add(block.get()));
+		return blocks;
 	}
 
 	@Override
@@ -68,6 +71,8 @@ public class VBBlockLoot extends BlockLootSubProvider
 		add(VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT.get(), block -> fewerFruit(block, VBItems.WHITE_GRAPES.get()));
 		add(VBBlocks.HOP_VINE_ON_SUPPORT.get(), block -> fewerFruit(block, VBItems.HOPS.get()));
 		dropSelf(VBBlocks.TRELLIS.get());
+		// A cauldron of a base drops the cauldron, like vanilla's water cauldron (the liquid is lost)
+		VBDataGenerators.CAULDRON_BLOCKS.forEach(cauldron -> dropOther(cauldron.get(), Items.CAULDRON));
 
 		// Barley like wheat, and like FD's straw_from_mature_wheat: FD's knife also cuts a straw from ripe barley (#vineandbarrel:straw
 		// holds FD's straw and #vineandbarrel:straw_harvesters FD's knives, both empty without FD, so the same table works everywhere)

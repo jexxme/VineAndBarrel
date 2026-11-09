@@ -38,6 +38,7 @@ export const punchHearts = t.rowdyPunchDamage / 2;
 - **等待**：每一级会在 **{cfg.secondsPerLevel} 秒**后消退，一次一级。每喝一杯新的，各级的计时都会重新开始，所以在微醺 {roman(t.maxLevel - 1)} 时，再不喝一滴，大约 {Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10} 分钟后就清醒了。
 - **牛奶**会把它整个清掉，和清除其他效果一样。饮品给你的增益也会一并清掉。
 - **一瓶水或任意果汁**（<Item id="grape_juice" />、<Item id="white_grape_juice" />、<Item id="sweet_berry_juice" />、<Item id="apple_juice" />）会立刻让它降低一级。只有普通的水瓶有用，其他药水不行。
+- **装了 Farmer's Delight 时**，它的<Item id="farmersdelight:milk_bottle" />、<Item id="farmersdelight:melon_juice" />和<Item id="farmersdelight:apple_cider" />也会让它降低一级。一瓶牛奶降低一级；一桶牛奶全部清除。
 - **睡一觉**：上床睡过整个夜晚。必须是真正被跳过的夜晚：提早起床，或者在服务器里其他人不睡时你躺着不睡着，醒来时你还是和上床时一样微醺。
 
 ## 小贴士

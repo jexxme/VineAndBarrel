@@ -6,6 +6,8 @@ import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.block.TrellisBlock;
 import jexxme.vineandbarrel.block.VineOnSupportBlock;
 import jexxme.vineandbarrel.block.VineOnTrellisBlock;
+import jexxme.vineandbarrel.cauldron.BaseCauldronBlock;
+import jexxme.vineandbarrel.cauldron.VBCauldrons;
 import jexxme.vineandbarrel.kettle.BrewKettleBlock;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
 import jexxme.vineandbarrel.kettle.KettleSupport;
@@ -71,6 +73,9 @@ public class VBModels extends ModelProvider
 			Optional.empty(), VINE);
 	private static final ModelTemplate VINE_WOUND = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_vine_wound")),
 			Optional.empty(), TextureSlot.CROP);
+	/** Vanilla's cauldron with its content one level (3 px) below vanilla's lowest, our cauldrons' first serving. */
+	private static final ModelTemplate CAULDRON_LEVEL0 = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_cauldron_level0")),
+			Optional.empty(), TextureSlot.CONTENT, TextureSlot.INSIDE, TextureSlot.PARTICLE, TextureSlot.TOP, TextureSlot.BOTTOM, TextureSlot.SIDE);
 
 	public VBModels(PackOutput output) {
 		super(output, VineAndBarrel.MODID);
@@ -78,8 +83,9 @@ public class VBModels extends ModelProvider
 
 	@Override
 	protected Stream<? extends Holder<Block>> getKnownBlocks() {
-		return Stream.concat(VBDataGenerators.CROP_BLOCKS.stream(),
-				Stream.concat(KettleRegistry.KETTLES.values().stream(), KettleRegistry.WAXED_KETTLES.values().stream()))
+		return Stream.concat(Stream.concat(VBDataGenerators.CROP_BLOCKS.stream(),
+				Stream.concat(KettleRegistry.KETTLES.values().stream(), KettleRegistry.WAXED_KETTLES.values().stream())),
+				VBDataGenerators.CAULDRON_BLOCKS.stream())
 			.map(block -> block.asHolder());
 	}
 
@@ -137,6 +143,25 @@ public class VBModels extends ModelProvider
 		// The Brew Kettle: every weathering stage, its waxed twin looks the same
 		for (WeatherState stage : WeatherState.values()) {
 			kettle(blockModels, KettleRegistry.KETTLES.get(stage).get(), KettleRegistry.WAXED_KETTLES.get(stage).get());
+		}
+
+		cauldrons(blockModels);
+	}
+
+	/**
+	 * Our bases in a cauldron: vanilla's cauldron models with the kettle's brew liquid as the content, tinted per base
+	 * ({@code CauldronClient}). Four levels share four models: 6 px (our own template), then vanilla's 9, 12 and 15.
+	 */
+	private static void cauldrons(BlockModelGenerators blockModels) {
+		TextureMapping textures = TextureMapping.cauldron(new Material(VineAndBarrel.id("block/brew_liquid")));
+		List<ModelTemplate> templates = List.of(CAULDRON_LEVEL0, ModelTemplates.CAULDRON_LEVEL1, ModelTemplates.CAULDRON_LEVEL2, ModelTemplates.CAULDRON_FULL);
+		List<Identifier> models = new ArrayList<>();
+		for (int level = BaseCauldronBlock.MIN_LEVEL; level <= BaseCauldronBlock.MAX_LEVEL; level++) {
+			models.add(templates.get(level - 1).create(VineAndBarrel.id("block/base_cauldron_level" + level), textures, blockModels.modelOutput));
+		}
+		for (BaseCauldronBlock cauldron : VBCauldrons.all()) {
+			blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(cauldron)
+					.with(PropertyDispatch.initial(BaseCauldronBlock.LEVEL).generate(level -> plainVariant(models.get(level - 1)))));
 		}
 	}
 

@@ -46,6 +46,19 @@ Vedi [Botte d'invecchiamento](/aging-barrel/).
 
 Vedi [Bollitore](/brew-kettle/).
 
+## Calderoni
+
+<Render name="scenes/cauldrons" float="right" size={192} alt="Calderoni di mosto di miele, mosto d'orzo e succo d'uva" />
+
+Un calderone accoglie succo, mosto e mosto di miele come accoglie l'acqua.
+
+- **Versa** con un secchio per riempirlo, o con un'ampolla per un livello. Un'ampolla vuota toglie un livello, un secchio vuoto
+  un calderone pieno.
+- **{rules.servingsPerBucket} livelli**, uno per porzione, così un secchio si divide in ampolle e le ampolle rifanno un secchio.
+- **I secchi sostituiscono** ciò che c'è in un calderone, come l'acqua e la lava. Le ampolle vanno solo in un calderone vuoto o
+  in uno con lo stesso contenuto.
+- **Come l'acqua**, spegne un mob in fiamme, un comparatore legge il livello, e rompendolo torna un calderone normale.
+
 ## Bevande e contenitori
 
 <Render name="scenes/placed-drinks" float="right" size={192} alt="Boccali e calici su un blocco" />
@@ -55,13 +68,14 @@ Vedi [Bollitore](/brew-kettle/).
 - **Cin cin!** Due o più giocatori che finiscono una bevanda entro {rules.cheersWindowTicks / 20} secondi e {rules.cheersRadius}
   blocchi l'uno dall'altro brindano, e il bonus di tutti dura il {rules.cheersBonusPercent}% in più.
 - **Bere** suona e sembra come una pozione, e ti torna il contenitore vuoto.
-- **I secchi di succo e di mosto** non si possono versare come liquido, come il latte.
+- **I secchi di succo e di mosto** non si possono versare come liquido, come il latte, ma riempiono un [calderone](#calderoni).
 
 ## Brillo
 
 - **Gli altri giocatori ti vedono ondeggiare** e vedono singhiozzi, inciampi e capitomboli.
 - **Dormici sopra:** dormire fino al mattino toglie Brillo.
-- **Il latte** lo toglie; **l'acqua o un succo qualsiasi** lo abbassa di un livello.
+- **Il latte** lo toglie; **l'acqua o un succo qualsiasi** lo abbassa di un livello. Con Farmer's Delight, anche la sua bottiglia di latte,
+  il succo di anguria e il sidro di mele.
 - **Passa il mouse sull'effetto** nell'inventario per vedere cosa fa il tuo livello.
 - **Un goccetto di troppo** al livello massimo e hai un vuoto di memoria. Dove ti svegli lo sa solo il caso.
 
@@ -72,7 +86,7 @@ Vedi [Brillo](/tipsy/).
 - I cespugli si raccolgono con un clic destro (anche semimaturi) e tornano indietro di una fase, come le bacche dolci. Un graticcio dentro o sopra un cespuglio lo fa arrampicare: clic destro sul cespuglio con il graticcio, o sul graticcio con uva o luppolo. Una staccionata, un muretto, una catena o delle sbarre funzionano allo stesso modo, con un frutto in meno a ogni raccolta.
 - Le api aiutano uva, luppolo e orzo a crescere.
 - L'orzo nutre e fa riprodurre gli animali come il grano; i suoi semi nutrono galline e pappagalli.
-- I villici contadini piantano e raccolgono l'orzo.
+- I villici contadini piantano e raccolgono l'orzo, e comprano orzo, uva e luppolo, come comprano il grano.
 - Le volpi staccano l'uva dai cespugli, rossa e bianca, come fanno con le bacche dolci.
 - Ogni coltura si composta.
 - La <Item id="barley_bale" /> attutisce una caduta e alza il fumo dei falò come una balla di fieno.

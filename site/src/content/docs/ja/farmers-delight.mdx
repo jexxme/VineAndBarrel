@@ -38,6 +38,8 @@ Fabricでは<a href={fd.refabricated}>Farmer's Delight Refabricated</a>です。
   いっぱいの樽には{rules.barrelCapacity}本入ります。ディスペンサーでも注ぎ入れられます。
 - **鍋料理、大皿料理、パン**に、このMODのワイン、サイダー、ビールを使います。
 - **FDのナイフで大麦からわらが取れます。** 小麦や野生のイネと同じです。
+- **FDのジュースで酔いが醒めます。** <Item id="farmersdelight:milk_bottle" />、<Item id="farmersdelight:melon_juice" />、
+  <Item id="farmersdelight:apple_cider" />は、このMODのジュースと同じく[ほろ酔い](/tipsy/)を1レベル下げます。
 - FDが飲み物を求める場面では、このMODの飲み物も飲み物として扱われます。
 
 ## Farmer's Delightの瓶から作る飲み物
@@ -95,6 +97,15 @@ FDの大皿料理と同じです。ボウルなしで鍋で作ると、テーブ
 まな板では、ナイフで<Item id="wild_barley" />が大麦になり、FDの野生のイネと同じく、半分の確率でわらも出ます。
 
 <Recipe id="cutting/wild_barley" />
+
+## まな板で切る野生のブドウとホップ
+
+ナイフで<Item id="wild_grapes" />、<Item id="wild_white_grapes" />、<Item id="wild_hops" />を切ると、FDの野生の作物と同じく、
+その作物と最大2つの染料になります。
+
+<Recipe id="cutting/wild_grapes" />
+<Recipe id="cutting/wild_white_grapes" />
+<Recipe id="cutting/wild_hops" />
 
 ## Farmer's Delightなしの場合
 

@@ -4,6 +4,18 @@
     "vineandbarrel:grape_juice",
     "vineandbarrel:white_grape_juice",
     "vineandbarrel:sweet_berry_juice",
-    "vineandbarrel:apple_juice"
+    "vineandbarrel:apple_juice",
+    {
+      "id": "farmersdelight:melon_juice",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:apple_cider",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:milk_bottle",
+      "required": false
+    }
   ]
 }
