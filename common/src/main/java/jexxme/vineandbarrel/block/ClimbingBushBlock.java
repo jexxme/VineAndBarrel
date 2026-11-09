@@ -57,6 +57,13 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	public static final EnumProperty<BushTrellis> TRELLIS = EnumProperty.create("trellis", BushTrellis.class);
 	private static final VoxelShape SHAPE_SAPLING = Block.column(10.0, 0.0, 8.0);
 	private static final VoxelShape SHAPE_GROWING = Block.column(14.0, 0.0, 16.0);
+	// drawn as the foot of a vine: the young shoot, then the vine's leafy planes along a trellis, fence, wall or bars, or
+	// round a rope or chain (the outline follows what is drawn, as vanilla's do)
+	private static final VoxelShape FOOT_SHOOT_X = Block.box(3.0, 0.0, 5.0, 13.0, 8.0, 11.0);
+	private static final VoxelShape FOOT_SHOOT_Z = Block.box(5.0, 0.0, 3.0, 11.0, 8.0, 13.0);
+	private static final VoxelShape FOOT_PLANES_X = Block.box(0.0, 0.0, 5.0, 16.0, 16.0, 11.0);
+	private static final VoxelShape FOOT_PLANES_Z = Block.box(5.0, 0.0, 0.0, 11.0, 16.0, 16.0);
+	private static final VoxelShape FOOT_WOUND = Block.column(12.0, 0.0, 16.0);
 
 	private final Supplier<? extends Block> ropeVine;
 	private final Supplier<? extends Block> trellisVine;
@@ -233,14 +240,31 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 		return state;
 	}
 
+	/**
+	 * The outline follows what is drawn: the round bush on its own (the sweet berry bush's shapes), or, as the foot of a
+	 * vine, its young shoot and then its leafy planes (with the panel of a trellis standing in it).
+	 */
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-		VoxelShape bush = switch (state.getValue(AGE)) {
-			case 0 -> SHAPE_SAPLING;
-			case MAX_AGE -> Shapes.block();
-			default -> SHAPE_GROWING;
-		};
+		int age = state.getValue(AGE);
 		Direction.Axis trellis = state.getValue(TRELLIS).axis();
+		Direction.Axis planes = trellis != null ? trellis : switch (state.getValue(SUPPORT)) {
+			case TRELLIS_X, FACES_X -> Direction.Axis.X;
+			case TRELLIS_Z, FACES_Z -> Direction.Axis.Z;
+			default -> null;
+		};
+		VoxelShape bush;
+		if (planes != null) {
+			bush = planes == Direction.Axis.X ? (age == 0 ? FOOT_SHOOT_X : FOOT_PLANES_X) : (age == 0 ? FOOT_SHOOT_Z : FOOT_PLANES_Z);
+		} else if (state.getValue(SUPPORT) == BushSupport.ROPE) {
+			bush = age == 0 ? SHAPE_SAPLING : FOOT_WOUND;
+		} else {
+			bush = switch (age) {
+				case 0 -> SHAPE_SAPLING;
+				case MAX_AGE -> Shapes.block();
+				default -> SHAPE_GROWING;
+			};
+		}
 		return trellis == null ? bush : Shapes.or(bush, TrellisBlock.panel(trellis));
 	}
 

@@ -55,13 +55,19 @@ public final class FarmCropProcessor implements StructureProcessor
 		if (!processedBlockInfo.state().is(Blocks.WHEAT)) {
 			return processedBlockInfo;
 		}
-		RandomSource random = RandomSource.create(Mth.getSeed(processedBlockInfo.pos()) ^ SALT);
+		BlockState crop = pick(processedBlockInfo.pos());
+		return crop == null ? processedBlockInfo : new StructureTemplate.StructureBlockInfo(processedBlockInfo.pos(), crop, null);
+	}
+
+	/** What the wheat at this spot of the world turns into, or null when it stays wheat: always the same for the same spot. */
+	public @Nullable BlockState pick(BlockPos pos) {
+		RandomSource random = RandomSource.create(Mth.getSeed(pos) ^ SALT);
 		for (Rule rule : rules) {
 			if (random.nextFloat() < rule.chance()) {
-				return new StructureTemplate.StructureBlockInfo(processedBlockInfo.pos(), rule.output(), null);
+				return rule.output();
 			}
 		}
-		return processedBlockInfo;
+		return null;
 	}
 
 	@Override

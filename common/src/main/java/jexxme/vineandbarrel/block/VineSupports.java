@@ -3,6 +3,7 @@ package jexxme.vineandbarrel.block;
 import jexxme.vineandbarrel.tag.VBTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
@@ -22,6 +23,9 @@ import java.util.WeakHashMap;
  * The blocks a grape or hop plant climbs besides the Trellis and FD's ropes: fences, walls, upright chains and bars
  * ({@code #vineandbarrel:makeshift_vine_supports}). The plant grows a {@link VineOnSupportBlock} into such a block, which
  * keeps the block exactly as it was in its block entity, draws it, and gives it back whenever the plant goes.
+ * <p>
+ * A fence or a wall holds a vine only from inside the plant ({@link #onlyFromInside}); a chain or bars over a bush is
+ * climbed like a trellis.
  * <p>
  * While overgrown the block still is what it was for its neighbours: fences, walls, bars and fence gates connect to it,
  * and a lead stays tied to an overgrown fence (our mixins ask {@link #appearance} instead of reading the vine).
@@ -44,6 +48,15 @@ public final class VineSupports
 			return false;
 		}
 		return !state.hasProperty(BlockStateProperties.AXIS) || state.getValue(BlockStateProperties.AXIS) == Direction.Axis.Y;
+	}
+
+	/**
+	 * True for a fence or a wall: the plant has to stand in it (planted into it, or the post put into a bush), as a trellis
+	 * stands in a bush. A bush with one on top stays a bush and doesn't climb it; from inside, the plant climbs the ones
+	 * stacked above.
+	 */
+	public static boolean onlyFromInside(BlockState state) {
+		return state.is(BlockTags.FENCES) || state.is(BlockTags.WALLS);
 	}
 
 	/** The block a vine at {@code pos} holds, or {@code null} when there is no vine on a support there. */

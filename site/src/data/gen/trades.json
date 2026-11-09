@@ -128,31 +128,5 @@
 			"count": 1
 		},
 		"maxUses": 16
-	},
-	{
-		"profession": "farmer",
-		"level": 3,
-		"gives": {
-			"id": "minecraft:emerald",
-			"count": 1
-		},
-		"wants": {
-			"id": "vineandbarrel:hops",
-			"count": 20
-		},
-		"maxUses": 12
-	},
-	{
-		"profession": "farmer",
-		"level": 4,
-		"gives": {
-			"id": "minecraft:emerald",
-			"count": 1
-		},
-		"wants": {
-			"id": "vineandbarrel:white_grapes",
-			"count": 20
-		},
-		"maxUses": 12
 	}
 ]

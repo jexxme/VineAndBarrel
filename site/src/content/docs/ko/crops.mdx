@@ -63,7 +63,7 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 <Recipe id="trellis" />
 
 <Aside title="Farmer's Delight와 함께: 밧줄도 돼요">
-덤불 위의 Farmer's Delight 밧줄도 격자 지지대와 똑같이 작동해요. FD의 토마토가 타고 오르는 것처럼요. [Farmer's Delight](/farmers-delight/)를 참고하세요.
+덤불 위의 Farmer's Delight 밧줄도 격자 지지대와 똑같이 작동해요. FD의 토마토가 타고 오르는 것처럼요. Farmer's Delight Neoforged 1.3.4-3 이상이면 FD의 토마토도 격자 지지대를 타고 올라요(NeoForge). [Farmer's Delight](/farmers-delight/)를 참고하세요.
 </Aside>
 
 ## 울타리, 담장, 사슬, 철 창살
@@ -75,6 +75,7 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 - 한 번 딸 때 격자 지지대보다 하나 적게 나와요. 다 익으면 {h.grapes_on_support.count[0]}~{h.grapes_on_support.count[1]}개, 반쯤 익으면 {h.grapes_on_support.halfRipe[0]}개예요. 가장 좋은 지지대는 여전히 격자 지지대예요.
 - 블록은 그대로예요. 가문비나무 울타리는 가문비나무 울타리로 남고, 울타리와 담장은 계속 이어지고, 끈도 묶인 채로 있어요. 식물을 부숴도 그대로 서 있어요.
 - 사슬은 똑바로 세워진 것만 쳐요. 사다리, 유리판, 울타리 문은 아무것도 받치지 못해요.
+- 울타리와 담장은 식물 안에 서 있어야 해요. 덤불 위에 올려 두면 덤불은 그대로예요. 덤불 위의 사슬과 철 창살은 격자 지지대처럼 타고 올라가요.
 - 다른 모드의 울타리와 담장도 돼요. 팩은 `#vineandbarrel:makeshift_vine_supports` 태그에 블록을 추가할 수 있어요.
 
 ## 보리
@@ -93,7 +94,7 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 
 <WildCrops />
 
-농부와 떠돌이 상인도 씨앗을 팔고, 마을 상자에도 가끔 들어 있어요. 농부는 네 보리, 포도, 홉도 사 가요. [마을과 선술집](/villages/)을 참고하세요.
+농부와 떠돌이 상인도 씨앗을 팔고, 마을 상자에도 가끔 들어 있어요. 농부는 네 보리와 적포도도 사 가요. [마을과 선술집](/villages/)을 참고하세요.
 
 ## 농장 생활
 

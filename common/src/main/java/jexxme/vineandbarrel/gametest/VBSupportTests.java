@@ -62,8 +62,10 @@ final class VBSupportTests
 		test("crops_support_root_lives_on_soil", LARGE, 200, VBSupportTests::rootLivesOnSoil);
 		test("crops_support_planting_both_ways", LARGE, 200, VBSupportTests::plantingBothWays);
 		test("crops_trellis_frame_follows_the_row", LARGE, 100, VBSupportTests::frameFollowsTheRow);
+		test("crops_trellis_frame_sees_fd_tomato_vines", LARGE, 100, VBSupportTests::frameSeesFdTomatoVines);
 		test("crops_support_holds_plain_blocks_and_catches_up", LARGE, 100, VBSupportTests::holdsPlainBlocksAndCatchesUp);
 		test("crops_burnt_vines_leave_their_support", LARGE, 100, VBSupportTests::burntVinesLeaveTheirSupport);
+		test("crops_outlines_follow_what_is_drawn", LARGE, 100, VBSupportTests::outlinesFollowWhatIsDrawn);
 	}
 
 	// ------------------------------------------------------------------ helpers
@@ -112,82 +114,112 @@ final class VBSupportTests
 	// ------------------------------------------------------------------ climbing
 
 	/**
-	 * A ripe grape bush under an oak fence row climbs into the middle fence (spread across it, east-west), keeps the fence
-	 * as it was, and its neighbours stay connected; bone meal takes it into the lone fence on top (wound round it), and the
-	 * plant stops at {@value VineClimbing#MAX_HEIGHT}. When the bush goes, both fences come back as they stood.
+	 * A fence or wall holds a vine only from inside the plant: a ripe grape bush under an oak fence row stays a round bush and
+	 * doesn't climb it, not even with bone meal. Grown in the middle fence of a row on grass, the plant sits spread across it
+	 * (east-west), keeps the fence as it was, and its neighbours stay connected; bone meal takes it up into the lone fences
+	 * on top (wound round them), and it stops at {@value VineClimbing#MAX_HEIGHT}. When the root goes, every fence comes back
+	 * as it stood.
 	 */
 	private static void climbsFenceRow(GameTestHelper helper) {
-		BlockPos bush = new BlockPos(3, 2, 3);
-		helper.setBlock(bush.below(2), Blocks.STONE);
+		ClimbingCropBlock grapes = VBBlocks.GRAPE_BUSH.get();
+		BlockPos bush = new BlockPos(3, 2, 6);
 		ripeBush(helper, bush, VBBlocks.GRAPE_BUSH.get());
 		for (int x = 2; x <= 4; x++) {
-			build(helper, new BlockPos(x, 3, 3), Blocks.OAK_FENCE.defaultBlockState());
+			build(helper, new BlockPos(x, 3, 6), Blocks.OAK_FENCE.defaultBlockState());
 		}
-		build(helper, bush.above(2), Blocks.OAK_FENCE.defaultBlockState());
-		build(helper, bush.above(3), Blocks.OAK_FENCE.defaultBlockState());
-		BlockState rowFence = state(helper, bush.above());
-		helper.assertValueEqual(state(helper, bush).getValue(ClimbingBushBlock.SUPPORT), BushSupport.FACES_X, "a bush under an east-west fence row");
+		helper.assertValueEqual(state(helper, bush).getValue(ClimbingBushBlock.SUPPORT), BushSupport.NONE, "a bush under a fence row stays round");
+		helper.assertFalse(VineClimbing.canClimb(helper.getLevel(), helper.absolutePos(bush), grapes), "a bush doesn't climb a fence on top of it");
+		helper.assertFalse(boneMeal(helper, bush), "bone meal does nothing for a ripe bush under a fence");
+		helper.assertBlockPresent(Blocks.OAK_FENCE, bush.above());
 
-		helper.assertTrue(boneMeal(helper, bush), "bone meal makes a ripe bush climb the fence above");
-		BlockState vine = state(helper, bush.above());
-		helper.assertTrue(vine.is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), "the bush grew into the fence, found " + vine);
-		helper.assertValueEqual(vine.getValue(VineOnSupportBlock.LOOK), SupportLook.THIN_X, "spread across the east-west fence");
-		helper.assertValueEqual(vine.getValue(VineOnSupportBlock.BASE), false, "a vine on its bush, not a root");
+		BlockPos root = new BlockPos(3, 2, 2);
+		helper.setBlock(root.below(), Blocks.GRASS_BLOCK);
+		for (int x = 2; x <= 4; x++) {
+			build(helper, new BlockPos(x, 2, 2), Blocks.OAK_FENCE.defaultBlockState());
+		}
+		for (int y = 1; y <= 3; y++) {
+			build(helper, root.above(y), Blocks.OAK_FENCE.defaultBlockState());
+		}
+		BlockState rowFence = state(helper, root);
+		overgrow(helper, root, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), ClimbingCropBlock.MAX_AGE, true);
+		helper.assertValueEqual(state(helper, root).getValue(VineOnSupportBlock.LOOK), SupportLook.THIN_X, "spread across the east-west fence");
+		helper.assertValueEqual(support(helper, root), rowFence, "the fence kept inside");
+		helper.assertTrue(state(helper, root.west()).getValue(CrossCollisionBlock.EAST), "the west fence still connects to the overgrown one");
+		helper.assertTrue(state(helper, root.east()).getValue(CrossCollisionBlock.WEST), "the east fence still connects to the overgrown one");
+
+		helper.assertTrue(boneMeal(helper, root), "bone meal makes the ripe plant climb the fence above");
+		BlockState vine = state(helper, root.above());
+		helper.assertTrue(vine.is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), "the plant grew into the fence above, found " + vine);
+		helper.assertValueEqual(vine.getValue(VineOnSupportBlock.LOOK), SupportLook.CROSS, "wound round a lone post");
+		helper.assertValueEqual(vine.getValue(VineOnSupportBlock.BASE), false, "a vine on its root");
 		helper.assertValueEqual(vine.getValue(ClimbingCropBlock.AGE), 0, "a fresh vine");
-		helper.assertValueEqual(support(helper, bush.above()), rowFence, "the fence kept inside");
-		helper.assertTrue(state(helper, bush.above().west()).getValue(CrossCollisionBlock.EAST), "the west fence still connects to the overgrown one");
-		helper.assertTrue(state(helper, bush.above().east()).getValue(CrossCollisionBlock.WEST), "the east fence still connects to the overgrown one");
 
 		for (int i = 0; i < 40; i++) {
-			boneMeal(helper, bush);
+			boneMeal(helper, root);
 		}
-		BlockState top = state(helper, bush.above(2));
-		helper.assertTrue(top.is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), "bone meal grows it into the lone fence on top, found " + top);
-		helper.assertValueEqual(top.getValue(VineOnSupportBlock.LOOK), SupportLook.CROSS, "wound round a lone post");
-		helper.assertBlockPresent(Blocks.OAK_FENCE, bush.above(3));
-		helper.assertValueEqual(VineClimbing.heightAt(helper.getLevel(), helper.absolutePos(bush.above(2)), VBBlocks.GRAPE_BUSH.get()),
+		BlockState top = state(helper, root.above(2));
+		helper.assertTrue(top.is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), "bone meal grows it into the next fence, found " + top);
+		helper.assertBlockPresent(Blocks.OAK_FENCE, root.above(3));
+		helper.assertValueEqual(VineClimbing.heightAt(helper.getLevel(), helper.absolutePos(root.above(2)), grapes),
 				VineClimbing.MAX_HEIGHT, "plant height");
 
-		helper.getLevel().destroyBlock(helper.absolutePos(bush), false);
+		helper.getLevel().destroyBlock(helper.absolutePos(root), false);
 		helper.succeedWhen(() -> {
-			helper.assertBlockState(bush.above(), rowFence);
-			helper.assertBlockPresent(Blocks.OAK_FENCE, bush.above(2));
-			helper.assertItemEntityNotPresent(Items.OAK_FENCE, bush.above(), 4.0);
+			helper.assertBlockState(root, rowFence);
+			helper.assertBlockPresent(Blocks.OAK_FENCE, root.above());
+			helper.assertBlockPresent(Blocks.OAK_FENCE, root.above(2));
+			helper.assertItemEntityNotPresent(Items.OAK_FENCE, root.above(), 4.0);
 		});
 	}
 
 	/**
-	 * Hops climb a mossy wall running north-south (spread wide across it), white grapes an upright copper chain (wound round
-	 * it), red grapes copper bars (spread thin), each on a random tick like on a trellis. (The iron chain is the test data's
-	 * stand-in for FD's rope, so it grows a vine on a rope here; in play it holds a vine like any chain.)
+	 * Hops grown in a mossy wall running north-south climb the wall above (spread wide across it); a hop bush under a wall
+	 * stays a bush. White grapes climb an upright copper chain above their bush (wound round it), red grapes copper bars
+	 * (spread thin), each on a random tick like on a trellis. (The iron chain is the test data's stand-in for FD's rope, so it
+	 * grows a vine on a rope here; in play it holds a vine like any chain.)
 	 */
 	private static void wallsChainsAndBars(GameTestHelper helper) {
-		record Column(Block bush, BlockState support, boolean row, SupportLook look) {
+		record Column(Block bush, BlockState support, boolean row, SupportLook look, boolean inside) {
 		}
 		List<Column> columns = List.of(
-				new Column(VBBlocks.HOP_BUSH.get(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState(), true, SupportLook.WIDE_Z),
-				new Column(VBBlocks.WHITE_GRAPE_BUSH.get(), Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState(), false, SupportLook.CROSS),
-				new Column(VBBlocks.GRAPE_BUSH.get(), Blocks.COPPER_BARS.weathering().unaffected().defaultBlockState(), true, SupportLook.THIN_Z));
+				new Column(VBBlocks.HOP_BUSH.get(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState(), true, SupportLook.WIDE_Z, true),
+				new Column(VBBlocks.WHITE_GRAPE_BUSH.get(), Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState(), false, SupportLook.CROSS, false),
+				new Column(VBBlocks.GRAPE_BUSH.get(), Blocks.COPPER_BARS.weathering().unaffected().defaultBlockState(), true, SupportLook.THIN_Z, false));
 		int x = 2;
 		for (Column column : columns) {
-			BlockPos bush = new BlockPos(x, 1, 4);
-			ripeBush(helper, bush, column.bush());
-			if (column.row()) {
-				build(helper, bush.above().north(), column.support());
-				build(helper, bush.above().south(), column.support());
-			}
-			build(helper, bush.above(), column.support());
-			BlockState before = state(helper, bush.above());
+			BlockPos plant = new BlockPos(x, 1, 4);
 			ClimbingCropBlock crop = (ClimbingCropBlock) column.bush();
-			for (int i = 0; i < 3000 && !state(helper, bush.above()).is(crop.supportVine()); i++) {
-				helper.randomTick(bush);
+			if (column.inside()) {
+				helper.setBlock(plant.below(), Blocks.GRASS_BLOCK);
+				for (BlockPos at : List.of(plant, plant.above())) {
+					build(helper, at.north(), column.support());
+					build(helper, at.south(), column.support());
+					build(helper, at, column.support());
+				}
+				overgrow(helper, plant, crop.supportVine(), ClimbingCropBlock.MAX_AGE, true);
+			} else {
+				ripeBush(helper, plant, column.bush());
+				if (column.row()) {
+					build(helper, plant.above().north(), column.support());
+					build(helper, plant.above().south(), column.support());
+				}
+				build(helper, plant.above(), column.support());
 			}
-			BlockState vine = state(helper, bush.above());
+			BlockState before = state(helper, plant.above());
+			for (int i = 0; i < 3000 && !state(helper, plant.above()).is(crop.supportVine()); i++) {
+				helper.randomTick(plant);
+			}
+			BlockState vine = state(helper, plant.above());
 			helper.assertTrue(vine.is(crop.supportVine()), column.bush() + " should climb " + before + ", found " + vine);
 			helper.assertValueEqual(vine.getValue(VineOnSupportBlock.LOOK), column.look(), "how the vine sits on " + before);
-			helper.assertValueEqual(support(helper, bush.above()), before, "the block kept inside");
+			helper.assertValueEqual(support(helper, plant.above()), before, "the block kept inside");
 			x += 4;
 		}
+		BlockPos underWall = new BlockPos(2, 1, 8);
+		ripeBush(helper, underWall, VBBlocks.HOP_BUSH.get());
+		build(helper, underWall.above(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState());
+		helper.assertValueEqual(state(helper, underWall).getValue(ClimbingBushBlock.SUPPORT), BushSupport.NONE, "a bush under a wall stays round");
+		helper.assertFalse(VineClimbing.canClimb(helper.getLevel(), helper.absolutePos(underWall), VBBlocks.HOP_BUSH.get()), "a bush doesn't climb a wall on top of it");
 		helper.succeed();
 	}
 
@@ -228,7 +260,9 @@ final class VBSupportTests
 
 	/**
 	 * However the plant goes, the exact block comes back: a player breaks it (fruit drops, no fence item), an explosion, a
-	 * fire burning it away (removed, or turned into fire), and the root's soil going.
+	 * fire burning it away (removed, or turned into fire), and the root's soil going. The fence and the wall stand in their
+	 * plant (a root below them), the chain and the bars over a bush. Each block is checked the moment it comes back: given
+	 * time, the plant under it would climb into it again.
 	 */
 	private static void givesTheBlockBack(GameTestHelper helper) {
 		List<BlockState> supports = List.of(Blocks.SPRUCE_FENCE.defaultBlockState(), Blocks.MOSSY_STONE_BRICK_WALL.defaultBlockState(),
@@ -240,6 +274,11 @@ final class VBSupportTests
 		for (int i = 0; i < supports.size(); i++) {
 			BlockPos bush = new BlockPos(2 + i * 3, 1, 3);
 			ripeBush(helper, bush, VBBlocks.GRAPE_BUSH.get());
+			if (i < 2) {
+				helper.setBlock(bush, Blocks.AIR);
+				build(helper, bush, supports.get(i));
+				overgrow(helper, bush, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), ClimbingCropBlock.MAX_AGE, true);
+			}
 			build(helper, bush.above().west(), supports.get(i));
 			build(helper, bush.above(), supports.get(i));
 			expected[i] = state(helper, bush.above());
@@ -255,9 +294,12 @@ final class VBSupportTests
 		// an explosion
 		Vec3 boom = Vec3.atCenterOf(helper.absolutePos(at[1]));
 		helper.getLevel().explode(null, boom.x, boom.y, boom.z, 1.0F, net.minecraft.world.level.Level.ExplosionInteraction.TNT);
+		helper.assertBlockState(at[1], expected[1]);
 		// fire: burnt away (removed), and turned into fire
 		helper.getLevel().removeBlock(helper.absolutePos(at[2]), false);
+		helper.assertBlockState(at[2], expected[2]);
 		helper.getLevel().setBlockAndUpdate(helper.absolutePos(at[3]), Blocks.FIRE.defaultBlockState());
+		helper.assertBlockState(at[3], expected[3]);
 		// the soil goes under a root
 		BlockPos root = at[4].below();
 		helper.setBlock(root.below(), Blocks.GRASS_BLOCK);
@@ -266,10 +308,8 @@ final class VBSupportTests
 		BlockState rootFence = state(helper, root);
 		overgrow(helper, root, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), ClimbingCropBlock.MAX_AGE, true);
 		helper.setBlock(root.below(), Blocks.STONE);
+		// no bush in this column any more, so nothing can grow back while the root and then its vine go
 		helper.succeedWhen(() -> {
-			helper.assertBlockState(at[1], expected[1]);
-			helper.assertBlockState(at[2], expected[2]);
-			helper.assertBlockState(at[3], expected[3]);
 			helper.assertBlockState(root, rootFence);
 			helper.assertBlockState(at[4], expected[4]); // the vine above lost its root and went too
 		});
@@ -287,7 +327,9 @@ final class VBSupportTests
 			Item fruit = bush.produce();
 			BlockPos base = new BlockPos(x, 1, 2);
 			x += 3;
-			ripeBush(helper, base, bush);
+			helper.setBlock(base.below(), Blocks.GRASS_BLOCK);
+			build(helper, base, Blocks.OAK_FENCE.defaultBlockState());
+			overgrow(helper, base, vineBlock, ClimbingCropBlock.MAX_AGE, true);
 			BlockPos vine = base.above();
 			boolean[] sawRipe = new boolean[4];
 			for (int i = 0; i < 32; i++) {
@@ -457,6 +499,42 @@ final class VBSupportTests
 	// ------------------------------------------------------------------ the trellis frame
 
 	/**
+	 * A trellis an FD Neoforged tomato vine holds (1.3.4-3 and newer) is part of the row: the trellises beside it draw no
+	 * end post towards it, and the held trellis draws no rail under another tomato vine on a trellis. Without that FD
+	 * (no FD, an older one, or Fabric) there is no such vine, and nothing to check.
+	 */
+	private static void frameSeesFdTomatoVines(GameTestHelper helper) {
+		java.util.Optional<Block> tomatoes = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getOptional(
+				net.minecraft.resources.Identifier.fromNamespaceAndPath("farmersdelight", "tomatoes_on_support"));
+		if (tomatoes.isEmpty()) {
+			helper.succeed();
+			return;
+		}
+		BlockState trellis = VBBlocks.TRELLIS.get().defaultBlockState().setValue(jexxme.vineandbarrel.block.TrellisBlock.AXIS, Direction.Axis.X);
+		BlockPos west = new BlockPos(1, 2, 2), middle = new BlockPos(2, 2, 2), east = new BlockPos(3, 2, 2);
+		helper.setBlock(west, trellis);
+		helper.setBlock(east, trellis);
+		for (BlockPos vine : List.of(middle, middle.above())) {
+			helper.setBlock(vine, tomatoes.get().defaultBlockState());
+			Object blockEntity = helper.getLevel().getBlockEntity(helper.absolutePos(vine));
+			helper.assertTrue(blockEntity != null, "the tomato vine has its block entity");
+			try {
+				blockEntity.getClass().getMethod("setSupport", BlockState.class).invoke(blockEntity, trellis);
+			} catch (ReflectiveOperationException e) {
+				throw helper.assertionException("FD's tomato vine takes a support: " + e);
+			}
+			helper.assertValueEqual(TrellisFrame.heldByTomatoVine(helper.getLevel().getBlockEntity(helper.absolutePos(vine))), trellis, "the trellis the tomato vine holds");
+		}
+		helper.assertFalse(frame(helper, west).contains(TrellisFrame.Part.POST_RIGHT), "no end post towards the tomato vine on a trellis");
+		helper.assertFalse(frame(helper, east).contains(TrellisFrame.Part.POST_LEFT), "no end post towards the tomato vine on a trellis");
+		helper.assertValueEqual(TrellisFrame.parts(helper.getLevel(), helper.absolutePos(middle), trellis), List.of(),
+				"the held trellis: trellises beside it, another tomato vine on a trellis above");
+		helper.assertTrue(TrellisFrame.parts(helper.getLevel(), helper.absolutePos(middle.above()), trellis).contains(TrellisFrame.Part.RAIL),
+				"the top tomato vine's trellis carries the rail");
+		helper.succeed();
+	}
+
+	/**
 	 * A trellis row draws its own frame: end posts where the row stops (on the bushes under it too), a rail and caps where
 	 * nothing lattice is above; a north-south row the same way round; a lone trellis framed on every side.
 	 */
@@ -556,6 +634,46 @@ final class VBSupportTests
 		overgrow(helper, onFence, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), 3, true);
 		helper.getLevel().setBlockAndUpdate(helper.absolutePos(onFence), Blocks.FIRE.defaultBlockState());
 		helper.assertBlockPresent(Blocks.SPRUCE_FENCE, onFence);
+		helper.succeed();
+	}
+
+	/**
+	 * Hovering a plant outlines what is drawn, as vanilla's do: a round ripe bush is a full block, but a ripe bush drawn as
+	 * the foot of a vine (a trellis in it or above it, a fence above it) is its leafy planes, with the trellis panel when
+	 * one stands in it; under a rope or a chain it is the wound plant's column. A young root in a fence is the fence and a
+	 * small shoot.
+	 */
+	private static void outlinesFollowWhatIsDrawn(GameTestHelper helper) {
+		ClimbingBushBlock grapes = VBBlocks.GRAPE_BUSH.get();
+		BlockState ripe = grapes.defaultBlockState().setValue(ClimbingCropBlock.AGE, ClimbingCropBlock.MAX_AGE);
+		BlockPos pos = new BlockPos(2, 2, 2);
+		helper.setBlock(pos.below(), Blocks.GRASS_BLOCK);
+		java.util.function.Function<BlockState, AABB> outline = state -> {
+			// as placed by hand: the bush looks at what stands above it
+			helper.setBlock(pos, Block.updateFromNeighbourShapes(state, helper.getLevel(), helper.absolutePos(pos)));
+			return state(helper, pos).getShape(helper.getLevel(), helper.absolutePos(pos)).bounds();
+		};
+		helper.assertValueEqual(outline.apply(ripe), new AABB(0, 0, 0, 1, 1, 1), "a round ripe bush");
+		AABB inTrellis = outline.apply(ripe.setValue(ClimbingBushBlock.TRELLIS, jexxme.vineandbarrel.block.BushTrellis.X));
+		helper.assertTrue(inTrellis.maxZ - inTrellis.minZ <= 6.0 / 16.0 + 1.0E-6 && inTrellis.maxY == 1.0,
+				"a ripe bush with a trellis in it is its planes and panel, not a block: " + inTrellis);
+		AABB youngInTrellis = outline.apply(grapes.defaultBlockState().setValue(ClimbingBushBlock.TRELLIS, jexxme.vineandbarrel.block.BushTrellis.Z));
+		helper.assertTrue(youngInTrellis.maxX - youngInTrellis.minX <= 6.0 / 16.0 + 1.0E-6, "a young bush in a trellis: its shoot and the panel " + youngInTrellis);
+		helper.setBlock(pos.above(), VBBlocks.TRELLIS.get().defaultBlockState());
+		AABB underTrellis = outline.apply(ripe);
+		helper.assertTrue(underTrellis.maxZ - underTrellis.minZ <= 6.0 / 16.0 + 1.0E-6, "a ripe bush under a trellis: its planes " + underTrellis);
+		helper.setBlock(pos.above(), Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState());
+		helper.assertValueEqual(outline.apply(ripe), new AABB(2.0 / 16.0, 0, 2.0 / 16.0, 14.0 / 16.0, 1, 14.0 / 16.0), "a ripe bush under a chain");
+		helper.setBlock(pos.above(), Blocks.AIR);
+		// a young root in a lone fence: the fence's own outline and the shoot
+		BlockPos root = new BlockPos(5, 2, 2);
+		helper.setBlock(root.below(), Blocks.GRASS_BLOCK);
+		build(helper, root, Blocks.OAK_FENCE.defaultBlockState());
+		BlockState fence = state(helper, root);
+		overgrow(helper, root, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), 0, true);
+		AABB young = state(helper, root).getShape(helper.getLevel(), helper.absolutePos(root)).bounds();
+		AABB expected = fence.getShape(helper.getLevel(), helper.absolutePos(root)).bounds().minmax(new AABB(3.0 / 16.0, 0, 3.0 / 16.0, 13.0 / 16.0, 0.5, 13.0 / 16.0));
+		helper.assertValueEqual(young, expected, "a young root in a fence");
 		helper.succeed();
 	}
 }

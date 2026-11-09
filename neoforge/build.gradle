@@ -49,7 +49,9 @@ neoForge {
         // This is THE test entry point, locally and in CI: ./gradlew :neoforge:runGameTestServer
         gameTestServer {
             type = "gameTestServer"
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            // Only this mod's GameTests (vanilla's --tests selector): another mod's jar in the run can carry its own, and
+            // neoforge.enabledGameTestNamespaces no longer filters anything since the 26.x GameTest registry.
+            programArguments.addAll '--tests', "${project.mod_id}:*"
             systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest.xml').absolutePath // for the parity checklist
         }
 
@@ -59,7 +61,9 @@ neoForge {
         gameTestServerFd {
             type = "gameTestServer"
             gameDirectory = project.file('run-fd')
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            // Only this mod's GameTests (vanilla's --tests selector): another mod's jar in the run can carry its own, and
+            // neoforge.enabledGameTestNamespaces no longer filters anything since the 26.x GameTest registry.
+            programArguments.addAll '--tests', "${project.mod_id}:*"
             systemProperty 'vineandbarrel.expectFd', 'true' // fd_run_has_the_right_mods fails if FD did not load
             systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest-fd.xml').absolutePath
         }
@@ -73,7 +77,6 @@ neoForge {
             type = "gameTestServer"
             gameDirectory = project.file('run-compat')
             programArguments.addAll '--tests', "${project.mod_id}:compat_*"
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             systemProperty 'vineandbarrel.expectCompat', 'true' // compat_run_has_the_right_mods fails if one did not load
             // ...or if one is not the version gradle.properties (and so the wiki) names
             systemProperty 'vineandbarrel.compatVersions', [

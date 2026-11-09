@@ -63,7 +63,7 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 <Recipe id="trellis" />
 
 <Aside title="Farmer's Delight があれば: ロープも使えます">
-Farmer's Delight のロープを低木の上に吊るすと、トレリスとまったく同じように働きます。FD のトマトが登るのと同じです。
+Farmer's Delight のロープを低木の上に吊るすと、トレリスとまったく同じように働きます。FD のトマトが登るのと同じです。Farmer's Delight Neoforged 1.3.4-3 以降なら、FD のトマトもトレリスを登ります（NeoForge）。
 [Farmer's Delight](/farmers-delight/)をご覧ください。
 </Aside>
 
@@ -76,6 +76,7 @@ Farmer's Delight のロープを低木の上に吊るすと、トレリスとま
 - 1回に摘める数は、トレリスより1つ少なくなります。熟していれば{h.grapes_on_support.count[0]}〜{h.grapes_on_support.count[1]}個、半熟なら{h.grapes_on_support.halfRipe[0]}個です。いちばんよい支えはトレリスのままです。
 - ブロックはそのままです。トウヒのフェンスはトウヒのフェンスのままで、フェンスや塀はつながり続け、リードも結ばれたままです。植物を壊しても、ブロックは立ったままです。
 - 鎖は縦に立っているものだけが対象です。はしご、ガラス板、フェンスゲートは何も支えません。
+- フェンスと塀は植物と同じブロックに立てる必要があります。低木の上に置いても、低木は登りません。低木の上の鎖や鉄格子には、トレリスと同じように登ります。
 - ほかのMODのフェンスや塀も使えます。パックは`#vineandbarrel:makeshift_vine_supports`タグにブロックを追加できます。
 
 ## 大麦
@@ -94,7 +95,7 @@ Mod のバイオームにも出現します。壊すと収穫物が手に入り�
 
 <WildCrops />
 
-農民や行商人も種を売っていて、村のチェストに入っていることもあります。農民は大麦、ブドウ、ホップを買い取ってもくれます。[村と酒場](/villages/)をご覧ください。
+農民や行商人も種を売っていて、村のチェストに入っていることもあります。農民は大麦と赤ブドウを買い取ってもくれます。[村と酒場](/villages/)をご覧ください。
 
 ## 農場の暮らし
 
