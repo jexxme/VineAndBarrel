@@ -1,0 +1,81 @@
+{
+	"ambientocclusion": false,
+	"textures": {
+		"frame": "vineandbarrel:block/trellis_frame",
+		"particle": "vineandbarrel:block/trellis"
+	},
+	"elements": [
+		{
+			"from": [
+				0,
+				14,
+				7.25
+			],
+			"to": [
+				16,
+				16,
+				8.75
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						2,
+						16
+					],
+					"texture": "#frame",
+					"rotation": 270
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						2,
+						16
+					],
+					"texture": "#frame",
+					"rotation": 270
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						16
+					],
+					"texture": "#frame",
+					"rotation": 270
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						16
+					],
+					"texture": "#frame",
+					"rotation": 270
+				},
+				"east": {
+					"uv": [
+						0,
+						0,
+						2,
+						2
+					],
+					"texture": "#frame"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						2,
+						2
+					],
+					"texture": "#frame"
+				}
+			}
+		}
+	]
+}

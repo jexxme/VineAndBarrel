@@ -54,6 +54,7 @@ public final class VBGameTests
 		test("polish_creative_tab_has_every_item_once", VBGameTests::creativeTabHasEveryItemOnce);
 		VBCropTests.registerAll();
 		VBTrellisTests.registerAll();
+		VBSupportTests.registerAll();
 	}
 
 	private VBGameTests() {

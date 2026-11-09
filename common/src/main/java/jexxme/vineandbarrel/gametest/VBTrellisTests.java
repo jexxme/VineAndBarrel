@@ -198,14 +198,16 @@ final class VBTrellisTests
 		ItemStack made = recipe.value().assemble(lattice);
 		helper.assertTrue(made.is(VBItems.TRELLIS.get()) && made.getCount() == 4, "Five sticks in an X should make 4 trellises, made " + made);
 
-		// mobs don't path through the panel; it burns like a fence; only a rope or a Trellis grows a vine
+		// mobs don't path through the panel; it burns like a fence; a rope, a Trellis or a fence grows a vine, a glass pane doesn't
 		for (Block block : List.of(VBBlocks.TRELLIS.get(), VBBlocks.GRAPE_VINE_ON_TRELLIS.get())) {
 			helper.assertFalse(block.defaultBlockState().isPathfindable(PathComputationType.LAND), block + " is no path for mobs");
 		}
 		helper.assertValueEqual(VBFlammability.igniteOdds(bare), VBFlammability.igniteOdds(Blocks.OAK_FENCE.defaultBlockState()), "trellis fire spread (a fence's)");
 		helper.assertValueEqual(VBFlammability.burnOdds(bare), VBFlammability.burnOdds(Blocks.OAK_FENCE.defaultBlockState()), "trellis flammability (a fence's)");
 		ClimbingCropBlock grapes = VBBlocks.GRAPE_BUSH.get();
-		helper.assertTrue(grapes.vineOn(Blocks.OAK_FENCE.defaultBlockState()) == null, "a fence grows no vine, even if a pack adds it to the tag");
+		helper.assertTrue(grapes.vineOn(Blocks.GLASS_PANE.defaultBlockState()) == null, "a glass pane grows no vine");
+		helper.assertTrue(grapes.vineOn(Blocks.OAK_FENCE.defaultBlockState()) != null
+				&& grapes.vineOn(Blocks.OAK_FENCE.defaultBlockState()).is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), "a fence grows the vine on a support");
 		helper.assertTrue(grapes.vineOn(bare) != null && grapes.vineOn(bare).is(VBBlocks.GRAPE_VINE_ON_TRELLIS.get()), "a trellis grows the vine on a trellis");
 
 		// a trellis placed on a vine keeps the vine's line

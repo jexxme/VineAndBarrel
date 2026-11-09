@@ -12,7 +12,8 @@ Art:
   pot handle.
 - rope_top.png (as block/rope_top.png) and the rope fibres in block/grape_vine_coiled_rope.png and
   block/hop_vine_coiled_rope.png: FD's rope, so a vine on a rope looks like it grows on FD's rope;
-  models/block/template_crop_with_rope.json is FD's model.
+  models/block/template_crop_with_rope.json is FD's model; models/block/template_vine_wound.json is its crop planes
+  without the rope (a vine wound round a chain or a post).
 - recipe_book/cooking_pot_*.png (as gui/sprites/recipe_book/brew_kettle_*.png): base of the Brew Kettle's recipe book
   button; only the pot icon is replaced by our kettle.
 - cooking_pot/boil_water1-2.ogg, boil_soup1-3.ogg (as sounds/block/brew_kettle/boil_water1-2.ogg, boil_brew1-3.ogg): the Brew Kettle's boiling sounds.

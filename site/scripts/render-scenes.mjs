@@ -12,6 +12,9 @@ const GRASS = [[0x91, 0xbd, 0x59]];
 const manifest = {};
 const failed = [];
 
+/** A piece of the trellis frame (end posts, top rail, caps; the game adds them from the neighbours) for an east-west row. */
+const frame = (part, offset) => ({ model: `vineandbarrel:block/trellis_${part}`, offset });
+
 /** place(blockId, state, [x, y, z]) -> scene parts */
 function place(block, state = {}, offset = [0, 0, 0], tint) {
 	// Fire is a multipart model with OR conditions; its floor model is what you see on a block
@@ -53,7 +56,8 @@ const KETTLE = { facing: 'north', open: 'false', fill: '0', support: 'none', wat
 const BARREL = { facing: 'north', bung: 'cork', fill: '0', left: 'false', right: 'false', stacked: 'false', tapping: 'false' };
 for (const [id, b] of Object.entries(runtime.blocks)) {
 	const slug = id.split(':')[1];
-	if (slug.startsWith('waxed_') || slug === 'placed_drinks' || slug.endsWith('_on_rope')) continue;
+	// vines on a rope or a fence, wall, chain or bars hold a block the wiki can't show on its own (FD's rope, the block kept inside)
+	if (slug.startsWith('waxed_') || slug === 'placed_drinks' || slug.endsWith('_on_rope') || slug.endsWith('_on_support')) continue;
 	const state = { ...b.defaultState, ...facingNorth(id) };
 	if ('age' in state) state.age = String(Math.max(...ageValues(id).map(Number)));
 	await save(`blocks/${slug}`, place(id, state));
@@ -68,7 +72,9 @@ const crops = [
 ];
 for (const [id, ground, gstate, tint] of crops) {
 	for (const v of ageValues(id)) {
-		await save(`stages/${id.split(':')[1]}-${v}`, [...place(ground, gstate, [0, -1, 0], tint), ...place(id, { age: v })], { size: 192 });
+		// a bush on its own: the round bush (not the base of a vine, which its other states draw)
+		const alone = id.endsWith('_bush') ? { support: 'none', trellis: 'none' } : {};
+		await save(`stages/${id.split(':')[1]}-${v}`, [...place(ground, gstate, [0, -1, 0], tint), ...place(id, { age: v, ...alone })], { size: 192 });
 	}
 }
 
@@ -122,11 +128,29 @@ const scenes = {
 			...place(`vineandbarrel:${crop}_vine_on_trellis`, { age, axis: 'x' }, [x, 3, 0]),
 		]),
 		...[1, 2, 3].flatMap((y) => place('vineandbarrel:trellis', { axis: 'x' }, [3, y, 0])),
+		// the frame the row draws by itself: end posts, the top rail and its caps
+		...[1, 2, 3].flatMap((y) => [frame('post_left', [0, y, 0]), frame('post_right', [3, y, 0])]),
+		...[0, 1, 2, 3].map((x) => frame('rail', [x, 3, 0])), frame('cap_left', [0, 3, 0]), frame('cap_right', [3, 3, 0]),
+	],
+	// Grapes and hops grown into an oak fence row and a mossy wall two high (the wiki shows the block they hold under the
+	// leaves, as the game draws it): ripe red grapes, ripe hops, a bare post; ripe white grapes, half-ripe red, a bare wall
+	'supports': [
+		...[0, 1, 2, 3, 4, 5].flatMap((x) => place('minecraft:grass_block', {}, [x, 0, 0], GRASS)),
+		...[0, 1, 2].flatMap((x) => place('minecraft:oak_fence', { east: String(x < 2), west: String(x > 0), north: 'false', south: 'false' }, [x, 1, 0])),
+		...place('vineandbarrel:grape_vine_on_support', { age: '3', base: 'true', look: 'thin_x' }, [0, 1, 0]),
+		...place('vineandbarrel:hop_vine_on_support', { age: '3', base: 'true', look: 'thin_x' }, [1, 1, 0]),
+		...[3, 4, 5].flatMap((x) => [1, 2].flatMap((y) => place('minecraft:mossy_cobblestone_wall',
+			{ east: x < 5 ? (y === 1 ? 'tall' : 'low') : 'none', west: x > 3 ? (y === 1 ? 'tall' : 'low') : 'none', north: 'none', south: 'none', up: String(x === 3 || x === 5) },
+			[x, y, 0]))),
+		...[['white_grape', '3', 3], ['grape', '2', 4]].flatMap(([crop, age, x]) => [
+			...place(`vineandbarrel:${crop}_vine_on_support`, { age, base: 'true', look: 'wide_x' }, [x, 1, 0]),
+			...place(`vineandbarrel:${crop}_vine_on_support`, { age, base: 'false', look: 'wide_x' }, [x, 2, 0]),
+		]),
 	],
 	'garden': [
 		...[0, 1, 2].flatMap((x) => place('minecraft:farmland', { moisture: '7' }, [x, 0, 1])),
 		...[0, 1, 2].flatMap((x) => place('minecraft:grass_block', {}, [x, 0, 0], GRASS)),
-		...place('vineandbarrel:grape_bush', { age: '3' }, [0, 1, 0]), ...place('vineandbarrel:hop_bush', { age: '3' }, [1, 1, 0]), ...place('vineandbarrel:white_grape_bush', { age: '3' }, [2, 1, 0]),
+		...['grape', 'hop', 'white_grape'].flatMap((crop, x) => place(`vineandbarrel:${crop}_bush`, { age: '3', support: 'none', trellis: 'none' }, [x, 1, 0])),
 		...place('vineandbarrel:barley', { age: '7' }, [0, 1, 1]), ...place('vineandbarrel:barley', { age: '7' }, [1, 1, 1]), ...place('vineandbarrel:barley', { age: '5' }, [2, 1, 1]),
 	],
 };

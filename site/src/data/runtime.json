@@ -26,7 +26,7 @@
         "minecraft:tooltip_display": {},
         "minecraft:use_effects": {}
       },
-      "class": "net.minecraft.world.item.BlockItem",
+      "class": "jexxme.vineandbarrel.block.ClimbingPlantItem",
       "tags": [
         "c:animal_foods",
         "c:crops",
@@ -64,7 +64,7 @@
         "minecraft:tooltip_display": {},
         "minecraft:use_effects": {}
       },
-      "class": "net.minecraft.world.item.BlockItem",
+      "class": "jexxme.vineandbarrel.block.ClimbingPlantItem",
       "tags": [
         "c:animal_foods",
         "c:crops",
@@ -97,7 +97,7 @@
         "minecraft:tooltip_display": {},
         "minecraft:use_effects": {}
       },
-      "class": "net.minecraft.world.item.BlockItem",
+      "class": "jexxme.vineandbarrel.block.ClimbingPlantItem",
       "tags": [
         "c:crops",
         "c:crops/hops",
@@ -2163,7 +2163,9 @@
           "none",
           "trellis_x",
           "trellis_z",
-          "rope"
+          "rope",
+          "faces_x",
+          "faces_z"
         ],
         "trellis": [
           "none",
@@ -2198,7 +2200,9 @@
           "none",
           "trellis_x",
           "trellis_z",
-          "rope"
+          "rope",
+          "faces_x",
+          "faces_z"
         ],
         "trellis": [
           "none",
@@ -2281,7 +2285,9 @@
           "none",
           "trellis_x",
           "trellis_z",
-          "rope"
+          "rope",
+          "faces_x",
+          "faces_z"
         ],
         "trellis": [
           "none",
@@ -2343,6 +2349,7 @@
         "waterlogged": "false"
       },
       "tags": [
+        "farmersdelight:tomato_supports",
         "minecraft:mineable/axe",
         "vineandbarrel:vine_supports"
       ]
@@ -2421,6 +2428,112 @@
       "defaultState": {
         "age": "0",
         "axis": "x"
+      },
+      "tags": [
+        "minecraft:bee_growables",
+        "minecraft:mineable/axe",
+        "sereneseasons:autumn_crops",
+        "sereneseasons:summer_crops"
+      ]
+    },
+    "vineandbarrel:grape_vine_on_support": {
+      "class": "jexxme.vineandbarrel.block.VineOnSupportBlock",
+      "hardness": 0.4,
+      "blastResistance": 0.4,
+      "item": "minecraft:air",
+      "properties": {
+        "age": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "base": [
+          "true",
+          "false"
+        ],
+        "look": [
+          "cross",
+          "thin_x",
+          "thin_z",
+          "wide_x",
+          "wide_z"
+        ]
+      },
+      "defaultState": {
+        "age": "0",
+        "base": "false",
+        "look": "cross"
+      },
+      "tags": [
+        "minecraft:bee_growables",
+        "minecraft:mineable/axe",
+        "sereneseasons:autumn_crops"
+      ]
+    },
+    "vineandbarrel:white_grape_vine_on_support": {
+      "class": "jexxme.vineandbarrel.block.VineOnSupportBlock",
+      "hardness": 0.4,
+      "blastResistance": 0.4,
+      "item": "minecraft:air",
+      "properties": {
+        "age": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "base": [
+          "true",
+          "false"
+        ],
+        "look": [
+          "cross",
+          "thin_x",
+          "thin_z",
+          "wide_x",
+          "wide_z"
+        ]
+      },
+      "defaultState": {
+        "age": "0",
+        "base": "false",
+        "look": "cross"
+      },
+      "tags": [
+        "minecraft:bee_growables",
+        "minecraft:mineable/axe",
+        "sereneseasons:autumn_crops"
+      ]
+    },
+    "vineandbarrel:hop_vine_on_support": {
+      "class": "jexxme.vineandbarrel.block.VineOnSupportBlock",
+      "hardness": 0.4,
+      "blastResistance": 0.4,
+      "item": "minecraft:air",
+      "properties": {
+        "age": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "base": [
+          "true",
+          "false"
+        ],
+        "look": [
+          "cross",
+          "thin_x",
+          "thin_z",
+          "wide_x",
+          "wide_z"
+        ]
+      },
+      "defaultState": {
+        "age": "0",
+        "base": "false",
+        "look": "cross"
       },
       "tags": [
         "minecraft:bee_growables",
@@ -12206,6 +12319,9 @@
       "farmersdelight:feasts": [
         "vineandbarrel:coq_au_vin_block"
       ],
+      "farmersdelight:tomato_supports": [
+        "vineandbarrel:trellis"
+      ],
       "farmersdelight:wild_crops": [
         "vineandbarrel:wild_barley",
         "vineandbarrel:wild_grapes",
@@ -12567,12 +12683,15 @@
         "vineandbarrel:barley",
         "vineandbarrel:grape_bush",
         "vineandbarrel:grape_vine_on_rope",
+        "vineandbarrel:grape_vine_on_support",
         "vineandbarrel:grape_vine_on_trellis",
         "vineandbarrel:hop_bush",
         "vineandbarrel:hop_vine_on_rope",
+        "vineandbarrel:hop_vine_on_support",
         "vineandbarrel:hop_vine_on_trellis",
         "vineandbarrel:white_grape_bush",
         "vineandbarrel:white_grape_vine_on_rope",
+        "vineandbarrel:white_grape_vine_on_support",
         "vineandbarrel:white_grape_vine_on_trellis"
       ],
       "minecraft:beehives": [
@@ -24784,11 +24903,14 @@
         "minecraft:yellow_wall_banner",
         "vineandbarrel:aging_barrel",
         "vineandbarrel:grape_crate",
+        "vineandbarrel:grape_vine_on_support",
         "vineandbarrel:grape_vine_on_trellis",
+        "vineandbarrel:hop_vine_on_support",
         "vineandbarrel:hop_vine_on_trellis",
         "vineandbarrel:hops_crate",
         "vineandbarrel:trellis",
         "vineandbarrel:white_grape_crate",
+        "vineandbarrel:white_grape_vine_on_support",
         "vineandbarrel:white_grape_vine_on_trellis"
       ],
       "minecraft:mineable/hoe": [
@@ -27834,12 +27956,15 @@
       "sereneseasons:autumn_crops": [
         "vineandbarrel:grape_bush",
         "vineandbarrel:grape_vine_on_rope",
+        "vineandbarrel:grape_vine_on_support",
         "vineandbarrel:grape_vine_on_trellis",
         "vineandbarrel:hop_bush",
         "vineandbarrel:hop_vine_on_rope",
+        "vineandbarrel:hop_vine_on_support",
         "vineandbarrel:hop_vine_on_trellis",
         "vineandbarrel:white_grape_bush",
         "vineandbarrel:white_grape_vine_on_rope",
+        "vineandbarrel:white_grape_vine_on_support",
         "vineandbarrel:white_grape_vine_on_trellis"
       ],
       "sereneseasons:spring_crops": [
@@ -27849,6 +27974,7 @@
         "vineandbarrel:barley",
         "vineandbarrel:hop_bush",
         "vineandbarrel:hop_vine_on_rope",
+        "vineandbarrel:hop_vine_on_support",
         "vineandbarrel:hop_vine_on_trellis"
       ],
       "vineandbarrel:brew_kettles": [
@@ -27879,6 +28005,72 @@
         "minecraft:magma_block",
         "minecraft:soul_campfire",
         "minecraft:soul_fire"
+      ],
+      "vineandbarrel:makeshift_vine_supports": [
+        "minecraft:acacia_fence",
+        "minecraft:andesite_wall",
+        "minecraft:bamboo_fence",
+        "minecraft:birch_fence",
+        "minecraft:blackstone_wall",
+        "minecraft:brick_wall",
+        "minecraft:cherry_fence",
+        "minecraft:cinnabar_brick_wall",
+        "minecraft:cinnabar_wall",
+        "minecraft:cobbled_deepslate_wall",
+        "minecraft:cobblestone_wall",
+        "minecraft:copper_bars",
+        "minecraft:copper_chain",
+        "minecraft:crimson_fence",
+        "minecraft:dark_oak_fence",
+        "minecraft:deepslate_brick_wall",
+        "minecraft:deepslate_tile_wall",
+        "minecraft:diorite_wall",
+        "minecraft:end_stone_brick_wall",
+        "minecraft:exposed_copper_bars",
+        "minecraft:exposed_copper_chain",
+        "minecraft:granite_wall",
+        "minecraft:iron_bars",
+        "minecraft:iron_chain",
+        "minecraft:jungle_fence",
+        "minecraft:mangrove_fence",
+        "minecraft:mossy_cobblestone_wall",
+        "minecraft:mossy_stone_brick_wall",
+        "minecraft:mud_brick_wall",
+        "minecraft:nether_brick_fence",
+        "minecraft:nether_brick_wall",
+        "minecraft:oak_fence",
+        "minecraft:oxidized_copper_bars",
+        "minecraft:oxidized_copper_chain",
+        "minecraft:pale_oak_fence",
+        "minecraft:polished_blackstone_brick_wall",
+        "minecraft:polished_blackstone_wall",
+        "minecraft:polished_cinnabar_wall",
+        "minecraft:polished_deepslate_wall",
+        "minecraft:polished_sulfur_wall",
+        "minecraft:polished_tuff_wall",
+        "minecraft:poplar_fence",
+        "minecraft:prismarine_wall",
+        "minecraft:red_nether_brick_wall",
+        "minecraft:red_sandstone_wall",
+        "minecraft:resin_brick_wall",
+        "minecraft:sandstone_wall",
+        "minecraft:spruce_fence",
+        "minecraft:stone_brick_wall",
+        "minecraft:sulfur_brick_wall",
+        "minecraft:sulfur_wall",
+        "minecraft:tuff_brick_wall",
+        "minecraft:tuff_wall",
+        "minecraft:warped_fence",
+        "minecraft:waxed_copper_bars",
+        "minecraft:waxed_copper_chain",
+        "minecraft:waxed_exposed_copper_bars",
+        "minecraft:waxed_exposed_copper_chain",
+        "minecraft:waxed_oxidized_copper_bars",
+        "minecraft:waxed_oxidized_copper_chain",
+        "minecraft:waxed_weathered_copper_bars",
+        "minecraft:waxed_weathered_copper_chain",
+        "minecraft:weathered_copper_bars",
+        "minecraft:weathered_copper_chain"
       ],
       "vineandbarrel:tray_heat_sources": [
         "minecraft:campfire",

@@ -6,6 +6,7 @@ import jexxme.vineandbarrel.block.BarleyBlock;
 import jexxme.vineandbarrel.block.ClimbingBushBlock;
 import jexxme.vineandbarrel.block.TrellisBlock;
 import jexxme.vineandbarrel.block.VineOnRopeBlock;
+import jexxme.vineandbarrel.block.VineOnSupportBlock;
 import jexxme.vineandbarrel.block.VineOnTrellisBlock;
 import jexxme.vineandbarrel.block.WildCropBlock;
 import net.minecraft.core.registries.Registries;
@@ -30,18 +31,24 @@ public final class VBBlocks
 	public static final ResourceKey<LootTable> HARVEST_GRAPES = ResourceKey.create(Registries.LOOT_TABLE, VineAndBarrel.id("harvest/grapes"));
 	public static final ResourceKey<LootTable> HARVEST_HOPS = ResourceKey.create(Registries.LOOT_TABLE, VineAndBarrel.id("harvest/hops"));
 	public static final ResourceKey<LootTable> HARVEST_WHITE_GRAPES = ResourceKey.create(Registries.LOOT_TABLE, VineAndBarrel.id("harvest/white_grapes"));
+	/** The same off a fence, wall, chain or bars: one fewer per pick than on a trellis. */
+	public static final ResourceKey<LootTable> HARVEST_GRAPES_ON_SUPPORT = ResourceKey.create(Registries.LOOT_TABLE, VineAndBarrel.id("harvest/grapes_on_support"));
+	public static final ResourceKey<LootTable> HARVEST_HOPS_ON_SUPPORT = ResourceKey.create(Registries.LOOT_TABLE, VineAndBarrel.id("harvest/hops_on_support"));
+	public static final ResourceKey<LootTable> HARVEST_WHITE_GRAPES_ON_SUPPORT = ResourceKey.create(Registries.LOOT_TABLE,
+			VineAndBarrel.id("harvest/white_grapes_on_support"));
 
 	// ------------------------------------------------------------------ crops
 	public static final DeferredBlock<ClimbingBushBlock> GRAPE_BUSH = BLOCKS.registerBlock("grape_bush",
-			p -> new ClimbingBushBlock(p, VBBlocks.GRAPE_VINE_ON_ROPE, VBBlocks.GRAPE_VINE_ON_TRELLIS, VBItems.RED_GRAPES, HARVEST_GRAPES), VBBlocks::bush);
+			p -> new ClimbingBushBlock(p, VBBlocks.GRAPE_VINE_ON_ROPE, VBBlocks.GRAPE_VINE_ON_TRELLIS, VBBlocks.GRAPE_VINE_ON_SUPPORT, VBItems.RED_GRAPES, HARVEST_GRAPES), VBBlocks::bush);
 	public static final DeferredBlock<ClimbingBushBlock> HOP_BUSH = BLOCKS.registerBlock("hop_bush",
-			p -> new ClimbingBushBlock(p, VBBlocks.HOP_VINE_ON_ROPE, VBBlocks.HOP_VINE_ON_TRELLIS, VBItems.HOPS, HARVEST_HOPS), VBBlocks::bush);
+			p -> new ClimbingBushBlock(p, VBBlocks.HOP_VINE_ON_ROPE, VBBlocks.HOP_VINE_ON_TRELLIS, VBBlocks.HOP_VINE_ON_SUPPORT, VBItems.HOPS, HARVEST_HOPS), VBBlocks::bush);
 	public static final DeferredBlock<VineOnRopeBlock> GRAPE_VINE_ON_ROPE = BLOCKS.registerBlock("grape_vine_on_rope",
 			p -> new VineOnRopeBlock(p, VBBlocks.GRAPE_BUSH, VBItems.RED_GRAPES, HARVEST_GRAPES), VBBlocks::vineOnRope);
 	public static final DeferredBlock<VineOnRopeBlock> HOP_VINE_ON_ROPE = BLOCKS.registerBlock("hop_vine_on_rope",
 			p -> new VineOnRopeBlock(p, VBBlocks.HOP_BUSH, VBItems.HOPS, HARVEST_HOPS), VBBlocks::vineOnRope);
 	public static final DeferredBlock<ClimbingBushBlock> WHITE_GRAPE_BUSH = BLOCKS.registerBlock("white_grape_bush",
-			p -> new ClimbingBushBlock(p, VBBlocks.WHITE_GRAPE_VINE_ON_ROPE, VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS, VBItems.WHITE_GRAPES, HARVEST_WHITE_GRAPES),
+			p -> new ClimbingBushBlock(p, VBBlocks.WHITE_GRAPE_VINE_ON_ROPE, VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS,
+					VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT, VBItems.WHITE_GRAPES, HARVEST_WHITE_GRAPES),
 			VBBlocks::bush);
 	public static final DeferredBlock<VineOnRopeBlock> WHITE_GRAPE_VINE_ON_ROPE = BLOCKS.registerBlock("white_grape_vine_on_rope",
 			p -> new VineOnRopeBlock(p, VBBlocks.WHITE_GRAPE_BUSH, VBItems.WHITE_GRAPES, HARVEST_WHITE_GRAPES), VBBlocks::vineOnRope);
@@ -54,6 +61,15 @@ public final class VBBlocks
 			p -> new VineOnTrellisBlock(p, VBBlocks.WHITE_GRAPE_BUSH, VBBlocks.TRELLIS, VBItems.WHITE_GRAPES, HARVEST_WHITE_GRAPES), VBBlocks::vineOnTrellis);
 	public static final DeferredBlock<VineOnTrellisBlock> HOP_VINE_ON_TRELLIS = BLOCKS.registerBlock("hop_vine_on_trellis",
 			p -> new VineOnTrellisBlock(p, VBBlocks.HOP_BUSH, VBBlocks.TRELLIS, VBItems.HOPS, HARVEST_HOPS), VBBlocks::vineOnTrellis);
+
+	// ------------------------------------------------------------------ vines on a fence, wall, upright chain or bars (named like the trellis vines)
+	public static final DeferredBlock<VineOnSupportBlock> GRAPE_VINE_ON_SUPPORT = BLOCKS.registerBlock("grape_vine_on_support",
+			p -> new VineOnSupportBlock(p, VBBlocks.GRAPE_BUSH, VBItems.RED_GRAPES, HARVEST_GRAPES_ON_SUPPORT), () -> vineOnSupport("grape_vine_on_trellis"));
+	public static final DeferredBlock<VineOnSupportBlock> WHITE_GRAPE_VINE_ON_SUPPORT = BLOCKS.registerBlock("white_grape_vine_on_support",
+			p -> new VineOnSupportBlock(p, VBBlocks.WHITE_GRAPE_BUSH, VBItems.WHITE_GRAPES, HARVEST_WHITE_GRAPES_ON_SUPPORT),
+			() -> vineOnSupport("white_grape_vine_on_trellis"));
+	public static final DeferredBlock<VineOnSupportBlock> HOP_VINE_ON_SUPPORT = BLOCKS.registerBlock("hop_vine_on_support",
+			p -> new VineOnSupportBlock(p, VBBlocks.HOP_BUSH, VBItems.HOPS, HARVEST_HOPS_ON_SUPPORT), () -> vineOnSupport("hop_vine_on_trellis"));
 
 	public static final DeferredBlock<BarleyBlock> BARLEY = BLOCKS.registerBlock("barley",
 			BarleyBlock::new, () -> BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT));
@@ -112,6 +128,17 @@ public final class VBBlocks
 	private static BlockBehaviour.Properties vineOnTrellis() {
 		return BlockBehaviour.Properties.of().mapColor(MapColor.PLANT).strength(0.4F).randomTicks().sound(SoundType.SWEET_BERRY_BUSH)
 				.noOcclusion().ignitedByLava().pushReaction(PushReaction.NORMAL);
+	}
+
+	/**
+	 * A vine on a fence, wall, chain or bars: a bush (berry-bush sounds, random ticks) that breaks like a vine on a trellis,
+	 * named like the trellis vine of the same plant. Its collision and outline follow the block it holds (a dynamic shape).
+	 * Pistons can't move it (it has a block entity), so the block it holds is never lost under a piston head.
+	 */
+	private static BlockBehaviour.Properties vineOnSupport(String trellisVine) {
+		return BlockBehaviour.Properties.of().mapColor(MapColor.PLANT).strength(0.4F).randomTicks().sound(SoundType.SWEET_BERRY_BUSH)
+				.noOcclusion().dynamicShape().forceSolidOn().ignitedByLava().pushReaction(PushReaction.BLOCK)
+				.overrideDescription("block." + VineAndBarrel.MODID + "." + trellisVine);
 	}
 
 	/** FD's crate properties: oak planks, strength 2/3, wood sounds. */
