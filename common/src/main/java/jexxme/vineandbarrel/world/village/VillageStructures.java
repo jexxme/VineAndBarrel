@@ -28,8 +28,8 @@ import java.util.function.Supplier;
 
 /**
  * Villages (DESIGN 3 and 8), done exactly like Farmer's Delight's {@code VillageStructures}: on every server start the
- * taverns join the village house pools and the village farm processor lists get one more rule processor that turns
- * some of their wheat into our crops. Both are code, not data, because a data pack can only replace a vanilla pool or
+ * taverns join the village house pools and the village farm processor lists (a living village's and an abandoned one's)
+ * get one more rule processor that turns some of their wheat into our crops. Both are code, not data, because a data pack can only replace a vanilla pool or
  * processor list as a whole, which would fight every other mod that adds to them.
  */
 public final class VillageStructures
@@ -180,7 +180,10 @@ public final class VillageStructures
 				dressing(layout.type()).withCellar(layout.cellarId(), TAVERN_FLOORS.get(layout.type()).defaultBlockState()));
 		}
 		for (VillageType type : VillageType.values()) {
-			addProcessorToList(processorLists, type.farmProcessors(), farmCropProcessor(FARM_CROPS.get(type)));
+			// abandoned (zombie) villages too: their farms are placed with the zombie list, which carries the same farm rules
+			for (Identifier list : type.farmProcessorLists()) {
+				addProcessorToList(processorLists, list, farmCropProcessor(FARM_CROPS.get(type)));
+			}
 		}
 	}
 

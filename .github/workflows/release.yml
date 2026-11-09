@@ -54,7 +54,10 @@ jobs:
             exit 1
           fi
           games_label=$(echo "${games}" | sed 's/,/, /g')
-          neo_needs="NeoForge $(prop neo_version)+"
+          # the oldest NeoForge the jar accepts: the lower end of neo_version_range ("[26.1.0.19-beta,26.1.2)"), not
+          # neo_version, which is only the one it builds against
+          neo_min=$(prop neo_version_range | sed -E 's/^\[([^,]+),.*/\1/')
+          neo_needs="NeoForge ${neo_min}+"
           fabric_needs="Fabric Loader $(prop fabric_loader_version)+ and Fabric API $(prop fabric_api_version | cut -d+ -f1)+"
           {
             echo "version=${expected}"

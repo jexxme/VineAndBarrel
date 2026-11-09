@@ -1,55 +1,167 @@
 {
   "variants": {
-    "age=0,support=none": {
+    "age=0,support=none,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_stage0"
     },
-    "age=0,support=rope": {
+    "age=0,support=none,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage0"
+    },
+    "age=0,support=none,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage0",
+      "y": 90
+    },
+    "age=0,support=rope,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_rope_stage0"
     },
-    "age=0,support=trellis_x": {
+    "age=0,support=rope,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage0"
+    },
+    "age=0,support=rope,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage0",
+      "y": 90
+    },
+    "age=0,support=trellis_x,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_trellis_stage0"
     },
-    "age=0,support=trellis_z": {
+    "age=0,support=trellis_x,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage0"
+    },
+    "age=0,support=trellis_x,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage0",
+      "y": 90
+    },
+    "age=0,support=trellis_z,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_trellis_stage0",
       "y": 90
     },
-    "age=1,support=none": {
+    "age=0,support=trellis_z,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage0"
+    },
+    "age=0,support=trellis_z,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage0",
+      "y": 90
+    },
+    "age=1,support=none,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_stage1"
     },
-    "age=1,support=rope": {
+    "age=1,support=none,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage1"
+    },
+    "age=1,support=none,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage1",
+      "y": 90
+    },
+    "age=1,support=rope,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_rope_stage1"
     },
-    "age=1,support=trellis_x": {
+    "age=1,support=rope,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage1"
+    },
+    "age=1,support=rope,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage1",
+      "y": 90
+    },
+    "age=1,support=trellis_x,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_trellis_stage1"
     },
-    "age=1,support=trellis_z": {
+    "age=1,support=trellis_x,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage1"
+    },
+    "age=1,support=trellis_x,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage1",
+      "y": 90
+    },
+    "age=1,support=trellis_z,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_trellis_stage1",
       "y": 90
     },
-    "age=2,support=none": {
+    "age=1,support=trellis_z,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage1"
+    },
+    "age=1,support=trellis_z,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage1",
+      "y": 90
+    },
+    "age=2,support=none,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_stage2"
     },
-    "age=2,support=rope": {
+    "age=2,support=none,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage2"
+    },
+    "age=2,support=none,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage2",
+      "y": 90
+    },
+    "age=2,support=rope,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_rope_stage2"
     },
-    "age=2,support=trellis_x": {
+    "age=2,support=rope,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage2"
+    },
+    "age=2,support=rope,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage2",
+      "y": 90
+    },
+    "age=2,support=trellis_x,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_trellis_stage2"
     },
-    "age=2,support=trellis_z": {
+    "age=2,support=trellis_x,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage2"
+    },
+    "age=2,support=trellis_x,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage2",
+      "y": 90
+    },
+    "age=2,support=trellis_z,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_trellis_stage2",
       "y": 90
     },
-    "age=3,support=none": {
+    "age=2,support=trellis_z,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage2"
+    },
+    "age=2,support=trellis_z,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage2",
+      "y": 90
+    },
+    "age=3,support=none,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_stage3"
     },
-    "age=3,support=rope": {
+    "age=3,support=none,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage3"
+    },
+    "age=3,support=none,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage3",
+      "y": 90
+    },
+    "age=3,support=rope,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_rope_stage3"
     },
-    "age=3,support=trellis_x": {
+    "age=3,support=rope,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage3"
+    },
+    "age=3,support=rope,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage3",
+      "y": 90
+    },
+    "age=3,support=trellis_x,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_trellis_stage3"
     },
-    "age=3,support=trellis_z": {
+    "age=3,support=trellis_x,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage3"
+    },
+    "age=3,support=trellis_x,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage3",
+      "y": 90
+    },
+    "age=3,support=trellis_z,trellis=none": {
       "model": "vineandbarrel:block/hop_bush_on_trellis_stage3",
+      "y": 90
+    },
+    "age=3,support=trellis_z,trellis=x": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage3"
+    },
+    "age=3,support=trellis_z,trellis=z": {
+      "model": "vineandbarrel:block/hop_bush_in_trellis_stage3",
       "y": 90
     }
   }

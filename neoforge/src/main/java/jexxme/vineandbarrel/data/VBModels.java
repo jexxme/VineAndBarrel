@@ -197,8 +197,10 @@ public class VBModels extends ModelProvider
 	 * texture that carries the vine's leaves and stem down to a trunk.
 	 */
 	private static void bush(BlockModelGenerators blockModels, Block block) {
+		Material trellis = new Material(VineAndBarrel.id("block/trellis"));
 		Map<Integer, Identifier> round = new HashMap<>();
 		Map<Integer, Identifier> onTrellis = new HashMap<>();
+		Map<Integer, Identifier> inTrellis = new HashMap<>();
 		Map<Integer, Identifier> onRope = new HashMap<>();
 		for (int age = 0; age <= ClimbingCropBlock.MAX_AGE; age++) {
 			String stage = "_stage" + age;
@@ -206,15 +208,23 @@ public class VBModels extends ModelProvider
 					blockModels.modelOutput));
 			onTrellis.put(age, BUSH_ON_TRELLIS.createWithSuffix(block, "_on_trellis" + stage,
 					new TextureMapping().put(VINE, TextureMapping.getBlockTexture(block, "_on_trellis" + stage)), blockModels.modelOutput));
+			// a trellis in the bush's own block: the same base of the vine, with the lattice through it
+			inTrellis.put(age, VINE_ON_TRELLIS.createWithSuffix(block, "_in_trellis" + stage,
+					new TextureMapping().put(TRELLIS, trellis).put(VINE, TextureMapping.getBlockTexture(block, "_on_trellis" + stage)), blockModels.modelOutput));
 			onRope.put(age, BUSH_ON_ROPE.createWithSuffix(block, "_on_rope" + stage,
 					new TextureMapping().put(TextureSlot.CROP, TextureMapping.getBlockTexture(block, "_on_rope" + stage)), blockModels.modelOutput));
 		}
-		blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(block).with(PropertyDispatch.initial(ClimbingCropBlock.AGE, ClimbingBushBlock.SUPPORT)
-				.generate((age, support) -> switch (support) {
-					case NONE -> plainVariant(round.get(age));
-					case TRELLIS_X -> plainVariant(onTrellis.get(age));
-					case TRELLIS_Z -> plainVariant(onTrellis.get(age)).with(BlockModelGenerators.Y_ROT_90);
-					case ROPE -> plainVariant(onRope.get(age));
+		blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(block)
+				.with(PropertyDispatch.initial(ClimbingCropBlock.AGE, ClimbingBushBlock.SUPPORT, ClimbingBushBlock.TRELLIS)
+				.generate((age, support, inside) -> switch (inside) {
+					case X -> plainVariant(inTrellis.get(age));
+					case Z -> plainVariant(inTrellis.get(age)).with(BlockModelGenerators.Y_ROT_90);
+					case NONE -> switch (support) {
+						case NONE -> plainVariant(round.get(age));
+						case TRELLIS_X -> plainVariant(onTrellis.get(age));
+						case TRELLIS_Z -> plainVariant(onTrellis.get(age)).with(BlockModelGenerators.Y_ROT_90);
+						case ROPE -> plainVariant(onRope.get(age));
+					};
 				})));
 	}
 
