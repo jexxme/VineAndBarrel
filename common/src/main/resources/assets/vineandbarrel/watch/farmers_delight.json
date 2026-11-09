@@ -295,7 +295,7 @@
         },
         {
           "type": "set_properties",
-          "at": 120,
+          "at": 112,
           "pos": [
             3,
             2,
@@ -306,8 +306,20 @@
           }
         },
         {
+          "type": "set_properties",
+          "at": 124,
+          "pos": [
+            3,
+            2,
+            1
+          ],
+          "properties": {
+            "age": "3"
+          }
+        },
+        {
           "type": "set_block",
-          "at": 130,
+          "at": 134,
           "pos": [
             3,
             3,
@@ -317,21 +329,9 @@
         },
         {
           "type": "sound",
-          "at": 130,
+          "at": 134,
           "sound": "minecraft:block.sweet_berry_bush.place",
           "volume": 0.6
-        },
-        {
-          "type": "set_properties",
-          "at": 145,
-          "pos": [
-            3,
-            2,
-            1
-          ],
-          "properties": {
-            "age": "3"
-          }
         },
         {
           "type": "set_properties",

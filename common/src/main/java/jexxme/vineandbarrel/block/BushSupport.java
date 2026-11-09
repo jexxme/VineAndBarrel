@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public enum BushSupport implements StringRepresentable
 {
 	NONE("none"), TRELLIS_X("trellis_x"), TRELLIS_Z("trellis_z"), ROPE("rope"),
-	/** Under a fence, wall or bars running one way: the base of a vine spread across its faces (no lattice). */
+	/** Under bars running one way (or a vine spread across a fence or wall): the base of that vine (no lattice). */
 	FACES_X("faces_x"), FACES_Z("faces_z");
 
 	private final String name;
@@ -35,7 +35,7 @@ public enum BushSupport implements StringRepresentable
 			return ROPE;
 		}
 		SupportLook look = above.is(crop.supportVine()) ? above.getValue(VineOnSupportBlock.LOOK)
-				: VineSupports.isMakeshift(above) ? VineSupports.lookOf(above) : null;
+				: VineSupports.isMakeshift(above) && !VineSupports.onlyFromInside(above) ? VineSupports.lookOf(above) : null; // a bush under a fence or wall stays round
 		if (look != null) {
 			return switch (look) {
 				case CROSS -> ROPE; // wound round a chain or a lone post, like round a rope

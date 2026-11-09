@@ -316,9 +316,10 @@ public final class FdCompatGameTests
 		}
 		helper.assertBlockPresent(VBBlocks.GRAPE_VINE_ON_ROPE.get(), bush.above());
 		helper.assertBlockPresent(rope, bush.above(2));
-		// the vine goes, FD's rope comes back
+		// the vine goes, FD's rope comes back (checked at once: given time, the ripe bush would climb it again)
 		helper.getLevel().destroyBlock(helper.absolutePos(bush.above()), false);
-		helper.succeedWhen(() -> helper.assertBlockPresent(rope, bush.above()));
+		helper.assertBlockPresent(rope, bush.above());
+		helper.succeed();
 	}
 
 	/**

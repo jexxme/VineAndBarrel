@@ -63,7 +63,7 @@ export const seasonsOf = (id) => list(Object.keys(seasons).filter((s) => seasons
 <Recipe id="trellis" />
 
 <Aside title="搭配 Farmer's Delight：绳子也行">
-Farmer's Delight 的绳子挂在灌木上方，作用和棚架一样，就像 FD 的番茄那样往上爬。详见 [Farmer's Delight](/farmers-delight/)。
+Farmer's Delight 的绳子挂在灌木上方，作用和棚架一样，就像 FD 的番茄那样往上爬。装了 Farmer's Delight Neoforged 1.3.4-3 或更新版本时，FD 的番茄也会爬棚架（NeoForge）。详见 [Farmer's Delight](/farmers-delight/)。
 </Aside>
 
 ## 栅栏、墙、锁链和铁栏杆
@@ -75,6 +75,7 @@ Farmer's Delight 的绳子挂在灌木上方，作用和棚架一样，就像 FD
 - 每次采摘比棚架少一个：成熟时 {h.grapes_on_support.count[0]} 到 {h.grapes_on_support.count[1]} 个，半熟时 {h.grapes_on_support.halfRipe[0]} 个。棚架仍然是最好的支撑。
 - 方块保持原样：云杉栅栏还是云杉栅栏，栅栏和墙照样相连，拴绳也还拴着。破坏植物后，它仍然立着。
 - 锁链只有竖直立着才算。梯子、玻璃板和栅栏门什么都撑不住。
+- 栅栏和墙必须立在植物里：在灌木上面放一个，灌木还是灌木，不会往上爬。灌木上方的锁链和铁栏杆则会像棚架一样被爬上去。
 - 其他模组的栅栏和墙也可以，数据包还能往 `#vineandbarrel:makeshift_vine_supports` 标签里添加方块。
 
 ## 大麦
