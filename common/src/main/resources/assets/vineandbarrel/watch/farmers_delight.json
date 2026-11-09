@@ -135,36 +135,24 @@
           "at": 70,
           "ticks": 60,
           "particle": {
-            "type": "vineandbarrel:steam"
+            "type": "minecraft:campfire_cosy_smoke"
           },
           "pos": [
             1.5,
-            2.66,
+            3.61,
             1.5
           ],
           "spread": [
-            0.33,
+            0.06,
             0.0,
-            0.33
+            0.06
           ],
           "velocity": [
             0.0,
-            0.008,
+            0.04,
             0.0
           ],
-          "rate": 0.3
-        },
-        {
-          "type": "sound",
-          "at": 72,
-          "sound": "vineandbarrel:block.brew_kettle.boil",
-          "volume": 0.6
-        },
-        {
-          "type": "sound",
-          "at": 110,
-          "sound": "vineandbarrel:block.brew_kettle.rattle",
-          "volume": 0.5
+          "rate": 0.12
         },
         {
           "type": "pointer",

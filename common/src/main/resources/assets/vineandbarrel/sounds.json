@@ -37,10 +37,6 @@
     "sounds": ["vineandbarrel:block/brew_kettle/boil_brew1", "vineandbarrel:block/brew_kettle/boil_brew2", "vineandbarrel:block/brew_kettle/boil_brew3"],
     "subtitle": "subtitles.vineandbarrel.block.brew_kettle.boil"
   },
-  "block.brew_kettle.rattle": {
-    "sounds": [{"name": "minecraft:block.copper_trapdoor.close", "type": "event"}],
-    "subtitle": "subtitles.vineandbarrel.block.brew_kettle.rattle"
-  },
   "block.brew_kettle.open": {
     "sounds": [{"name": "minecraft:block.copper_trapdoor.open", "type": "event"}],
     "subtitle": "subtitles.vineandbarrel.block.brew_kettle.open"

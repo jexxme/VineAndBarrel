@@ -9,6 +9,9 @@ import jexxme.vineandbarrel.block.VineOnTrellisBlock;
 import jexxme.vineandbarrel.cauldron.BaseCauldronBlock;
 import jexxme.vineandbarrel.cauldron.VBCauldrons;
 import jexxme.vineandbarrel.kettle.BrewKettleBlock;
+import jexxme.vineandbarrel.kettle.BrewKettlePartBlock;
+import jexxme.vineandbarrel.kettle.KettlePart;
+import jexxme.vineandbarrel.kettle.KettleChimneyBlock;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
 import jexxme.vineandbarrel.kettle.KettleSupport;
 import net.minecraft.resources.Identifier;
@@ -84,7 +87,8 @@ public class VBModels extends ModelProvider
 	@Override
 	protected Stream<? extends Holder<Block>> getKnownBlocks() {
 		return Stream.concat(Stream.concat(VBDataGenerators.CROP_BLOCKS.stream(),
-				Stream.concat(KettleRegistry.KETTLES.values().stream(), KettleRegistry.WAXED_KETTLES.values().stream())),
+				Stream.of(KettleRegistry.KETTLES, KettleRegistry.WAXED_KETTLES, KettleRegistry.PARTS, KettleRegistry.WAXED_PARTS, KettleRegistry.CHIMNEYS,
+						KettleRegistry.WAXED_CHIMNEYS).flatMap(map -> map.values().stream())),
 				VBDataGenerators.CAULDRON_BLOCKS.stream())
 			.map(block -> block.asHolder());
 	}
@@ -140,9 +144,11 @@ public class VBModels extends ModelProvider
 		// The bale: a hay bale (axis pillar with a horizontal variant)
 		blockModels.createRotatedPillarWithHorizontalVariant(VBBlocks.BARLEY_BALE.get(), TexturedModel.COLUMN, TexturedModel.COLUMN_HORIZONTAL);
 
-		// The Brew Kettle: every weathering stage, its waxed twin looks the same
+		// The Brew Kettle: every weathering stage, its waxed twin looks the same; big kettles are made of its parts
 		for (WeatherState stage : WeatherState.values()) {
-			kettle(blockModels, KettleRegistry.KETTLES.get(stage).get(), KettleRegistry.WAXED_KETTLES.get(stage).get());
+			kettle(blockModels, stage, KettleRegistry.KETTLES.get(stage).get(), KettleRegistry.WAXED_KETTLES.get(stage).get());
+			kettleParts(blockModels, stage, KettleRegistry.PARTS.get(stage).get(), KettleRegistry.WAXED_PARTS.get(stage).get());
+			kettleChimney(blockModels, stage, KettleRegistry.CHIMNEYS.get(stage).get(), KettleRegistry.WAXED_CHIMNEYS.get(stage).get());
 		}
 
 		cauldrons(blockModels);
@@ -165,54 +171,139 @@ public class VBModels extends ModelProvider
 		}
 	}
 
+	private static final TextureSlot K_PLATE = TextureSlot.create("plate");
+	private static final TextureSlot K_CUT = TextureSlot.create("cut");
+	private static final TextureSlot K_BAND = TextureSlot.create("band");
+	private static final TextureSlot K_TRIM = TextureSlot.create("trim");
+	private static final TextureSlot K_PIPE = TextureSlot.create("pipe");
+	private static final TextureSlot K_DARK = TextureSlot.create("dark");
+	private static final TextureSlot K_IRON = TextureSlot.create("iron");
+	private static final TextureSlot K_TAP = TextureSlot.create("tap");
+	private static final TextureSlot K_GLASS = TextureSlot.create("glass");
+	private static final TextureSlot[] KETTLE_SLOTS = {K_PLATE, K_CUT, K_BAND, K_TRIM, K_PIPE, K_DARK, K_IRON, K_TAP, K_GLASS, KETTLE_BREW,
+			KETTLE_TRAY_TOP, KETTLE_TRAY_SIDE, KETTLE_HANDLE};
+
 	/**
-	 * A kettle's block states: support (none, tray, handle) x lid x fill level, turned by facing. The geometry lives in
-	 * the hand-written {@code template_brew_kettle*} models; each stage only swaps the copper textures. Closed, open
-	 * while the screen is open (the inside shows), or with a waiting brew at one of four levels (the lid stays up).
+	 * A kettle's textures for one copper stage (WP4 redesign): its body and dome are vanilla's copper block and cut copper of
+	 * that stage, its bands, trim and chimney our own art in the stage's colours; the tap and sight glass the barrel's. {@code brew} is what an open
+	 * kettle shows inside (tinted with the brew's colour).
 	 */
-	private static void kettle(BlockModelGenerators blockModels, Block kettle, Block waxed) {
+	private static TextureMapping kettleTextures(WeatherState stage, Material brew) {
+		String prefix = stage == WeatherState.UNAFFECTED ? "" : stage.getSerializedName() + "_";
+		return new TextureMapping()
+				.put(K_PLATE, new Material(Identifier.withDefaultNamespace("block/" + (stage == WeatherState.UNAFFECTED ? "copper_block" : prefix + "copper"))))
+				.put(K_CUT, new Material(Identifier.withDefaultNamespace("block/" + prefix + "cut_copper")))
+				.put(K_BAND, new Material(VineAndBarrel.id("block/" + prefix + "brew_kettle_band")))
+				.put(K_TRIM, new Material(VineAndBarrel.id("block/" + prefix + "brew_kettle_trim")))
+				.put(K_PIPE, new Material(VineAndBarrel.id("block/" + prefix + "brew_kettle_pipe")))
+				.put(K_DARK, new Material(VineAndBarrel.id("block/brew_kettle_dark")))
+				.put(K_IRON, new Material(Identifier.withDefaultNamespace("block/iron_block")))
+				.put(K_TAP, new Material(VineAndBarrel.id("block/aging_barrel_tap")))
+				.put(K_GLASS, new Material(VineAndBarrel.id("block/placed_drink_glass")))
+				.put(KETTLE_BREW, brew)
+				.put(KETTLE_TRAY_TOP, new Material(VineAndBarrel.id("block/brew_kettle_tray_top")))
+				.put(KETTLE_TRAY_SIDE, new Material(VineAndBarrel.id("block/brew_kettle_tray_side")))
+				.put(KETTLE_HANDLE, new Material(VineAndBarrel.id("block/brew_kettle_handle")));
+	}
+
+	private static final Material WATER = new Material(Identifier.withDefaultNamespace("block/water_still"));
+	private static final Material BREW_LIQUID = new Material(VineAndBarrel.id("block/brew_liquid"));
+
+	/**
+	 * A single kettle's block states: support (none, tray, handle) x lid x fill level x extended chimney, turned by facing.
+	 * The geometry lives in the generated {@code template_brew_kettle*} models; each stage only swaps textures. Closed, open
+	 * while the screen is open (water inside), or with a waiting brew at one of four levels (the lid stays up); with its
+	 * chimney extended the lid stays shut and the chimney ends at the block's top for the pieces above.
+	 */
+	private static void kettle(BlockModelGenerators blockModels, WeatherState stage, Block kettle, Block waxed) {
 		Map<String, Identifier> models = new HashMap<>();
 		for (KettleSupport support : KettleSupport.values()) {
 			String supportSuffix = support == KettleSupport.NONE ? "" : "_" + support.getSerializedName();
-			List<String> states = new ArrayList<>(List.of("", "_open"));
-			for (int fill = 1; fill <= BrewKettleBlock.MAX_FILL; fill++) {
-				states.add("_fill" + fill);
-			}
-			for (String state : states) {
-				String suffix = supportSuffix + state;
-				TextureMapping textures = new TextureMapping()
-						.put(TextureSlot.SIDE, TextureMapping.getBlockTexture(kettle, "_side"))
-						.put(TextureSlot.TOP, TextureMapping.getBlockTexture(kettle, "_top"))
-						.put(TextureSlot.BOTTOM, TextureMapping.getBlockTexture(kettle, "_bottom"));
-				List<TextureSlot> slots = new ArrayList<>(List.of(TextureSlot.SIDE, TextureSlot.TOP, TextureSlot.BOTTOM));
-				if (!state.isEmpty()) {
-					textures.put(TextureSlot.INSIDE, TextureMapping.getBlockTexture(kettle, "_bottom"));
-					textures.put(KETTLE_BREW, state.equals("_open") ? new Material(Identifier.withDefaultNamespace("block/water_still"))
-							: new Material(VineAndBarrel.id("block/brew_liquid")));
-					slots.add(TextureSlot.INSIDE);
-					slots.add(KETTLE_BREW);
+			for (boolean open : List.of(false, true)) {
+				for (int fill = 0; fill <= BrewKettleBlock.MAX_FILL; fill++) {
+					for (boolean extended : List.of(false, true)) {
+						if (extended && (support == KettleSupport.HANDLE || open)) {
+							continue;
+						}
+						String suffix = supportSuffix + singleSuffix(open, fill, extended);
+						ModelTemplate template = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_brew_kettle" + suffix)), Optional.of(suffix), KETTLE_SLOTS);
+						// an open kettle with no brew shows water inside
+						models.put(suffix, template.create(kettle, kettleTextures(stage, open && fill == 0 ? WATER : BREW_LIQUID), blockModels.modelOutput));
+					}
 				}
-				if (support == KettleSupport.TRAY) {
-					textures.put(KETTLE_TRAY_TOP, new Material(VineAndBarrel.id("block/brew_kettle_tray_top")));
-					textures.put(KETTLE_TRAY_SIDE, new Material(VineAndBarrel.id("block/brew_kettle_tray_side")));
-					slots.add(KETTLE_TRAY_TOP);
-					slots.add(KETTLE_TRAY_SIDE);
-				} else if (support == KettleSupport.HANDLE) {
-					textures.put(KETTLE_HANDLE, new Material(VineAndBarrel.id("block/brew_kettle_handle")));
-					slots.add(KETTLE_HANDLE);
-				}
-				ModelTemplate template = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_brew_kettle" + suffix)),
-						Optional.of(suffix), slots.toArray(TextureSlot[]::new));
-				models.put(suffix, template.create(kettle, textures, blockModels.modelOutput));
 			}
 		}
 		for (Block block : List.of(kettle, waxed)) {
 			blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(block)
-					.with(PropertyDispatch.initial(BrewKettleBlock.SUPPORT, BrewKettleBlock.OPEN, BrewKettleBlock.FILL).generate((support, open, fill) -> {
-						String suffix = (support == KettleSupport.NONE ? "" : "_" + support.getSerializedName())
-								+ (fill > 0 ? "_fill" + fill : open ? "_open" : "");
-						return plainVariant(models.get(suffix));
+					.with(PropertyDispatch.initial(BrewKettleBlock.SUPPORT, BrewKettleBlock.OPEN, BrewKettleBlock.FILL, BrewKettleBlock.EXTENDED).generate((support, open, fill, extended) -> {
+						String supportSuffix = support == KettleSupport.NONE ? "" : "_" + support.getSerializedName();
+						boolean ext = extended && support != KettleSupport.HANDLE;
+						return plainVariant(models.get(supportSuffix + singleSuffix(open && !ext, fill, ext)));
 					}))
+					.with(BlockModelGenerators.ROTATION_HORIZONTAL_FACING));
+		}
+	}
+
+	/**
+	 * The blocks of the Big and the Great Kettle: one generated template per block ({@code template_brew_kettle_part_<shape>_<xyz>},
+	 * built facing north), with tray variants for the bottom layer, the sight glass's levels for its block and the extended
+	 * chimney for the chimney block; turned by facing like a single kettle.
+	 */
+	private static void kettleParts(BlockModelGenerators blockModels, WeatherState stage, Block part, Block waxed) {
+		Map<String, Identifier> models = new HashMap<>();
+		for (KettlePart p : KettlePart.all()) {
+			for (String suffix : partSuffixes(p)) {
+				ModelTemplate template = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_brew_kettle_part" + suffix)), Optional.of(suffix), KETTLE_SLOTS);
+				models.put(suffix, template.create(part, kettleTextures(stage, BREW_LIQUID), blockModels.modelOutput));
+			}
+		}
+		for (Block block : List.of(part, waxed)) {
+			blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(block)
+					.with(PropertyDispatch.initial(BrewKettlePartBlock.PART, BrewKettlePartBlock.TRAY, BrewKettlePartBlock.LEVEL, BrewKettlePartBlock.EXTENDED)
+							.generate((id, tray, level, extended) -> plainVariant(models.get(partSuffix(KettlePart.byId(id), tray, level, extended)))))
+					.with(BlockModelGenerators.ROTATION_HORIZONTAL_FACING));
+		}
+	}
+
+	/** "_open_fill2", "_fill3_extended", as the model generator names a single kettle's variants. */
+	private static String singleSuffix(boolean open, int fill, boolean extended) {
+		return (open ? "_open" : "") + (fill > 0 ? "_fill" + fill : "") + (extended ? "_extended" : "");
+	}
+
+	/** "_2x2x2_100_tray_level3", as the model generator names a part's variants. */
+	private static String partSuffix(KettlePart p, boolean tray, int level, boolean extended) {
+		return "_" + p.shape().id() + "_" + p.x() + p.y() + p.z() + (tray && p.isBottom() ? "_tray" : "") + (p.isGauge() ? "_level" + level : "")
+				+ (extended && p.isChimney() ? "_extended" : "");
+	}
+
+	private static List<String> partSuffixes(KettlePart p) {
+		List<String> list = new ArrayList<>();
+		for (boolean tray : p.isBottom() ? List.of(false, true) : List.of(false)) {
+			for (int level = 0; level <= (p.isGauge() ? BrewKettlePartBlock.MAX_LEVEL : 0); level++) {
+				for (boolean extended : p.isChimney() ? List.of(false, true) : List.of(false)) {
+					list.add(partSuffix(p, tray, level, extended));
+				}
+			}
+		}
+		return list;
+	}
+
+	/** A chimney's extension pieces: per kettle size a full piece and the top piece with the cap, turned by facing. */
+	private static void kettleChimney(BlockModelGenerators blockModels, WeatherState stage, Block chimney, Block waxed) {
+		Map<String, Identifier> models = new HashMap<>();
+		for (int size = 1; size <= 3; size++) {
+			for (String top : List.of("", "_top")) {
+				for (String flashing : List.of("", "_flashing")) {
+					String suffix = "_" + size + top + flashing;
+					ModelTemplate template = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_brew_kettle_chimney" + suffix)), Optional.of(suffix), KETTLE_SLOTS);
+					models.put(suffix, template.create(chimney, kettleTextures(stage, BREW_LIQUID), blockModels.modelOutput));
+				}
+			}
+		}
+		for (Block block : List.of(chimney, waxed)) {
+			blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(block)
+					.with(PropertyDispatch.initial(KettleChimneyBlock.SIZE, KettleChimneyBlock.TOP, KettleChimneyBlock.FLASHING)
+							.generate((size, top, flashing) -> plainVariant(models.get("_" + size + (top ? "_top" : "") + (flashing ? "_flashing" : "")))))
 					.with(BlockModelGenerators.ROTATION_HORIZONTAL_FACING));
 		}
 	}

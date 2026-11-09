@@ -52,12 +52,14 @@ const liquid = (id) => {
 };
 
 // Every block in its default look (waxed kettles look like their unwaxed stage)
-const KETTLE = { facing: 'north', open: 'false', fill: '0', support: 'none', waterlogged: 'false' };
+const KETTLE = { facing: 'north', open: 'false', fill: '0', support: 'none', waterlogged: 'false', extended: 'false' };
 const BARREL = { facing: 'north', bung: 'cork', fill: '0', left: 'false', right: 'false', stacked: 'false', tapping: 'false' };
 for (const [id, b] of Object.entries(runtime.blocks)) {
 	const slug = id.split(':')[1];
-	// vines on a rope or a fence, wall, chain or bars hold a block the wiki can't show on its own (FD's rope, the block kept inside)
-	if (slug.startsWith('waxed_') || slug === 'placed_drinks' || slug.endsWith('_on_rope') || slug.endsWith('_on_support')) continue;
+	// vines on a rope or a fence, wall, chain or bars hold a block the wiki can't show on its own (FD's rope, the block kept
+	// inside); big kettles' blocks and chimney pieces aren't blocks you hold: they're shown in the kettle scenes
+	if (slug.startsWith('waxed_') || slug === 'placed_drinks' || slug.endsWith('_on_rope') || slug.endsWith('_on_support')
+		|| slug.endsWith('_part') || slug.endsWith('_chimney')) continue;
 	const state = { ...b.defaultState, ...facingNorth(id) };
 	if ('age' in state) state.age = String(Math.max(...ageValues(id).map(Number)));
 	await save(`blocks/${slug}`, place(id, state));
@@ -91,14 +93,38 @@ const rack = (y, stacked, z = 0, x0 = 0) => [0, 1, 2].flatMap((x) =>
 const drinks = (spots) => Object.fromEntries(spots.map((v, i) => [`spot_${i}`, v]));
 const table = (spots, colours, offset) => place('vineandbarrel:placed_drinks', drinks(spots), offset, colours.map((d) => (d ? rgb(d) : [255, 255, 255])));
 
+// A big kettle (size 2 or 3) on lit campfires, its sight glass at a level, its chimney grown by some pieces. Its blocks
+// are the kettle's parts as the mod numbers them (KettlePart: the Big Kettle's 8, then the Great Kettle's 27, x, y, z order)
+function bigKettle(size, [ox, oy, oz], { level = 0, chimney = 0, tint } = {}) {
+	const parts = [];
+	const first = size === 3 ? 8 : 0;
+	const c = size === 3 ? 1 : 0;
+	for (let x = 0; x < size; x++) for (let y = 0; y < size; y++) for (let z = 0; z < size; z++) {
+		const id = first + x * size * size + y * size + z;
+		const state = { facing: 'north', part: String(id), tray: String(y === 0), level: String(level), extended: String(chimney > 0 && x === c && z === c && y === size - 1) };
+		parts.push(...place('vineandbarrel:brew_kettle_part', state, [ox + x, oy + y + 1, oz + z], tint ? [tint] : undefined));
+	}
+	for (let x = 0; x < size; x++) for (let z = 0; z < size; z++) parts.push(...place('minecraft:campfire', { lit: 'true', facing: 'north' }, [ox + x, oy, oz + z]));
+	for (let i = 1; i <= chimney; i++) parts.push(...place('vineandbarrel:brew_kettle_chimney', { facing: 'north', size: String(size), top: String(i === chimney), flashing: 'false' }, [ox + c, oy + size + i, oz + c]));
+	return parts;
+}
+
 // Scenes for the pages
 const scenes = {
 	'kettle-on-magma': [...place('minecraft:magma_block'), ...place('vineandbarrel:brew_kettle', KETTLE, [0, 1, 0])],
 	'kettle-on-hopper': [...place('minecraft:magma_block'), ...place('minecraft:hopper', { facing: 'down' }, [0, 1, 0]), ...place('vineandbarrel:brew_kettle', KETTLE, [0, 2, 0])],
 	'kettle-on-campfire': [...place('minecraft:campfire', { lit: 'true', facing: 'north' }), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray' }, [0, 1, 0])],
 	'kettle-hanging': [...place('minecraft:oak_planks', {}, [0, 2, 0]), ...place('minecraft:iron_chain', { axis: 'y' }, [0, 1, 0]), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'handle' }), ...place('minecraft:campfire', { lit: 'true', facing: 'north' }, [0, -1, 0])],
-	// A finished brew waits under the raised lid, in its colour
-	'kettle-open': [...place('minecraft:campfire', { lit: 'true', facing: 'north' }), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', fill: '3' }, [0, 1, 0], [liquid('vineandbarrel:grape_juice')])],
+	// The lid lifted (screen open): the brew inside in its colour, the sight glass beside the tap
+	'kettle-open': [...place('minecraft:campfire', { lit: 'true', facing: 'north' }), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', open: 'true', fill: '3' }, [0, 1, 0], [liquid('vineandbarrel:grape_juice')])],
+	// WP4: the Big and the Great Kettle, the three side by side, a chimney grown through a roof
+	'kettle-big': bigKettle(2, [0, 0, 0], { level: 2, tint: liquid('vineandbarrel:barley_wort_bottle') }),
+	'kettle-great': bigKettle(3, [0, 0, 0], { level: 3, chimney: 2, tint: liquid('vineandbarrel:barley_wort_bottle') }),
+	'kettle-family': [...bigKettle(3, [0, 0, 0], { level: 2, tint: liquid('vineandbarrel:barley_wort_bottle') }), ...bigKettle(2, [3.75, 0, 0], { level: 3, tint: liquid('vineandbarrel:barley_wort_bottle') }),
+		...place('minecraft:campfire', { lit: 'true', facing: 'north' }, [6.5, 0, 0]), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', fill: '2' }, [6.5, 1, 0], [liquid('vineandbarrel:barley_wort_bottle')])],
+	'kettle-chimney': [...place('minecraft:campfire', { lit: 'true', facing: 'north' }), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', extended: 'true' }, [0, 1, 0]),
+		...[2, 3, 4].flatMap((y) => place('vineandbarrel:brew_kettle_chimney', { facing: 'north', size: '1', top: String(y === 4), flashing: String(y === 3) }, [0, y, 0])),
+		...[[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].flatMap(([x, z]) => place('minecraft:spruce_planks', {}, [x, 3, z]))],
 	'barrel-rack': rack(0, false),
 	'barrel-cellar': [...rack(0, false), ...rack(1, true)],
 	'placed-drinks': [...place('minecraft:oak_planks'), ...table(['mug_full', 'glass_full', 'glass', 'mug_full'], ['barley_ale', 'red_wine', null, 'wheat_beer'], [0, 1, 0])],

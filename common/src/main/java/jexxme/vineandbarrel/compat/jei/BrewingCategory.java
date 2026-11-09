@@ -121,6 +121,7 @@ public class BrewingCategory implements IRecipeCategory<RecipeHolder<BrewingReci
 			}
 		} else if (mouseX >= 18 && mouseX < 35 && mouseY >= 39 && mouseY < 54) {
 			tooltip.add(Component.translatable("jei.vineandbarrel.brewing.heat"));
+			tooltip.add(Component.translatable("jei.vineandbarrel.brewing.bigger"));
 		}
 	}
 }

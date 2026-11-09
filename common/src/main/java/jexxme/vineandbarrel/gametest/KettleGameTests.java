@@ -1545,26 +1545,26 @@ public final class KettleGameTests
 	}
 
 	/** The lid stays down while a batch brews, comes up with the finished brew and goes down once the last serving is taken. */
+	/** WP4: the sight glass beside the tap shows the brew (it never empties while brewing); the lid only lifts for the screen. */
 	private static void lidOpensWhenBrewDone(GameTestHelper helper) {
 		BrewKettleBlockEntity kettle = placeKettle(helper, KETTLE, litCampfire());
 		loadBatch(kettle, 1);
-		helper.runAfterDelay(100, () -> helper.assertValueEqual(fill(helper), 0, "the lid is down while brewing"));
+		helper.runAfterDelay(100, () -> helper.assertValueEqual(fill(helper), 0, "an empty glass while the first batch brews"));
 		helper.startSequence()
 			.thenWaitUntil(() -> helper.assertValueEqual(kettle.getServings(), 4, "the brew is done"))
-			.thenWaitUntil(() -> helper.assertValueEqual(fill(helper), 1, "the finished brew shows"))
+			.thenWaitUntil(() -> helper.assertValueEqual(fill(helper), 1, "the finished brew shows in the glass"))
 			.thenExecute(() -> {
-				// another batch on top: the lid goes down again while it brews
+				helper.assertFalse(helper.getBlockState(KETTLE).getValue(BrewKettleBlock.OPEN), "the lid stays shut");
 				loadBatch(kettle, 1);
 			})
-			.thenWaitUntil(() -> helper.assertValueEqual(fill(helper), 0, "the lid is down while the next batch brews"))
 			.thenWaitUntil(() -> helper.assertValueEqual(kettle.getServings(), 8, "the second batch is done"))
 			.thenWaitUntil(() -> helper.assertValueEqual(fill(helper), 1, "eight servings show"))
 			.thenExecute(() -> {
-				// the container slot takes the brew, the lid closes when nothing is left
+				// the container slot takes the brew, the glass empties with it
 				kettle.setStack(BrewKettleBlockEntity.CONTAINER_SLOT, new ItemStack(Items.GLASS_BOTTLE, 8));
 			})
 			.thenWaitUntil(() -> helper.assertTrue(kettle.getBrew().isEmpty(), "bottled up"))
-			.thenWaitUntil(() -> helper.assertValueEqual(fill(helper), 0, "the lid closes on an empty kettle"))
+			.thenWaitUntil(() -> helper.assertValueEqual(fill(helper), 0, "an empty kettle shows an empty glass"))
 			.thenSucceed();
 	}
 

@@ -1,0 +1,137 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "#plate"
+	},
+	"elements": [
+		{
+			"from": [
+				13.5,
+				0,
+				13.5
+			],
+			"to": [
+				18.5,
+				16,
+				18.5
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"south": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"east": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"west": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						5.0,
+						5.0
+					],
+					"texture": "#dark"
+				}
+			},
+			"name": "chimney"
+		},
+		{
+			"from": [
+				13.0,
+				0,
+				13.0
+			],
+			"to": [
+				19.0,
+				1,
+				19.0
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						1
+					],
+					"texture": "#band"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						1
+					],
+					"texture": "#band"
+				},
+				"east": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						1
+					],
+					"texture": "#band"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						1
+					],
+					"texture": "#band"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						6.0
+					],
+					"texture": "#band"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						6.0,
+						6.0
+					],
+					"texture": "#band"
+				}
+			},
+			"name": "ring"
+		}
+	]
+}
