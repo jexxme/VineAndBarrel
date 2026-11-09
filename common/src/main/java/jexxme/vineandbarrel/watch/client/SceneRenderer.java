@@ -114,6 +114,16 @@ public final class SceneRenderer extends PictureInPictureRenderer<SceneRenderSta
 			pose.popPose();
 		}
 
+		// The block the caption points at: an outline like the world's own block outline, in the caption's colour
+		if (state.outline() != null && world.blocks().containsKey(state.outline())) {
+			BlockPos pos = state.outline();
+			pose.pushPose();
+			pose.translate(pos.getX() - centre.x, pos.getY() - centre.y + drops.getOrDefault(pos, 0.0F), pos.getZ() - centre.z);
+			collector.submitShapeOutline(pose, world.getBlockState(pos).getShape(world, pos), net.minecraft.client.renderer.rendertype.RenderTypes.linesTranslucent(),
+				WatchScreen.ACCENT, 3.0F, false);
+			pose.popPose();
+		}
+
 		CameraRenderState cameraState = new CameraRenderState();
 		cameraState.pos = ScenePlayer.PARTICLE_ORIGIN.add(centre);
 		cameraState.yRot = state.yaw();

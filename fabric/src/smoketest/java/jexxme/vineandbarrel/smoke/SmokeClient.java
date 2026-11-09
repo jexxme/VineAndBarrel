@@ -23,6 +23,7 @@ import jexxme.vineandbarrel.tipsy.client.TipsyClient;
 import jexxme.vineandbarrel.watch.client.ScenePlayer;
 import jexxme.vineandbarrel.watch.client.WatchClient;
 import jexxme.vineandbarrel.watch.client.WatchIndex;
+import jexxme.vineandbarrel.watch.client.WatchPathScreen;
 import jexxme.vineandbarrel.watch.client.WatchScreen;
 import net.minecraft.client.gui.screens.InBedChatScreen;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -585,6 +586,9 @@ public final class SmokeClient implements ClientModInitializer
 		if (FabricLoader.getInstance().isModLoaded("farmersdelight")) {
 			steps.add(watchScene("watch_farmers_delight_plays", "farmers_delight", 1, "watch_farmers_delight"));
 		}
+		// The Brewer's path: every station of the journey, with what the player has done ticked off
+		steps.add(new Step("watch_path_opens", 40, mc -> mc.gui.setScreen(new WatchPathScreen(null)),
+			mc -> mc.gui.screen() instanceof WatchPathScreen ? null : "the path didn't open: the screen is " + mc.gui.screen(), "watch_path", false));
 		steps.add(new Step("watch_it_closes", 5, mc -> mc.gui.setScreen(null), mc -> mc.gui.screen() == null ? null : "still open: " + mc.gui.screen(), null, true));
 		// A real plains village grown by the game with our tavern in it; its casks reach the client
 		// Growing villages until one has a tavern can keep the server busy for a while (with FD, up to ten tries)
