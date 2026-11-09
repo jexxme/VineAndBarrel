@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1 ración",
   "container.vineandbarrel.brew_kettle.servings": "%s raciones",
   "container.vineandbarrel.brew_kettle.big": "Marmita grande",
-  "container.vineandbarrel.brew_kettle.great": "Marmita enorme",
   "container.vineandbarrel.brew_kettle.batch": "Una tanda da %s raciones",
   "container.vineandbarrel.recipe_book.brewable": "Mostrando elaborables",
   "tooltip.vineandbarrel.brew_kettle.empty": "Vacía",

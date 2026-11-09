@@ -16,8 +16,11 @@ public enum KettleShape
 	BIG(2),
 	GREAT(3);
 
-	/** Biggest first: the order {@link KettleMultiblock} tries shapes in when a kettle is placed. */
-	public static final List<KettleShape> BIGGEST_FIRST = List.of(GREAT, BIG);
+	/**
+	 * Biggest first: the shapes {@link KettleMultiblock} joins kettles into, in the order it tries them. The Great Kettle
+	 * is dormant (not in 1.1.0: 27 kettles don't join), its parts stay registered for when it comes back.
+	 */
+	public static final List<KettleShape> BIGGEST_FIRST = List.of(BIG);
 
 	private final int size;
 

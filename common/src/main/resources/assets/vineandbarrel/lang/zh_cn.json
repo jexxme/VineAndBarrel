@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1份",
   "container.vineandbarrel.brew_kettle.servings": "%s份",
   "container.vineandbarrel.brew_kettle.big": "大酿造锅",
-  "container.vineandbarrel.brew_kettle.great": "巨型酿造锅",
   "container.vineandbarrel.brew_kettle.batch": "一锅可得%s份",
   "container.vineandbarrel.recipe_book.brewable": "仅显示可酿造",
   "tooltip.vineandbarrel.brew_kettle.empty": "空",

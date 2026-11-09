@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1 serving",
   "container.vineandbarrel.brew_kettle.servings": "%s servings",
   "container.vineandbarrel.brew_kettle.big": "Big Brew Kettle",
-  "container.vineandbarrel.brew_kettle.great": "Great Brew Kettle",
   "container.vineandbarrel.brew_kettle.batch": "One batch makes %s servings",
   "container.vineandbarrel.recipe_book.brewable": "Showing Brewable",
   "tooltip.vineandbarrel.brew_kettle.empty": "Empty",
