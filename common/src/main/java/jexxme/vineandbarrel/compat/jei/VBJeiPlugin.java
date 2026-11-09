@@ -132,6 +132,16 @@ public class VBJeiPlugin implements IModPlugin
 		return true;
 	}
 
+	/** Opens JEI on how to get an item ("What you need" in a scene). */
+	public static boolean showRecipes(net.minecraft.world.item.ItemStack stack) {
+		if (runtime == null) {
+			return false;
+		}
+		runtime.getRecipesGui().show(runtime.getJeiHelpers().getFocusFactory().createFocus(
+			mezz.jei.api.recipe.RecipeIngredientRole.OUTPUT, mezz.jei.api.constants.VanillaTypes.ITEM_STACK, stack));
+		return true;
+	}
+
 	/** Opens JEI's recipe screen on our aging category (the dev screenshot tool's watch check: its watch buttons). */
 	public static boolean showAging() {
 		if (runtime == null) {

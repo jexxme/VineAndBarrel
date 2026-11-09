@@ -9,6 +9,7 @@
     "items": ["@drinks"]
   },
   "also": ["vineandbarrel:aging_barrel", "vineandbarrel:brew_kettle"],
+  "needs": [{"recipe": "vineandbarrel:aging/red_wine", "part": "young"}, {"recipe": "vineandbarrel:aging/barley_ale", "part": "young"}],
   "steps": [
     {
       "caption": "watch.vineandbarrel.cheers.1",

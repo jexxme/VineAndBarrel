@@ -29,6 +29,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.locale.Language;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -121,9 +122,19 @@ public final class ScenePlayer
 		return scene.steps().get(step);
 	}
 
+	/**
+	 * {@return how long the current step plays}: its own length, but never shorter than its caption takes to read in the
+	 * player's language (a second, then about 15 characters a second), so a long translation isn't cut off
+	 */
+	public int stepTicks() {
+		WatchScene.Step current = currentStep();
+		int characters = Language.getInstance().getOrDefault(current.caption()).length();
+		return Math.max(current.ticks(), 20 + characters * 4 / 3);
+	}
+
 	/** {@return how far through the current step it is, 0 to 1} */
 	public float stepProgress(float partialTick) {
-		return Mth.clamp((tick + (paused || finished ? 0.0F : partialTick)) / currentStep().ticks(), 0.0F, 1.0F);
+		return Mth.clamp((tick + (paused || finished ? 0.0F : partialTick)) / stepTicks(), 0.0F, 1.0F);
 	}
 
 	/** Starts a step from its beginning: the stage as the steps before it left it. */
@@ -161,13 +172,13 @@ public final class ScenePlayer
 		if (!paused && !finished) {
 			emitParticles();
 			tick++;
-			if (tick >= currentStep().ticks()) {
+			if (tick >= stepTicks()) {
 				if (step + 1 < scene.steps().size()) {
 					step++;
 					tick = 0;
 					fire(0);
 				} else {
-					tick = currentStep().ticks();
+					tick = stepTicks();
 					finished = true;
 				}
 			} else {
@@ -368,14 +379,32 @@ public final class ScenePlayer
 		return 0.0F;
 	}
 
-	/** {@return the point the step's pointer shows, if it shows one now} */
-	public Optional<Vec3> pointer() {
-		for (WatchScene.Action action : currentStep().actions()) {
-			if (action instanceof WatchScene.Pointer pointer && tick >= pointer.at() && tick < pointer.end()) {
+	/**
+	 * Where the current step's caption points: its anchor (a stage point, or a figure's hands), else its pointer's point.
+	 */
+	public Optional<Vec3> anchor(float partialTick) {
+		WatchScene.Step step = currentStep();
+		if (step.anchor().isPresent()) {
+			WatchScene.Anchor anchor = step.anchor().get();
+			if (anchor.pos().isPresent()) {
+				return anchor.pos();
+			}
+			SceneFigure figure = figures.get(anchor.figure().orElse("brewer"));
+			if (figure != null) {
+				return Optional.of(figure.entity().getPosition(partialTick).subtract(PARTICLE_ORIGIN).add(0.0, 1.05, 0.0));
+			}
+		}
+		for (WatchScene.Action action : step.actions()) {
+			if (action instanceof WatchScene.Pointer pointer) {
 				return Optional.of(pointer.pos());
 			}
 		}
 		return Optional.empty();
+	}
+
+	/** {@return what the figures hold now (empty hands left out)} */
+	public java.util.List<ItemStack> heldItems() {
+		return figures.values().stream().map(figure -> figure.entity().getMainHandItem()).filter(stack -> !stack.isEmpty()).toList();
 	}
 
 	/** A time-lapse under way: how many days it shows and how far it is (0 to 1). */

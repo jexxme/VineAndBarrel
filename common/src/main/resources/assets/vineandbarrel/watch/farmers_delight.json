@@ -34,6 +34,7 @@
     "vineandbarrel:brew_kettle",
     "vineandbarrel:trellis"
   ],
+  "needs": ["farmersdelight:stove", "vineandbarrel:brew_kettle", "farmersdelight:rope"],
   "steps": [
     {
       "caption": "watch.vineandbarrel.farmers_delight.1",

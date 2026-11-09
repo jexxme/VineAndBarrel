@@ -15,9 +15,11 @@
     "jei": ["vineandbarrel:aging"]
   },
   "also": ["vineandbarrel:cheers", "vineandbarrel:brew_kettle"],
+  "needs": ["vineandbarrel:aging_barrel", {"recipe": "vineandbarrel:aging/red_wine", "part": "bucket"}, "vineandbarrel:wine_glass"],
   "steps": [
     {
       "caption": "watch.vineandbarrel.aging_barrel.1",
+      "anchor": [1.5, 1.6, 1.5],
       "ticks": 110,
       "actions": [
         { "type": "figure", "pos": [0.35, 1.0, 0.6], "yaw": 0 },
@@ -67,6 +69,7 @@
     },
     {
       "caption": "watch.vineandbarrel.aging_barrel.4",
+      "anchor": [1.5, 1.3, 1.97],
       "ticks": 100,
       "actions": [
         { "type": "hold", "at": 2, "item": "vineandbarrel:wine_glass" },

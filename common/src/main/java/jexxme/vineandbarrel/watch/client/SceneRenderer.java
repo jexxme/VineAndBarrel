@@ -135,6 +135,21 @@ public final class SceneRenderer extends PictureInPictureRenderer<SceneRenderSta
 			pose.popPose();
 		}
 
+		// The block the caption points at: an outline like the world's own block outline, in the caption's colour
+		if (state.outline() != null && world.blocks().containsKey(state.outline())) {
+			BlockPos pos = state.outline();
+			pose.pushPose();
+			pose.translate(pos.getX() - centre.x, pos.getY() - centre.y + drops.getOrDefault(pos, 0.0F), pos.getZ() - centre.z);
+			net.minecraft.world.phys.shapes.VoxelShape shape = world.getBlockState(pos).getShape(world, pos);
+			collector.submitCustomGeometry(pose, net.minecraft.client.renderer.rendertype.RenderTypes.linesTranslucent(), (at, buffer) ->
+				shape.forAllEdges((x1, y1, z1, x2, y2, z2) -> {
+					org.joml.Vector3f normal = new org.joml.Vector3f((float) (x2 - x1), (float) (y2 - y1), (float) (z2 - z1)).normalize();
+					buffer.addVertex(at, (float) x1, (float) y1, (float) z1).setColor(WatchScreen.ACCENT).setNormal(at, normal).setLineWidth(3.0F);
+					buffer.addVertex(at, (float) x2, (float) y2, (float) z2).setColor(WatchScreen.ACCENT).setNormal(at, normal).setLineWidth(3.0F);
+				}));
+			pose.popPose();
+		}
+
 		CameraRenderState cameraState = new CameraRenderState();
 		cameraState.pos = ScenePlayer.PARTICLE_ORIGIN.add(centre);
 		cameraState.yRot = state.yaw();
