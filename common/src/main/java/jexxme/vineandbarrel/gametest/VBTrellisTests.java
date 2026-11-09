@@ -206,8 +206,9 @@ final class VBTrellisTests
 		helper.assertValueEqual(VBFlammability.burnOdds(bare), VBFlammability.burnOdds(Blocks.OAK_FENCE.defaultBlockState()), "trellis flammability (a fence's)");
 		ClimbingCropBlock grapes = VBBlocks.GRAPE_BUSH.get();
 		helper.assertTrue(grapes.vineOn(Blocks.GLASS_PANE.defaultBlockState()) == null, "a glass pane grows no vine");
-		helper.assertTrue(grapes.vineOn(Blocks.OAK_FENCE.defaultBlockState()) != null
-				&& grapes.vineOn(Blocks.OAK_FENCE.defaultBlockState()).is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), "a fence grows the vine on a support");
+		helper.assertTrue(jexxme.vineandbarrel.block.VineSupports.ENABLED ? grapes.vineOn(Blocks.OAK_FENCE.defaultBlockState()) != null
+				&& grapes.vineOn(Blocks.OAK_FENCE.defaultBlockState()).is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get())
+				: grapes.vineOn(Blocks.OAK_FENCE.defaultBlockState()) == null, "a fence grows the vine on a support exactly when supports are on");
 		helper.assertTrue(grapes.vineOn(bare) != null && grapes.vineOn(bare).is(VBBlocks.GRAPE_VINE_ON_TRELLIS.get()), "a trellis grows the vine on a trellis");
 
 		// a trellis placed on a vine keeps the vine's line
