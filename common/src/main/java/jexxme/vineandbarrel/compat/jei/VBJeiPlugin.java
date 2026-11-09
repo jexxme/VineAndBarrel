@@ -1,5 +1,16 @@
 package jexxme.vineandbarrel.compat.jei;
 
+import jexxme.vineandbarrel.watch.client.WatchClient;
+import jexxme.vineandbarrel.watch.client.WatchIndex;
+import jexxme.vineandbarrel.watch.client.WatchScreen;
+import mezz.jei.api.gui.IRecipeLayoutDrawable;
+import mezz.jei.api.gui.buttons.IButtonState;
+import mezz.jei.api.gui.buttons.IIconButtonController;
+import mezz.jei.api.gui.builder.ITooltipBuilder;
+import mezz.jei.api.gui.drawable.IDrawableStatic;
+import mezz.jei.api.gui.inputs.IJeiUserInput;
+import mezz.jei.api.recipe.advanced.IRecipeButtonControllerFactory;
+import mezz.jei.api.registration.IAdvancedRegistration;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.barrel.AgingRecipe;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
@@ -49,6 +60,17 @@ public class VBJeiPlugin implements IModPlugin
 	@Override
 	public void onRuntimeAvailable(mezz.jei.api.runtime.IJeiRuntime jeiRuntime) {
 		runtime = jeiRuntime;
+		// "Watch it": the watch key over an item in JEI's list, its bookmarks or a recipe page opens that item's scene
+		WatchClient.setJei(() -> {
+			ItemStack stack = jeiRuntime.getIngredientListOverlay().getIngredientUnderMouse(VanillaTypes.ITEM_STACK);
+			if (stack == null) {
+				stack = jeiRuntime.getBookmarkOverlay().getIngredientUnderMouse(VanillaTypes.ITEM_STACK);
+			}
+			if (stack == null) {
+				stack = jeiRuntime.getRecipesGui().getIngredientUnderMouse(VanillaTypes.ITEM_STACK).orElse(null);
+			}
+			return stack == null ? ItemStack.EMPTY : stack;
+		}, () -> jeiRuntime.getIngredientListOverlay().hasKeyboardFocus());
 		// Like the creative tab: no FD meals or melon wine without Farmer's Delight
 		List<ItemStack> hidden = VBCreativeTabs.hidden().stream().map(ItemStack::new).toList();
 		if (!hidden.isEmpty()) {
@@ -59,6 +81,46 @@ public class VBJeiPlugin implements IModPlugin
 	@Override
 	public void onRuntimeUnavailable() {
 		runtime = null;
+		WatchClient.setJei(() -> ItemStack.EMPTY, () -> false);
+	}
+
+	/** "Watch it": a small button beside each recipe of a category that has a scene (our brewing and aging pages). */
+	@Override
+	public void registerAdvanced(IAdvancedRegistration registration) {
+		IDrawableStatic icon = registration.getJeiHelpers().getGuiHelper().drawableBuilder(WATCH_ICON, 0, 0, 8, 8).setTextureSize(8, 8).build();
+		registration.addRecipeButtonFactory(new IRecipeButtonControllerFactory()
+		{
+			@Override
+			public <T> @org.jspecify.annotations.Nullable IIconButtonController createButtonController(IRecipeLayoutDrawable<T> layout) {
+				Identifier category = layout.getRecipeCategory().getRecipeType().getUid();
+				return WatchIndex.INSTANCE.forJeiCategory(category).map(scene -> new WatchButton(scene, icon)).orElse(null);
+			}
+		});
+	}
+
+	private static final Identifier WATCH_ICON = VineAndBarrel.id("textures/gui/watch_jei.png");
+
+	/** Opens the category's scene; Escape comes back to this JEI page. */
+	private record WatchButton(Identifier scene, IDrawableStatic icon) implements IIconButtonController
+	{
+		@Override
+		public void initState(IButtonState state) {
+			state.setIcon(icon);
+		}
+
+		@Override
+		public void getTooltips(ITooltipBuilder tooltip) {
+			tooltip.add(Component.translatable("watch.vineandbarrel.button"));
+		}
+
+		@Override
+		public boolean onPress(IJeiUserInput input) {
+			if (!input.isSimulate()) {
+				net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+				WatchScreen.open(scene, 0, null, minecraft.screen);
+			}
+			return true;
+		}
 	}
 
 	/** Opens JEI's recipe screen on our brewing category (the dev screenshot tool's JEI check). */
@@ -67,6 +129,15 @@ public class VBJeiPlugin implements IModPlugin
 			return false;
 		}
 		runtime.getRecipesGui().showTypes(List.of(BREWING));
+		return true;
+	}
+
+	/** Opens JEI's recipe screen on our aging category (the dev screenshot tool's watch check: its watch buttons). */
+	public static boolean showAging() {
+		if (runtime == null) {
+			return false;
+		}
+		runtime.getRecipesGui().showTypes(List.of(AGING));
 		return true;
 	}
 

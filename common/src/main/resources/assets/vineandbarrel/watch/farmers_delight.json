@@ -1,0 +1,370 @@
+{
+  "requires": [
+    "farmersdelight"
+  ],
+  "title": "watch.vineandbarrel.farmers_delight",
+  "icon": "farmersdelight:stove",
+  "width": 4,
+  "depth": 3,
+  "floor": "minecraft:stone_bricks",
+  "view": {
+    "yaw": 145,
+    "pitch": 26,
+    "height": 3.2
+  },
+  "blocks": [
+    {
+      "pos": [
+        3,
+        0,
+        1
+      ],
+      "block": "minecraft:grass_block"
+    },
+    {
+      "pos": [
+        3,
+        1,
+        1
+      ],
+      "block": "vineandbarrel:grape_bush[age=3]"
+    }
+  ],
+  "also": [
+    "vineandbarrel:brew_kettle",
+    "vineandbarrel:trellis"
+  ],
+  "steps": [
+    {
+      "caption": "watch.vineandbarrel.farmers_delight.1",
+      "ticks": 130,
+      "actions": [
+        {
+          "type": "figure",
+          "pos": [
+            0.3,
+            1.0,
+            0.5
+          ],
+          "yaw": 0
+        },
+        {
+          "type": "figure",
+          "pos": [
+            0.35,
+            1.0,
+            2.3
+          ],
+          "ticks": 18
+        },
+        {
+          "type": "hold",
+          "item": "farmersdelight:stove"
+        },
+        {
+          "type": "look",
+          "at": 19,
+          "pos": [
+            1.5,
+            1.0,
+            1.5
+          ]
+        },
+        {
+          "type": "swing",
+          "at": 26
+        },
+        {
+          "type": "place",
+          "at": 28,
+          "pos": [
+            1,
+            1,
+            1
+          ],
+          "block": "farmersdelight:stove[facing=south,lit=true]",
+          "drop": false
+        },
+        {
+          "type": "sound",
+          "at": 28,
+          "sound": "minecraft:block.stone.place"
+        },
+        {
+          "type": "hold",
+          "at": 38,
+          "item": "vineandbarrel:brew_kettle"
+        },
+        {
+          "type": "look",
+          "at": 40,
+          "pos": [
+            1.5,
+            2.0,
+            1.5
+          ]
+        },
+        {
+          "type": "swing",
+          "at": 50
+        },
+        {
+          "type": "place",
+          "at": 52,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "block": "vineandbarrel:brew_kettle[facing=south]",
+          "drop": false
+        },
+        {
+          "type": "sound",
+          "at": 52,
+          "sound": "minecraft:block.copper.place"
+        },
+        {
+          "type": "hold",
+          "at": 60,
+          "item": "minecraft:air"
+        },
+        {
+          "type": "particles",
+          "at": 70,
+          "ticks": 60,
+          "particle": {
+            "type": "vineandbarrel:steam"
+          },
+          "pos": [
+            1.5,
+            2.66,
+            1.5
+          ],
+          "spread": [
+            0.33,
+            0.0,
+            0.33
+          ],
+          "velocity": [
+            0.0,
+            0.008,
+            0.0
+          ],
+          "rate": 0.3
+        },
+        {
+          "type": "sound",
+          "at": 72,
+          "sound": "vineandbarrel:block.brew_kettle.boil",
+          "volume": 0.6
+        },
+        {
+          "type": "sound",
+          "at": 110,
+          "sound": "vineandbarrel:block.brew_kettle.rattle",
+          "volume": 0.5
+        },
+        {
+          "type": "pointer",
+          "at": 30,
+          "ticks": 100,
+          "pos": [
+            1.5,
+            1.5,
+            2.15
+          ]
+        }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.farmers_delight.2",
+      "ticks": 190,
+      "actions": [
+        {
+          "type": "figure",
+          "pos": [
+            0.4,
+            1.0,
+            0.45
+          ],
+          "ticks": 12
+        },
+        {
+          "type": "figure",
+          "at": 13,
+          "pos": [
+            3.55,
+            1.0,
+            0.45
+          ],
+          "ticks": 24
+        },
+        {
+          "type": "hold",
+          "at": 30,
+          "item": "farmersdelight:rope"
+        },
+        {
+          "type": "look",
+          "at": 38,
+          "pos": [
+            3.5,
+            2.5,
+            1.5
+          ]
+        },
+        {
+          "type": "swing",
+          "at": 46
+        },
+        {
+          "type": "place",
+          "at": 48,
+          "pos": [
+            3,
+            3,
+            1
+          ],
+          "block": "farmersdelight:rope",
+          "drop": false
+        },
+        {
+          "type": "sound",
+          "at": 48,
+          "sound": "minecraft:block.wool.place"
+        },
+        {
+          "type": "swing",
+          "at": 60
+        },
+        {
+          "type": "place",
+          "at": 62,
+          "pos": [
+            3,
+            2,
+            1
+          ],
+          "block": "farmersdelight:rope",
+          "drop": false
+        },
+        {
+          "type": "set_properties",
+          "at": 62,
+          "pos": [
+            3,
+            1,
+            1
+          ],
+          "properties": {
+            "support": "rope"
+          }
+        },
+        {
+          "type": "sound",
+          "at": 62,
+          "sound": "minecraft:block.wool.place"
+        },
+        {
+          "type": "hold",
+          "at": 72,
+          "item": "minecraft:air"
+        },
+        {
+          "type": "timelapse",
+          "at": 76,
+          "ticks": 100,
+          "days": 2
+        },
+        {
+          "type": "set_block",
+          "at": 100,
+          "pos": [
+            3,
+            2,
+            1
+          ],
+          "block": "vineandbarrel:grape_vine_on_rope[age=0]"
+        },
+        {
+          "type": "sound",
+          "at": 100,
+          "sound": "minecraft:block.sweet_berry_bush.place",
+          "volume": 0.6
+        },
+        {
+          "type": "set_properties",
+          "at": 120,
+          "pos": [
+            3,
+            2,
+            1
+          ],
+          "properties": {
+            "age": "2"
+          }
+        },
+        {
+          "type": "set_block",
+          "at": 130,
+          "pos": [
+            3,
+            3,
+            1
+          ],
+          "block": "vineandbarrel:grape_vine_on_rope[age=0]"
+        },
+        {
+          "type": "sound",
+          "at": 130,
+          "sound": "minecraft:block.sweet_berry_bush.place",
+          "volume": 0.6
+        },
+        {
+          "type": "set_properties",
+          "at": 145,
+          "pos": [
+            3,
+            2,
+            1
+          ],
+          "properties": {
+            "age": "3"
+          }
+        },
+        {
+          "type": "set_properties",
+          "at": 155,
+          "pos": [
+            3,
+            3,
+            1
+          ],
+          "properties": {
+            "age": "3"
+          }
+        },
+        {
+          "type": "pointer",
+          "at": 168,
+          "ticks": 22,
+          "pos": [
+            3.5,
+            4.3,
+            1.5
+          ]
+        },
+        {
+          "type": "look",
+          "at": 172,
+          "pos": [
+            4.6,
+            2.4,
+            4.6
+          ]
+        }
+      ]
+    }
+  ]
+}

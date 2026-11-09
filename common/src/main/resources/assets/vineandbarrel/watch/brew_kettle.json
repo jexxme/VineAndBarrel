@@ -1,0 +1,616 @@
+{
+  "title": "block.vineandbarrel.brew_kettle",
+  "icon": "vineandbarrel:brew_kettle",
+  "width": 3,
+  "depth": 3,
+  "floor": "minecraft:stone_bricks",
+  "view": {
+    "yaw": 135,
+    "pitch": 28,
+    "height": 2.5
+  },
+  "opens": {
+    "items": [
+      "vineandbarrel:brew_kettle",
+      "vineandbarrel:exposed_brew_kettle",
+      "vineandbarrel:weathered_brew_kettle",
+      "vineandbarrel:oxidized_brew_kettle",
+      "vineandbarrel:waxed_brew_kettle",
+      "vineandbarrel:waxed_exposed_brew_kettle",
+      "vineandbarrel:waxed_weathered_brew_kettle",
+      "vineandbarrel:waxed_oxidized_brew_kettle"
+    ],
+    "blocks": [
+      {
+        "block": "vineandbarrel:brew_kettle",
+        "heated": false,
+        "step": 1,
+        "now": "watch.vineandbarrel.brew_kettle.now.cold"
+      },
+      {
+        "block": "vineandbarrel:exposed_brew_kettle",
+        "heated": false,
+        "step": 1,
+        "now": "watch.vineandbarrel.brew_kettle.now.cold"
+      },
+      {
+        "block": "vineandbarrel:weathered_brew_kettle",
+        "heated": false,
+        "step": 1,
+        "now": "watch.vineandbarrel.brew_kettle.now.cold"
+      },
+      {
+        "block": "vineandbarrel:oxidized_brew_kettle",
+        "heated": false,
+        "step": 1,
+        "now": "watch.vineandbarrel.brew_kettle.now.cold"
+      },
+      {
+        "block": "vineandbarrel:waxed_brew_kettle",
+        "heated": false,
+        "step": 1,
+        "now": "watch.vineandbarrel.brew_kettle.now.cold"
+      },
+      {
+        "block": "vineandbarrel:waxed_exposed_brew_kettle",
+        "heated": false,
+        "step": 1,
+        "now": "watch.vineandbarrel.brew_kettle.now.cold"
+      },
+      {
+        "block": "vineandbarrel:waxed_weathered_brew_kettle",
+        "heated": false,
+        "step": 1,
+        "now": "watch.vineandbarrel.brew_kettle.now.cold"
+      },
+      {
+        "block": "vineandbarrel:waxed_oxidized_brew_kettle",
+        "heated": false,
+        "step": 1,
+        "now": "watch.vineandbarrel.brew_kettle.now.cold"
+      },
+      {
+        "block": "vineandbarrel:brew_kettle",
+        "when": {
+          "fill": "0"
+        },
+        "step": 3,
+        "now": "watch.vineandbarrel.brew_kettle.now.heated"
+      },
+      {
+        "block": "vineandbarrel:exposed_brew_kettle",
+        "when": {
+          "fill": "0"
+        },
+        "step": 3,
+        "now": "watch.vineandbarrel.brew_kettle.now.heated"
+      },
+      {
+        "block": "vineandbarrel:weathered_brew_kettle",
+        "when": {
+          "fill": "0"
+        },
+        "step": 3,
+        "now": "watch.vineandbarrel.brew_kettle.now.heated"
+      },
+      {
+        "block": "vineandbarrel:oxidized_brew_kettle",
+        "when": {
+          "fill": "0"
+        },
+        "step": 3,
+        "now": "watch.vineandbarrel.brew_kettle.now.heated"
+      },
+      {
+        "block": "vineandbarrel:waxed_brew_kettle",
+        "when": {
+          "fill": "0"
+        },
+        "step": 3,
+        "now": "watch.vineandbarrel.brew_kettle.now.heated"
+      },
+      {
+        "block": "vineandbarrel:waxed_exposed_brew_kettle",
+        "when": {
+          "fill": "0"
+        },
+        "step": 3,
+        "now": "watch.vineandbarrel.brew_kettle.now.heated"
+      },
+      {
+        "block": "vineandbarrel:waxed_weathered_brew_kettle",
+        "when": {
+          "fill": "0"
+        },
+        "step": 3,
+        "now": "watch.vineandbarrel.brew_kettle.now.heated"
+      },
+      {
+        "block": "vineandbarrel:waxed_oxidized_brew_kettle",
+        "when": {
+          "fill": "0"
+        },
+        "step": 3,
+        "now": "watch.vineandbarrel.brew_kettle.now.heated"
+      },
+      {
+        "block": "vineandbarrel:brew_kettle",
+        "step": 5,
+        "now": "watch.vineandbarrel.brew_kettle.now.brew"
+      },
+      {
+        "block": "vineandbarrel:exposed_brew_kettle",
+        "step": 5,
+        "now": "watch.vineandbarrel.brew_kettle.now.brew"
+      },
+      {
+        "block": "vineandbarrel:weathered_brew_kettle",
+        "step": 5,
+        "now": "watch.vineandbarrel.brew_kettle.now.brew"
+      },
+      {
+        "block": "vineandbarrel:oxidized_brew_kettle",
+        "step": 5,
+        "now": "watch.vineandbarrel.brew_kettle.now.brew"
+      },
+      {
+        "block": "vineandbarrel:waxed_brew_kettle",
+        "step": 5,
+        "now": "watch.vineandbarrel.brew_kettle.now.brew"
+      },
+      {
+        "block": "vineandbarrel:waxed_exposed_brew_kettle",
+        "step": 5,
+        "now": "watch.vineandbarrel.brew_kettle.now.brew"
+      },
+      {
+        "block": "vineandbarrel:waxed_weathered_brew_kettle",
+        "step": 5,
+        "now": "watch.vineandbarrel.brew_kettle.now.brew"
+      },
+      {
+        "block": "vineandbarrel:waxed_oxidized_brew_kettle",
+        "step": 5,
+        "now": "watch.vineandbarrel.brew_kettle.now.brew"
+      }
+    ],
+    "jei": [
+      "vineandbarrel:brewing"
+    ]
+  },
+  "also": [
+    "vineandbarrel:aging_barrel",
+    "vineandbarrel:farmers_delight"
+  ],
+  "steps": [
+    {
+      "caption": "watch.vineandbarrel.brew_kettle.1",
+      "ticks": 90,
+      "actions": [
+        {
+          "type": "figure",
+          "pos": [
+            0.35,
+            1.0,
+            0.6
+          ],
+          "yaw": 0
+        },
+        {
+          "type": "figure",
+          "pos": [
+            0.6,
+            1.0,
+            2.35
+          ],
+          "ticks": 16
+        },
+        {
+          "type": "hold",
+          "item": "minecraft:campfire"
+        },
+        {
+          "type": "look",
+          "at": 17,
+          "pos": [
+            1.5,
+            1.0,
+            1.5
+          ]
+        },
+        {
+          "type": "swing",
+          "at": 24
+        },
+        {
+          "type": "place",
+          "at": 26,
+          "pos": [
+            1,
+            1,
+            1
+          ],
+          "block": "minecraft:campfire[lit=true]",
+          "drop": false
+        },
+        {
+          "type": "sound",
+          "at": 26,
+          "sound": "minecraft:block.wood.place"
+        },
+        {
+          "type": "hold",
+          "at": 27,
+          "item": "minecraft:air"
+        },
+        {
+          "type": "particles",
+          "at": 30,
+          "ticks": 60,
+          "particle": {
+            "type": "minecraft:campfire_cosy_smoke"
+          },
+          "pos": [
+            1.5,
+            1.5,
+            1.5
+          ],
+          "spread": [
+            0.2,
+            0.0,
+            0.2
+          ],
+          "velocity": [
+            0.0,
+            0.04,
+            0.0
+          ],
+          "rate": 0.12
+        },
+        {
+          "type": "sound",
+          "at": 40,
+          "sound": "minecraft:block.campfire.crackle",
+          "volume": 0.8
+        },
+        {
+          "type": "sound",
+          "at": 70,
+          "sound": "minecraft:block.campfire.crackle",
+          "volume": 0.8
+        },
+        {
+          "type": "pointer",
+          "at": 32,
+          "ticks": 58,
+          "pos": [
+            1.5,
+            1.9,
+            1.5
+          ]
+        }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.brew_kettle.2",
+      "ticks": 70,
+      "actions": [
+        {
+          "type": "hold",
+          "at": 2,
+          "item": "vineandbarrel:brew_kettle"
+        },
+        {
+          "type": "look",
+          "at": 4,
+          "pos": [
+            1.5,
+            2.0,
+            1.5
+          ]
+        },
+        {
+          "type": "swing",
+          "at": 18
+        },
+        {
+          "type": "place",
+          "at": 20,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "block": "vineandbarrel:brew_kettle[facing=south,support=tray]",
+          "drop": false
+        },
+        {
+          "type": "sound",
+          "at": 20,
+          "sound": "minecraft:block.copper.place"
+        },
+        {
+          "type": "hold",
+          "at": 30,
+          "item": "minecraft:air"
+        },
+        {
+          "type": "pointer",
+          "at": 24,
+          "ticks": 46,
+          "pos": [
+            1.5,
+            3.1,
+            1.5
+          ]
+        }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.brew_kettle.3",
+      "ticks": 100,
+      "actions": [
+        {
+          "type": "set_properties",
+          "at": 6,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "properties": {
+            "open": "true"
+          }
+        },
+        {
+          "type": "sound",
+          "at": 6,
+          "sound": "vineandbarrel:block.brew_kettle.open"
+        },
+        {
+          "type": "hold",
+          "at": 8,
+          "item": {
+            "recipe": "vineandbarrel:brewing/grape_juice",
+            "part": "ingredient"
+          }
+        },
+        {
+          "type": "look",
+          "at": 10,
+          "pos": [
+            1.5,
+            2.7,
+            1.5
+          ]
+        },
+        {
+          "type": "swing",
+          "at": 22
+        },
+        {
+          "type": "swing",
+          "at": 34
+        },
+        {
+          "type": "hold",
+          "at": 46,
+          "item": "minecraft:sugar"
+        },
+        {
+          "type": "swing",
+          "at": 58
+        },
+        {
+          "type": "hold",
+          "at": 70,
+          "item": "minecraft:air"
+        },
+        {
+          "type": "set_properties",
+          "at": 80,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "properties": {
+            "open": "false"
+          }
+        },
+        {
+          "type": "sound",
+          "at": 80,
+          "sound": "vineandbarrel:block.brew_kettle.close"
+        }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.brew_kettle.4",
+      "ticks": 110,
+      "actions": [
+        {
+          "type": "particles",
+          "ticks": 100,
+          "particle": {
+            "type": "vineandbarrel:steam"
+          },
+          "pos": [
+            1.5,
+            2.66,
+            1.5
+          ],
+          "spread": [
+            0.33,
+            0.0,
+            0.33
+          ],
+          "velocity": [
+            0.0,
+            0.008,
+            0.0
+          ],
+          "rate": 0.3
+        },
+        {
+          "type": "particles",
+          "ticks": 100,
+          "particle": {
+            "type": "minecraft:bubble_pop"
+          },
+          "pos": [
+            1.5,
+            2.64,
+            1.5
+          ],
+          "spread": [
+            0.36,
+            0.0,
+            0.36
+          ],
+          "rate": 0.2
+        },
+        {
+          "type": "sound",
+          "at": 8,
+          "sound": "vineandbarrel:block.brew_kettle.boil",
+          "volume": 0.6
+        },
+        {
+          "type": "sound",
+          "at": 30,
+          "sound": "vineandbarrel:block.brew_kettle.rattle",
+          "volume": 0.5
+        },
+        {
+          "type": "sound",
+          "at": 52,
+          "sound": "vineandbarrel:block.brew_kettle.boil",
+          "volume": 0.6
+        },
+        {
+          "type": "sound",
+          "at": 76,
+          "sound": "vineandbarrel:block.brew_kettle.rattle",
+          "volume": 0.5
+        },
+        {
+          "type": "pointer",
+          "at": 10,
+          "ticks": 90,
+          "pos": [
+            1.5,
+            3.4,
+            1.5
+          ]
+        },
+        {
+          "type": "kettle",
+          "at": 100,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "recipe": "vineandbarrel:brewing/grape_juice",
+          "servings": 8
+        },
+        {
+          "type": "sound",
+          "at": 100,
+          "sound": "vineandbarrel:block.brew_kettle.finish"
+        }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.brew_kettle.5",
+      "ticks": 110,
+      "actions": [
+        {
+          "type": "hold",
+          "at": 4,
+          "item": "minecraft:glass_bottle"
+        },
+        {
+          "type": "look",
+          "at": 6,
+          "pos": [
+            1.5,
+            2.6,
+            1.5
+          ]
+        },
+        {
+          "type": "swing",
+          "at": 20
+        },
+        {
+          "type": "sound",
+          "at": 22,
+          "sound": "minecraft:item.bottle.fill"
+        },
+        {
+          "type": "kettle",
+          "at": 22,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "recipe": "vineandbarrel:brewing/grape_juice",
+          "servings": 7
+        },
+        {
+          "type": "hold",
+          "at": 22,
+          "item": {
+            "recipe": "vineandbarrel:brewing/grape_juice",
+            "part": "result"
+          }
+        },
+        {
+          "type": "hold",
+          "at": 50,
+          "item": "minecraft:bucket"
+        },
+        {
+          "type": "swing",
+          "at": 64
+        },
+        {
+          "type": "sound",
+          "at": 66,
+          "sound": "minecraft:item.bucket.fill"
+        },
+        {
+          "type": "kettle",
+          "at": 66,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "recipe": "vineandbarrel:brewing/grape_juice",
+          "servings": 3
+        },
+        {
+          "type": "hold",
+          "at": 66,
+          "item": {
+            "recipe": "vineandbarrel:brewing/grape_juice",
+            "part": "bucket"
+          }
+        },
+        {
+          "type": "look",
+          "at": 86,
+          "pos": [
+            3.4,
+            2.4,
+            3.4
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "title": "advancements.vineandbarrel.cheers.title",
+  "icon": "vineandbarrel:barley_ale",
+  "width": 3,
+  "depth": 3,
+  "floor": "minecraft:spruce_planks",
+  "view": { "yaw": 160, "pitch": 22 },
+  "opens": {
+    "items": ["@drinks"]
+  },
+  "also": ["vineandbarrel:aging_barrel", "vineandbarrel:brew_kettle"],
+  "steps": [
+    {
+      "caption": "watch.vineandbarrel.cheers.1",
+      "ticks": 100,
+      "actions": [
+        { "type": "figure", "pos": [0.3, 1.0, 0.35], "yaw": 0 },
+        { "type": "figure", "pos": [0.8, 1.0, 1.5], "ticks": 22 },
+        { "type": "hold", "item": { "recipe": "vineandbarrel:aging/red_wine", "part": "young" } },
+        { "type": "figure", "id": "friend", "skin": "default", "pos": [2.7, 1.0, 2.65], "yaw": 180 },
+        { "type": "figure", "id": "friend", "pos": [2.2, 1.0, 1.5], "ticks": 22 },
+        { "type": "hold", "id": "friend", "item": { "recipe": "vineandbarrel:aging/barley_ale", "part": "young" } },
+        { "type": "look", "at": 24, "pos": [2.2, 2.5, 1.5] },
+        { "type": "look", "at": 26, "id": "friend", "pos": [0.8, 2.5, 1.5] }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.cheers.2",
+      "ticks": 70,
+      "actions": [
+        { "type": "drink", "at": 8, "ticks": 32 },
+        { "type": "drink", "at": 10, "id": "friend", "ticks": 32 },
+        { "type": "sound", "at": 12, "sound": "vineandbarrel:item.wine_glass.drink", "volume": 0.6 },
+        { "type": "sound", "at": 16, "sound": "vineandbarrel:item.mug.drink", "volume": 0.6 },
+        { "type": "sound", "at": 28, "sound": "vineandbarrel:item.wine_glass.drink", "volume": 0.6 },
+        { "type": "sound", "at": 32, "sound": "vineandbarrel:item.mug.drink", "volume": 0.6 },
+        { "type": "hold", "at": 41, "item": "vineandbarrel:wine_glass" },
+        { "type": "hold", "at": 43, "id": "friend", "item": "vineandbarrel:mug" },
+        { "type": "particles", "at": 42, "ticks": 28, "particle": { "type": "minecraft:entity_effect", "color": -3318613 },
+          "pos": [0.8, 1.9, 1.5], "spread": [0.3, 0.9, 0.3], "rate": 0.3 },
+        { "type": "particles", "at": 44, "ticks": 26, "particle": { "type": "minecraft:entity_effect", "color": -2506685 },
+          "pos": [2.2, 1.9, 1.5], "spread": [0.3, 0.9, 0.3], "rate": 0.3 },
+        { "type": "look", "at": 44, "pos": [2.2, 2.5, 1.5] },
+        { "type": "look", "at": 46, "id": "friend", "pos": [0.8, 2.5, 1.5] }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.cheers.3",
+      "ticks": 90,
+      "actions": [
+        { "type": "sound", "sound": "vineandbarrel:item.drink.cheers_glass", "volume": 0.8 },
+        { "type": "sound", "at": 1, "sound": "vineandbarrel:item.drink.cheers_mug", "volume": 0.8 },
+        { "type": "particles", "ticks": 2, "particle": { "type": "vineandbarrel:cheers" },
+          "pos": [0.8, 2.92, 1.5], "spread": [0.25, 0.15, 0.25], "rate": 2 },
+        { "type": "particles", "ticks": 2, "particle": { "type": "vineandbarrel:cheers" },
+          "pos": [2.2, 2.92, 1.5], "spread": [0.25, 0.15, 0.25], "rate": 2 },
+        { "type": "particles", "ticks": 90, "particle": { "type": "minecraft:entity_effect", "color": -3318613 },
+          "pos": [0.8, 1.9, 1.5], "spread": [0.3, 0.9, 0.3], "rate": 0.35 },
+        { "type": "particles", "ticks": 90, "particle": { "type": "minecraft:entity_effect", "color": -2506685 },
+          "pos": [2.2, 1.9, 1.5], "spread": [0.3, 0.9, 0.3], "rate": 0.35 },
+        { "type": "look", "at": 34, "pos": [1.9, 2.4, 5.0] },
+        { "type": "look", "at": 38, "id": "friend", "pos": [1.1, 2.4, 5.0] }
+      ]
+    }
+  ]
+}
