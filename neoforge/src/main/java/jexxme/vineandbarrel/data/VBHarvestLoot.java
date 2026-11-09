@@ -19,7 +19,8 @@ import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntPr
 /**
  * Right-click harvest of a grape (red or white) or hop plant ({@code block_interact} tables), built like vanilla's
  * {@code harvest/sweet_berry_bush}: 1-2 fruit, plus one more when the plant is ripe (age 3), so 1-2 half-ripe and 2-3
- * ripe. One table per crop serves its bush and both of its vines.
+ * ripe. One table per crop serves its bush and its vines on a rope or a trellis; a vine on a fence, wall, chain or bars has
+ * its own with one fewer (1 half-ripe, 1-2 ripe).
  */
 public class VBHarvestLoot implements LootTableSubProvider
 {
@@ -36,6 +37,23 @@ public class VBHarvestLoot implements LootTableSubProvider
 		output.accept(VBBlocks.HARVEST_GRAPES, harvest(VBBlocks.GRAPE_BUSH.get()));
 		output.accept(VBBlocks.HARVEST_HOPS, harvest(VBBlocks.HOP_BUSH.get()));
 		output.accept(VBBlocks.HARVEST_WHITE_GRAPES, harvest(VBBlocks.WHITE_GRAPE_BUSH.get()));
+		output.accept(VBBlocks.HARVEST_GRAPES_ON_SUPPORT, harvestOnSupport(VBBlocks.GRAPE_BUSH.get()));
+		output.accept(VBBlocks.HARVEST_HOPS_ON_SUPPORT, harvestOnSupport(VBBlocks.HOP_BUSH.get()));
+		output.accept(VBBlocks.HARVEST_WHITE_GRAPES_ON_SUPPORT, harvestOnSupport(VBBlocks.WHITE_GRAPE_BUSH.get()));
+	}
+
+	/** Off a fence, wall, chain or bars: one fruit, and maybe one more when ripe (so 1 half-ripe, 1-2 ripe). */
+	private LootTable.Builder harvestOnSupport(ClimbingBushBlock bush) {
+		BlockPredicate.Builder ripe = BlockPredicate.Builder.block().of(blocks, bush.supportVine())
+				.setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(ClimbingCropBlock.AGE, ClimbingCropBlock.MAX_AGE));
+		return LootTable.lootTable()
+				.withPool(LootPool.lootPool()
+						.setRolls(ContextIntProviders.exactly(1))
+						.add(LootItem.lootTableItem(bush.produce()).apply(SetItemCountFunction.setCount(ContextIntProviders.between(0, 1))))
+						.when(MatchBlock.blockMatches(ripe)))
+				.withPool(LootPool.lootPool()
+						.setRolls(ContextIntProviders.exactly(1))
+						.add(LootItem.lootTableItem(bush.produce()).apply(SetItemCountFunction.setCount(ContextIntProviders.exactly(1)))));
 	}
 
 	private LootTable.Builder harvest(ClimbingBushBlock bush) {

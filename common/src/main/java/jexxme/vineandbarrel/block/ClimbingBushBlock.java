@@ -5,9 +5,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -60,12 +60,15 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 
 	private final Supplier<? extends Block> ropeVine;
 	private final Supplier<? extends Block> trellisVine;
+	private final Supplier<? extends Block> supportVine;
 
 	public ClimbingBushBlock(Properties properties, Supplier<? extends Block> ropeVine, Supplier<? extends Block> trellisVine,
+							 Supplier<? extends Block> supportVine,
 							 Supplier<? extends Item> produce, ResourceKey<LootTable> harvestLoot) {
 		super(properties, produce, harvestLoot);
 		this.ropeVine = ropeVine;
 		this.trellisVine = trellisVine;
+		this.supportVine = supportVine;
 		registerDefaultState(defaultBlockState().setValue(SUPPORT, BushSupport.NONE).setValue(TRELLIS, BushTrellis.NONE));
 	}
 
@@ -80,6 +83,10 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 
 	Block trellisVineBlock() {
 		return trellisVine.get();
+	}
+
+	Block supportVineBlock() {
+		return supportVine.get();
 	}
 
 	@Override
@@ -102,7 +109,9 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 
 	/**
 	 * A trellis in the hand goes into the bush, facing the player, or lined up with the trellis or vine above it so the
-	 * row stays straight. Anything else is the bush's usual business: bone meal, picking.
+	 * row stays straight. A fence, wall, chain or bars goes in too, connected to its neighbours: the plant then grows inside
+	 * it (see {@link VineOnSupportBlock}), keeping its age. Sneaking places either beside, the vanilla way. Anything else is
+	 * the bush's usual business: bone meal, picking.
 	 */
 	@Override
 	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand,
@@ -124,6 +133,24 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 				stack.consume(1, player);
 			}
 			return InteractionResult.SUCCESS;
+		}
+		if (state.getValue(TRELLIS) == BushTrellis.NONE && stack.getItem() instanceof BlockItem item
+				&& VineSupports.isMakeshift(item.getBlock().defaultBlockState())) {
+			BlockState support = Block.updateFromNeighbourShapes(item.getBlock().defaultBlockState(), level, pos);
+			if (VineSupports.isMakeshift(support)) {
+				if (!level.isUnobstructed(support, pos, CollisionContext.of(player))) {
+					return InteractionResult.FAIL; // the fence or wall would stand in someone, as a placed block can't
+				}
+				if (level instanceof ServerLevel) {
+					VineOnSupportBlock.place(level, pos, supportVineBlock().defaultBlockState().setValue(AGE, state.getValue(AGE)), support, true, false);
+					SoundType sound = support.getSoundType();
+					level.playSound(null, pos, sound.getPlaceSound(), SoundSource.BLOCKS, (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F);
+					level.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(player, level.getBlockState(pos)));
+					player.awardStat(Stats.ITEM_USED.get(item));
+					stack.consume(1, player);
+				}
+				return InteractionResult.SUCCESS;
+			}
 		}
 		return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
 	}
@@ -193,6 +220,8 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 			BlockState turned = switch (state.getValue(SUPPORT)) {
 				case TRELLIS_X -> state.setValue(SUPPORT, BushSupport.TRELLIS_Z);
 				case TRELLIS_Z -> state.setValue(SUPPORT, BushSupport.TRELLIS_X);
+				case FACES_X -> state.setValue(SUPPORT, BushSupport.FACES_Z);
+				case FACES_Z -> state.setValue(SUPPORT, BushSupport.FACES_X);
 				default -> state;
 			};
 			return switch (turned.getValue(TRELLIS)) {

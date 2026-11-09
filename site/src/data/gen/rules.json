@@ -121,6 +121,17 @@
 				2
 			]
 		},
+		"grapes_on_support": {
+			"id": "vineandbarrel:red_grapes",
+			"count": [
+				1,
+				2
+			],
+			"halfRipe": [
+				1,
+				1
+			]
+		},
 		"hops": {
 			"id": "vineandbarrel:hops",
 			"count": [
@@ -132,6 +143,17 @@
 				2
 			]
 		},
+		"hops_on_support": {
+			"id": "vineandbarrel:hops",
+			"count": [
+				1,
+				2
+			],
+			"halfRipe": [
+				1,
+				1
+			]
+		},
 		"white_grapes": {
 			"id": "vineandbarrel:white_grapes",
 			"count": [
@@ -141,6 +163,17 @@
 			"halfRipe": [
 				1,
 				2
+			]
+		},
+		"white_grapes_on_support": {
+			"id": "vineandbarrel:white_grapes",
+			"count": [
+				1,
+				2
+			],
+			"halfRipe": [
+				1,
+				1
 			]
 		}
 	},

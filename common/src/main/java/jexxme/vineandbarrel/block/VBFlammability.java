@@ -9,7 +9,8 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * How our blocks burn, in vanilla's own fire table ({@code FireBlock.setFlammable}, as {@code FireBlock.bootStrap}
  * fills it), which both loaders read: the plants like the sweet berry bush (60 / 100, as FD's plants do), the Trellis
- * like a wooden fence (5 / 20), the barley bale like a hay bale (60 / 20).
+ * like a wooden fence (5 / 20), the barley bale like a hay bale (60 / 20). A vine on a fence, wall, chain or bars burns away
+ * like the other plants and leaves the block it held.
  */
 public final class VBFlammability
 {
@@ -21,6 +22,7 @@ public final class VBFlammability
 		for (Block plant : new Block[] {VBBlocks.GRAPE_BUSH.get(), VBBlocks.WHITE_GRAPE_BUSH.get(), VBBlocks.HOP_BUSH.get(),
 				VBBlocks.GRAPE_VINE_ON_ROPE.get(), VBBlocks.WHITE_GRAPE_VINE_ON_ROPE.get(), VBBlocks.HOP_VINE_ON_ROPE.get(),
 				VBBlocks.GRAPE_VINE_ON_TRELLIS.get(), VBBlocks.WHITE_GRAPE_VINE_ON_TRELLIS.get(), VBBlocks.HOP_VINE_ON_TRELLIS.get(),
+				VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT.get(), VBBlocks.HOP_VINE_ON_SUPPORT.get(),
 				VBBlocks.WILD_GRAPES.get(), VBBlocks.WILD_WHITE_GRAPES.get(), VBBlocks.WILD_HOPS.get(), VBBlocks.WILD_BARLEY.get()}) {
 			fire().setFlammable(plant, 60, 100);
 		}

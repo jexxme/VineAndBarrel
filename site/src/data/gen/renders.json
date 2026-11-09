@@ -69,5 +69,6 @@
 	"scenes/storage": true,
 	"scenes/wild-crops": true,
 	"scenes/trellis": true,
+	"scenes/supports": true,
 	"scenes/garden": true
 }

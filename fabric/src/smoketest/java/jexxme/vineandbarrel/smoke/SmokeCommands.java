@@ -59,6 +59,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
+import jexxme.vineandbarrel.block.VineOnSupportBlock;
+
 import java.util.Optional;
 
 /**
@@ -74,6 +76,8 @@ public final class SmokeCommands implements ModInitializer
 	static final BlockPos KETTLE = new BlockPos(0, 1, 3), BARREL = new BlockPos(3, 0, 3), TABLE = new BlockPos(-3, 0, 3),
 		GRAPES = new BlockPos(-3, 0, 6), BARLEY = new BlockPos(0, 0, 6), HOPS = new BlockPos(3, 0, 6), EMPTY_TABLE = new BlockPos(-5, 0, 3),
 		MEAD_BARREL = new BlockPos(5, 0, 3), BED_FOOT = new BlockPos(4, 0, 0);
+	/** Trellis 2.0's patch behind the scene: the first root in the fence row, the first in the wall, the trellis row's first bush. */
+	static final BlockPos VINE_FENCE = new BlockPos(-5, 0, 13), VINE_WALL = new BlockPos(1, 0, 13), VINE_TRELLIS = new BlockPos(-4, 0, 16);
 	/** The blackout ending the next draw gives (see ForcedBlackoutEndingMixin), or null for the normal draw. */
 	private static volatile BlackoutEnding forcedEnding;
 
@@ -90,6 +94,7 @@ public final class SmokeCommands implements ModInitializer
 		CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> dispatcher.register(Commands.literal("vbsmoke")
 			.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 			.then(Commands.literal("setup").executes(SmokeCommands::setup))
+			.then(Commands.literal("vines").executes(SmokeCommands::vines))
 			.then(Commands.literal("look").then(Commands.argument("what", StringArgumentType.word()).executes(SmokeCommands::look)))
 			.then(Commands.literal("view").executes(context -> view(context.getSource().getPlayerOrException())))
 			.then(Commands.literal("open_kettle").executes(SmokeCommands::openKettle))
@@ -187,6 +192,66 @@ public final class SmokeCommands implements ModInitializer
 		level.setBlock(o.offset(HOPS), VBBlocks.HOP_BUSH.get().defaultBlockState().setValue(BlockStateProperties.AGE_3, 3), Block.UPDATE_ALL);
 		view(player);
 		return reply(context, "setup at " + o + (fd ? " with Farmer's Delight" : ""));
+	}
+
+	/**
+	 * Trellis 2.0 behind the scene: grapes and hops grown into an oak fence row and a mossy wall two high (the vines keep the
+	 * blocks they grew into, drawn under their leaves), and a framed trellis row; the player looks at it.
+	 */
+	private static int vines(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		ServerLevel level = player.level();
+		BlockPos o = origin(level);
+		for (int x = -6; x <= 6; x++) {
+			for (int z = 11; z <= 17; z++) {
+				level.setBlock(o.offset(x, -1, z), Blocks.GRASS_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+				for (int y = 0; y < 5; y++) {
+					level.setBlock(o.offset(x, y, z), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+				}
+			}
+		}
+		java.util.List<BlockPos> built = new java.util.ArrayList<>();
+		for (int x = 0; x < 5; x++) {
+			built.add(o.offset(VINE_FENCE).east(x));
+			level.setBlock(built.getLast(), Blocks.OAK_FENCE.defaultBlockState(), Block.UPDATE_ALL);
+		}
+		for (int x = 0; x < 5; x++) {
+			for (int y = 0; y < 2; y++) {
+				built.add(o.offset(VINE_WALL).east(x).above(y));
+				level.setBlock(built.getLast(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState(), Block.UPDATE_ALL);
+			}
+		}
+		for (BlockPos pos : built) {
+			level.setBlock(pos, Block.updateFromNeighbourShapes(level.getBlockState(pos), level, pos), Block.UPDATE_ALL);
+		}
+		int[] ages = {3, 3, 2, 1};
+		for (int x = 0; x < ages.length; x++) {
+			grow(level, o.offset(VINE_FENCE).east(x), x == 1 ? VBBlocks.HOP_VINE_ON_SUPPORT.get() : VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), ages[x], true);
+			grow(level, o.offset(VINE_WALL).east(x), VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT.get(), ages[x], true);
+			if (ages[x] >= 2) {
+				grow(level, o.offset(VINE_WALL).east(x).above(), VBBlocks.WHITE_GRAPE_VINE_ON_SUPPORT.get(), ages[x], false);
+			}
+		}
+		// a trellis row two high on ripe bushes, the last trellis bare: it draws its frame
+		for (int x = 0; x < 4; x++) {
+			BlockPos bush = o.offset(VINE_TRELLIS).east(x);
+			boolean grown = x < 3;
+			level.setBlock(bush, (x == 1 ? VBBlocks.HOP_BUSH.get() : VBBlocks.GRAPE_BUSH.get()).defaultBlockState()
+				.setValue(BlockStateProperties.AGE_3, grown ? 3 : 0), Block.UPDATE_ALL);
+			for (int y = 1; y <= 2; y++) {
+				BlockState trellis = VBBlocks.TRELLIS.get().defaultBlockState();
+				BlockState vine = (x == 1 ? VBBlocks.HOP_VINE_ON_TRELLIS.get() : VBBlocks.GRAPE_VINE_ON_TRELLIS.get()).defaultBlockState()
+					.setValue(BlockStateProperties.AGE_3, 3);
+				level.setBlock(bush.above(y), grown ? vine : trellis, Block.UPDATE_ALL);
+			}
+		}
+		fly(player);
+		player.teleportTo(level, o.getX() + 0.5, o.getY() + 2.5, o.getZ() + 8.5, java.util.Set.of(), 0.0F, 20.0F, true);
+		return reply(context, "vines at " + o.offset(VINE_FENCE));
+	}
+
+	private static void grow(ServerLevel level, BlockPos pos, VineOnSupportBlock vine, int age, boolean root) {
+		VineOnSupportBlock.place(level, pos, vine.defaultBlockState().setValue(BlockStateProperties.AGE_3, age), level.getBlockState(pos), root);
 	}
 
 	/** The whole scene in view, from behind the kettle's row. */

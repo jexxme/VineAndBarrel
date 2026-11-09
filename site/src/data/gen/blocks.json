@@ -14,7 +14,9 @@
 				"none",
 				"trellis_x",
 				"trellis_z",
-				"rope"
+				"rope",
+				"faces_x",
+				"faces_z"
 			],
 			"trellis": [
 				"none",
@@ -29,6 +31,7 @@
 		},
 		"tags": [
 			"minecraft:bee_growables",
+			"minecraft:maintains_farmland",
 			"minecraft:washed_away_by_fluids",
 			"sereneseasons:autumn_crops"
 		],
@@ -49,7 +52,9 @@
 				"none",
 				"trellis_x",
 				"trellis_z",
-				"rope"
+				"rope",
+				"faces_x",
+				"faces_z"
 			],
 			"trellis": [
 				"none",
@@ -64,6 +69,7 @@
 		},
 		"tags": [
 			"minecraft:bee_growables",
+			"minecraft:maintains_farmland",
 			"minecraft:washed_away_by_fluids",
 			"sereneseasons:autumn_crops",
 			"sereneseasons:summer_crops"
@@ -132,7 +138,9 @@
 				"none",
 				"trellis_x",
 				"trellis_z",
-				"rope"
+				"rope",
+				"faces_x",
+				"faces_z"
 			],
 			"trellis": [
 				"none",
@@ -147,6 +155,7 @@
 		},
 		"tags": [
 			"minecraft:bee_growables",
+			"minecraft:maintains_farmland",
 			"minecraft:washed_away_by_fluids",
 			"sereneseasons:autumn_crops"
 		],
@@ -194,6 +203,7 @@
 			"waterlogged": "false"
 		},
 		"tags": [
+			"farmersdelight:tomato_supports",
 			"minecraft:mineable/axe",
 			"vineandbarrel:vine_supports"
 		],
@@ -272,6 +282,112 @@
 		"defaultState": {
 			"age": "0",
 			"axis": "x"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:mineable/axe",
+			"sereneseasons:autumn_crops",
+			"sereneseasons:summer_crops"
+		],
+		"hardness": 0.4
+	},
+	"vineandbarrel:grape_vine_on_support": {
+		"id": "vineandbarrel:grape_vine_on_support",
+		"name": "Air",
+		"item": null,
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			],
+			"base": [
+				"true",
+				"false"
+			],
+			"look": [
+				"cross",
+				"thin_x",
+				"thin_z",
+				"wide_x",
+				"wide_z"
+			]
+		},
+		"defaultState": {
+			"age": "0",
+			"base": "false",
+			"look": "cross"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:mineable/axe",
+			"sereneseasons:autumn_crops"
+		],
+		"hardness": 0.4
+	},
+	"vineandbarrel:white_grape_vine_on_support": {
+		"id": "vineandbarrel:white_grape_vine_on_support",
+		"name": "Air",
+		"item": null,
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			],
+			"base": [
+				"true",
+				"false"
+			],
+			"look": [
+				"cross",
+				"thin_x",
+				"thin_z",
+				"wide_x",
+				"wide_z"
+			]
+		},
+		"defaultState": {
+			"age": "0",
+			"base": "false",
+			"look": "cross"
+		},
+		"tags": [
+			"minecraft:bee_growables",
+			"minecraft:mineable/axe",
+			"sereneseasons:autumn_crops"
+		],
+		"hardness": 0.4
+	},
+	"vineandbarrel:hop_vine_on_support": {
+		"id": "vineandbarrel:hop_vine_on_support",
+		"name": "Air",
+		"item": null,
+		"properties": {
+			"age": [
+				"0",
+				"1",
+				"2",
+				"3"
+			],
+			"base": [
+				"true",
+				"false"
+			],
+			"look": [
+				"cross",
+				"thin_x",
+				"thin_z",
+				"wide_x",
+				"wide_z"
+			]
+		},
+		"defaultState": {
+			"age": "0",
+			"base": "false",
+			"look": "cross"
 		},
 		"tags": [
 			"minecraft:bee_growables",

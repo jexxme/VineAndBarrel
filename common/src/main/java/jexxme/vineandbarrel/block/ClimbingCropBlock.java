@@ -75,9 +75,14 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 		return bushBlock().trellisVineBlock();
 	}
 
-	/** True for either vine of this plant. */
+	/** This plant's vine on a fence, wall, upright chain or bars. */
+	public Block supportVine() {
+		return bushBlock().supportVineBlock();
+	}
+
+	/** True for any vine of this plant (on a rope, a trellis or another support). */
 	public boolean isVine(BlockState state) {
-		return state.is(ropeVine()) || state.is(trellisVine());
+		return state.is(ropeVine()) || state.is(trellisVine()) || state.is(supportVine());
 	}
 
 	/** True for the bush or either vine of this plant: what a vine can grow on. */
@@ -87,7 +92,9 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 
 	/**
 	 * The vine that grows onto {@code support}: a vine on a rope for FD's ropes, a vine on a trellis (facing the same way)
-	 * for our Trellis, nothing for anything else, or for a support under water (a vine doesn't grow there, like any crop).
+	 * for our Trellis, a vine on a support for a fence, wall, upright chain or bars (which then keeps that block, see
+	 * {@link VineOnSupportBlock#place}), nothing for anything else, or for a support under water (a vine doesn't grow there,
+	 * like any crop).
 	 */
 	public @Nullable BlockState vineOn(BlockState support) {
 		if (!support.getFluidState().isEmpty()) {
@@ -98,6 +105,9 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 		}
 		if (support.getBlock() instanceof TrellisBlock) {
 			return trellisVine().defaultBlockState().setValue(TrellisBlock.AXIS, support.getValue(TrellisBlock.AXIS));
+		}
+		if (VineSupports.isMakeshift(support)) {
+			return supportVine().defaultBlockState().setValue(VineOnSupportBlock.LOOK, VineSupports.lookOf(support));
 		}
 		return null;
 	}

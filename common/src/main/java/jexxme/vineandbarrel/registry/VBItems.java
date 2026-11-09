@@ -1,6 +1,7 @@
 package jexxme.vineandbarrel.registry;
 
 import jexxme.vineandbarrel.VineAndBarrel;
+import jexxme.vineandbarrel.block.ClimbingPlantItem;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.BlockItem;
@@ -21,15 +22,16 @@ public final class VBItems
 {
 	public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(VineAndBarrel.MODID);
 
-	// ------------------------------------------------------------------ produce (grapes and hops plant their bush, like sweet berries)
+	// ------------------------------------------------------------------ produce (grapes and hops plant their bush, like sweet berries,
+	// also straight into a fence, wall, chain or bars standing on soil)
 	public static final DeferredItem<BlockItem> RED_GRAPES = ITEMS.registerItem("red_grapes",
-			p -> new BlockItem(VBBlocks.GRAPE_BUSH.get(), p.useItemDescriptionPrefix()),
+			p -> new ClimbingPlantItem(VBBlocks.GRAPE_BUSH.get(), p.useItemDescriptionPrefix()),
 			() -> new Item.Properties().food(Foods.SWEET_BERRIES).compostable(ContextIntProviders.COMPOSTABLE_LOW));
 	public static final DeferredItem<BlockItem> WHITE_GRAPES = ITEMS.registerItem("white_grapes",
-			p -> new BlockItem(VBBlocks.WHITE_GRAPE_BUSH.get(), p.useItemDescriptionPrefix()),
+			p -> new ClimbingPlantItem(VBBlocks.WHITE_GRAPE_BUSH.get(), p.useItemDescriptionPrefix()),
 			() -> new Item.Properties().food(Foods.SWEET_BERRIES).compostable(ContextIntProviders.COMPOSTABLE_LOW));
 	public static final DeferredItem<BlockItem> HOPS = ITEMS.registerItem("hops",
-			p -> new BlockItem(VBBlocks.HOP_BUSH.get(), p.useItemDescriptionPrefix()),
+			p -> new ClimbingPlantItem(VBBlocks.HOP_BUSH.get(), p.useItemDescriptionPrefix()),
 			() -> new Item.Properties().compostable(ContextIntProviders.COMPOSTABLE_LOW));
 	public static final DeferredItem<BlockItem> BARLEY_SEEDS = ITEMS.registerItem("barley_seeds",
 			p -> new BlockItem(VBBlocks.BARLEY.get(), p.useItemDescriptionPrefix()),
