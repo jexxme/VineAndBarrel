@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1杯分",
   "container.vineandbarrel.brew_kettle.servings": "%s杯分",
   "container.vineandbarrel.brew_kettle.big": "大きな醸造釜",
-  "container.vineandbarrel.brew_kettle.great": "巨大な醸造釜",
   "container.vineandbarrel.brew_kettle.batch": "1回で%s杯分",
   "container.vineandbarrel.recipe_book.brewable": "醸造可能なアイテムを表示中",
   "tooltip.vineandbarrel.brew_kettle.empty": "空",

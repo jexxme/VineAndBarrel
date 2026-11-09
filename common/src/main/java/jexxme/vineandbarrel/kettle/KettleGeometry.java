@@ -34,6 +34,6 @@ public final class KettleGeometry
 		return 16.0D * shape.size() + 8.0D + 1.75D;
 	}
 
-	/** The top of an extension piece's cap, from that piece's bottom. */
-	public static final double PIECE_TOP = 8.0D + 1.75D;
+	/** The top of an extension piece's cap, from that piece's bottom: the top piece carries on into the block above, like the kettle's own chimney. */
+	public static final double PIECE_TOP = 16.0D + 8.0D + 1.75D;
 }

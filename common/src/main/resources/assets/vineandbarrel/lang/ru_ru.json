@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1 порция",
   "container.vineandbarrel.brew_kettle.servings": "Порций: %s",
   "container.vineandbarrel.brew_kettle.big": "Большой варочный котёл",
-  "container.vineandbarrel.brew_kettle.great": "Огромный варочный котёл",
   "container.vineandbarrel.brew_kettle.batch": "Одна варка даёт порций: %s",
   "container.vineandbarrel.recipe_book.brewable": "Доступно к варке",
   "tooltip.vineandbarrel.brew_kettle.empty": "Пусто",

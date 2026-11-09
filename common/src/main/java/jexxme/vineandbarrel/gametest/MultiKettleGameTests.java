@@ -50,7 +50,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * WP4: the Big and Great Kettle. Joining by placing a cube (and not when sneaking, or with different brews), bigger
+ * WP4: the Big Kettle (the Great Kettle is dormant: 27 kettles make no Great Kettle). Joining by placing a cube (and not when sneaking, or with different brews), bigger
  * batches and the per-fire speed, splitting with the brew shared out, use from any block, one copper vessel, the
  * sight glass, the copper-ingot chimney, more than 99 servings saved, and a kettle saved by 1.0 loading unchanged.
  */
@@ -68,7 +68,7 @@ public final class MultiKettleGameTests
 	static {
 		test("multikettle_joins_big_cube", 100, MultiKettleGameTests::joinsBigCube);
 		test("multikettle_joins_when_sneaking", 100, MultiKettleGameTests::joinsWhenSneaking);
-		test("multikettle_big_grows_into_great", 100, MultiKettleGameTests::bigGrowsIntoGreat);
+		test("multikettle_27_kettles_make_no_great_kettle", 100, MultiKettleGameTests::noGreatKettle);
 		test("multikettle_different_brews_dont_join", 100, MultiKettleGameTests::differentBrewsDontJoin);
 		test("multikettle_join_pools_the_brew", 100, MultiKettleGameTests::joinPoolsTheBrew);
 		test("multikettle_big_batch_on_four_fires", 600, MultiKettleGameTests::bigBatchOnFourFires);
@@ -86,12 +86,12 @@ public final class MultiKettleGameTests
 		test("kettle_chimney_weathers_with_the_kettle", 100, MultiKettleGameTests::chimneyWeathersWithKettle);
 		test("kettle_chimney_on_big_kettle", 100, MultiKettleGameTests::chimneyOnBigKettle);
 		test("kettle_chimney_breaks_through_the_roof", 100, MultiKettleGameTests::chimneyBreaksThroughRoof);
-		test("multikettle_offset_big_grows_into_great", 100, MultiKettleGameTests::offsetBigGrowsIntoGreat);
 		test("multikettle_breaking_the_controller_splits", 100, MultiKettleGameTests::breakingTheControllerSplits);
 		test("multikettle_removed_controller_keeps_the_brew", 100, MultiKettleGameTests::removedControllerKeepsTheBrew);
 		test("multikettle_copper_change_on_one_part_turns_all", 100, MultiKettleGameTests::copperChangeOnOnePartTurnsAll);
 		test("kettle_chimney_stops_at_obsidian", 100, MultiKettleGameTests::chimneyStopsAtObsidian);
 		test("kettle_chimney_keeps_a_trellis", 100, MultiKettleGameTests::chimneyKeepsTrellis);
+		test("kettle_chimney_through_a_roof_in_one_click", 100, MultiKettleGameTests::chimneyThroughRoofInOneClick);
 		test("kettle_chimney_through_stone_drops_it", 100, MultiKettleGameTests::chimneyThroughStoneDrops);
 		test("multikettle_removed_full_kettle_never_overfills", 100, MultiKettleGameTests::removedFullKettleNeverOverfills);
 		test("kettle_chimney_grows_from_the_chimney", 100, MultiKettleGameTests::chimneyGrowsFromChimney);
@@ -265,53 +265,18 @@ public final class MultiKettleGameTests
 		});
 	}
 
-	private static void bigGrowsIntoGreat(GameTestHelper helper) {
+	/** The Great Kettle is dormant: a 3x3x3 cube of kettles makes Big Kettles at most, never a Great one. */
+	private static void noGreatKettle(GameTestHelper helper) {
 		fires(helper, 3, 9);
-		placeCube(helper, 2);
+		placeCube(helper, 3);
 		helper.runAfterDelay(2, () -> {
-			assertAllParts(helper, 2, true);
-			for (int y = 0; y < 3; y++) {
-				for (int z = 0; z < 3; z++) {
-					for (int x = 0; x < 3; x++) {
-						if (x < 2 && y < 2 && z < 2) continue;
-						place(helper, BASE.offset(x, y, z), false);
-					}
-				}
+			for (int y = 0; y < 3; y++) for (int z = 0; z < 3; z++) for (int x = 0; x < 3; x++) {
+				BlockState state = helper.getBlockState(BASE.offset(x, y, z));
+				helper.assertTrue(!(state.getBlock() instanceof BrewKettlePartBlock) || state.getValue(BrewKettlePartBlock.PART) < 8,
+					"no Great Kettle part at " + x + "," + y + "," + z);
 			}
-			helper.runAfterDelay(2, () -> {
-				assertAllParts(helper, 3, true);
-				helper.assertValueEqual(controller(helper).shape(), KettleShape.GREAT, "the Big Kettle and 19 kettles make a Great Kettle");
-				helper.succeed();
-			});
+			helper.succeed();
 		});
-	}
-
-	/** A Big Kettle whose controller isn't the Great Kettle's: its old block entity must go, the brew stays. */
-	private static void offsetBigGrowsIntoGreat(GameTestHelper helper) {
-		fires(helper, 3, 9);
-		BlockPos corner = BASE.offset(1, 0, 1);
-		for (int y = 0; y < 2; y++) for (int z = 0; z < 2; z++) for (int x = 0; x < 2; x++) helper.setBlock(corner.offset(x, y, z), KettleRegistry.kettle());
-		KettleMultiblock.tryJoin(helper.getLevel(), helper.absolutePos(corner));
-		BrewKettleBlockEntity big = KettleMultiblock.controller(helper.getLevel(), helper.absolutePos(corner));
-		helper.assertTrue(big != null && big.shape() == KettleShape.BIG, "a Big Kettle in the far corner");
-		fillBrew(big, 20);
-		for (int y = 0; y < 3; y++) for (int z = 0; z < 3; z++) for (int x = 0; x < 3; x++) {
-			BlockPos at = BASE.offset(x, y, z);
-			if (!(helper.getBlockState(at).getBlock() instanceof BrewKettlePartBlock)) helper.setBlock(at, KettleRegistry.kettle());
-		}
-		KettleMultiblock.tryJoin(helper.getLevel(), helper.absolutePos(BASE));
-		assertAllParts(helper, 3, true);
-		BrewKettleBlockEntity great = controller(helper);
-		helper.assertValueEqual(great.shape(), KettleShape.GREAT, "a Great Kettle");
-		helper.assertValueEqual(great.getServings(), 20, "the Big Kettle's brew went in");
-		for (int y = 0; y < 3; y++) for (int z = 0; z < 3; z++) for (int x = 0; x < 3; x++) {
-			if (x == 0 && y == 0 && z == 0) continue;
-			helper.assertTrue(helper.getLevel().getBlockEntity(helper.absolutePos(BASE.offset(x, y, z))) == null, "only the controller has a block entity");
-		}
-		// a hopper on the old controller feeds the Great Kettle, not a leftover
-		BrewKettleBlockEntity atOld = KettleMultiblock.controller(helper.getLevel(), helper.absolutePos(corner));
-		helper.assertTrue(atOld == great, "the old corner resolves to the Great Kettle");
-		helper.succeed();
 	}
 
 	private static void differentBrewsDontJoin(GameTestHelper helper) {
@@ -507,7 +472,7 @@ public final class MultiKettleGameTests
 	}
 
 	private static void savesMoreThanAStack(GameTestHelper helper) {
-		BrewKettleBlockEntity kettle = bigKettle(helper, KettleShape.GREAT, 0);
+		BrewKettleBlockEntity kettle = bigKettle(helper, KettleShape.BIG, 0);
 		fillBrew(kettle, 64);
 		// pour in more than an item stack can save
 		for (int i = 0; i < 4; i++) {
@@ -515,7 +480,7 @@ public final class MultiKettleGameTests
 			brew.grow(64);
 			kettle.setStack(BrewKettleBlockEntity.BREW_SLOT, brew);
 		}
-		helper.assertValueEqual(kettle.getServings(), 320, "a Great Kettle holds 320");
+		helper.assertValueEqual(kettle.getServings(), 320, "a Big Kettle holds 320");
 		var tag = kettle.saveWithFullMetadata(helper.getLevel().registryAccess());
 		kettle.clearContent();
 		kettle.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), tag));
@@ -646,6 +611,20 @@ public final class MultiKettleGameTests
 			helper.assertTrue(!helper.getBlockState(BASE).getValue(BrewKettleBlock.EXTENDED), "the chimney didn't grow");
 			helper.succeed();
 		});
+	}
+
+	/** A roof right on the kettle: one click breaks it and puts the piece in its place, for one ingot. */
+	private static void chimneyThroughRoofInOneClick(GameTestHelper helper) {
+		place(helper, BASE, false);
+		for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) helper.setBlock(BASE.offset(x, 1, z), Blocks.OAK_PLANKS);
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		BlockState piece = helper.getBlockState(BASE.above());
+		helper.assertTrue(piece.getBlock() instanceof KettleChimneyBlock, "the chimney piece stands where the roof block was");
+		helper.assertTrue(piece.getValue(KettleChimneyBlock.TOP) && piece.getValue(KettleChimneyBlock.FLASHING), "the top piece, flashed into the roof");
+		helper.assertTrue(helper.getBlockState(BASE).getValue(BrewKettleBlock.EXTENDED), "the kettle's chimney carries on into it");
+		helper.assertValueEqual(player.getMainHandItem().getCount(), 3, "one ingot used");
+		helper.succeedWhen(() -> helper.assertValueEqual(dropped(helper, Items.OAK_PLANKS), 1, "the roof block drops"));
 	}
 
 	/** A copper ingot is no pickaxe, but the stone the chimney goes through drops all the same. */

@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1 порція",
   "container.vineandbarrel.brew_kettle.servings": "Порцій: %s",
   "container.vineandbarrel.brew_kettle.big": "Великий варильний казан",
-  "container.vineandbarrel.brew_kettle.great": "Величезний варильний казан",
   "container.vineandbarrel.brew_kettle.batch": "Одна варка дає порцій: %s",
   "container.vineandbarrel.recipe_book.brewable": "Доступні для варіння",
   "tooltip.vineandbarrel.brew_kettle.empty": "Порожній",

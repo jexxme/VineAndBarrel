@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1인분",
   "container.vineandbarrel.brew_kettle.servings": "%s인분",
   "container.vineandbarrel.brew_kettle.big": "큰 양조 솥",
-  "container.vineandbarrel.brew_kettle.great": "거대한 양조 솥",
   "container.vineandbarrel.brew_kettle.batch": "한 번에 %s인분",
   "container.vineandbarrel.recipe_book.brewable": "양조 가능한 아이템 표시 중",
   "tooltip.vineandbarrel.brew_kettle.empty": "비어 있음",

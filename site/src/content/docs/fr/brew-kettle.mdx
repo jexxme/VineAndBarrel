@@ -71,19 +71,18 @@ portions. Tant que tu as l'écran de la cuve ouvert, son couvercle est levé et 
 
 ## Grandes cuves
 
-<Render name="scenes/kettle-family" size={384} caption="Une Immense cuve de brassage, une Grande et une cuve de brassage simple" />
+<Render name="scenes/kettle-family" size={384} caption="Une Grande cuve de brassage et une cuve de brassage simple" />
 
-Place des cuves ensemble en cube et elles n'en font plus qu'une : **8 cuves en cube de 2×2×2** forment une **Grande
-cuve de brassage**, **27 en cube de 3×3×3** une **Immense cuve de brassage**. Elles s'unissent quand tu poses la
-dernière cuve du cube, et une Grande cuve au milieu d'un cube de 27 devient une Immense cuve. Les cuves qui
-contiennent des brassages différents ne s'unissent pas.
+Place 8 cuves en cube de 2×2×2 et elles n'en font plus qu'une seule **Grande cuve de brassage**. Elles s'unissent quand
+tu poses la dernière cuve du cube. Les cuves qui contiennent des brassages différents ou d'un autre cuivre ne
+s'unissent pas.
 
-- **Lots plus gros.** Chaque bloc ajoute un lot : une Grande cuve brasse 32 portions d'un coup, une Immense 108. Cela
-  fait quatre et treize tonneaux.
+- **Lots plus gros.** Chaque bloc ajoute un lot : une Grande cuve brasse 32 portions d'un coup. Cela fait quatre
+  tonneaux.
 - **Feu.** Un seul feu dessous suffit. Chaque feu sous sa couche du bas la rend plus rapide : avec un feu sous chaque
-  bloc, elle brasse un lot complet en deux fois (Grande) ou trois fois (Immense) moins de temps qu'une cuve seule. Pas
-  assez d'ingrédients ? Elle brasse autant de jeux que la grille en contient.
-- **Place.** Elle contient 64 portions par bloc : 512 dans une Grande cuve, 1728 dans une Immense.
+  bloc, elle brasse un lot complet en deux fois moins de temps qu'une cuve seule. Pas assez d'ingrédients ? Elle brasse
+  autant de jeux que la grille en contient.
+- **Place.** Elle contient 64 portions par bloc : 512 dans une Grande cuve.
 - **N'importe quel bloc.** Chaque bloc ouvre l'écran, remplit fioles et seaux, accepte les entonnoirs et donne un
   signal au comparateur.
 - **Casser.** Si tu casses un bloc, la cuve se sépare en cuves simples, qui gardent chacune leur part du brassage ; le
@@ -91,14 +90,14 @@ contiennent des brassages différents ne s'unissent pas.
 - **Un seul récipient.** Elle s'érode d'un bloc, et un rayon de miel ou un coup de hache change tout.
 
 <Render name="scenes/kettle-big" size={256} caption="Grande cuve de brassage" />
-<Render name="scenes/kettle-great" size={256} caption="Immense cuve de brassage avec une cheminée plus haute" />
+<Render name="scenes/kettle-big-chimney" size={256} caption="Grande cuve de brassage avec une cheminée plus haute" />
 
 ## Cheminée
 
 <Render name="scenes/kettle-chimney" float="right" size={192} alt="Une cuve dont la cheminée traverse un toit en planches" />
 
 Fais un clic droit sur une cuve ou sa cheminée avec un <Item id="copper_ingot" /> et la cheminée gagne un bloc de
-hauteur, jusqu'à 8. Elle perce un bloc de toit sur son chemin (le bloc tombe) et une bavette en cuivre scelle le trou
+hauteur, jusqu'à 8 blocs. Elle perce un bloc de toit sur son chemin (le bloc tombe) et une bavette en cuivre scelle le trou
 autour d'elle. La cheminée vieillit avec sa cuve. Si tu en casses un morceau, tout ce qui est au-dessus s'effondre et
 rend les lingots ; casser la cuve fait de même. Une cuve suspendue n'a pas de place pour une cheminée.
 
