@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1 porzione",
   "container.vineandbarrel.brew_kettle.servings": "%s porzioni",
   "container.vineandbarrel.brew_kettle.big": "Bollitore grande",
-  "container.vineandbarrel.brew_kettle.great": "Bollitore enorme",
   "container.vineandbarrel.brew_kettle.batch": "Una cotta dà %s porzioni",
   "container.vineandbarrel.recipe_book.brewable": "Ricette preparabili",
   "tooltip.vineandbarrel.brew_kettle.empty": "Vuoto",

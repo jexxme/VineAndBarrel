@@ -192,6 +192,64 @@
 				}
 			},
 			"name": "flashing"
+		},
+		{
+			"from": [
+				0,
+				0,
+				0
+			],
+			"to": [
+				16,
+				0,
+				16
+			],
+			"faces": {
+				"up": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#cut"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#cut",
+					"cullface": "down"
+				}
+			},
+			"name": "flashing_seal"
+		},
+		{
+			"from": [
+				0,
+				16,
+				0
+			],
+			"to": [
+				16,
+				16,
+				16
+			],
+			"faces": {
+				"up": {
+					"uv": [
+						0,
+						0,
+						16,
+						16
+					],
+					"texture": "#cut"
+				}
+			},
+			"name": "flashing_sheet"
 		}
 	]
 }

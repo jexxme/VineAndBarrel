@@ -1,12 +1,16 @@
 ## 1.1.0
 
-- **Watch it:** press G over an item, a JEI recipe or a block, and a short animated scene shows how it's done. A brewer in your own skin grows grapes up a trellis, fills and taps an Aging Barrel, brews in a Brew Kettle and raises a round of Cheers. With Farmer's Delight, the kettle heats on a stove and grapes grow up a rope.
-- **Grapes and hops climb fences, walls, chains and bars too:** plant them into one standing on soil, or put one into a bush. They give one fewer fruit per pick than on a trellis, and the block stays exactly as it was: fences and walls keep connecting, leads stay tied.
+- **Watch it:** press G over an item, a JEI recipe or a block, and a short scene shows how it's done: a brewer in your own skin grows grapes up a trellis, brews in the kettle, fills and taps an Aging Barrel and raises a round of Cheers. Numbered steps, captions tied to what they name, and what you need on the side. With nothing under the cursor, G opens the Brewer's path: the whole way from vine to glass, ticked off as you go.
+- **The Brew Kettle grows:** place 8 kettles as a 2×2×2 cube for a Big Brew Kettle. It brews 4 servings per block per batch and holds 64 per block. One fire under it works, and every extra fire under the bottom speeds it up. Breaking any block splits it into single kettles that share the brew.
+- A new look for the Brew Kettle: a boxy copper kettle with a tall chimney, a tap and a sight glass that shows how full it is. Steam rises from the chimney while it brews, and the tap drips when it's done. Right-click a kettle or its chimney with a copper ingot to make the chimney taller, up to 8 blocks and through a roof. Kettles from 1.0 load unchanged.
+- **Grapes and hops climb fences, walls, chains and bars too:** plant them into one standing on soil, or put one into a bush. Fences and walls go into the plant, like the trellis. Supports give one fewer fruit per pick than a trellis, and the block stays exactly as it was: fences and walls keep connecting, leads stay tied.
 - Trellis rows frame themselves: a post where a row ends, a rail along the top.
+- With Farmer's Delight Neoforged 1.3.4-3 or newer, tomatoes climb the trellis too (NeoForge).
 - Vines on a burning trellis or rope burn away and leave the trellis or rope standing.
 - Cauldrons take juice, wort and honey must the way they take water. A bucket fills one, a bottle adds a serving, and empty bottles or a bucket take it back out. A cauldron holds four servings, a bucket's worth.
 - Farmers buy barley and red grapes, as they buy wheat and pumpkins.
 - With Farmer's Delight: the knife cuts wild grapes, wild white grapes and wild hops on the cutting board, like FD's own wild crops. FD's milk bottle, melon juice and apple cider lower Tipsy by one level, like our juices.
+- Taverns: tables that stand, real windows in the savanna taverns, hearths inside the snowy ones, no holes in chimneys or cellars, and a little less beer on the plains counter.
 
 ## 1.0.2
 

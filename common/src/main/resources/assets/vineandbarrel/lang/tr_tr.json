@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1 porsiyon",
   "container.vineandbarrel.brew_kettle.servings": "%s porsiyon",
   "container.vineandbarrel.brew_kettle.big": "Büyük Kaynatma Kazanı",
-  "container.vineandbarrel.brew_kettle.great": "Dev Kaynatma Kazanı",
   "container.vineandbarrel.brew_kettle.batch": "Bir parti %s porsiyon verir",
   "container.vineandbarrel.recipe_book.brewable": "Demlenebilenler Gösteriliyor",
   "tooltip.vineandbarrel.brew_kettle.empty": "Boş",

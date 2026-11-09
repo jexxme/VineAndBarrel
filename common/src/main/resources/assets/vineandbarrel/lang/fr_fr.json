@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1 portion",
   "container.vineandbarrel.brew_kettle.servings": "%s portions",
   "container.vineandbarrel.brew_kettle.big": "Grande cuve de brassage",
-  "container.vineandbarrel.brew_kettle.great": "Immense cuve de brassage",
   "container.vineandbarrel.brew_kettle.batch": "Un brassin donne %s portions",
   "container.vineandbarrel.recipe_book.brewable": "Brassages réalisables",
   "tooltip.vineandbarrel.brew_kettle.empty": "Vide",

@@ -117,11 +117,11 @@ const scenes = {
 	'kettle-hanging': [...place('minecraft:oak_planks', {}, [0, 2, 0]), ...place('minecraft:iron_chain', { axis: 'y' }, [0, 1, 0]), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'handle' }), ...place('minecraft:campfire', { lit: 'true', facing: 'north' }, [0, -1, 0])],
 	// The lid lifted (screen open): the brew inside in its colour, the sight glass beside the tap
 	'kettle-open': [...place('minecraft:campfire', { lit: 'true', facing: 'north' }), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', open: 'true', fill: '3' }, [0, 1, 0], [liquid('vineandbarrel:grape_juice')])],
-	// WP4: the Big and the Great Kettle, the three side by side, a chimney grown through a roof
+	// WP4: the Big Kettle, beside a plain one, with a taller chimney, a chimney grown through a roof
 	'kettle-big': bigKettle(2, [0, 0, 0], { level: 2, tint: liquid('vineandbarrel:barley_wort_bottle') }),
-	'kettle-great': bigKettle(3, [0, 0, 0], { level: 3, chimney: 2, tint: liquid('vineandbarrel:barley_wort_bottle') }),
-	'kettle-family': [...bigKettle(3, [0, 0, 0], { level: 2, tint: liquid('vineandbarrel:barley_wort_bottle') }), ...bigKettle(2, [3.75, 0, 0], { level: 3, tint: liquid('vineandbarrel:barley_wort_bottle') }),
-		...place('minecraft:campfire', { lit: 'true', facing: 'north' }, [6.5, 0, 0]), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', fill: '2' }, [6.5, 1, 0], [liquid('vineandbarrel:barley_wort_bottle')])],
+	'kettle-big-chimney': bigKettle(2, [0, 0, 0], { level: 3, chimney: 2, tint: liquid('vineandbarrel:barley_wort_bottle') }),
+	'kettle-family': [...bigKettle(2, [0, 0, 0], { level: 3, tint: liquid('vineandbarrel:barley_wort_bottle') }),
+		...place('minecraft:campfire', { lit: 'true', facing: 'north' }, [2.75, 0, 0]), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', fill: '2' }, [2.75, 1, 0], [liquid('vineandbarrel:barley_wort_bottle')])],
 	'kettle-chimney': [...place('minecraft:campfire', { lit: 'true', facing: 'north' }), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', extended: 'true' }, [0, 1, 0]),
 		...[2, 3, 4].flatMap((y) => place('vineandbarrel:brew_kettle_chimney', { facing: 'north', size: '1', top: String(y === 4), flashing: String(y === 3) }, [0, y, 0])),
 		...[[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].flatMap(([x, z]) => place('minecraft:spruce_planks', {}, [x, 3, z]))],

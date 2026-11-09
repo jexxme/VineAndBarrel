@@ -93,7 +93,6 @@
   "container.vineandbarrel.brew_kettle.one_serving": "1 porcja",
   "container.vineandbarrel.brew_kettle.servings": "Porcje: %s",
   "container.vineandbarrel.brew_kettle.big": "Duży kocioł warzelny",
-  "container.vineandbarrel.brew_kettle.great": "Wielki kocioł warzelny",
   "container.vineandbarrel.brew_kettle.batch": "Jedna warka daje porcji: %s",
   "container.vineandbarrel.recipe_book.brewable": "Pokazuje warzalne",
   "tooltip.vineandbarrel.brew_kettle.empty": "Pusty",

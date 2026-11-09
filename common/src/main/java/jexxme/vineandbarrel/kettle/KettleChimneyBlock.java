@@ -173,7 +173,7 @@ public class KettleChimneyBlock extends Block
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		int size = state.getValue(SIZE);
 		double w = KettleGeometry.chimneyHalfWidth(size) + 0.5D;
-		double top = state.getValue(TOP) ? 9.75D : 16.0D;
+		double top = 16.0D; // (the top piece's cap stands in the block above, like the kettle's own)
 		double cx = 8.0D;
 		double cz = 8.0D;
 		if (size == 2) {
