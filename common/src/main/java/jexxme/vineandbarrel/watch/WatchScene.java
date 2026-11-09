@@ -43,9 +43,10 @@ import java.util.Optional;
  * @param opens   which items' tooltips, which blocks in the world and which JEI categories open it
  * @param also    the scenes offered at its end ("Also watch")
  * @param steps   the steps, played one after the other
+ * @param needs   what the scene uses, for the "What you need" rail (items or parts of real recipes)
  */
 public record WatchScene(String title, Holder<Item> icon, int width, int depth, Optional<BlockState> floor, List<Placed> blocks, View view,
-						 Opens opens, List<Identifier> also, List<Step> steps)
+						 Opens opens, List<Identifier> also, List<Step> steps, List<Either<Holder<Item>, RecipePart>> needs)
 {
 	/** A block state as a string, the way commands write it: {@code vineandbarrel:aging_barrel[facing=south,fill=4]}. */
 	public static final Codec<BlockState> BLOCK_STATE = Codec.STRING.comapFlatMap(WatchScene::parseState, WatchScene::writeState);
@@ -63,7 +64,8 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 		View.CODEC.optionalFieldOf("view", View.DEFAULT).forGetter(WatchScene::view),
 		Opens.CODEC.optionalFieldOf("opens", Opens.NONE).forGetter(WatchScene::opens),
 		Identifier.CODEC.listOf().optionalFieldOf("also", List.of()).forGetter(WatchScene::also),
-		Step.CODEC.listOf().fieldOf("steps").forGetter(WatchScene::steps)
+		Step.CODEC.listOf().fieldOf("steps").forGetter(WatchScene::steps),
+		ITEM_REF.listOf().optionalFieldOf("needs", List.of()).forGetter(WatchScene::needs)
 	).apply(inst, WatchScene::new));
 
 	private static DataResult<BlockState> parseState(String text) {
@@ -180,13 +182,25 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 	 * @param ticks   how long the step plays
 	 * @param actions what happens, each at its tick into the step
 	 */
-	public record Step(String caption, int ticks, List<Action> actions)
+	public record Step(String caption, int ticks, List<Action> actions, Optional<Anchor> anchor)
 	{
 		public static final Codec<Step> CODEC = RecordCodecBuilder.create(inst -> inst.group(
 			Codec.STRING.fieldOf("caption").forGetter(Step::caption),
 			ExtraCodecs.intRange(1, 20 * 60).fieldOf("ticks").forGetter(Step::ticks),
-			Action.CODEC.listOf().optionalFieldOf("actions", List.of()).forGetter(Step::actions)
+			Action.CODEC.listOf().optionalFieldOf("actions", List.of()).forGetter(Step::actions),
+			Anchor.CODEC.optionalFieldOf("anchor").forGetter(Step::anchor)
 		).apply(inst, Step::new));
+	}
+
+	/**
+	 * What a step's caption points at: a point on the stage (its block gets the outline), or a figure (what it holds).
+	 * Without one, a step points where its pointer does.
+	 */
+	public record Anchor(Optional<Vec3> pos, Optional<String> figure)
+	{
+		public static final Codec<Anchor> CODEC = Codec.either(Vec3.CODEC, Codec.STRING).xmap(
+			either -> either.map(pos -> new Anchor(Optional.of(pos), Optional.empty()), id -> new Anchor(Optional.empty(), Optional.of(id))),
+			anchor -> anchor.pos().<Either<Vec3, String>>map(Either::left).orElseGet(() -> Either.right(anchor.figure().orElse("brewer"))));
 	}
 
 	/** Something that happens in a step, starting {@link #at()} ticks into it. */

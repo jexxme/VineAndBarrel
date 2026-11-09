@@ -55,7 +55,8 @@ public final class WatchClient
 
 	/** The tooltip's last line on an item that opens a scene: "Press [G] to watch". */
 	public static void onTooltip(ItemStack stack, List<Component> lines) {
-		if (KEY.isUnbound() || Minecraft.getInstance().level == null || WatchIndex.INSTANCE.forItem(stack).isEmpty()) {
+		if (KEY.isUnbound() || Minecraft.getInstance().level == null || WatchIndex.INSTANCE.forItem(stack).isEmpty()
+			|| Minecraft.getInstance().screen instanceof WatchScreen) {
 			return;
 		}
 		Component key = KEY.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.YELLOW);
@@ -97,17 +98,26 @@ public final class WatchClient
 		return false;
 	}
 
-	/** Each client tick: the watch key pressed in the world at one of our blocks opens its scene where that block is. */
+	/**
+	 * Each client tick: the watch key pressed in the world at one of our blocks opens its scene where that block is; at
+	 * anything else (no block, or one without a scene) it opens the Brewer's path.
+	 */
 	public static void onClientTick() {
 		Minecraft minecraft = Minecraft.getInstance();
 		while (KEY.consumeClick()) {
-			if (minecraft.screen != null || minecraft.level == null || minecraft.hitResult == null
-				|| minecraft.hitResult.getType() != HitResult.Type.BLOCK) {
+			if (minecraft.screen != null || minecraft.level == null) {
 				continue;
 			}
-			var pos = ((BlockHitResult) minecraft.hitResult).getBlockPos();
-			WatchIndex.INSTANCE.forBlock(minecraft.level, pos, minecraft.level.getBlockState(pos)).ifPresent(entry ->
-				WatchScreen.open(entry.scene(), entry.step(), entry.now().map(Component::translatable).orElse(null), null));
+			Optional<WatchIndex.BlockEntry> entry = Optional.empty();
+			if (minecraft.hitResult != null && minecraft.hitResult.getType() == HitResult.Type.BLOCK) {
+				var pos = ((BlockHitResult) minecraft.hitResult).getBlockPos();
+				entry = WatchIndex.INSTANCE.forBlock(minecraft.level, pos, minecraft.level.getBlockState(pos));
+			}
+			if (entry.isPresent()) {
+				WatchScreen.open(entry.get().scene(), entry.get().step(), entry.get().now().map(Component::translatable).orElse(null), null);
+			} else if (WatchPathScreen.available()) {
+				minecraft.setScreen(new WatchPathScreen(null));
+			}
 		}
 	}
 }
