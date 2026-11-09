@@ -101,6 +101,7 @@ public final class VBTagProviders
 			add(tag(BlockTags.BLOCKS_MOTION_NO_LEAVES), BarrelRegistry.AGING_BARREL);
 			// every Brew Kettle, as listed by hand in #vineandbarrel:brew_kettles (a datagen tag can't reference that file)
 			KettleRegistry.allKettleBlocks().forEach(kettle -> tag(BlockTags.BLOCKS_MOTION_NO_LEAVES).add(kettle.builtInRegistryHolder().key()));
+			KettleRegistry.allPartBlocks().forEach(part -> tag(BlockTags.BLOCKS_MOTION_NO_LEAVES).add(part.builtInRegistryHolder().key()));
 			// The blackout's hay ending: a bale is a bed, if you're tired enough
 			add(tag(VBTags.HAY_BALES).add(net.minecraft.world.level.block.Blocks.HAY_BLOCK.builtInRegistryHolder().key())
 					.addOptional(fdBlock("straw_bale")).addOptional(fdBlock("rice_bale")), VBBlocks.BARLEY_BALE);

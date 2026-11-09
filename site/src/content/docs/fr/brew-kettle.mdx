@@ -49,18 +49,58 @@ cuve ; survole-la pour voir les portions.
 
 <KettleScreen recipe="brewing/barley_wort" />
 
-Chaque recette donne **{rules.servingsPerBucket} portions** et prend **{seconds(brews[0].brewingTime)}**. Une cuve chauffée fume
-et bouillonne dès qu'elle contient un brassin ou de quoi en faire un (sinon, elle reste silencieuse) ; pendant qu'un lot brasse, le couvercle cliquette aussi, et à la fin elle lâche un nuage de vapeur. La cuve continue de brasser
-d'autres lots tant qu'il y a des ingrédients, jusqu'à {rules.kettleMaxServings} portions au total.
+Chaque recette donne **{rules.servingsPerBucket} portions** et prend **{seconds(brews[0].brewingTime)}**. La cuve
+continue de brasser d'autres lots tant qu'il y a des ingrédients, jusqu'à {rules.kettleMaxServings} portions au total.
+
+On voit de loin ce que fait une cuve :
+
+- **Brassage :** de la vapeur sort de sa cheminée, elle bout et bouillonne. Quand un lot est terminé, elle lâche une
+  bouffée de vapeur.
+- **Terminé :** la vapeur s'arrête et le robinet goutte de temps en temps. Le voyant de niveau à côté du robinet
+  montre à quel point elle est pleine.
+- **Sur un feu allumé sans rien à brasser :** la fumée du feu monte par la cheminée.
 
 <BrewFlow />
 
-Quand un brassage est terminé, le couvercle reste levé et tu le vois à l'intérieur, qui descend à mesure que tu sors des portions. Pendant qu'un lot brasse, le
-couvercle est baissé ; quand la dernière portion est partie, il se ferme.
+Le voyant de niveau à côté du robinet montre le brassage dans sa couleur et baisse à mesure que tu prends des
+portions. Tant que tu as l'écran de la cuve ouvert, son couvercle est levé et tu vois le brassage à l'intérieur.
 
 {brews.map((r) => <Recipe recipe={r} />)}
 
 <Render name="scenes/kettle-open" float="right" size={192} alt="La cuve avec son couvercle ouvert, montrant le brassage" />
+
+## Grandes cuves
+
+<Render name="scenes/kettle-family" size={384} caption="Une Immense cuve de brassage, une Grande et une cuve de brassage simple" />
+
+Place des cuves ensemble en cube et elles n'en font plus qu'une : **8 cuves en cube de 2×2×2** forment une **Grande
+cuve de brassage**, **27 en cube de 3×3×3** une **Immense cuve de brassage**. Elles s'unissent quand tu poses la
+dernière cuve du cube, et une Grande cuve au milieu d'un cube de 27 devient une Immense cuve. Les cuves qui
+contiennent des brassages différents ne s'unissent pas.
+
+- **Lots plus gros.** Chaque bloc ajoute un lot : une Grande cuve brasse 32 portions d'un coup, une Immense 108. Cela
+  fait quatre et treize tonneaux.
+- **Feu.** Un seul feu dessous suffit. Chaque feu sous sa couche du bas la rend plus rapide : avec un feu sous chaque
+  bloc, elle brasse un lot complet en deux fois (Grande) ou trois fois (Immense) moins de temps qu'une cuve seule. Pas
+  assez d'ingrédients ? Elle brasse autant de jeux que la grille en contient.
+- **Place.** Elle contient 64 portions par bloc : 512 dans une Grande cuve, 1728 dans une Immense.
+- **N'importe quel bloc.** Chaque bloc ouvre l'écran, remplit fioles et seaux, accepte les entonnoirs et donne un
+  signal au comparateur.
+- **Casser.** Si tu casses un bloc, la cuve se sépare en cuves simples, qui gardent chacune leur part du brassage ; le
+  bloc cassé tombe avec sa part. Remets une cuve dans le trou et elles s'unissent de nouveau.
+- **Un seul récipient.** Elle s'érode d'un bloc, et un rayon de miel ou un coup de hache change tout.
+
+<Render name="scenes/kettle-big" size={256} caption="Grande cuve de brassage" />
+<Render name="scenes/kettle-great" size={256} caption="Immense cuve de brassage avec une cheminée plus haute" />
+
+## Cheminée
+
+<Render name="scenes/kettle-chimney" float="right" size={192} alt="Une cuve dont la cheminée traverse un toit en planches" />
+
+Fais un clic droit sur une cuve ou sa cheminée avec un <Item id="copper_ingot" /> et la cheminée gagne un bloc de
+hauteur, jusqu'à 8. Elle perce un bloc de toit sur son chemin (le bloc tombe) et une bavette en cuivre scelle le trou
+autour d'elle. La cheminée vieillit avec sa cuve. Si tu en casses un morceau, tout ce qui est au-dessus s'effondre et
+rend les lingots ; casser la cuve fait de même. Une cuve suspendue n'a pas de place pour une cheminée.
 
 ## Mise en fiole
 
@@ -105,8 +145,7 @@ La cuve est en cuivre, et elle vieillit comme le cuivre.
 - Le **rayon de miel** la cire et arrête l'érosion. Une **hache** gratte la cire ou un stade d'érosion, et la foudre la nettoie.
 - **Casse-la pleine** et elle garde son brassage : l'infobulle de l'objet et sa barre de remplissage le montrent, et tu peux la poser ailleurs
   et continuer. Les ingrédients et les fioles ou seaux en attente tombent par terre.
-- Elle ne s'érode pas tant que quelqu'un a son écran ouvert.
-
+- Elle ne s'érode pas tant que quelqu'un a son écran ouvert (une cuve seule).
 ## Bon à savoir
 
 - **Tu as perdu le feu ?** Retirer la chaleur ne réinitialise pas un lot, mais la flèche recule deux fois plus vite qu'elle ne s'est remplie.

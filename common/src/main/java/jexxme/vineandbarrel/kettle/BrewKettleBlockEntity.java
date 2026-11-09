@@ -180,7 +180,8 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	// ------------------------------------------------------------------ ticking
 
 	public static void serverTick(ServerLevel level, BlockPos pos, BlockState state, BrewKettleBlockEntity kettle) {
-		boolean heated = KettleTags.isHeated(level, pos);
+		int fires = kettle.heatedBlocks();
+		boolean heated = fires > 0;
 		boolean changed = false;
 		boolean brewing = false;
 
@@ -189,9 +190,10 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		if (heated && hasInput) {
 			RecipeHolder<BrewingRecipe> recipe = kettle.matchRecipe(level);
 			matches = recipe != null;
-			if (recipe != null && kettle.canBrew(kettle.matchedResult, recipe.value())) {
+			int sets = recipe == null ? 0 : kettle.batchSets(recipe.value());
+			if (sets > 0) {
 				brewing = true;
-				changed = kettle.processBrewing(level, recipe);
+				changed = kettle.processBrewing(level, recipe, sets, fires);
 			} else {
 				kettle.brewTime = Mth.clamp(kettle.brewTime - 2, 0, kettle.brewTimeTotal);
 			}
@@ -217,15 +219,26 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 			kettle.inventoryChanged();
 		}
 
-		// The waiting brew shows under the raised lid; while a batch brews the lid stays down
-		int fill = brewing ? 0 : fillLevel(kettle.getServings());
-		if (state.getValue(BrewKettleBlock.FILL) != fill) {
-			state = state.setValue(BrewKettleBlock.FILL, fill);
-			level.setBlock(pos, state, Block.UPDATE_CLIENTS);
+		if (state.getBlock() instanceof BrewKettleBlock) {
+			// The sight glass beside the tap shows how full it is (and the brew under the lid while the screen is open)
+			int fill = fillLevel(kettle.getServings());
+			if (state.getValue(BrewKettleBlock.FILL) != fill) {
+				state = state.setValue(BrewKettleBlock.FILL, fill);
+				level.setBlock(pos, state, Block.UPDATE_CLIENTS);
+			}
+		} else {
+			// A big kettle shows its brew in the sight glass beside its tap
+			BlockPos gauge = kettle.kettle().gauge();
+			BlockState glass = level.getBlockState(gauge);
+			int glassLevel = gaugeLevel(kettle.getServings(), kettle.capacity());
+			if (glass.hasProperty(BrewKettlePartBlock.LEVEL) && glass.getValue(BrewKettlePartBlock.LEVEL) != glassLevel) {
+				level.setBlock(gauge, glass.setValue(BrewKettlePartBlock.LEVEL, glassLevel), Block.UPDATE_CLIENTS);
+			}
 		}
 
 		// K2: re-count viewers now and then, so the lid never stays open after someone left without closing the screen
-		if (state.getValue(BrewKettleBlock.OPEN) && level.getGameTime() % 20L == 0L) {
+		// (or open from a save: the count isn't saved, the lid is)
+		if ((kettle.openCount > 0 || state.getBlock() instanceof BrewKettleBlock && state.getValue(BrewKettleBlock.OPEN)) && level.getGameTime() % 20L == 0L) {
 			kettle.updateLid(null, null);
 		}
 	}
@@ -244,43 +257,92 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	}
 
 	/**
-	 * K3: while heated with a brew or a batch in it, steam curls out under the lid and bubbles pop, the lid rattles now
-	 * and then while brewing. A kettle with nothing to brew stays quiet, so it never looks like it's cooking.
+	 * What the kettle shows (WP4 playtest): brewing = steam out of the chimney, the boil and bubbles; a finished brew
+	 * waiting = the tap drips; a lit fire and nothing brewing = the fire's smoke out of the chimney; otherwise quiet.
 	 */
-	public static void clientTick(Level level, BlockPos pos, BlockState state, BrewKettleBlockEntity kettle) {
-		boolean hasInput = kettle.hasInput();
-		int servings = kettle.getServings();
-		if (staysQuiet(hasInput, kettle.ingredientsMatch, servings) || !KettleTags.isHeated(level, pos)) {
-			return;
-		}
-		boolean brewing = hasInput && kettle.ingredientsMatch;
+	public static void clientTick(Level level, BlockPos pos, BlockState state, BrewKettleBlockEntity be) {
+		int fires = be.heatedBlocks();
+		int servings = be.getServings();
+		boolean brewing = fires > 0 && be.hasInput() && be.ingredientsMatch && servings < be.capacity();
+		boolean hanging = state.getBlock() instanceof BrewKettleBlock && state.getValue(BrewKettleBlock.SUPPORT) == KettleSupport.HANDLE;
+		KettleMultiblock.Kettle kettle = be.kettle();
 		RandomSource random = level.getRandom();
-		boolean open = state.getValue(BrewKettleBlock.OPEN) || state.getValue(BrewKettleBlock.FILL) > 0;
-		double cx = pos.getX() + 0.5D;
-		double cz = pos.getZ() + 0.5D;
-		double seam = pos.getY() + 10.0D / 16.0D;
-		if (random.nextFloat() < 0.2F) {
-			double spread = open ? 0.3D : 0.38D;
+		int size = kettle.shape().size();
+
+		// What comes out of the chimney, more of it the taller the chimney is built: steam while it brews, otherwise the
+		// smoke of a lit fire under it (never both: one clear sign of what the kettle is doing)
+		int extension = hanging ? 0 : kettle.extension(level);
+		if (brewing) {
+			// Brewing: steam out of the chimney, the boil and bubbles at the rim
+			if (random.nextDouble() < 0.2D + 0.08D * size + 0.04D * extension) {
+				chimneySteam(level, kettle, random, 1.0D + 0.25D * (size - 1) + 0.1D * extension);
+			}
+			if (random.nextInt(10) == 0) {
+				Vec3 centre = kettle.centre();
+				float pitch = (random.nextFloat() * 0.2F + 0.9F) * (size == 1 ? 1.0F : size == 2 ? 0.85F : 0.75F);
+				level.playLocalSound(centre.x, kettle.controller().getY() + 0.5D, centre.z, servings <= 0 ? KettleRegistry.BOIL.get() : KettleRegistry.BOIL_BREW.get(),
+					SoundSource.BLOCKS, 0.5F + 0.1F * (size - 1), pitch, false);
+			}
+			if (size == 1 && random.nextFloat() < 0.2F) {
+				double angle = random.nextDouble() * Math.PI * 2.0D;
+				level.addParticle(ParticleTypes.BUBBLE_POP, pos.getX() + 0.5D + Math.cos(angle) * 0.38D, pos.getY() + KettleGeometry.bodyTop(KettleShape.SINGLE) / 16.0D + 0.02D,
+					pos.getZ() + 0.5D + Math.sin(angle) * 0.38D, 0.0D, 0.0D, 0.0D);
+			}
+		} else if (fires > 0 && !hanging && random.nextDouble() < 0.015D + 0.035D * extension) {
+			chimneySmoke(level, kettle, random, extension);
+		}
+		if (!brewing && servings > 0 && random.nextInt(30) == 0) {
+			// Done: the brew waits, and the tap drips now and then
+			Vec3 tap = localPoint(kettle, 8.0D * size, 2.3D, 1.2D);
+			level.addParticle(ParticleTypes.DRIPPING_WATER, tap.x, tap.y, tap.z, 0.0D, 0.0D, 0.0D);
+		}
+
+		// The Kettle's lid up (screen open): a thin wisp from the open pot
+		if (size == 1 && fires > 0 && state.getValue(BrewKettleBlock.OPEN) && !state.getValue(BrewKettleBlock.EXTENDED) && (servings > 0 || be.hasInput())
+			&& random.nextFloat() < 0.1F) {
 			double angle = random.nextDouble() * Math.PI * 2.0D;
-			double r = open ? random.nextDouble() * spread : spread;
-			level.addParticle(ParticleTypes.BUBBLE_POP, cx + Math.cos(angle) * r, seam + 0.02D, cz + Math.sin(angle) * r, 0.0D, 0.0D, 0.0D);
+			double r = random.nextDouble() * 0.22D;
+			level.addParticle(KettleRegistry.STEAM.get(), pos.getX() + 0.5D + Math.cos(angle) * r, pos.getY() + 0.5D, pos.getZ() + 0.5D + Math.sin(angle) * r,
+				0.0D, 0.004D + random.nextDouble() * 0.006D, 0.0D);
 		}
-		// a thin wisp now and then: from the open pot, or curling out under the lid's rim
-		if (random.nextFloat() < (open ? 0.1F : 0.075F)) {
-			double angle = random.nextDouble() * Math.PI * 2.0D;
-			double r = open ? random.nextDouble() * 0.22D : 0.34D;
-			double out = open ? 0.0D : 0.004D;
-			level.addParticle(KettleRegistry.STEAM.get(), cx + Math.cos(angle) * r, seam + 0.04D, cz + Math.sin(angle) * r,
-				Math.cos(angle) * out, 0.004D + random.nextDouble() * 0.006D, Math.sin(angle) * out);
-		}
-		if (random.nextInt(10) == 0) {
-			// FD's boil sound; the bubbling one once there is a brew inside
-			level.playLocalSound(cx, pos.getY(), cz, servings <= 0 ? KettleRegistry.BOIL.get() : KettleRegistry.BOIL_BREW.get(),
-				SoundSource.BLOCKS, 0.5F, random.nextFloat() * 0.2F + 0.9F, false);
-		}
-		if (!open && brewing && random.nextInt(40) == 0) {
-			level.playLocalSound(cx, seam, cz, KettleRegistry.LID_RATTLE.get(), SoundSource.BLOCKS, 0.35F, random.nextFloat() * 0.3F + 1.1F, false);
-		}
+	}
+
+	/** A point given in the kettle's own pixels (built facing north, from its bottom corner), in world coordinates. */
+	static Vec3 localPoint(KettleMultiblock.Kettle kettle, double px, double py, double pz) {
+		double half = 8.0D * kettle.shape().size();
+		double dx = (px - half) / 16.0D;
+		double dz = (pz - half) / 16.0D;
+		double wx = switch (kettle.facing()) {
+			case EAST -> -dz;
+			case SOUTH -> -dx;
+			case WEST -> dz;
+			default -> dx;
+		};
+		double wz = switch (kettle.facing()) {
+			case EAST -> dx;
+			case SOUTH -> -dz;
+			case WEST -> -dx;
+			default -> dz;
+		};
+		Vec3 centre = kettle.centre();
+		return new Vec3(centre.x + wx, kettle.controller().getY() + py / 16.0D, centre.z + wz);
+	}
+
+	/** One wisp of steam out of the chimney's cap, drifting up. */
+	private static void chimneySteam(Level level, KettleMultiblock.Kettle kettle, RandomSource random, double strength) {
+		Vec3 top = kettle.chimneyTop(level);
+		double r = KettleGeometry.chimneyHalfWidth(kettle.shape().size()) / 16.0D * 0.6D;
+		double angle = random.nextDouble() * Math.PI * 2.0D;
+		level.addParticle(KettleRegistry.STEAM.get(), top.x + Math.cos(angle) * r * random.nextDouble(), top.y, top.z + Math.sin(angle) * r * random.nextDouble(),
+			(random.nextDouble() - 0.5D) * 0.004D, (0.012D + random.nextDouble() * 0.008D) * strength, (random.nextDouble() - 0.5D) * 0.004D);
+	}
+
+	/** The fire's smoke out of the chimney, like a campfire's (a taller chimney sends it a little higher). */
+	private static void chimneySmoke(Level level, KettleMultiblock.Kettle kettle, RandomSource random, int extension) {
+		Vec3 top = kettle.chimneyTop(level);
+		double r = KettleGeometry.chimneyHalfWidth(kettle.shape().size()) / 16.0D * 0.5D;
+		level.addAlwaysVisibleParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, true, top.x + (random.nextDouble() - 0.5D) * r, top.y, top.z + (random.nextDouble() - 0.5D) * r,
+			0.0D, 0.04D + 0.005D * extension, 0.0D);
 	}
 
 	/** The recipe the ingredient slots make, matched again only when they or the recipes changed since the last match. */
@@ -331,35 +393,85 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		return hasInput() && level instanceof ServerLevel server && matchRecipe(server) == null;
 	}
 
-	/** Whether a batch making {@code result} (only read) fits with the brew already stored. */
-	private boolean canBrew(ItemStack result, BrewingRecipe recipe) {
+	/**
+	 * How many sets of {@code recipe} the next batch brews: one per block of kettle, as many as the grid holds and as
+	 * fit with the brew already stored (WP4). 0 if none: nothing to brew, or another brew is stored.
+	 */
+	int batchSets(BrewingRecipe recipe) {
+		ItemStack result = matchedResult;
 		if (result.isEmpty()) {
-			return false;
+			return 0;
 		}
 		ItemStack stored = inventory.getStack(BREW_SLOT);
-		if (stored.isEmpty()) {
-			return true;
+		if (!stored.isEmpty() && (!ItemStack.isSameItemSameComponents(stored, result) || !ItemStack.isSameItemSameComponents(bucketForm, recipe.bucket()))) {
+			return 0;
 		}
-		if (!ItemStack.isSameItemSameComponents(stored, result) || !ItemStack.isSameItemSameComponents(bucketForm, recipe.bucket())) {
-			return false;
+		int room = (capacity() - stored.getCount()) / result.getCount();
+		int max = Math.min(shape().blocks(), room);
+		if (max <= 0) {
+			return 0;
 		}
-		return stored.getCount() + result.getCount() <= MAX_SERVINGS;
+		return availableSets(recipe, max);
 	}
 
-	private boolean processBrewing(ServerLevel level, RecipeHolder<BrewingRecipe> holder) {
+	/** How many times (up to {@code max}) the grid makes {@code recipe}, taking each set's ingredients in turn. */
+	private int availableSets(BrewingRecipe recipe, int max) {
+		if (max == 1) {
+			return recipe.consumption(new KettleRecipeInput(inventory)) != null ? 1 : 0;
+		}
+		ItemSlots copy = new ItemSlots(INPUT_SLOTS);
+		for (int i = 0; i < INPUT_SLOTS; i++) {
+			copy.set(i, inventory.copyStack(i));
+		}
+		int sets = 0;
+		while (sets < max) {
+			int[] taken = recipe.consumption(new KettleRecipeInput(copy));
+			if (taken == null) {
+				break;
+			}
+			for (int i = 0; i < taken.length; i++) {
+				if (taken[i] > 0) {
+					ItemStack stack = copy.copyStack(i);
+					stack.shrink(taken[i]);
+					copy.set(i, stack);
+				}
+			}
+			sets++;
+		}
+		return sets;
+	}
+
+	/**
+	 * One tick of a batch of {@code sets} sets. Every fire under the kettle boils one set's worth, but a batch never goes
+	 * faster than one 1x1 kettle: a 1x1 on its fire takes the recipe's time, a 2x2 on four fires too, a 2x2 on one fire
+	 * four times as long. Same output per fire as a 1x1 (decided with Jexxme).
+	 */
+	private boolean processBrewing(ServerLevel level, RecipeHolder<BrewingRecipe> holder, int sets, int fires) {
 		BrewingRecipe recipe = holder.value();
-		++brewTime;
-		brewTimeTotal = recipe.brewingTime();
+		brewTime += Math.min(fires, sets);
+		brewTimeTotal = recipe.brewingTime() * sets;
 		if (brewTime < brewTimeTotal) {
 			return false;
 		}
+		brewTime = 0;
+		for (int set = 0; set < sets; set++) {
+			if (!brewOneSet(holder)) {
+				break;
+			}
+		}
+		// K4: the brew is done, a puff of steam and a short hiss (like a furnace finishing)
+		finishPuff(level);
+		return true;
+	}
 
+	/** Takes one set's ingredients and adds one set's servings. */
+	private boolean brewOneSet(RecipeHolder<BrewingRecipe> holder) {
+		BrewingRecipe recipe = holder.value();
 		// The pooled match decides which slots this batch takes from (DESIGN: hoppers stack repeated ingredients into one slot)
 		int[] taken = recipe.consumption(new KettleRecipeInput(inventory));
 		if (taken == null) {
 			return false;
 		}
-		brewTime = 0;
 		ItemStack result = recipe.assemble(new KettleRecipeInput(inventory));
 		ItemStack stored = getBrew();
 		if (stored.isEmpty()) {
@@ -387,8 +499,22 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 			slotStack.shrink(taken[i]);
 			setStack(i, slotStack);
 		}
+		return true;
+	}
 
-		// K4: the brew is done, a puff of steam and a short hiss (like a furnace finishing)
+	private void finishPuff(ServerLevel level) {
+		KettleMultiblock.Kettle kettle = kettle();
+		if (kettle.isBig()) {
+			// a big kettle lets its puff out of the chimney, a little deeper
+			Vec3 top = kettle.chimneyTop(level);
+			RandomSource random = level.getRandom();
+			for (int i = 0; i < 5 + 2 * kettle.shape().size(); i++) {
+				level.sendParticles(KettleRegistry.STEAM.get(), top.x, top.y, top.z, 0, (random.nextDouble() - 0.5D) * 0.2D, 1.0D, (random.nextDouble() - 0.5D) * 0.2D,
+					0.03D + random.nextDouble() * 0.02D);
+			}
+			level.playSound(null, BlockPos.containing(top), KettleRegistry.BREW_FINISHED.get(), SoundSource.BLOCKS, 0.7F, 0.85F);
+			return;
+		}
 		double x = worldPosition.getX() + 0.5D;
 		double y = worldPosition.getY() + 0.7D;
 		double z = worldPosition.getZ() + 0.5D;
@@ -403,7 +529,6 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 			level.sendParticles(KettleRegistry.STEAM.get(), x + dx * 0.33D, y, z + dz * 0.33D, 0, dx * 0.25D, 1.0D, dz * 0.25D, 0.02D + random.nextDouble() * 0.012D);
 		}
 		level.playSound(null, worldPosition, KettleRegistry.BREW_FINISHED.get(), SoundSource.BLOCKS, 0.6F, 1.0F);
-		return true;
 	}
 
 	protected void ejectIngredientRemainder(ItemStack remainder) {
@@ -547,11 +672,22 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 			count++;
 		}
 		openCount = count;
-		BlockState state = getBlockState();
-		boolean open = count > 0;
-		if (state.getValue(BrewKettleBlock.OPEN) != open) {
-			level.setBlock(worldPosition, state.setValue(BrewKettleBlock.OPEN, open), Block.UPDATE_ALL);
-			level.playSound(null, worldPosition, open ? KettleRegistry.LID_OPEN.get() : KettleRegistry.LID_CLOSE.get(), SoundSource.BLOCKS,
+		applyLid();
+	}
+
+	/**
+	 * Lifts a single kettle's lid while someone looks at its screen, with the lid sound (big kettles show their brew in the
+	 * sight glass instead).
+	 */
+	private void applyLid() {
+		if (level == null || level.isClientSide() || isRemoved()) return;
+		BlockPos lidPos = worldPosition;
+		BlockState lid = getBlockState();
+		if (!lid.hasProperty(BrewKettleBlock.OPEN)) return;
+		boolean open = openCount > 0;
+		if (lid.getValue(BrewKettleBlock.OPEN) != open) {
+			level.setBlock(lidPos, lid.setValue(BrewKettleBlock.OPEN, open), Block.UPDATE_ALL);
+			level.playSound(null, lidPos, open ? KettleRegistry.LID_OPEN.get() : KettleRegistry.LID_CLOSE.get(), SoundSource.BLOCKS,
 				0.5F, level.getRandom().nextFloat() * 0.1F + 0.9F);
 		}
 	}
@@ -632,6 +768,117 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		return inventory.getAmount(BREW_SLOT);
 	}
 
+	/** The kettle this block entity is the controller of: a single kettle, or a big one (WP4). */
+	public KettleMultiblock.Kettle kettle() {
+		KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(getBlockState(), worldPosition);
+		return kettle != null ? kettle : new KettleMultiblock.Kettle(KettleShape.SINGLE, worldPosition, Direction.NORTH);
+	}
+
+	public KettleShape shape() {
+		BlockState state = getBlockState();
+		return state.getBlock() instanceof BrewKettlePartBlock ? BrewKettlePartBlock.part(state).shape() : KettleShape.SINGLE;
+	}
+
+	/** How many servings this kettle holds: {@link #MAX_SERVINGS} per block. */
+	public int capacity() {
+		return MAX_SERVINGS * shape().blocks();
+	}
+
+	/** How many blocks of the kettle's bottom stand over a heat source (0: cold). */
+	public int heatedBlocks() {
+		if (level == null) return 0;
+		KettleMultiblock.Kettle kettle = kettle();
+		if (!kettle.isBig()) {
+			return KettleTags.isHeated(level, worldPosition) ? 1 : 0;
+		}
+		int fires = 0;
+		for (BlockPos pos : kettle.bottom()) {
+			if (KettleTags.isHeated(level, pos)) fires++;
+		}
+		return fires;
+	}
+
+	/** Puts a brew into an empty kettle (splitting a big kettle hands each single one its share). */
+	void setBrew(ItemStack brew, ItemStack bucket) {
+		setStack(BREW_SLOT, brew);
+		bucketForm = brew.isEmpty() ? ItemStack.EMPTY : bucket.copy();
+	}
+
+	/** What kettles joining into one bring together: the brew, the grid, the buffers, and what doesn't fit. */
+	record Merged(ItemStack brew, ItemStack bucket, List<ItemStack> grid, ItemStack containers, ItemStack output,
+		List<ItemStack> spills, Map<ResourceKey<Recipe<?>>, Integer> recipesUsed, @Nullable Component name) {
+	}
+
+	/**
+	 * Pools the contents of kettles about to join, or null if they can't: different brews, or more ingredients than one
+	 * grid holds. Buffered containers that don't fit spill out.
+	 */
+	static @Nullable Merged merge(List<BrewKettleBlockEntity> kettles) {
+		ItemStack brew = ItemStack.EMPTY;
+		ItemStack bucket = ItemStack.EMPTY;
+		List<ItemStack> ingredients = new java.util.ArrayList<>();
+		List<ItemStack> spills = new java.util.ArrayList<>();
+		ItemStack containers = ItemStack.EMPTY;
+		ItemStack output = ItemStack.EMPTY;
+		Map<ResourceKey<Recipe<?>>, Integer> used = new java.util.HashMap<>();
+		Component name = null;
+		for (BrewKettleBlockEntity kettle : kettles) {
+			ItemStack b = kettle.getBrew();
+			if (!b.isEmpty()) {
+				if (brew.isEmpty()) {
+					brew = b.copy();
+					bucket = kettle.getBucketForm();
+				} else if (ItemStack.isSameItemSameComponents(brew, b) && ItemStack.isSameItemSameComponents(bucket, kettle.getBucketForm())) {
+					brew.grow(b.getCount());
+				} else {
+					return null;
+				}
+			}
+			for (int i = 0; i < INPUT_SLOTS; i++) {
+				if (!kettle.stackIn(i).isEmpty()) ingredients.add(kettle.stackIn(i));
+			}
+			containers = mergeBuffer(containers, kettle.stackIn(CONTAINER_SLOT), spills);
+			output = mergeBuffer(output, kettle.stackIn(OUTPUT_SLOT), spills);
+			kettle.usedRecipeTracker.object2IntEntrySet().forEach(e -> used.merge(e.getKey(), e.getIntValue(), Integer::sum));
+			if (name == null) name = kettle.customName;
+		}
+		List<ItemStack> grid = new java.util.ArrayList<>(java.util.Collections.nCopies(INPUT_SLOTS, ItemStack.EMPTY));
+		if (!KettleMultiblock.pack(ingredients, grid, kettles.getFirst().inventory)) {
+			return null;
+		}
+		return new Merged(brew, bucket, grid, containers, output, spills, used, name);
+	}
+
+	private static ItemStack mergeBuffer(ItemStack into, ItemStack add, List<ItemStack> spills) {
+		if (add.isEmpty()) return into;
+		if (into.isEmpty()) return add.copy();
+		if (ItemStack.isSameItemSameComponents(into, add)) {
+			int room = into.getMaxStackSize() - into.getCount();
+			int moved = Math.min(room, add.getCount());
+			into.grow(moved);
+			if (add.getCount() > moved) spills.add(add.copyWithCount(add.getCount() - moved));
+			return into;
+		}
+		spills.add(add.copy());
+		return into;
+	}
+
+	/** Takes over joined kettles' contents (the block entity of the new big kettle's controller). */
+	void load(Merged merged) {
+		clearContent();
+		for (int i = 0; i < INPUT_SLOTS; i++) {
+			setStack(i, merged.grid().get(i));
+		}
+		setStack(CONTAINER_SLOT, merged.containers());
+		setStack(OUTPUT_SLOT, merged.output());
+		setBrew(merged.brew(), merged.bucket());
+		usedRecipeTracker.clear();
+		merged.recipesUsed().forEach(usedRecipeTracker::put);
+		customName = merged.name();
+		brewTime = 0;
+		inventoryChanged();
+	}
+
 	/**
 	 * The fill level a brew of this many servings shows: its share of the kettle's {@link #MAX_SERVINGS}, in
 	 * {@link BrewKettleBlock#MAX_FILL} steps, and never 0 while any serving is left.
@@ -641,6 +888,14 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 			return 0;
 		}
 		return Mth.clamp(Mth.ceil(servings * (float) BrewKettleBlock.MAX_FILL / MAX_SERVINGS), 1, BrewKettleBlock.MAX_FILL);
+	}
+
+	/** The sight glass's level (0 to {@link BrewKettlePartBlock#MAX_LEVEL}) for a brew of this many servings, never 0 while any is left. */
+	public static int gaugeLevel(int servings, int capacity) {
+		if (servings <= 0) {
+			return 0;
+		}
+		return Mth.clamp(Mth.ceil(servings * (float) BrewKettlePartBlock.MAX_LEVEL / capacity), 1, BrewKettlePartBlock.MAX_LEVEL);
 	}
 
 	/** How far the current batch is (0 when nothing brews), out of {@link #getBrewTimeTotal()}. */
@@ -653,7 +908,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	}
 
 	public boolean isHeated() {
-		return level != null && KettleTags.isHeated(level, worldPosition);
+		return heatedBlocks() > 0;
 	}
 
 	/** K7: FD's comparator rule over every slot, each slot measured against what it can really hold (the brew: 64 servings). */
@@ -700,6 +955,19 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	/** 26.x: the block entity is already gone in Block#affectNeighborsAfterRemoval, so contents are dropped here. */
 	@Override
 	public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+		if (KettleMultiblock.isConverting()) {
+			// joining, splitting or a change of copper moves the contents itself
+			return;
+		}
+		if (level instanceof ServerLevel serverLevel && state.getBlock() instanceof BrewKettlePartBlock) {
+			// a big kettle's controller went some other way (an explosion, a command): the rest falls apart and keeps the
+			// brew. A player breaking it split it already (playerWillDestroy).
+			KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
+			if (kettle != null && KettleMultiblock.restIntact(serverLevel, kettle, pos)) {
+				KettleMultiblock.split(serverLevel, kettle, this, state.getBlock(), pos, false);
+			}
+			return;
+		}
 		if (level instanceof ServerLevel serverLevel) {
 			Containers.dropContents(serverLevel, pos, getDroppableInventory());
 			getUsedRecipesAndPopExperience(serverLevel, Vec3.atCenterOf(pos));
@@ -722,7 +990,15 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 
 	@Override
 	public Component getName() {
-		return customName != null ? customName : Component.translatable("container.vineandbarrel.brew_kettle");
+		if (customName != null) {
+			return customName;
+		}
+		KettleShape shape = shape();
+		return Component.translatable(switch (shape) {
+			case SINGLE -> "container.vineandbarrel.brew_kettle";
+			case BIG -> "container.vineandbarrel.brew_kettle.big";
+			case GREAT -> "container.vineandbarrel.brew_kettle.great";
+		});
 	}
 
 	@Override
@@ -746,6 +1022,11 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	protected void loadAdditional(ValueInput input) {
 		super.loadAdditional(input);
 		inventory.deserialize(input.childOrEmpty("Inventory"));
+		// a big kettle's brew can exceed what an item stack saves (99): the true count is kept beside it
+		int servings = input.getIntOr("Servings", 0);
+		if (servings > 0 && !inventory.getStack(BREW_SLOT).isEmpty()) {
+			inventory.setQuietly(BREW_SLOT, inventory.getStack(BREW_SLOT).copyWithCount(servings));
+		}
 		brewTime = input.getIntOr("BrewTime", 0);
 		brewTimeTotal = input.getIntOr("BrewTimeTotal", 0);
 		bucketForm = input.read("BucketForm", ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY);
@@ -763,7 +1044,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		output.putInt("BrewTimeTotal", brewTimeTotal);
 		output.storeNullable("BucketForm", ItemStack.CODEC, bucketForm.isEmpty() ? null : bucketForm);
 		output.storeNullable("CustomName", ComponentSerialization.CODEC, customName);
-		inventory.serialize(output.child("Inventory"));
+		serializeInventory(output);
 		output.store("RecipesUsed", RECIPES_USED_CODEC, usedRecipeTracker);
 	}
 
@@ -772,7 +1053,24 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		output.putBoolean("IngredientsMatch", ingredientsMatch);
 		output.storeNullable("BucketForm", ItemStack.CODEC, bucketForm.isEmpty() ? null : bucketForm);
 		output.storeNullable("CustomName", ComponentSerialization.CODEC, customName);
-		inventory.serialize(output.child("Inventory"));
+		serializeInventory(output);
+	}
+
+	/** The inventory, with the brew's stack capped to what a stack saves (64) and its true count as "Servings" if larger. */
+	private void serializeInventory(ValueOutput output) {
+		int servings = getServings();
+		if (servings > MAX_SERVINGS) {
+			ItemStack brew = inventory.getStack(BREW_SLOT);
+			inventory.setQuietly(BREW_SLOT, brew.copyWithCount(MAX_SERVINGS));
+			try {
+				inventory.serialize(output.child("Inventory"));
+			} finally {
+				inventory.setQuietly(BREW_SLOT, brew);
+			}
+			output.putInt("Servings", servings);
+		} else {
+			inventory.serialize(output.child("Inventory"));
+		}
 	}
 
 	@Override
@@ -793,8 +1091,16 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	public void onDataPacket(Connection connection, ValueInput input) {
 		loadWithComponents(input);
 		// The open lid shows the brew's colour (K2): re-render when the brew changes while the lid is up
-		if (level != null && level.isClientSide() && (getBlockState().getValue(BrewKettleBlock.OPEN) || getBlockState().getValue(BrewKettleBlock.FILL) > 0)) {
-			level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+		if (level != null && level.isClientSide()) {
+			BlockState state = getBlockState();
+			if (state.getBlock() instanceof BrewKettleBlock && (state.getValue(BrewKettleBlock.OPEN) || state.getValue(BrewKettleBlock.FILL) > 0)) {
+				level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_CLIENTS);
+			} else if (state.getBlock() instanceof BrewKettlePartBlock) {
+				// the brew's colour shows in the sight glass
+				BlockPos gauge = kettle().gauge();
+				BlockState glass = level.getBlockState(gauge);
+				level.sendBlockUpdated(gauge, glass, glass, Block.UPDATE_CLIENTS);
+			}
 		}
 	}
 
@@ -802,7 +1108,20 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		super.setChanged();
 		if (level != null) {
 			level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+			if (!level.isClientSide() && getBlockState().getBlock() instanceof BrewKettlePartBlock) {
+				// comparators may stand by any block of a big kettle
+				for (BlockPos pos : kettle().positions()) {
+					if (!pos.equals(worldPosition)) {
+						level.updateNeighbourForOutputSignal(pos, level.getBlockState(pos).getBlock());
+					}
+				}
+			}
 		}
+	}
+
+	/** Forgets the recipes used (their experience was handed out). */
+	void clearUsedRecipes() {
+		usedRecipeTracker.clear();
 	}
 
 	@Override
@@ -837,7 +1156,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 			@Override
 			public int getCapacity(int index, ItemStack stack) {
 				if (index == BREW_SLOT) {
-					return MAX_SERVINGS;
+					return capacity();
 				}
 				return super.getCapacity(index, stack);
 			}
@@ -866,7 +1185,10 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	/** The screen's synced numbers: 0 brew time, 1 its total, 2 the servings (the gauge), 3 whether the grid makes nothing. */
 	public static final int DATA_SERVINGS = 2;
 	public static final int DATA_MAKES_NOTHING = 3;
-	public static final int DATA_COUNT = 4;
+	/** 4: how many servings the kettle holds; 5: how many blocks it is made of. */
+	public static final int DATA_CAPACITY = 4;
+	public static final int DATA_BLOCKS = 5;
+	public static final int DATA_COUNT = 6;
 
 	private ContainerData createData() {
 		return new ContainerData()
@@ -878,6 +1200,8 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 					case 1 -> brewTimeTotal;
 					case DATA_SERVINGS -> getServings();
 					case DATA_MAKES_NOTHING -> ingredientsMakeNothing() ? 1 : 0;
+					case DATA_CAPACITY -> capacity();
+					case DATA_BLOCKS -> shape().blocks();
 					default -> 0;
 				};
 			}

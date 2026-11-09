@@ -25,6 +25,7 @@ public class VBJadePlugin implements IWailaPlugin
 	@Override
 	public void registerClient(IWailaClientRegistration registration) {
 		registration.registerBlockComponent(KettleProvider.INSTANCE, BrewKettleBlock.class);
+		registration.registerBlockComponent(KettleProvider.INSTANCE, jexxme.vineandbarrel.kettle.BrewKettlePartBlock.class);
 		registration.registerBlockComponent(BarrelProvider.INSTANCE, AgingBarrelBlock.class);
 		registration.registerBlockComponent(PlacedDrinksProvider.INSTANCE, jexxme.vineandbarrel.drink.PlacedDrinksBlock.class);
 		// Out cold: the screen is black, so Jade shows nothing either (its tooltip would draw over the blackout)

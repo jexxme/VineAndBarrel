@@ -4,6 +4,7 @@ import jexxme.vineandbarrel.barrel.AgingBarrelBlockEntity;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.inventory.ItemSlots;
 import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
+import jexxme.vineandbarrel.kettle.KettleMultiblock;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
 import jexxme.vineandbarrel.platform.SlotAccess;
 import net.minecraft.core.BlockPos;
@@ -42,8 +43,14 @@ public final class NeoForgeItemAccess implements SlotAccess
 	 * below pulls the filled ones; the barrel takes bases from the top and vessels from the sides.
 	 */
 	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(Capabilities.Item.BLOCK, KettleRegistry.BREW_KETTLE_BE.get(),
-			(be, side) -> sideView(be.getInventory(), BrewKettleBlockEntity.automationSide(side), true));
+		// Every kettle block, single or part of a big kettle, hands out its kettle's inventory (the controller's), with the
+		// rules of the side it is asked from (the same single provider as on Fabric)
+		java.util.List<net.minecraft.world.level.block.Block> kettles = new java.util.ArrayList<>(KettleRegistry.allKettleBlocks());
+		kettles.addAll(KettleRegistry.allPartBlocks());
+		event.registerBlock(Capabilities.Item.BLOCK, (level, pos, state, be, side) -> {
+			BrewKettleBlockEntity kettle = KettleMultiblock.controller(level, pos);
+			return kettle == null ? null : sideView(kettle.getInventory(), BrewKettleBlockEntity.automationSide(side), true);
+		}, kettles.toArray(net.minecraft.world.level.block.Block[]::new));
 		event.registerBlockEntity(Capabilities.Item.BLOCK, BarrelRegistry.AGING_BARREL_BE.get(),
 			(be, side) -> sideView(be.getInventory(), AgingBarrelBlockEntity.automationSide(side), false));
 	}

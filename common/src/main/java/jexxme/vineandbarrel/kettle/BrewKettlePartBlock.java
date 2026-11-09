@@ -1,0 +1,260 @@
+package jexxme.vineandbarrel.kettle;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
+
+import java.util.List;
+
+/**
+ * One block of a big Brew Kettle (see {@link KettleMultiblock}). It drops, picks and reads as a plain kettle of its
+ * stage; the controller part (local 0, 0, 0) holds the block entity, every other part asks it. This class is the waxed
+ * part; {@link WeatheringBrewKettlePartBlock} weathers, for the whole kettle at once.
+ */
+public class BrewKettlePartBlock extends Block implements EntityBlock
+{
+	public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
+	public static final IntegerProperty PART = IntegerProperty.create("part", 0, KettlePart.count() - 1);
+	/** How full the sight glass shows the kettle, 0 to {@link #MAX_LEVEL} (only the glass block draws it). */
+	public static final int MAX_LEVEL = 4;
+	public static final IntegerProperty LEVEL = IntegerProperty.create("level", 0, MAX_LEVEL);
+	/** Extension blocks stand on the chimney (only the chimney block draws it). */
+	public static final BooleanProperty EXTENDED = BrewKettleBlock.EXTENDED;
+	/** A bottom block standing over a campfire, fire or lava shows the tray, like a single kettle. */
+	public static final BooleanProperty TRAY = BooleanProperty.create("tray");
+
+	private static final VoxelShape[][] SHAPES = new VoxelShape[KettlePart.count()][4];
+
+	private final WeatherState weatherState;
+
+	public BrewKettlePartBlock(WeatherState weatherState, BlockBehaviour.Properties properties) {
+		super(properties);
+		this.weatherState = weatherState;
+		registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(PART, 0).setValue(TRAY, false).setValue(LEVEL, 0)
+			.setValue(EXTENDED, false));
+	}
+
+	public static KettlePart part(BlockState state) {
+		return KettlePart.byId(state.getValue(PART));
+	}
+
+	public WeatherState getWeatherState() {
+		return weatherState;
+	}
+
+	public boolean isWaxed() {
+		return true;
+	}
+
+	@Override
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+		builder.add(FACING, PART, TRAY, LEVEL, EXTENDED);
+	}
+
+	/** Reads as the kettle it was placed as (Jade, the debug screen's block name). */
+	@Override
+	public MutableComponent getName() {
+		return KettleRegistry.singleOf(this).getName();
+	}
+
+	// ------------------------------------------------------------------ use: everything a single kettle does, for the whole kettle
+
+	@Override
+	protected InteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+		return BrewKettleBlock.useKettle(held, state, level, pos, player, hand);
+	}
+
+	@Override
+	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+		return BrewKettleBlock.openScreen(level, pos, player);
+	}
+
+	// ------------------------------------------------------------------ breaking: falls apart into single kettles
+
+	@Override
+	public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+		if (level instanceof ServerLevel server) {
+			KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
+			BrewKettleBlockEntity controller = KettleMultiblock.controller(level, pos);
+			if (kettle != null && controller != null && KettleMultiblock.isIntact(level, kettle)) {
+				KettleMultiblock.split(server, kettle, controller, state.getBlock(), pos, !player.preventsBlockDrops());
+			}
+		}
+		return super.playerWillDestroy(level, pos, state, player);
+	}
+
+	/** Anything else that removes a part (an explosion, a command): the rest falls apart, the brew stays with them. */
+	@Override
+	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+		BlockState now = level.getBlockState(pos);
+		boolean sameplace = now.getBlock() instanceof BrewKettlePartBlock && now.getValue(PART).equals(state.getValue(PART));
+		// (a change of copper on this block, e.g. vanilla's honeycomb or lightning: onPlace turns the whole kettle)
+		if (!KettleMultiblock.isConverting() && !sameplace && !part(state).isController()) {
+			KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
+			if (kettle != null && KettleMultiblock.restIntact(level, kettle, pos)
+				&& level.getBlockEntity(kettle.controller()) instanceof BrewKettleBlockEntity controller) {
+				KettleMultiblock.split(level, kettle, controller, state.getBlock(), pos, false);
+			}
+		}
+		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+	}
+
+	/** A broken part drops as a plain kettle of its stage, carrying its share of the brew. */
+	@Override
+	protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+		ItemStack kettle = new ItemStack(KettleRegistry.singleOf(this).asItem());
+		net.minecraft.world.phys.Vec3 origin = params.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN);
+		if (origin != null) {
+			KettleContents share = KettleMultiblock.takePendingDrop(params.getLevel(), BlockPos.containing(origin));
+			if (share != null) {
+				kettle.set(KettleRegistry.KETTLE_CONTENTS.get(), share);
+			}
+		}
+		return List.of(kettle);
+	}
+
+	@Override
+	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+		return new ItemStack(KettleRegistry.singleOf(this).asItem());
+	}
+
+	// ------------------------------------------------------------------ copper: the whole kettle changes together
+
+	/** Lightning, a command or another mod changed one block's copper: the rest of the kettle follows. */
+	@Override
+	protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+		super.onPlace(state, level, pos, oldState, movedByPiston);
+		if (!level.isClientSide() && !KettleMultiblock.isConverting() && oldState.getBlock() instanceof BrewKettlePartBlock && oldState.getBlock() != this
+			&& oldState.getValue(PART).equals(state.getValue(PART))) {
+			KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
+			if (kettle != null) {
+				KettleMultiblock.restage(level, kettle, KettleRegistry.singleOf(this));
+			}
+		}
+	}
+
+	/** Only a change of copper keeps the block entity (same part, another stage); joining and splitting move the brew themselves. */
+	@Override
+	protected boolean shouldChangedStateKeepBlockEntity(BlockState oldState) {
+		return oldState.getBlock() instanceof BrewKettlePartBlock;
+	}
+
+	// ------------------------------------------------------------------ shape, trays, turning
+
+	@Override
+	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+		if (direction == Direction.DOWN && part(state).isBottom()) {
+			return state.setValue(TRAY, BrewKettleBlock.trayState(level, pos) == KettleSupport.TRAY);
+		}
+		return state;
+	}
+
+	@Override
+	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+		int id = state.getValue(PART);
+		int facing = state.getValue(FACING).get2DDataValue();
+		VoxelShape shape = SHAPES[id][facing];
+		if (shape == null) {
+			shape = SHAPES[id][facing] = computeShape(KettlePart.byId(id), state.getValue(FACING));
+		}
+		return shape;
+	}
+
+	/** The body (2 px in from the kettle's edges, up to the dome's top) cut to this block. */
+	private static VoxelShape computeShape(KettlePart part, Direction facing) {
+		KettleShape shape = part.shape();
+		BlockPos at = KettlePart.offset(facing, part.x(), part.y(), part.z());
+		BlockPos far = KettlePart.offset(facing, shape.size() - 1, 0, shape.size() - 1);
+		// the kettle's box relative to this block, in px
+		double minX = 16.0D * (Math.min(0, far.getX()) - at.getX()) + 2.0D;
+		double minZ = 16.0D * (Math.min(0, far.getZ()) - at.getZ()) + 2.0D;
+		double maxX = minX + 16.0D * shape.size() - 4.0D;
+		double maxZ = minZ + 16.0D * shape.size() - 4.0D;
+		double minY = -16.0D * part.y();
+		double maxY = minY + KettleGeometry.hoodTop(shape);
+		double x0 = Math.max(0, minX), x1 = Math.min(16, maxX), z0 = Math.max(0, minZ), z1 = Math.min(16, maxZ);
+		double y0 = Math.max(0, minY), y1 = Math.min(16, maxY);
+		if (x1 <= x0 || z1 <= z0 || y1 <= y0) {
+			return Shapes.empty();
+		}
+		return Block.box(x0, y0, z0, x1, y1, z1);
+	}
+
+	@Override
+	protected RenderShape getRenderShape(BlockState state) {
+		return RenderShape.MODEL;
+	}
+
+	@Override
+	protected BlockState rotate(BlockState state, Rotation rotation) {
+		return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+	}
+
+	@Override
+	protected BlockState mirror(BlockState state, Mirror mirror) {
+		if (mirror == Mirror.NONE) {
+			return state;
+		}
+		return state.setValue(FACING, mirror.mirror(state.getValue(FACING))).setValue(PART, part(state).mirrored().id());
+	}
+
+	// ------------------------------------------------------------------ comparator, block entity
+
+	@Override
+	protected boolean hasAnalogOutputSignal(BlockState state) {
+		return true;
+	}
+
+	@Override
+	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
+		BrewKettleBlockEntity kettle = KettleMultiblock.controller(level, pos);
+		return kettle != null ? kettle.comparatorSignal() : 0;
+	}
+
+	@Override
+	public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+		return part(state).isController() ? new BrewKettleBlockEntity(pos, state) : null;
+	}
+
+	@Override
+	public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+		if (type != KettleRegistry.BREW_KETTLE_BE.get() || !part(state).isController()) {
+			return null;
+		}
+		return level.isClientSide()
+			? (l, p, s, be) -> BrewKettleBlockEntity.clientTick(l, p, s, (BrewKettleBlockEntity) be)
+			: (l, p, s, be) -> BrewKettleBlockEntity.serverTick((ServerLevel) l, p, s, (BrewKettleBlockEntity) be);
+	}
+}

@@ -152,6 +152,16 @@ public class BrewKettleMenu extends RecipeBookMenu
 		return blockEntity.isHeated();
 	}
 
+	/** How many servings this kettle holds (synced: 64 per block). */
+	public int getCapacity() {
+		return Math.max(1, kettleData.get(BrewKettleBlockEntity.DATA_CAPACITY));
+	}
+
+	/** How many blocks the kettle is made of (synced: 1 for a single kettle). */
+	public int getBlocks() {
+		return Math.max(1, kettleData.get(BrewKettleBlockEntity.DATA_BLOCKS));
+	}
+
 	/** Whether the ingredients in the grid make no recipe (synced from the server, which knows the recipes). */
 	public boolean ingredientsMakeNothing() {
 		return kettleData.get(BrewKettleBlockEntity.DATA_MAKES_NOTHING) != 0;

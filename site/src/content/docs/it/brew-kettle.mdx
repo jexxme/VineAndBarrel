@@ -49,18 +49,58 @@ Apri il bollitore con un clic destro e inserisci gli ingredienti. L'indicatore a
 
 <KettleScreen recipe="brewing/barley_wort" />
 
-Ogni ricetta dà **{rules.servingsPerBucket} porzioni** e richiede **{seconds(brews[0].brewingTime)}**. Un bollitore riscaldato fuma
-e gorgoglia appena contiene una preparazione o gli ingredienti per farne una (altrimenti resta tranquillo); mentre una partita è in preparazione il coperchio vibra, e quando è pronta sbuffa vapore. Il bollitore continua a preparare
-altre partite finché ci sono ingredienti, fino a {rules.kettleMaxServings} porzioni in tutto.
+Ogni ricetta dà **{rules.servingsPerBucket} porzioni** e richiede **{seconds(brews[0].brewingTime)}**. Il bollitore
+continua a preparare altre partite finché ci sono ingredienti, fino a {rules.kettleMaxServings} porzioni in totale.
+
+Si capisce da lontano cosa sta facendo un bollitore:
+
+- **Prepara:** dal suo camino esce vapore, bolle e gorgoglia. Quando una partita è pronta, sbuffa una nuvola di
+  vapore.
+- **Pronto:** il vapore si ferma e il rubinetto gocciola ogni tanto. La spia di livello accanto al rubinetto mostra
+  quanto è pieno.
+- **Su un fuoco acceso senza niente da preparare:** il fumo del fuoco sale lungo il camino.
 
 <BrewFlow />
 
-Quando una preparazione è finita, il coperchio resta alzato e la vedi all'interno, che scende man mano che prelevi porzioni. Mentre una partita è in preparazione, il
-coperchio è abbassato; quando l'ultima porzione è andata, si chiude.
+La spia di livello accanto al rubinetto mostra la preparazione col suo colore e scende man mano che prendi porzioni.
+Finché hai aperto la schermata del bollitore, il suo coperchio è alzato e vedi la preparazione dentro.
 
 {brews.map((r) => <Recipe recipe={r} />)}
 
 <Render name="scenes/kettle-open" float="right" size={192} alt="Il bollitore con il coperchio aperto, che mostra la preparazione" />
+
+## Bollitori grandi
+
+<Render name="scenes/kettle-family" size={384} caption="Un Bollitore enorme, un Bollitore grande e un bollitore semplice" />
+
+Metti dei bollitori insieme a formare un cubo e diventano uno solo: **8 bollitori in un cubo 2×2×2** formano un
+**Bollitore grande**, **27 in un cubo 3×3×3** un **Bollitore enorme**. Si uniscono quando posi l'ultimo bollitore del
+cubo, e un Bollitore grande dentro un cubo di 27 diventa un Bollitore enorme. I bollitori con preparazioni diverse non
+si uniscono.
+
+- **Partite più grandi.** Ogni blocco aggiunge una partita: un Bollitore grande prepara 32 porzioni in una volta, uno
+  enorme 108. Sono quattro e tredici botti.
+- **Fuoco.** Basta un fuoco sotto. Ogni fuoco sotto lo strato inferiore lo rende più veloce: con un fuoco sotto ogni
+  blocco prepara una partita intera in metà (grande) o un terzo (enorme) del tempo di un bollitore singolo. Mancano
+  ingredienti? Prepara tanti set quanti ne contiene la griglia.
+- **Spazio.** Contiene 64 porzioni per blocco: 512 in un Bollitore grande, 1728 in uno enorme.
+- **Qualsiasi blocco.** Ogni blocco apre la schermata, riempie ampolle e secchi, accetta le tramogge e dà un segnale
+  al comparatore.
+- **Rompere.** Se rompi un blocco qualsiasi, il bollitore si separa in bollitori singoli, ognuno con la sua parte di
+  preparazione; il blocco rotto cade con la sua parte. Rimetti un bollitore nel vuoto e si uniscono di nuovo.
+- **Un unico recipiente.** Si ossida tutto insieme, e un favo o una raschiata d'ascia cambia l'intero bollitore.
+
+<Render name="scenes/kettle-big" size={256} caption="Bollitore grande" />
+<Render name="scenes/kettle-great" size={256} caption="Bollitore enorme con un camino più alto" />
+
+## Camino
+
+<Render name="scenes/kettle-chimney" float="right" size={192} alt="Un bollitore il cui camino attraversa un tetto di assi" />
+
+Fai clic destro su un bollitore o sul suo camino con un <Item id="copper_ingot" /> e il camino cresce di un blocco,
+fino a 8. Sfonda un blocco del tetto che ha davanti (il blocco cade) e una lamiera di rame sigilla il buco intorno. Il
+camino invecchia insieme al bollitore. Se rompi un pezzo, crolla insieme a tutto ciò che c'è sopra e ti restituisce i
+lingotti; rompere il bollitore fa lo stesso. Un bollitore appeso non ha spazio per un camino.
 
 ## Imbottigliare
 
@@ -105,8 +145,7 @@ Il bollitore è di rame e si ossida come il rame.
 - **Il favo** lo cera e ferma l'ossidazione. Un'**ascia** raschia via la cera o uno stadio di ossidazione, e un fulmine lo ripulisce.
 - **Rompilo pieno** e conserva la sua preparazione: la descrizione dell'oggetto e la barra di riempimento la mostrano, e puoi posizionarlo altrove
   e andare avanti. Gli ingredienti e le ampolle o i secchi in attesa cadono a terra.
-- Non si ossida mentre qualcuno ha la sua schermata aperta.
-
+- Non si ossida mentre qualcuno ha la sua schermata aperta (un bollitore singolo).
 ## Da sapere
 
 - **Hai perso il fuoco?** Togliere il calore non azzera una partita, ma la freccia torna indietro al doppio della velocità con cui si era riempita.

@@ -49,18 +49,57 @@ llena que está la marmita; pasa el cursor por encima para ver las raciones.
 
 <KettleScreen recipe="brewing/barley_wort" />
 
-Cada receta da **{rules.servingsPerBucket} raciones** y tarda **{seconds(brews[0].brewingTime)}**. Una marmita caliente echa vapor
-y burbujea cuando tiene una tanda o los ingredientes de una (si no, se queda callada); mientras elabora una tanda, la tapa traquetea también, y al terminar suelta una bocanada de vapor. La marmita sigue elaborando
-más tandas mientras haya ingredientes, hasta {rules.kettleMaxServings} raciones en total.
+Cada receta da **{rules.servingsPerBucket} raciones** y tarda **{seconds(brews[0].brewingTime)}**. La marmita sigue
+elaborando más tandas mientras haya ingredientes, hasta {rules.kettleMaxServings} raciones en total.
+
+Desde lejos se nota qué está haciendo una marmita:
+
+- **Elaborando:** sale vapor por su chimenea, hierve y burbujea. Cuando termina una tanda, suelta una bocanada de
+  vapor.
+- **Lista:** el vapor se detiene y el grifo gotea de vez en cuando. La mirilla junto al grifo muestra lo llena que
+  está.
+- **Sobre un fuego encendido sin nada que elaborar:** el humo del fuego sube por la chimenea.
 
 <BrewFlow />
 
-Cuando una tanda termina, la tapa se queda levantada y la ves dentro, bajando a medida que sacas raciones. Mientras elabora una tanda, la
-tapa está cerrada; cuando sale la última ración, se cierra.
+La mirilla junto al grifo muestra la tanda con su color y baja a medida que sacas raciones. Mientras tengas abierta la
+pantalla de la marmita, su tapa está levantada y ves la tanda dentro.
 
 {brews.map((r) => <Recipe recipe={r} />)}
 
 <Render name="scenes/kettle-open" float="right" size={192} alt="La marmita con la tapa abierta, mostrando la tanda" />
+
+## Marmitas grandes
+
+<Render name="scenes/kettle-family" size={384} caption="Una Marmita enorme, una Marmita grande y una marmita normal" />
+
+Coloca marmitas juntas formando un cubo y se convierten en una sola: **8 marmitas en un cubo de 2×2×2** forman una
+**Marmita grande**, **27 en un cubo de 3×3×3** una **Marmita enorme**. Se unen al colocar la última marmita del cubo,
+y una Marmita grande dentro de un cubo de 27 crece hasta ser una Marmita enorme. Las marmitas con tandas distintas no
+se unen.
+
+- **Tandas mayores.** Cada bloque añade una tanda: una Marmita grande elabora 32 raciones a la vez, una enorme 108.
+  Son cuatro y trece barriles.
+- **Fuego.** Basta con un fuego debajo. Cada fuego bajo su capa inferior la hace más rápida: con un fuego bajo cada
+  bloque elabora una tanda completa en la mitad (grande) o la tercera parte (enorme) del tiempo de una marmita sola.
+  ¿Faltan ingredientes? Elabora tantos juegos como quepan en la rejilla.
+- **Espacio.** Guarda 64 raciones por bloque: 512 en una Marmita grande, 1728 en una enorme.
+- **Cualquier bloque.** Cada bloque abre la pantalla, llena frascos y cubos, admite tolvas y da señal al comparador.
+- **Romperla.** Si rompes cualquier bloque, la marmita se separa en marmitas sueltas, cada una con su parte de la
+  tanda; el bloque roto se suelta con su parte. Si pones una marmita en el hueco, se vuelve a unir.
+- **Un solo recipiente.** Se oxida como uno solo, y un panal o un raspado de hacha lo cambia todo.
+
+<Render name="scenes/kettle-big" size={256} caption="Marmita grande" />
+<Render name="scenes/kettle-great" size={256} caption="Marmita enorme con una chimenea más alta" />
+
+## Chimenea
+
+<Render name="scenes/kettle-chimney" float="right" size={192} alt="Una marmita cuya chimenea atraviesa un techo de tablones" />
+
+Haz clic derecho en una marmita o en su chimenea con un <Item id="copper_ingot" /> y la chimenea crece un bloque más,
+hasta 8. Atraviesa un bloque de techo que esté en su camino (el bloque se suelta) y un remate de cobre sella el hueco
+a su alrededor. La chimenea envejece con su marmita. Si rompes una pieza, cae junto con todo lo que tiene encima y
+devuelve los lingotes; romper la marmita hace lo mismo. Una marmita colgada no tiene sitio para una.
 
 ## Embotellado
 
@@ -105,8 +144,7 @@ La marmita es de cobre, y envejece como el cobre.
 - El **panal** la encera y detiene el desgaste. Un **hacha** raspa la cera o una fase de desgaste, y un rayo la limpia.
 - **Rómpela llena** y conserva su tanda: la descripción del objeto y su barra de llenado lo muestran, y puedes colocarla en otro sitio
   y seguir. Los ingredientes y los frascos o cubos que esperaban caen al suelo.
-- No se desgasta mientras alguien tiene su pantalla abierta.
-
+- No se desgasta mientras alguien tiene su pantalla abierta (una marmita sola).
 ## Conviene saber
 
 - **¿Se apagó el fuego?** Quitar el calor no reinicia una tanda, pero la flecha retrocede al doble de velocidad a la que se llenó.

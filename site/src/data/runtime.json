@@ -2763,6 +2763,10 @@
       "blastResistance": 6.0,
       "item": "vineandbarrel:brew_kettle",
       "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
         "facing": [
           "north",
           "south",
@@ -2791,6 +2795,7 @@
         ]
       },
       "defaultState": {
+        "extended": "false",
         "facing": "north",
         "fill": "0",
         "open": "false",
@@ -2818,6 +2823,10 @@
       "blastResistance": 6.0,
       "item": "vineandbarrel:waxed_brew_kettle",
       "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
         "facing": [
           "north",
           "south",
@@ -2846,6 +2855,7 @@
         ]
       },
       "defaultState": {
+        "extended": "false",
         "facing": "north",
         "fill": "0",
         "open": "false",
@@ -2867,12 +2877,264 @@
         "vineandbarrel:brew_kettles"
       ]
     },
+    "vineandbarrel:brew_kettle_part": {
+      "class": "jexxme.vineandbarrel.kettle.WeatheringBrewKettlePartBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "level": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "part": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33",
+          "34"
+        ],
+        "tray": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "extended": "false",
+        "facing": "north",
+        "level": "0",
+        "part": "0",
+        "tray": "false"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:waxed_brew_kettle_part": {
+      "class": "jexxme.vineandbarrel.kettle.BrewKettlePartBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "level": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "part": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33",
+          "34"
+        ],
+        "tray": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "extended": "false",
+        "facing": "north",
+        "level": "0",
+        "part": "0",
+        "tray": "false"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:brew_kettle_chimney": {
+      "class": "jexxme.vineandbarrel.kettle.KettleChimneyBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "flashing": [
+          "true",
+          "false"
+        ],
+        "size": [
+          "1",
+          "2",
+          "3"
+        ],
+        "top": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "facing": "north",
+        "flashing": "false",
+        "size": "1",
+        "top": "true"
+      },
+      "tags": [
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:waxed_brew_kettle_chimney": {
+      "class": "jexxme.vineandbarrel.kettle.KettleChimneyBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "flashing": [
+          "true",
+          "false"
+        ],
+        "size": [
+          "1",
+          "2",
+          "3"
+        ],
+        "top": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "facing": "north",
+        "flashing": "false",
+        "size": "1",
+        "top": "true"
+      },
+      "tags": [
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
     "vineandbarrel:exposed_brew_kettle": {
       "class": "jexxme.vineandbarrel.kettle.WeatheringBrewKettleBlock",
       "hardness": 0.5,
       "blastResistance": 6.0,
       "item": "vineandbarrel:exposed_brew_kettle",
       "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
         "facing": [
           "north",
           "south",
@@ -2901,6 +3163,7 @@
         ]
       },
       "defaultState": {
+        "extended": "false",
         "facing": "north",
         "fill": "0",
         "open": "false",
@@ -2928,6 +3191,10 @@
       "blastResistance": 6.0,
       "item": "vineandbarrel:waxed_exposed_brew_kettle",
       "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
         "facing": [
           "north",
           "south",
@@ -2956,6 +3223,7 @@
         ]
       },
       "defaultState": {
+        "extended": "false",
         "facing": "north",
         "fill": "0",
         "open": "false",
@@ -2977,12 +3245,264 @@
         "vineandbarrel:brew_kettles"
       ]
     },
+    "vineandbarrel:exposed_brew_kettle_part": {
+      "class": "jexxme.vineandbarrel.kettle.WeatheringBrewKettlePartBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "level": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "part": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33",
+          "34"
+        ],
+        "tray": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "extended": "false",
+        "facing": "north",
+        "level": "0",
+        "part": "0",
+        "tray": "false"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:waxed_exposed_brew_kettle_part": {
+      "class": "jexxme.vineandbarrel.kettle.BrewKettlePartBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "level": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "part": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33",
+          "34"
+        ],
+        "tray": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "extended": "false",
+        "facing": "north",
+        "level": "0",
+        "part": "0",
+        "tray": "false"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:exposed_brew_kettle_chimney": {
+      "class": "jexxme.vineandbarrel.kettle.KettleChimneyBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "flashing": [
+          "true",
+          "false"
+        ],
+        "size": [
+          "1",
+          "2",
+          "3"
+        ],
+        "top": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "facing": "north",
+        "flashing": "false",
+        "size": "1",
+        "top": "true"
+      },
+      "tags": [
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:waxed_exposed_brew_kettle_chimney": {
+      "class": "jexxme.vineandbarrel.kettle.KettleChimneyBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "flashing": [
+          "true",
+          "false"
+        ],
+        "size": [
+          "1",
+          "2",
+          "3"
+        ],
+        "top": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "facing": "north",
+        "flashing": "false",
+        "size": "1",
+        "top": "true"
+      },
+      "tags": [
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
     "vineandbarrel:weathered_brew_kettle": {
       "class": "jexxme.vineandbarrel.kettle.WeatheringBrewKettleBlock",
       "hardness": 0.5,
       "blastResistance": 6.0,
       "item": "vineandbarrel:weathered_brew_kettle",
       "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
         "facing": [
           "north",
           "south",
@@ -3011,6 +3531,7 @@
         ]
       },
       "defaultState": {
+        "extended": "false",
         "facing": "north",
         "fill": "0",
         "open": "false",
@@ -3038,6 +3559,10 @@
       "blastResistance": 6.0,
       "item": "vineandbarrel:waxed_weathered_brew_kettle",
       "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
         "facing": [
           "north",
           "south",
@@ -3066,6 +3591,7 @@
         ]
       },
       "defaultState": {
+        "extended": "false",
         "facing": "north",
         "fill": "0",
         "open": "false",
@@ -3087,12 +3613,264 @@
         "vineandbarrel:brew_kettles"
       ]
     },
+    "vineandbarrel:weathered_brew_kettle_part": {
+      "class": "jexxme.vineandbarrel.kettle.WeatheringBrewKettlePartBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "level": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "part": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33",
+          "34"
+        ],
+        "tray": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "extended": "false",
+        "facing": "north",
+        "level": "0",
+        "part": "0",
+        "tray": "false"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:waxed_weathered_brew_kettle_part": {
+      "class": "jexxme.vineandbarrel.kettle.BrewKettlePartBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "level": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "part": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33",
+          "34"
+        ],
+        "tray": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "extended": "false",
+        "facing": "north",
+        "level": "0",
+        "part": "0",
+        "tray": "false"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:weathered_brew_kettle_chimney": {
+      "class": "jexxme.vineandbarrel.kettle.KettleChimneyBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "flashing": [
+          "true",
+          "false"
+        ],
+        "size": [
+          "1",
+          "2",
+          "3"
+        ],
+        "top": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "facing": "north",
+        "flashing": "false",
+        "size": "1",
+        "top": "true"
+      },
+      "tags": [
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:waxed_weathered_brew_kettle_chimney": {
+      "class": "jexxme.vineandbarrel.kettle.KettleChimneyBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "flashing": [
+          "true",
+          "false"
+        ],
+        "size": [
+          "1",
+          "2",
+          "3"
+        ],
+        "top": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "facing": "north",
+        "flashing": "false",
+        "size": "1",
+        "top": "true"
+      },
+      "tags": [
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
     "vineandbarrel:oxidized_brew_kettle": {
       "class": "jexxme.vineandbarrel.kettle.WeatheringBrewKettleBlock",
       "hardness": 0.5,
       "blastResistance": 6.0,
       "item": "vineandbarrel:oxidized_brew_kettle",
       "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
         "facing": [
           "north",
           "south",
@@ -3121,6 +3899,7 @@
         ]
       },
       "defaultState": {
+        "extended": "false",
         "facing": "north",
         "fill": "0",
         "open": "false",
@@ -3148,6 +3927,10 @@
       "blastResistance": 6.0,
       "item": "vineandbarrel:waxed_oxidized_brew_kettle",
       "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
         "facing": [
           "north",
           "south",
@@ -3176,6 +3959,7 @@
         ]
       },
       "defaultState": {
+        "extended": "false",
         "facing": "north",
         "fill": "0",
         "open": "false",
@@ -3193,6 +3977,254 @@
         "minecraft:causes_suffocation",
         "minecraft:entities_can_teleport_to",
         "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:oxidized_brew_kettle_part": {
+      "class": "jexxme.vineandbarrel.kettle.WeatheringBrewKettlePartBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "level": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "part": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33",
+          "34"
+        ],
+        "tray": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "extended": "false",
+        "facing": "north",
+        "level": "0",
+        "part": "0",
+        "tray": "false"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:waxed_oxidized_brew_kettle_part": {
+      "class": "jexxme.vineandbarrel.kettle.BrewKettlePartBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "extended": [
+          "true",
+          "false"
+        ],
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "level": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "part": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33",
+          "34"
+        ],
+        "tray": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "extended": "false",
+        "facing": "north",
+        "level": "0",
+        "part": "0",
+        "tray": "false"
+      },
+      "tags": [
+        "minecraft:blocks_dolphin_jump",
+        "minecraft:blocks_fluid_flow",
+        "minecraft:blocks_lava_fire_spread",
+        "minecraft:blocks_motion",
+        "minecraft:blocks_motion_in_heightmap",
+        "minecraft:blocks_motion_in_heightmap_no_leaves",
+        "minecraft:blocks_motion_no_leaves",
+        "minecraft:causes_suffocation",
+        "minecraft:entities_can_teleport_to",
+        "minecraft:ice_melts_when_destroyed_above",
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:oxidized_brew_kettle_chimney": {
+      "class": "jexxme.vineandbarrel.kettle.KettleChimneyBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "flashing": [
+          "true",
+          "false"
+        ],
+        "size": [
+          "1",
+          "2",
+          "3"
+        ],
+        "top": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "facing": "north",
+        "flashing": "false",
+        "size": "1",
+        "top": "true"
+      },
+      "tags": [
+        "minecraft:mineable/pickaxe",
+        "vineandbarrel:brew_kettles"
+      ]
+    },
+    "vineandbarrel:waxed_oxidized_brew_kettle_chimney": {
+      "class": "jexxme.vineandbarrel.kettle.KettleChimneyBlock",
+      "hardness": 0.5,
+      "blastResistance": 6.0,
+      "item": "minecraft:air",
+      "properties": {
+        "facing": [
+          "north",
+          "south",
+          "west",
+          "east"
+        ],
+        "flashing": [
+          "true",
+          "false"
+        ],
+        "size": [
+          "1",
+          "2",
+          "3"
+        ],
+        "top": [
+          "true",
+          "false"
+        ]
+      },
+      "defaultState": {
+        "facing": "north",
+        "flashing": "false",
+        "size": "1",
+        "top": "true"
+      },
+      "tags": [
         "minecraft:mineable/pickaxe",
         "vineandbarrel:brew_kettles"
       ]
@@ -13961,18 +14993,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -15009,18 +16049,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -16031,18 +17079,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -17053,18 +18109,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -18075,18 +19139,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -19083,18 +20155,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -20091,18 +21171,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -21314,18 +22402,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -22936,18 +24032,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -24271,18 +25375,26 @@
         "vineandbarrel:barley_bale",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_crate",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:hops_crate",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_crate",
         "vineandbarrel:white_grape_juice_cauldron"
@@ -25809,16 +26921,32 @@
         "vineandbarrel:apple_juice_cauldron",
         "vineandbarrel:barley_wort_cauldron",
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_chimney",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_chimney",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:grape_juice_cauldron",
         "vineandbarrel:honey_must_cauldron",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_chimney",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:sweet_berry_juice_cauldron",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_chimney",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_chimney",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_chimney",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
+        "vineandbarrel:waxed_weathered_brew_kettle_chimney",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
         "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_chimney",
+        "vineandbarrel:weathered_brew_kettle_part",
         "vineandbarrel:wheat_wort_cauldron",
         "vineandbarrel:white_grape_juice_cauldron"
       ],
@@ -28300,13 +29428,29 @@
       ],
       "vineandbarrel:brew_kettles": [
         "vineandbarrel:brew_kettle",
+        "vineandbarrel:brew_kettle_chimney",
+        "vineandbarrel:brew_kettle_part",
         "vineandbarrel:exposed_brew_kettle",
+        "vineandbarrel:exposed_brew_kettle_chimney",
+        "vineandbarrel:exposed_brew_kettle_part",
         "vineandbarrel:oxidized_brew_kettle",
+        "vineandbarrel:oxidized_brew_kettle_chimney",
+        "vineandbarrel:oxidized_brew_kettle_part",
         "vineandbarrel:waxed_brew_kettle",
+        "vineandbarrel:waxed_brew_kettle_chimney",
+        "vineandbarrel:waxed_brew_kettle_part",
         "vineandbarrel:waxed_exposed_brew_kettle",
+        "vineandbarrel:waxed_exposed_brew_kettle_chimney",
+        "vineandbarrel:waxed_exposed_brew_kettle_part",
         "vineandbarrel:waxed_oxidized_brew_kettle",
+        "vineandbarrel:waxed_oxidized_brew_kettle_chimney",
+        "vineandbarrel:waxed_oxidized_brew_kettle_part",
         "vineandbarrel:waxed_weathered_brew_kettle",
-        "vineandbarrel:weathered_brew_kettle"
+        "vineandbarrel:waxed_weathered_brew_kettle_chimney",
+        "vineandbarrel:waxed_weathered_brew_kettle_part",
+        "vineandbarrel:weathered_brew_kettle",
+        "vineandbarrel:weathered_brew_kettle_chimney",
+        "vineandbarrel:weathered_brew_kettle_part"
       ],
       "vineandbarrel:campfire_signal_smoke": [
         "vineandbarrel:barley_bale"

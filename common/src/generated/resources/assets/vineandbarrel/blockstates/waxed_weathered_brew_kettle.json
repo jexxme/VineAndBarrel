@@ -1,453 +1,903 @@
 {
   "variants": {
-    "facing=east,fill=0,open=false,support=handle": {
+    "extended=false,facing=east,fill=0,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle",
       "y": 90
     },
-    "facing=east,fill=0,open=false,support=none": {
+    "extended=false,facing=east,fill=0,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle",
       "y": 90
     },
-    "facing=east,fill=0,open=false,support=tray": {
+    "extended=false,facing=east,fill=0,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray",
       "y": 90
     },
-    "facing=east,fill=0,open=true,support=handle": {
+    "extended=false,facing=east,fill=0,open=true,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_open",
       "y": 90
     },
-    "facing=east,fill=0,open=true,support=none": {
+    "extended=false,facing=east,fill=0,open=true,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_open",
       "y": 90
     },
-    "facing=east,fill=0,open=true,support=tray": {
+    "extended=false,facing=east,fill=0,open=true,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_open",
       "y": 90
     },
-    "facing=east,fill=1,open=false,support=handle": {
+    "extended=false,facing=east,fill=1,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1",
       "y": 90
     },
-    "facing=east,fill=1,open=false,support=none": {
+    "extended=false,facing=east,fill=1,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill1",
       "y": 90
     },
-    "facing=east,fill=1,open=false,support=tray": {
+    "extended=false,facing=east,fill=1,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1",
       "y": 90
     },
-    "facing=east,fill=1,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1",
+    "extended=false,facing=east,fill=1,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill1",
       "y": 90
     },
-    "facing=east,fill=1,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill1",
+    "extended=false,facing=east,fill=1,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill1",
       "y": 90
     },
-    "facing=east,fill=1,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1",
+    "extended=false,facing=east,fill=1,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill1",
       "y": 90
     },
-    "facing=east,fill=2,open=false,support=handle": {
+    "extended=false,facing=east,fill=2,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2",
       "y": 90
     },
-    "facing=east,fill=2,open=false,support=none": {
+    "extended=false,facing=east,fill=2,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill2",
       "y": 90
     },
-    "facing=east,fill=2,open=false,support=tray": {
+    "extended=false,facing=east,fill=2,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2",
       "y": 90
     },
-    "facing=east,fill=2,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2",
+    "extended=false,facing=east,fill=2,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill2",
       "y": 90
     },
-    "facing=east,fill=2,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill2",
+    "extended=false,facing=east,fill=2,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill2",
       "y": 90
     },
-    "facing=east,fill=2,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2",
+    "extended=false,facing=east,fill=2,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill2",
       "y": 90
     },
-    "facing=east,fill=3,open=false,support=handle": {
+    "extended=false,facing=east,fill=3,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3",
       "y": 90
     },
-    "facing=east,fill=3,open=false,support=none": {
+    "extended=false,facing=east,fill=3,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill3",
       "y": 90
     },
-    "facing=east,fill=3,open=false,support=tray": {
+    "extended=false,facing=east,fill=3,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3",
       "y": 90
     },
-    "facing=east,fill=3,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3",
+    "extended=false,facing=east,fill=3,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill3",
       "y": 90
     },
-    "facing=east,fill=3,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill3",
+    "extended=false,facing=east,fill=3,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill3",
       "y": 90
     },
-    "facing=east,fill=3,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3",
+    "extended=false,facing=east,fill=3,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill3",
       "y": 90
     },
-    "facing=east,fill=4,open=false,support=handle": {
+    "extended=false,facing=east,fill=4,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4",
       "y": 90
     },
-    "facing=east,fill=4,open=false,support=none": {
+    "extended=false,facing=east,fill=4,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill4",
       "y": 90
     },
-    "facing=east,fill=4,open=false,support=tray": {
+    "extended=false,facing=east,fill=4,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4",
       "y": 90
     },
-    "facing=east,fill=4,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4",
+    "extended=false,facing=east,fill=4,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill4",
       "y": 90
     },
-    "facing=east,fill=4,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill4",
+    "extended=false,facing=east,fill=4,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill4",
       "y": 90
     },
-    "facing=east,fill=4,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4",
+    "extended=false,facing=east,fill=4,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill4",
       "y": 90
     },
-    "facing=north,fill=0,open=false,support=handle": {
+    "extended=false,facing=north,fill=0,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle"
     },
-    "facing=north,fill=0,open=false,support=none": {
+    "extended=false,facing=north,fill=0,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle"
     },
-    "facing=north,fill=0,open=false,support=tray": {
+    "extended=false,facing=north,fill=0,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray"
     },
-    "facing=north,fill=0,open=true,support=handle": {
+    "extended=false,facing=north,fill=0,open=true,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_open"
     },
-    "facing=north,fill=0,open=true,support=none": {
+    "extended=false,facing=north,fill=0,open=true,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_open"
     },
-    "facing=north,fill=0,open=true,support=tray": {
+    "extended=false,facing=north,fill=0,open=true,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_open"
     },
-    "facing=north,fill=1,open=false,support=handle": {
+    "extended=false,facing=north,fill=1,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1"
     },
-    "facing=north,fill=1,open=false,support=none": {
+    "extended=false,facing=north,fill=1,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill1"
     },
-    "facing=north,fill=1,open=false,support=tray": {
+    "extended=false,facing=north,fill=1,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1"
     },
-    "facing=north,fill=1,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1"
+    "extended=false,facing=north,fill=1,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill1"
     },
-    "facing=north,fill=1,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill1"
+    "extended=false,facing=north,fill=1,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill1"
     },
-    "facing=north,fill=1,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1"
+    "extended=false,facing=north,fill=1,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill1"
     },
-    "facing=north,fill=2,open=false,support=handle": {
+    "extended=false,facing=north,fill=2,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2"
     },
-    "facing=north,fill=2,open=false,support=none": {
+    "extended=false,facing=north,fill=2,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill2"
     },
-    "facing=north,fill=2,open=false,support=tray": {
+    "extended=false,facing=north,fill=2,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2"
     },
-    "facing=north,fill=2,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2"
+    "extended=false,facing=north,fill=2,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill2"
     },
-    "facing=north,fill=2,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill2"
+    "extended=false,facing=north,fill=2,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill2"
     },
-    "facing=north,fill=2,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2"
+    "extended=false,facing=north,fill=2,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill2"
     },
-    "facing=north,fill=3,open=false,support=handle": {
+    "extended=false,facing=north,fill=3,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3"
     },
-    "facing=north,fill=3,open=false,support=none": {
+    "extended=false,facing=north,fill=3,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill3"
     },
-    "facing=north,fill=3,open=false,support=tray": {
+    "extended=false,facing=north,fill=3,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3"
     },
-    "facing=north,fill=3,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3"
+    "extended=false,facing=north,fill=3,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill3"
     },
-    "facing=north,fill=3,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill3"
+    "extended=false,facing=north,fill=3,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill3"
     },
-    "facing=north,fill=3,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3"
+    "extended=false,facing=north,fill=3,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill3"
     },
-    "facing=north,fill=4,open=false,support=handle": {
+    "extended=false,facing=north,fill=4,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4"
     },
-    "facing=north,fill=4,open=false,support=none": {
+    "extended=false,facing=north,fill=4,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill4"
     },
-    "facing=north,fill=4,open=false,support=tray": {
+    "extended=false,facing=north,fill=4,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4"
     },
-    "facing=north,fill=4,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4"
+    "extended=false,facing=north,fill=4,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill4"
     },
-    "facing=north,fill=4,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill4"
+    "extended=false,facing=north,fill=4,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill4"
     },
-    "facing=north,fill=4,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4"
+    "extended=false,facing=north,fill=4,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill4"
     },
-    "facing=south,fill=0,open=false,support=handle": {
+    "extended=false,facing=south,fill=0,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle",
       "y": 180
     },
-    "facing=south,fill=0,open=false,support=none": {
+    "extended=false,facing=south,fill=0,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle",
       "y": 180
     },
-    "facing=south,fill=0,open=false,support=tray": {
+    "extended=false,facing=south,fill=0,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray",
       "y": 180
     },
-    "facing=south,fill=0,open=true,support=handle": {
+    "extended=false,facing=south,fill=0,open=true,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_open",
       "y": 180
     },
-    "facing=south,fill=0,open=true,support=none": {
+    "extended=false,facing=south,fill=0,open=true,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_open",
       "y": 180
     },
-    "facing=south,fill=0,open=true,support=tray": {
+    "extended=false,facing=south,fill=0,open=true,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_open",
       "y": 180
     },
-    "facing=south,fill=1,open=false,support=handle": {
+    "extended=false,facing=south,fill=1,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1",
       "y": 180
     },
-    "facing=south,fill=1,open=false,support=none": {
+    "extended=false,facing=south,fill=1,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill1",
       "y": 180
     },
-    "facing=south,fill=1,open=false,support=tray": {
+    "extended=false,facing=south,fill=1,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1",
       "y": 180
     },
-    "facing=south,fill=1,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1",
+    "extended=false,facing=south,fill=1,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill1",
       "y": 180
     },
-    "facing=south,fill=1,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill1",
+    "extended=false,facing=south,fill=1,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill1",
       "y": 180
     },
-    "facing=south,fill=1,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1",
+    "extended=false,facing=south,fill=1,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill1",
       "y": 180
     },
-    "facing=south,fill=2,open=false,support=handle": {
+    "extended=false,facing=south,fill=2,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2",
       "y": 180
     },
-    "facing=south,fill=2,open=false,support=none": {
+    "extended=false,facing=south,fill=2,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill2",
       "y": 180
     },
-    "facing=south,fill=2,open=false,support=tray": {
+    "extended=false,facing=south,fill=2,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2",
       "y": 180
     },
-    "facing=south,fill=2,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2",
+    "extended=false,facing=south,fill=2,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill2",
       "y": 180
     },
-    "facing=south,fill=2,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill2",
+    "extended=false,facing=south,fill=2,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill2",
       "y": 180
     },
-    "facing=south,fill=2,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2",
+    "extended=false,facing=south,fill=2,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill2",
       "y": 180
     },
-    "facing=south,fill=3,open=false,support=handle": {
+    "extended=false,facing=south,fill=3,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3",
       "y": 180
     },
-    "facing=south,fill=3,open=false,support=none": {
+    "extended=false,facing=south,fill=3,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill3",
       "y": 180
     },
-    "facing=south,fill=3,open=false,support=tray": {
+    "extended=false,facing=south,fill=3,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3",
       "y": 180
     },
-    "facing=south,fill=3,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3",
+    "extended=false,facing=south,fill=3,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill3",
       "y": 180
     },
-    "facing=south,fill=3,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill3",
+    "extended=false,facing=south,fill=3,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill3",
       "y": 180
     },
-    "facing=south,fill=3,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3",
+    "extended=false,facing=south,fill=3,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill3",
       "y": 180
     },
-    "facing=south,fill=4,open=false,support=handle": {
+    "extended=false,facing=south,fill=4,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4",
       "y": 180
     },
-    "facing=south,fill=4,open=false,support=none": {
+    "extended=false,facing=south,fill=4,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill4",
       "y": 180
     },
-    "facing=south,fill=4,open=false,support=tray": {
+    "extended=false,facing=south,fill=4,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4",
       "y": 180
     },
-    "facing=south,fill=4,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4",
+    "extended=false,facing=south,fill=4,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill4",
       "y": 180
     },
-    "facing=south,fill=4,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill4",
+    "extended=false,facing=south,fill=4,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill4",
       "y": 180
     },
-    "facing=south,fill=4,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4",
+    "extended=false,facing=south,fill=4,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill4",
       "y": 180
     },
-    "facing=west,fill=0,open=false,support=handle": {
+    "extended=false,facing=west,fill=0,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle",
       "y": 270
     },
-    "facing=west,fill=0,open=false,support=none": {
+    "extended=false,facing=west,fill=0,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle",
       "y": 270
     },
-    "facing=west,fill=0,open=false,support=tray": {
+    "extended=false,facing=west,fill=0,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray",
       "y": 270
     },
-    "facing=west,fill=0,open=true,support=handle": {
+    "extended=false,facing=west,fill=0,open=true,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_open",
       "y": 270
     },
-    "facing=west,fill=0,open=true,support=none": {
+    "extended=false,facing=west,fill=0,open=true,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_open",
       "y": 270
     },
-    "facing=west,fill=0,open=true,support=tray": {
+    "extended=false,facing=west,fill=0,open=true,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_open",
       "y": 270
     },
-    "facing=west,fill=1,open=false,support=handle": {
+    "extended=false,facing=west,fill=1,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1",
       "y": 270
     },
-    "facing=west,fill=1,open=false,support=none": {
+    "extended=false,facing=west,fill=1,open=false,support=none": {
       "model": "vineandbarrel:block/weathered_brew_kettle_fill1",
       "y": 270
     },
-    "facing=west,fill=1,open=false,support=tray": {
+    "extended=false,facing=west,fill=1,open=false,support=tray": {
       "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1",
       "y": 270
     },
-    "facing=west,fill=1,open=true,support=handle": {
+    "extended=false,facing=west,fill=1,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill1",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=1,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill1",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=1,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill1",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=2,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=2,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill2",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=2,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=2,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill2",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=2,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill2",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=2,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill2",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=3,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=3,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill3",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=3,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=3,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill3",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=3,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill3",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=3,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill3",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=4,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=4,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill4",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=4,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=4,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill4",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=4,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_open_fill4",
+      "y": 270
+    },
+    "extended=false,facing=west,fill=4,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_open_fill4",
+      "y": 270
+    },
+    "extended=true,facing=east,fill=0,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=0,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=0,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=0,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=0,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=0,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=1,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=1,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill1_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=1,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=1,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill1",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=1,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill1_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=1,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=2,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=2,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill2_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=2,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=2,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill2",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=2,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill2_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=2,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=3,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=3,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill3_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=3,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=3,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill3",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=3,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill3_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=3,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=4,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=4,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill4_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=4,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=4,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill4",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=4,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill4_extended",
+      "y": 90
+    },
+    "extended=true,facing=east,fill=4,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4_extended",
+      "y": 90
+    },
+    "extended=true,facing=north,fill=0,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle"
+    },
+    "extended=true,facing=north,fill=0,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_extended"
+    },
+    "extended=true,facing=north,fill=0,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_extended"
+    },
+    "extended=true,facing=north,fill=0,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open"
+    },
+    "extended=true,facing=north,fill=0,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_extended"
+    },
+    "extended=true,facing=north,fill=0,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_extended"
+    },
+    "extended=true,facing=north,fill=1,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1"
+    },
+    "extended=true,facing=north,fill=1,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill1_extended"
+    },
+    "extended=true,facing=north,fill=1,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1_extended"
+    },
+    "extended=true,facing=north,fill=1,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill1"
+    },
+    "extended=true,facing=north,fill=1,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill1_extended"
+    },
+    "extended=true,facing=north,fill=1,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1_extended"
+    },
+    "extended=true,facing=north,fill=2,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2"
+    },
+    "extended=true,facing=north,fill=2,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill2_extended"
+    },
+    "extended=true,facing=north,fill=2,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2_extended"
+    },
+    "extended=true,facing=north,fill=2,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill2"
+    },
+    "extended=true,facing=north,fill=2,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill2_extended"
+    },
+    "extended=true,facing=north,fill=2,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2_extended"
+    },
+    "extended=true,facing=north,fill=3,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3"
+    },
+    "extended=true,facing=north,fill=3,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill3_extended"
+    },
+    "extended=true,facing=north,fill=3,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3_extended"
+    },
+    "extended=true,facing=north,fill=3,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill3"
+    },
+    "extended=true,facing=north,fill=3,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill3_extended"
+    },
+    "extended=true,facing=north,fill=3,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3_extended"
+    },
+    "extended=true,facing=north,fill=4,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4"
+    },
+    "extended=true,facing=north,fill=4,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill4_extended"
+    },
+    "extended=true,facing=north,fill=4,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4_extended"
+    },
+    "extended=true,facing=north,fill=4,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill4"
+    },
+    "extended=true,facing=north,fill=4,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill4_extended"
+    },
+    "extended=true,facing=north,fill=4,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4_extended"
+    },
+    "extended=true,facing=south,fill=0,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=0,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=0,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=0,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=0,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=0,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=1,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=1,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill1_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=1,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=1,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill1",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=1,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill1_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=1,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=2,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=2,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill2_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=2,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=2,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill2",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=2,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill2_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=2,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=3,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=3,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill3_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=3,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=3,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill3",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=3,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill3_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=3,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=4,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=4,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill4_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=4,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=4,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill4",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=4,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill4_extended",
+      "y": 180
+    },
+    "extended=true,facing=south,fill=4,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4_extended",
+      "y": 180
+    },
+    "extended=true,facing=west,fill=0,open=false,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle",
+      "y": 270
+    },
+    "extended=true,facing=west,fill=0,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_extended",
+      "y": 270
+    },
+    "extended=true,facing=west,fill=0,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_extended",
+      "y": 270
+    },
+    "extended=true,facing=west,fill=0,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open",
+      "y": 270
+    },
+    "extended=true,facing=west,fill=0,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_extended",
+      "y": 270
+    },
+    "extended=true,facing=west,fill=0,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_extended",
+      "y": 270
+    },
+    "extended=true,facing=west,fill=1,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill1",
       "y": 270
     },
-    "facing=west,fill=1,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill1",
+    "extended=true,facing=west,fill=1,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill1_extended",
       "y": 270
     },
-    "facing=west,fill=1,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1",
+    "extended=true,facing=west,fill=1,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1_extended",
       "y": 270
     },
-    "facing=west,fill=2,open=false,support=handle": {
+    "extended=true,facing=west,fill=1,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill1",
+      "y": 270
+    },
+    "extended=true,facing=west,fill=1,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill1_extended",
+      "y": 270
+    },
+    "extended=true,facing=west,fill=1,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill1_extended",
+      "y": 270
+    },
+    "extended=true,facing=west,fill=2,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2",
       "y": 270
     },
-    "facing=west,fill=2,open=false,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill2",
+    "extended=true,facing=west,fill=2,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill2_extended",
       "y": 270
     },
-    "facing=west,fill=2,open=false,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2",
+    "extended=true,facing=west,fill=2,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2_extended",
       "y": 270
     },
-    "facing=west,fill=2,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill2",
+    "extended=true,facing=west,fill=2,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill2",
       "y": 270
     },
-    "facing=west,fill=2,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill2",
+    "extended=true,facing=west,fill=2,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill2_extended",
       "y": 270
     },
-    "facing=west,fill=2,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2",
+    "extended=true,facing=west,fill=2,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill2_extended",
       "y": 270
     },
-    "facing=west,fill=3,open=false,support=handle": {
+    "extended=true,facing=west,fill=3,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3",
       "y": 270
     },
-    "facing=west,fill=3,open=false,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill3",
+    "extended=true,facing=west,fill=3,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill3_extended",
       "y": 270
     },
-    "facing=west,fill=3,open=false,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3",
+    "extended=true,facing=west,fill=3,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3_extended",
       "y": 270
     },
-    "facing=west,fill=3,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill3",
+    "extended=true,facing=west,fill=3,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill3",
       "y": 270
     },
-    "facing=west,fill=3,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill3",
+    "extended=true,facing=west,fill=3,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill3_extended",
       "y": 270
     },
-    "facing=west,fill=3,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3",
+    "extended=true,facing=west,fill=3,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill3_extended",
       "y": 270
     },
-    "facing=west,fill=4,open=false,support=handle": {
+    "extended=true,facing=west,fill=4,open=false,support=handle": {
       "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4",
       "y": 270
     },
-    "facing=west,fill=4,open=false,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill4",
+    "extended=true,facing=west,fill=4,open=false,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill4_extended",
       "y": 270
     },
-    "facing=west,fill=4,open=false,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4",
+    "extended=true,facing=west,fill=4,open=false,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4_extended",
       "y": 270
     },
-    "facing=west,fill=4,open=true,support=handle": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_handle_fill4",
+    "extended=true,facing=west,fill=4,open=true,support=handle": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_handle_open_fill4",
       "y": 270
     },
-    "facing=west,fill=4,open=true,support=none": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_fill4",
+    "extended=true,facing=west,fill=4,open=true,support=none": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_fill4_extended",
       "y": 270
     },
-    "facing=west,fill=4,open=true,support=tray": {
-      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4",
+    "extended=true,facing=west,fill=4,open=true,support=tray": {
+      "model": "vineandbarrel:block/weathered_brew_kettle_tray_fill4_extended",
       "y": 270
     }
   }

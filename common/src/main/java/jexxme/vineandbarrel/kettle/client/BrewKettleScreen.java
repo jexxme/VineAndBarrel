@@ -57,11 +57,15 @@ public class BrewKettleScreen extends AbstractRecipeBookScreen<BrewKettleMenu>
 		if (this.menu.getCarried().isEmpty() && this.isHovering(GAUGE_X, GAUGE_Y, GAUGE_W, GAUGE_H, mouseX, mouseY)) {
 			ItemStack brew = this.menu.getBrew();
 			int servings = this.menu.getServings();
-			List<Component> lines = brew.isEmpty() || servings <= 0
+			List<Component> lines = new java.util.ArrayList<>(brew.isEmpty() || servings <= 0
 				? List.of(Component.translatable("tooltip.vineandbarrel.brew_kettle.empty").withStyle(ChatFormatting.GRAY))
 				: List.of(brew.getHoverName().copy().withStyle(brew.getRarity().color()),
 					(servings == 1 ? Component.translatable("container.vineandbarrel.brew_kettle.one_serving")
-						: Component.translatable("container.vineandbarrel.brew_kettle.servings", servings)).withStyle(ChatFormatting.GRAY));
+						: Component.translatable("container.vineandbarrel.brew_kettle.servings", servings)).withStyle(ChatFormatting.GRAY)));
+			if (this.menu.getBlocks() > 1) {
+				// a big kettle: what one batch makes
+				lines.add(Component.translatable("container.vineandbarrel.brew_kettle.batch", 4 * this.menu.getBlocks()).withStyle(ChatFormatting.GRAY));
+			}
 			gui.setComponentTooltipForNextFrame(this.font, lines, mouseX, mouseY);
 			return;
 		}
@@ -79,11 +83,11 @@ public class BrewKettleScreen extends AbstractRecipeBookScreen<BrewKettleMenu>
 	}
 
 	/** How many of the gauge's pixels the liquid fills: its share of the kettle's servings, at least one while any is left. */
-	static int gaugeHeight(int servings) {
+	static int gaugeHeight(int servings, int capacity) {
 		if (servings <= 0) {
 			return 0;
 		}
-		return Mth.clamp(Mth.ceil(servings * (float) LIQUID_H / BrewKettleBlockEntity.MAX_SERVINGS), 1, LIQUID_H);
+		return Mth.clamp(Mth.ceil(servings * (float) LIQUID_H / capacity), 1, LIQUID_H);
 	}
 
 	static Component servingsText(int servings) {
@@ -107,7 +111,7 @@ public class BrewKettleScreen extends AbstractRecipeBookScreen<BrewKettleMenu>
 		}
 
 		// The brew in the sight glass: its colour, a lighter surface line, the glass highlight over it
-		int height = gaugeHeight(this.menu.getServings());
+		int height = gaugeHeight(this.menu.getServings(), this.menu.getCapacity());
 		if (height > 0) {
 			int color = BaseItems.liquidColor(this.menu.getBrew());
 			int rgb = color == -1 ? BaseItems.WATER_COLOR : color;

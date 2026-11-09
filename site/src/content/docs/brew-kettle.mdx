@@ -49,18 +49,54 @@ full the kettle is; hover it for the servings.
 
 <KettleScreen recipe="brewing/barley_wort" />
 
-Each recipe makes **{rules.servingsPerBucket} servings** and takes **{seconds(brews[0].brewingTime)}**. A heated kettle steams
-and bubbles once it holds a brew or the makings of one (otherwise it stays quiet); while a batch brews, the lid rattles too, and when it's done it lets out a puff of steam. The kettle keeps brewing
+Each recipe makes **{rules.servingsPerBucket} servings** and takes **{seconds(brews[0].brewingTime)}**. The kettle keeps brewing
 more batches as long as there are ingredients, up to {rules.kettleMaxServings} servings in total.
+
+You can tell what a kettle is doing from across the room:
+
+- **Brewing:** steam rises out of its chimney, it boils and bubbles. When a batch is done it lets out a puff of steam.
+- **Done:** the steam stops and the tap drips now and then. The sight glass beside the tap shows how full it is.
+- **On a lit fire with nothing to brew:** the fire's smoke goes up the chimney.
 
 <BrewFlow />
 
-Once a brew is done, the lid stays up and you can see it inside, sinking as you take servings out. While a batch brews, the
-lid is down; when the last serving is gone, it closes.
+The sight glass beside the tap shows the brew in its colour, sinking as you take servings out. While you have the kettle's
+screen open, its lid is up and you can see the brew inside.
 
 {brews.map((r) => <Recipe recipe={r} />)}
 
 <Render name="scenes/kettle-open" float="right" size={192} alt="The kettle with its lid open, showing the brew" />
+
+## Big kettles
+
+<Render name="scenes/kettle-family" size={384} caption="A Great, a Big and a plain Brew Kettle" />
+
+Place kettles together into a cube and they become one: **8 kettles in a 2×2×2 cube** make a **Big Brew Kettle**, **27 in
+a 3×3×3 cube** a **Great Brew Kettle**. They join when you place the last kettle of the cube, and a Big Kettle inside a cube
+of 27 grows into a Great Kettle. Kettles holding different brews don't join.
+
+- **Bigger batches.** Every block adds a batch: a Big Kettle brews 32 servings at once, a Great Kettle 108. That's four
+  and thirteen barrels.
+- **Fire.** One fire under it is enough. Every fire under its bottom layer makes it faster: with a fire under every block it
+  brews a full batch in twice (Big) or three times (Great) the time of a single kettle. Short on ingredients? It brews as
+  many sets as the grid holds.
+- **Room.** It holds 64 servings per block: 512 in a Big Kettle, 1728 in a Great Kettle.
+- **Any block.** Every block of it opens the screen, fills bottles and buckets, takes hoppers and gives a comparator signal.
+- **Breaking.** Break any block and the kettle falls apart into single kettles, each keeping its share of the brew; the
+  broken one drops with its share. Put a kettle back into the gap and it joins again.
+- **One vessel.** It weathers as one, and one honeycomb or one axe scrape changes all of it.
+
+<Render name="scenes/kettle-big" size={256} caption="Big Brew Kettle" />
+<Render name="scenes/kettle-great" size={256} caption="Great Brew Kettle with a taller chimney" />
+
+## Chimney
+
+<Render name="scenes/kettle-chimney" float="right" size={192} alt="A kettle whose chimney goes through a plank roof" />
+
+Right-click a kettle or its chimney with a <Item id="copper_ingot" /> and the chimney grows a block taller, up to 8. It
+breaks through a roof block in its way (the block drops) and a copper flashing seals the hole around it. The chimney ages
+with its kettle. Mine a piece and it comes down with everything above it, giving the ingots back; breaking the kettle does
+the same. A hanging kettle has no room for one.
 
 ## Bottling
 
@@ -105,7 +141,7 @@ The kettle is copper, and it ages like copper.
 - **Honeycomb** waxes it and stops the weathering. An **axe** scrapes off wax or one stage of weathering, and lightning cleans it.
 - **Break it full** and it keeps its brew: the item's tooltip and fill bar show it, and you can place it somewhere else
   and carry on. Ingredients and waiting bottles or buckets drop on the ground.
-- It doesn't weather while someone has its screen open.
+- It doesn't weather while someone has its screen open (a single kettle).
 
 ## Good to know
 

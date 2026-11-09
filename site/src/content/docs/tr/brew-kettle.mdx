@@ -44,15 +44,55 @@ Sağ tıkla kazanı aç ve malzemeleri koy. Sağdaki gösterge demi kendi rengin
 
 <KettleScreen recipe="brewing/barley_wort" />
 
-Her tarif **{rules.servingsPerBucket} porsiyon** yapar ve **{seconds(brews[0].brewingTime)}** sürer. Isıtılmış bir kazan içinde bir demleme ya da onun malzemeleri olunca buharlanır ve kabarcıklanır (yoksa sessiz kalır); bir parti demlenirken kapak da sallanır, iş bitince bir buhar tütmesi bırakır. Malzeme olduğu sürece kazan, toplam {rules.kettleMaxServings} porsiyona kadar yeni partiler demlemeye devam eder.
+Her tarif **{rules.servingsPerBucket} porsiyon** yapar ve **{seconds(brews[0].brewingTime)}** sürer. Kazan, malzeme
+olduğu sürece yeni partiler demlemeye devam eder; toplamda {rules.kettleMaxServings} porsiyona kadar.
+
+Bir kazanın ne yaptığını odanın öbür ucundan anlayabilirsin:
+
+- **Demliyor:** bacasından buhar çıkar, kaynar ve köpürür. Bir parti bitince bir buhar bulutu salar.
+- **Bitti:** buhar durur ve musluk ara sıra damlar. Musluğun yanındaki gösterge camı ne kadar dolu olduğunu gösterir.
+- **Yanan bir ateşin üstünde, demlenecek bir şey yokken:** ateşin dumanı bacadan yukarı çıkar.
 
 <BrewFlow />
 
-Dem bitince kapak açık kalır ve içindekini görürsün; porsiyon aldıkça alçalır. Bir parti demlenirken kapak kapalıdır; son porsiyon bitince de kapanır.
+Musluğun yanındaki gösterge camı demi kendi renginde gösterir ve porsiyon aldıkça alçalır. Kazanın ekranı açıkken
+kapağı yukarıdadır ve demi içeride görürsün.
 
 {brews.map((r) => <Recipe recipe={r} />)}
 
 <Render name="scenes/kettle-open" float="right" size={192} alt="Kapağı açık, demi gösteren kazan" />
+
+## Büyük kazanlar
+
+<Render name="scenes/kettle-family" size={384} caption="Bir Dev, bir Büyük ve bir sade Kaynatma Kazanı" />
+
+Kazanları küp şeklinde yan yana koy, tek kazan olurlar: **2×2×2 küpte 8 kazan** bir **Büyük Kaynatma Kazanı**, **3×3×3
+küpte 27 kazan** bir **Dev Kaynatma Kazanı** yapar. Küpün son kazanını yerleştirdiğinde birleşirler, 27'lik bir küpün
+içindeki Büyük Kazan da Dev Kazana dönüşür. Farklı demler tutan kazanlar birleşmez.
+
+- **Daha büyük partiler.** Her blok bir parti ekler: Büyük Kazan bir seferde 32 porsiyon, Dev Kazan 108 porsiyon
+  demler. Bu dört ve on üç fıçı eder.
+- **Ateş.** Altında tek bir ateş yeter. Alt katmanın altındaki her ateş onu hızlandırır: her bloğun altında ateş varsa
+  dolu bir partiyi tek kazanın süresinin yarısında (Büyük) ya da üçte birinde (Dev) demler. Malzeme mi az? Izgaranın
+  aldığı kadar takım demler.
+- **Yer.** Blok başına 64 porsiyon alır: Büyük Kazanda 512, Dev Kazanda 1728.
+- **Herhangi bir blok.** Her bloğu ekranı açar, şişe ve kovaları doldurur, huni kabul eder ve karşılaştırıcıya sinyal
+  verir.
+- **Kırmak.** Herhangi bir bloğu kırarsan kazan tek tek kazanlara ayrılır, her biri demden kendi payını tutar; kırılan
+  blok payıyla birlikte düşer. Boşluğa bir kazan geri koyarsan yeniden birleşirler.
+- **Tek kap.** Bir bütün olarak yıpranır; tek bir bal peteği ya da baltayla tek bir kazıma hepsini değiştirir.
+
+<Render name="scenes/kettle-big" size={256} caption="Büyük Kaynatma Kazanı" />
+<Render name="scenes/kettle-great" size={256} caption="Daha uzun bacalı Dev Kaynatma Kazanı" />
+
+## Baca
+
+<Render name="scenes/kettle-chimney" float="right" size={192} alt="Bacası tahta bir çatıdan geçen bir kazan" />
+
+Bir kazana ya da bacasına elinde <Item id="copper_ingot" /> varken sağ tıkla, baca bir blok uzar; en fazla 8 bloğa
+kadar. Yolundaki bir çatı bloğunu kırıp geçer (blok düşer) ve bakır bir su yalıtımı etrafındaki deliği kapatır. Baca
+kazanıyla birlikte yaşlanır. Bir parçayı kırarsan üstündeki her şeyle birlikte çöker ve külçeleri geri verir; kazanı
+kırmak da aynısını yapar. Asılı bir kazanın baca için yeri yoktur.
 
 ## Şişeleme
 
@@ -93,8 +133,7 @@ Kazan bakırdandır ve bakır gibi yaşlanır.
 - Zamanla açıkta kalmış, yıpranmış ve sonunda oksitlenmiş olur. Her aşamada aynı şekilde demler.
 - **Bal peteği** onu cilalar ve yıpranmayı durdurur. Bir **balta** cilayı ya da bir yıpranma aşamasını kazır, yıldırım ise temizler.
 - **Doluyken kırarsan** demini korur: eşyanın bilgi kutusu ve dolum çubuğu bunu gösterir, başka bir yere koyup devam edebilirsin. Malzemeler ve bekleyen şişeler ya da kovalar yere düşer.
-- Biri ekranını açıkken yıpranmaz.
-
+- Biri ekranını açıkken yıpranmaz (tek bir kazan).
 ## Bilmekte fayda var
 
 - **Ateşi mi kaybettin?** Isıyı kesmek partiyi sıfırlamaz ama ok dolduğundan iki kat hızlı geri kayar. Malzemeler yalnızca parti bittiğinde harcanır, yani hiçbir şey boşa gitmez.

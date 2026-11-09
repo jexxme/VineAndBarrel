@@ -614,6 +614,10 @@
 		"name": "Brew Kettle",
 		"item": "vineandbarrel:brew_kettle",
 		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
 			"facing": [
 				"north",
 				"south",
@@ -642,6 +646,7 @@
 			]
 		},
 		"defaultState": {
+			"extended": "false",
 			"facing": "north",
 			"fill": "0",
 			"open": "false",
@@ -669,6 +674,10 @@
 		"name": "Waxed Brew Kettle",
 		"item": "vineandbarrel:waxed_brew_kettle",
 		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
 			"facing": [
 				"north",
 				"south",
@@ -697,6 +706,7 @@
 			]
 		},
 		"defaultState": {
+			"extended": "false",
 			"facing": "north",
 			"fill": "0",
 			"open": "false",
@@ -719,11 +729,263 @@
 		],
 		"hardness": 0.5
 	},
+	"vineandbarrel:brew_kettle_part": {
+		"id": "vineandbarrel:brew_kettle_part",
+		"name": "Brew Kettle",
+		"item": null,
+		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"level": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"part": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+				"10",
+				"11",
+				"12",
+				"13",
+				"14",
+				"15",
+				"16",
+				"17",
+				"18",
+				"19",
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31",
+				"32",
+				"33",
+				"34"
+			],
+			"tray": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"extended": "false",
+			"facing": "north",
+			"level": "0",
+			"part": "0",
+			"tray": "false"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_brew_kettle_part": {
+		"id": "vineandbarrel:waxed_brew_kettle_part",
+		"name": "Waxed Brew Kettle",
+		"item": null,
+		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"level": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"part": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+				"10",
+				"11",
+				"12",
+				"13",
+				"14",
+				"15",
+				"16",
+				"17",
+				"18",
+				"19",
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31",
+				"32",
+				"33",
+				"34"
+			],
+			"tray": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"extended": "false",
+			"facing": "north",
+			"level": "0",
+			"part": "0",
+			"tray": "false"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:brew_kettle_chimney": {
+		"id": "vineandbarrel:brew_kettle_chimney",
+		"name": "Brew Kettle",
+		"item": null,
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"flashing": [
+				"true",
+				"false"
+			],
+			"size": [
+				"1",
+				"2",
+				"3"
+			],
+			"top": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"flashing": "false",
+			"size": "1",
+			"top": "true"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_brew_kettle_chimney": {
+		"id": "vineandbarrel:waxed_brew_kettle_chimney",
+		"name": "Waxed Brew Kettle",
+		"item": null,
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"flashing": [
+				"true",
+				"false"
+			],
+			"size": [
+				"1",
+				"2",
+				"3"
+			],
+			"top": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"flashing": "false",
+			"size": "1",
+			"top": "true"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
 	"vineandbarrel:exposed_brew_kettle": {
 		"id": "vineandbarrel:exposed_brew_kettle",
 		"name": "Exposed Brew Kettle",
 		"item": "vineandbarrel:exposed_brew_kettle",
 		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
 			"facing": [
 				"north",
 				"south",
@@ -752,6 +1014,7 @@
 			]
 		},
 		"defaultState": {
+			"extended": "false",
 			"facing": "north",
 			"fill": "0",
 			"open": "false",
@@ -779,6 +1042,10 @@
 		"name": "Waxed Exposed Brew Kettle",
 		"item": "vineandbarrel:waxed_exposed_brew_kettle",
 		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
 			"facing": [
 				"north",
 				"south",
@@ -807,6 +1074,7 @@
 			]
 		},
 		"defaultState": {
+			"extended": "false",
 			"facing": "north",
 			"fill": "0",
 			"open": "false",
@@ -829,11 +1097,263 @@
 		],
 		"hardness": 0.5
 	},
+	"vineandbarrel:exposed_brew_kettle_part": {
+		"id": "vineandbarrel:exposed_brew_kettle_part",
+		"name": "Exposed Brew Kettle",
+		"item": null,
+		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"level": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"part": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+				"10",
+				"11",
+				"12",
+				"13",
+				"14",
+				"15",
+				"16",
+				"17",
+				"18",
+				"19",
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31",
+				"32",
+				"33",
+				"34"
+			],
+			"tray": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"extended": "false",
+			"facing": "north",
+			"level": "0",
+			"part": "0",
+			"tray": "false"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_exposed_brew_kettle_part": {
+		"id": "vineandbarrel:waxed_exposed_brew_kettle_part",
+		"name": "Waxed Exposed Brew Kettle",
+		"item": null,
+		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"level": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"part": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+				"10",
+				"11",
+				"12",
+				"13",
+				"14",
+				"15",
+				"16",
+				"17",
+				"18",
+				"19",
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31",
+				"32",
+				"33",
+				"34"
+			],
+			"tray": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"extended": "false",
+			"facing": "north",
+			"level": "0",
+			"part": "0",
+			"tray": "false"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:exposed_brew_kettle_chimney": {
+		"id": "vineandbarrel:exposed_brew_kettle_chimney",
+		"name": "Exposed Brew Kettle",
+		"item": null,
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"flashing": [
+				"true",
+				"false"
+			],
+			"size": [
+				"1",
+				"2",
+				"3"
+			],
+			"top": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"flashing": "false",
+			"size": "1",
+			"top": "true"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_exposed_brew_kettle_chimney": {
+		"id": "vineandbarrel:waxed_exposed_brew_kettle_chimney",
+		"name": "Waxed Exposed Brew Kettle",
+		"item": null,
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"flashing": [
+				"true",
+				"false"
+			],
+			"size": [
+				"1",
+				"2",
+				"3"
+			],
+			"top": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"flashing": "false",
+			"size": "1",
+			"top": "true"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
 	"vineandbarrel:weathered_brew_kettle": {
 		"id": "vineandbarrel:weathered_brew_kettle",
 		"name": "Weathered Brew Kettle",
 		"item": "vineandbarrel:weathered_brew_kettle",
 		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
 			"facing": [
 				"north",
 				"south",
@@ -862,6 +1382,7 @@
 			]
 		},
 		"defaultState": {
+			"extended": "false",
 			"facing": "north",
 			"fill": "0",
 			"open": "false",
@@ -889,6 +1410,10 @@
 		"name": "Waxed Weathered Brew Kettle",
 		"item": "vineandbarrel:waxed_weathered_brew_kettle",
 		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
 			"facing": [
 				"north",
 				"south",
@@ -917,6 +1442,7 @@
 			]
 		},
 		"defaultState": {
+			"extended": "false",
 			"facing": "north",
 			"fill": "0",
 			"open": "false",
@@ -939,11 +1465,263 @@
 		],
 		"hardness": 0.5
 	},
+	"vineandbarrel:weathered_brew_kettle_part": {
+		"id": "vineandbarrel:weathered_brew_kettle_part",
+		"name": "Weathered Brew Kettle",
+		"item": null,
+		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"level": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"part": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+				"10",
+				"11",
+				"12",
+				"13",
+				"14",
+				"15",
+				"16",
+				"17",
+				"18",
+				"19",
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31",
+				"32",
+				"33",
+				"34"
+			],
+			"tray": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"extended": "false",
+			"facing": "north",
+			"level": "0",
+			"part": "0",
+			"tray": "false"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_weathered_brew_kettle_part": {
+		"id": "vineandbarrel:waxed_weathered_brew_kettle_part",
+		"name": "Waxed Weathered Brew Kettle",
+		"item": null,
+		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"level": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"part": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+				"10",
+				"11",
+				"12",
+				"13",
+				"14",
+				"15",
+				"16",
+				"17",
+				"18",
+				"19",
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31",
+				"32",
+				"33",
+				"34"
+			],
+			"tray": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"extended": "false",
+			"facing": "north",
+			"level": "0",
+			"part": "0",
+			"tray": "false"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:weathered_brew_kettle_chimney": {
+		"id": "vineandbarrel:weathered_brew_kettle_chimney",
+		"name": "Weathered Brew Kettle",
+		"item": null,
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"flashing": [
+				"true",
+				"false"
+			],
+			"size": [
+				"1",
+				"2",
+				"3"
+			],
+			"top": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"flashing": "false",
+			"size": "1",
+			"top": "true"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_weathered_brew_kettle_chimney": {
+		"id": "vineandbarrel:waxed_weathered_brew_kettle_chimney",
+		"name": "Waxed Weathered Brew Kettle",
+		"item": null,
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"flashing": [
+				"true",
+				"false"
+			],
+			"size": [
+				"1",
+				"2",
+				"3"
+			],
+			"top": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"flashing": "false",
+			"size": "1",
+			"top": "true"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
 	"vineandbarrel:oxidized_brew_kettle": {
 		"id": "vineandbarrel:oxidized_brew_kettle",
 		"name": "Oxidized Brew Kettle",
 		"item": "vineandbarrel:oxidized_brew_kettle",
 		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
 			"facing": [
 				"north",
 				"south",
@@ -972,6 +1750,7 @@
 			]
 		},
 		"defaultState": {
+			"extended": "false",
 			"facing": "north",
 			"fill": "0",
 			"open": "false",
@@ -999,6 +1778,10 @@
 		"name": "Waxed Oxidized Brew Kettle",
 		"item": "vineandbarrel:waxed_oxidized_brew_kettle",
 		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
 			"facing": [
 				"north",
 				"south",
@@ -1027,6 +1810,7 @@
 			]
 		},
 		"defaultState": {
+			"extended": "false",
 			"facing": "north",
 			"fill": "0",
 			"open": "false",
@@ -1044,6 +1828,254 @@
 			"minecraft:causes_suffocation",
 			"minecraft:entities_can_teleport_to",
 			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:oxidized_brew_kettle_part": {
+		"id": "vineandbarrel:oxidized_brew_kettle_part",
+		"name": "Oxidized Brew Kettle",
+		"item": null,
+		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"level": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"part": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+				"10",
+				"11",
+				"12",
+				"13",
+				"14",
+				"15",
+				"16",
+				"17",
+				"18",
+				"19",
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31",
+				"32",
+				"33",
+				"34"
+			],
+			"tray": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"extended": "false",
+			"facing": "north",
+			"level": "0",
+			"part": "0",
+			"tray": "false"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_oxidized_brew_kettle_part": {
+		"id": "vineandbarrel:waxed_oxidized_brew_kettle_part",
+		"name": "Waxed Oxidized Brew Kettle",
+		"item": null,
+		"properties": {
+			"extended": [
+				"true",
+				"false"
+			],
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"level": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"part": [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+				"10",
+				"11",
+				"12",
+				"13",
+				"14",
+				"15",
+				"16",
+				"17",
+				"18",
+				"19",
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31",
+				"32",
+				"33",
+				"34"
+			],
+			"tray": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"extended": "false",
+			"facing": "north",
+			"level": "0",
+			"part": "0",
+			"tray": "false"
+		},
+		"tags": [
+			"minecraft:blocks_dolphin_jump",
+			"minecraft:blocks_fluid_flow",
+			"minecraft:blocks_lava_fire_spread",
+			"minecraft:blocks_motion",
+			"minecraft:blocks_motion_in_heightmap",
+			"minecraft:blocks_motion_in_heightmap_no_leaves",
+			"minecraft:blocks_motion_no_leaves",
+			"minecraft:causes_suffocation",
+			"minecraft:entities_can_teleport_to",
+			"minecraft:ice_melts_when_destroyed_above",
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:oxidized_brew_kettle_chimney": {
+		"id": "vineandbarrel:oxidized_brew_kettle_chimney",
+		"name": "Oxidized Brew Kettle",
+		"item": null,
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"flashing": [
+				"true",
+				"false"
+			],
+			"size": [
+				"1",
+				"2",
+				"3"
+			],
+			"top": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"flashing": "false",
+			"size": "1",
+			"top": "true"
+		},
+		"tags": [
+			"minecraft:mineable/pickaxe",
+			"vineandbarrel:brew_kettles"
+		],
+		"hardness": 0.5
+	},
+	"vineandbarrel:waxed_oxidized_brew_kettle_chimney": {
+		"id": "vineandbarrel:waxed_oxidized_brew_kettle_chimney",
+		"name": "Waxed Oxidized Brew Kettle",
+		"item": null,
+		"properties": {
+			"facing": [
+				"north",
+				"south",
+				"west",
+				"east"
+			],
+			"flashing": [
+				"true",
+				"false"
+			],
+			"size": [
+				"1",
+				"2",
+				"3"
+			],
+			"top": [
+				"true",
+				"false"
+			]
+		},
+		"defaultState": {
+			"facing": "north",
+			"flashing": "false",
+			"size": "1",
+			"top": "true"
+		},
+		"tags": [
 			"minecraft:mineable/pickaxe",
 			"vineandbarrel:brew_kettles"
 		],

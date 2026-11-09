@@ -69,6 +69,8 @@ public class BrewKettleBlock extends Block implements SimpleWaterloggedBlock, En
 	 */
 	public static final IntegerProperty FILL = IntegerProperty.create("fill", 0, MAX_FILL);
 	public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+	/** Extension blocks stand on the chimney (copper ingots, WP4): the kettle's own chimney ends at its top, capless. */
+	public static final BooleanProperty EXTENDED = BooleanProperty.create("extended");
 
 	/** Body plus the stepped lid and knob (the side handles stay outside the outline, like FD's pot handles). */
 	protected static final VoxelShape SHAPE = Shapes.or(Block.box(2.0D, 0.0D, 2.0D, 14.0D, 10.0D, 14.0D),
@@ -81,7 +83,7 @@ public class BrewKettleBlock extends Block implements SimpleWaterloggedBlock, En
 		super(properties);
 		this.weatherState = weatherState;
 		this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(SUPPORT, KettleSupport.NONE)
-			.setValue(OPEN, false).setValue(FILL, 0).setValue(WATERLOGGED, false));
+			.setValue(OPEN, false).setValue(FILL, 0).setValue(WATERLOGGED, false).setValue(EXTENDED, false));
 	}
 
 	public WeatherState getWeatherState() {
@@ -97,43 +99,63 @@ public class BrewKettleBlock extends Block implements SimpleWaterloggedBlock, En
 	@Override
 	protected InteractionResult useItemOn(ItemStack heldStack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
 		// K1: sneak + empty hand hangs the kettle from its handle (or puts it back on its feet), exactly like FD's pot
-		if (heldStack.isEmpty() && player.isShiftKeyDown()) {
+		if (heldStack.isEmpty() && player.isShiftKeyDown() && !state.getValue(EXTENDED)) {
 			level.setBlockAndUpdate(pos, state.setValue(SUPPORT, state.getValue(SUPPORT) == KettleSupport.HANDLE ? trayState(level, pos) : KettleSupport.HANDLE));
 			level.playSound(null, pos, SoundEvents.LANTERN_PLACE, SoundSource.BLOCKS, 0.7F, 1.0F);
 			return InteractionResult.SUCCESS;
 		}
+		return useKettle(heldStack, state, level, pos, player, hand);
+	}
 
-		// K8: honeycomb waxes, an axe scrapes off wax or one stage of oxidation, like vanilla copper (properties and contents stay)
+	/**
+	 * What a held item does to a kettle, single or big (any of its blocks): K8 honeycomb waxes and an axe scrapes the whole
+	 * kettle like vanilla copper (contents stay); K5 an empty bottle or bucket fills straight from the brew, like a
+	 * cauldron (the client predicts from its synced copy). Anything else falls through to the screen.
+	 */
+	static InteractionResult useKettle(ItemStack heldStack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand) {
+		KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
+		if (kettle == null) {
+			return InteractionResult.PASS;
+		}
+		Block look = KettleRegistry.singleOf(state.getBlock());
+		// a copper ingot grows the chimney a block (to the roof, at most 8)
+		if (heldStack.is(net.minecraft.world.item.Items.COPPER_INGOT)) {
+			if (!KettleMultiblock.extendChimney(level, kettle, player)) {
+				return InteractionResult.PASS;
+			}
+			if (!level.isClientSide()) {
+				heldStack.consume(1, player);
+			}
+			return InteractionResult.SUCCESS;
+		}
 		if (heldStack.getItem() instanceof HoneycombItem) {
-			BlockState waxed = HoneycombItem.getWaxed(state).orElse(null);
+			Block waxed = KettleRegistry.waxedOf(look);
 			if (waxed != null) {
 				if (!level.isClientSide()) {
 					heldStack.consume(1, player);
-					changeCopperState(level, pos, waxed, player, LevelEvent.PARTICLES_WAX_ON);
+					changeCopper(level, kettle, waxed, player, LevelEvent.PARTICLES_WAX_ON);
 					level.playSound(null, pos, SoundEvents.HONEYCOMB_WAX_ON, SoundSource.BLOCKS, 1.0F, 1.0F);
 				}
 				return InteractionResult.SUCCESS;
 			}
 		}
 		if (isAxe(heldStack)) {
-			BlockState scraped = scrapedState(state);
+			Block scraped = KettleRegistry.scrapedOf(look);
 			if (scraped != null) {
 				if (!level.isClientSide()) {
-					boolean waxOff = isWaxed();
+					boolean waxOff = look instanceof BrewKettleBlock kettleBlock && kettleBlock.isWaxed();
 					heldStack.hurtAndBreak(1, player, hand.asEquipmentSlot());
-					changeCopperState(level, pos, scraped, player, waxOff ? LevelEvent.PARTICLES_WAX_OFF : LevelEvent.PARTICLES_SCRAPE);
+					changeCopper(level, kettle, scraped, player, waxOff ? LevelEvent.PARTICLES_WAX_OFF : LevelEvent.PARTICLES_SCRAPE);
 					level.playSound(null, pos, (waxOff ? SoundEvents.AXE_WAX_OFF : SoundEvents.AXE_SCRAPE).value(), SoundSource.BLOCKS, 1.0F, 1.0F);
 				}
 				return InteractionResult.SUCCESS;
 			}
 		}
-
-		// K5: an empty bottle or bucket fills straight from the brew, like a cauldron (the client predicts from its synced copy)
-		if (level.getBlockEntity(pos) instanceof BrewKettleBlockEntity kettle && kettle.canServe(heldStack)) {
+		if (level.getBlockEntity(kettle.controller()) instanceof BrewKettleBlockEntity be && be.canServe(heldStack)) {
 			if (!level.isClientSide()) {
-				ItemStack filled = kettle.drawServing(heldStack);
+				ItemStack filled = be.drawServing(heldStack);
 				player.setItemInHand(hand, ItemUtils.createFilledResult(heldStack, player, filled.copy()));
-				kettle.awardServing(player, filled, filled.getCount());
+				be.awardServing(player, filled, filled.getCount());
 				level.gameEvent(player, GameEvent.FLUID_PICKUP, pos);
 			}
 			return InteractionResult.SUCCESS;
@@ -144,8 +166,14 @@ public class BrewKettleBlock extends Block implements SimpleWaterloggedBlock, En
 
 	@Override
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-		if (player instanceof ServerPlayer serverPlayer && level.getBlockEntity(pos) instanceof BrewKettleBlockEntity kettle) {
-			Services.PLATFORM.openBlockMenu(serverPlayer, kettle, pos);
+		return openScreen(level, pos, player);
+	}
+
+	/** Opens the kettle's screen from any of its blocks (the controller's block entity holds the brew). */
+	static InteractionResult openScreen(Level level, BlockPos pos, Player player) {
+		BrewKettleBlockEntity kettle = KettleMultiblock.controller(level, pos);
+		if (player instanceof ServerPlayer serverPlayer && kettle != null) {
+			Services.PLATFORM.openBlockMenu(serverPlayer, kettle, kettle.getBlockPos());
 		}
 		return InteractionResult.SUCCESS;
 	}
@@ -158,17 +186,47 @@ public class BrewKettleBlock extends Block implements SimpleWaterloggedBlock, En
 	/** One step back with an axe: wax off first, otherwise one oxidation stage, or null if there is nothing to scrape. */
 	@Nullable
 	public BlockState scrapedState(BlockState state) {
-		Block unwaxed = Services.PLATFORM.unwaxed(state.getBlock());
-		if (unwaxed != null) {
-			return unwaxed.withPropertiesOf(state);
-		}
-		return WeatheringCopper.getPrevious(state).orElse(null);
+		Block scraped = KettleRegistry.scrapedOf(this);
+		return scraped == null ? null : scraped.withPropertiesOf(state);
 	}
 
-	private static void changeCopperState(Level level, BlockPos pos, BlockState newState, @Nullable Player player, int levelEvent) {
-		level.setBlock(pos, newState, Block.UPDATE_ALL_IMMEDIATE);
-		level.levelEvent(player, levelEvent, pos, 0);
-		level.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(player, newState));
+	/** Waxing and scraping: the whole kettle changes copper, with the particles on every block. */
+	private static void changeCopper(Level level, KettleMultiblock.Kettle kettle, Block single, @Nullable Player player, int levelEvent) {
+		KettleMultiblock.restage(level, kettle, single);
+		for (BlockPos at : kettle.positions()) {
+			level.levelEvent(player, levelEvent, at, 0);
+			level.gameEvent(GameEvent.BLOCK_CHANGE, at, GameEvent.Context.of(player, level.getBlockState(at)));
+		}
+	}
+
+	// ------------------------------------------------------------------ growing (WP4): a placed kettle joins the kettles around it
+
+	@Override
+	public void setPlacedBy(Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.@Nullable LivingEntity placer, ItemStack stack) {
+		super.setPlacedBy(level, pos, state, placer, stack);
+		// placing kettles against kettles needs sneaking (else their screen opens), so a cube always joins. A tick later:
+		// the placing is final then (a protection mod may still undo it in this one)
+		if (level instanceof ServerLevel server && placer instanceof Player) {
+			server.scheduleTick(pos, this, 1);
+		}
+	}
+
+	@Override
+	protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+		KettleMultiblock.tryJoin(level, pos);
+	}
+
+	/** Weathering (or lightning, or another mod) changed this kettle's copper: its chimney pieces follow. */
+	@Override
+	protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+		super.onPlace(state, level, pos, oldState, movedByPiston);
+		if (!level.isClientSide() && !KettleMultiblock.isConverting() && oldState.getBlock() instanceof BrewKettleBlock && oldState.getBlock() != this
+			&& state.getValue(EXTENDED)) {
+			KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
+			if (kettle != null) {
+				KettleMultiblock.restage(level, kettle, this);
+			}
+		}
 	}
 
 	/** Weathering, waxing and scraping swap the block for another kettle: keep the block entity (contents) like vanilla's copper chest. */
@@ -237,7 +295,7 @@ public class BrewKettleBlock extends Block implements SimpleWaterloggedBlock, En
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
-		builder.add(FACING, SUPPORT, OPEN, FILL, WATERLOGGED);
+		builder.add(FACING, SUPPORT, OPEN, FILL, WATERLOGGED, EXTENDED);
 	}
 
 	@Override

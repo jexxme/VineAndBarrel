@@ -1,0 +1,18 @@
+{
+  "parent": "vineandbarrel:block/template_brew_kettle_part_3x3x3_010",
+  "textures": {
+    "band": "vineandbarrel:block/weathered_brew_kettle_band",
+    "brew": "vineandbarrel:block/brew_liquid",
+    "cut": "minecraft:block/weathered_cut_copper",
+    "dark": "vineandbarrel:block/brew_kettle_dark",
+    "glass": "vineandbarrel:block/placed_drink_glass",
+    "handle": "vineandbarrel:block/brew_kettle_handle",
+    "iron": "minecraft:block/iron_block",
+    "pipe": "vineandbarrel:block/weathered_brew_kettle_pipe",
+    "plate": "minecraft:block/weathered_copper",
+    "tap": "vineandbarrel:block/aging_barrel_tap",
+    "tray_side": "vineandbarrel:block/brew_kettle_tray_side",
+    "tray_top": "vineandbarrel:block/brew_kettle_tray_top",
+    "trim": "vineandbarrel:block/weathered_brew_kettle_trim"
+  }
+}
