@@ -1,0 +1,35 @@
+{
+  "type": "farmersdelight:cutting",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "farmersdelight"
+      ]
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "vineandbarrel:wild_hops"
+    }
+  ],
+  "result": [
+    {
+      "item": "vineandbarrel:hops"
+    },
+    {
+      "chance": 0.5,
+      "count": 2,
+      "item": "minecraft:lime_dye"
+    }
+  ],
+  "tool": {
+    "tag": "vineandbarrel:cooking/knives"
+  }
+}

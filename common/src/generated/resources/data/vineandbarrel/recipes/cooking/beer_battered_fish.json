@@ -1,0 +1,33 @@
+{
+  "type": "farmersdelight:cooking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "experience": 1.0,
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "farmersdelight"
+      ]
+    }
+  ],
+  "ingredients": [
+    {
+      "tag": "vineandbarrel:cooking/raw_fish"
+    },
+    {
+      "tag": "vineandbarrel:cooking/barley_ale"
+    },
+    {
+      "tag": "vineandbarrel:cooking/wheat"
+    }
+  ],
+  "recipe_book_tab": "meals",
+  "result": {
+    "item": "vineandbarrel:beer_battered_fish"
+  }
+}

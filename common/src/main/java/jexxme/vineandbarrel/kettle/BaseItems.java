@@ -1,12 +1,16 @@
 package jexxme.vineandbarrel.kettle;
 
 import jexxme.vineandbarrel.VineAndBarrel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.Consumable;
-import net.minecraft.world.item.component.Consumables;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.level.Level;
 import jexxme.vineandbarrel.platform.registry.DeferredItem;
 import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
@@ -21,9 +25,14 @@ public final class BaseItems
 {
 	public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(VineAndBarrel.MODID);
 
-	/** Light food, always drinkable, like a honey bottle but with the vanilla drink sound (D3). */
-	public static final FoodProperties JUICE_FOOD = new FoodProperties.Builder().nutrition(2).saturationModifier(0.3F).alwaysEdible().build();
-	public static final Consumable JUICE_DRINK = Consumables.defaultDrink().consumeSeconds(2.0F).build();
+	/**
+	 * Light food, always drinkable, like a honey bottle but with the vanilla drink sound (D3): drunk in 2 seconds, and
+	 * the bottle is left ({@link JuiceItem} makes it a drink, sets the time and gives the bottle back: this Minecraft's
+	 * food has neither an eating time nor a "converts to").
+	 */
+	public static final FoodProperties JUICE_FOOD = new FoodProperties.Builder().nutrition(2).saturationMod(0.3F).alwaysEat().build();
+	/** 2 seconds. */
+	private static final int JUICE_DRINK_TICKS = 40;
 
 	public static final DeferredItem<Item> GRAPE_JUICE = juice("grape_juice");
 	public static final DeferredItem<Item> GRAPE_JUICE_BUCKET = bucket("grape_juice_bucket");
@@ -58,8 +67,42 @@ public final class BaseItems
 	}
 
 	private static DeferredItem<Item> juice(String name) {
-		return ITEMS.registerSimpleItem(name, p -> p.craftRemainder(Items.GLASS_BOTTLE).food(JUICE_FOOD, JUICE_DRINK)
-			.usingConvertsTo(Items.GLASS_BOTTLE).stacksTo(16));
+		return ITEMS.registerItem(name, JuiceItem::new, p -> p.craftRemainder(Items.GLASS_BOTTLE).food(JUICE_FOOD).stacksTo(16));
+	}
+
+	/** A juice bottle: food that is drunk (vanilla's drink animation and sound, no crumbs), and the bottle comes back. */
+	private static class JuiceItem extends Item
+	{
+		JuiceItem(Properties properties) {
+			super(properties);
+		}
+
+		@Override
+		public UseAnim getUseAnimation(ItemStack stack) {
+			return UseAnim.DRINK;
+		}
+
+		@Override
+		public int getUseDuration(ItemStack stack) {
+			return JUICE_DRINK_TICKS;
+		}
+
+		/**
+		 * The empty bottle, as newer Minecraft's food hands back what it "converts to": to players only and not in
+		 * creative; in place of the last juice of a stack, otherwise into the inventory.
+		 */
+		@Override
+		public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+			// The empty bottle comes back like a drink's vessel: into the inventory, or at the drinker's feet if it is full
+			jexxme.vineandbarrel.drink.DrinkItem.Remainder bottle = jexxme.vineandbarrel.drink.DrinkItem.Remainder.before(stack);
+			return bottle.after(super.finishUsingItem(stack, level, entity), level, entity);
+		}
+
+		/** Played once when the bottle is finished (LivingEntity#eat): a gulp, not a crunch. */
+		@Override
+		public SoundEvent getEatingSound() {
+			return SoundEvents.GENERIC_DRINK;
+		}
 	}
 
 	private static DeferredItem<Item> wort(String name) {

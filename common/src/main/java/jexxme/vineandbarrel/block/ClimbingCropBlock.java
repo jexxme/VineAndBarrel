@@ -1,7 +1,7 @@
 package jexxme.vineandbarrel.block;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -13,19 +13,22 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.BonemealSource;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.VegetationBlock;
+import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import jexxme.vineandbarrel.platform.Services;
 import org.jspecify.annotations.Nullable;
 
@@ -37,14 +40,14 @@ import java.util.function.Supplier;
  * that climb a support above it (our Trellis, or an FD rope):
  * <ul>
  *   <li>4 ages like the sweet berry bush; it grows with the sweet berry bush's pace and light rule.</li>
- *   <li>From age 2 on, right-click picks the fruit through a {@code block_interact} loot table and drops the plant back to
+ *   <li>From age 2 on, right-click picks the fruit through a harvest loot table and drops the plant back to
  *       age 1, exactly like the sweet berry bush (C1): half-ripe (age 2) gives fewer than ripe (age 3).</li>
  *   <li>Bone meal adds one age; on a ripe plant with a support above it makes the plant climb (FD tomato rule). Because
  *       the plants are bonemealable, FD's rich soil boosts them automatically.</li>
  *   <li>Ripe with a support above: it climbs onto it, up to {@value VineClimbing#MAX_HEIGHT} blocks tall (FD tomato rule).</li>
  * </ul>
  */
-public abstract class ClimbingCropBlock extends VegetationBlock implements BonemealableBlock
+public abstract class ClimbingCropBlock extends BushBlock implements BonemealableBlock
 {
 	public static final int MAX_AGE = 3;
 	/** The first age that can be picked: half-ripe, like the sweet berry bush at age 2. */
@@ -53,9 +56,9 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 	public static final IntegerProperty AGE = BlockStateProperties.AGE_3;
 
 	private final Supplier<? extends Item> produce;
-	private final ResourceKey<LootTable> harvestLoot;
+	private final ResourceLocation harvestLoot;
 
-	protected ClimbingCropBlock(Properties properties, Supplier<? extends Item> produce, ResourceKey<LootTable> harvestLoot) {
+	protected ClimbingCropBlock(Properties properties, Supplier<? extends Item> produce, ResourceLocation harvestLoot) {
 		super(properties);
 		this.produce = produce;
 		this.harvestLoot = harvestLoot;
@@ -116,7 +119,7 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 		return produce.get();
 	}
 
-	public ResourceKey<LootTable> harvestLoot() {
+	public ResourceLocation harvestLoot() {
 		return harvestLoot;
 	}
 
@@ -130,17 +133,17 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 	}
 
 	@Override
-	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+	public ItemStack getCloneItemStack(BlockGetter level, BlockPos pos, BlockState state) {
 		return new ItemStack(produce());
 	}
 
 	@Override
-	protected boolean isRandomlyTicking(BlockState state) {
+	public boolean isRandomlyTicking(BlockState state) {
 		return true; // a ripe plant keeps ticking so it can climb a support placed above it later
 	}
 
 	@Override
-	protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+	public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
 		if (!level.hasChunksAt(pos.offset(-1, -1, -1), pos.offset(1, 1, 1)) || level.getRawBrightness(pos.above(), 0) < 9) {
 			return;
 		}
@@ -158,24 +161,43 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 		}
 	}
 
+	/**
+	 * 1.20.1 has one hook for a right-click, called for each hand in turn: first what the stack in that hand does to the
+	 * plant ({@link #useItemOn}), then, for the main hand only and when the stack had no business here, picking
+	 * ({@link #useWithoutItem}): the order and the hands of the newer versions' two hooks.
+	 */
 	@Override
-	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-		// Like the sweet berry bush: bone meal goes to BoneMealItem while it can still do something here
-		if (stack.is(Items.BONE_MEAL) && isValidBonemealTarget(level, pos, state, BonemealSource.INTERACTION)) {
-			return InteractionResult.PASS;
+	public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+		InteractionResult withItem = useItemOn(player.getItemInHand(hand), state, level, pos, player, hand, hitResult);
+		if (withItem != null) {
+			return withItem;
 		}
-		return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
+		return hand == InteractionHand.MAIN_HAND ? useWithoutItem(state, level, pos, player, hitResult) : InteractionResult.PASS;
 	}
 
-	@Override
+	/**
+	 * What the stack in the hand does to the plant.
+	 *
+	 * @return the result when the stack was used here; {@link InteractionResult#PASS} (or {@link InteractionResult#FAIL})
+	 * to leave the click to the item itself without picking; {@code null} when the stack has no business here: the plant
+	 * is then picked
+	 */
+	protected @Nullable InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+		// Like the sweet berry bush: bone meal goes to BoneMealItem while it can still do something here
+		if (stack.is(Items.BONE_MEAL) && isValidBonemealTarget(level, pos, state, level.isClientSide())) {
+			return InteractionResult.PASS;
+		}
+		return null;
+	}
+
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
 		if (canPick(state)) {
 			if (level instanceof ServerLevel serverLevel) {
 				pick(serverLevel, pos, state, player, stack -> Block.popResource(serverLevel, pos, stack));
 			}
-			return InteractionResult.SUCCESS;
+			return InteractionResult.sidedSuccess(level.isClientSide());
 		}
-		return super.useWithoutItem(state, level, pos, player, hitResult);
+		return InteractionResult.PASS;
 	}
 
 	/**
@@ -183,8 +205,15 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 	 * like vanilla's {@code harvest/sweet_berry_bush}), plays the berry-picking sound and drops the plant back to age 1.
 	 */
 	public void pick(ServerLevel level, BlockPos pos, BlockState state, @Nullable Entity picker, Consumer<ItemStack> drops) {
-		Block.dropFromBlockInteractLootTable(level, harvestLoot, pos, state, level.getBlockEntity(pos), null, picker,
-				(serverLevel, stack) -> drops.accept(stack));
+		// 1.20.1 has no block_interact tables: the harvest tables are of the "block" kind, rolled with an empty tool
+		LootParams.Builder params = new LootParams.Builder(level)
+				.withParameter(LootContextParams.BLOCK_STATE, state)
+				.withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+				.withParameter(LootContextParams.TOOL, ItemStack.EMPTY)
+				.withOptionalParameter(LootContextParams.BLOCK_ENTITY, level.getBlockEntity(pos))
+				.withOptionalParameter(LootContextParams.THIS_ENTITY, picker);
+		level.getServer().getLootData().getLootTable(harvestLoot)
+				.getRandomItems(params.create(LootContextParamSets.BLOCK)).forEach(drops);
 		level.playSound(null, pos, SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.BLOCKS, 1.0F, 0.8F + level.getRandom().nextFloat() * 0.4F);
 		BlockState picked = state.setValue(AGE, PICKED_AGE);
 		level.setBlock(pos, picked, Block.UPDATE_CLIENTS);
@@ -192,7 +221,7 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 	}
 
 	@Override
-	public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
+	public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, boolean isClient) {
 		if (state.getValue(AGE) < MAX_AGE) {
 			return true;
 		}
@@ -202,16 +231,16 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 		// FD tomato rule: bone meal on a grown plant passes on to the vine above it
 		BlockPos above = pos.above();
 		BlockState aboveState = level.getBlockState(above);
-		return isVine(aboveState) && ((ClimbingCropBlock) aboveState.getBlock()).isValidBonemealTarget(level, above, aboveState, source);
+		return isVine(aboveState) && ((ClimbingCropBlock) aboveState.getBlock()).isValidBonemealTarget(level, above, aboveState, isClient);
 	}
 
 	@Override
-	public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
+	public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
 		return true;
 	}
 
 	@Override
-	public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
+	public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
 		int age = state.getValue(AGE);
 		if (age < MAX_AGE) {
 			level.setBlock(pos, state.setValue(AGE, age + 1), Block.UPDATE_CLIENTS);
@@ -221,8 +250,8 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 			BlockPos above = pos.above();
 			BlockState aboveState = level.getBlockState(above);
 			if (isVine(aboveState) && aboveState.getBlock() instanceof ClimbingCropBlock climber
-					&& climber.isValidBonemealTarget(level, above, aboveState, source)) {
-				climber.performBonemeal(level, random, above, aboveState, source);
+					&& climber.isValidBonemealTarget(level, above, aboveState, false)) {
+				climber.performBonemeal(level, random, above, aboveState);
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 plugins {
     // Versions of the loader toolchains, applied in the subprojects
-    id 'net.neoforged.moddev' version '2.0.148' apply false
+    id 'net.neoforged.moddev.legacyforge' version '2.0.148' apply false
     id 'net.fabricmc.fabric-loom' version '1.19.3' apply false
 }
 
@@ -8,9 +8,55 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-// The NeoForge GameTests without and with Farmer's Delight, as before the split (the counts CI compares)
+// For fabric/build.gradle's runs with Farmer's Delight Refabricated: its jar for this Minecraft carries jars (Fabric-ASM
+// and Porting Lib modules, which carry more), and Loom drops the jars inside a mod it remaps. They are unpacked here into
+// build/fd-nested, once per mod id, while the build is configured: the Fabric project needs the files when Loom sets up
+// its remapping and can't resolve anything itself before that. Nothing else is resolved through the root project.
+repositories {
+    exclusiveContent {
+        forRepository { maven { name = "Modrinth"; url = "https://api.modrinth.com/maven" } }
+        filter { includeGroup "maven.modrinth" }
+    }
+}
+def unpackNestedJars
+unpackNestedJars = { File jar, File into, Map<String, File> mods, Map<String, File> libraries ->
+    def nested = []
+    new java.util.zip.ZipFile(jar).withCloseable { zip ->
+        zip.entries().findAll { it.name.startsWith('META-INF/jars/') && it.name.endsWith('.jar') }.each { entry ->
+            def out = new File(into, entry.name.substring(entry.name.lastIndexOf('/') + 1))
+            if (!out.exists()) {
+                into.mkdirs()
+                out.bytes = zip.getInputStream(entry).bytes
+            }
+            nested << out
+        }
+    }
+    nested.each { File file ->
+        String modId = null
+        new java.util.zip.ZipFile(file).withCloseable { zip ->
+            def json = zip.getEntry('fabric.mod.json')
+            if (json != null) {
+                modId = new groovy.json.JsonSlurper().parse(zip.getInputStream(json)).id
+            }
+        }
+        if (modId == null) {
+            libraries.putIfAbsent(file.name, file)
+        } else if (!mods.containsKey(modId)) {
+            mods[modId] = file
+            unpackNestedJars(file, into, mods, libraries)
+        }
+    }
+}
+def fdNestedMods = [:], fdNestedLibraries = [:]
+def fdJarOnly = configurations.detachedConfiguration(dependencies.create("maven.modrinth:farmers-delight-refabricated:${fd_refabricated_version}"))
+fdJarOnly.transitive = false
+unpackNestedJars(fdJarOnly.singleFile, layout.buildDirectory.dir("fd-nested/${fd_refabricated_version}").get().asFile, fdNestedMods, fdNestedLibraries)
+ext.fdRefabricatedNestedMods = fdNestedMods.values().toList()
+ext.fdRefabricatedNestedLibraries = fdNestedLibraries.values().toList()
+
+// The GameTests of both loaders, each without and with Farmer's Delight and with the compat mods
 tasks.register('gameTestsAll') {
     group = 'verification'
-    description = "Runs the NeoForge and the Fabric GameTests, each without and with Farmer's Delight and with the compat mods."
-    dependsOn ':neoforge:gameTestsAll', ':fabric:gameTestsAll'
+    description = "Runs the Forge and the Fabric GameTests, each without and with Farmer's Delight and with the compat mods."
+    dependsOn ':forge:gameTestsAll', ':fabric:gameTestsAll'
 }

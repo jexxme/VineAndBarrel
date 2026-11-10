@@ -205,7 +205,7 @@ public final class KettleMultiblock
 			level.setBlock(at, state, Block.UPDATE_ALL);
 			if (level instanceof ServerLevel server) {
 				// a copper glint where the new piece stands
-				server.sendParticles(new net.minecraft.core.particles.DustParticleOptions(0xE3826C, 0.8F), at.getX() + 0.5D, at.getY() + 0.5D, at.getZ() + 0.5D, 10, 0.25D, 0.4D, 0.25D, 0.0D);
+				server.sendParticles(new net.minecraft.core.particles.DustParticleOptions(Vec3.fromRGB24(0xE3826C).toVector3f(), 0.8F), at.getX() + 0.5D, at.getY() + 0.5D, at.getZ() + 0.5D, 10, 0.25D, 0.4D, 0.25D, 0.0D);
 			}
 			level.playSound(null, at, net.minecraft.sounds.SoundEvents.COPPER_PLACE, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 0.9F);
 		}
@@ -458,7 +458,7 @@ public final class KettleMultiblock
 
 	/** A pending drop is for one block in one dimension, this tick only (a drop that never happened can't come back later). */
 	private static String dropKey(Level level, BlockPos pos) {
-		return level.dimension().identifier() + "@" + pos.asLong() + "@" + level.getGameTime();
+		return level.dimension().location() + "@" + pos.asLong() + "@" + level.getGameTime();
 	}
 
 	/**
@@ -518,7 +518,7 @@ public final class KettleMultiblock
 			ItemStack left = stack.copy();
 			for (int i = 0; i < grid.size() && !left.isEmpty(); i++) {
 				ItemStack slot = grid.get(i);
-				if (!slot.isEmpty() && ItemStack.isSameItemSameComponents(slot, left)) {
+				if (!slot.isEmpty() && ItemStack.isSameItemSameTags(slot, left)) {
 					int room = capacityOf.getCapacity(i, slot) - slot.getCount();
 					int moved = Math.min(room, left.getCount());
 					slot.grow(moved);

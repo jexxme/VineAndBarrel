@@ -1,15 +1,15 @@
 name: Release
 
-# Push a tag named <minecraft_version>-<mod_version> (the NeoForge version, e.g. 26.3-0.9.0+neoforged.1) on the matching
-# branch. gradle.properties also has fabric_mod_version (e.g. 0.9.0+fabric.1: the same version before the "+").
+# Push a tag named <minecraft_version>-<mod_version> (the Forge version, e.g. 1.20.1-1.1.0+forge.1) on the matching
+# branch. gradle.properties also has fabric_mod_version (e.g. 1.1.0+fabric.1: the same version before the "+").
 # Publishes both jars to GitHub Releases always, and to Modrinth / CurseForge (the same projects, one file per loader;
 # both full releases) once these are set up in the repository settings:
 #   Variables: MODRINTH_PROJECT_ID, CURSEFORGE_PROJECT_ID     Secrets: MODRINTH_TOKEN, CURSEFORGE_TOKEN
 #   Modrinth uploads also need the variable MODRINTH_LIVE=true: until Modrinth approves the project they are skipped
 #   (with a notice), and GitHub and CurseForge still get the release.
 #
-# Names, loader first and the same everywhere (RELEASING.md): "Vine & Barrel 0.9.0 · NeoForge · Minecraft 26.3" and
-# "Vine & Barrel 0.9.0 · Fabric · Minecraft 26.3". The GitHub release starts with a "Which file do I need?" table, and
+# Names, loader first and the same everywhere (RELEASING.md): "Vine & Barrel 1.1.0 · Forge · Minecraft 1.20.1" and
+# "Vine & Barrel 1.1.0 · Fabric · Minecraft 1.20.1". The GitHub release starts with a "Which file do I need?" table, and
 # each Modrinth / CurseForge changelog names its loader in its first line.
 on:
   push:
@@ -40,8 +40,8 @@ jobs:
             echo "::error::Tag ${GITHUB_REF_NAME} doesn't match this commit's gradle.properties (${expected})."
             exit 1
           fi
-          if ! [[ "${mod}" =~ ^([0-9]+\.[0-9]+\.[0-9]+)\+neoforged\.[0-9]+$ ]]; then
-            echo "::error::mod_version ${mod} isn't <version>+neoforged.<n>."
+          if ! [[ "${mod}" =~ ^([0-9]+\.[0-9]+\.[0-9]+)\+forge\.[0-9]+$ ]]; then
+            echo "::error::mod_version ${mod} isn't <version>+forge.<n>."
             exit 1
           fi
           core="${BASH_REMATCH[1]}"
@@ -54,21 +54,22 @@ jobs:
             exit 1
           fi
           games_label=$(echo "${games}" | sed 's/,/, /g')
-          # the oldest NeoForge the jar accepts: the lower end of neo_version_range ("[26.1.0.19-beta,26.1.2)"), not
-          # neo_version, which is only the one it builds against
-          neo_min=$(prop neo_version_range | sed -E 's/^\[([^,]+),.*/\1/')
-          neo_needs="NeoForge ${neo_min}+"
-          fabric_needs="Fabric Loader $(prop fabric_loader_version)+ and Fabric API $(prop fabric_api_version | cut -d+ -f1)+"
+          # the oldest Forge the jar accepts: the lower end of forge_version_range ("[47.3,)"), not
+          # forge_version, which is only the one it builds against
+          forge_min=$(prop forge_version_range | sed -E 's/^\[([^,]+),.*/\1/')
+          forge_needs="Forge ${forge_min}+"
+          # Fabric Loader: the oldest the jar accepts (fabric_loader_min_version), not the one it builds against
+          fabric_needs="Fabric Loader $(prop fabric_loader_min_version)+ and Fabric API $(prop fabric_api_version | cut -d+ -f1)+"
           {
             echo "version=${expected}"
             echo "fabric_version=${mc}-${fabric}"
-            echo "neo_jar=VineAndBarrel-${expected}.jar"
+            echo "forge_jar=VineAndBarrel-${expected}.jar"
             echo "fabric_jar=VineAndBarrel-${mc}-${fabric}.jar"
-            echo "neo_name=Vine & Barrel ${core} · NeoForge · Minecraft ${games_label}"
+            echo "forge_name=Vine & Barrel ${core} · Forge · Minecraft ${games_label}"
             echo "fabric_name=Vine & Barrel ${core} · Fabric · Minecraft ${games_label}"
             echo "title=Vine & Barrel ${core} · Minecraft ${games_label}"
             echo "games_label=${games_label}"
-            echo "neo_needs=${neo_needs}"
+            echo "forge_needs=${forge_needs}"
             echo "fabric_needs=${fabric_needs}"
             echo "games<<EOF"; echo "${games}" | tr ',' '\n'; echo "EOF"
           } >> "$GITHUB_OUTPUT"
@@ -76,7 +77,7 @@ jobs:
           awk 'NR==1 && /^## /{next} /^#{1,2} /{exit} {print}' changelog.md > release-notes.md
           echo "Release notes:"; cat release-notes.md
           # Each store's changelog says its loader first
-          { echo "**NeoForge** · Minecraft ${games_label} · needs ${neo_needs}"; echo; cat release-notes.md; } > notes-neoforge.md
+          { echo "**Forge** · Minecraft ${games_label} · needs ${forge_needs}"; echo; cat release-notes.md; } > notes-forge.md
           { echo "**Fabric** · Minecraft ${games_label} · needs ${fabric_needs}"; echo; cat release-notes.md; } > notes-fabric.md
           # Only builds for the newest Minecraft version (the default branch) are marked as the latest release
           git fetch --depth=1 origin "${{ github.event.repository.default_branch }}"
@@ -86,15 +87,16 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
+          java-version: 17
 
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build, check and test (both loaders, the same GameTest runs as CI)
         run: |
           set -o pipefail
-          ./gradlew build :neoforge:runGameTestServer :neoforge:runGameTestServerCompat :fabric:runGameTest :fabric:runGameTestFd :fabric:runGameTestCompat --console=plain 2>&1 | tee release.log
-          if grep -E "/ERROR\]" release.log; then
+          ./gradlew build :forge:runGameTestServer :forge:runGameTestServerFd :forge:runGameTestServerCompat :fabric:runGameTest :fabric:runGameTestFd :fabric:runGameTestCompat --console=plain 2>&1 | tee release.log
+          # This older-Minecraft branch: errors other mods log about themselves in a dev environment (scripts/multiloader/known-errors.txt)
+          if grep -E "/ERROR\]" release.log | grep -vEf <(grep -v '^#' scripts/multiloader/known-errors.txt | tr -d '\r'); then
             echo "::error::Errors were logged while the GameTests ran."
             exit 1
           fi
@@ -102,20 +104,20 @@ jobs:
       - name: GitHub release (both jars, labelled by loader, and a "Which file do I need?" table)
         env:
           GH_TOKEN: ${{ github.token }}
-          NEO_JAR: neoforge/build/libs/${{ steps.info.outputs.neo_jar }}
+          FORGE_JAR: forge/build/libs/${{ steps.info.outputs.forge_jar }}
           FABRIC_JAR: fabric/build/libs/${{ steps.info.outputs.fabric_jar }}
-          NEO_NAME: ${{ steps.info.outputs.neo_name }}
+          FORGE_NAME: ${{ steps.info.outputs.forge_name }}
           FABRIC_NAME: ${{ steps.info.outputs.fabric_name }}
-          NEO_NEEDS: ${{ steps.info.outputs.neo_needs }}
+          FORGE_NEEDS: ${{ steps.info.outputs.forge_needs }}
           FABRIC_NEEDS: ${{ steps.info.outputs.fabric_needs }}
           TITLE: ${{ steps.info.outputs.title }}
           GAMES: ${{ steps.info.outputs.games_label }}
           LATEST: ${{ steps.info.outputs.latest }}
         run: |
           set -euo pipefail
-          ls "${NEO_JAR}" "${FABRIC_JAR}"
+          ls "${FORGE_JAR}" "${FABRIC_JAR}"
           gh release create "${GITHUB_REF_NAME}" --verify-tag --title "${TITLE}" --notes-file release-notes.md --latest="${LATEST}"
-          gh release upload "${GITHUB_REF_NAME}" "${NEO_JAR}#${NEO_NAME}" "${FABRIC_JAR}#${FABRIC_NAME}"
+          gh release upload "${GITHUB_REF_NAME}" "${FORGE_JAR}#${FORGE_NAME}" "${FABRIC_JAR}#${FABRIC_NAME}"
           # The table links the files as GitHub stored them (it may rename characters in file names)
           url() { gh release view "${GITHUB_REF_NAME}" --json assets --jq ".assets[] | select(.label == \"$1\") | .url"; }
           name() { gh release view "${GITHUB_REF_NAME}" --json assets --jq ".assets[] | select(.label == \"$1\") | .name"; }
@@ -124,7 +126,7 @@ jobs:
             echo
             echo "| Loader | Minecraft | File | Needs |"
             echo "|---|---|---|---|"
-            echo "| NeoForge | ${GAMES} | [$(name "${NEO_NAME}")]($(url "${NEO_NAME}")) | ${NEO_NEEDS} |"
+            echo "| Forge | ${GAMES} | [$(name "${FORGE_NAME}")]($(url "${FORGE_NAME}")) | ${FORGE_NEEDS} |"
             echo "| Fabric | ${GAMES} | [$(name "${FABRIC_NAME}")]($(url "${FABRIC_NAME}")) | ${FABRIC_NEEDS} |"
             echo
             cat release-notes.md
@@ -133,38 +135,37 @@ jobs:
           gh release edit "${GITHUB_REF_NAME}" --notes-file release-body.md
 
       # Optional dependencies per loader: only mods with a real build for this loader and Minecraft version
-      # (Nutritional Balance has no Fabric build; Farmer's Delight is Farmer's Delight Neoforged on NeoForge and
-      # Farmer's Delight Refabricated on Fabric).
+      # (Spice of Life Onion has no Fabric build, Nutritional Balance has no 1.20.1 build on either loader; Farmer's Delight
+      # is the original mod on Forge and Farmer's Delight Refabricated on Fabric).
       - name: Modrinth skipped (the project isn't approved yet)
         if: vars.MODRINTH_LIVE != 'true'
         run: |
           echo "::notice::Modrinth uploads skipped: set the repository variable MODRINTH_LIVE to true once Modrinth has approved the project."
 
-      - name: Modrinth (NeoForge)
+      - name: Modrinth (Forge)
         if: vars.MODRINTH_PROJECT_ID != '' && vars.MODRINTH_LIVE == 'true'
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ vars.MODRINTH_PROJECT_ID }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: neoforge/build/libs/${{ steps.info.outputs.neo_jar }}
-          name: ${{ steps.info.outputs.neo_name }}
+          files: forge/build/libs/${{ steps.info.outputs.forge_jar }}
+          name: ${{ steps.info.outputs.forge_name }}
           version: ${{ steps.info.outputs.version }}
           version-type: release
-          changelog-file: notes-neoforge.md
-          loaders: neoforge
+          changelog-file: notes-forge.md
+          loaders: forge
           game-versions: ${{ steps.info.outputs.games }}
           game-version-filter: none
           dependencies: |
-            farmers-delight-neoforged(optional){modrinth:8Vb5dzx9}{curseforge:1782500}
+            farmers-delight(optional){modrinth:R2OftAxM}{curseforge:398521}
             jei(optional){modrinth:u6dRKJwZ}{curseforge:238222}
             jade(optional){modrinth:nvQzSEkH}{curseforge:324717}
             appleskin(optional){modrinth:EsAfCjCV}{curseforge:248787}
             tough-as-nails(optional){modrinth:ge1sOdFH}{curseforge:246391}
             homeostatic(optional){modrinth:oDobngty}{curseforge:634466}
             thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
-            nutritional-balance(optional){modrinth:OECzAr94}{curseforge:448222}
             spice-of-life-onion(optional){modrinth:eHGYGKJz}{curseforge:878047}
-          java: 25
+          java: 17
 
       - name: Modrinth (Fabric)
         if: vars.MODRINTH_PROJECT_ID != '' && vars.MODRINTH_LIVE == 'true'
@@ -189,34 +190,32 @@ jobs:
             tough-as-nails(optional){modrinth:ge1sOdFH}{curseforge:246391}
             homeostatic(optional){modrinth:oDobngty}{curseforge:634466}
             thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
-            spice-of-life-onion(optional){modrinth:eHGYGKJz}{curseforge:878047}
-          java: 25
+          java: 17
 
-      - name: CurseForge (NeoForge)
+      - name: CurseForge (Forge)
         if: vars.CURSEFORGE_PROJECT_ID != ''
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-          files: neoforge/build/libs/${{ steps.info.outputs.neo_jar }}
-          name: ${{ steps.info.outputs.neo_name }}
+          files: forge/build/libs/${{ steps.info.outputs.forge_jar }}
+          name: ${{ steps.info.outputs.forge_name }}
           version: ${{ steps.info.outputs.version }}
           version-type: release
-          changelog-file: notes-neoforge.md
-          loaders: neoforge
+          changelog-file: notes-forge.md
+          loaders: forge
           game-versions: ${{ steps.info.outputs.games }}
           game-version-filter: none
           dependencies: |
-            farmers-delight-neoforged(optional){modrinth:8Vb5dzx9}{curseforge:1782500}
+            farmers-delight(optional){modrinth:R2OftAxM}{curseforge:398521}
             jei(optional){modrinth:u6dRKJwZ}{curseforge:238222}
             jade(optional){modrinth:nvQzSEkH}{curseforge:324717}
             appleskin(optional){modrinth:EsAfCjCV}{curseforge:248787}
             tough-as-nails(optional){modrinth:ge1sOdFH}{curseforge:246391}
             homeostatic(optional){modrinth:oDobngty}{curseforge:634466}
             thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
-            nutritional-balance(optional){modrinth:OECzAr94}{curseforge:448222}
             spice-of-life-onion(optional){modrinth:eHGYGKJz}{curseforge:878047}
-          java: 25
+          java: 17
 
       - name: CurseForge (Fabric)
         if: vars.CURSEFORGE_PROJECT_ID != ''
@@ -241,5 +240,4 @@ jobs:
             tough-as-nails(optional){modrinth:ge1sOdFH}{curseforge:246391}
             homeostatic(optional){modrinth:oDobngty}{curseforge:634466}
             thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
-            spice-of-life-onion(optional){modrinth:eHGYGKJz}{curseforge:878047}
-          java: 25
+          java: 17

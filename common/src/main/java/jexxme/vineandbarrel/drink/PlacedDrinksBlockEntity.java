@@ -1,7 +1,6 @@
 package jexxme.vineandbarrel.drink;
 
 import jexxme.vineandbarrel.platform.hooks.DataPacketReceiver;
-import com.mojang.logging.LogUtils;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -10,24 +9,17 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.Containers;
-import net.minecraft.world.ItemStackWithSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 /** The drinks on a placed-drinks block (D1): one item per spot, each keeping its own drink (and its glint, name, ...). */
 public class PlacedDrinksBlockEntity extends BlockEntity implements DataPacketReceiver
 {
-	private static final Logger LOGGER = LogUtils.getLogger();
-
 	private final NonNullList<ItemStack> items = NonNullList.withSize(PlacedDrinksBlock.SPOTS, ItemStack.EMPTY);
 
 	public PlacedDrinksBlockEntity(BlockPos pos, BlockState state) {
@@ -60,36 +52,35 @@ public class PlacedDrinksBlockEntity extends BlockEntity implements DataPacketRe
 		return n;
 	}
 
-	/** 26.x: drop what stands here when the block goes (broken, popped by a piston, no support left); water only waterlogs it. */
-	@Override
-	public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+	/**
+	 * Drop what stands here when the block goes (broken, popped by a piston, no support left); water only waterlogs it.
+	 * Called by {@link PlacedDrinksBlock#onRemove} (26.x: the block entity's own preRemoveSideEffects).
+	 */
+	public void dropContents() {
 		if (level instanceof ServerLevel serverLevel) {
-			Containers.dropContents(serverLevel, pos, items);
+			Containers.dropContents(serverLevel, worldPosition, items);
 		}
 	}
 
 	@Override
-	protected void loadAdditional(ValueInput input) {
-		super.loadAdditional(input);
+	public void load(CompoundTag tag) {
+		super.load(tag);
 		for (int i = 0; i < items.size(); i++) {
 			items.set(i, ItemStack.EMPTY);
 		}
-		for (ItemStackWithSlot entry : input.listOrEmpty("Items", ItemStackWithSlot.CODEC)) {
-			if (entry.isValidInContainer(items.size())) {
-				items.set(entry.slot(), entry.stack());
-			}
+		// "Items": a list of stacks with their "Slot", as 26.x writes it; each stack in this Minecraft's own form
+		ContainerHelper.loadAllItems(tag, items);
+		// Each spot's liquid is tinted in its own drink's colour: re-render when a drink changes. Here and not only in
+		// onDataPacket: 1.20.1's loaders hand an update packet to load unless their glue calls onDataPacket
+		if (level != null && level.isClientSide()) {
+			level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
 		}
 	}
 
 	@Override
-	protected void saveAdditional(ValueOutput output) {
-		super.saveAdditional(output);
-		ValueOutput.TypedOutputList<ItemStackWithSlot> list = output.list("Items", ItemStackWithSlot.CODEC);
-		for (int i = 0; i < items.size(); i++) {
-			if (!items.get(i).isEmpty()) {
-				list.add(new ItemStackWithSlot(i, items.get(i)));
-			}
-		}
+	protected void saveAdditional(CompoundTag tag) {
+		super.saveAdditional(tag);
+		ContainerHelper.saveAllItems(tag, items);
 	}
 
 	@Override
@@ -98,20 +89,14 @@ public class PlacedDrinksBlockEntity extends BlockEntity implements DataPacketRe
 	}
 
 	@Override
-	public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-		try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(this.problemPath(), LOGGER)) {
-			TagValueOutput output = TagValueOutput.createWithContext(reporter, registries);
-			saveAdditional(output);
-			return output.buildResult();
-		}
+	public CompoundTag getUpdateTag() {
+		CompoundTag tag = new CompoundTag();
+		saveAdditional(tag);
+		return tag;
 	}
 
 	@Override
-	public void onDataPacket(Connection connection, ValueInput input) {
-		loadWithComponents(input);
-		// Each spot's liquid is tinted in its own drink's colour: re-render when a drink changes
-		if (level != null && level.isClientSide()) {
-			level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
-		}
+	public void onDataPacket(Connection connection, CompoundTag tag, HolderLookup.Provider registries) {
+		load(tag);
 	}
 }

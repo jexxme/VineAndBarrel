@@ -1,8 +1,7 @@
 package jexxme.vineandbarrel.platform;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.Entity;
 import org.jspecify.annotations.Nullable;
 
@@ -34,7 +33,7 @@ public interface EntityAttachment<T>
 	 * entity's attachment data), whether it is sent to the entity's own client and everyone tracking it ({@code sync}),
 	 * and whether a player keeps it through death ({@code copyOnDeath}, saved attachments only).
 	 */
-	record Spec<T>(Supplier<T> defaultValue, @Nullable MapCodec<T> saveCodec, @Nullable StreamCodec<? super RegistryFriendlyByteBuf, T> syncCodec,
+	record Spec<T>(Supplier<T> defaultValue, @Nullable MapCodec<T> saveCodec, @Nullable SyncCodec<T> syncCodec,
 		boolean copyOnDeath)
 	{
 		public static <T> Builder<T> builder(Supplier<T> defaultValue) {
@@ -46,7 +45,7 @@ public interface EntityAttachment<T>
 	{
 		private final Supplier<T> defaultValue;
 		private @Nullable MapCodec<T> saveCodec;
-		private @Nullable StreamCodec<? super RegistryFriendlyByteBuf, T> syncCodec;
+		private @Nullable SyncCodec<T> syncCodec;
 		private boolean copyOnDeath;
 
 		private Builder(Supplier<T> defaultValue) {
@@ -58,7 +57,7 @@ public interface EntityAttachment<T>
 			return this;
 		}
 
-		public Builder<T> sync(StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
+		public Builder<T> sync(SyncCodec<T> codec) {
 			this.syncCodec = codec;
 			return this;
 		}
@@ -74,5 +73,14 @@ public interface EntityAttachment<T>
 			}
 			return new Spec<>(defaultValue, saveCodec, syncCodec, copyOnDeath);
 		}
+	}
+
+	/**
+	 * How a synced value goes over the network (this Minecraft has no StreamCodec): written to and read from a packet
+	 * buffer.
+	 */
+	record SyncCodec<T>(FriendlyByteBuf.Writer<T> writer, FriendlyByteBuf.Reader<T> reader)
+	{
+		public static final SyncCodec<Integer> VAR_INT = new SyncCodec<>(FriendlyByteBuf::writeVarInt, FriendlyByteBuf::readVarInt);
 	}
 }

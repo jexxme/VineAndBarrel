@@ -1,0 +1,49 @@
+{
+  "parent": "vineandbarrel:main/patience_pays",
+  "criteria": {
+    "aged_mead": {
+      "conditions": {
+        "item": {
+          "items": [
+            "vineandbarrel:aged_mead"
+          ]
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    },
+    "mead": {
+      "conditions": {
+        "item": {
+          "items": [
+            "vineandbarrel:mead"
+          ]
+        }
+      },
+      "trigger": "minecraft:consume_item"
+    }
+  },
+  "display": {
+    "announce_to_chat": true,
+    "description": {
+      "translate": "advancements.vineandbarrel.mead_hall.description"
+    },
+    "frame": "goal",
+    "hidden": false,
+    "icon": {
+      "item": "vineandbarrel:aged_mead"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.vineandbarrel.mead_hall.title"
+    }
+  },
+  "requirements": [
+    [
+      "mead"
+    ],
+    [
+      "aged_mead"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

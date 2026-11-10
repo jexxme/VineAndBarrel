@@ -1,13 +1,16 @@
 package jexxme.vineandbarrel.advancement;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.google.gson.JsonObject;
+import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.tipsy.BlackoutEnding;
-import net.minecraft.advancements.triggers.Criterion;
-import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
-import net.minecraft.core.Holder;
+import net.minecraft.advancements.critereon.AbstractCriterionTriggerInstance;
+import net.minecraft.advancements.critereon.ContextAwarePredicate;
+import net.minecraft.advancements.critereon.DeserializationContext;
+import net.minecraft.advancements.critereon.SerializationContext;
+import net.minecraft.advancements.critereon.SimpleCriterionTrigger;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.util.GsonHelper;
 
 import java.util.Optional;
 
@@ -17,9 +20,16 @@ import java.util.Optional;
  */
 public class BlackoutTrigger extends SimpleCriterionTrigger<BlackoutTrigger.TriggerInstance>
 {
+	public static final ResourceLocation ID = VineAndBarrel.id("woke_up");
+
 	@Override
-	public Codec<TriggerInstance> codec() {
-		return TriggerInstance.CODEC;
+	public ResourceLocation getId() {
+		return ID;
+	}
+
+	@Override
+	protected TriggerInstance createInstance(JsonObject json, ContextAwarePredicate player, DeserializationContext context) {
+		return new TriggerInstance(player, json.has("ending") ? Optional.of(GsonHelper.getAsString(json, "ending")) : Optional.empty());
 	}
 
 	public void trigger(ServerPlayer player, BlackoutEnding ending) {
@@ -30,16 +40,28 @@ public class BlackoutTrigger extends SimpleCriterionTrigger<BlackoutTrigger.Trig
 		VBAdvancements.WOKE_UP.get().trigger(player, ending);
 	}
 
-	public static Criterion<TriggerInstance> criterion(Optional<BlackoutEnding> ending) {
-		return VBAdvancements.WOKE_UP.get().createCriterion(new TriggerInstance(Optional.empty(), ending.map(BlackoutEnding::id)));
+	public static TriggerInstance criterion(Optional<BlackoutEnding> ending) {
+		return new TriggerInstance(ContextAwarePredicate.ANY, ending.map(BlackoutEnding::id));
 	}
 
-	public record TriggerInstance(Optional<Holder<LootItemCondition>> player, Optional<String> ending)
-		implements SimpleCriterionTrigger.SimpleInstance
+	public static class TriggerInstance extends AbstractCriterionTriggerInstance
 	{
-		public static final Codec<TriggerInstance> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-			LootItemCondition.CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player),
-			Codec.STRING.optionalFieldOf("ending").forGetter(TriggerInstance::ending)
-		).apply(inst, TriggerInstance::new));
+		private final Optional<String> ending;
+
+		public TriggerInstance(ContextAwarePredicate player, Optional<String> ending) {
+			super(ID, player);
+			this.ending = ending;
+		}
+
+		public Optional<String> ending() {
+			return ending;
+		}
+
+		@Override
+		public JsonObject serializeToJson(SerializationContext context) {
+			JsonObject json = super.serializeToJson(context);
+			ending.ifPresent(id -> json.addProperty("ending", id));
+			return json;
+		}
 	}
 }

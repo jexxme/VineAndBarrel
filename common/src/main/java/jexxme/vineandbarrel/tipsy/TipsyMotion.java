@@ -1,8 +1,6 @@
 package jexxme.vineandbarrel.tipsy;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import jexxme.vineandbarrel.platform.EntityAttachment;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -22,12 +20,15 @@ public final class TipsyMotion
 	public record Counts(int hiccups, int stumbles, boolean stumbleLeft, int trips)
 	{
 		public static final Counts NONE = new Counts(0, 0, false, 0);
-		public static final StreamCodec<ByteBuf, Counts> STREAM_CODEC = StreamCodec.composite(
-			ByteBufCodecs.VAR_INT, Counts::hiccups,
-			ByteBufCodecs.VAR_INT, Counts::stumbles,
-			ByteBufCodecs.BOOL, Counts::stumbleLeft,
-			ByteBufCodecs.VAR_INT, Counts::trips,
-			Counts::new);
+		/** On the wire as before: two var-ints, the stumble's side, one more var-int. */
+		public static final EntityAttachment.SyncCodec<Counts> SYNC_CODEC = new EntityAttachment.SyncCodec<>(
+			(buf, counts) -> {
+				buf.writeVarInt(counts.hiccups());
+				buf.writeVarInt(counts.stumbles());
+				buf.writeBoolean(counts.stumbleLeft());
+				buf.writeVarInt(counts.trips());
+			},
+			buf -> new Counts(buf.readVarInt(), buf.readVarInt(), buf.readBoolean(), buf.readVarInt()));
 	}
 
 	// ------------------------------------------------------------------ the hiccup: a sharp jolt up, settled in a few ticks

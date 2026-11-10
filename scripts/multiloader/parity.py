@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Builds the loader parity checklist (PARITY.md) from the last test runs: every GameTest of the six GameTest runs
-(NeoForge and Fabric, each without and with Farmer's Delight and with the compat mods) and every check of the Fabric
+(Forge and Fabric, each without and with Farmer's Delight and with the compat mods) and every check of the Fabric
 smoke tests, one row each, grouped by feature area, so the gaps show at a glance.
 
     ./gradlew gameTestsAll :fabric:smokeAll          # or scripts/multiloader/verify-all.sh --full
@@ -19,11 +19,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 GAMETEST_RUNS = [
-    ('NeoForge', ROOT / 'neoforge/build/test-reports/gametest.xml'),
-    ('NeoForge + FD', ROOT / 'neoforge/build/test-reports/gametest-fd.xml'),
+    ('Forge', ROOT / 'forge/build/test-reports/gametest.xml'),
+    ('Forge + FD', ROOT / 'forge/build/test-reports/gametest-fd.xml'),
     ('Fabric', ROOT / 'fabric/build/test-reports/gametest.xml'),
     ('Fabric + FD Refabricated', ROOT / 'fabric/build/test-reports/gametest-fd.xml'),
-    ('NeoForge compat mods', ROOT / 'neoforge/build/test-reports/gametest-compat.xml'),
+    ('Forge compat mods', ROOT / 'forge/build/test-reports/gametest-compat.xml'),
     ('Fabric compat mods', ROOT / 'fabric/build/test-reports/gametest-compat.xml'),
 ]
 SMOKE_RUNS = [
@@ -56,18 +56,16 @@ AREAS = [
 # What the automated checks don't cover yet, kept by hand (shown under the tables)
 KNOWN_GAPS = [
     ('Kettle recipe book clicks', 'Both loaders have the kettle\'s own book type (its settings saved apart, checked by a GameTest) and search tab; clicking through the book itself is not automated on either loader.'),
-    ('Protection mods cancelling a placement', 'NeoForge only (drinks_cancelled_place_keeps_no_duplicate); Fabric has no generic place event.'),
-    ('Crop growth vetoes', 'NeoForge mods can veto or watch our crops growing (crop grow events); Fabric has no such events, so there our crops just grow.'),
-    ('Foxes picking grapes and mob griefing', 'NeoForge mods can veto it per fox with the mob griefing event; Fabric has no such event, so there only the mobGriefing game rule counts.'),
-    ('Data maps on Fabric', 'Copper kettle weathering and waxing and the farmer composting barley seeds are data maps on NeoForge (a datapack can change them); Fabric registers the same values in code at start.'),
-    ('Nutritional Balance on Fabric', 'It has no Fabric build: our c:nutrients tags ship on both loaders, but only the NeoForge compat run can ask the mod itself.'),
+    ('Protection mods cancelling a placement', 'Forge only (drinks_cancelled_place_keeps_no_duplicate); Fabric has no generic place event.'),
+    ('Crop growth vetoes', 'Forge mods can veto or watch our crops growing (crop grow events); Fabric has no such events, so there our crops just grow.'),
+    ('Foxes picking grapes and mob griefing', 'Forge mods can veto it per fox with the mob griefing event; Fabric has no such event, so there only the mobGriefing game rule counts.'),
     ('Compat runs', 'They run only the compat_* tests (the other tests\' fake players have no network channels, and the thirst mods sync to every player).'),
     ('Item tooltips by mouse hover', 'The smoke test hovers the effect list (Tipsy\'s tooltip), not items; the item tooltip code is the same common method on both loaders.'),
-    ('NeoForge client', 'No automated client smoke test on NeoForge: Jexxme playtests NeoForge with FD by hand; the wiki screenshot tool covers some.'),
+    ('Forge client', 'No automated client smoke test on Forge: Jexxme playtests Forge with FD by hand; the wiki screenshot tool covers some.'),
 ]
 
 
-FOREIGN = "Farmer's Delight's own GameTests (FD Neoforged ships them; not ours)"
+FOREIGN = "Farmer's Delight's own GameTests (the mod ships them; not ours)"
 
 
 def area_of(test):

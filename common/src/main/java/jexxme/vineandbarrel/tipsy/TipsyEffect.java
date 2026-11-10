@@ -1,11 +1,9 @@
 package jexxme.vineandbarrel.tipsy;
 
-import java.util.function.BiConsumer;
-import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -26,34 +24,40 @@ public class TipsyEffect extends MobEffect
 	/** Warm amber, the colour of the icon's drink. */
 	public static final int COLOR = 0xE8A23C;
 
-	private static final Identifier COURAGE_KNOCKBACK = VineAndBarrel.id("tipsy_courage_knockback");
-	private static final Identifier COURAGE_FALL = VineAndBarrel.id("tipsy_courage_fall");
+	private static final UUID COURAGE_KNOCKBACK = modifierId(VineAndBarrel.id("tipsy_courage_knockback"));
 
 	public TipsyEffect() {
 		super(MobEffectCategory.NEUTRAL, COLOR);
-		// Vanilla re-applies these whenever the level changes, also when a level decays down the hidden-effect chain.
-		// Registered so vanilla knows them (removal, tooltips); the amounts per level come from createModifiers below,
-		// since vanilla's own templates only scale linearly with the level.
-		addAttributeModifier(Attributes.KNOCKBACK_RESISTANCE, COURAGE_KNOCKBACK, 0.0, AttributeModifier.Operation.ADD_VALUE);
-		addAttributeModifier(Attributes.FALL_DAMAGE_MULTIPLIER, COURAGE_FALL, 0.0, AttributeModifier.Operation.ADD_VALUE);
+		// Vanilla re-applies this whenever the level changes, also when a level decays down the hidden-effect chain.
+		// Registered so vanilla knows it (adding, removal); the amount per level comes from getAttributeModifierValue
+		// below, since vanilla's own template only scales linearly with the level.
+		// The courage's other half, less fall damage, has no attribute on 1.20.1: fallDamageFactor below, which
+		// mixin/TipsyFallDamageMixin puts into vanilla's fall damage.
+		addAttributeModifier(Attributes.KNOCKBACK_RESISTANCE, COURAGE_KNOCKBACK.toString(), 0.0, AttributeModifier.Operation.ADDITION);
+	}
+
+	/**
+	 * The UUID of an attribute modifier that newer versions name by {@code id}: 1.20.1 knows modifiers by UUID only, so
+	 * each one gets the name-based UUID of its id's text (e.g. {@code vineandbarrel:tipsy_courage_knockback}), the same
+	 * in every world and on both sides.
+	 */
+	public static UUID modifierId(ResourceLocation id) {
+		return UUID.nameUUIDFromBytes(id.toString().getBytes(StandardCharsets.UTF_8));
 	}
 
 	@Override
-	public void createModifiers(int amplifier, BiConsumer<Holder<Attribute>, AttributeModifier> consumer) {
-		// "Liquid courage" (TipsyLevels): from I to III a little knockback resistance and less fall damage, none from IV
-		TipsyLevels.Level level = TipsyLevels.at(amplifier + 1);
-		consumer.accept(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(COURAGE_KNOCKBACK, level.knockbackResistance(), AttributeModifier.Operation.ADD_VALUE));
-		consumer.accept(Attributes.FALL_DAMAGE_MULTIPLIER, new AttributeModifier(COURAGE_FALL, -level.fallDamageReduction(), AttributeModifier.Operation.ADD_VALUE));
+	public double getAttributeModifierValue(int amplifier, AttributeModifier modifier) {
+		// "Liquid courage" (TipsyLevels): from I to III a little knockback resistance, none from IV
+		return TipsyLevels.at(amplifier + 1).knockbackResistance();
 	}
 
-	@Override
-	public void addAttributeModifiers(AttributeMap attributes, int amplifier) {
-		createModifiers(amplifier, (attribute, modifier) -> {
-			AttributeInstance instance = attributes.getInstance(attribute);
-			if (instance != null) {
-				instance.removeModifier(modifier.id());
-				instance.addPermanentModifier(modifier);
-			}
-		});
+	/**
+	 * "Liquid courage", the other half: the factor on this entity's fall damage, 1 when sober and from IV. Newer
+	 * versions take the level's reduction off the entity's fall damage multiplier attribute, whose base is 1 (0.5 for
+	 * horses and their kin); this is that attribute's value over its {@code base}.
+	 */
+	public static float fallDamageFactor(LivingEntity entity, double base) {
+		double reduction = TipsyLevels.at(Tipsy.getLevel(entity)).fallDamageReduction();
+		return reduction > 0.0 ? (float) (Math.max(0.0, base - reduction) / base) : 1.0F;
 	}
 }

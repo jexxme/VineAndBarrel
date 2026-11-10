@@ -1,13 +1,16 @@
 package jexxme.vineandbarrel.barrel.client;
 
 import jexxme.vineandbarrel.barrel.AgingBarrelItem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.util.ARGB;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Matrix4f;
 
 /** The barrel item's tooltip (B12): "Holds 5 servings of:" and the drink with its icon, like the Brew Kettle and FD's pot. */
 public class BarrelTooltip implements ClientTooltipComponent
@@ -32,8 +35,10 @@ public class BarrelTooltip implements ClientTooltipComponent
 	}
 
 	@Override
-	public int getHeight(Font font) {
-		return drink.isEmpty() ? lineHeight(font) : lineHeight(font) + ITEM_SIZE;
+	public int getHeight() {
+		// 1.20.1 asks without a font: every font's line is as high as the default one's
+		int line = Minecraft.getInstance().font.lineHeight + 1;
+		return drink.isEmpty() ? line : line + ITEM_SIZE;
 	}
 
 	@Override
@@ -42,20 +47,21 @@ public class BarrelTooltip implements ClientTooltipComponent
 	}
 
 	@Override
-	public void extractImage(Font font, int x, int y, int w, int h, GuiGraphicsExtractor gui) {
+	public void renderImage(Font font, int x, int y, GuiGraphics gui) {
 		if (!drink.isEmpty()) {
-			gui.item(drink, x, y + lineHeight(font), 0);
+			gui.renderItem(drink, x, y + lineHeight(font), 0);
 		}
 	}
 
 	@Override
-	public void extractText(GuiGraphicsExtractor gui, Font font, int x, int y) {
-		// gui.text skips text with zero alpha, and chat colours are plain RGB
-		Integer color = TextColor.GRAY.getValue();
-		int gray = color == null ? -1 : ARGB.opaque(color);
-		gui.text(font, headline(), x, y, gray, drink.isEmpty());
+	public void renderText(Font font, int x, int y, Matrix4f matrix, MultiBufferSource.BufferSource buffers) {
+		// chat colours are plain RGB
+		Integer color = ChatFormatting.GRAY.getColor();
+		int gray = color == null ? -1 : 0xFF000000 | color;
+		font.drawInBatch(headline(), x, y, gray, drink.isEmpty(), matrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
 		if (!drink.isEmpty()) {
-			gui.text(font, drink.getHoverName(), x + ITEM_SIZE + MARGIN, y + lineHeight(font) + MARGIN, -1);
+			font.drawInBatch(drink.getHoverName(), x + ITEM_SIZE + MARGIN, y + lineHeight(font) + MARGIN, -1, true, matrix, buffers,
+				Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
 		}
 	}
 

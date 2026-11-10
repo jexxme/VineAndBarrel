@@ -2,7 +2,6 @@ package jexxme.vineandbarrel.fabric;
 
 import jexxme.vineandbarrel.gametest.CompatProbes;
 import jexxme.vineandbarrel.gametest.ModCompatGameTests;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.Connection;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
@@ -16,14 +15,15 @@ import java.util.Set;
 
 /**
  * {@link CompatProbes} on Fabric, against the Fabric builds of the mods (compile-only, see fabric/build.gradle).
- * Nutritional Balance has no Fabric build, so its probe is never called here.
+ * Nutritional Balance and Spice of Life Onion have no Fabric build for this Minecraft: they are never loaded here, so
+ * their probes are never called (a probe is only called when its mod is loaded) and name none of their classes.
  */
 public final class FabricCompatProbes implements CompatProbes
 {
 	@Override
 	public List<String> compatRunMods() {
-		return List.of(ModCompatGameTests.TOUGH_AS_NAILS, "glitchcore", ModCompatGameTests.HOMEOSTATIC, ModCompatGameTests.THIRST_WAS_TAKEN,
-			ModCompatGameTests.SPICE_OF_LIFE, "creativecore");
+		// Spice of Life Onion has no Fabric build for this Minecraft (see fabric/build.gradle)
+		return List.of(ModCompatGameTests.TOUGH_AS_NAILS, "glitchcore", ModCompatGameTests.HOMEOSTATIC, ModCompatGameTests.THIRST_WAS_TAKEN);
 	}
 
 	@Override
@@ -73,17 +73,24 @@ public final class FabricCompatProbes implements CompatProbes
 
 	@Override
 	public double spiceOfLifeDiversity(Player player, ItemStack stack) {
-		return Sol.diversity(player, stack);
+		throw new UnsupportedOperationException("Spice of Life Onion has no Fabric build for this Minecraft");
 	}
 
 	/** Fires AppleSkin's food event the way its tooltip and HUD do. */
 	private static final class AppleSkin
 	{
 		static FoodProperties[] foodValues(Player player, ItemStack stack) {
-			FoodProperties own = stack.getOrDefault(DataComponents.FOOD, new FoodProperties(0, 0.0F, false));
+			// The item's own food as this AppleSkin starts from it: hunger and saturation modifier, 0 and 0 for no food
+			FoodProperties food = stack.getItem().getFoodProperties();
+			squeek.appleskin.api.food.FoodValues own = food == null ? new squeek.appleskin.api.food.FoodValues(0, 0.0F)
+				: new squeek.appleskin.api.food.FoodValues(food.getNutrition(), food.getSaturationModifier());
 			squeek.appleskin.api.event.FoodValuesEvent event = new squeek.appleskin.api.event.FoodValuesEvent(player, stack, own, own);
 			squeek.appleskin.api.event.FoodValuesEvent.EVENT.invoker().interact(event);
-			return new FoodProperties[] {event.defaultFoodComponent, event.modifiedFoodComponent};
+			return new FoodProperties[] {food(event.defaultFoodValues), food(event.modifiedFoodValues)};
+		}
+
+		private static FoodProperties food(squeek.appleskin.api.food.FoodValues values) {
+			return new FoodProperties.Builder().nutrition(values.hunger).saturationMod(values.saturationModifier).build();
 		}
 	}
 
@@ -124,10 +131,4 @@ public final class FabricCompatProbes implements CompatProbes
 		}
 	}
 
-	private static final class Sol
-	{
-		static double diversity(Player player, ItemStack stack) {
-			return team.creative.solonion.common.SOLOnion.CONFIG.getDiversity(player, stack);
-		}
-	}
 }

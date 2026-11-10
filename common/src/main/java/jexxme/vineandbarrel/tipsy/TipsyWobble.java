@@ -67,7 +67,7 @@ public final class TipsyWobble
 	 * in from IV} 1 means unchanged.
 	 */
 	public static float fov(float level, float time, double intensity) {
-		float breathing = Math.clamp(level - (TipsyLevels.first(TipsyLevels.Level::fovBreathing) - 1), 0.0F, 1.0F);
+		float breathing = Math.max(0.0F, Math.min(1.0F, level - (TipsyLevels.first(TipsyLevels.Level::fovBreathing) - 1)));
 		if (breathing <= 0.0F || intensity <= 0.0) {
 			return 1.0F;
 		}

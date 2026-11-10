@@ -33,12 +33,12 @@ public class WeatheringBrewKettlePartBlock extends BrewKettlePartBlock implement
 	}
 
 	@Override
-	protected boolean isRandomlyTicking(BlockState state) {
+	public boolean isRandomlyTicking(BlockState state) {
 		return part(state).isController() && getWeatherState() != WeatherState.OXIDIZED;
 	}
 
 	@Override
-	protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+	public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
 		KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
 		if (kettle == null || random.nextFloat() >= CHANCE) {
 			return;

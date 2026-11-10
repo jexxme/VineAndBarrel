@@ -27,26 +27,19 @@ import jexxme.vineandbarrel.kettle.BaseItems;
 import jexxme.vineandbarrel.tipsy.Tipsy;
 import jexxme.vineandbarrel.tipsy.TipsyConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.BlockSource;
+import net.minecraft.core.BlockSourceImpl;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.dispenser.BlockSource;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
@@ -67,17 +60,14 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.HopperBlock;
-import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
 import net.minecraft.world.level.block.entity.DispenserBlockEntity;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,16 +86,15 @@ import java.util.function.Consumer;
  */
 public final class BarrelGameTests
 {
-	private static final Identifier SMALL = VineAndBarrel.id("gametest/empty_5x5");
-	private static final Identifier LARGE = VineAndBarrel.id("gametest/empty_32x6x32");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
+	private static final ResourceLocation SMALL = VineAndBarrel.id("gametest/empty_5x5");
+	private static final ResourceLocation LARGE = VineAndBarrel.id("gametest/empty_32x6x32");
 	private static final List<Entry> TESTS = new ArrayList<>();
 
 	private static final int FERMENT = AgingRecipe.DEFAULT_FERMENTING_TIME;
 	private static final int AGE = AgingRecipe.DEFAULT_AGING_TIME;
 	private static final BlockPos POS = new BlockPos(2, 1, 2);
 
-	private record Entry(ResourceKey<Consumer<GameTestHelper>> function, Identifier structure, int maxTicks) {
+	private record Entry(String name, ResourceLocation structure, int maxTicks, Consumer<GameTestHelper> function) {
 	}
 
 	static {
@@ -195,21 +184,17 @@ public final class BarrelGameTests
 		register(name, LARGE, timeout, function);
 	}
 
-	private static void register(String name, Identifier structure, int timeout, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		TESTS.add(new Entry(ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name)), structure, timeout));
+	private static void register(String name, ResourceLocation structure, int timeout, Consumer<GameTestHelper> function) {
+		TESTS.add(new Entry(name, structure, timeout, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(BarrelGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("barrel"));
 		for (Entry test : TESTS) {
-			event.registerTest(test.function().identifier(), new FunctionGameTestInstance(test.function(), new TestData<>(environment,
-				Level.OVERWORLD, test.structure(), test.maxTicks(), 0, true, Rotation.NONE, false, 1, 1, false, 0)));
+			VBGameTests.add(event, "barrel", test.name(), test.structure(), test.maxTicks(), test.function());
 		}
 	}
 
@@ -217,7 +202,7 @@ public final class BarrelGameTests
 
 	private static AgingBarrelBlockEntity placeBarrel(GameTestHelper helper, BlockPos pos, Direction facing) {
 		helper.setBlock(pos, BarrelRegistry.AGING_BARREL.get().defaultBlockState().setValue(AgingBarrelBlock.FACING, facing));
-		return helper.getBlockEntity(pos, AgingBarrelBlockEntity.class);
+		return VBGameTests.blockEntity(helper, pos, AgingBarrelBlockEntity.class);
 	}
 
 	private static AgingBarrelBlockEntity placeBarrel(GameTestHelper helper, BlockPos pos) {
@@ -242,7 +227,7 @@ public final class BarrelGameTests
 	}
 
 	private static void tickBarrel(GameTestHelper helper, BlockPos pos) {
-		AgingBarrelBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), helper.getBlockEntity(pos, AgingBarrelBlockEntity.class));
+		AgingBarrelBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), VBGameTests.blockEntity(helper, pos, AgingBarrelBlockEntity.class));
 	}
 
 	/** Places a barrel item the way a player does (on top of {@code below}), so placement rules (B1-B3) apply. */
@@ -257,7 +242,7 @@ public final class BarrelGameTests
 	}
 
 	private static Player playerHolding(GameTestHelper helper, ItemStack stack, GameType type) {
-		Player player = helper.makeMockPlayer(type);
+		Player player = VBGameTests.makeMockPlayer(helper, type);
 		player.setItemInHand(InteractionHand.MAIN_HAND, stack);
 		return player;
 	}
@@ -279,21 +264,14 @@ public final class BarrelGameTests
 		return component.getContents() instanceof TranslatableContents t ? t.getArgs() : new Object[0];
 	}
 
-	/** A real server player (vanilla's own drinking code runs on it), kept out of the player list. */
+	/**
+	 * A real server player (vanilla's own drinking code runs on it), kept out of the player list. In survival: a new
+	 * ServerPlayer's game mode is survival on 1.20.1 (26.x had to say so, and that no client moves it).
+	 */
 	private static final class TestPlayer extends ServerPlayer
 	{
 		TestPlayer(MinecraftServer server, ServerLevel level, GameProfile profile) {
-			super(server, level, profile, ClientInformation.createDefault());
-		}
-
-		@Override
-		public GameType gameMode() {
-			return GameType.SURVIVAL;
-		}
-
-		@Override
-		public boolean isClientAuthoritative() {
-			return false;
+			super(server, level, profile);
 		}
 
 		void drink(ItemStack stack) {
@@ -305,12 +283,12 @@ public final class BarrelGameTests
 
 	private static TestPlayer drinker(GameTestHelper helper, Vec3 relative) {
 		ServerLevel level = helper.getLevel();
-		CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), "barrel-test-player"), false);
-		TestPlayer player = new TestPlayer(level.getServer(), level, cookie.gameProfile());
+		TestPlayer player = new TestPlayer(level.getServer(), level, new GameProfile(UUID.randomUUID(), "barrel-test-player"));
 		GameType.SURVIVAL.updatePlayerAbilities(player.getAbilities());
 		Connection connection = new Connection(PacketFlow.SERVERBOUND);
 		new EmbeddedChannel(connection);
-		new ServerGamePacketListenerImpl(level.getServer(), connection, player, cookie);
+		jexxme.vineandbarrel.platform.Services.PLATFORM.prepareMockConnection(connection);
+		new ServerGamePacketListenerImpl(level.getServer(), connection, player);
 		Vec3 pos = helper.absoluteVec(relative);
 		player.setPos(pos.x, pos.y, pos.z);
 		return player;
@@ -325,7 +303,7 @@ public final class BarrelGameTests
 		a.drink(new ItemStack(DrinkItems.AGED_BARLEY_ALE.get()));
 		b.drink(new ItemStack(DrinkItems.AGED_BARLEY_ALE.get()));
 		for (TestPlayer player : List.of(a, b)) {
-			MobEffectInstance haste = player.getEffect(MobEffects.HASTE);
+			MobEffectInstance haste = player.getEffect(MobEffects.DIG_SPEED);
 			helper.assertTrue(haste != null && haste.getAmplifier() == 1 && haste.getDuration() >= base + bonus - 1,
 				"Haste II for 90 s plus " + Cheers.BONUS_PERCENT + "%: " + haste);
 		}
@@ -337,28 +315,28 @@ public final class BarrelGameTests
 	 * (own block models; the enchantment shimmer comes from PlacedDrinksRenderer, never from light_emission). The item keeps its own model.
 	 */
 	private static void placedAgedGlows(GameTestHelper helper) {
-		helper.assertValueEqual(PlacedDrink.of(new ItemStack(DrinkItems.RED_WINE.get())), PlacedDrink.GLASS_FULL, "young wine");
-		helper.assertValueEqual(PlacedDrink.of(new ItemStack(DrinkItems.AGED_RED_WINE.get())), PlacedDrink.GLASS_AGED, "aged wine");
-		helper.assertValueEqual(PlacedDrink.of(new ItemStack(DrinkItems.BARLEY_ALE.get())), PlacedDrink.MUG_FULL, "young ale");
-		helper.assertValueEqual(PlacedDrink.of(new ItemStack(DrinkItems.AGED_BARLEY_ALE.get())), PlacedDrink.MUG_AGED, "aged ale");
+		VBGameTests.assertValueEqual(helper, PlacedDrink.of(new ItemStack(DrinkItems.RED_WINE.get())), PlacedDrink.GLASS_FULL, "young wine");
+		VBGameTests.assertValueEqual(helper, PlacedDrink.of(new ItemStack(DrinkItems.AGED_RED_WINE.get())), PlacedDrink.GLASS_AGED, "aged wine");
+		VBGameTests.assertValueEqual(helper, PlacedDrink.of(new ItemStack(DrinkItems.BARLEY_ALE.get())), PlacedDrink.MUG_FULL, "young ale");
+		VBGameTests.assertValueEqual(helper, PlacedDrink.of(new ItemStack(DrinkItems.AGED_BARLEY_ALE.get())), PlacedDrink.MUG_AGED, "aged ale");
 		helper.assertTrue(PlacedDrink.MUG_AGED.isFull() && PlacedDrink.MUG_AGED.isMug() && !PlacedDrink.GLASS_AGED.isMug(), "aged kinds are full");
 
 		// Put down: the state shows the aged kind, and the shape is the vessel's
 		BlockPos table = new BlockPos(2, 1, 2);
 		BlockPos spot = table.above();
 		helper.setBlock(table, Blocks.OAK_PLANKS);
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		player.setShiftKeyDown(true);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.AGED_BARLEY_ALE.get()));
 		helper.assertTrue(DrinkPlacing.place(sneakUse(helper, player, table, new Vec3(0.25, 1.0, 0.25))).consumesAction(), "placed");
-		helper.assertValueEqual(helper.getBlockState(spot).getValue(PlacedDrinksBlock.SPOT.get(0)), PlacedDrink.MUG_AGED, "the aged mug's state");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(spot).getValue(PlacedDrinksBlock.SPOT.get(0)), PlacedDrink.MUG_AGED, "the aged mug's state");
 		helper.assertTrue(helper.getBlockState(spot).getShape(helper.getLevel(), helper.absolutePos(spot)).max(Direction.Axis.Y) > 0.0, "it has its mug shape");
 
 		// The models: every aged one glows on its liquid surface, no young one does
 		for (int i = 0; i < PlacedDrinksBlock.SPOTS; i++) {
 			for (String vessel : List.of("mug", "glass")) {
-				helper.assertValueEqual(emissiveElements(helper, "placed_" + vessel + "_aged_" + i), 0, vessel + " aged model " + i + " is lit normally (the shimmer is PlacedDrinksRenderer's)");
-				helper.assertValueEqual(emissiveElements(helper, "placed_" + vessel + "_full_" + i), 0, vessel + " young model " + i + " doesn't glow");
+				VBGameTests.assertValueEqual(helper, emissiveElements(helper, "placed_" + vessel + "_aged_" + i), 0, vessel + " aged model " + i + " is lit normally (the shimmer is PlacedDrinksRenderer's)");
+				VBGameTests.assertValueEqual(helper, emissiveElements(helper, "placed_" + vessel + "_full_" + i), 0, vessel + " young model " + i + " doesn't glow");
 			}
 		}
 		String blockstate = resource(helper, "assets/vineandbarrel/blockstates/placed_drinks.json");
@@ -388,11 +366,11 @@ public final class BarrelGameTests
 	private static String resource(GameTestHelper helper, String path) {
 		try (java.io.InputStream in = BarrelGameTests.class.getClassLoader().getResourceAsStream(path)) {
 			if (in == null) {
-				throw helper.assertionException("missing resource " + path);
+				throw VBGameTests.assertionException(helper, "missing resource " + path);
 			}
 			return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
 		} catch (java.io.IOException e) {
-			throw helper.assertionException("can't read " + path + ": " + e);
+			throw VBGameTests.assertionException(helper, "can't read " + path + ": " + e);
 		}
 	}
 
@@ -401,13 +379,13 @@ public final class BarrelGameTests
 	/** An empty barrel takes any base; the first fill starts the timer and the batch is the recipe's. */
 	private static void fillsEmpty(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, POS);
-		helper.assertValueEqual(barrel.stage(), BarrelStage.EMPTY, "new barrel");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.EMPTY, "new barrel");
 		ItemStack juice = new ItemStack(BaseItems.GRAPE_JUICE.get());
 		ItemStack left = barrel.pour(juice, null);
 		helper.assertTrue(left != null && left.is(Items.GLASS_BOTTLE), "a bottle of juice leaves its glass bottle: " + left);
-		helper.assertValueEqual(barrel.servings(), 1, "servings");
-		helper.assertValueEqual(barrel.stage(), BarrelStage.FERMENTING, "stage");
-		helper.assertValueEqual(barrel.age(), 0L, "the timer starts at the first fill");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 1, "servings");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.FERMENTING, "stage");
+		VBGameTests.assertValueEqual(helper, barrel.age(), 0L, "the timer starts at the first fill");
 		helper.assertTrue(barrel.drink().is(DrinkItems.RED_WINE.get()), "grape juice becomes red wine");
 		helper.assertTrue(barrel.content().is(BaseItems.GRAPE_JUICE.get()), "it is still juice while fermenting");
 		helper.succeed();
@@ -420,13 +398,13 @@ public final class BarrelGameTests
 	private static void topsUpSameBase(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, POS);
 		ItemStack renamed = new ItemStack(BaseItems.BARLEY_WORT_BOTTLE.get());
-		renamed.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Grandpa's wort"));
+		renamed.setHoverName(net.minecraft.network.chat.Component.literal("Grandpa's wort"));
 		helper.assertTrue(barrel.pour(renamed, null) != null, "a renamed bottle of wort fills the barrel");
 		barrel.setAge(5000);
 		pour(helper, barrel, BaseItems.BARLEY_WORT_BUCKET.get(), 1);
 		pour(helper, barrel, BaseItems.BARLEY_WORT_BOTTLE.get(), 2);
-		helper.assertValueEqual(barrel.servings(), 7, "1 + 4 + 2 servings");
-		helper.assertValueEqual(barrel.age(), 5000L, "a top-up doesn't restart the timer");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 7, "1 + 4 + 2 servings");
+		VBGameTests.assertValueEqual(helper, barrel.age(), 5000L, "a top-up doesn't restart the timer");
 		helper.assertTrue(barrel.drink().is(DrinkItems.BARLEY_ALE.get()), "barley wort becomes pale ale");
 		helper.succeed();
 	}
@@ -436,25 +414,25 @@ public final class BarrelGameTests
 		AgingBarrelBlockEntity barrel = wineBarrel(helper, POS, 5, 100);
 		for (Item other : List.of(BaseItems.BARLEY_WORT_BOTTLE.get(), BaseItems.WHEAT_WORT_BUCKET.get(), BaseItems.SWEET_BERRY_JUICE.get())) {
 			ItemStack stack = new ItemStack(other);
-			helper.assertValueEqual(barrel.pourRefusal(stack), AgingBarrelBlockEntity.Refusal.OTHER_BASE, "refusal for " + other);
+			VBGameTests.assertValueEqual(helper, barrel.pourRefusal(stack), AgingBarrelBlockEntity.Refusal.OTHER_BASE, "refusal for " + other);
 			helper.assertTrue(barrel.pour(stack, null) == null && stack.getCount() == 1, other + " is refused and kept");
 		}
 		ItemStack stone = new ItemStack(Items.STONE);
-		helper.assertValueEqual(barrel.pourRefusal(stone), AgingBarrelBlockEntity.Refusal.NOT_A_BASE, "stone");
+		VBGameTests.assertValueEqual(helper, barrel.pourRefusal(stone), AgingBarrelBlockEntity.Refusal.NOT_A_BASE, "stone");
 		helper.assertTrue(barrel.pour(stone, null) == null, "stone is not poured");
 		// 5 + 4 > 8: the bucket doesn't fit, three more bottles do, then it is full
 		ItemStack bucket = new ItemStack(BaseItems.GRAPE_JUICE_BUCKET.get());
-		helper.assertValueEqual(barrel.pourRefusal(bucket), AgingBarrelBlockEntity.Refusal.FULL, "a bucket into 5 servings");
+		VBGameTests.assertValueEqual(helper, barrel.pourRefusal(bucket), AgingBarrelBlockEntity.Refusal.FULL, "a bucket into 5 servings");
 		pour(helper, barrel, BaseItems.GRAPE_JUICE.get(), 3);
-		helper.assertValueEqual(barrel.pourRefusal(new ItemStack(BaseItems.GRAPE_JUICE.get())), AgingBarrelBlockEntity.Refusal.FULL, "8 servings");
+		VBGameTests.assertValueEqual(helper, barrel.pourRefusal(new ItemStack(BaseItems.GRAPE_JUICE.get())), AgingBarrelBlockEntity.Refusal.FULL, "8 servings");
 		// once it is wine, only an empty barrel takes a new batch
 		barrel.setAge(FERMENT);
-		helper.assertValueEqual(barrel.pourRefusal(new ItemStack(BaseItems.GRAPE_JUICE.get())), AgingBarrelBlockEntity.Refusal.ALREADY_A_DRINK, "full of wine");
+		VBGameTests.assertValueEqual(helper, barrel.pourRefusal(new ItemStack(BaseItems.GRAPE_JUICE.get())), AgingBarrelBlockEntity.Refusal.ALREADY_A_DRINK, "full of wine");
 		barrel.tap(new ItemStack(DrinkItems.WINE_GLASS.get()), null);
 		ItemStack juice = new ItemStack(BaseItems.GRAPE_JUICE.get());
-		helper.assertValueEqual(barrel.pourRefusal(juice), AgingBarrelBlockEntity.Refusal.ALREADY_A_DRINK, "juice into wine");
+		VBGameTests.assertValueEqual(helper, barrel.pourRefusal(juice), AgingBarrelBlockEntity.Refusal.ALREADY_A_DRINK, "juice into wine");
 		helper.assertTrue(barrel.pour(juice, null) == null && juice.getCount() == 1, "no juice into wine");
-		helper.assertValueEqual(barrel.servings(), 7, "servings unchanged by refusals");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 7, "servings unchanged by refusals");
 		helper.succeed();
 	}
 
@@ -464,15 +442,15 @@ public final class BarrelGameTests
 		ItemStack bucket = new ItemStack(BaseItems.SWEET_BERRY_JUICE_BUCKET.get());
 		ItemStack left = barrel.pour(bucket, null);
 		helper.assertTrue(left != null && left.is(Items.BUCKET), "an empty bucket comes back: " + left);
-		helper.assertValueEqual(barrel.servings(), 4, "one bucket");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 4, "one bucket");
 		pour(helper, barrel, BaseItems.SWEET_BERRY_JUICE_BUCKET.get(), 1);
-		helper.assertValueEqual(barrel.servings(), AgingBarrelBlockEntity.CAPACITY, "two buckets fill the barrel");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), AgingBarrelBlockEntity.CAPACITY, "two buckets fill the barrel");
 		AgingBarrelBlockEntity bottles = placeBarrel(helper, POS.east());
 		for (int i = 1; i <= 8; i++) {
 			ItemStack bottle = new ItemStack(BaseItems.WHEAT_WORT_BOTTLE.get());
 			ItemStack glass = bottles.pour(bottle, null);
 			helper.assertTrue(glass != null && glass.is(Items.GLASS_BOTTLE), "glass bottle back");
-			helper.assertValueEqual(bottles.servings(), i, "bottles poured");
+			VBGameTests.assertValueEqual(helper, bottles.servings(), i, "bottles poured");
 		}
 		helper.assertTrue(bottles.pour(new ItemStack(BaseItems.WHEAT_WORT_BOTTLE.get()), null) == null, "the 9th bottle doesn't fit");
 		helper.succeed();
@@ -484,15 +462,15 @@ public final class BarrelGameTests
 		ItemStack buckets = new ItemStack(Items.BUCKET, 2);
 		ItemStack first = barrel.takeBack(buckets, null);
 		helper.assertTrue(first.is(BaseItems.GRAPE_JUICE_BUCKET.get()), "a bucket of juice back: " + first);
-		helper.assertValueEqual(barrel.servings(), 2, "6 - 4");
-		helper.assertValueEqual(buckets.getCount(), 1, "one bucket used");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 2, "6 - 4");
+		VBGameTests.assertValueEqual(helper, buckets.getCount(), 1, "one bucket used");
 		helper.assertTrue(barrel.takeBack(buckets, null).isEmpty(), "a bucket needs 4 servings");
-		helper.assertValueEqual(buckets.getCount(), 1, "the refused bucket is kept");
+		VBGameTests.assertValueEqual(helper, buckets.getCount(), 1, "the refused bucket is kept");
 		ItemStack glass = new ItemStack(Items.GLASS_BOTTLE, 5);
 		helper.assertTrue(barrel.takeBack(glass, null).is(BaseItems.GRAPE_JUICE.get()), "a bottle of juice back");
 		helper.assertTrue(barrel.takeBack(glass, null).is(BaseItems.GRAPE_JUICE.get()), "and another");
-		helper.assertValueEqual(glass.getCount(), 3, "two bottles used");
-		helper.assertValueEqual(barrel.stage(), BarrelStage.EMPTY, "emptied by undo");
+		VBGameTests.assertValueEqual(helper, glass.getCount(), 3, "two bottles used");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.EMPTY, "emptied by undo");
 		helper.assertTrue(barrel.contents().isEmpty(), "the batch is forgotten");
 		// a fresh batch of something else is fine now
 		pour(helper, barrel, BaseItems.WHEAT_WORT_BOTTLE.get(), 1);
@@ -501,7 +479,7 @@ public final class BarrelGameTests
 		AgingBarrelBlockEntity wine = wineBarrel(helper, POS.east(), 4, FERMENT);
 		ItemStack bottles = new ItemStack(Items.GLASS_BOTTLE);
 		helper.assertTrue(wine.takeBack(bottles, null).isEmpty() && bottles.getCount() == 1, "wine can't be taken back as juice");
-		helper.assertValueEqual(wine.servings(), 4, "wine untouched");
+		VBGameTests.assertValueEqual(helper, wine.servings(), 4, "wine untouched");
 		helper.succeed();
 	}
 
@@ -511,19 +489,19 @@ public final class BarrelGameTests
 	private static void exactTimes(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = wineBarrel(helper, POS, 2, 0);
 		barrel.setAge(FERMENT - 1);
-		helper.assertValueEqual(barrel.stage(), BarrelStage.FERMENTING, "tick 23999");
-		helper.assertValueEqual(barrel.ticksToNextStage(), 1L, "one tick to go");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.FERMENTING, "tick 23999");
+		VBGameTests.assertValueEqual(helper, barrel.ticksToNextStage(), 1L, "one tick to go");
 		barrel.setAge(FERMENT);
-		helper.assertValueEqual(barrel.stage(), BarrelStage.YOUNG, "tick 24000");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.YOUNG, "tick 24000");
 		helper.assertTrue(barrel.content().is(DrinkItems.RED_WINE.get()), "red wine");
-		helper.assertValueEqual(barrel.ticksToNextStage(), (long) AGE, "3 days to aged");
+		VBGameTests.assertValueEqual(helper, barrel.ticksToNextStage(), (long) AGE, "3 days to aged");
 		barrel.setAge(FERMENT + AGE - 1);
-		helper.assertValueEqual(barrel.stage(), BarrelStage.YOUNG, "tick 95999");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.YOUNG, "tick 95999");
 		barrel.setAge(FERMENT + AGE);
-		helper.assertValueEqual(barrel.stage(), BarrelStage.AGED, "tick 96000");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.AGED, "tick 96000");
 		helper.assertTrue(barrel.content().is(DrinkItems.AGED_RED_WINE.get()), "aged red wine");
 		barrel.setAge(10L * FERMENT + AGE);
-		helper.assertValueEqual(barrel.stage(), BarrelStage.AGED, "aged stays aged");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.AGED, "aged stays aged");
 		helper.succeed();
 	}
 
@@ -534,15 +512,15 @@ public final class BarrelGameTests
 	private static void agesOnGameTime(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = wineBarrel(helper, POS, 3, 100);
 		long start = helper.getLevel().getGameTime();
-		var saved = barrel.saveWithFullMetadata(helper.getLevel().registryAccess());
+		var saved = barrel.saveWithFullMetadata();
 		helper.runAfterDelay(20, () -> {
 			long passed = helper.getLevel().getGameTime() - start;
-			helper.assertValueEqual(barrel.age(), 100L + passed, "age follows game time");
+			VBGameTests.assertValueEqual(helper, barrel.age(), 100L + passed, "age follows game time");
 			// "unloaded" for those ticks: load what was saved before them
 			AgingBarrelBlockEntity reloaded = barrel;
-			reloaded.loadWithComponents(TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), saved));
-			helper.assertValueEqual(reloaded.age(), 100L + passed, "the time while unloaded counts");
-			helper.assertValueEqual(reloaded.servings(), 3, "servings after loading");
+			reloaded.load(saved);
+			VBGameTests.assertValueEqual(helper, reloaded.age(), 100L + passed, "the time while unloaded counts");
+			VBGameTests.assertValueEqual(helper, reloaded.servings(), 3, "servings after loading");
 			helper.succeed();
 		});
 	}
@@ -552,16 +530,16 @@ public final class BarrelGameTests
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, POS);
 		pour(helper, barrel, Items.HONEY_BOTTLE, 2);
 		helper.startSequence()
-			.thenExecuteAfter(2, () -> helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.AIRLOCK, "airlock while fermenting"))
-			.thenWaitUntil(() -> helper.assertValueEqual(barrel.stage(), BarrelStage.YOUNG, "young after 40 ticks"))
+			.thenExecuteAfter(2, () -> VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.AIRLOCK, "airlock while fermenting"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.YOUNG, "young after 40 ticks"))
 			.thenExecute(() -> {
 				helper.assertTrue(barrel.age() >= 40 && barrel.age() < 45, "turned young on time: " + barrel.age());
 				helper.assertTrue(barrel.content().is(DrinkItems.BARLEY_ALE.get()), "young drink");
 			})
-			.thenWaitUntil(() -> helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.CORK, "cork when young"))
-			.thenWaitUntil(() -> helper.assertValueEqual(barrel.stage(), BarrelStage.AGED, "aged after 100 ticks"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.CORK, "cork when young"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.AGED, "aged after 100 ticks"))
 			.thenExecute(() -> helper.assertTrue(barrel.age() >= 100 && barrel.age() < 105, "turned aged on time: " + barrel.age()))
-			.thenWaitUntil(() -> helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.WAX, "wax seal when aged"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.WAX, "wax seal when aged"))
 			.thenSucceed();
 	}
 
@@ -574,17 +552,17 @@ public final class BarrelGameTests
 		for (int left = 2; left >= 0; left--) {
 			ItemStack drink = barrel.tap(glasses, null);
 			helper.assertTrue(drink.is(DrinkItems.AGED_RED_WINE.get()) && drink.getCount() == 1, "one aged red wine: " + drink);
-			helper.assertValueEqual(barrel.servings(), left, "servings left");
+			VBGameTests.assertValueEqual(helper, barrel.servings(), left, "servings left");
 		}
-		helper.assertValueEqual(glasses.getCount(), 2, "one glass per serving");
+		VBGameTests.assertValueEqual(helper, glasses.getCount(), 2, "one glass per serving");
 		helper.assertTrue(barrel.tap(glasses, null).isEmpty(), "nothing left to tap");
-		helper.assertValueEqual(glasses.getCount(), 2, "no glass used on an empty barrel");
-		helper.assertValueEqual(barrel.stage(), BarrelStage.EMPTY, "empty barrel resets");
-		helper.assertValueEqual(barrel.age(), 0L, "the timer resets");
+		VBGameTests.assertValueEqual(helper, glasses.getCount(), 2, "no glass used on an empty barrel");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.EMPTY, "empty barrel resets");
+		VBGameTests.assertValueEqual(helper, barrel.age(), 0L, "the timer resets");
 		tickBarrel(helper, POS);
-		helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.CORK, "cork again");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.CORK, "cork again");
 		pour(helper, barrel, BaseItems.BARLEY_WORT_BUCKET.get(), 1);
-		helper.assertValueEqual(barrel.age(), 0L, "a new batch starts its own timer");
+		VBGameTests.assertValueEqual(helper, barrel.age(), 0L, "a new batch starts its own timer");
 		// a young beer goes into mugs
 		barrel.setAge(FERMENT);
 		ItemStack mugs = new ItemStack(DrinkItems.MUG.get(), 4);
@@ -599,17 +577,17 @@ public final class BarrelGameTests
 		helper.assertTrue(wine.tap(mugs, null).isEmpty(), "wine isn't served in a mug");
 		helper.assertTrue(wine.vesselNeeded() == DrinkItems.WINE_GLASS.get(), "wine needs a wine glass");
 		helper.assertTrue(wine.tap(new ItemStack(Items.GLASS_BOTTLE), null).isEmpty(), "nor in a glass bottle");
-		helper.assertValueEqual(mugs.getCount(), 3, "mugs kept");
-		helper.assertValueEqual(wine.servings(), 4, "servings kept");
+		VBGameTests.assertValueEqual(helper, mugs.getCount(), 3, "mugs kept");
+		VBGameTests.assertValueEqual(helper, wine.servings(), 4, "servings kept");
 		// by hand: the mug stays in the hand
 		Player player = playerHolding(helper, new ItemStack(DrinkItems.MUG.get(), 2), GameType.SURVIVAL);
 		helper.useBlock(POS, player);
 		helper.assertTrue(player.getMainHandItem().is(DrinkItems.MUG.get()) && player.getMainHandItem().getCount() == 2, "the hint uses nothing up");
-		helper.assertValueEqual(count(player, DrinkItems.RED_WINE.get()), 0, "no wine in a mug");
+		VBGameTests.assertValueEqual(helper, count(player, DrinkItems.RED_WINE.get()), 0, "no wine in a mug");
 		AgingBarrelBlockEntity fermenting = wineBarrel(helper, POS.east(), 4, 10);
 		ItemStack glasses = new ItemStack(DrinkItems.WINE_GLASS.get(), 2);
 		helper.assertTrue(fermenting.tap(glasses, null).isEmpty(), "still fermenting");
-		helper.assertValueEqual(glasses.getCount(), 2, "glasses kept while fermenting");
+		VBGameTests.assertValueEqual(helper, glasses.getCount(), 2, "glasses kept while fermenting");
 		helper.succeed();
 	}
 
@@ -619,39 +597,43 @@ public final class BarrelGameTests
 		Player player = playerHolding(helper, new ItemStack(BaseItems.GRAPE_JUICE_BUCKET.get()), GameType.SURVIVAL);
 		helper.useBlock(POS, player);
 		helper.assertTrue(player.getMainHandItem().is(Items.BUCKET), "the hand holds the empty bucket");
-		helper.assertValueEqual(barrel.servings(), 4, "a bucket by hand");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 4, "a bucket by hand");
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(BaseItems.GRAPE_JUICE.get(), 3));
 		helper.useBlock(POS, player);
-		helper.assertValueEqual(player.getMainHandItem().getCount(), 2, "one bottle poured");
-		helper.assertValueEqual(count(player, Items.GLASS_BOTTLE), 1, "its glass bottle in the inventory");
-		helper.assertValueEqual(barrel.servings(), 5, "a bottle by hand");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 2, "one bottle poured");
+		VBGameTests.assertValueEqual(helper, count(player, Items.GLASS_BOTTLE), 1, "its glass bottle in the inventory");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 5, "a bottle by hand");
 		// undo by hand
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.GLASS_BOTTLE));
 		helper.useBlock(POS, player);
 		helper.assertTrue(player.getMainHandItem().is(BaseItems.GRAPE_JUICE.get()), "undo fills the bottle in the hand");
-		helper.assertValueEqual(barrel.servings(), 4, "after undo");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 4, "after undo");
 		// empty hand: the status line, nothing changes
 		player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 		helper.useBlock(POS, player);
-		helper.assertValueEqual(barrel.servings(), 4, "status changes nothing");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 4, "status changes nothing");
 		// tap by hand
 		barrel.setAge(FERMENT);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.WINE_GLASS.get(), 2));
 		helper.useBlock(POS, player);
-		helper.assertValueEqual(player.getMainHandItem().getCount(), 1, "one glass used");
-		helper.assertValueEqual(count(player, DrinkItems.RED_WINE.get()), 1, "a red wine in the inventory");
-		helper.assertValueEqual(barrel.servings(), 3, "after tapping by hand");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 1, "one glass used");
+		VBGameTests.assertValueEqual(helper, count(player, DrinkItems.RED_WINE.get()), 1, "a red wine in the inventory");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 3, "after tapping by hand");
 		// an unrelated item is not taken by the barrel (it may be placed against it instead)
 		ItemStack stone = new ItemStack(Items.STONE);
+		player.setItemInHand(InteractionHand.MAIN_HAND, stone);
 		BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(helper.absolutePos(POS)), Direction.UP, helper.absolutePos(POS), false);
-		InteractionResult result = helper.getBlockState(POS).useItemOn(stone, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit);
+		InteractionResult result = helper.getBlockState(POS).use(helper.getLevel(), player, InteractionHand.MAIN_HAND, hit);
+		// 1.20.1 has one use method: a pass goes straight on to the item's own use, and there is no empty-hand use (the
+		// status line) after it (1.21.1: "skip the default block interaction")
 		helper.assertTrue(result == InteractionResult.PASS, "stone passes: " + result);
+		helper.assertTrue(player.getMainHandItem() == stone && stone.getCount() == 1, "and stays in the hand");
 		// creative: nothing is used up
 		Player creative = playerHolding(helper, new ItemStack(DrinkItems.WINE_GLASS.get()), GameType.CREATIVE);
 		GameType.CREATIVE.updatePlayerAbilities(creative.getAbilities());
 		helper.useBlock(POS, creative);
 		helper.assertTrue(creative.getMainHandItem().is(DrinkItems.WINE_GLASS.get()), "creative keeps the glass");
-		helper.assertValueEqual(barrel.servings(), 2, "a serving still goes");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 2, "a serving still goes");
 		helper.succeed();
 	}
 
@@ -669,24 +651,24 @@ public final class BarrelGameTests
 		helper.setBlock(below, Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.NORTH));
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, barrelPos);
 		helper.setBlock(above, Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.DOWN));
-		HopperBlockEntity top = helper.getBlockEntity(above, HopperBlockEntity.class);
+		HopperBlockEntity top = VBGameTests.blockEntity(helper, above, HopperBlockEntity.class);
 		top.setItem(0, new ItemStack(BaseItems.GRAPE_JUICE_BUCKET.get()));
 		top.setItem(1, new ItemStack(BaseItems.GRAPE_JUICE_BUCKET.get()));
 		top.setItem(2, new ItemStack(BaseItems.GRAPE_JUICE.get()));
-		HopperBlockEntity bottom = helper.getBlockEntity(below, HopperBlockEntity.class);
+		HopperBlockEntity bottom = VBGameTests.blockEntity(helper, below, HopperBlockEntity.class);
 		helper.startSequence()
-			.thenWaitUntil(() -> helper.assertValueEqual(barrel.servings(), 8, "two buckets poured in by the hopper"))
-			.thenWaitUntil(() -> helper.assertValueEqual(countIn(bottom, Items.BUCKET), 2, "empty buckets pulled out below"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, barrel.servings(), 8, "two buckets poured in by the hopper"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, countIn(bottom, Items.BUCKET), 2, "empty buckets pulled out below"))
 			.thenExecute(() -> {
-				helper.assertValueEqual(countIn(top, BaseItems.GRAPE_JUICE.get()), 1, "the 9th serving waits in the hopper");
+				VBGameTests.assertValueEqual(helper, countIn(top, BaseItems.GRAPE_JUICE.get()), 1, "the 9th serving waits in the hopper");
 				barrel.setAge(FERMENT);
 				helper.setBlock(side, Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.WEST));
-				helper.getBlockEntity(side, HopperBlockEntity.class).setItem(0, new ItemStack(DrinkItems.WINE_GLASS.get(), 3));
+				VBGameTests.blockEntity(helper, side, HopperBlockEntity.class).setItem(0, new ItemStack(DrinkItems.WINE_GLASS.get(), 3));
 			})
-			.thenWaitUntil(() -> helper.assertValueEqual(countIn(bottom, DrinkItems.RED_WINE.get()), 3, "three wines tapped into the hopper below"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, countIn(bottom, DrinkItems.RED_WINE.get()), 3, "three wines tapped into the hopper below"))
 			.thenExecute(() -> {
-				helper.assertValueEqual(barrel.servings(), 5, "servings after three");
-				helper.assertValueEqual(countIn(helper.getBlockEntity(side, HopperBlockEntity.class), DrinkItems.WINE_GLASS.get()), 0, "glasses used");
+				VBGameTests.assertValueEqual(helper, barrel.servings(), 5, "servings after three");
+				VBGameTests.assertValueEqual(helper, countIn(VBGameTests.blockEntity(helper, side, HopperBlockEntity.class), DrinkItems.WINE_GLASS.get()), 0, "glasses used");
 				for (int slot = 0; slot < AgingBarrelBlockEntity.INVENTORY_SIZE; slot++) {
 					if (slot != AgingBarrelBlockEntity.INPUT_SLOT) {
 						helper.assertTrue(barrel.stackIn(slot).isEmpty(), "slot " + slot + " empty: " + barrel.stackIn(slot));
@@ -709,7 +691,7 @@ public final class BarrelGameTests
 		BlockPos barrelPos = new BlockPos(2, 1, 2);
 		AgingBarrelBlockEntity barrel = wineBarrel(helper, barrelPos, 2, 0);
 		helper.setBlock(barrelPos.above(), Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.DOWN));
-		HopperBlockEntity top = helper.getBlockEntity(barrelPos.above(), HopperBlockEntity.class);
+		HopperBlockEntity top = VBGameTests.blockEntity(helper, barrelPos.above(), HopperBlockEntity.class);
 		top.setItem(0, new ItemStack(BaseItems.BARLEY_WORT_BOTTLE.get(), 4));
 		top.setItem(1, new ItemStack(Items.STONE, 4));
 		SlotAccess sideHandler = Services.PLATFORM.itemAccess(helper.getLevel(), helper.absolutePos(barrelPos), Direction.EAST);
@@ -719,12 +701,12 @@ public final class BarrelGameTests
 			for (int i = 0; i < sideHandler.size(); i++) {
 				inserted += sideHandler.insert(i, SlotAccess.of(BaseItems.GRAPE_JUICE.get()), 1, tx);
 			}
-			helper.assertValueEqual(inserted, 0, "bases don't go in from the side");
+			VBGameTests.assertValueEqual(helper, inserted, 0, "bases don't go in from the side");
 		}
 		helper.runAfterDelay(60, () -> {
-			helper.assertValueEqual(countIn(top, BaseItems.BARLEY_WORT_BOTTLE.get()), 4, "other base stays in the hopper");
-			helper.assertValueEqual(countIn(top, Items.STONE), 4, "stone stays in the hopper");
-			helper.assertValueEqual(barrel.servings(), 2, "barrel unchanged");
+			VBGameTests.assertValueEqual(helper, countIn(top, BaseItems.BARLEY_WORT_BOTTLE.get()), 4, "other base stays in the hopper");
+			VBGameTests.assertValueEqual(helper, countIn(top, Items.STONE), 4, "stone stays in the hopper");
+			VBGameTests.assertValueEqual(helper, barrel.servings(), 2, "barrel unchanged");
 			helper.assertTrue(barrel.stackIn(AgingBarrelBlockEntity.INPUT_SLOT).isEmpty(), "input slot never jammed");
 			helper.succeed();
 		});
@@ -736,38 +718,38 @@ public final class BarrelGameTests
 		BlockPos barrelPos = dispenserPos.east();
 		helper.setBlock(dispenserPos, Blocks.DISPENSER.defaultBlockState().setValue(DispenserBlock.FACING, Direction.EAST));
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, barrelPos);
-		DispenserBlockEntity dispenser = helper.getBlockEntity(dispenserPos, DispenserBlockEntity.class);
-		BlockSource source = new BlockSource(helper.getLevel(), helper.absolutePos(dispenserPos), helper.getBlockState(dispenserPos), dispenser);
+		DispenserBlockEntity dispenser = VBGameTests.blockEntity(helper, dispenserPos, DispenserBlockEntity.class);
+		BlockSource source = new BlockSourceImpl(helper.getLevel(), helper.absolutePos(dispenserPos));
 
 		ItemStack bucket = new ItemStack(BaseItems.GRAPE_JUICE_BUCKET.get());
-		ItemStack afterBucket = DispenserBlock.DISPENSER_REGISTRY.get(bucket.getItem()).dispense(source, bucket);
+		ItemStack afterBucket = jexxme.vineandbarrel.mixin.DispenserBlockAccessor.vineandbarrel$registry().get(bucket.getItem()).dispense(source, bucket);
 		helper.assertTrue(afterBucket.is(Items.BUCKET), "the dispenser keeps the empty bucket: " + afterBucket);
 		ItemStack bottles = new ItemStack(BaseItems.GRAPE_JUICE.get(), 3);
-		ItemStack afterBottle = DispenserBlock.DISPENSER_REGISTRY.get(bottles.getItem()).dispense(source, bottles);
-		helper.assertValueEqual(afterBottle.getCount(), 2, "one bottle poured");
-		helper.assertValueEqual(barrel.servings(), 5, "4 + 1 by dispenser");
+		ItemStack afterBottle = jexxme.vineandbarrel.mixin.DispenserBlockAccessor.vineandbarrel$registry().get(bottles.getItem()).dispense(source, bottles);
+		VBGameTests.assertValueEqual(helper, afterBottle.getCount(), 2, "one bottle poured");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 5, "4 + 1 by dispenser");
 		int glassInDispenser = 0;
 		for (int i = 0; i < dispenser.getContainerSize(); i++) {
 			if (dispenser.getItem(i).is(Items.GLASS_BOTTLE)) glassInDispenser += dispenser.getItem(i).getCount();
 		}
-		helper.assertValueEqual(glassInDispenser, 1, "the glass bottle went into the dispenser");
+		VBGameTests.assertValueEqual(helper, glassInDispenser, 1, "the glass bottle went into the dispenser");
 
 		barrel.setAge(FERMENT);
 		ItemStack mugs = new ItemStack(DrinkItems.MUG.get(), 2);
-		ItemStack afterMug = DispenserBlock.DISPENSER_REGISTRY.get(mugs.getItem()).dispense(source, mugs);
-		helper.assertValueEqual(afterMug.getCount(), 2, "wrong vessel: nothing used");
+		ItemStack afterMug = jexxme.vineandbarrel.mixin.DispenserBlockAccessor.vineandbarrel$registry().get(mugs.getItem()).dispense(source, mugs);
+		VBGameTests.assertValueEqual(helper, afterMug.getCount(), 2, "wrong vessel: nothing used");
 		ItemStack glass = new ItemStack(DrinkItems.WINE_GLASS.get());
-		ItemStack afterGlass = DispenserBlock.DISPENSER_REGISTRY.get(glass.getItem()).dispense(source, glass);
+		ItemStack afterGlass = jexxme.vineandbarrel.mixin.DispenserBlockAccessor.vineandbarrel$registry().get(glass.getItem()).dispense(source, glass);
 		helper.assertTrue(afterGlass.is(DrinkItems.RED_WINE.get()), "the last glass comes back as wine: " + afterGlass);
-		helper.assertValueEqual(barrel.servings(), 4, "one serving tapped");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 4, "one serving tapped");
 
 		// not facing a barrel: a mug is just dropped, like any item
 		BlockPos lone = new BlockPos(1, 1, 0);
 		helper.setBlock(lone, Blocks.DISPENSER.defaultBlockState().setValue(DispenserBlock.FACING, Direction.UP));
-		DispenserBlockEntity loneDispenser = helper.getBlockEntity(lone, DispenserBlockEntity.class);
-		BlockSource loneSource = new BlockSource(helper.getLevel(), helper.absolutePos(lone), helper.getBlockState(lone), loneDispenser);
-		ItemStack dropped = DispenserBlock.DISPENSER_REGISTRY.get(DrinkItems.MUG.get()).dispense(loneSource, new ItemStack(DrinkItems.MUG.get(), 2));
-		helper.assertValueEqual(dropped.getCount(), 1, "the default behaviour throws one mug");
+		VBGameTests.blockEntity(helper, lone, DispenserBlockEntity.class);
+		BlockSource loneSource = new BlockSourceImpl(helper.getLevel(), helper.absolutePos(lone));
+		ItemStack dropped = jexxme.vineandbarrel.mixin.DispenserBlockAccessor.vineandbarrel$registry().get(DrinkItems.MUG.get()).dispense(loneSource, new ItemStack(DrinkItems.MUG.get(), 2));
+		VBGameTests.assertValueEqual(helper, dropped.getCount(), 1, "the default behaviour throws one mug");
 		helper.succeed();
 	}
 
@@ -776,10 +758,10 @@ public final class BarrelGameTests
 		BlockPos dispenserPos = new BlockPos(1, 1, 2);
 		helper.setBlock(dispenserPos, Blocks.DISPENSER.defaultBlockState().setValue(DispenserBlock.FACING, Direction.EAST));
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, dispenserPos.east());
-		helper.getBlockEntity(dispenserPos, DispenserBlockEntity.class).setItem(0, new ItemStack(BaseItems.WHEAT_WORT_BOTTLE.get(), 2));
+		VBGameTests.blockEntity(helper, dispenserPos, DispenserBlockEntity.class).setItem(0, new ItemStack(BaseItems.WHEAT_WORT_BOTTLE.get(), 2));
 		helper.setBlock(dispenserPos.west(), Blocks.REDSTONE_BLOCK);
 		helper.succeedWhen(() -> {
-			helper.assertValueEqual(barrel.servings(), 1, "one bottle per pulse");
+			VBGameTests.assertValueEqual(helper, barrel.servings(), 1, "one bottle per pulse");
 			helper.assertTrue(barrel.drink().is(DrinkItems.WHEAT_BEER.get()), "wheat wort in the barrel");
 		});
 	}
@@ -800,21 +782,21 @@ public final class BarrelGameTests
 			else helper.fail("unexpected drop " + stack);
 			entity.discard();
 		}
-		helper.assertValueEqual(glasses, 2, "slot items drop");
+		VBGameTests.assertValueEqual(helper, glasses, 2, "slot items drop");
 		BarrelContents contents = AgingBarrelItem.contentsOf(barrelItem);
-		helper.assertValueEqual(contents.servings(), 5, "servings in the item");
-		helper.assertValueEqual(contents.stageAt(contents.elapsed()), BarrelStage.YOUNG, "stage in the item");
+		VBGameTests.assertValueEqual(helper, contents.servings(), 5, "servings in the item");
+		VBGameTests.assertValueEqual(helper, contents.stageAt(contents.elapsed()), BarrelStage.YOUNG, "stage in the item");
 		helper.assertTrue(contents.elapsed() >= 30000 && contents.elapsed() < 30010, "age in the item: " + contents.elapsed());
 		long elapsed = contents.elapsed();
 		ItemStack item = barrelItem;
 		helper.runAfterDelay(40, () -> {
-			helper.assertValueEqual(AgingBarrelItem.contentsOf(item).elapsed(), elapsed, "no aging as an item");
-			Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+			VBGameTests.assertValueEqual(helper, AgingBarrelItem.contentsOf(item).elapsed(), elapsed, "no aging as an item");
+			Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 			player.setItemInHand(InteractionHand.MAIN_HAND, item);
 			helper.placeAt(player, item, POS.below(), Direction.UP);
-			AgingBarrelBlockEntity placed = helper.getBlockEntity(POS, AgingBarrelBlockEntity.class);
-			helper.assertValueEqual(placed.servings(), 5, "servings after placing");
-			helper.assertValueEqual(placed.age(), elapsed, "carries on from the age it had (paused while an item)");
+			AgingBarrelBlockEntity placed = VBGameTests.blockEntity(helper, POS, AgingBarrelBlockEntity.class);
+			VBGameTests.assertValueEqual(helper, placed.servings(), 5, "servings after placing");
+			VBGameTests.assertValueEqual(helper, placed.age(), elapsed, "carries on from the age it had (paused while an item)");
 			helper.assertTrue(placed.content().is(DrinkItems.RED_WINE.get()), "still red wine");
 			helper.succeed();
 		});
@@ -826,25 +808,25 @@ public final class BarrelGameTests
 		barrel.setStack(AgingBarrelBlockEntity.VESSEL_SLOT, new ItemStack(DrinkItems.WINE_GLASS.get(), 3));
 		barrel.setStack(AgingBarrelBlockEntity.CONTAINER_SLOT, new ItemStack(Items.BUCKET));
 		ItemStack named = new ItemStack(BarrelRegistry.AGING_BARREL_ITEM.get());
-		named.set(DataComponents.CUSTOM_NAME, Component.literal("Wedding Wine"));
-		named.set(BarrelRegistry.BARREL_CONTENTS.get(), barrel.contents());
-		barrel.applyComponentsFromItemStack(named);
-		var tag = barrel.saveWithFullMetadata(helper.getLevel().registryAccess());
+		named.setHoverName(Component.literal("Wedding Wine"));
+		AgingBarrelItem.setContents(named, barrel.contents());
+		barrel.applyItem(named);
+		var tag = barrel.saveWithFullMetadata();
 		long age = barrel.age();
 		AgingBarrelBlockEntity copy = new AgingBarrelBlockEntity(helper.absolutePos(POS), helper.getBlockState(POS));
 		copy.setLevel(helper.getLevel());
-		copy.loadWithComponents(TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), tag));
-		helper.assertValueEqual(copy.servings(), 6, "servings");
-		helper.assertValueEqual(copy.age(), age, "age");
-		helper.assertValueEqual(copy.stage(), BarrelStage.YOUNG, "stage");
-		helper.assertValueEqual(copy.stackIn(AgingBarrelBlockEntity.VESSEL_SLOT).getCount(), 3, "vessel slot");
+		copy.load(tag);
+		VBGameTests.assertValueEqual(helper, copy.servings(), 6, "servings");
+		VBGameTests.assertValueEqual(helper, copy.age(), age, "age");
+		VBGameTests.assertValueEqual(helper, copy.stage(), BarrelStage.YOUNG, "stage");
+		VBGameTests.assertValueEqual(helper, copy.stackIn(AgingBarrelBlockEntity.VESSEL_SLOT).getCount(), 3, "vessel slot");
 		helper.assertTrue(copy.stackIn(AgingBarrelBlockEntity.CONTAINER_SLOT).is(Items.BUCKET), "container slot");
 		helper.assertTrue(copy.getCustomName() != null && copy.getCustomName().getString().equals("Wedding Wine"), "name");
 		helper.succeed();
 	}
 
 	/**
-	 * Random actions through every real path: a player's clicks on the block ({@code useItemOn}), a dispenser facing it,
+	 * Random actions through every real path: a player's clicks on the block ({@code use}), a dispenser facing it,
 	 * a real hopper above feeding it and a real hopper below pulling from it, raw capability inserts and extracts on
 	 * every side (some aborted), time jumps, barrel ticks and save/load, with grape juice. After every step: liquid
 	 * (juice bottles + 4 per juice bucket + wines + servings) and each kind of container are exactly what they were,
@@ -859,11 +841,11 @@ public final class BarrelGameTests
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, barrelPos);
 		helper.setBlock(topPos, Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.DOWN));
 		helper.setBlock(dispenserPos, Blocks.DISPENSER.defaultBlockState().setValue(DispenserBlock.FACING, Direction.EAST));
-		HopperBlockEntity top = helper.getBlockEntity(topPos, HopperBlockEntity.class);
-		HopperBlockEntity bottom = helper.getBlockEntity(bottomPos, HopperBlockEntity.class);
-		DispenserBlockEntity dispenser = helper.getBlockEntity(dispenserPos, DispenserBlockEntity.class);
-		BlockSource source = new BlockSource(helper.getLevel(), helper.absolutePos(dispenserPos), helper.getBlockState(dispenserPos), dispenser);
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		HopperBlockEntity top = VBGameTests.blockEntity(helper, topPos, HopperBlockEntity.class);
+		HopperBlockEntity bottom = VBGameTests.blockEntity(helper, bottomPos, HopperBlockEntity.class);
+		DispenserBlockEntity dispenser = VBGameTests.blockEntity(helper, dispenserPos, DispenserBlockEntity.class);
+		BlockSource source = new BlockSourceImpl(helper.getLevel(), helper.absolutePos(dispenserPos));
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		BlockPos absolute = helper.absolutePos(barrelPos);
 		Map<Item, Integer> outside = new HashMap<>();
 		outside.put(BaseItems.GRAPE_JUICE.get(), 24);
@@ -898,7 +880,7 @@ public final class BarrelGameTests
 				Item fed = dispensable.get(random.nextInt(dispensable.size()));
 				if (outside.getOrDefault(fed, 0) > 0) {
 					take(outside, fed, 1);
-					ItemStack result = DispenserBlock.DISPENSER_REGISTRY.get(fed).dispense(source, new ItemStack(fed));
+					ItemStack result = jexxme.vineandbarrel.mixin.DispenserBlockAccessor.vineandbarrel$registry().get(fed).dispense(source, new ItemStack(fed));
 					if (!result.isEmpty()) outside.merge(result.getItem(), result.getCount(), Integer::sum);
 					drain(dispenser, outside);
 				}
@@ -937,12 +919,12 @@ public final class BarrelGameTests
 				barrel.setAge(barrel.age() + (random.nextBoolean() ? random.nextInt(200) : FERMENT));
 				tickBarrel(helper, barrelPos);
 			} else {
-				var tag = barrel.saveWithFullMetadata(helper.getLevel().registryAccess());
-				barrel.loadWithComponents(TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), tag));
+				var tag = barrel.saveWithFullMetadata();
+				barrel.load(tag);
 			}
 			int[] now = totals(everywhere(outside, top, bottom, dispenser), barrel);
 			for (int k = 0; k < now.length; k++) {
-				helper.assertValueEqual(now[k], expected[k], "step " + step + " (action " + action + ", " + item + ") total #" + k);
+				VBGameTests.assertValueEqual(helper, now[k], expected[k], "step " + step + " (action " + action + ", " + item + ") total #" + k);
 			}
 		}
 		// what is left in the slots drops; the batch stays in the barrel item
@@ -965,8 +947,8 @@ public final class BarrelGameTests
 			if (stack.is(BarrelRegistry.AGING_BARREL_ITEM.get())) barrelServings += AgingBarrelItem.contentsOf(stack).servings();
 			else dropped.merge(stack.getItem(), stack.getCount(), Integer::sum);
 		}
-		helper.assertValueEqual(dropped, inSlots, "slot items dropped");
-		helper.assertValueEqual(barrelServings, servings, "servings kept in the barrel item");
+		VBGameTests.assertValueEqual(helper, dropped, inSlots, "slot items dropped");
+		VBGameTests.assertValueEqual(helper, barrelServings, servings, "servings kept in the barrel item");
 		helper.succeed();
 	}
 
@@ -1019,23 +1001,23 @@ public final class BarrelGameTests
 	private static void comparatorOutput(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, POS);
 		int[] expected = {0, 1, 3, 5, 7, 9, 11, 13, 15};
-		helper.assertValueEqual(barrel.comparatorSignal(), 0, "empty");
+		VBGameTests.assertValueEqual(helper, barrel.comparatorSignal(), 0, "empty");
 		for (int servings = 1; servings <= 8; servings++) {
 			pour(helper, barrel, BaseItems.GRAPE_JUICE.get(), 1);
-			helper.assertValueEqual(barrel.comparatorSignal(), expected[servings], servings + " servings");
+			VBGameTests.assertValueEqual(helper, barrel.comparatorSignal(), expected[servings], servings + " servings");
 		}
 		// a real comparator next to it reads 15, and drops as servings are tapped
 		BlockPos comparatorPos = POS.south();
 		helper.setBlock(comparatorPos.below(), Blocks.STONE);
 		helper.setBlock(comparatorPos, Blocks.COMPARATOR.defaultBlockState().setValue(ComparatorBlock.FACING, Direction.NORTH));
 		helper.startSequence()
-			.thenWaitUntil(() -> helper.assertValueEqual(helper.getBlockEntity(comparatorPos, ComparatorBlockEntity.class).getOutputSignal(), 15, "full barrel"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, VBGameTests.blockEntity(helper, comparatorPos, ComparatorBlockEntity.class).getOutputSignal(), 15, "full barrel"))
 			.thenExecute(() -> {
 				barrel.setAge(FERMENT);
 				ItemStack glasses = new ItemStack(DrinkItems.WINE_GLASS.get(), 4);
 				for (int i = 0; i < 4; i++) barrel.tap(glasses, null);
 			})
-			.thenWaitUntil(() -> helper.assertValueEqual(helper.getBlockEntity(comparatorPos, ComparatorBlockEntity.class).getOutputSignal(), 7, "4 servings left"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, VBGameTests.blockEntity(helper, comparatorPos, ComparatorBlockEntity.class).getOutputSignal(), 7, "4 servings left"))
 			.thenSucceed();
 	}
 
@@ -1055,16 +1037,16 @@ public final class BarrelGameTests
 		barrel.setAge(FERMENT);
 		BlockPos side = barrelPos.east();
 		helper.startSequence()
-			.thenWaitUntil(() -> helper.assertValueEqual(helper.getBlockEntity(comparatorPos, ComparatorBlockEntity.class).getOutputSignal(), 15, "full barrel"))
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, VBGameTests.blockEntity(helper, comparatorPos, ComparatorBlockEntity.class).getOutputSignal(), 15, "full barrel"))
 			.thenExecute(() -> {
 				helper.setBlock(side, Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.WEST));
-				helper.getBlockEntity(side, HopperBlockEntity.class).setItem(0, new ItemStack(DrinkItems.WINE_GLASS.get(), 4));
+				VBGameTests.blockEntity(helper, side, HopperBlockEntity.class).setItem(0, new ItemStack(DrinkItems.WINE_GLASS.get(), 4));
 			})
-			.thenWaitUntil(() -> helper.assertValueEqual(countIn(helper.getBlockEntity(barrelPos.below(), HopperBlockEntity.class), DrinkItems.RED_WINE.get()), 4,
+			.thenWaitUntil(() -> VBGameTests.assertValueEqual(helper, countIn(VBGameTests.blockEntity(helper, barrelPos.below(), HopperBlockEntity.class), DrinkItems.RED_WINE.get()), 4,
 				"four wines tapped into the hopper below"))
 			.thenWaitUntil(() -> {
-				helper.assertValueEqual(barrel.servings(), 4, "servings after four");
-				helper.assertValueEqual(helper.getBlockEntity(comparatorPos, ComparatorBlockEntity.class).getOutputSignal(), 7, "4 servings left");
+				VBGameTests.assertValueEqual(helper, barrel.servings(), 4, "servings after four");
+				VBGameTests.assertValueEqual(helper, VBGameTests.blockEntity(helper, comparatorPos, ComparatorBlockEntity.class).getOutputSignal(), 7, "4 servings left");
 			})
 			.thenSucceed();
 	}
@@ -1073,17 +1055,17 @@ public final class BarrelGameTests
 	private static void slotChangeIsSaved(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, POS);
 		var chunk = helper.getLevel().getChunkAt(helper.absolutePos(POS));
-		chunk.tryMarkSaved();
+		chunk.setUnsaved(false);
 		helper.assertFalse(chunk.isUnsaved(), "chunk saved");
 		barrel.setStack(AgingBarrelBlockEntity.VESSEL_SLOT, new ItemStack(DrinkItems.WINE_GLASS.get(), 2));
 		helper.assertTrue(chunk.isUnsaved(), "chunk unsaved after a slot change");
-		helper.assertValueEqual(barrel.stackIn(AgingBarrelBlockEntity.VESSEL_SLOT).getCount(), 2, "vessels in the slot");
+		VBGameTests.assertValueEqual(helper, barrel.stackIn(AgingBarrelBlockEntity.VESSEL_SLOT).getCount(), 2, "vessels in the slot");
 		helper.succeed();
 	}
 
 	/** B2: same-facing neighbours on the ground join their cradles; B3: a barrel on a barrel sits on chocks. */
 	private static void racksAndStacking(GameTestHelper helper) {
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		// placed by a player looking south (facing = toward the player = north): three in a row along x
 		player.setYRot(0.0F);
 		for (int x = 1; x <= 3; x++) {
@@ -1092,13 +1074,13 @@ public final class BarrelGameTests
 		BlockState left = helper.getBlockState(new BlockPos(1, 1, 2));
 		BlockState middle = helper.getBlockState(new BlockPos(2, 1, 2));
 		BlockState right = helper.getBlockState(new BlockPos(3, 1, 2));
-		helper.assertValueEqual(middle.getValue(AgingBarrelBlock.FACING), Direction.NORTH, "B1: the tap faces the player");
+		VBGameTests.assertValueEqual(helper, middle.getValue(AgingBarrelBlock.FACING), Direction.NORTH, "B1: the tap faces the player");
 		Direction facing = middle.getValue(AgingBarrelBlock.FACING);
 		// left of a north-facing barrel (counter-clockwise) is west, -x
 		helper.assertTrue(middle.getValue(AgingBarrelBlock.LEFT) && middle.getValue(AgingBarrelBlock.RIGHT), "the middle joins both sides");
 		helper.assertTrue(!left.getValue(AgingBarrelBlock.LEFT) && left.getValue(AgingBarrelBlock.RIGHT), "the west end joins only east: " + left);
 		helper.assertTrue(right.getValue(AgingBarrelBlock.LEFT) && !right.getValue(AgingBarrelBlock.RIGHT), "the east end joins only west: " + right);
-		helper.assertValueEqual(facing.getCounterClockWise(), Direction.WEST, "left is west");
+		VBGameTests.assertValueEqual(helper, facing.getCounterClockWise(), Direction.WEST, "left is west");
 		// another facing doesn't join
 		helper.setBlock(new BlockPos(4, 1, 2), BarrelRegistry.AGING_BARREL.get().defaultBlockState().setValue(AgingBarrelBlock.FACING, Direction.EAST));
 		helper.assertFalse(helper.getBlockState(new BlockPos(3, 1, 2)).getValue(AgingBarrelBlock.RIGHT), "a barrel facing east doesn't join the rack");
@@ -1122,18 +1104,18 @@ public final class BarrelGameTests
 	private static void bungStates(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, POS);
 		tickBarrel(helper, POS);
-		helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.CORK, "empty");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.CORK, "empty");
 		pour(helper, barrel, BaseItems.GRAPE_JUICE.get(), 1);
 		tickBarrel(helper, POS);
-		helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.AIRLOCK, "fermenting");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.AIRLOCK, "fermenting");
 		barrel.setAge(FERMENT);
 		tickBarrel(helper, POS);
-		helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.CORK, "young");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.CORK, "young");
 		barrel.setAge(FERMENT + AGE);
 		tickBarrel(helper, POS);
-		helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.WAX, "aged");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.BUNG), BungState.WAX, "aged");
 		for (BarrelStage stage : BarrelStage.values()) {
-			helper.assertValueEqual(stage.bung(), switch (stage) {
+			VBGameTests.assertValueEqual(helper, stage.bung(), switch (stage) {
 				case FERMENTING -> BungState.AIRLOCK;
 				case AGED -> BungState.WAX;
 				default -> BungState.CORK;
@@ -1145,35 +1127,35 @@ public final class BarrelGameTests
 	/** B10/B15: drink, servings and state, with the custom name first; the "when" words follow the day. */
 	private static void statusLine(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, POS);
-		helper.assertValueEqual(key(BarrelStatus.of(barrel)), "message.vineandbarrel.aging_barrel.empty", "empty");
+		VBGameTests.assertValueEqual(helper, key(BarrelStatus.of(barrel)), "message.vineandbarrel.aging_barrel.empty", "empty");
 		pour(helper, barrel, BaseItems.GRAPE_JUICE_BUCKET.get(), 1);
 		pour(helper, barrel, BaseItems.GRAPE_JUICE.get(), 1);
 		Component status = BarrelStatus.of(barrel);
-		helper.assertValueEqual(key(status), "message.vineandbarrel.aging_barrel.status", "status");
+		VBGameTests.assertValueEqual(helper, key(status), "message.vineandbarrel.aging_barrel.status", "status");
 		Object[] parts = args(status);
-		helper.assertValueEqual(((Component) parts[0]).getString(), new ItemStack(DrinkItems.RED_WINE.get()).getHoverName().getString(), "it names the drink it becomes");
-		helper.assertValueEqual(args((Component) parts[1])[0], 5, "5 servings");
-		helper.assertValueEqual(key((Component) parts[2]), "message.vineandbarrel.aging_barrel.fermenting", "fermenting");
+		VBGameTests.assertValueEqual(helper, ((Component) parts[0]).getString(), new ItemStack(DrinkItems.RED_WINE.get()).getHoverName().getString(), "it names the drink it becomes");
+		VBGameTests.assertValueEqual(helper, args((Component) parts[1])[0], 5, "5 servings");
+		VBGameTests.assertValueEqual(helper, key((Component) parts[2]), "message.vineandbarrel.aging_barrel.fermenting", "fermenting");
 		// renamed in an anvil: the name leads
 		ItemStack named = barrel.getAsItem();
-		named.set(DataComponents.CUSTOM_NAME, Component.literal("Wedding Wine"));
-		barrel.applyComponentsFromItemStack(named);
+		named.setHoverName(Component.literal("Wedding Wine"));
+		barrel.applyItem(named);
 		barrel.setAge(FERMENT);
 		Component renamed = BarrelStatus.of(barrel);
 		Component title = (Component) args(renamed)[0];
-		helper.assertValueEqual(key(title), "message.vineandbarrel.aging_barrel.named", "named title");
-		helper.assertValueEqual(((Component) args(title)[0]).getString(), "Wedding Wine", "the custom name");
-		helper.assertValueEqual(key((Component) args(renamed)[2]), "message.vineandbarrel.aging_barrel.aging", "aging");
-		helper.assertValueEqual(key((Component) args((Component) args(renamed)[2])[0]), "message.vineandbarrel.aging_barrel.when.in_days", "aged in 3 days");
+		VBGameTests.assertValueEqual(helper, key(title), "message.vineandbarrel.aging_barrel.named", "named title");
+		VBGameTests.assertValueEqual(helper, ((Component) args(title)[0]).getString(), "Wedding Wine", "the custom name");
+		VBGameTests.assertValueEqual(helper, key((Component) args(renamed)[2]), "message.vineandbarrel.aging_barrel.aging", "aging");
+		VBGameTests.assertValueEqual(helper, key((Component) args((Component) args(renamed)[2])[0]), "message.vineandbarrel.aging_barrel.when.in_days", "aged in 3 days");
 		// the "when" words: days start at sunrise (0) and keep their night
-		helper.assertValueEqual(key(BarrelStatus.when(1000L, 24000L)), "message.vineandbarrel.aging_barrel.when.tomorrow.morning", "a day from morning");
-		helper.assertValueEqual(key(BarrelStatus.when(12500L, 24000L)), "message.vineandbarrel.aging_barrel.when.tomorrow.evening", "a day from evening");
-		helper.assertValueEqual(key(BarrelStatus.when(1000L, 10000L)), "message.vineandbarrel.aging_barrel.when.today.afternoon", "later today");
-		helper.assertValueEqual(key(BarrelStatus.when(6000L, 10000L)), "message.vineandbarrel.aging_barrel.when.today.night", "tonight");
-		helper.assertValueEqual(key(BarrelStatus.when(20000L, 6000L)), "message.vineandbarrel.aging_barrel.when.tomorrow.morning", "after midnight is tomorrow morning");
-		helper.assertValueEqual(key(BarrelStatus.when(1000L, 600L)), "message.vineandbarrel.aging_barrel.when.soon", "under a minute");
-		helper.assertValueEqual(key(BarrelStatus.when(-1L, 30000L)), "message.vineandbarrel.aging_barrel.when.in_days", "no day in the Nether");
-		helper.assertValueEqual(BarrelStatus.partOfDay(23999L), "night", "late night");
+		VBGameTests.assertValueEqual(helper, key(BarrelStatus.when(1000L, 24000L)), "message.vineandbarrel.aging_barrel.when.tomorrow.morning", "a day from morning");
+		VBGameTests.assertValueEqual(helper, key(BarrelStatus.when(12500L, 24000L)), "message.vineandbarrel.aging_barrel.when.tomorrow.evening", "a day from evening");
+		VBGameTests.assertValueEqual(helper, key(BarrelStatus.when(1000L, 10000L)), "message.vineandbarrel.aging_barrel.when.today.afternoon", "later today");
+		VBGameTests.assertValueEqual(helper, key(BarrelStatus.when(6000L, 10000L)), "message.vineandbarrel.aging_barrel.when.today.night", "tonight");
+		VBGameTests.assertValueEqual(helper, key(BarrelStatus.when(20000L, 6000L)), "message.vineandbarrel.aging_barrel.when.tomorrow.morning", "after midnight is tomorrow morning");
+		VBGameTests.assertValueEqual(helper, key(BarrelStatus.when(1000L, 600L)), "message.vineandbarrel.aging_barrel.when.soon", "under a minute");
+		VBGameTests.assertValueEqual(helper, key(BarrelStatus.when(-1L, 30000L)), "message.vineandbarrel.aging_barrel.when.in_days", "no day in the Nether");
+		VBGameTests.assertValueEqual(helper, BarrelStatus.partOfDay(23999L), "night", "late night");
 		helper.succeed();
 	}
 
@@ -1192,24 +1174,29 @@ public final class BarrelGameTests
 	private static void woodProperties(GameTestHelper helper) {
 		BlockState barrel = BarrelRegistry.AGING_BARREL.get().defaultBlockState();
 		helper.assertTrue(barrel.is(BlockTags.MINEABLE_WITH_AXE), "axe");
-		helper.assertValueEqual(barrel.getSoundType(), Blocks.BARREL.defaultBlockState().getSoundType(), "wood sounds like the vanilla barrel");
+		VBGameTests.assertValueEqual(helper, barrel.getSoundType(), Blocks.BARREL.defaultBlockState().getSoundType(), "wood sounds like the vanilla barrel");
 		helper.assertTrue(barrel.ignitedByLava(), "lava sets things around it alight, like a vanilla barrel");
 		helper.setBlock(POS, barrel);
-		helper.assertValueEqual(VBFlammability.burnOdds(helper.getBlockState(POS)), 0, "not flammable");
-		helper.assertValueEqual(VBFlammability.igniteOdds(helper.getBlockState(POS)), 0, "fire doesn't catch");
-		helper.assertTrue(new ItemStack(BarrelRegistry.AGING_BARREL_ITEM.get()).get(DataComponents.COOKING_FUEL) != null, "an empty barrel is fuel");
-		helper.assertValueEqual(new ItemStack(BarrelRegistry.AGING_BARREL_ITEM.get()).getMaxStackSize(), 1, "keeps contents: stacks to 1");
+		VBGameTests.assertValueEqual(helper, VBFlammability.burnOdds(helper.getBlockState(POS)), 0, "not flammable");
+		VBGameTests.assertValueEqual(helper, VBFlammability.igniteOdds(helper.getBlockState(POS)), 0, "fire doesn't catch");
+		helper.assertTrue(burns(helper, new ItemStack(BarrelRegistry.AGING_BARREL_ITEM.get())), "an empty barrel is fuel");
+		VBGameTests.assertValueEqual(helper, new ItemStack(BarrelRegistry.AGING_BARREL_ITEM.get()).getMaxStackSize(), 1, "keeps contents: stacks to 1");
 		// broken full: no fuel; emptied and broken again: fuel again
 		AgingBarrelBlockEntity full = wineBarrel(helper, POS.east(), 2, 0);
-		helper.assertTrue(full.getAsItem().get(DataComponents.COOKING_FUEL) == null, "picked full: not fuel");
+		helper.assertTrue(!burns(helper, full.getAsItem()), "picked full: not fuel");
 		helper.getLevel().destroyBlock(helper.absolutePos(POS.east()), true);
 		ItemStack fullItem = barrelDrop(helper, POS.east());
-		helper.assertTrue(!AgingBarrelItem.contentsOf(fullItem).isEmpty() && fullItem.get(DataComponents.COOKING_FUEL) == null, "a barrel with a batch is never fuel");
+		helper.assertTrue(!AgingBarrelItem.contentsOf(fullItem).isEmpty() && !burns(helper, fullItem), "a barrel with a batch is never fuel");
 		AgingBarrelBlockEntity emptied = wineBarrel(helper, POS.east(), 1, 0);
 		emptied.takeBack(new ItemStack(Items.GLASS_BOTTLE), null);
 		helper.getLevel().destroyBlock(helper.absolutePos(POS.east()), true);
-		helper.assertTrue(barrelDrop(helper, POS.east()).get(DataComponents.COOKING_FUEL) != null, "emptied: fuel again");
+		helper.assertTrue(burns(helper, barrelDrop(helper, POS.east())), "emptied: fuel again");
 		helper.succeed();
+	}
+
+	/** 26.2: whether a furnace takes it, by its burn time (26.3: the cooking_fuel component). */
+	private static boolean burns(GameTestHelper helper, ItemStack stack) {
+		return Services.PLATFORM.burnTime(stack, helper.getLevel()) > 0;
 	}
 
 	/** The one barrel item dropped around {@code pos} (discarded from the world). */
@@ -1228,20 +1215,20 @@ public final class BarrelGameTests
 
 	/** Data-driven recipes: the four base drinks are there; the FD ones are behind mod_loaded and absent without FD. */
 	private static void recipesAndFdAbsent(GameTestHelper helper) {
-		var recipes = helper.getLevel().recipeAccess();
+		var recipes = helper.getLevel().getRecipeManager();
 		for (String id : List.of("red_wine", "sweet_berry_wine", "barley_ale", "wheat_beer", "white_wine", "mead", "hard_cider_from_apple_juice")) {
-			var recipe = recipes.byKey(ResourceKey.create(Registries.RECIPE, VineAndBarrel.id("aging/" + id)));
-			helper.assertTrue(recipe.isPresent() && recipe.get().value() instanceof AgingRecipe, "aging recipe " + id);
-			AgingRecipe aging = (AgingRecipe) recipe.get().value();
-			helper.assertValueEqual(aging.fermentingTime(), FERMENT, id + " ferments a day");
-			helper.assertValueEqual(aging.agingTime(), AGE, id + " ages 3 more days");
+			var recipe = recipes.byKey(VineAndBarrel.id("aging/" + id));
+			helper.assertTrue(recipe.isPresent() && recipe.get() instanceof AgingRecipe, "aging recipe " + id);
+			AgingRecipe aging = (AgingRecipe) recipe.get();
+			VBGameTests.assertValueEqual(helper, aging.fermentingTime(), FERMENT, id + " ferments a day");
+			VBGameTests.assertValueEqual(helper, aging.agingTime(), AGE, id + " ages 3 more days");
 			helper.assertTrue(aging.bucket().isPresent(), id + " takes buckets");
 		}
 		// FD's apple cider -> hard cider and melon wine load only with FD (both runs: see FdCompatGameTests); our own
 		// apple juice makes the same hard cider in every run
 		boolean fd = jexxme.vineandbarrel.platform.Services.PLATFORM.isModLoaded("farmersdelight");
 		for (String id : List.of("hard_cider", "melon_wine")) {
-			helper.assertValueEqual(recipes.byKey(ResourceKey.create(Registries.RECIPE, VineAndBarrel.id("aging/" + id))).isPresent(), fd, id + " loads exactly when FD is installed");
+			VBGameTests.assertValueEqual(helper, recipes.byKey(VineAndBarrel.id("aging/" + id)).isPresent(), fd, id + " loads exactly when FD is installed");
 		}
 		// the items exist anyway, so worlds and loot stay stable
 		for (Item item : List.of(DrinkItems.HARD_CIDER.get(), DrinkItems.AGED_HARD_CIDER.get(), DrinkItems.MELON_WINE.get(), DrinkItems.AGED_MELON_WINE.get())) {
@@ -1258,37 +1245,38 @@ public final class BarrelGameTests
 	 * Comfort, see FdCompatGameTests). Wheat beer's Saturation is instant, so it has its own few ticks.
 	 */
 	private static void drinkItems(GameTestHelper helper) {
-		TagKey<Item> fdDrinks = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("farmersdelight", "drinks"));
+		TagKey<Item> fdDrinks = TagKey.create(Registries.ITEM, new ResourceLocation("farmersdelight", "drinks"));
 		for (DrinkItem drink : DrinkItems.allDrinks()) {
 			ItemStack stack = new ItemStack(drink);
-			helper.assertValueEqual(stack.getMaxStackSize(), 16, drink + " stacks to 16");
+			VBGameTests.assertValueEqual(helper, stack.getMaxStackSize(), 16, drink + " stacks to 16");
 			helper.assertTrue(stack.is(fdDrinks), drink + " is an FD drink");
 			Item vessel = AgingBarrelBlockEntity.vesselOf(stack);
 			helper.assertTrue(vessel == DrinkItems.MUG.get() || vessel == DrinkItems.WINE_GLASS.get(), drink + " comes back as a vessel");
-			helper.assertTrue(stack.getItem().getCraftingRemainder() != null && stack.getItem().getCraftingRemainder().item().value() == vessel, drink + " remainder");
-			helper.assertValueEqual(Boolean.TRUE.equals(stack.get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE)), drink.isAged(), drink + " glint");
+			helper.assertTrue(stack.getItem().getCraftingRemainingItem() == vessel, drink + " remainder");
+			// 1.20.1 has no glint component: the item says so itself, and the stack asks it
+			VBGameTests.assertValueEqual(helper, drink.isFoil(stack) && stack.hasFoil(), drink.isAged(), drink + " glint");
 			helper.assertTrue(stack.is(BarrelRegistry.DRINK_VESSELS) == false, "a full drink is not an empty vessel");
 		}
 		for (DrinkItem drink : DrinkItems.allDrinks()) {
 			MobEffectInstance buff = drink.buff();
-			helper.assertValueEqual(buff.getAmplifier(), drink.isAged() ? 1 : 0, drink + " buff level");
+			VBGameTests.assertValueEqual(helper, buff.getAmplifier(), drink.isAged() ? 1 : 0, drink + " buff level");
 			boolean saturation = buff.getEffect() == MobEffects.SATURATION;
 			int ticks = saturation ? (drink.isAged() ? DrinkItems.WHEAT_BEER_AGED_TICKS : DrinkItems.WHEAT_BEER_YOUNG_TICKS)
 				: (drink.isAged() ? 90 * 20 : 45 * 20);
-			helper.assertValueEqual(buff.getDuration(), ticks, drink + " buff duration");
+			VBGameTests.assertValueEqual(helper, buff.getDuration(), ticks, drink + " buff duration");
 		}
 		// Saturation feeds (level + 1) food per tick: young 5, aged 8, filling but never a whole bar
 		int youngFood = DrinkItems.WHEAT_BEER.get().buff().getDuration() * (DrinkItems.WHEAT_BEER.get().buff().getAmplifier() + 1);
 		int agedFood = DrinkItems.AGED_WHEAT_BEER.get().buff().getDuration() * (DrinkItems.AGED_WHEAT_BEER.get().buff().getAmplifier() + 1);
 		helper.assertTrue(youngFood < agedFood && agedFood <= 10, "wheat beer feeds " + youngFood + " -> " + agedFood);
 		helper.assertTrue(DrinkItems.RED_WINE.get().buff().getEffect() == MobEffects.REGENERATION, "red wine: regeneration");
-		helper.assertTrue(DrinkItems.SWEET_BERRY_WINE.get().buff().getEffect() == MobEffects.SPEED, "sweet berry wine: speed");
-		helper.assertTrue(DrinkItems.BARLEY_ALE.get().buff().getEffect() == MobEffects.HASTE, "pale ale: haste");
+		helper.assertTrue(DrinkItems.SWEET_BERRY_WINE.get().buff().getEffect() == MobEffects.MOVEMENT_SPEED, "sweet berry wine: speed");
+		helper.assertTrue(DrinkItems.BARLEY_ALE.get().buff().getEffect() == MobEffects.DIG_SPEED, "pale ale: haste");
 		helper.assertTrue(DrinkItems.WHEAT_BEER.get().buff().getEffect() == MobEffects.SATURATION, "wheat beer: saturation");
 		helper.assertTrue(DrinkItems.HARD_CIDER.get().buff().getEffect() == MobEffects.ABSORPTION, "hard cider: absorption");
 		helper.assertTrue(DrinkItems.MELON_WINE.get().buff().getEffect() == MobEffects.FIRE_RESISTANCE, "melon wine: fire resistance");
 		helper.assertTrue(DrinkItems.WHITE_WINE.get().buff().getEffect() == MobEffects.NIGHT_VISION, "white wine: night vision");
-		helper.assertTrue(DrinkItems.MEAD.get().buff().getEffect() == MobEffects.RESISTANCE, "mead: resistance");
+		helper.assertTrue(DrinkItems.MEAD.get().buff().getEffect() == MobEffects.DAMAGE_RESISTANCE, "mead: resistance");
 		helper.assertTrue(AgingBarrelBlockEntity.vesselOf(new ItemStack(DrinkItems.WHITE_WINE.get())) == DrinkItems.WINE_GLASS.get(), "white wine: wine glass");
 		helper.assertTrue(AgingBarrelBlockEntity.vesselOf(new ItemStack(DrinkItems.MEAD.get())) == DrinkItems.MUG.get(), "mead: mug (Jexxme)");
 		helper.assertTrue(new ItemStack(DrinkItems.MUG.get()).is(BarrelRegistry.DRINK_VESSELS) && new ItemStack(DrinkItems.WINE_GLASS.get()).is(BarrelRegistry.DRINK_VESSELS), "vessels");
@@ -1306,19 +1294,19 @@ public final class BarrelGameTests
 		ItemStack emptied = barrel.pour(fullBucket, null);
 		helper.assertTrue(emptied != null && emptied.is(Items.BUCKET), "a bucket of " + bottle + " pours in and comes back empty");
 		pour(helper, barrel, bottle, 1);
-		helper.assertValueEqual(barrel.servings(), 5, "a bucket and a bottle");
-		helper.assertValueEqual(barrel.stage(), BarrelStage.FERMENTING, "fermenting at first");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 5, "a bucket and a bottle");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.FERMENTING, "fermenting at first");
 		barrel.setAge(FERMENT);
-		helper.assertValueEqual(barrel.stage(), BarrelStage.YOUNG, "young after a day");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.YOUNG, "young after a day");
 		helper.assertTrue(barrel.content().is(young), "the young drink is " + young);
 		helper.assertTrue(barrel.tap(new ItemStack(otherVessel), null).isEmpty(), young + " is not tapped into a " + otherVessel);
 		ItemStack drink = barrel.tap(new ItemStack(vessel), null);
 		helper.assertTrue(drink.is(young) && AgingBarrelBlockEntity.vesselOf(drink) == vessel, "tapped " + drink);
 		barrel.setAge(FERMENT + AGE);
-		helper.assertValueEqual(barrel.stage(), BarrelStage.AGED, "aged after 3 more days");
+		VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.AGED, "aged after 3 more days");
 		ItemStack agedDrink = barrel.tap(new ItemStack(vessel), null);
 		helper.assertTrue(agedDrink.is(aged), "the aged drink is " + aged + ", got " + agedDrink);
-		helper.assertValueEqual(barrel.servings(), 3, "servings left");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 3, "servings left");
 		TestPlayer player = drinker(helper, new Vec3(2.5, 2.0, 2.5));
 		player.drink(agedDrink);
 		helper.assertTrue(player.getMainHandItem().is(vessel), "drinking gives the " + vessel + " back");
@@ -1331,30 +1319,29 @@ public final class BarrelGameTests
 	private static void tipsyFromDrinking(GameTestHelper helper) {
 		TestPlayer player = drinker(helper, new Vec3(16.5, 1.0, 16.5));
 		player.drink(new ItemStack(DrinkItems.BARLEY_ALE.get(), 3));
-		helper.assertValueEqual(Tipsy.getLevel(player), 1, "one drink, one level");
-		MobEffectInstance haste = player.getEffect(MobEffects.HASTE);
+		VBGameTests.assertValueEqual(helper, Tipsy.getLevel(player), 1, "one drink, one level");
+		MobEffectInstance haste = player.getEffect(MobEffects.DIG_SPEED);
 		helper.assertTrue(haste != null && haste.getAmplifier() == 0 && haste.getDuration() > DrinkItems.YOUNG_TICKS - 100, "the buff, Haste I for 45 s: " + haste);
-		helper.assertValueEqual(player.getMainHandItem().getCount(), 2, "one drunk from the stack");
-		helper.assertValueEqual(count(player, DrinkItems.MUG.get()), 1, "the mug comes back");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 2, "one drunk from the stack");
+		VBGameTests.assertValueEqual(helper, count(player, DrinkItems.MUG.get()), 1, "the mug comes back");
 		player.drink(new ItemStack(DrinkItems.AGED_RED_WINE.get()));
 		player.drink(new ItemStack(DrinkItems.WHEAT_BEER.get()));
-		helper.assertValueEqual(Tipsy.getLevel(player), 3, "three drinks");
+		VBGameTests.assertValueEqual(helper, Tipsy.getLevel(player), 3, "three drinks");
 		helper.assertTrue(player.getMainHandItem().is(DrinkItems.MUG.get()), "the last one leaves its mug in the hand");
 		MobEffectInstance regen = player.getEffect(MobEffects.REGENERATION);
 		helper.assertTrue(regen != null && regen.getAmplifier() == 1 && regen.getDuration() > DrinkItems.AGED_TICKS - 100, "aged red wine: Regeneration II for 90 s: " + regen);
 		// grape juice still sobers by one (M4)
 		player.drink(new ItemStack(BaseItems.GRAPE_JUICE.get()));
-		helper.assertValueEqual(Tipsy.getLevel(player), 2, "grape juice lowers it");
+		VBGameTests.assertValueEqual(helper, Tipsy.getLevel(player), 2, "grape juice lowers it");
 		// non-alcoholic mode: buffs stay, Tipsy doesn't come
-		boolean was = TipsyConfig.ENABLED.get();
 		TestPlayer sober = drinker(helper, new Vec3(28.5, 1.0, 4.5));
 		try {
-			TipsyConfig.ENABLED.set(false);
+			TipsyConfig.ENABLED.setForTest(false);
 			sober.drink(new ItemStack(DrinkItems.AGED_HARD_CIDER.get()));
-			helper.assertValueEqual(Tipsy.getLevel(sober), 0, "non-alcoholic mode");
+			VBGameTests.assertValueEqual(helper, Tipsy.getLevel(sober), 0, "non-alcoholic mode");
 			helper.assertTrue(sober.getEffect(MobEffects.ABSORPTION) != null, "the buff still comes");
 		} finally {
-			TipsyConfig.ENABLED.set(was);
+			TipsyConfig.ENABLED.setForTest(null);
 		}
 		helper.succeed();
 	}
@@ -1376,8 +1363,8 @@ public final class BarrelGameTests
 			jexxme.vineandbarrel.tipsy.Tipsy.setLevel(b, 3);
 			a.drink(new ItemStack(DrinkItems.BARLEY_ALE.get()));
 			b.drink(new ItemStack(DrinkItems.BARLEY_ALE.get()));
-			helper.assertValueEqual(events.get(), 1, "still a cheers");
-			helper.assertFalse(a.hasEffect(MobEffects.HASTE) || b.hasEffect(MobEffects.HASTE), "no Haste for either: too drunk, and the cheers adds none");
+			VBGameTests.assertValueEqual(helper, events.get(), 1, "still a cheers");
+			helper.assertFalse(a.hasEffect(MobEffects.DIG_SPEED) || b.hasEffect(MobEffects.DIG_SPEED), "no Haste for either: too drunk, and the cheers adds none");
 		} finally {
 			DrankTogether.removeListener(listener);
 		}
@@ -1406,19 +1393,19 @@ public final class BarrelGameTests
 		helper.startSequence()
 			.thenExecuteAfter(20, () -> {
 				b.drink(new ItemStack(DrinkItems.BARLEY_ALE.get()));
-				helper.assertValueEqual(events.get(), 1, "one cheers");
-				helper.assertTrue(b.getEffect(MobEffects.HASTE).getDuration() >= base + bonus - 1, "b's buff is longer: " + b.getEffect(MobEffects.HASTE));
-				helper.assertTrue(a.getEffect(MobEffects.HASTE).getDuration() > base - 20 + bonus - 2, "a's buff is longer too: " + a.getEffect(MobEffects.HASTE));
+				VBGameTests.assertValueEqual(helper, events.get(), 1, "one cheers");
+				helper.assertTrue(b.getEffect(MobEffects.DIG_SPEED).getDuration() >= base + bonus - 1, "b's buff is longer: " + b.getEffect(MobEffects.DIG_SPEED));
+				helper.assertTrue(a.getEffect(MobEffects.DIG_SPEED).getDuration() > base - 20 + bonus - 2, "a's buff is longer too: " + a.getEffect(MobEffects.DIG_SPEED));
 				// 8 blocks away: no cheers
 				farB.drink(new ItemStack(DrinkItems.BARLEY_ALE.get()));
-				helper.assertValueEqual(events.get(), 1, "too far apart");
-				helper.assertTrue(farB.getEffect(MobEffects.HASTE).getDuration() <= base, "no bonus far away");
+				VBGameTests.assertValueEqual(helper, events.get(), 1, "too far apart");
+				helper.assertTrue(farB.getEffect(MobEffects.DIG_SPEED).getDuration() <= base, "no bonus far away");
 			})
 			.thenExecuteAfter(Cheers.WINDOW_TICKS + 5, () -> {
 				// a drinks again long after b: too late for a cheers
 				int before = events.get();
 				a.drink(new ItemStack(DrinkItems.BARLEY_ALE.get()));
-				helper.assertValueEqual(events.get(), before, "more than 3 s later");
+				VBGameTests.assertValueEqual(helper, events.get(), before, "more than 3 s later");
 			})
 			.thenExecute(() -> DrankTogether.removeListener(listener))
 			.thenSucceed();
@@ -1437,21 +1424,21 @@ public final class BarrelGameTests
 		BlockPos table = new BlockPos(2, 1, 2);
 		BlockPos spot = table.above();
 		helper.setBlock(table, Blocks.OAK_PLANKS);
-		Player placer = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player placer = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		placer.setShiftKeyDown(true);
 		Vec3[] where = {new Vec3(0.25, 1.0, 0.25), new Vec3(0.75, 1.0, 0.25), new Vec3(0.25, 1.0, 0.75), new Vec3(0.75, 1.0, 0.75)};
 		for (Vec3 at : where) {
 			placer.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.MUG.get()));
 			DrinkPlacing.place(sneakUse(helper, placer, table, at));
 		}
-		PlacedDrinksBlockEntity drinks = helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class);
-		helper.assertValueEqual(drinks.count(), 4, "four mugs on the table");
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		PlacedDrinksBlockEntity drinks = VBGameTests.blockEntity(helper, spot, PlacedDrinksBlockEntity.class);
+		VBGameTests.assertValueEqual(helper, drinks.count(), 4, "four mugs on the table");
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		for (int left = 3; left >= 1; left--) {
 			player.gameMode.destroyBlock(helper.absolutePos(spot));
 			helper.assertBlockPresent(BarrelRegistry.PLACED_DRINKS.get(), spot);
-			helper.assertValueEqual(helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class).count(), left, "mugs left after a break");
+			VBGameTests.assertValueEqual(helper, VBGameTests.blockEntity(helper, spot, PlacedDrinksBlockEntity.class).count(), left, "mugs left after a break");
 		}
 		player.gameMode.destroyBlock(helper.absolutePos(spot));
 		helper.assertBlockNotPresent(BarrelRegistry.PLACED_DRINKS.get(), spot);
@@ -1459,7 +1446,7 @@ public final class BarrelGameTests
 		for (ItemEntity entity : dropsAround(helper, spot)) {
 			if (entity.getItem().is(DrinkItems.MUG.get())) mugs += entity.getItem().getCount();
 		}
-		helper.assertValueEqual(mugs, 4, "every mug dropped, one per break");
+		VBGameTests.assertValueEqual(helper, mugs, 4, "every mug dropped, one per break");
 		player.discard();
 		helper.succeed();
 	}
@@ -1469,20 +1456,20 @@ public final class BarrelGameTests
 		BlockPos table = new BlockPos(2, 1, 2);
 		BlockPos spot = table.above();
 		helper.setBlock(table, Blocks.OAK_PLANKS);
-		Player placer = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player placer = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		placer.setShiftKeyDown(true);
 		placer.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.RED_WINE.get()));
 		DrinkPlacing.place(sneakUse(helper, placer, table, new Vec3(0.25, 1.0, 0.25)));
 		placer.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.MUG.get()));
 		DrinkPlacing.place(sneakUse(helper, placer, table, new Vec3(0.75, 1.0, 0.75)));
-		helper.assertValueEqual(helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class).count(), 2, "two drinks on the table");
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		VBGameTests.assertValueEqual(helper, VBGameTests.blockEntity(helper, spot, PlacedDrinksBlockEntity.class).count(), 2, "two drinks on the table");
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.CREATIVE);
 		player.gameMode.destroyBlock(helper.absolutePos(spot));
-		helper.assertValueEqual(helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class).count(), 1, "one knocked off");
+		VBGameTests.assertValueEqual(helper, VBGameTests.blockEntity(helper, spot, PlacedDrinksBlockEntity.class).count(), 1, "one knocked off");
 		player.gameMode.destroyBlock(helper.absolutePos(spot));
 		helper.assertBlockNotPresent(BarrelRegistry.PLACED_DRINKS.get(), spot);
-		helper.assertValueEqual(dropsAround(helper, spot).size(), 0, "nothing dropped in creative");
+		VBGameTests.assertValueEqual(helper, dropsAround(helper, spot).size(), 0, "nothing dropped in creative");
 		player.discard();
 		helper.succeed();
 	}
@@ -1493,7 +1480,7 @@ public final class BarrelGameTests
 		BlockPos spot = table.above();
 		helper.setBlock(table, Blocks.OAK_PLANKS);
 		helper.setBlock(spot, Blocks.WATER);
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		player.setShiftKeyDown(true);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.WINE_GLASS.get()));
 		helper.assertTrue(DrinkPlacing.place(sneakUse(helper, player, table, new Vec3(0.25, 1.0, 0.25))).consumesAction(), "placed in water");
@@ -1530,14 +1517,14 @@ public final class BarrelGameTests
 
 	/** Review: a second, third and fourth drink put down in the same waterlogged block keep the water. */
 	private static void moreUnderWater(GameTestHelper helper) {
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		BlockPos spot = drinkUnderWater(helper, player);
 		Vec3[] where = {new Vec3(0.75, 0.2, 0.25), new Vec3(0.25, 0.2, 0.75), new Vec3(0.75, 0.2, 0.75)};
 		for (Vec3 at : where) {
 			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.MUG.get()));
 			helper.assertTrue(DrinkPlacing.place(sneakUse(helper, player, spot, at)).consumesAction(), "another one placed");
 		}
-		helper.assertValueEqual(helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class).count(), 4, "four drinks");
+		VBGameTests.assertValueEqual(helper, VBGameTests.blockEntity(helper, spot, PlacedDrinksBlockEntity.class).count(), 4, "four drinks");
 		helper.assertTrue(helper.getBlockState(spot).getValue(PlacedDrinksBlock.WATERLOGGED), "still waterlogged");
 		assertWaterSource(helper, spot, "the water is kept");
 		helper.succeed();
@@ -1545,8 +1532,8 @@ public final class BarrelGameTests
 
 	/** Review: a player breaking the last drink under water leaves the water (and gets the drink). */
 	private static void lastBrokenUnderWater(GameTestHelper helper) {
-		BlockPos spot = drinkUnderWater(helper, helper.makeMockPlayer(GameType.SURVIVAL));
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		BlockPos spot = drinkUnderWater(helper, VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL));
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		player.gameMode.destroyBlock(helper.absolutePos(spot));
 		helper.assertBlockNotPresent(BarrelRegistry.PLACED_DRINKS.get(), spot);
@@ -1555,20 +1542,20 @@ public final class BarrelGameTests
 		for (ItemEntity entity : dropsAround(helper, spot)) {
 			if (entity.getItem().is(DrinkItems.WINE_GLASS.get())) glasses += entity.getItem().getCount();
 		}
-		helper.assertValueEqual(glasses, 1, "the glass dropped");
+		VBGameTests.assertValueEqual(helper, glasses, 1, "the glass dropped");
 		player.discard();
 		helper.succeed();
 	}
 
 	/** Review: a waterlogged drink whose table goes turns into its water (and drops the drink). */
 	private static void unsupportedUnderWater(GameTestHelper helper) {
-		BlockPos spot = drinkUnderWater(helper, helper.makeMockPlayer(GameType.SURVIVAL));
+		BlockPos spot = drinkUnderWater(helper, VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL));
 		// a solid floor under the table, so the water has nowhere to fall to in this tick
 		helper.setBlock(spot.below(2), Blocks.STONE);
 		helper.setBlock(spot.below(), Blocks.AIR);
 		helper.assertBlockNotPresent(BarrelRegistry.PLACED_DRINKS.get(), spot);
 		helper.assertTrue(helper.getBlockState(spot).is(Blocks.WATER), "turned into water: " + helper.getBlockState(spot));
-		helper.assertValueEqual(dropsAround(helper, spot).size(), 1, "the glass dropped");
+		VBGameTests.assertValueEqual(helper, dropsAround(helper, spot).size(), 1, "the glass dropped");
 		helper.succeed();
 	}
 
@@ -1577,20 +1564,20 @@ public final class BarrelGameTests
 		BlockPos table = new BlockPos(2, 1, 2);
 		BlockPos spot = table.above();
 		helper.setBlock(table, Blocks.OAK_PLANKS);
-		Player placer = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player placer = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		placer.setShiftKeyDown(true);
 		placer.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.RED_WINE.get()));
 		DrinkPlacing.place(sneakUse(helper, placer, table, new Vec3(0.25, 1.0, 0.25)));
 		placer.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.AGED_BARLEY_ALE.get()));
 		DrinkPlacing.place(sneakUse(helper, placer, table, new Vec3(0.75, 1.0, 0.75)));
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		player.gameMode.destroyBlock(helper.absolutePos(spot));
-		PlacedDrinksBlockEntity drinks = helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class);
-		helper.assertValueEqual(drinks.count(), 1, "one knocked off, one left");
+		PlacedDrinksBlockEntity drinks = VBGameTests.blockEntity(helper, spot, PlacedDrinksBlockEntity.class);
+		VBGameTests.assertValueEqual(helper, drinks.count(), 1, "one knocked off, one left");
 		List<ItemEntity> drops = dropsAround(helper, spot);
-		helper.assertValueEqual(drops.size(), 1, "one drop");
-		ItemStack dropped = drops.getFirst().getItem();
+		VBGameTests.assertValueEqual(helper, drops.size(), 1, "one drop");
+		ItemStack dropped = drops.get(0).getItem();
 		helper.assertTrue(dropped.is(DrinkItems.RED_WINE.get()) || dropped.is(DrinkItems.AGED_BARLEY_ALE.get()), "a full drink dropped: " + dropped);
 		helper.assertTrue(!drinks.getItem(0).isEmpty() || !drinks.getItem(3).isEmpty(), "the other one still stands");
 		player.discard();
@@ -1605,7 +1592,7 @@ public final class BarrelGameTests
 		var shape = state.getShape(helper.getLevel(), at);
 		helper.assertTrue(shape == state.getShape(helper.getLevel(), at), "cached: the same shape object");
 		helper.assertTrue(shape == state.setValue(PlacedDrinksBlock.WATERLOGGED, true).getShape(helper.getLevel(), at), "water doesn't change it");
-		helper.assertValueEqual(shape.bounds(), new AABB(2 / 16.0, 0, 2 / 16.0, 14 / 16.0, 6 / 16.0, 14 / 16.0), "a mug and a glass in opposite corners");
+		VBGameTests.assertValueEqual(helper, shape.bounds(), new AABB(2 / 16.0, 0, 2 / 16.0, 14 / 16.0, 6 / 16.0, 14 / 16.0), "a mug and a glass in opposite corners");
 		helper.succeed();
 	}
 
@@ -1613,15 +1600,20 @@ public final class BarrelGameTests
 	private static void soundLikeTheirVessel(GameTestHelper helper) {
 		for (DrinkItem drink : DrinkItems.allDrinks()) {
 			PlacedDrink vessel = PlacedDrink.of(new ItemStack(drink));
-			var consumable = new ItemStack(drink).get(DataComponents.CONSUMABLE);
-			helper.assertTrue(consumable != null && consumable.sound().value() == (vessel.isMug() ? BarrelRegistry.MUG_DRINK : BarrelRegistry.WINE_GLASS_DRINK).value(),
-				drink + " drinks with its vessel's sound");
+			// 1.20.1 has no consumable component: the item itself says how it is used and how that sounds (sips and the last gulp)
+			var sound = (vessel.isMug() ? BarrelRegistry.MUG_DRINK : BarrelRegistry.WINE_GLASS_DRINK).get();
+			// no food component either: the item is the food (Item#isEdible, its FoodProperties)
+			helper.assertTrue(new ItemStack(drink).isEdible() && drink.getFoodProperties() != null
+					&& drink.getUseAnimation(new ItemStack(drink)) == net.minecraft.world.item.UseAnim.DRINK,
+				drink + " is drunk");
+			VBGameTests.assertValueEqual(helper, drink.vessel(), vessel.isMug() ? DrinkItems.MUG.get() : DrinkItems.WINE_GLASS.get(), drink + " names its vessel");
+			helper.assertTrue(drink.getDrinkingSound() == sound && drink.getEatingSound() == sound, drink + " drinks with its vessel's sound");
 		}
 		float wine = DrinkItems.pourPitch(new ItemStack(DrinkItems.RED_WINE.get()));
 		float cider = DrinkItems.pourPitch(new ItemStack(DrinkItems.HARD_CIDER.get()));
 		float ale = DrinkItems.pourPitch(new ItemStack(DrinkItems.BARLEY_ALE.get()));
 		helper.assertTrue(wine > cider && cider > ale, "wine pours lighter than cider, cider than ale: " + wine + " " + cider + " " + ale);
-		helper.assertValueEqual(DrinkItems.pourPitch(new ItemStack(Items.WATER_BUCKET)), 1.0F, "anything else as it is");
+		VBGameTests.assertValueEqual(helper, DrinkItems.pourPitch(new ItemStack(Items.WATER_BUCKET)), 1.0F, "anything else as it is");
 		helper.succeed();
 	}
 
@@ -1630,15 +1622,15 @@ public final class BarrelGameTests
 		BlockPos table = new BlockPos(2, 1, 2);
 		BlockPos spot = table.above();
 		helper.setBlock(table, Blocks.OAK_PLANKS);
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		player.setShiftKeyDown(true);
 		ItemStack wine = new ItemStack(DrinkItems.AGED_RED_WINE.get(), 2);
-		wine.set(DataComponents.CUSTOM_NAME, Component.literal("The good one"));
+		wine.setHoverName(Component.literal("The good one"));
 		player.setItemInHand(InteractionHand.MAIN_HAND, wine);
 		helper.assertTrue(DrinkPlacing.place(sneakUse(helper, player, table, new Vec3(0.75, 1.0, 0.25))).consumesAction(), "placed");
 		helper.assertTrue(helper.getBlockState(spot).is(BarrelRegistry.PLACED_DRINKS.get()), "a placed-drinks block");
-		helper.assertValueEqual(helper.getBlockState(spot).getValue(PlacedDrinksBlock.SPOT.get(1)), PlacedDrink.GLASS_AGED, "north-east spot holds a glass of aged wine");
-		helper.assertValueEqual(wine.getCount(), 1, "one used");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(spot).getValue(PlacedDrinksBlock.SPOT.get(1)), PlacedDrink.GLASS_AGED, "north-east spot holds a glass of aged wine");
+		VBGameTests.assertValueEqual(helper, wine.getCount(), 1, "one used");
 		// more onto the same block, pointing at the block itself
 		ItemStack[] more = {new ItemStack(DrinkItems.MUG.get()), new ItemStack(DrinkItems.WHEAT_BEER.get()), new ItemStack(DrinkItems.WINE_GLASS.get())};
 		Vec3[] where = {new Vec3(0.25, 0.1, 0.25), new Vec3(0.25, 0.1, 0.75), new Vec3(0.75, 0.1, 0.75)};
@@ -1648,18 +1640,18 @@ public final class BarrelGameTests
 			helper.assertTrue(more[i].isEmpty(), "used #" + (i + 2));
 		}
 		BlockState state = helper.getBlockState(spot);
-		helper.assertValueEqual(state.getValue(PlacedDrinksBlock.SPOT.get(0)), PlacedDrink.MUG, "spot 0");
-		helper.assertValueEqual(state.getValue(PlacedDrinksBlock.SPOT.get(2)), PlacedDrink.MUG_FULL, "spot 2");
-		helper.assertValueEqual(state.getValue(PlacedDrinksBlock.SPOT.get(3)), PlacedDrink.GLASS, "spot 3");
+		VBGameTests.assertValueEqual(helper, state.getValue(PlacedDrinksBlock.SPOT.get(0)), PlacedDrink.MUG, "spot 0");
+		VBGameTests.assertValueEqual(helper, state.getValue(PlacedDrinksBlock.SPOT.get(2)), PlacedDrink.MUG_FULL, "spot 2");
+		VBGameTests.assertValueEqual(helper, state.getValue(PlacedDrinksBlock.SPOT.get(3)), PlacedDrink.GLASS, "spot 3");
 		ItemStack fifth = new ItemStack(DrinkItems.BARLEY_ALE.get());
 		player.setItemInHand(InteractionHand.MAIN_HAND, fifth);
 		helper.assertFalse(DrinkPlacing.place(sneakUse(helper, player, spot, new Vec3(0.5, 0.1, 0.5))).consumesAction(), "a fifth doesn't fit");
-		helper.assertValueEqual(fifth.getCount(), 1, "the fifth is kept");
-		PlacedDrinksBlockEntity drinks = helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class);
+		VBGameTests.assertValueEqual(helper, fifth.getCount(), 1, "the fifth is kept");
+		PlacedDrinksBlockEntity drinks = VBGameTests.blockEntity(helper, spot, PlacedDrinksBlockEntity.class);
 		ItemStack kept = drinks.getItem(1);
 		helper.assertTrue(kept.is(DrinkItems.AGED_RED_WINE.get()) && kept.getHoverName().getString().equals("The good one"), "keeps its own item: " + kept);
 		// not sneaking: drinking stays drinking (the item use isn't taken over)
-		Player walker = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player walker = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		walker.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.BARLEY_ALE.get()));
 		helper.assertTrue(walker.getMainHandItem().useOn(sneakUse(helper, walker, new BlockPos(0, 1, 0), new Vec3(0.5, 1, 0.5))) == InteractionResult.PASS, "no placing without sneaking");
 		helper.succeed();
@@ -1670,7 +1662,7 @@ public final class BarrelGameTests
 		BlockPos table = new BlockPos(2, 1, 2);
 		BlockPos spot = table.above();
 		helper.setBlock(table, Blocks.OAK_PLANKS);
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		player.setShiftKeyDown(true);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.RED_WINE.get()));
 		DrinkPlacing.place(sneakUse(helper, player, table, new Vec3(0.25, 1.0, 0.25)));
@@ -1680,15 +1672,18 @@ public final class BarrelGameTests
 		player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 		BlockPos absolute = helper.absolutePos(spot);
 		helper.useBlock(spot, player, new BlockHitResult(Vec3.atLowerCornerOf(absolute).add(0.8, 0.2, 0.8), Direction.UP, absolute, false));
-		helper.assertValueEqual(count(player, DrinkItems.BARLEY_ALE.get()), 1, "picked up the ale pointed at");
-		helper.assertValueEqual(helper.getBlockState(spot).getValue(PlacedDrinksBlock.SPOT.get(3)), PlacedDrink.NONE, "its spot is free");
+		VBGameTests.assertValueEqual(helper, count(player, DrinkItems.BARLEY_ALE.get()), 1, "picked up the ale pointed at");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(spot).getValue(PlacedDrinksBlock.SPOT.get(3)), PlacedDrink.NONE, "its spot is free");
 		// holding a drink, a right-click drinks it rather than touching the table (placing always needs sneaking)
 		BlockHitResult hit = new BlockHitResult(Vec3.atLowerCornerOf(absolute).add(0.8, 0.2, 0.8), Direction.UP, absolute, false);
-		helper.assertTrue(helper.getBlockState(spot).useItemOn(player.getMainHandItem(), helper.getLevel(), player, InteractionHand.MAIN_HAND, hit) == InteractionResult.PASS,
+		helper.assertTrue(player.getMainHandItem().is(DrinkItems.BARLEY_ALE.get()), "the ale picked up is in the hand");
+		// 1.20.1 has one use method: a pass goes on to the item's own use (1.21.1: "skip the default block interaction")
+		helper.assertTrue(helper.getBlockState(spot).use(helper.getLevel(), player, InteractionHand.MAIN_HAND, hit) == InteractionResult.PASS,
 			"a drink in hand passes to drinking");
+		VBGameTests.assertValueEqual(helper, VBGameTests.blockEntity(helper, spot, PlacedDrinksBlockEntity.class).count(), 1, "and picks nothing up");
 		player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 		helper.useBlock(spot, player, new BlockHitResult(Vec3.atLowerCornerOf(absolute).add(0.8, 0.2, 0.8), Direction.UP, absolute, false));
-		helper.assertValueEqual(count(player, DrinkItems.RED_WINE.get()), 1, "then the nearest other one");
+		VBGameTests.assertValueEqual(helper, count(player, DrinkItems.RED_WINE.get()), 1, "then the nearest other one");
 		helper.assertTrue(helper.getBlockState(spot).isAir(), "the block goes with the last drink");
 		// breaking the table drops what stands on it
 		player.setShiftKeyDown(true);
@@ -1704,68 +1699,67 @@ public final class BarrelGameTests
 			if (entity.getItem().is(DrinkItems.AGED_WHEAT_BEER.get())) beers += entity.getItem().getCount();
 			if (entity.getItem().is(DrinkItems.WINE_GLASS.get())) glasses += entity.getItem().getCount();
 		}
-		helper.assertValueEqual(beers, 1, "the beer dropped");
-		helper.assertValueEqual(glasses, 1, "the glass dropped");
+		VBGameTests.assertValueEqual(helper, beers, 1, "the beer dropped");
+		VBGameTests.assertValueEqual(helper, glasses, 1, "the glass dropped");
 		helper.succeed();
 	}
 
 	// ------------------------------------------------------------------ review round: time, fire, explosions, edge paths
 
-	/** The day clock, as {@code /time} and sleeping move it. */
-	private static Holder<net.minecraft.world.clock.WorldClock> clock(GameTestHelper helper) {
-		return helper.getLevel().dimensionType().defaultClock().orElseThrow();
-	}
-
 	/**
 	 * Sleeping through the night and {@code /time add} move a barrel along; {@code /time set} backwards never un-ages
 	 * it. All within one tick, and the clock is put back, so no other test sees the jumps.
+	 * <p>
+	 * 1.20.1: the day clock is the level's day time ({@code ServerLevel#setDayTime}, which is what {@code /time} and
+	 * waking up call; 26.x: the dimension's world clock).
 	 */
 	private static void agesWithSleepAndTime(GameTestHelper helper) {
-		var clocks = helper.getLevel().getServer().clockManager();
-		var clock = clock(helper);
-		long before = clocks.getInstance(clock).totalTicks();
+		ServerLevel level = helper.getLevel();
+		long before = level.getDayTime();
 		try {
 			AgingBarrelBlockEntity barrel = wineBarrel(helper, POS, 2, 100);
-			// a night slept: vanilla (and NeoForge's default sleep adjustment) moves the clock to the wake-up marker
-			clocks.moveToTimeMarker(clock, net.minecraft.world.clock.ClockTimeMarkers.WAKE_UP_FROM_SLEEP);
-			long slept = clocks.getInstance(clock).totalTicks() - before;
+			// a night slept: vanilla (and Forge's default sleep adjustment) moves the clock to the next morning
+			// (ServerLevel#tick: the next multiple of a day)
+			long morning = before + 24000L;
+			level.setDayTime(morning - morning % 24000L);
+			long slept = level.getDayTime() - before;
 			helper.assertTrue(slept > 0, "the night was skipped: " + slept);
-			helper.assertValueEqual(barrel.age(), 100L + slept, "sleeping ages the barrel");
+			VBGameTests.assertValueEqual(helper, barrel.age(), 100L + slept, "sleeping ages the barrel");
 			tickBarrel(helper, POS);
 			long afterSleep = barrel.age();
 			// /time set back to before the night: no un-aging
-			clocks.setTotalTicks(clock, before);
+			level.setDayTime(before);
 			tickBarrel(helper, POS);
-			helper.assertValueEqual(barrel.age(), afterSleep, "setting the time back doesn't un-age it");
+			VBGameTests.assertValueEqual(helper, barrel.age(), afterSleep, "setting the time back doesn't un-age it");
 			// /time add a day: a day older
-			clocks.addTicks(clock, FERMENT);
-			helper.assertValueEqual(barrel.age(), afterSleep + FERMENT, "/time add ages it");
+			level.setDayTime(level.getDayTime() + FERMENT);
+			VBGameTests.assertValueEqual(helper, barrel.age(), afterSleep + FERMENT, "/time add ages it");
 			tickBarrel(helper, POS);
-			helper.assertValueEqual(barrel.stage(), BarrelStage.YOUNG, "a day later it is wine");
-			helper.assertValueEqual(key((Component) args(BarrelStatus.of(barrel))[2]), "message.vineandbarrel.aging_barrel.aging", "the status line agrees");
+			VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.YOUNG, "a day later it is wine");
+			VBGameTests.assertValueEqual(helper, key((Component) args(BarrelStatus.of(barrel))[2]), "message.vineandbarrel.aging_barrel.aging", "the status line agrees");
 			helper.succeed();
 		} finally {
-			clocks.setTotalTicks(clock, before);
+			level.setDayTime(before);
 		}
 	}
 
 	/** With the daylight cycle off the clock stands still, but game time goes on and so does the barrel. */
 	private static void agesWithDaylightCycleOff(GameTestHelper helper) {
 		MinecraftServer server = helper.getLevel().getServer();
-		var rules = server.getGlobalGameRules();
-		boolean was = rules.get(net.minecraft.world.level.gamerules.GameRules.ADVANCE_TIME);
-		rules.set(net.minecraft.world.level.gamerules.GameRules.ADVANCE_TIME, false, server);
+		var rule = server.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT);
+		boolean was = rule.get();
+		rule.set(false, server);
 		AgingBarrelBlockEntity barrel = wineBarrel(helper, POS, 2, 100);
-		long clockBefore = server.clockManager().getInstance(clock(helper)).totalTicks();
+		long clockBefore = helper.getLevel().getDayTime();
 		long gameBefore = helper.getLevel().getGameTime();
 		helper.runAfterDelay(20, () -> {
 			try {
-				helper.assertValueEqual(server.clockManager().getInstance(clock(helper)).totalTicks(), clockBefore, "the clock stood still");
+				VBGameTests.assertValueEqual(helper, helper.getLevel().getDayTime(), clockBefore, "the clock stood still");
 				long passed = helper.getLevel().getGameTime() - gameBefore;
 				helper.assertTrue(passed >= 20, "game time went on");
-				helper.assertValueEqual(barrel.age(), 100L + passed, "the barrel aged on game time");
+				VBGameTests.assertValueEqual(helper, barrel.age(), 100L + passed, "the barrel aged on game time");
 			} finally {
-				rules.set(net.minecraft.world.level.gamerules.GameRules.ADVANCE_TIME, was, server);
+				rule.set(was, server);
 			}
 			helper.succeed();
 		});
@@ -1775,7 +1769,7 @@ public final class BarrelGameTests
 	private static void creativeBreak(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = wineBarrel(helper, POS, 4, 0);
 		barrel.setStack(AgingBarrelBlockEntity.VESSEL_SLOT, new ItemStack(DrinkItems.WINE_GLASS.get(), 2));
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.CREATIVE);
 		player.gameMode.destroyBlock(helper.absolutePos(POS));
 		helper.assertBlockNotPresent(BarrelRegistry.AGING_BARREL.get(), POS);
@@ -1784,7 +1778,7 @@ public final class BarrelGameTests
 			helper.assertFalse(entity.getItem().is(BarrelRegistry.AGING_BARREL_ITEM.get()), "no barrel item in creative");
 			if (entity.getItem().is(DrinkItems.WINE_GLASS.get())) glasses += entity.getItem().getCount();
 		}
-		helper.assertValueEqual(glasses, 2, "slot items drop");
+		VBGameTests.assertValueEqual(helper, glasses, 2, "slot items drop");
 		player.discard();
 		helper.succeed();
 	}
@@ -1802,7 +1796,7 @@ public final class BarrelGameTests
 			ItemStack stack = entity.getItem();
 			if (stack.is(BarrelRegistry.AGING_BARREL_ITEM.get())) {
 				barrels += stack.getCount();
-				helper.assertValueEqual(AgingBarrelItem.contentsOf(stack).servings(), 5, "a dropped barrel keeps its whole batch");
+				VBGameTests.assertValueEqual(helper, AgingBarrelItem.contentsOf(stack).servings(), 5, "a dropped barrel keeps its whole batch");
 			} else if (stack.is(DrinkItems.WINE_GLASS.get())) {
 				glasses += stack.getCount();
 			}
@@ -1821,8 +1815,8 @@ public final class BarrelGameTests
 		}
 		helper.runAfterDelay(240, () -> {
 			helper.assertBlockPresent(BarrelRegistry.AGING_BARREL.get(), POS);
-			helper.assertTrue(barrel == helper.getBlockEntity(POS, AgingBarrelBlockEntity.class), "the same barrel");
-			helper.assertValueEqual(barrel.servings(), 3, "batch intact");
+			helper.assertTrue(barrel == VBGameTests.blockEntity(helper, POS, AgingBarrelBlockEntity.class), "the same barrel");
+			VBGameTests.assertValueEqual(helper, barrel.servings(), 3, "batch intact");
 			helper.succeed();
 		});
 	}
@@ -1836,13 +1830,13 @@ public final class BarrelGameTests
 		}
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.WINE_GLASS.get(), 2));
 		helper.useBlock(POS, player);
-		helper.assertValueEqual(player.getMainHandItem().getCount(), 1, "one glass used");
-		helper.assertValueEqual(barrel.servings(), 1, "one tapped");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 1, "one glass used");
+		VBGameTests.assertValueEqual(helper, barrel.servings(), 1, "one tapped");
 		int wines = 0;
 		for (ItemEntity entity : helper.getLevel().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(3.0D))) {
 			if (entity.getItem().is(DrinkItems.RED_WINE.get())) wines += entity.getItem().getCount();
 		}
-		helper.assertValueEqual(wines, 1, "the wine drops at the player");
+		VBGameTests.assertValueEqual(helper, wines, 1, "the wine drops at the player");
 		helper.succeed();
 	}
 
@@ -1850,25 +1844,25 @@ public final class BarrelGameTests
 	private static void fillGauge(GameTestHelper helper) {
 		AgingBarrelBlockEntity barrel = placeBarrel(helper, POS);
 		pour(helper, barrel, BaseItems.GRAPE_JUICE_BUCKET.get(), 1);
-		helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.FILL), 4, "a bucket: 4");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.FILL), 4, "a bucket: 4");
 		pour(helper, barrel, BaseItems.GRAPE_JUICE.get(), 3);
-		helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.FILL), 7, "7");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.FILL), 7, "7");
 		barrel.takeBack(new ItemStack(Items.GLASS_BOTTLE), null);
-		helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.FILL), 6, "undo: 6");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.FILL), 6, "undo: 6");
 		barrel.setAge(FERMENT);
 		ItemStack glasses = new ItemStack(DrinkItems.WINE_GLASS.get(), 6);
 		for (int i = 5; i >= 0; i--) {
 			barrel.tap(glasses, null);
-			helper.assertValueEqual(helper.getBlockState(POS).getValue(AgingBarrelBlock.FILL), i, "tapped down to " + i);
+			VBGameTests.assertValueEqual(helper, helper.getBlockState(POS).getValue(AgingBarrelBlock.FILL), i, "tapped down to " + i);
 		}
 		// placed from an item with a batch: the gauge shows it after the first tick
 		AgingBarrelBlockEntity other = wineBarrel(helper, POS.east(), 5, 0);
 		ItemStack item = new ItemStack(BarrelRegistry.AGING_BARREL_ITEM.get());
-		item.set(BarrelRegistry.BARREL_CONTENTS.get(), other.contents());
+		AgingBarrelItem.setContents(item, other.contents());
 		helper.setBlock(POS.west(), BarrelRegistry.AGING_BARREL.get());
-		helper.getBlockEntity(POS.west(), AgingBarrelBlockEntity.class).applyComponentsFromItemStack(item);
+		VBGameTests.blockEntity(helper, POS.west(), AgingBarrelBlockEntity.class).applyItem(item);
 		tickBarrel(helper, POS.west());
-		helper.assertValueEqual(helper.getBlockState(POS.west()).getValue(AgingBarrelBlock.FILL), 5, "placed with 5");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(POS.west()).getValue(AgingBarrelBlock.FILL), 5, "placed with 5");
 		helper.succeed();
 	}
 
@@ -1880,13 +1874,13 @@ public final class BarrelGameTests
 		AgingBarrelBlockEntity empty = placeBarrel(helper, POS);
 		AgingBarrelBlockEntity wine = wineBarrel(helper, POS.east(), 3, FERMENT);
 		AgingBarrelBlockEntity juice = wineBarrel(helper, POS.west(), 3, 0);
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		record Case(AgingBarrelBlockEntity barrel, ItemStack held, boolean claimed, String what) {
 		}
 		List<Case> cases = List.of(
 			new Case(empty, new ItemStack(DrinkItems.RED_WINE.get()), false, "a drink at an empty barrel"),
 			new Case(wine, new ItemStack(DrinkItems.BARLEY_ALE.get()), false, "a drink at a wine barrel"),
-			new Case(empty, net.minecraft.world.item.alchemy.PotionContents.createItemStack(Items.POTION, net.minecraft.world.item.alchemy.Potions.WATER), false, "a water bottle"),
+			new Case(empty, net.minecraft.world.item.alchemy.PotionUtils.setPotion(new ItemStack(Items.POTION), net.minecraft.world.item.alchemy.Potions.WATER), false, "a water bottle"),
 			new Case(empty, new ItemStack(Items.WATER_BUCKET), false, "a water bucket"),
 			new Case(wine, new ItemStack(Items.MILK_BUCKET), false, "a milk bucket"),
 			new Case(empty, new ItemStack(Items.STONE), false, "a block"),
@@ -1899,33 +1893,40 @@ public final class BarrelGameTests
 		for (Case c : cases) {
 			BlockState state = c.barrel().getBlockState();
 			BlockHitResult at = new BlockHitResult(Vec3.atCenterOf(c.barrel().getBlockPos()), Direction.NORTH, c.barrel().getBlockPos(), false);
-			InteractionResult result = state.useItemOn(c.held().copy(), helper.getLevel(), player, InteractionHand.MAIN_HAND, at);
-			helper.assertValueEqual(result.consumesAction(), c.claimed(), c.what());
+			// 1.20.1's one use method reads the hand
+			player.setItemInHand(InteractionHand.MAIN_HAND, c.held().copy());
+			InteractionResult result = state.use(helper.getLevel(), player, InteractionHand.MAIN_HAND, at);
+			VBGameTests.assertValueEqual(helper, result.consumesAction(), c.claimed(), c.what());
 		}
 		helper.succeed();
 	}
 
 	/** A data-pack drink without a vessel is rejected with a clear message; two recipes on one base: the lowest id, always. */
 	private static void recipeValidation(GameTestHelper helper) {
-		var ops = helper.getLevel().registryAccess().createSerializationContext(com.mojang.serialization.JsonOps.INSTANCE);
 		com.google.gson.JsonObject good = new com.google.gson.JsonObject();
 		good.addProperty("base", "minecraft:apple");
 		good.addProperty("young", "vineandbarrel:hard_cider");
 		good.addProperty("aged", "vineandbarrel:aged_hard_cider");
 		com.google.gson.JsonObject bad = good.deepCopy();
 		bad.addProperty("young", "minecraft:stone");
-		var goodResult = AgingRecipe.CODEC.codec().parse(ops, good);
-		helper.assertTrue(goodResult.isSuccess(), "a valid recipe parses: " + goodResult);
-		helper.assertValueEqual(goodResult.getOrThrow().fermentingTime(), FERMENT, "default fermenting time");
-		helper.assertTrue(goodResult.getOrThrow().problem().isEmpty(), "and is usable");
-		AgingRecipe badRecipe = AgingRecipe.CODEC.codec().parse(ops, bad).getOrThrow();
-		helper.assertTrue(badRecipe.problem().isPresent() && badRecipe.problem().get().contains("use_remainder"), "a drink without a vessel: " + badRecipe.problem());
+		// 1.20.1: a recipe file is read by AgingRecipe.fromJson (no codec), which throws on a file it can't read
+		AgingRecipe goodRecipe;
+		try {
+			goodRecipe = AgingRecipe.fromJson(VineAndBarrel.id("test/good"), good);
+		} catch (com.google.gson.JsonParseException e) {
+			throw VBGameTests.assertionException(helper, "a valid recipe parses: " + e);
+		}
+		VBGameTests.assertValueEqual(helper, goodRecipe.fermentingTime(), FERMENT, "default fermenting time");
+		helper.assertTrue(goodRecipe.problem().isEmpty(), "and is usable");
+		AgingRecipe badRecipe = AgingRecipe.fromJson(VineAndBarrel.id("test/bad"), bad);
+		// 1.20.1: a drink names its vessel itself (DrinkItem#vessel) or as its item's crafting remainder (1.21.1: its
+		// food's using_converts_to; 26.x: its use_remainder component)
+		helper.assertTrue(badRecipe.problem().isPresent() && badRecipe.problem().get().contains("crafting remainder"), "a drink without a vessel: " + badRecipe.problem());
 		List<String> reports = new ArrayList<>();
-		var holders = List.of(new net.minecraft.world.item.crafting.RecipeHolder<>(ResourceKey.create(Registries.RECIPE, VineAndBarrel.id("test/bad")), badRecipe),
-			new net.minecraft.world.item.crafting.RecipeHolder<>(ResourceKey.create(Registries.RECIPE, VineAndBarrel.id("test/good")), goodResult.getOrThrow()));
-		var usable = jexxme.vineandbarrel.barrel.AgingRecipes.usable(holders, reports::add);
-		helper.assertValueEqual(usable.size(), 1, "the bad one is left out");
-		helper.assertTrue(reports.size() == 1 && reports.get(0).contains("vineandbarrel:test/bad") && reports.get(0).contains("use_remainder"), "with a clear message: " + reports);
+		var usable = jexxme.vineandbarrel.barrel.AgingRecipes.usable(List.of(badRecipe, goodRecipe), reports::add);
+		VBGameTests.assertValueEqual(helper, usable.size(), 1, "the bad one is left out");
+		helper.assertTrue(usable.get(0) == goodRecipe, "the good one stays");
+		helper.assertTrue(reports.size() == 1 && reports.get(0).contains("vineandbarrel:test/bad") && reports.get(0).contains("crafting remainder"), "with a clear message: " + reports);
 		// test data: aging/test_duplicate_a (ale) and _b (wheat beer) both start from sugar
 		for (int i = 0; i < 3; i++) {
 			AgingRecipe chosen = AgingBarrelBlockEntity.recipeFor(helper.getLevel(), new ItemStack(Items.SUGAR));
@@ -1939,7 +1940,7 @@ public final class BarrelGameTests
 		BlockPos table = new BlockPos(2, 1, 2);
 		BlockPos spot = table.above();
 		helper.setBlock(table, Blocks.OAK_PLANKS);
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		player.setShiftKeyDown(true);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.RED_WINE.get()));
 		DrinkPlacing.place(sneakUse(helper, player, table, new Vec3(0.25, 1.0, 0.25)));
@@ -1957,8 +1958,8 @@ public final class BarrelGameTests
 				if (entity.getItem().is(DrinkItems.RED_WINE.get())) wines += entity.getItem().getCount();
 				if (entity.getItem().is(DrinkItems.MUG.get())) mugs += entity.getItem().getCount();
 			}
-			helper.assertValueEqual(wines, 1, "the wine dropped once");
-			helper.assertValueEqual(mugs, 1, "the mug dropped once");
+			VBGameTests.assertValueEqual(helper, wines, 1, "the wine dropped once");
+			VBGameTests.assertValueEqual(helper, mugs, 1, "the mug dropped once");
 		});
 	}
 
@@ -1967,14 +1968,14 @@ public final class BarrelGameTests
 		BlockPos table = new BlockPos(2, 1, 2);
 		helper.setBlock(table, Blocks.OAK_PLANKS);
 		helper.setBlock(table.east(), Blocks.OAK_PLANKS);
-		var sheep = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityTypes.SHEEP, new Vec3(2.5, 2.0, 2.5));
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		var sheep = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityType.SHEEP, new Vec3(2.5, 2.0, 2.5));
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		player.setShiftKeyDown(true);
 		ItemStack wine = new ItemStack(DrinkItems.RED_WINE.get());
 		player.setItemInHand(InteractionHand.MAIN_HAND, wine);
 		helper.assertTrue(DrinkPlacing.place(sneakUse(helper, player, table, new Vec3(0.5, 1.0, 0.5))) == InteractionResult.PASS, "a sheep is in the way: pass");
 		helper.assertTrue(helper.getBlockState(table.above()).isAir(), "nothing placed");
-		helper.assertValueEqual(wine.getCount(), 1, "nothing used");
+		VBGameTests.assertValueEqual(helper, wine.getCount(), 1, "nothing used");
 		sheep.discard();
 		// a side face, or no sturdy top: pass as well (sneak-drinking)
 		BlockPos absolute = helper.absolutePos(table.east());
@@ -1987,50 +1988,54 @@ public final class BarrelGameTests
 
 	/**
 	 * Farmer's Delight removed: a saved hard cider batch names {@code farmersdelight:apple_cider} as its base, which no
-	 * longer exists. The drinks and servings survive (in the codec, a placed barrel's save and a barrel item); only the
+	 * longer exists. The drinks and servings survive (in the codec, a placed barrel's save and a barrel item's NBT); only the
 	 * undo is gone. An unfermented batch keeps fermenting into its drink.
 	 */
 	private static void survivesMissingBase(GameTestHelper helper) {
-		var ops = helper.getLevel().registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE);
+		var ops = net.minecraft.nbt.NbtOps.INSTANCE;
 		// Stands in for farmersdelight:apple_cider after FD was removed; an id no run ever has, so this works with FD too
 		String gone = "removedmod:apple_cider";
-		helper.assertTrue(net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(Identifier.parse(gone)).isEmpty(), "the stand-in base must not exist");
+		helper.assertTrue(net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(new ResourceLocation(gone)).isEmpty(), "the stand-in base must not exist");
 		for (long elapsed : new long[]{FERMENT + AGE + 5L, 10L}) {
 			BarrelContents saved = new BarrelContents(new ItemStack(Items.APPLE), ItemStack.EMPTY, new ItemStack(DrinkItems.HARD_CIDER.get()),
 				new ItemStack(DrinkItems.AGED_HARD_CIDER.get()), 6, elapsed, FERMENT, AGE);
-			net.minecraft.nbt.CompoundTag tag = (net.minecraft.nbt.CompoundTag) BarrelContents.CODEC.encodeStart(ops, saved).getOrThrow();
-			tag.getCompound("base").orElseThrow().putString("id", gone);
-			BarrelContents loaded = BarrelContents.CODEC.parse(ops, tag).getOrThrow();
+			net.minecraft.nbt.CompoundTag tag = (net.minecraft.nbt.CompoundTag) BarrelContents.CODEC.encodeStart(ops, saved).result().orElseThrow();
+			helper.assertTrue(tag.getCompound("base").getString("id").equals("minecraft:apple"), "the batch names its base by id: " + tag);
+			tag.getCompound("base").putString("id", gone);
+			BarrelContents loaded = BarrelContents.CODEC.parse(ops, tag).result().orElseThrow();
 			helper.assertTrue(loaded.base().isEmpty(), "the missing base is dropped");
-			helper.assertValueEqual(loaded.servings(), 6, "servings survive");
+			VBGameTests.assertValueEqual(helper, loaded.servings(), 6, "servings survive");
 			helper.assertTrue(loaded.young().is(DrinkItems.HARD_CIDER.get()) && loaded.aged().is(DrinkItems.AGED_HARD_CIDER.get()), "the drinks survive");
-			helper.assertValueEqual(loaded.elapsed(), elapsed, "its age survives");
+			VBGameTests.assertValueEqual(helper, loaded.elapsed(), elapsed, "its age survives");
 
 			// a barrel item (B12): the whole stack still loads
 			ItemStack item = new ItemStack(BarrelRegistry.AGING_BARREL_ITEM.get());
-			item.set(BarrelRegistry.BARREL_CONTENTS.get(), saved);
-			net.minecraft.nbt.CompoundTag itemTag = (net.minecraft.nbt.CompoundTag) ItemStack.CODEC.encodeStart(ops, item).getOrThrow();
-			itemTag.getCompound("components").orElseThrow().getCompound("vineandbarrel:barrel_contents").orElseThrow()
-				.getCompound("base").orElseThrow().putString("id", gone);
-			ItemStack loadedItem = ItemStack.CODEC.parse(ops, itemTag).getOrThrow();
-			helper.assertValueEqual(AgingBarrelItem.contentsOf(loadedItem).servings(), 6, "the barrel item keeps its servings");
+			AgingBarrelItem.setContents(item, saved);
+			// 1.20.1: the batch is in the item's NBT, under vanilla's BlockEntityTag (1.21.1: its barrel_contents component)
+			net.minecraft.nbt.CompoundTag itemTag = item.save(new net.minecraft.nbt.CompoundTag());
+			net.minecraft.nbt.CompoundTag itemBase = itemTag.getCompound("tag").getCompound("BlockEntityTag").getCompound("Batch").getCompound("base");
+			helper.assertTrue(itemBase.getString("id").equals("minecraft:apple"), "the barrel item names its batch's base by id: " + itemTag);
+			itemBase.putString("id", gone);
+			ItemStack loadedItem = ItemStack.of(itemTag);
+			helper.assertTrue(AgingBarrelItem.contentsOf(loadedItem).base().isEmpty(), "the barrel item's missing base is dropped");
+			VBGameTests.assertValueEqual(helper, AgingBarrelItem.contentsOf(loadedItem).servings(), 6, "the barrel item keeps its servings");
 
 			// a placed barrel's save
 			BlockPos pos = elapsed > FERMENT ? POS : POS.east();
 			AgingBarrelBlockEntity barrel = placeBarrel(helper, pos);
-			barrel.applyComponentsFromItemStack(item);
-			net.minecraft.nbt.CompoundTag be = barrel.saveWithFullMetadata(helper.getLevel().registryAccess());
-			be.getCompound("Batch").orElseThrow().getCompound("base").orElseThrow().putString("id", gone);
-			barrel.loadWithComponents(TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), be));
-			helper.assertValueEqual(barrel.servings(), 6, "the placed barrel keeps its servings");
+			barrel.applyItem(item);
+			net.minecraft.nbt.CompoundTag be = barrel.saveWithFullMetadata();
+			be.getCompound("Batch").getCompound("base").putString("id", gone);
+			barrel.load(be);
+			VBGameTests.assertValueEqual(helper, barrel.servings(), 6, "the placed barrel keeps its servings");
 			if (elapsed > FERMENT) {
 				helper.assertTrue(barrel.content().is(DrinkItems.AGED_HARD_CIDER.get()), "still aged hard cider");
 			} else {
-				helper.assertValueEqual(barrel.stage(), BarrelStage.FERMENTING, "still fermenting");
-				helper.assertValueEqual(barrel.undoServings(new ItemStack(Items.GLASS_BOTTLE)), 0, "no undo without its base");
+				VBGameTests.assertValueEqual(helper, barrel.stage(), BarrelStage.FERMENTING, "still fermenting");
+				VBGameTests.assertValueEqual(helper, barrel.undoServings(new ItemStack(Items.GLASS_BOTTLE)), 0, "no undo without its base");
 				barrel.setAge(FERMENT);
 				helper.assertTrue(barrel.tap(new ItemStack(DrinkItems.MUG.get()), null).is(DrinkItems.HARD_CIDER.get()), "it ferments into hard cider");
-				helper.assertValueEqual(barrel.servings(), 5, "and taps");
+				VBGameTests.assertValueEqual(helper, barrel.servings(), 5, "and taps");
 			}
 		}
 		helper.succeed();

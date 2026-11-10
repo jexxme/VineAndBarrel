@@ -2,7 +2,7 @@ name: Verify
 
 # The merge gate: scripts/multiloader/verify-all.sh on a GitHub runner, smoke clients included (hidden, under Xvfb).
 # Started by pushing a branch ci/quick/<name> or ci/full/<name> (what gh-verify.sh does), or by hand: Actions, Verify,
-# Run workflow, with a ref and the tier. Quick after each round of changes, full before merging into 26.3 and before
+# Run workflow, with a ref and the tier. Quick after each round of changes, full before merging into 26.3 (the newest branch) and before
 # tagging (see CONTRIBUTING.md).
 
 on:
@@ -62,24 +62,9 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
+          java-version: 17
 
       - uses: gradle/actions/setup-gradle@v4
-
-      - name: Farmer's Delight Neoforged, from its GitHub releases (the newest for this Minecraft version)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mc=$(sed -n 's/^minecraft_version=//p' gradle.properties | tr -d '\r')
-          tag=$(gh release list -R jexxme/FarmersDelight-Neoforged --limit 100 --json tagName,createdAt \
-            --jq "[.[] | select(.tagName | startswith(\"$mc-\"))] | sort_by(.createdAt) | last | .tagName")
-          [ -n "$tag" ] && [ "$tag" != null ] || { echo "::error::No Farmer's Delight Neoforged release for Minecraft $mc"; exit 1; }
-          mkdir -p "$RUNNER_TEMP/fd"
-          gh release download "$tag" -R jexxme/FarmersDelight-Neoforged -p 'FarmersDelight*.jar' -D "$RUNNER_TEMP/fd"
-          jar=$(ls "$RUNNER_TEMP"/fd/FarmersDelight*.jar | grep -v -- -sources | head -1)
-          echo "FD_JAR=$jar" >> "$GITHUB_ENV"
-          echo "Farmer's Delight Neoforged $tag: $(basename "$jar")"
-          # FD Refabricated comes from Modrinth's Maven through the Fabric build, nothing to fetch here
 
       - name: The Minecraft EULA for the smoke-test server
         # Jexxme accepts the EULA for local dev/test servers; the folder is gitignored, nothing is committed
@@ -114,8 +99,8 @@ jobs:
           path: |
             build/verify-all/
             PARITY.md
-            neoforge/run*/logs/latest.log
-            neoforge/run*/crash-reports/
+            forge/run*/logs/latest.log
+            forge/run*/crash-reports/
             fabric/run*/logs/latest.log
             fabric/run*/crash-reports/
             fabric/run/*/logs/latest.log

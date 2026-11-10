@@ -68,7 +68,11 @@ public final class SceneView
 		return Math.min(windowWidth * 0.5F / maxX, windowHeight * 0.53F / maxY);
 	}
 
-	/** The camera's rotation, exactly as {@link Camera} builds it from a yaw and a pitch. */
+	/**
+	 * The view's rotation from a yaw and a pitch, as newer versions' {@link Camera} builds its own. (This version's
+	 * camera keeps its rotation turned half round, for its particles' billboards; the view that comes of it,
+	 * {@link #viewMatrix}, is the same: this version's level renderer turns by the pitch about x, then by yaw + 180 about y.)
+	 */
 	static Quaternionf cameraRotation(float yaw, float pitch) {
 		return new Quaternionf().rotationYXZ((float) Math.PI - yaw * Mth.DEG_TO_RAD, -pitch * Mth.DEG_TO_RAD, 0.0F);
 	}

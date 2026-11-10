@@ -1,26 +1,30 @@
 package jexxme.vineandbarrel.kettle;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.PlacementInfo;
 import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeBookCategory;
-import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.display.RecipeDisplay;
-import net.minecraft.world.item.crafting.display.SlotDisplay;
 import net.minecraft.world.level.Level;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -35,40 +39,113 @@ import java.util.List;
  *   "recipe_book_tab": "juices", "experience": 0.35, "brewingtime": 200
  * }
  * </pre>
+ * The files are the same on every Minecraft version: an ingredient is written as newer Minecraft writes it (an item id,
+ * {@code "#"} and a tag id, or a list of item ids) and a stack as {@code {"id": ..., "count": ...}}, which
+ * {@link #fromJson} reads on this one (this Minecraft's recipes are read from JSON by hand, and know their own id).
  */
-public class BrewingRecipe implements Recipe<RecipeInput>
+public class BrewingRecipe implements Recipe<Container>
 {
-	public static final MapCodec<BrewingRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
-		Codec.STRING.optionalFieldOf("group", "").forGetter(BrewingRecipe::group),
-		BrewingRecipeBookTab.CODEC.optionalFieldOf("recipe_book_tab", BrewingRecipeBookTab.MISC).forGetter(BrewingRecipe::tab),
-		Ingredient.CODEC.listOf(1, BrewKettleBlockEntity.INPUT_SLOTS).fieldOf("ingredients").forGetter(BrewingRecipe::ingredients),
-		ItemStackTemplate.CODEC.fieldOf("result").forGetter(r -> r.result),
-		ItemStackTemplate.CODEC.fieldOf("bucket").forGetter(r -> r.bucket),
-		Codec.FLOAT.optionalFieldOf("experience", 0.0F).forGetter(BrewingRecipe::experience),
-		Codec.INT.optionalFieldOf("brewingtime", 200).forGetter(BrewingRecipe::brewingTime)
-	).apply(inst, BrewingRecipe::new));
-
-	public static final StreamCodec<RegistryFriendlyByteBuf, BrewingRecipe> STREAM_CODEC = StreamCodec.of(BrewingRecipe::toNetwork, BrewingRecipe::fromNetwork);
-
+	private final ResourceLocation id;
 	private final String group;
 	private final BrewingRecipeBookTab tab;
 	private final List<Ingredient> ingredients;
-	private final ItemStackTemplate result;
-	private final ItemStackTemplate bucket;
+	/** Never changed or handed out: {@link #result()} and {@link #bucket()} give copies. */
+	private final ItemStack result;
+	private final ItemStack bucket;
 	private final float experience;
 	private final int brewingTime;
-	private @Nullable PlacementInfo placementInfo;
 
-	public BrewingRecipe(String group, BrewingRecipeBookTab tab, List<Ingredient> ingredients, ItemStackTemplate result, ItemStackTemplate bucket, float experience, int brewingTime) {
+	public BrewingRecipe(ResourceLocation id, String group, BrewingRecipeBookTab tab, List<Ingredient> ingredients, ItemStack result, ItemStack bucket,
+			float experience, int brewingTime) {
+		this.id = id;
 		this.group = group;
 		this.tab = tab;
 		this.ingredients = List.copyOf(ingredients);
-		this.result = result;
-		this.bucket = bucket;
+		this.result = result.copy();
+		this.bucket = bucket.copy();
 		this.experience = experience;
 		this.brewingTime = brewingTime;
 	}
 
+	// ------------------------------------------------------------------ the recipe file
+
+	/** Reads a recipe file (see the class comment); anything wrong with it throws, and vanilla logs the recipe as unreadable. */
+	public static BrewingRecipe fromJson(ResourceLocation id, JsonObject json) {
+		String group = GsonHelper.getAsString(json, "group", "");
+		BrewingRecipeBookTab tab = BrewingRecipeBookTab.MISC;
+		if (json.has("recipe_book_tab")) {
+			String name = GsonHelper.getAsString(json, "recipe_book_tab");
+			tab = Arrays.stream(BrewingRecipeBookTab.values()).filter(t -> t.getSerializedName().equals(name)).findFirst()
+				.orElseThrow(() -> new JsonSyntaxException("Unknown recipe book tab '" + name + "'"));
+		}
+		JsonArray array = GsonHelper.getAsJsonArray(json, "ingredients");
+		if (array.size() < 1 || array.size() > BrewKettleBlockEntity.INPUT_SLOTS) {
+			throw new JsonSyntaxException("A brewing recipe has 1 to " + BrewKettleBlockEntity.INPUT_SLOTS + " ingredients, not " + array.size());
+		}
+		List<Ingredient> ingredients = new ArrayList<>(array.size());
+		for (JsonElement element : array) {
+			ingredients.add(ingredientFromJson(element));
+		}
+		ItemStack result = stackFromJson(GsonHelper.getAsJsonObject(json, "result"));
+		ItemStack bucket = stackFromJson(GsonHelper.getAsJsonObject(json, "bucket"));
+		float experience = GsonHelper.getAsFloat(json, "experience", 0.0F);
+		int brewingTime = GsonHelper.getAsInt(json, "brewingtime", 200);
+		return new BrewingRecipe(id, group, tab, ingredients, result, bucket, experience, brewingTime);
+	}
+
+	/**
+	 * The recipe files' ingredients: an item id or {@code "#"} and a tag id, or a list of item ids (any of them); and
+	 * this Minecraft's own form too ({@code {"item": ...}}, {@code {"tag": ...}}, a list of those).
+	 */
+	private static Ingredient ingredientFromJson(JsonElement json) {
+		if (GsonHelper.isStringValue(json)) {
+			return ingredientOf(json.getAsString());
+		}
+		if (json.isJsonArray() && json.getAsJsonArray().size() > 0 && GsonHelper.isStringValue(json.getAsJsonArray().get(0))) {
+			List<ItemStack> items = new ArrayList<>();
+			for (JsonElement element : json.getAsJsonArray()) {
+				items.add(new ItemStack(itemOf(GsonHelper.convertToString(element, "item"))));
+			}
+			return Ingredient.of(items.stream());
+		}
+		return Ingredient.fromJson(json, false);
+	}
+
+	private static Ingredient ingredientOf(String id) {
+		if (id.startsWith("#")) {
+			return Ingredient.of(TagKey.create(Registries.ITEM, idOf(id.substring(1))));
+		}
+		return Ingredient.of(itemOf(id));
+	}
+
+	private static Item itemOf(String id) {
+		Item item = BuiltInRegistries.ITEM.getOptional(idOf(id)).orElseThrow(() -> new JsonSyntaxException("Unknown item '" + id + "'"));
+		if (item == Items.AIR) {
+			throw new JsonSyntaxException("Item must not be minecraft:air");
+		}
+		return item;
+	}
+
+	private static ResourceLocation idOf(String id) {
+		ResourceLocation key = ResourceLocation.tryParse(id);
+		if (key == null) {
+			throw new JsonSyntaxException("Not a valid id: '" + id + "'");
+		}
+		return key;
+	}
+
+	/** A stack as newer Minecraft's recipe files write it: {@code {"id": ..., "count": ...}} (count 1 if missing). */
+	private static ItemStack stackFromJson(JsonObject json) {
+		Item item = itemOf(GsonHelper.getAsString(json, "id"));
+		int count = GsonHelper.getAsInt(json, "count", 1);
+		ItemStack stack = new ItemStack(item, count);
+		if (count < 1 || count > stack.getMaxStackSize()) {
+			throw new JsonSyntaxException("Count must be 1 to " + stack.getMaxStackSize() + ", not " + count);
+		}
+		return stack;
+	}
+
+	/** The kettle recipe book's tab this recipe is on. */
 	public BrewingRecipeBookTab tab() {
 		return tab;
 	}
@@ -79,16 +156,16 @@ public class BrewingRecipe implements Recipe<RecipeInput>
 
 	/** The brew in its bottle form (count = servings of one batch). */
 	public ItemStack result() {
-		return result.create();
+		return result.copy();
 	}
 
 	/** The brew as one bucket: a whole batch. */
 	public ItemStack bucket() {
-		return bucket.create();
+		return bucket.copy();
 	}
 
 	public int servings() {
-		return result.count();
+		return result.getCount();
 	}
 
 	public float experience() {
@@ -100,7 +177,7 @@ public class BrewingRecipe implements Recipe<RecipeInput>
 	}
 
 	@Override
-	public boolean matches(RecipeInput input, Level level) {
+	public boolean matches(Container input, Level level) {
 		return consumption(input) != null;
 	}
 
@@ -112,8 +189,8 @@ public class BrewingRecipe implements Recipe<RecipeInput>
 	 * uses (no foreign leftovers), and the entries prefer slots this batch hasn't touched yet, so FD's layout (one
 	 * ingredient per slot, N items each = N batches) still takes exactly one item from every slot.
 	 */
-	public int @Nullable [] consumption(RecipeInput input) {
-		int slots = Math.min(BrewKettleBlockEntity.INPUT_SLOTS, input.size());
+	public int @Nullable [] consumption(Container input) {
+		int slots = Math.min(BrewKettleBlockEntity.INPUT_SLOTS, input.getContainerSize());
 		ItemStack[] stacks = new ItemStack[slots];
 		int total = 0;
 		for (int i = 0; i < slots; ++i) {
@@ -179,8 +256,28 @@ public class BrewingRecipe implements Recipe<RecipeInput>
 	}
 
 	@Override
-	public ItemStack assemble(RecipeInput input) {
-		return result.create();
+	public ItemStack assemble(Container input, RegistryAccess registries) {
+		return result.copy();
+	}
+
+	/** The six slots are one pool (see {@link #consumption}): any grid that holds the ingredients will do. */
+	@Override
+	public boolean canCraftInDimensions(int width, int height) {
+		return width * height >= ingredients.size();
+	}
+
+	/** For the recipe book, which only reads it. */
+	@Override
+	public ItemStack getResultItem(RegistryAccess registries) {
+		return result;
+	}
+
+	/** For the recipe book: what it counts in the player's inventory and places in the grid. */
+	@Override
+	public NonNullList<Ingredient> getIngredients() {
+		NonNullList<Ingredient> list = NonNullList.create();
+		list.addAll(ingredients);
+		return list;
 	}
 
 	@Override
@@ -189,8 +286,13 @@ public class BrewingRecipe implements Recipe<RecipeInput>
 	}
 
 	@Override
-	public String group() {
+	public String getGroup() {
 		return group;
+	}
+
+	@Override
+	public ResourceLocation getId() {
+		return id;
 	}
 
 	@Override
@@ -203,58 +305,30 @@ public class BrewingRecipe implements Recipe<RecipeInput>
 		return KettleRegistry.BREWING.get();
 	}
 
-	@Override
-	public PlacementInfo placementInfo() {
-		// 26.3: recipes are decoded before tags are bound, so this must be computed lazily (as in FD)
-		if (placementInfo == null) {
-			placementInfo = PlacementInfo.create(ingredients);
-		}
-		return placementInfo;
-	}
-
-	@Override
-	public List<RecipeDisplay> display() {
-		return List.of(new BrewingRecipeDisplay(ingredients.stream().map(Ingredient::display).toList(),
-			new SlotDisplay.ItemSlotDisplay(Items.GLASS_BOTTLE),
-			new SlotDisplay.ItemStackSlotDisplay(result),
-			new SlotDisplay.ItemSlotDisplay(KettleRegistry.kettleItem()),
-			brewingTime, experience));
-	}
-
-	@Override
-	public RecipeBookCategory recipeBookCategory() {
-		return switch (tab) {
-			case JUICES -> KettleRegistry.BREWING_JUICES.get();
-			case WORTS -> KettleRegistry.BREWING_WORTS.get();
-			case MISC -> KettleRegistry.BREWING_MISC.get();
-		};
-	}
-
-	private static BrewingRecipe fromNetwork(RegistryFriendlyByteBuf buffer) {
+	public static BrewingRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buffer) {
 		String group = buffer.readUtf();
 		BrewingRecipeBookTab tab = buffer.readEnum(BrewingRecipeBookTab.class);
 		int count = buffer.readVarInt();
-		// 26.3: Ingredient.of() (empty) throws, so the list is never prefilled
 		List<Ingredient> ingredients = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {
-			ingredients.add(Ingredient.CONTENTS_STREAM_CODEC.decode(buffer));
+			ingredients.add(Ingredient.fromNetwork(buffer));
 		}
-		ItemStackTemplate result = ItemStackTemplate.STREAM_CODEC.decode(buffer);
-		ItemStackTemplate bucket = ItemStackTemplate.STREAM_CODEC.decode(buffer);
+		ItemStack result = buffer.readItem();
+		ItemStack bucket = buffer.readItem();
 		float experience = buffer.readFloat();
 		int brewingTime = buffer.readVarInt();
-		return new BrewingRecipe(group, tab, ingredients, result, bucket, experience, brewingTime);
+		return new BrewingRecipe(id, group, tab, ingredients, result, bucket, experience, brewingTime);
 	}
 
-	private static void toNetwork(RegistryFriendlyByteBuf buffer, BrewingRecipe recipe) {
+	public static void toNetwork(FriendlyByteBuf buffer, BrewingRecipe recipe) {
 		buffer.writeUtf(recipe.group);
 		buffer.writeEnum(recipe.tab);
 		buffer.writeVarInt(recipe.ingredients.size());
 		for (Ingredient ingredient : recipe.ingredients) {
-			Ingredient.CONTENTS_STREAM_CODEC.encode(buffer, ingredient);
+			ingredient.toNetwork(buffer);
 		}
-		ItemStackTemplate.STREAM_CODEC.encode(buffer, recipe.result);
-		ItemStackTemplate.STREAM_CODEC.encode(buffer, recipe.bucket);
+		buffer.writeItem(recipe.result);
+		buffer.writeItem(recipe.bucket);
 		buffer.writeFloat(recipe.experience);
 		buffer.writeVarInt(recipe.brewingTime);
 	}

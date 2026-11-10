@@ -38,13 +38,13 @@
   ],
   "accessWidener": "${mod_id}.classtweaker",
   "depends": {
-    "fabricloader": ">=${fabric_loader_version}",
+    "fabricloader": ">=${fabric_loader_min_version}",
     "fabric-api": ">=${fabric_api_min_version}",
-    "minecraft": "~${minecraft_version}",
-    "java": ">=25"
+    "minecraft": "1.20.1",
+    "java": ">=17"
   },
   "breaks": {
-    "farmersdelight": "<26.3-3.6.21"
+    "farmersdelight": "<1.20.1-2.0.0"
   },
   "suggests": {
     "farmersdelight": "*",
@@ -54,7 +54,6 @@
     "appleskin": "*",
     "toughasnails": "*",
     "homeostatic": "*",
-    "thirstwastaken2": "*",
-    "solonion": "*"
+    "thirstwastaken2": "*"
   }
 }

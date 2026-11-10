@@ -5,7 +5,7 @@ import jexxme.vineandbarrel.barrel.BarrelStatus;
 import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
@@ -21,10 +21,10 @@ public enum KettleProvider implements IBlockComponentProvider
 {
 	INSTANCE;
 
-	static final Identifier UID = VineAndBarrel.id("brew_kettle");
+	static final ResourceLocation UID = VineAndBarrel.id("brew_kettle");
 
 	@Override
-	public Identifier getUid() {
+	public ResourceLocation getUid() {
 		return UID;
 	}
 
@@ -44,7 +44,7 @@ public enum KettleProvider implements IBlockComponentProvider
 		if (!brew.isEmpty()) {
 			tooltip.add(Component.translatable("jade.vineandbarrel.serving", brew.getHoverName(), BarrelStatus.servings(brew.getCount())));
 		}
-		KettleDataProvider.INSTANCE.decodeFromData(accessor).filter(progress -> progress.time() > 0 && progress.total() > 0).ifPresent(progress ->
+		KettleDataProvider.decodeFromData(accessor).filter(progress -> progress.time() > 0 && progress.total() > 0).ifPresent(progress ->
 			tooltip.add(Component.translatable("jade.vineandbarrel.brew_kettle.brewing", Math.min(100, progress.time() * 100 / progress.total()))));
 		if (kettle.hasIngredients() && kettle.heatedBlocks() == 0) {
 			tooltip.add(Component.translatable("container.vineandbarrel.brew_kettle.not_heated").withStyle(ChatFormatting.GRAY));

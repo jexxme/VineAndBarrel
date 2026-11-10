@@ -1,0 +1,9 @@
+# ERROR lines another mod logs about itself in a dev environment, which change nothing for our tests.
+# verify-all.sh and the CI / release workflows ignore lines matching one of these extended regexes (this file is on the older-Minecraft branches only).
+# Checked against the six 1.20.1 GameTest runs (2026-11-10): the three Forge runs log no ERROR line at all.
+# Jade, in the Fabric compat run: Thirst Was Taken 2's client-only Jade plugins, which a server cannot load
+\(Jade\) Error loading plugin at null
+# Tough As Nails' block entities have no data fixer in a dev environment (Fabric compat run)
+No data fixer registered for (temperature_gauge|thermoregulator|water_purifier)
+# Farmer's Delight Refabricated's rotten tomato entity has none either (Fabric run with Farmer's Delight)
+No data fixer registered for rotten_tomato

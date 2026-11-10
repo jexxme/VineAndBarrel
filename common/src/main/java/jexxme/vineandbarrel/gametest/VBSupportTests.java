@@ -44,12 +44,21 @@ import static jexxme.vineandbarrel.gametest.VBGameTests.test;
 
 /**
  * Trellis 2.0: grapes and hops also climb fences, walls, upright chains and bars ({@code #vineandbarrel:makeshift_vine_supports}).
- * The vine keeps that exact block (a spruce fence, a waxed copper chain), its neighbours still see it, it comes back
+ * The vine keeps that exact block (a spruce fence, a chain), its neighbours still see it, it comes back
  * however the plant goes, and picking gives one fewer than on a trellis.
+ * <p>
+ * Minecraft 1.20.1 has one chain ({@code minecraft:chain}) and one kind of bars (iron), no copper ones, so every chain
+ * and every bars here is that one. The GameTest data makes that same chain the stand-in for FD's rope
+ * ({@code #farmersdelight:ropes}), so where a test needs a chain that is no rope it asks {@link #chainIsARope} first.
  */
 final class VBSupportTests
 {
 	private VBSupportTests() {
+	}
+
+	/** True in a run whose data puts the chain into {@code #farmersdelight:ropes} (the GameTest data's stand-in for FD's rope). */
+	private static boolean chainIsARope() {
+		return Blocks.CHAIN.defaultBlockState().is(jexxme.vineandbarrel.tag.VBTags.FD_ROPES);
 	}
 
 	static void registerAll() {
@@ -79,7 +88,7 @@ final class VBSupportTests
 	 * never climbs, bone meal or not.
 	 */
 	private static void supportsAreOff(GameTestHelper helper) {
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		ClimbingCropBlock grapes = VBBlocks.GRAPE_BUSH.get();
 		BlockPos fence = new BlockPos(2, 2, 2);
 		helper.setBlock(fence.below(), Blocks.GRASS_BLOCK);
@@ -88,7 +97,7 @@ final class VBSupportTests
 		player.setItemInHand(InteractionHand.MAIN_HAND, grapeStack);
 		helper.useBlock(fence, player);
 		helper.assertBlockPresent(Blocks.OAK_FENCE, fence);
-		helper.assertValueEqual(grapeStack.getCount(), 4, "no grapes planted into a fence");
+		VBGameTests.assertValueEqual(helper, grapeStack.getCount(), 4, "no grapes planted into a fence");
 		BlockPos bush = new BlockPos(6, 2, 2);
 		ripeBush(helper, bush, VBBlocks.GRAPE_BUSH.get());
 		ItemStack fences = new ItemStack(Items.OAK_FENCE, 2);
@@ -96,13 +105,18 @@ final class VBSupportTests
 		helper.useBlock(bush, player);
 		helper.assertBlockPresent(VBBlocks.GRAPE_BUSH.get(), bush);
 		int x = 1;
-		for (BlockState above : List.of(Blocks.OAK_FENCE.defaultBlockState(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState(),
-				Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState(), Blocks.IRON_BARS.defaultBlockState())) {
+		List<BlockState> aboves = new java.util.ArrayList<>(List.of(Blocks.OAK_FENCE.defaultBlockState(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState(),
+				Blocks.IRON_BARS.defaultBlockState()));
+		if (!chainIsARope()) {
+			// 26.x: a copper chain (the iron one is the test data's rope). 1.20.1's only chain is that rope: a bush climbs it
+			aboves.add(Blocks.CHAIN.defaultBlockState());
+		}
+		for (BlockState above : aboves) {
 			BlockPos under = new BlockPos(x, 2, 6);
 			x += 2;
 			ripeBush(helper, under, VBBlocks.GRAPE_BUSH.get());
 			build(helper, under.above(), above);
-			helper.assertValueEqual(state(helper, under).getValue(ClimbingBushBlock.SUPPORT), BushSupport.NONE, "a bush under " + above + " stays round");
+			VBGameTests.assertValueEqual(helper, state(helper, under).getValue(ClimbingBushBlock.SUPPORT), BushSupport.NONE, "a bush under " + above + " stays round");
 			helper.assertFalse(VineClimbing.canClimb(helper.getLevel(), helper.absolutePos(under), grapes), "a bush doesn't climb " + above);
 			helper.assertTrue(grapes.vineOn(above) == null, above + " grows no vine");
 			helper.assertFalse(boneMeal(helper, under), "bone meal does nothing for a ripe bush under " + above);
@@ -169,7 +183,7 @@ final class VBSupportTests
 		for (int x = 2; x <= 4; x++) {
 			build(helper, new BlockPos(x, 3, 6), Blocks.OAK_FENCE.defaultBlockState());
 		}
-		helper.assertValueEqual(state(helper, bush).getValue(ClimbingBushBlock.SUPPORT), BushSupport.NONE, "a bush under a fence row stays round");
+		VBGameTests.assertValueEqual(helper, state(helper, bush).getValue(ClimbingBushBlock.SUPPORT), BushSupport.NONE, "a bush under a fence row stays round");
 		helper.assertFalse(VineClimbing.canClimb(helper.getLevel(), helper.absolutePos(bush), grapes), "a bush doesn't climb a fence on top of it");
 		helper.assertFalse(boneMeal(helper, bush), "bone meal does nothing for a ripe bush under a fence");
 		helper.assertBlockPresent(Blocks.OAK_FENCE, bush.above());
@@ -184,17 +198,17 @@ final class VBSupportTests
 		}
 		BlockState rowFence = state(helper, root);
 		overgrow(helper, root, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), ClimbingCropBlock.MAX_AGE, true);
-		helper.assertValueEqual(state(helper, root).getValue(VineOnSupportBlock.LOOK), SupportLook.THIN_X, "spread across the east-west fence");
-		helper.assertValueEqual(support(helper, root), rowFence, "the fence kept inside");
+		VBGameTests.assertValueEqual(helper, state(helper, root).getValue(VineOnSupportBlock.LOOK), SupportLook.THIN_X, "spread across the east-west fence");
+		VBGameTests.assertValueEqual(helper, support(helper, root), rowFence, "the fence kept inside");
 		helper.assertTrue(state(helper, root.west()).getValue(CrossCollisionBlock.EAST), "the west fence still connects to the overgrown one");
 		helper.assertTrue(state(helper, root.east()).getValue(CrossCollisionBlock.WEST), "the east fence still connects to the overgrown one");
 
 		helper.assertTrue(boneMeal(helper, root), "bone meal makes the ripe plant climb the fence above");
 		BlockState vine = state(helper, root.above());
 		helper.assertTrue(vine.is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), "the plant grew into the fence above, found " + vine);
-		helper.assertValueEqual(vine.getValue(VineOnSupportBlock.LOOK), SupportLook.CROSS, "wound round a lone post");
-		helper.assertValueEqual(vine.getValue(VineOnSupportBlock.BASE), false, "a vine on its root");
-		helper.assertValueEqual(vine.getValue(ClimbingCropBlock.AGE), 0, "a fresh vine");
+		VBGameTests.assertValueEqual(helper, vine.getValue(VineOnSupportBlock.LOOK), SupportLook.CROSS, "wound round a lone post");
+		VBGameTests.assertValueEqual(helper, vine.getValue(VineOnSupportBlock.BASE), false, "a vine on its root");
+		VBGameTests.assertValueEqual(helper, vine.getValue(ClimbingCropBlock.AGE), 0, "a fresh vine");
 
 		for (int i = 0; i < 40; i++) {
 			boneMeal(helper, root);
@@ -202,12 +216,12 @@ final class VBSupportTests
 		BlockState top = state(helper, root.above(2));
 		helper.assertTrue(top.is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), "bone meal grows it into the next fence, found " + top);
 		helper.assertBlockPresent(Blocks.OAK_FENCE, root.above(3));
-		helper.assertValueEqual(VineClimbing.heightAt(helper.getLevel(), helper.absolutePos(root.above(2)), grapes),
+		VBGameTests.assertValueEqual(helper, VineClimbing.heightAt(helper.getLevel(), helper.absolutePos(root.above(2)), grapes),
 				VineClimbing.MAX_HEIGHT, "plant height");
 
 		helper.getLevel().destroyBlock(helper.absolutePos(root), false);
 		helper.succeedWhen(() -> {
-			helper.assertBlockState(root, rowFence);
+			VBGameTests.assertBlockState(helper, root, rowFence);
 			helper.assertBlockPresent(Blocks.OAK_FENCE, root.above());
 			helper.assertBlockPresent(Blocks.OAK_FENCE, root.above(2));
 			helper.assertItemEntityNotPresent(Items.OAK_FENCE, root.above(), 4.0);
@@ -216,8 +230,8 @@ final class VBSupportTests
 
 	/**
 	 * Hops grown in a mossy wall running north-south climb the wall above (spread wide across it); a hop bush under a wall
-	 * stays a bush. White grapes climb an upright copper chain above their bush (wound round it), red grapes copper bars
-	 * (spread thin), each on a random tick like on a trellis. (The iron chain is the test data's stand-in for FD's rope, so it
+	 * stays a bush. White grapes climb an upright chain above their bush (wound round it), red grapes iron bars
+	 * (spread thin), each on a random tick like on a trellis. (In a run whose data makes the chain the stand-in for FD's rope, it
 	 * grows a vine on a rope here; in play it holds a vine like any chain.)
 	 */
 	private static void wallsChainsAndBars(GameTestHelper helper) {
@@ -225,8 +239,8 @@ final class VBSupportTests
 		}
 		List<Column> columns = List.of(
 				new Column(VBBlocks.HOP_BUSH.get(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState(), true, SupportLook.WIDE_Z, true),
-				new Column(VBBlocks.WHITE_GRAPE_BUSH.get(), Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState(), false, SupportLook.CROSS, false),
-				new Column(VBBlocks.GRAPE_BUSH.get(), Blocks.COPPER_BARS.weathering().unaffected().defaultBlockState(), true, SupportLook.THIN_Z, false));
+				new Column(VBBlocks.WHITE_GRAPE_BUSH.get(), Blocks.CHAIN.defaultBlockState(), false, SupportLook.CROSS, false),
+				new Column(VBBlocks.GRAPE_BUSH.get(), Blocks.IRON_BARS.defaultBlockState(), true, SupportLook.THIN_Z, false));
 		int x = 2;
 		for (Column column : columns) {
 			BlockPos plant = new BlockPos(x, 1, 4);
@@ -253,14 +267,14 @@ final class VBSupportTests
 			}
 			BlockState vine = state(helper, plant.above());
 			helper.assertTrue(vine.is(crop.supportVine()), column.bush() + " should climb " + before + ", found " + vine);
-			helper.assertValueEqual(vine.getValue(VineOnSupportBlock.LOOK), column.look(), "how the vine sits on " + before);
-			helper.assertValueEqual(support(helper, plant.above()), before, "the block kept inside");
+			VBGameTests.assertValueEqual(helper, vine.getValue(VineOnSupportBlock.LOOK), column.look(), "how the vine sits on " + before);
+			VBGameTests.assertValueEqual(helper, support(helper, plant.above()), before, "the block kept inside");
 			x += 4;
 		}
 		BlockPos underWall = new BlockPos(2, 1, 8);
 		ripeBush(helper, underWall, VBBlocks.HOP_BUSH.get());
 		build(helper, underWall.above(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState());
-		helper.assertValueEqual(state(helper, underWall).getValue(ClimbingBushBlock.SUPPORT), BushSupport.NONE, "a bush under a wall stays round");
+		VBGameTests.assertValueEqual(helper, state(helper, underWall).getValue(ClimbingBushBlock.SUPPORT), BushSupport.NONE, "a bush under a wall stays round");
 		helper.assertFalse(VineClimbing.canClimb(helper.getLevel(), helper.absolutePos(underWall), VBBlocks.HOP_BUSH.get()), "a bush doesn't climb a wall on top of it");
 		helper.succeed();
 	}
@@ -272,28 +286,27 @@ final class VBSupportTests
 	private static void whatHoldsAVine(GameTestHelper helper) {
 		ClimbingCropBlock grapes = VBBlocks.GRAPE_BUSH.get();
 		for (BlockState holds : List.of(Blocks.SPRUCE_FENCE.defaultBlockState(), Blocks.NETHER_BRICK_FENCE.defaultBlockState(),
-				Blocks.STONE_BRICK_WALL.defaultBlockState(), Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState(),
-				Blocks.COPPER_CHAIN.waxed().oxidized().defaultBlockState(),
-				Blocks.IRON_BARS.defaultBlockState(), Blocks.COPPER_BARS.weathering().weathered().defaultBlockState())) {
+				Blocks.STONE_BRICK_WALL.defaultBlockState(), Blocks.CHAIN.defaultBlockState(),
+				Blocks.IRON_BARS.defaultBlockState())) {
 			helper.assertTrue(VineSupports.isMakeshift(holds), holds + " holds a vine");
 			helper.assertTrue(grapes.vineOn(holds) != null && grapes.vineOn(holds).is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), holds + " grows the vine on a support");
 		}
-		for (BlockState holdsNot : List.of(Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState().setValue(ChainBlock.AXIS, Direction.Axis.X),
+		for (BlockState holdsNot : List.of(Blocks.CHAIN.defaultBlockState().setValue(ChainBlock.AXIS, Direction.Axis.X),
 				Blocks.LADDER.defaultBlockState(), Blocks.GLASS_PANE.defaultBlockState(), Blocks.OAK_FENCE_GATE.defaultBlockState(),
 				Blocks.OAK_FENCE.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, true), Blocks.OAK_LOG.defaultBlockState())) {
 			helper.assertTrue(grapes.vineOn(holdsNot) == null, holdsNot + " grows no vine");
 		}
 		BlockState fence = Blocks.OAK_FENCE.defaultBlockState();
-		helper.assertValueEqual(VineSupports.lookOf(fence), SupportLook.CROSS, "a lone fence post");
-		helper.assertValueEqual(VineSupports.lookOf(fence.setValue(CrossCollisionBlock.NORTH, true).setValue(CrossCollisionBlock.EAST, true)),
+		VBGameTests.assertValueEqual(helper, VineSupports.lookOf(fence), SupportLook.CROSS, "a lone fence post");
+		VBGameTests.assertValueEqual(helper, VineSupports.lookOf(fence.setValue(CrossCollisionBlock.NORTH, true).setValue(CrossCollisionBlock.EAST, true)),
 				SupportLook.CROSS, "a fence corner");
-		helper.assertValueEqual(VineSupports.lookOf(fence.setValue(CrossCollisionBlock.WEST, true)), SupportLook.THIN_X, "a fence row's end");
-		helper.assertValueEqual(VineSupports.lookOf(Blocks.STONE_BRICK_WALL.defaultBlockState().setValue(WallBlock.EAST, WallSide.LOW)
-				.setValue(WallBlock.WEST, WallSide.TALL)), SupportLook.WIDE_X, "a wall running east-west");
-		helper.assertValueEqual(VineSupports.lookOf(Blocks.IRON_BARS.defaultBlockState().setValue(CrossCollisionBlock.NORTH, true)
+		VBGameTests.assertValueEqual(helper, VineSupports.lookOf(fence.setValue(CrossCollisionBlock.WEST, true)), SupportLook.THIN_X, "a fence row's end");
+		VBGameTests.assertValueEqual(helper, VineSupports.lookOf(Blocks.STONE_BRICK_WALL.defaultBlockState().setValue(WallBlock.EAST_WALL, WallSide.LOW)
+				.setValue(WallBlock.WEST_WALL, WallSide.TALL)), SupportLook.WIDE_X, "a wall running east-west");
+		VBGameTests.assertValueEqual(helper, VineSupports.lookOf(Blocks.IRON_BARS.defaultBlockState().setValue(CrossCollisionBlock.NORTH, true)
 				.setValue(CrossCollisionBlock.SOUTH, true)), SupportLook.THIN_Z, "bars running north-south");
-		helper.assertValueEqual(VineSupports.lookOf(Blocks.IRON_CHAIN.defaultBlockState()), SupportLook.CROSS, "a chain");
-		helper.assertValueEqual(VBBlocks.GRAPE_VINE_ON_SUPPORT.get().defaultBlockState().getPistonPushReaction(), PushReaction.IMMOVEABLE,
+		VBGameTests.assertValueEqual(helper, VineSupports.lookOf(Blocks.CHAIN.defaultBlockState()), SupportLook.CROSS, "a chain");
+		VBGameTests.assertValueEqual(helper, VBBlocks.GRAPE_VINE_ON_SUPPORT.get().defaultBlockState().getPistonPushReaction(), PushReaction.BLOCK,
 				"pistons leave an overgrown support alone");
 		helper.succeed();
 	}
@@ -308,8 +321,8 @@ final class VBSupportTests
 	 */
 	private static void givesTheBlockBack(GameTestHelper helper) {
 		List<BlockState> supports = List.of(Blocks.SPRUCE_FENCE.defaultBlockState(), Blocks.MOSSY_STONE_BRICK_WALL.defaultBlockState(),
-				Blocks.COPPER_CHAIN.waxed().exposed().defaultBlockState(), Blocks.COPPER_BARS.weathering().unaffected().defaultBlockState(), Blocks.CRIMSON_FENCE.defaultBlockState());
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+				Blocks.CHAIN.defaultBlockState(), Blocks.IRON_BARS.defaultBlockState(), Blocks.CRIMSON_FENCE.defaultBlockState());
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		BlockState[] expected = new BlockState[supports.size()];
 		BlockPos[] at = new BlockPos[supports.size()];
@@ -326,22 +339,22 @@ final class VBSupportTests
 			expected[i] = state(helper, bush.above());
 			at[i] = bush.above();
 			overgrow(helper, at[i], VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), ClimbingCropBlock.MAX_AGE, false);
-			helper.assertValueEqual(support(helper, at[i]), expected[i], "kept inside");
+			VBGameTests.assertValueEqual(helper, support(helper, at[i]), expected[i], "kept inside");
 		}
 		// a player: the fence stays, the ripe grapes drop, no fence item
 		player.gameMode.destroyBlock(helper.absolutePos(at[0]));
-		helper.assertBlockState(at[0], expected[0]);
+		VBGameTests.assertBlockState(helper, at[0], expected[0]);
 		int picked = collect(helper, at[0], VBItems.RED_GRAPES.get());
 		helper.assertTrue(picked == 1 || picked == 2, "breaking a ripe vine on a fence drops 1-2 grapes (and no fence), dropped " + picked);
 		// an explosion
 		Vec3 boom = Vec3.atCenterOf(helper.absolutePos(at[1]));
 		helper.getLevel().explode(null, boom.x, boom.y, boom.z, 1.0F, net.minecraft.world.level.Level.ExplosionInteraction.TNT);
-		helper.assertBlockState(at[1], expected[1]);
+		VBGameTests.assertBlockState(helper, at[1], expected[1]);
 		// fire: burnt away (removed), and turned into fire
 		helper.getLevel().removeBlock(helper.absolutePos(at[2]), false);
-		helper.assertBlockState(at[2], expected[2]);
+		VBGameTests.assertBlockState(helper, at[2], expected[2]);
 		helper.getLevel().setBlockAndUpdate(helper.absolutePos(at[3]), Blocks.FIRE.defaultBlockState());
-		helper.assertBlockState(at[3], expected[3]);
+		VBGameTests.assertBlockState(helper, at[3], expected[3]);
 		// the soil goes under a root
 		BlockPos root = at[4].below();
 		helper.setBlock(root.below(), Blocks.GRASS_BLOCK);
@@ -352,8 +365,8 @@ final class VBSupportTests
 		helper.setBlock(root.below(), Blocks.STONE);
 		// no bush in this column any more, so nothing can grow back while the root and then its vine go
 		helper.succeedWhen(() -> {
-			helper.assertBlockState(root, rootFence);
-			helper.assertBlockState(at[4], expected[4]); // the vine above lost its root and went too
+			VBGameTests.assertBlockState(helper, root, rootFence);
+			VBGameTests.assertBlockState(helper, at[4], expected[4]); // the vine above lost its root and went too
 		});
 	}
 
@@ -361,7 +374,7 @@ final class VBSupportTests
 
 	/** Picking off a fence gives one fewer than off a trellis: 1-2 ripe, 1 half-ripe; breaking drops the same. */
 	private static void yieldsOneFewer(GameTestHelper helper) {
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		int x = 1;
 		for (Block bushBlock : List.of(VBBlocks.GRAPE_BUSH.get(), VBBlocks.WHITE_GRAPE_BUSH.get(), VBBlocks.HOP_BUSH.get())) {
 			ClimbingCropBlock bush = (ClimbingCropBlock) bushBlock;
@@ -381,10 +394,10 @@ final class VBSupportTests
 				int ripe = collect(helper, vine, fruit);
 				helper.assertTrue(ripe == 1 || ripe == 2, "picking a ripe " + vineBlock + " should give 1-2, gave " + ripe);
 				sawRipe[ripe] = true;
-				helper.assertValueEqual(state(helper, vine).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "age after picking");
+				VBGameTests.assertValueEqual(helper, state(helper, vine).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "age after picking");
 				helper.setBlock(vine, state(helper, vine).setValue(ClimbingCropBlock.AGE, ClimbingCropBlock.HALF_RIPE_AGE));
 				helper.useBlock(vine, player);
-				helper.assertValueEqual(collect(helper, vine, fruit), 1, "picking a half-ripe " + vineBlock);
+				VBGameTests.assertValueEqual(helper, collect(helper, vine, fruit), 1, "picking a half-ripe " + vineBlock);
 				helper.setBlock(vine, Blocks.AIR);
 			}
 			helper.assertTrue(sawRipe[1] && sawRipe[2], "over 32 pickings of a ripe " + vineBlock + " both 1 and 2 should appear");
@@ -407,20 +420,20 @@ final class VBSupportTests
 	 * overgrown walls sits low, and a lead tied to a fence stays tied when the vine grows over it.
 	 */
 	private static void neighboursAndLeads(GameTestHelper helper) {
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		// a fence placed next to an overgrown lone fence
 		BlockPos fence = new BlockPos(2, 2, 2);
 		helper.setBlock(fence.below(), Blocks.GRASS_BLOCK);
 		helper.setBlock(fence.east().below(), Blocks.STONE);
 		build(helper, fence, Blocks.OAK_FENCE.defaultBlockState());
 		overgrow(helper, fence, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), 2, true);
-		helper.assertValueEqual(state(helper, fence).getValue(VineOnSupportBlock.LOOK), SupportLook.CROSS, "a lone overgrown post");
+		VBGameTests.assertValueEqual(helper, state(helper, fence).getValue(VineOnSupportBlock.LOOK), SupportLook.CROSS, "a lone overgrown post");
 		ItemStack fences = new ItemStack(Items.OAK_FENCE, 4);
 		player.setItemInHand(InteractionHand.MAIN_HAND, fences);
 		helper.placeAt(player, fences, fence.east().below(), Direction.UP);
 		helper.assertTrue(state(helper, fence.east()).getValue(CrossCollisionBlock.WEST), "a new fence connects to the overgrown fence");
 		helper.assertTrue(support(helper, fence).getValue(CrossCollisionBlock.EAST), "the overgrown fence connects back");
-		helper.assertValueEqual(state(helper, fence).getValue(VineOnSupportBlock.LOOK), SupportLook.THIN_X, "now spread along the row");
+		VBGameTests.assertValueEqual(helper, state(helper, fence).getValue(VineOnSupportBlock.LOOK), SupportLook.THIN_X, "now spread along the row");
 		// a wall placed next to an overgrown wall
 		BlockPos wall = new BlockPos(2, 2, 5);
 		helper.setBlock(wall.below(), Blocks.GRASS_BLOCK);
@@ -430,8 +443,8 @@ final class VBSupportTests
 		ItemStack walls = new ItemStack(Items.COBBLESTONE_WALL, 4);
 		player.setItemInHand(InteractionHand.MAIN_HAND, walls);
 		helper.placeAt(player, walls, wall.east().below(), Direction.UP);
-		helper.assertTrue(state(helper, wall.east()).getValue(WallBlock.WEST) != WallSide.NONE, "a new wall connects to the overgrown wall");
-		helper.assertTrue(support(helper, wall).getValue(WallBlock.EAST) != WallSide.NONE, "the overgrown wall connects back");
+		helper.assertTrue(state(helper, wall.east()).getValue(WallBlock.WEST_WALL) != WallSide.NONE, "a new wall connects to the overgrown wall");
+		helper.assertTrue(support(helper, wall).getValue(WallBlock.EAST_WALL) != WallSide.NONE, "the overgrown wall connects back");
 		// a gate between two overgrown walls
 		BlockPos gate = new BlockPos(5, 2, 8);
 		for (BlockPos side : List.of(gate.west(), gate.east())) {
@@ -472,9 +485,9 @@ final class VBSupportTests
 		for (int i = 0; i < 20000 && !state(helper, root.above()).is(VBBlocks.HOP_VINE_ON_SUPPORT.get()); i++) {
 			helper.randomTick(root);
 		}
-		helper.assertValueEqual(state(helper, root).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.MAX_AGE, "the root grew ripe");
+		VBGameTests.assertValueEqual(helper, state(helper, root).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.MAX_AGE, "the root grew ripe");
 		helper.assertTrue(state(helper, root.above()).is(VBBlocks.HOP_VINE_ON_SUPPORT.get()), "the ripe root climbed the fence above");
-		helper.assertValueEqual(VineClimbing.heightAt(helper.getLevel(), helper.absolutePos(root.above()), VBBlocks.HOP_BUSH.get()), 2, "root and vine");
+		VBGameTests.assertValueEqual(helper, VineClimbing.heightAt(helper.getLevel(), helper.absolutePos(root.above()), VBBlocks.HOP_BUSH.get()), 2, "root and vine");
 		BlockPos onStone = new BlockPos(6, 2, 3);
 		helper.setBlock(onStone.below(), Blocks.STONE);
 		build(helper, onStone, Blocks.BIRCH_FENCE.defaultBlockState());
@@ -482,7 +495,7 @@ final class VBSupportTests
 		overgrow(helper, onStone, VBBlocks.HOP_VINE_ON_SUPPORT.get(), 0, true);
 		helper.assertFalse(state(helper, onStone).canSurvive(helper.getLevel(), helper.absolutePos(onStone)), "a root can't live on stone");
 		helper.setBlock(onStone.below(), Blocks.COBBLESTONE); // any update makes it notice
-		helper.succeedWhen(() -> helper.assertBlockState(onStone, stoneFence));
+		helper.succeedWhen(() -> VBGameTests.assertBlockState(helper, onStone, stoneFence));
 	}
 
 	// ------------------------------------------------------------------ planting, both ways round
@@ -493,7 +506,7 @@ final class VBSupportTests
 	 * its age and connects to the fence beside it.
 	 */
 	private static void plantingBothWays(GameTestHelper helper) {
-		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 		// grapes into a fence on grass
 		BlockPos onGrass = new BlockPos(2, 2, 2);
 		helper.setBlock(onGrass.below(), Blocks.GRASS_BLOCK);
@@ -504,10 +517,10 @@ final class VBSupportTests
 		helper.useBlock(onGrass, player);
 		BlockState root = state(helper, onGrass);
 		helper.assertTrue(root.is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), "grapes planted into a fence on grass, found " + root);
-		helper.assertValueEqual(root.getValue(VineOnSupportBlock.BASE), true, "the plant's root");
-		helper.assertValueEqual(root.getValue(ClimbingCropBlock.AGE), 0, "a young plant");
-		helper.assertValueEqual(support(helper, onGrass), spruce, "the fence kept inside");
-		helper.assertValueEqual(grapes.getCount(), 7, "one grape used");
+		VBGameTests.assertValueEqual(helper, root.getValue(VineOnSupportBlock.BASE), true, "the plant's root");
+		VBGameTests.assertValueEqual(helper, root.getValue(ClimbingCropBlock.AGE), 0, "a young plant");
+		VBGameTests.assertValueEqual(helper, support(helper, onGrass), spruce, "the fence kept inside");
+		VBGameTests.assertValueEqual(helper, grapes.getCount(), 7, "one grape used");
 		// not on stone, not under water
 		BlockPos onStone = new BlockPos(5, 2, 2);
 		helper.setBlock(onStone.below(), Blocks.STONE);
@@ -519,7 +532,7 @@ final class VBSupportTests
 		build(helper, wet, Blocks.SPRUCE_FENCE.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, true));
 		helper.useBlock(wet, player);
 		helper.assertBlockPresent(Blocks.SPRUCE_FENCE, wet);
-		helper.assertValueEqual(grapes.getCount(), 7, "no grapes used on stone or under water");
+		VBGameTests.assertValueEqual(helper, grapes.getCount(), 7, "no grapes used on stone or under water");
 		// a fence into a ripe hop bush, next to a fence
 		BlockPos bush = new BlockPos(2, 2, 6);
 		ripeBush(helper, bush, VBBlocks.HOP_BUSH.get());
@@ -530,11 +543,11 @@ final class VBSupportTests
 		helper.useBlock(bush, player);
 		BlockState hops = state(helper, bush);
 		helper.assertTrue(hops.is(VBBlocks.HOP_VINE_ON_SUPPORT.get()), "the fence went into the hop bush, found " + hops);
-		helper.assertValueEqual(hops.getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.MAX_AGE, "the bush kept its age");
-		helper.assertValueEqual(hops.getValue(VineOnSupportBlock.BASE), true, "still the plant's root");
+		VBGameTests.assertValueEqual(helper, hops.getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.MAX_AGE, "the bush kept its age");
+		VBGameTests.assertValueEqual(helper, hops.getValue(VineOnSupportBlock.BASE), true, "still the plant's root");
 		helper.assertTrue(support(helper, bush).is(Blocks.OAK_FENCE) && support(helper, bush).getValue(CrossCollisionBlock.EAST), "the fence connects east");
 		helper.assertTrue(state(helper, bush.east()).getValue(CrossCollisionBlock.WEST), "the fence beside connects back");
-		helper.assertValueEqual(fences.getCount(), 1, "one fence used");
+		VBGameTests.assertValueEqual(helper, fences.getCount(), 1, "one fence used");
 		helper.succeed();
 	}
 
@@ -547,7 +560,7 @@ final class VBSupportTests
 	 */
 	private static void frameSeesFdTomatoVines(GameTestHelper helper) {
 		java.util.Optional<Block> tomatoes = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getOptional(
-				net.minecraft.resources.Identifier.fromNamespaceAndPath("farmersdelight", "tomatoes_on_support"));
+				new net.minecraft.resources.ResourceLocation("farmersdelight", "tomatoes_on_support"));
 		if (tomatoes.isEmpty()) {
 			helper.succeed();
 			return;
@@ -563,13 +576,13 @@ final class VBSupportTests
 			try {
 				blockEntity.getClass().getMethod("setSupport", BlockState.class).invoke(blockEntity, trellis);
 			} catch (ReflectiveOperationException e) {
-				throw helper.assertionException("FD's tomato vine takes a support: " + e);
+				throw VBGameTests.assertionException(helper, "FD's tomato vine takes a support: " + e);
 			}
-			helper.assertValueEqual(TrellisFrame.heldByTomatoVine(helper.getLevel().getBlockEntity(helper.absolutePos(vine))), trellis, "the trellis the tomato vine holds");
+			VBGameTests.assertValueEqual(helper, TrellisFrame.heldByTomatoVine(helper.getLevel().getBlockEntity(helper.absolutePos(vine))), trellis, "the trellis the tomato vine holds");
 		}
 		helper.assertFalse(frame(helper, west).contains(TrellisFrame.Part.POST_RIGHT), "no end post towards the tomato vine on a trellis");
 		helper.assertFalse(frame(helper, east).contains(TrellisFrame.Part.POST_LEFT), "no end post towards the tomato vine on a trellis");
-		helper.assertValueEqual(TrellisFrame.parts(helper.getLevel(), helper.absolutePos(middle), trellis), List.of(),
+		VBGameTests.assertValueEqual(helper, TrellisFrame.parts(helper.getLevel(), helper.absolutePos(middle), trellis), List.of(),
 				"the held trellis: trellises beside it, another tomato vine on a trellis above");
 		helper.assertTrue(TrellisFrame.parts(helper.getLevel(), helper.absolutePos(middle.above()), trellis).contains(TrellisFrame.Part.RAIL),
 				"the top tomato vine's trellis carries the rail");
@@ -591,21 +604,21 @@ final class VBSupportTests
 			helper.setBlock(new BlockPos(x, 3, 1), alongX);
 		}
 		helper.setBlock(new BlockPos(2, 3, 1), VBBlocks.GRAPE_VINE_ON_TRELLIS.get().defaultBlockState().setValue(jexxme.vineandbarrel.block.TrellisBlock.AXIS, Direction.Axis.X));
-		helper.assertValueEqual(frame(helper, new BlockPos(1, 3, 1)), List.of(TrellisFrame.Part.POST_LEFT, TrellisFrame.Part.RAIL, TrellisFrame.Part.CAP_LEFT),
+		VBGameTests.assertValueEqual(helper, frame(helper, new BlockPos(1, 3, 1)), List.of(TrellisFrame.Part.POST_LEFT, TrellisFrame.Part.RAIL, TrellisFrame.Part.CAP_LEFT),
 				"west end, top");
-		helper.assertValueEqual(frame(helper, new BlockPos(2, 3, 1)), List.of(TrellisFrame.Part.RAIL), "middle, top (a vine)");
-		helper.assertValueEqual(frame(helper, new BlockPos(3, 2, 1)), List.of(TrellisFrame.Part.POST_RIGHT), "east end, below the top");
-		helper.assertValueEqual(frame(helper, new BlockPos(3, 1, 1)), List.of(TrellisFrame.Part.POST_RIGHT), "the bush under the east end carries its post");
-		helper.assertValueEqual(frame(helper, new BlockPos(2, 1, 1)), List.of(), "the bush in the middle");
+		VBGameTests.assertValueEqual(helper, frame(helper, new BlockPos(2, 3, 1)), List.of(TrellisFrame.Part.RAIL), "middle, top (a vine)");
+		VBGameTests.assertValueEqual(helper, frame(helper, new BlockPos(3, 2, 1)), List.of(TrellisFrame.Part.POST_RIGHT), "east end, below the top");
+		VBGameTests.assertValueEqual(helper, frame(helper, new BlockPos(3, 1, 1)), List.of(TrellisFrame.Part.POST_RIGHT), "the bush under the east end carries its post");
+		VBGameTests.assertValueEqual(helper, frame(helper, new BlockPos(2, 1, 1)), List.of(), "the bush in the middle");
 		// a north-south row of two
 		helper.setBlock(new BlockPos(6, 1, 1), alongZ);
 		helper.setBlock(new BlockPos(6, 1, 2), alongZ);
-		helper.assertValueEqual(frame(helper, new BlockPos(6, 1, 1)), List.of(TrellisFrame.Part.POST_LEFT, TrellisFrame.Part.RAIL, TrellisFrame.Part.CAP_LEFT),
+		VBGameTests.assertValueEqual(helper, frame(helper, new BlockPos(6, 1, 1)), List.of(TrellisFrame.Part.POST_LEFT, TrellisFrame.Part.RAIL, TrellisFrame.Part.CAP_LEFT),
 				"north end of a north-south row");
 		// a lone trellis, and one beside a row going the other way
 		helper.setBlock(new BlockPos(6, 1, 5), alongX);
 		helper.setBlock(new BlockPos(7, 1, 5), alongZ);
-		helper.assertValueEqual(frame(helper, new BlockPos(6, 1, 5)), List.of(TrellisFrame.Part.POST_LEFT, TrellisFrame.Part.POST_RIGHT, TrellisFrame.Part.RAIL,
+		VBGameTests.assertValueEqual(helper, frame(helper, new BlockPos(6, 1, 5)), List.of(TrellisFrame.Part.POST_LEFT, TrellisFrame.Part.POST_RIGHT, TrellisFrame.Part.RAIL,
 				TrellisFrame.Part.CAP_LEFT, TrellisFrame.Part.CAP_RIGHT), "a trellis with nothing on its line around it");
 		// bushes with a trellis in their own block: part of the row, the one with nothing above gets the rail
 		for (int x = 1; x <= 2; x++) {
@@ -613,8 +626,8 @@ final class VBSupportTests
 			helper.setBlock(new BlockPos(x, 1, 8), VBBlocks.GRAPE_BUSH.get().defaultBlockState().setValue(ClimbingBushBlock.TRELLIS, jexxme.vineandbarrel.block.BushTrellis.X));
 		}
 		helper.setBlock(new BlockPos(1, 2, 8), alongX);
-		helper.assertValueEqual(frame(helper, new BlockPos(1, 1, 8)), List.of(TrellisFrame.Part.POST_LEFT), "a bush in a trellis, a trellis above it");
-		helper.assertValueEqual(frame(helper, new BlockPos(2, 1, 8)), List.of(TrellisFrame.Part.POST_RIGHT, TrellisFrame.Part.RAIL, TrellisFrame.Part.CAP_RIGHT),
+		VBGameTests.assertValueEqual(helper, frame(helper, new BlockPos(1, 1, 8)), List.of(TrellisFrame.Part.POST_LEFT), "a bush in a trellis, a trellis above it");
+		VBGameTests.assertValueEqual(helper, frame(helper, new BlockPos(2, 1, 8)), List.of(TrellisFrame.Part.POST_RIGHT, TrellisFrame.Part.RAIL, TrellisFrame.Part.CAP_RIGHT),
 				"a bush in a trellis with nothing above");
 		helper.succeed();
 	}
@@ -634,7 +647,7 @@ final class VBSupportTests
 		helper.setBlock(pos.below(), Blocks.GRASS_BLOCK);
 		build(helper, pos, Blocks.OAK_FENCE.defaultBlockState());
 		overgrow(helper, pos, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), 1, true);
-		jexxme.vineandbarrel.block.VineSupportBlockEntity entity = (jexxme.vineandbarrel.block.VineSupportBlockEntity) helper.getBlockEntity(pos,
+		jexxme.vineandbarrel.block.VineSupportBlockEntity entity = VBGameTests.blockEntity(helper, pos,
 				jexxme.vineandbarrel.block.VineSupportBlockEntity.class);
 		entity.setSupport(VBBlocks.HOP_VINE_ON_SUPPORT.get().defaultBlockState());
 		helper.assertTrue(entity.support() == null, "a vine can't hold another vine on a support");
@@ -649,7 +662,7 @@ final class VBSupportTests
 				Blocks.OAK_FENCE.defaultBlockState(), true);
 		helper.succeedWhen(() -> {
 			helper.assertTrue(support(helper, stale).getValue(CrossCollisionBlock.EAST), "the held fence caught up with the fence beside it");
-			helper.assertValueEqual(state(helper, stale).getValue(VineOnSupportBlock.LOOK), SupportLook.THIN_X, "and the leaves spread along the row");
+			VBGameTests.assertValueEqual(helper, state(helper, stale).getValue(VineOnSupportBlock.LOOK), SupportLook.THIN_X, "and the leaves spread along the row");
 		});
 	}
 
@@ -663,7 +676,7 @@ final class VBSupportTests
 		ripeBush(helper, onTrellis.below(), VBBlocks.GRAPE_BUSH.get());
 		helper.setBlock(onTrellis, VBBlocks.GRAPE_VINE_ON_TRELLIS.get().defaultBlockState().setValue(jexxme.vineandbarrel.block.TrellisBlock.AXIS, Direction.Axis.Z));
 		helper.getLevel().setBlockAndUpdate(helper.absolutePos(onTrellis), Blocks.FIRE.defaultBlockState());
-		helper.assertBlockState(onTrellis, trellis);
+		VBGameTests.assertBlockState(helper, onTrellis, trellis);
 		BlockPos onRope = new BlockPos(5, 2, 2);
 		ripeBush(helper, onRope.below(), VBBlocks.HOP_BUSH.get());
 		helper.setBlock(onRope, VBBlocks.HOP_VINE_ON_ROPE.get().defaultBlockState());
@@ -697,7 +710,7 @@ final class VBSupportTests
 			helper.setBlock(pos, Block.updateFromNeighbourShapes(state, helper.getLevel(), helper.absolutePos(pos)));
 			return state(helper, pos).getShape(helper.getLevel(), helper.absolutePos(pos)).bounds();
 		};
-		helper.assertValueEqual(outline.apply(ripe), new AABB(0, 0, 0, 1, 1, 1), "a round ripe bush");
+		VBGameTests.assertValueEqual(helper, outline.apply(ripe), new AABB(0, 0, 0, 1, 1, 1), "a round ripe bush");
 		AABB inTrellis = outline.apply(ripe.setValue(ClimbingBushBlock.TRELLIS, jexxme.vineandbarrel.block.BushTrellis.X));
 		helper.assertTrue(inTrellis.maxZ - inTrellis.minZ <= 6.0 / 16.0 + 1.0E-6 && inTrellis.maxY == 1.0,
 				"a ripe bush with a trellis in it is its planes and panel, not a block: " + inTrellis);
@@ -706,10 +719,13 @@ final class VBSupportTests
 		helper.setBlock(pos.above(), VBBlocks.TRELLIS.get().defaultBlockState());
 		AABB underTrellis = outline.apply(ripe);
 		helper.assertTrue(underTrellis.maxZ - underTrellis.minZ <= 6.0 / 16.0 + 1.0E-6, "a ripe bush under a trellis: its planes " + underTrellis);
-		helper.setBlock(pos.above(), Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState());
-		helper.assertValueEqual(outline.apply(ripe), VineSupports.ENABLED ? new AABB(2.0 / 16.0, 0, 2.0 / 16.0, 14.0 / 16.0, 1, 14.0 / 16.0)
-				: new AABB(0, 0, 0, 1, 1, 1), "a ripe bush under a chain");
-		helper.setBlock(pos.above(), Blocks.AIR);
+		if (!chainIsARope()) {
+			// 26.x: a copper chain (the iron one is the test data's rope). 1.20.1's only chain is that rope
+			helper.setBlock(pos.above(), Blocks.CHAIN.defaultBlockState());
+			VBGameTests.assertValueEqual(helper, outline.apply(ripe), VineSupports.ENABLED ? new AABB(2.0 / 16.0, 0, 2.0 / 16.0, 14.0 / 16.0, 1, 14.0 / 16.0)
+					: new AABB(0, 0, 0, 1, 1, 1), "a ripe bush under a chain");
+			helper.setBlock(pos.above(), Blocks.AIR);
+		}
 		if (!VineSupports.ENABLED) {
 			helper.succeed();
 			return;
@@ -722,7 +738,7 @@ final class VBSupportTests
 		overgrow(helper, root, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), 0, true);
 		AABB young = state(helper, root).getShape(helper.getLevel(), helper.absolutePos(root)).bounds();
 		AABB expected = fence.getShape(helper.getLevel(), helper.absolutePos(root)).bounds().minmax(new AABB(3.0 / 16.0, 0, 3.0 / 16.0, 13.0 / 16.0, 0.5, 13.0 / 16.0));
-		helper.assertValueEqual(young, expected, "a young root in a fence");
+		VBGameTests.assertValueEqual(helper, young, expected, "a young root in a fence");
 		helper.succeed();
 	}
 }

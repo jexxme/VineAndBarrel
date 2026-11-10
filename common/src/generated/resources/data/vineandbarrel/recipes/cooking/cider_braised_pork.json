@@ -1,0 +1,36 @@
+{
+  "type": "farmersdelight:cooking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "experience": 1.0,
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "farmersdelight"
+      ]
+    }
+  ],
+  "ingredients": [
+    {
+      "tag": "vineandbarrel:cooking/raw_pork"
+    },
+    {
+      "tag": "vineandbarrel:cooking/hard_cider"
+    },
+    {
+      "item": "minecraft:apple"
+    },
+    {
+      "tag": "vineandbarrel:cooking/onion"
+    }
+  ],
+  "recipe_book_tab": "meals",
+  "result": {
+    "item": "vineandbarrel:cider_braised_pork"
+  }
+}

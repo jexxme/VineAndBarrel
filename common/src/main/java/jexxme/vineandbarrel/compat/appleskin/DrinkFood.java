@@ -1,10 +1,9 @@
 package jexxme.vineandbarrel.compat.appleskin;
 
 import jexxme.vineandbarrel.drink.DrinkItem;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.food.FoodConstants;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 
@@ -27,14 +26,34 @@ public final class DrinkFood
 			return Optional.empty();
 		}
 		MobEffectInstance buff = drink.buff();
-		if (!buff.is(MobEffects.SATURATION)) {
+		if (buff.getEffect() != MobEffects.SATURATION) {
 			return Optional.empty();
 		}
 		int perTick = buff.getAmplifier() + 1;
 		int nutrition = perTick * buff.getDuration();
-		float saturation = FoodConstants.saturationByModifier(perTick, 1.0F) * buff.getDuration();
-		FoodProperties own = stack.get(DataComponents.FOOD);
-		return Optional.of(own == null ? new FoodProperties(nutrition, saturation, true)
-			: new FoodProperties(own.nutrition() + nutrition, own.saturation() + saturation, own.canAlwaysEat()));
+		// Vanilla's saturation of a food: nutrition x modifier x 2 (Saturation feeds with modifier 1)
+		float saturation = perTick * 1.0F * 2.0F * buff.getDuration();
+		FoodProperties own = stack.getItem().getFoodProperties();
+		// 1.20.1: a food says its saturation as a modifier of its nutrition, so the sum is turned back into one
+		FoodProperties.Builder food = new FoodProperties.Builder();
+		if (own == null) {
+			return Optional.of(food.nutrition(nutrition).saturationMod(saturation / (nutrition * 2.0F)).alwaysEat().build());
+		}
+		int totalNutrition = own.getNutrition() + nutrition;
+		float totalSaturation = own.getNutrition() * own.getSaturationModifier() * 2.0F + saturation;
+		food.nutrition(totalNutrition).saturationMod(totalNutrition == 0 ? 0.0F : totalSaturation / (totalNutrition * 2.0F));
+		if (own.canAlwaysEat()) {
+			food.alwaysEat();
+		}
+		if (own.isFastFood()) {
+			food.fast();
+		}
+		if (own.isMeat()) {
+			food.meat();
+		}
+		for (Pair<MobEffectInstance, Float> effect : own.getEffects()) {
+			food.effect(effect.getFirst(), effect.getSecond());
+		}
+		return Optional.of(food.build());
 	}
 }

@@ -12,22 +12,21 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import mezz.jei.api.recipe.types.IRecipeType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeHolder;
 
 /**
  * The Aging Barrel's JEI category (W3): base → young drink → aged drink, with how long each step takes. The base comes
  * as a bottle (1 serving) or a bucket (4 servings); the drinks are tapped into the vessel shown under them.
  */
-public class AgingCategory implements IRecipeCategory<RecipeHolder<AgingRecipe>>
+public class AgingCategory implements IRecipeCategory<AgingRecipe>
 {
 	public static final int WIDTH = 120;
 	public static final int HEIGHT = 58;
@@ -49,7 +48,7 @@ public class AgingCategory implements IRecipeCategory<RecipeHolder<AgingRecipe>>
 	}
 
 	@Override
-	public IRecipeType<RecipeHolder<AgingRecipe>> getRecipeType() {
+	public RecipeType<AgingRecipe> getRecipeType() {
 		return VBJeiPlugin.AGING;
 	}
 
@@ -74,27 +73,25 @@ public class AgingCategory implements IRecipeCategory<RecipeHolder<AgingRecipe>>
 	}
 
 	@Override
-	public void setRecipe(IRecipeLayoutBuilder builder, RecipeHolder<AgingRecipe> holder, IFocusGroup focuses) {
-		AgingRecipe recipe = holder.value();
+	public void setRecipe(IRecipeLayoutBuilder builder, AgingRecipe recipe, IFocusGroup focuses) {
 		IRecipeSlotBuilder base = builder.addSlot(RecipeIngredientRole.INPUT, BASE_X, SLOT_Y).setStandardSlotBackground()
-			.add(new ItemStack(recipe.base()));
-		recipe.bucket().ifPresent(bucket -> base.add(new ItemStack(bucket)));
-		builder.addSlot(RecipeIngredientRole.OUTPUT, YOUNG_X, SLOT_Y).setOutputSlotBackground().add(recipe.young());
-		builder.addSlot(RecipeIngredientRole.OUTPUT, AGED_X, SLOT_Y).setOutputSlotBackground().add(recipe.aged());
+			.addItemStack(new ItemStack(recipe.base()));
+		recipe.bucket().ifPresent(bucket -> base.addItemStack(new ItemStack(bucket)));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, YOUNG_X, SLOT_Y).setOutputSlotBackground().addItemStack(recipe.young());
+		builder.addSlot(RecipeIngredientRole.OUTPUT, AGED_X, SLOT_Y).setOutputSlotBackground().addItemStack(recipe.aged());
 		// The vessels each drink is tapped into
 		Item youngVessel = AgingBarrelBlockEntity.vesselOf(recipe.young());
 		if (youngVessel != null) {
-			builder.addSlot(RecipeIngredientRole.CRAFTING_STATION, YOUNG_X, VESSEL_Y).add(youngVessel);
+			builder.addSlot(RecipeIngredientRole.CATALYST, YOUNG_X, VESSEL_Y).addItemLike(youngVessel);
 		}
 		Item agedVessel = AgingBarrelBlockEntity.vesselOf(recipe.aged());
 		if (agedVessel != null) {
-			builder.addSlot(RecipeIngredientRole.CRAFTING_STATION, AGED_X, VESSEL_Y).add(agedVessel);
+			builder.addSlot(RecipeIngredientRole.CATALYST, AGED_X, VESSEL_Y).addItemLike(agedVessel);
 		}
 	}
 
 	@Override
-	public void draw(RecipeHolder<AgingRecipe> holder, IRecipeSlotsView slots, GuiGraphicsExtractor gui, double mouseX, double mouseY) {
-		AgingRecipe recipe = holder.value();
+	public void draw(AgingRecipe recipe, IRecipeSlotsView slots, GuiGraphics gui, double mouseX, double mouseY) {
 		fermentArrow.draw(gui, ARROW_1_X, ARROW_Y);
 		ageArrow.draw(gui, ARROW_2_X, ARROW_Y);
 		Font font = Minecraft.getInstance().font;
@@ -102,16 +99,15 @@ public class AgingCategory implements IRecipeCategory<RecipeHolder<AgingRecipe>>
 		label(gui, font, Component.translatable("jei.vineandbarrel.aging.more", days(recipe.agingTime())), ARROW_2_X + 12, LABEL_Y);
 	}
 
-	private static void label(GuiGraphicsExtractor gui, Font font, Component text, int centerX, int y) {
-		gui.text(font, text, centerX - font.width(text) / 2, y, TEXT_COLOR, false);
+	private static void label(GuiGraphics gui, Font font, Component text, int centerX, int y) {
+		gui.drawString(font, text, centerX - font.width(text) / 2, y, TEXT_COLOR, false);
 	}
 
 	@Override
-	public void getTooltip(ITooltipBuilder tooltip, RecipeHolder<AgingRecipe> holder, IRecipeSlotsView slots, double mouseX, double mouseY) {
+	public void getTooltip(ITooltipBuilder tooltip, AgingRecipe recipe, IRecipeSlotsView slots, double mouseX, double mouseY) {
 		if (mouseY < ARROW_Y || mouseY >= LABEL_Y + 10) {
 			return;
 		}
-		AgingRecipe recipe = holder.value();
 		if (mouseX >= ARROW_1_X && mouseX < ARROW_1_X + 24) {
 			tooltip.add(Component.translatable("jei.vineandbarrel.aging.fermenting", days(recipe.fermentingTime())));
 			// FD's juices come in bottles only

@@ -1,0 +1,30 @@
+{
+  "parent": "vineandbarrel:main/root",
+  "criteria": {
+    "brewed": {
+      "conditions": {},
+      "trigger": "vineandbarrel:brewed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.vineandbarrel.first_brew.description"
+    },
+    "frame": "task",
+    "hidden": false,
+    "icon": {
+      "item": "vineandbarrel:brew_kettle"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.vineandbarrel.first_brew.title"
+    }
+  },
+  "requirements": [
+    [
+      "brewed"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

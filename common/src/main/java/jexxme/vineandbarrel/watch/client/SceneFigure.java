@@ -2,16 +2,16 @@ package jexxme.vineandbarrel.watch.client;
 
 import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.ClientMannequin;
+import com.mojang.authlib.GameProfile;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
-import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.SwingAnimation;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -42,19 +42,21 @@ final class SceneFigure
 
 	private int drinking;
 
-	SceneFigure(Level level, String id, boolean viewerSkin, Vec3 pos, float yaw) {
-		this.entity = new Brewer(level, viewerSkin ? null : DefaultPlayerSkin.get(UUID.nameUUIDFromBytes(id.getBytes(StandardCharsets.UTF_8))));
+	SceneFigure(ClientLevel level, String id, boolean viewerSkin, Vec3 pos, float yaw) {
+		UUID uuid = UUID.nameUUIDFromBytes(id.getBytes(StandardCharsets.UTF_8));
+		this.entity = new Brewer(level, uuid, viewerSkin);
 		entity.setId(nextId--);
 		this.pos = pos;
 		this.walkFrom = pos;
 		this.yaw = this.headYaw = yaw;
 		apply();
 		entity.setOldPosAndRot();
+		entity.settleCloak();
 		entity.yBodyRotO = entity.yBodyRot;
 		entity.yHeadRotO = entity.yHeadRot;
 	}
 
-	ClientMannequin entity() {
+	AbstractClientPlayer entity() {
 		return entity;
 	}
 
@@ -68,6 +70,9 @@ final class SceneFigure
 		walkTicks = walked = 0;
 		yaw = headYaw = facing;
 		lookAt = null;
+		// a cape hangs still where the figure now stands (it would swing over from where it stood)
+		apply();
+		entity.settleCloak();
 	}
 
 	void walkTo(Vec3 to, int ticks) {
@@ -99,6 +104,7 @@ final class SceneFigure
 	/** Raises what it holds to the mouth for a while. */
 	void drink(int ticks) {
 		drinking = ticks;
+		entity.drinking = ticks > 0;
 	}
 
 	/** {@return whether it is drinking now} (the renderer raises the arm) */
@@ -107,12 +113,13 @@ final class SceneFigure
 	}
 
 	void swing() {
-		entity.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
+		entity.swing(InteractionHand.MAIN_HAND);
 	}
 
 	/** One tick: walking, turning, and the entity's own tick (the arm swing, the legs while walking). */
 	void tick() {
-		entity.commonTick();
+		entity.setOldPosAndRot();
+		entity.tickCount++;
 		entity.yBodyRotO = entity.yBodyRot;
 		entity.yHeadRotO = entity.yHeadRot;
 		if (walkTicks > 0) {
@@ -136,6 +143,7 @@ final class SceneFigure
 			// the head tips back while the drink goes down
 			drinking--;
 			pitch = Mth.approach(pitch, -25.0F, 8.0F);
+			entity.drinking = drinking > 0;
 		}
 		apply();
 		if (!broken) {
@@ -173,29 +181,80 @@ final class SceneFigure
 		return from + Mth.clamp(Mth.wrapDegrees(to - from), -TURN_SPEED, TURN_SPEED);
 	}
 
-	/** The figure itself: a client mannequin wearing the viewer's skin (or a default one), with no label under it. */
-	private static final class Brewer extends ClientMannequin
+	/**
+	 * The figure itself: a player no server knows, wearing the viewer's skin (or a default one) with every layer of it
+	 * shown. Its name is never drawn: name tags only show near the real camera, and it stands far from everything.
+	 */
+	static final class Brewer extends RemotePlayer
 	{
-		private final @Nullable PlayerSkin skin;
+		private static final byte ALL_LAYERS = 0x7F;
+		private final boolean viewerSkin;
+		/** Raising what it holds to the mouth (SceneFigureDrinkMixin gives the arm its pose). */
+		boolean drinking;
 
-		Brewer(Level level, @Nullable PlayerSkin skin) {
-			super(level, Minecraft.getInstance().playerSkinRenderCache());
-			this.skin = skin;
+		Brewer(ClientLevel level, UUID uuid, boolean viewerSkin) {
+			super(level, new GameProfile(uuid, "Brewer"));
+			this.viewerSkin = viewerSkin;
+			entityData.set(DATA_PLAYER_MODE_CUSTOMISATION, ALL_LAYERS);
 			setNoGravity(true);
 		}
 
-		@Override
-		public PlayerSkin getSkin() {
-			if (skin != null) {
-				return skin;
-			}
-			LocalPlayer player = Minecraft.getInstance().player;
-			return player != null ? player.getSkin() : super.getSkin();
+		/**
+		 * {@return the viewer's own player, if the figure wears its skin} Without one (or for a default skin) the figure
+		 * wears the default skin its id picks, without a cape. On this Minecraft version a player's skin is asked for
+		 * piece by piece (texture, model, cape, elytra), so each piece is passed on.
+		 */
+		private @Nullable LocalPlayer viewer() {
+			return viewerSkin ? Minecraft.getInstance().player : null;
 		}
 
 		@Override
-		public @Nullable Component belowNameDisplay() {
-			return null;
+		public boolean isSkinLoaded() {
+			LocalPlayer viewer = viewer();
+			return viewer != null && viewer.isSkinLoaded();
+		}
+
+		@Override
+		public ResourceLocation getSkinTextureLocation() {
+			LocalPlayer viewer = viewer();
+			return viewer != null ? viewer.getSkinTextureLocation() : DefaultPlayerSkin.getDefaultSkin(getUUID());
+		}
+
+		@Override
+		public String getModelName() {
+			LocalPlayer viewer = viewer();
+			return viewer != null ? viewer.getModelName() : DefaultPlayerSkin.getSkinModelName(getUUID());
+		}
+
+		@Override
+		public boolean isCapeLoaded() {
+			LocalPlayer viewer = viewer();
+			return viewer != null && viewer.isCapeLoaded();
+		}
+
+		@Override
+		public @Nullable ResourceLocation getCloakTextureLocation() {
+			LocalPlayer viewer = viewer();
+			return viewer != null ? viewer.getCloakTextureLocation() : null;
+		}
+
+		@Override
+		public boolean isElytraLoaded() {
+			LocalPlayer viewer = viewer();
+			return viewer != null && viewer.isElytraLoaded();
+		}
+
+		@Override
+		public @Nullable ResourceLocation getElytraTextureLocation() {
+			LocalPlayer viewer = viewer();
+			return viewer != null ? viewer.getElytraTextureLocation() : null;
+		}
+
+		/** A cape (the viewer's own) hangs where the figure is, instead of trailing in from where it was made. */
+		void settleCloak() {
+			xCloak = xCloakO = getX();
+			yCloak = yCloakO = getY();
+			zCloak = zCloakO = getZ();
 		}
 	}
 }

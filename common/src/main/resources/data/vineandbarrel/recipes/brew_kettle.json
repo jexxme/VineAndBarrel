@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "b": {
+      "item": "minecraft:brick"
+    },
+    "c": {
+      "tag": "vineandbarrel:crafting/copper_ingots"
+    },
+    "W": {
+      "tag": "vineandbarrel:crafting/water_buckets"
+    }
+  },
+  "pattern": [
+    "bcb",
+    "cWc",
+    "ccc"
+  ],
+  "result": {
+    "item": "vineandbarrel:brew_kettle"
+  }
+}

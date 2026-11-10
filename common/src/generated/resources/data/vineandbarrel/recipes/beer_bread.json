@@ -1,0 +1,47 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "farmersdelight"
+      ]
+    }
+  ],
+  "ingredients": [
+    {
+      "tag": "vineandbarrel:cooking/wheat"
+    },
+    {
+      "tag": "vineandbarrel:cooking/wheat"
+    },
+    {
+      "tag": "vineandbarrel:cooking/wheat"
+    },
+    [
+      {
+        "item": "vineandbarrel:barley_ale"
+      },
+      {
+        "item": "vineandbarrel:aged_barley_ale"
+      },
+      {
+        "item": "vineandbarrel:wheat_beer"
+      },
+      {
+        "item": "vineandbarrel:aged_wheat_beer"
+      }
+    ]
+  ],
+  "result": {
+    "count": 2,
+    "item": "vineandbarrel:beer_bread"
+  }
+}

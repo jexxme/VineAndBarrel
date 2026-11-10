@@ -1,0 +1,377 @@
+// Vine & Barrel on Forge (Minecraft 1.20.1): the common sources plus the Forge glue (entry point, events, capabilities,
+// configs, biome modifier, loot modifiers) and the data generators. Built with ModDevGradle's legacy plugin: the code
+// is written against Mojang's names, the game runs on SRG names, so the shipped jar is the reobfuscated one (reobfJar)
+// and every mod we compile or run against goes through a remapping configuration (mod*). See build/port/forge-build-notes.md.
+plugins {
+    id 'vb-loader'
+    id 'net.neoforged.moddev.legacyforge'
+}
+
+sourceSets {
+    // Test-only data for the GameTest server runs only (see legacyForge.mods), never packed into the jar. It stands in
+    // for optional mods, e.g. it puts a vanilla block into #farmersdelight:ropes so rope climbing is tested without
+    // Farmer's Delight on the classpath. Shared with Fabric: it lives in common/src/gametest.
+    gametest {
+        resources.srcDir project(':common').file('src/gametest/resources')
+    }
+    // The runs with other mods next to ours. No sources: only a runtime classpath each (below), which a run picks with
+    // `sourceSet = ...`. Farmer's Delight and the compat mods are on no other run's classpath.
+    fdRun {
+        java.srcDirs = []
+        resources.srcDirs = []
+    }
+    compatRun {
+        java.srcDirs = []
+        resources.srcDirs = []
+    }
+}
+
+def commonResourcesDir = project(':common').file('src/main/resources')
+def generatedResourcesDir = project(':common').file('src/generated/resources')
+
+// The access transformer is optional: the common code opens vanilla members with mixin accessors, so the file may be
+// missing or hold comments only. Then it is neither applied to the dev Minecraft nor packed into the jar. Entries name
+// fields and methods by their SRG names (build/port/forge-build-notes.md says how to look them up).
+def accessTransformerFile = new File(commonResourcesDir, 'META-INF/accesstransformer.cfg')
+def hasAccessEntries = accessTransformerFile.isFile() && accessTransformerFile.readLines('UTF-8').any { it.replaceFirst(/#.*$/, '').trim() }
+
+def mixinConfigs = ["${mod_id}.mixins.json".toString(), "${mod_id}.forge.mixins.json".toString()]
+def mixinRefmap = "${mod_id}.refmap.json".toString()
+
+legacyForge {
+    version = "${minecraft_version}-${forge_version}"
+    if (hasAccessEntries) {
+        accessTransformers.from(accessTransformerFile.absolutePath)
+    }
+    // An entry that matches nothing (a Mojang name where the SRG name belongs) fails the build instead of doing nothing
+    validateAccessTransformers = true
+
+    // Two views of the same mod (one mods.toml): the real one, and one with the test-only data from src/gametest on
+    // top. Only the GameTest servers load the second, so dev clients and servers play exactly what the jar ships.
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+        "${mod_id}_gametest" {
+            sourceSet(sourceSets.main)
+            sourceSet(sourceSets.gametest)
+        }
+    }
+
+    runs {
+        // forge.enableGameTest: the /test command and our GameTests in a dev game started by Gradle (Forge turns them on
+        // by itself only in an IDE run and on the GameTest server)
+        client {
+            client()
+            systemProperty 'forge.enableGameTest', 'true'
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'forge.enableGameTest', 'true'
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        // Headless: boots a GameTest server, runs every test of this mod, exits. No window, safe to run any time.
+        // This is THE test entry point, locally and in CI: ./gradlew :forge:runGameTestServer
+        gameTestServer {
+            type = "gameTestServer"
+            // Only this mod's GameTests: another mod's jar in the run can carry its own
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest.xml').absolutePath // for the parity checklist
+        }
+
+        // The same GameTests with Farmer's Delight installed: ./gradlew :forge:runGameTestServerFd (headless too). FD is
+        // never on the compile classpath; it is on this run's classpath only (the fdRun source set), remapped to
+        // Mojang's names, so the normal gameTestServer run stays FD-free. Every FD hook is tested in both runs (see
+        // FdCompatGameTests).
+        gameTestServerFd {
+            type = "gameTestServer"
+            sourceSet = sourceSets.fdRun
+            gameDirectory = project.file('run-fd')
+            // Only this mod's GameTests: Farmer's Delight's jar carries its own
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'vineandbarrel.expectFd', 'true' // fd_run_has_the_right_mods fails if FD did not load
+            systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest-fd.xml').absolutePath
+        }
+
+        // The compat GameTests with the thirst mods we ship data for (Tough As Nails, Homeostatic, Thirst Was Taken 2)
+        // and Spice of Life Onion: ./gradlew :forge:runGameTestServerCompat (headless too). They are on this run's
+        // classpath only (the compatRun source set), remapped to Mojang's names. The compat tests ask each mod itself
+        // what it read from our data (see ModCompatGameTests). Only those run here: the other tests' fake players have
+        // no network channels, and these mods sync their data to every player.
+        gameTestServerCompat {
+            type = "gameTestServer"
+            sourceSet = sourceSets.compatRun
+            gameDirectory = project.file('run-compat')
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'vineandbarrel.tests', 'compat_' // only the tests whose name starts like this (VBGameTests)
+            systemProperty 'vineandbarrel.expectCompat', 'true' // compat_run_has_the_right_mods fails if one did not load
+            // ...or if one is not the version gradle.properties (and so the wiki) names
+            systemProperty 'vineandbarrel.compatVersions', [
+                toughasnails: project.tough_as_nails_version, homeostatic: project.homeostatic_version,
+                thirstwastaken2: project.thirst_was_taken_version, solonion: project.spice_of_life_version,
+            ].collect { id, version -> "${id}=${version}" }.join(',')
+            systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest-compat.xml').absolutePath
+        }
+
+        // Writes the runtime values the wiki reads (site/src/data/runtime.json): ./gradlew :forge:runDocsExport. Headless.
+        // Only the exporter runs there (see VBDocsExport), so it never appears in the normal GameTest results.
+        docsExport {
+            type = "gameTestServer"
+            gameDirectory = project.file('run/docs-export')
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'vineandbarrel.docsExport', rootProject.file('site/src/data/runtime.json').getAbsolutePath()
+        }
+
+        // A local playtest server: ./gradlew :forge:runPlaytest. Farmer's Delight, JEI, Jade and AppleSkin loaded, the
+        // showcase world, bound to 127.0.0.1 in offline mode. Join with ./gradlew :forge:runPlaytestClient (its own
+        // folder; FD is on both runs' classpath, see fdRun) or any Forge client with the same mods. See preparePlaytest.
+        playtest {
+            server()
+            sourceSet = sourceSets.fdRun
+            gameDirectory = project.file('run/playtest')
+            programArgument '--nogui'
+        }
+
+        playtestClient {
+            client()
+            sourceSet = sourceSets.fdRun
+            gameDirectory = project.file('run/playtest-client')
+            programArguments.addAll '--username', 'Jexxme', '--quickPlayMultiplayer', '127.0.0.1:25565'
+        }
+
+        // Writes common/src/generated/resources (shared by both loaders): ./gradlew :forge:runData
+        data {
+            data()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file(project.findProperty('datagenOutput') ?: generatedResourcesDir).getAbsolutePath(), '--existing', commonResourcesDir.getAbsolutePath()
+        }
+
+        configureEach { run ->
+            loadedMods = run.name.startsWith('gameTestServer') ? [legacyForge.mods.named("${mod_id}_gametest").get()]
+                    : [legacyForge.mods.named(mod_id).get()]
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+}
+
+// Mixin on Forge 1.20.1: the annotation processor writes a refmap (the SRG names of everything the mixins target by
+// name) into the jar; the dev runs get the configs as --mixin.config arguments, the jar names them in its manifest.
+mixin {
+    add sourceSets.main, mixinRefmap
+    mixinConfigs.each { config it }
+}
+
+// Farmer's Delight and the compat mods reach their runs remapped (modFdRunRuntimeOnly, modCompatRunRuntimeOnly): a jar
+// in a run's mods folder is loaded as it is, in SRG names, and crashes on the first Minecraft call in a dev run.
+obfuscation {
+    createRemappingConfiguration(configurations.fdRunRuntimeOnly)
+    createRemappingConfiguration(configurations.compatRunRuntimeOnly)
+}
+sourceSets.fdRun.runtimeClasspath = sourceSets.main.runtimeClasspath + configurations.fdRunRuntimeClasspath
+sourceSets.compatRun.runtimeClasspath = sourceSets.main.runtimeClasspath + configurations.compatRunRuntimeClasspath
+
+dependencies {
+    // Mixin's processor jar carries its own old Guava classes (unrelocated). Error Prone (vb-java.gradle) shares the
+    // processor path and needs a current Guava, so Guava's own jar is named first: classes are found in path order.
+    // (The version is a floor; Error Prone's own, higher one wins.)
+    annotationProcessor 'com.google.guava:guava:32.1.2-jre'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    // MixinExtras is not part of Forge 1.20.1: it ships inside our jar (jar-in-jar, a game library that sets itself up,
+    // so nothing calls MixinExtrasBootstrap) and is on the dev runs' classpath
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.4.1'
+    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.4.1'
+    implementation 'io.github.llamalad7:mixinextras-forge:0.4.1'
+    jarJar('io.github.llamalad7:mixinextras-forge:0.4.1') {
+        version {
+            strictly '[0.4.1,)'
+            prefer '0.4.1'
+        }
+    }
+
+    // JEI and Jade: optional at runtime. Their APIs are compile-only; the integrations live in compat/jei and compat/jade,
+    // which only those mods load (@JeiPlugin, @WailaPlugin). Both are in every dev run, so the GameTest runs boot with them.
+    modCompileOnly "mezz.jei:jei-${jei_minecraft}-common-api:${jei_version}"
+    modCompileOnly "mezz.jei:jei-${jei_minecraft}-forge-api:${jei_version}"
+    modRuntimeOnly "mezz.jei:jei-${jei_minecraft}-forge:${jei_version}"
+    modCompileOnly "maven.modrinth:jade:${jade_version}"
+    modRuntimeOnly "maven.modrinth:jade:${jade_version}"
+
+    // AppleSkin: optional at runtime, set up like JEI and Jade. Only its API is compiled against (compat/appleskin, which
+    // only loads when AppleSkin is installed); it is in every dev run, so the GameTests check the hook for real.
+    modCompileOnly "squeek.appleskin:appleskin-forge:${appleskin_version}:api"
+    modRuntimeOnly "squeek.appleskin:appleskin-forge:${appleskin_version}"
+
+    // Thirst mods and Spice of Life Onion: Vine & Barrel ships plain data for them (tags and JSON, generated in compat/),
+    // no code. Only the GameTest probes compile against them (gametest/ModCompatGameTests' nested *Probe classes, loaded
+    // only in the compat run where these mods are installed). They stay off the other runs: see gameTestServerCompat.
+    [
+        "maven.modrinth:tough-as-nails:${tough_as_nails_modrinth}",
+        "maven.modrinth:glitchcore:${glitchcore_modrinth}",
+        "maven.modrinth:homeostatic:${homeostatic_modrinth}",
+        "maven.modrinth:thirst-was-taken-2:${thirst_was_taken_modrinth}",
+        "maven.modrinth:spice-of-life-onion:${spice_of_life_modrinth}",
+        "maven.modrinth:creativecore:${creativecore_modrinth}",
+    ].each { modCompileOnly it; modCompatRunRuntimeOnly it }
+
+    // Farmer's Delight (vectorwing's own build for this Minecraft, MIT), for the FD runs only
+    modFdRunRuntimeOnly "maven.modrinth:farmers-delight:${farmers_delight_modrinth}"
+}
+
+tasks.named('processResources', ProcessResources) {
+    def keepAccessTransformer = hasAccessEntries
+    inputs.property('keepAccessTransformer', keepAccessTransformer)
+    if (!keepAccessTransformer) {
+        exclude 'META-INF/accesstransformer.cfg'
+    }
+}
+
+// Forge 1.20.1 reads the mixin configs from the manifest (not from mods.toml), and Mixin finds the refmap through the
+// "refmap" key of each config. The key is added here, in the jar only: the shared config (common) stays as Fabric
+// needs it (Loom adds its own refmap there), and the dev runs, which have no refmap, don't warn about a missing one.
+tasks.named('jar', Jar) {
+    manifest.attributes(['MixinConfigs': mixinConfigs.join(',')])
+    filesMatching(mixinConfigs) {
+        filter(MixinRefmapFilter, refmap: mixinRefmap)
+    }
+}
+
+// What must be true of the jar that ships (build/libs, made by reobfJar from the jar task's output): `./gradlew check`
+def checkForgeJar = tasks.register('checkForgeJar') {
+    group = 'verification'
+    description = 'Fails unless the reobfuscated jar has its metadata, license files, mixin setup and MixinExtras, and no dev-only classes.'
+    def jarFile = tasks.named('reobfJar').flatMap { it.archiveFile }
+    def configs = mixinConfigs
+    def refmap = mixinRefmap
+    def expectAccessTransformer = hasAccessEntries
+    inputs.file(jarFile)
+    doLast {
+        def problems = []
+        new java.util.zip.ZipFile(jarFile.get().asFile).withCloseable { zip ->
+            def names = zip.entries().collect { it.name } as Set
+            ['META-INF/mods.toml', 'pack.mcmeta', 'LICENSE_vineandbarrel', 'NOTICE_farmersdelight.txt', refmap,
+             'META-INF/jarjar/metadata.json'].each {
+                if (!names.contains(it)) problems << "missing ${it}"
+            }
+            if (!names.any { it.startsWith('META-INF/jarjar/mixinextras-forge-') && it.endsWith('.jar') }) problems << 'MixinExtras is not in META-INF/jarjar'
+            if (names.any { it.startsWith('jexxme/vineandbarrel/gametest/VBDocsExport') }) problems << 'VBDocsExport is in the jar'
+            if (names.contains('vineandbarrel.classtweaker')) problems << "Fabric's class tweaker is in the jar"
+            if (names.contains('META-INF/accesstransformer.cfg') != expectAccessTransformer) problems << "META-INF/accesstransformer.cfg should ${expectAccessTransformer ? '' : 'not '}be in the jar"
+            def manifest = new java.util.jar.Manifest(zip.getInputStream(zip.getEntry('META-INF/MANIFEST.MF')))
+            if (manifest.mainAttributes.getValue('MixinConfigs') != configs.join(',')) problems << "manifest MixinConfigs is ${manifest.mainAttributes.getValue('MixinConfigs')}"
+            configs.each { config ->
+                def entry = zip.getEntry(config)
+                if (entry == null) {
+                    problems << "missing ${config}"
+                } else if (new groovy.json.JsonSlurper().parse(zip.getInputStream(entry), 'UTF-8').refmap != refmap) {
+                    problems << "${config} does not name the refmap ${refmap}"
+                }
+            }
+        }
+        if (!problems.isEmpty()) {
+            throw new GradleException("${jarFile.get().asFile}:\n  " + problems.join('\n  '))
+        }
+    }
+}
+tasks.named('check') {
+    dependsOn checkForgeJar
+}
+
+// Farmer's Delight and the compat mods are on their runs' classpath: a jar left in the run's mods folder (by hand, or by
+// an older build) would be loaded a second time, unremapped
+def prepareFdRun = tasks.register('prepareFdRun', Delete) {
+    group = 'verification'
+    description = "Empties run-fd/mods for runGameTestServerFd (Farmer's Delight is on the run's classpath)."
+    delete(layout.projectDirectory.dir('run-fd/mods'))
+}
+tasks.matching { it.name == 'runGameTestServerFd' }.configureEach {
+    dependsOn prepareFdRun
+}
+
+def prepareCompatRun = tasks.register('prepareCompatRun', Delete) {
+    group = 'verification'
+    description = "Empties run-compat/mods for runGameTestServerCompat (the compat mods are on the run's classpath)."
+    delete(layout.projectDirectory.dir('run-compat/mods'))
+}
+tasks.matching { it.name == 'runGameTestServerCompat' }.configureEach {
+    dependsOn prepareCompatRun
+}
+
+// Forge 47's GameTest server is not vanilla's: net.minecraft.server.Main builds it on the dedicated server's world, which
+// server.properties describes. With an empty file that is a normal overworld with a random seed, and the tests (placed
+// at y = -60) end up buried in stone, in the dark. So each GameTest run gets the world vanilla's own
+// GameTestServer.create makes (and Fabric's and NeoForge's runs use): the default flat world, seed 0, no structures,
+// creative, normal difficulty; and a new one every time, as vanilla's is (the old world folder is deleted: it would
+// carry the last run's blocks, mobs and time of day). The two game rules vanilla's test world sets (no mob spawning, no
+// weather cycle) are set by ForgePlatform when a GameTest server starts. The file also keeps vanilla from logging an
+// ERROR for a missing server.properties.
+def gameTestServerProperties = [
+    'level-type=minecraft:flat',
+    'generator-settings={"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:dirt","height":2},{"block":"minecraft:grass_block","height":1}],"biome":"minecraft:plains"}',
+    'level-seed=0',
+    'generate-structures=false',
+    'gamemode=creative',
+    'difficulty=normal',
+].join(System.lineSeparator()) + System.lineSeparator()
+// The wiki export (runDocsExport) is a GameTest server like the others and gets the same world.
+[run: 'runGameTestServer', 'run-fd': 'runGameTestServerFd', 'run-compat': 'runGameTestServerCompat', 'run/docs-export': 'runDocsExport'].each { folder, runTask ->
+    def dir = project.file(folder)
+    def prepare = tasks.register('prepare' + folder.split('[/-]').collect { it.capitalize() }.join('') + 'Folder') {
+        group = 'verification'
+        description = "Writes the GameTest world's server.properties into ${folder} and deletes the last run's world."
+        doLast {
+            dir.mkdirs()
+            new File(dir, 'server.properties').text = gameTestServerProperties
+            new File(dir, 'world').deleteDir()
+        }
+    }
+    tasks.matching { it.name == runTask }.configureEach {
+        dependsOn prepare
+        mustRunAfter prepareFdRun, prepareCompatRun
+    }
+}
+
+// The playtest server's settings. server.properties is only written once, so changes made for a playtest stay; the EULA
+// is never accepted here, that is the player's own call (run/playtest/eula.txt).
+def playtestDir = project.file('run/playtest')
+def preparePlaytest = tasks.register('preparePlaytest') {
+    group = 'application'
+    description = "Writes a local-only server.properties for the playtest server."
+    doLast {
+        playtestDir.mkdirs()
+        def props = new File(playtestDir, 'server.properties')
+        if (!props.exists()) {
+            props.text = [
+                'server-ip=127.0.0.1', 'online-mode=false', 'motd=Vine & Barrel playtest', 'level-name=world',
+                'gamemode=survival', 'difficulty=normal', 'spawn-protection=0', 'view-distance=12', 'simulation-distance=10',
+                'allow-flight=true', 'enable-command-block=true',
+            ].join(System.lineSeparator()) + System.lineSeparator()
+        }
+    }
+}
+tasks.matching { it.name == 'runPlaytest' || it.name == 'runPlaytestClient' }.configureEach {
+    dependsOn preparePlaytest
+}
+
+tasks.register('gameTestsAll') {
+    group = 'verification'
+    description = "Runs the Forge GameTests without and with Farmer's Delight, then with the compat mods (runGameTestServer, runGameTestServerFd, runGameTestServerCompat)."
+    dependsOn 'runGameTestServer', 'runGameTestServerFd', 'runGameTestServerCompat'
+}
+tasks.matching { it.name == 'runGameTestServerFd' }.configureEach {
+    mustRunAfter 'runGameTestServer'
+}
+tasks.matching { it.name == 'runGameTestServerCompat' }.configureEach {
+    mustRunAfter 'runGameTestServer', 'runGameTestServerFd'
+}
+
+// Maintainer dev tooling isn't part of this repository. Where it is checked out as dev/, dev/forge.gradle is applied
+// here, last, and may add its own source sets, mods, runs and tasks to this project (a run of its own sets its loadedMods).
+def devTooling = rootProject.file('dev/forge.gradle')
+if (devTooling.isFile()) {
+    apply from: devTooling
+}

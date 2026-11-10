@@ -1,0 +1,36 @@
+{
+  "type": "farmersdelight:cooking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "experience": 1.0,
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "farmersdelight"
+      ]
+    }
+  ],
+  "ingredients": [
+    {
+      "tag": "vineandbarrel:cooking/rice"
+    },
+    {
+      "tag": "vineandbarrel:cooking/white_wine"
+    },
+    {
+      "tag": "vineandbarrel:cooking/onion"
+    },
+    {
+      "item": "farmersdelight:bone_broth"
+    }
+  ],
+  "recipe_book_tab": "meals",
+  "result": {
+    "item": "vineandbarrel:white_wine_risotto"
+  }
+}

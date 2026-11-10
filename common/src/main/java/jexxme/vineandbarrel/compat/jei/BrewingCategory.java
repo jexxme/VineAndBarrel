@@ -12,15 +12,14 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import mezz.jei.api.recipe.types.IRecipeType;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeHolder;
 
 import java.util.List;
 
@@ -28,11 +27,11 @@ import java.util.List;
  * The Brew Kettle's JEI category: FD's cooking category (MIT) on our kettle screen. The kettle screen has FD's cooking
  * pot layout, so the background is the same cut-out of the screen, with the same heat, arrow, time and XP sprites.
  */
-public class BrewingCategory implements IRecipeCategory<RecipeHolder<BrewingRecipe>>
+public class BrewingCategory implements IRecipeCategory<BrewingRecipe>
 {
 	public static final int WIDTH = 118;
 	public static final int HEIGHT = 58;
-	private static final Identifier SCREEN = VineAndBarrel.id("textures/gui/brew_kettle.png");
+	private static final ResourceLocation SCREEN = VineAndBarrel.id("textures/gui/brew_kettle.png");
 
 	private final IDrawable background;
 	private final IDrawable icon;
@@ -56,7 +55,7 @@ public class BrewingCategory implements IRecipeCategory<RecipeHolder<BrewingReci
 	}
 
 	@Override
-	public IRecipeType<RecipeHolder<BrewingRecipe>> getRecipeType() {
+	public RecipeType<BrewingRecipe> getRecipeType() {
 		return VBJeiPlugin.BREWING;
 	}
 
@@ -81,41 +80,40 @@ public class BrewingCategory implements IRecipeCategory<RecipeHolder<BrewingReci
 	}
 
 	@Override
-	public void setRecipe(IRecipeLayoutBuilder builder, RecipeHolder<BrewingRecipe> holder, IFocusGroup focuses) {
-		BrewingRecipe recipe = holder.value();
+	public void setRecipe(IRecipeLayoutBuilder builder, BrewingRecipe recipe, IFocusGroup focuses) {
 		List<Ingredient> ingredients = recipe.ingredients();
 		for (int i = 0; i < ingredients.size(); i++) {
-			builder.addSlot(RecipeIngredientRole.INPUT, (i % 3) * 18 + 1, (i / 3) * 18 + 1).add(ingredients.get(i));
+			builder.addSlot(RecipeIngredientRole.INPUT, (i % 3) * 18 + 1, (i / 3) * 18 + 1).addIngredients(ingredients.get(i));
 		}
 		// The brew slot holds the whole batch; a bottle takes one serving of it, a bucket all of them
-		builder.addSlot(RecipeIngredientRole.OUTPUT, 96, 10).setOutputSlotBackground().add(recipe.result());
-		IRecipeSlotBuilder container = builder.addSlot(RecipeIngredientRole.CRAFTING_STATION, 63, 39).setStandardSlotBackground()
-			.add(new ItemStack(Items.GLASS_BOTTLE)).add(new ItemStack(Items.BUCKET));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 96, 10).setOutputSlotBackground().addItemStack(recipe.result());
+		IRecipeSlotBuilder container = builder.addSlot(RecipeIngredientRole.CATALYST, 63, 39).setStandardSlotBackground()
+			.addItemStack(new ItemStack(Items.GLASS_BOTTLE)).addItemStack(new ItemStack(Items.BUCKET));
 		IRecipeSlotBuilder output = builder.addSlot(RecipeIngredientRole.OUTPUT, 96, 39).setStandardSlotBackground()
-			.add(recipe.result().copyWithCount(1)).add(recipe.bucket());
+			.addItemStack(recipe.result().copyWithCount(1)).addItemStack(recipe.bucket());
 		builder.createFocusLink(container, output);
 	}
 
 	@Override
-	public void draw(RecipeHolder<BrewingRecipe> holder, IRecipeSlotsView slots, GuiGraphicsExtractor gui, double mouseX, double mouseY) {
+	public void draw(BrewingRecipe recipe, IRecipeSlotsView slots, GuiGraphics gui, double mouseX, double mouseY) {
 		background.draw(gui, 0, 0);
 		arrowBase.draw(gui, 60, 9);
 		arrow.draw(gui, 60, 9);
 		heatIndicator.draw(gui, 18, 39);
 		timeIcon.draw(gui, 64, 2);
-		if (holder.value().experience() > 0) {
+		if (recipe.experience() > 0) {
 			expIcon.draw(gui, 63, 21);
 		}
 	}
 
 	@Override
-	public void getTooltip(ITooltipBuilder tooltip, RecipeHolder<BrewingRecipe> holder, IRecipeSlotsView slots, double mouseX, double mouseY) {
+	public void getTooltip(ITooltipBuilder tooltip, BrewingRecipe recipe, IRecipeSlotsView slots, double mouseX, double mouseY) {
 		if (mouseX >= 61 && mouseX < 83 && mouseY >= 2 && mouseY < 30) {
-			int seconds = holder.value().brewingTime() / 20;
+			int seconds = recipe.brewingTime() / 20;
 			if (seconds > 0) {
 				tooltip.add(Component.translatable("gui.jei.category.smelting.time.seconds", seconds));
 			}
-			float experience = holder.value().experience();
+			float experience = recipe.experience();
 			if (experience > 0) {
 				tooltip.add(Component.translatable("gui.jei.category.smelting.experience", experience));
 			}

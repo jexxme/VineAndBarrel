@@ -7,14 +7,14 @@
 #       - build: both jars, Error Prone, forbidden patterns
 #       - datagen is up to date (common/src/generated), only when the data generators or common/src/generated
 #         changed since the last green datagen check
-#       - the GameTests on NeoForge and on Fabric, without Farmer's Delight; the run logs have no ERROR lines
+#       - the GameTests on Forge and on Fabric, without Farmer's Delight; the run logs have no ERROR lines
 #       - the singleplayer Fabric smoke test, without FD (a client in a hidden window)
 #     A GameTest or smoke run whose inputs (the sources, the build files, the run folder's settings and mods) are
 #     exactly those of its last green run is not run again. Delete build/verify-all to run everything anyway.
 #
 #   bash scripts/multiloader/verify-all.sh --full   everything, before merging and before tagging (about 15 minutes):
 #       - build and datagen, always
-#       - the six GameTest runs: NeoForge and Fabric, each without and with Farmer's Delight and with the compat mods
+#       - the six GameTest runs: Forge and Fabric, each without and with Farmer's Delight and with the compat mods
 #       - the six Fabric smoke tests: singleplayer, a LAN host, a dedicated server, each without and with FD
 #         Refabricated (screenshots in fabric/run/smoke-*/smoke). The dedicated server needs the Minecraft EULA
 #         accepted by the player in fabric/run/server-smoke/eula.txt; this script never accepts it, and without it
@@ -67,7 +67,7 @@ gradle() {
 }
 # Whether a task ran in that invocation and did not fail
 task_ok() { grep -qx "> Task $1" "$state/$2.log" && ! grep -qx "> Task $1 FAILED" "$state/$2.log"; }
-# How long a game ran, from the first and the last time stamp in its log (NeoForge's and Fabric's formats both)
+# How long a game ran, from the first and the last time stamp in its log (Forge's and Fabric's formats both)
 log_seconds() {
     [ -f "$1" ] || { echo '?'; return; }
     local first last
@@ -79,13 +79,18 @@ log_seconds() {
     b=$((10#${last:0:2} * 3600 + 10#${last:3:2} * 60 + 10#${last:6:2}))
     echo $(( (b - a + 86400) % 86400 ))
 }
+# This older-Minecraft branch only: ERROR lines other mods log about their own data on this Minecraft version, which
+# change nothing for our tests (one extended regex per line in known-errors.txt, matched against the whole line)
+known_errors=scripts/multiloader/known-errors.txt
 errors_in_log() { # prints the first ERROR lines and fails if there are any
     if [ ! -f "$1" ]; then
         echo "no log: $1"
         return 1
     fi
-    if grep -q '/ERROR\]' "$1"; then
-        grep '/ERROR\]' "$1" | head -5
+    local found
+    found=$(grep '/ERROR\]' "$1" | { if [ -s "$known_errors" ]; then grep -vEf <(grep -v '^#' "$known_errors" | tr -d '\r'); else cat; fi; })
+    if [ -n "$found" ]; then
+        echo "$found" | head -5
         return 1
     fi
 }
@@ -93,7 +98,7 @@ errors_in_log() { # prints the first ERROR lines and fails if there are any
 # What every game run depends on: all common and loader sources, the build files, Gradle's own files
 base_inputs=(common/src build-logic/src build-logic/build.gradle build-logic/settings.gradle build.gradle settings.gradle
     gradle.properties gradle common/build.gradle)
-neoforge_inputs=("${base_inputs[@]}" neoforge/src/main neoforge/build.gradle)
+forge_inputs=("${base_inputs[@]}" forge/src/main forge/build.gradle)
 fabric_inputs=("${base_inputs[@]}" fabric/src/main fabric/build.gradle)
 
 # The GameTest and smoke runs: name, Gradle task, the game's log, then its inputs besides the sources (the run folder's
@@ -105,11 +110,13 @@ add_run() {
     run_log[$name]=$log
     run_inputs[$name]="$*"
 }
-add_run neoforge :neoforge:runGameTestServer neoforge/run/logs/latest.log "${neoforge_inputs[*]}" neoforge/run/config neoforge/run/defaultconfigs neoforge/run/mods
-add_run neoforge-fd :neoforge:runGameTestServerFd neoforge/run-fd/logs/latest.log "${neoforge_inputs[*]}" neoforge/run-fd/config neoforge/run-fd/mods
-add_run neoforge-compat :neoforge:runGameTestServerCompat neoforge/run-compat/logs/latest.log "${neoforge_inputs[*]}" neoforge/run-compat/config neoforge/run-compat/mods
+# Forge: Farmer's Delight and the compat mods are on their runs' classpath (remapped), not in mods folders (forge/run-fd/mods
+# and forge/run-compat/mods are emptied by the build), so their versions are inputs through forge/build.gradle and gradle.properties
+add_run forge :forge:runGameTestServer forge/run/logs/latest.log "${forge_inputs[*]}" forge/run/config forge/run/defaultconfigs
+add_run forge-fd :forge:runGameTestServerFd forge/run-fd/logs/latest.log "${forge_inputs[*]}" forge/run-fd/config
+add_run forge-compat :forge:runGameTestServerCompat forge/run-compat/logs/latest.log "${forge_inputs[*]}" forge/run-compat/config
 add_run fabric :fabric:runGameTest fabric/run/gametest/logs/latest.log "${fabric_inputs[*]}" fabric/run/gametest/config fabric/run/gametest/mods fabric/run/gametest/server.properties
-add_run fabric-fd :fabric:runGameTestFd fabric/run-fd/logs/latest.log "${fabric_inputs[*]}" fabric/run-fd/config fabric/run-fd/mods fabric/run-fd/server.properties
+add_run fabric-fd :fabric:runGameTestFd fabric/run-fd/logs/latest.log "${fabric_inputs[*]}" fabric/run-fd/config fabric/run-fd/server.properties
 add_run fabric-compat :fabric:runGameTestCompat fabric/run-compat/logs/latest.log "${fabric_inputs[*]}" fabric/run-compat/config fabric/run-compat/mods fabric/run-compat/server.properties
 add_run smoke-client :fabric:runSmokeClient fabric/run/smoke-client/logs/latest.log "${fabric_inputs[*]}" fabric/src/smoketest fabric/run/smoke-client/config
 add_run smoke-client-fd :fabric:runSmokeClientFd fabric/run/smoke-client-fd/logs/latest.log "${fabric_inputs[*]}" fabric/src/smoketest fabric/run/smoke-client-fd/config
@@ -134,7 +141,7 @@ run_games() {
     gradle "$invocation" "${tasks[@]}" || true
     if $with_build; then
         local project
-        for project in common neoforge fabric; do
+        for project in common forge fabric; do
             task_ok ":$project:build" "$invocation" || { failed+=("build of $project (see $state/$invocation.log)"); break; }
         done
     fi
@@ -163,15 +170,15 @@ $fd && ! $full && tier+=", with FD"
 $smoke || tier+=", no smoke"
 if $full; then echo "verify-all: $tier"; else echo "verify-all: $tier (--full for everything)"; fi
 
-# Datagen first: its run writes neoforge/run/logs/latest.log, which the NeoForge GameTest run then replaces
+# Datagen first: its run writes forge/run/logs/latest.log, which the Forge GameTest run then replaces
 step "datagen is up to date"
-data_imports=$(grep -rhoE '^import jexxme\.vineandbarrel\.[A-Za-z0-9_.]+' neoforge/src/main/java/jexxme/vineandbarrel/data \
+data_imports=$(grep -rhoE '^import jexxme\.vineandbarrel\.[A-Za-z0-9_.]+' forge/src/main/java/jexxme/vineandbarrel/data \
     | sed 's/^import //; s/\./\//g' | sort -u)
-data_inputs=(neoforge/src/main/java/jexxme/vineandbarrel/data common/src/generated neoforge/build.gradle gradle.properties)
+data_inputs=(forge/src/main/java/jexxme/vineandbarrel/data common/src/generated forge/build.gradle gradle.properties)
 for class in $data_imports; do
     # A nested class (Outer.Inner) lives in Outer.java
     for file in "$class.java" "$(dirname "$class").java"; do
-        for root in common/src/main/java neoforge/src/main/java; do
+        for root in common/src/main/java forge/src/main/java; do
             [ -f "$root/$file" ] && data_inputs+=("$root/$file")
         done
     done
@@ -191,14 +198,14 @@ else
 fi
 
 if ! $full; then
-    runs=(neoforge fabric)
-    $fd && runs+=(neoforge-fd fabric-fd)
+    runs=(forge fabric)
+    $fd && runs+=(forge-fd fabric-fd)
     $smoke && runs+=(smoke-client)
     $smoke && $fd && runs+=(smoke-client-fd)
     step "build, ${runs[*]} (at most two games at once)"
     run_games quick true "${runs[@]}"
 else
-    runs=(neoforge neoforge-fd neoforge-compat fabric fabric-fd fabric-compat)
+    runs=(forge forge-fd forge-compat fabric fabric-fd fabric-compat)
     $smoke && runs+=(smoke-client smoke-client-fd)
     step "build, the six GameTest runs$($smoke && echo ' and the singleplayer smoke tests') (at most two games at once)"
     run_games full true "${runs[@]}"

@@ -2,7 +2,6 @@ package jexxme.vineandbarrel.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
@@ -12,7 +11,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.BonemealSource;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,44 +26,41 @@ public class WildCropBlock extends FlowerBlock implements BonemealableBlock
 {
 	protected static final VoxelShape SHAPE = Block.box(2.0D, 0.0D, 2.0D, 14.0D, 13.0D, 14.0D);
 
-	public WildCropBlock(Holder<MobEffect> suspiciousStewEffect, float effectSeconds, Properties properties) {
-		super(suspiciousStewEffect, effectSeconds, properties);
+	/** {@code effectDuration} as vanilla's flowers give it on 1.20.1: seconds, but ticks for an instant effect (saturation). */
+	public WildCropBlock(MobEffect suspiciousStewEffect, int effectDuration, Properties properties) {
+		super(suspiciousStewEffect, effectDuration, properties);
 	}
 
 	@Override
-	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return SHAPE;
 	}
 
-	/**
-	 * FD: "dirt or sand". In 26.3 grass, podzol, mycelium and moss left {@code #minecraft:dirt} for
-	 * {@code #minecraft:substrate_overworld}, so that is the tag that keeps FD's meaning (FD's own 26.x port still
-	 * checks {@code #dirt}, which rejects grass).
-	 */
+	/** FD: "dirt or sand" (on 1.20.1 {@code #minecraft:dirt} still holds grass, podzol, mycelium and moss). */
 	@Override
 	protected boolean mayPlaceOn(BlockState state, BlockGetter level, BlockPos pos) {
-		return state.is(BlockTags.SUBSTRATE_OVERWORLD) || state.is(BlockTags.SAND);
+		return state.is(BlockTags.DIRT) || state.is(BlockTags.SAND);
 	}
 
 	@Override
-	protected boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
+	public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
 		return false;
 	}
 
 
 
 	@Override
-	public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
+	public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, boolean isClient) {
 		return true;
 	}
 
 	@Override
-	public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
+	public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
 		return random.nextFloat() < 0.8F;
 	}
 
 	@Override
-	public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
+	public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
 		int wildCropLimit = 10;
 		for (BlockPos nearbyPos : BlockPos.betweenClosed(pos.offset(-4, -1, -4), pos.offset(4, 1, 4))) {
 			if (level.getBlockState(nearbyPos).is(this)) {

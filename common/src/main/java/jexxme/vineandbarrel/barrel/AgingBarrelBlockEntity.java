@@ -1,6 +1,11 @@
 package jexxme.vineandbarrel.barrel;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import jexxme.vineandbarrel.drink.DrinkColors;
+import jexxme.vineandbarrel.drink.DrinkItem;
 import jexxme.vineandbarrel.drink.DrinkItems;
 import jexxme.vineandbarrel.platform.Services;
 import jexxme.vineandbarrel.platform.hooks.DataPacketReceiver;
@@ -11,35 +16,28 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.component.DataComponentGetter;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NumericTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.ProblemReporter;
-import net.minecraft.util.Unit;
 import net.minecraft.world.Containers;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStackTemplate;
-import net.minecraft.world.item.component.UseRemainder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -132,14 +130,19 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 	/**
 	 * The dimension's day clock (0 where there is none, e.g. the Nether: game time alone counts there). During this
-	 * barrel's own tick it is the value read when the tick began: a tick asks five or six times, and every read is a
-	 * clock lookup (nothing in the tick can move the clock).
+	 * barrel's own tick it is the value read when the tick began: a tick asks five or six times (nothing in the tick
+	 * can move the clock).
 	 */
 	private long today() {
 		if (ticking) {
 			return tickToday;
 		}
-		return level != null ? level.getDefaultClockTime() : 0L;
+		return level != null ? dayClock(level) : 0L;
+	}
+
+	/** 1.20.1: every dimension reports the Overworld's day time; one without a day of its own (fixed time) has no clock. */
+	private static long dayClock(Level level) {
+		return level.dimensionType().hasFixedTime() ? 0L : level.getDayTime();
 	}
 
 	private void stamp(long age) {
@@ -283,8 +286,8 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 	/** The empty container a poured-in base leaves behind (its crafting remainder: a bucket or a glass bottle). */
 	public static ItemStack containerOf(ItemStack filled) {
-		ItemStackTemplate remainder = Services.PLATFORM.craftingRemainder(filled);
-		return remainder != null ? remainder.create() : ItemStack.EMPTY;
+		ItemStack remainder = Services.PLATFORM.craftingRemainder(filled);
+		return remainder != null ? remainder : ItemStack.EMPTY;
 	}
 
 	/**
@@ -309,7 +312,7 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 		}
 		batch = batch.withServings(batch.servings() + servings);
 		ItemStack container = containerOf(stack);
-		if (player == null || !player.hasInfiniteMaterials()) {
+		if (player == null || !player.getAbilities().instabuild) {
 			stack.shrink(1);
 		}
 		if (level != null) {
@@ -357,7 +360,7 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 			return ItemStack.EMPTY;
 		}
 		ItemStack filled = servings == SERVINGS_PER_BUCKET ? batch.bucket() : batch.base();
-		if (player == null || !player.hasInfiniteMaterials()) {
+		if (player == null || !player.getAbilities().instabuild) {
 			container.shrink(1);
 		}
 		float pitch = fillPitch();
@@ -371,10 +374,17 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 	// ------------------------------------------------------------------ tapping (B9, B13, B14)
 
-	/** The vessel a drink is served in: its use remainder (a mug or a wine glass), or null if it has none. */
+	/**
+	 * The vessel a drink is served in (a mug or a wine glass), or null if it has none. 1.20.1's food names no vessel
+	 * (1.21.1: what the food converts to; 26.x: the use remainder component), so the item itself says it: our drinks
+	 * know theirs ({@link DrinkItem#vessel}); any other item's is its crafting remainder, which is what Farmer's Delight
+	 * gives its drinks (a glass bottle) and hands back when they are drunk.
+	 */
 	public static @Nullable Item vesselOf(ItemStack drink) {
-		UseRemainder remainder = drink.get(DataComponents.USE_REMAINDER);
-		return remainder == null ? null : remainder.convertInto().item().value();
+		if (drink.isEmpty()) {
+			return null;
+		}
+		return drink.getItem() instanceof DrinkItem ours ? ours.vessel() : drink.getItem().getCraftingRemainingItem();
 	}
 
 	/** The vessel the current drink needs, or null while it is not a drink yet. */
@@ -400,7 +410,7 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 			return ItemStack.EMPTY;
 		}
 		ItemStack drink = content();
-		if (player == null || !player.hasInfiniteMaterials()) {
+		if (player == null || !player.getAbilities().instabuild) {
 			vessel.shrink(1);
 		}
 		setServings(batch.servings() - 1);
@@ -439,7 +449,7 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 	// ------------------------------------------------------------------ ticking
 
 	public static void serverTick(ServerLevel level, BlockPos pos, BlockState state, AgingBarrelBlockEntity barrel) {
-		barrel.tickToday = level.getDefaultClockTime();
+		barrel.tickToday = dayClock(level);
 		barrel.ticking = true;
 		try {
 			tick(level, pos, state, barrel);
@@ -497,7 +507,7 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 	private static boolean fitsInto(ItemStack slot, ItemStack add) {
 		if (add.isEmpty() || slot.isEmpty()) return true;
-		return ItemStack.isSameItemSameComponents(slot, add) && slot.getCount() + add.getCount() <= slot.getMaxStackSize();
+		return ItemStack.isSameItemSameTags(slot, add) && slot.getCount() + add.getCount() <= slot.getMaxStackSize();
 	}
 
 	// ------------------------------------------------------------------ comparator (B11)
@@ -531,22 +541,49 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 		return drops;
 	}
 
-	/** 26.x: the block entity is already gone in Block#affectNeighborsAfterRemoval, so slot items are dropped here. */
-	@Override
-	public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+	/** Drops the slot items where the barrel stood; called by {@link AgingBarrelBlock#onRemove} when the barrel goes. */
+	public void dropInventory() {
 		if (level instanceof ServerLevel serverLevel) {
-			Containers.dropContents(serverLevel, pos, getDroppableInventory());
+			Containers.dropContents(serverLevel, worldPosition, getDroppableInventory());
 		}
 	}
 
+	/** The barrel as an item with its batch (at its age), its "home brewed" mark and its name: what the loot table drops. */
 	public ItemStack getAsItem() {
 		ItemStack stack = new ItemStack(getBlockState().getBlock().asItem());
-		stack.applyComponents(collectComponents());
-		if (!batch.isEmpty()) {
-			// B16: an empty barrel is furnace fuel like a vanilla barrel, a full one never (it would burn the batch)
-			stack.remove(DataComponents.COOKING_FUEL);
+		if (customName != null) {
+			stack.setHoverName(customName);
 		}
-		return stack;
+		if (!batch.isEmpty()) {
+			AgingBarrelItem.setContents(stack, contents());
+			if (homeBrewed) {
+				AgingBarrelItem.setHomeBrewed(stack, true);
+			}
+		}
+		return stack; // the loaders' fuel hooks (AgingBarrelItem#fuelBlocked) keep a full barrel out of the furnace
+	}
+
+	/**
+	 * Takes over what a barrel item carries when it is placed (B12; 1.21.1 and 26.x: the item's components): the batch,
+	 * which carries on aging from the age it had when the barrel was broken, its "home brewed" mark, and the name.
+	 * Called by {@link AgingBarrelBlock#setPlacedBy}, after vanilla has loaded the item's {@code BlockEntityTag}.
+	 */
+	public void applyItem(ItemStack stack) {
+		if (stack.hasCustomHoverName()) {
+			customName = stack.getHoverName();
+		}
+		applyContents(AgingBarrelItem.contentsOf(stack), AgingBarrelItem.isHomeBrewed(stack));
+	}
+
+	/** Sets the batch as a barrel item carries it: {@code contents.elapsed()} is its age, from which it ages on. */
+	public void applyContents(BarrelContents contents, boolean brewedAtHome) {
+		batch = contents.withElapsed(0L);
+		// B12: the batch carries on aging from the age it had when the barrel was broken
+		pausedAge = batch.isEmpty() ? -1L : contents.elapsed();
+		fillTime = 0L;
+		fillDayTime = NO_DAY;
+		homeBrewed = !batch.isEmpty() && brewedAtHome;
+		resolvePausedAge();
 	}
 
 	private ItemSlots createHandler() {
@@ -589,45 +626,127 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 		return customName;
 	}
 
-	// ------------------------------------------------------------------ save, sync, item components
+	// ------------------------------------------------------------------ save, sync, the barrel item's data
 
 	@Override
-	protected void loadAdditional(ValueInput input) {
-		super.loadAdditional(input);
-		inventory.deserialize(input.childOrEmpty("Inventory"));
-		readBatch(input);
-		customName = input.read("CustomName", ComponentSerialization.CODEC).orElse(null);
+	public void load(CompoundTag tag) {
+		super.load(tag);
+		inventory.deserialize(tag.getCompound("Inventory"));
+		readBatch(tag);
+		customName = readName(tag);
 	}
 
-	private void readBatch(ValueInput input) {
-		batch = input.read("Batch", BarrelContents.CODEC).orElse(BarrelContents.EMPTY);
-		fillTime = input.getLongOr("FillTime", 0L);
-		fillDayTime = input.getLongOr("FillDayTime", NO_DAY);
-		pausedAge = input.getLongOr("PausedAge", -1L);
-		homeBrewed = !batch.isEmpty() && input.getBooleanOr("HomeBrewed", false);
+	// The tag has the same keys and shapes as 26.x's (there read and written through ValueInput/ValueOutput), but for
+	// the name's (see readName) and the item stacks in the slots, which are in this Minecraft's own form (ItemSlots)
+
+	private void readBatch(CompoundTag tag) {
+		BarrelContents saved = BarrelContents.fromTag(tag.get("Batch"),
+			problem -> LOGGER.warn("Aging Barrel at {}: can't read its batch: {}", worldPosition, problem));
+		// The batch's own "elapsed" is only for the barrel item (see writeBatch): a placed barrel goes by its fill time
+		batch = saved.withElapsed(0L);
+		fillTime = tag.contains("FillTime", Tag.TAG_ANY_NUMERIC) ? tag.getLong("FillTime") : 0L;
+		fillDayTime = tag.contains("FillDayTime", Tag.TAG_ANY_NUMERIC) ? tag.getLong("FillDayTime") : NO_DAY;
+		pausedAge = tag.contains("PausedAge", Tag.TAG_ANY_NUMERIC) ? tag.getLong("PausedAge") : -1L;
+		if (!batch.isEmpty() && !tag.contains("FillTime", Tag.TAG_ANY_NUMERIC) && !tag.contains("PausedAge", Tag.TAG_ANY_NUMERIC)) {
+			// A batch with neither a fill time nor a paused age is a barrel item's (its BlockEntityTag, which vanilla loads
+			// into the barrel when the item is placed): it carries on from its age (B12)
+			pausedAge = saved.elapsed();
+		}
+		homeBrewed = !batch.isEmpty() && tag.getBoolean("HomeBrewed");
+	}
+
+	/**
+	 * The name. 26.x and 1.21.1 save a text component as NBT (a plain name as a bare string, anything more as a compound),
+	 * which is how the taverns' structure files carry it; 1.20.1 has no such form and saves names as JSON in a string, as
+	 * its own block entities do. Both are read; the JSON string is written.
+	 */
+	private @Nullable Component readName(CompoundTag tag) {
+		Tag saved = tag.get("CustomName");
+		if (saved == null) {
+			return null;
+		}
+		try {
+			if (saved instanceof StringTag) {
+				String text = saved.getAsString();
+				try {
+					Component parsed = Component.Serializer.fromJson(text);
+					if (parsed != null) {
+						return parsed;
+					}
+				} catch (RuntimeException notJson) {
+					// 26.x's bare string: the name itself
+				}
+				return Component.literal(text);
+			}
+			return Component.Serializer.fromJson(componentJson(saved));
+		} catch (RuntimeException problem) {
+			LOGGER.warn("Aging Barrel at {}: can't read its name: {}", worldPosition, problem.toString());
+			return null;
+		}
+	}
+
+	/** A text component saved as NBT by 26.x or 1.21.1, as the JSON 1.20.1 reads (NBT has no booleans: its bytes are them). */
+	private static JsonElement componentJson(Tag tag) {
+		if (tag instanceof CompoundTag compound) {
+			JsonObject object = new JsonObject();
+			for (String key : compound.getAllKeys()) {
+				object.add(key, componentJson(compound.get(key)));
+			}
+			return object;
+		}
+		if (tag instanceof ListTag list) {
+			JsonArray array = new JsonArray();
+			for (Tag element : list) {
+				array.add(componentJson(element));
+			}
+			return array;
+		}
+		if (tag instanceof ByteTag flag) {
+			return new JsonPrimitive(flag.getAsByte() != 0);
+		}
+		if (tag instanceof NumericTag number) {
+			return new JsonPrimitive(number.getAsNumber());
+		}
+		return new JsonPrimitive(tag.getAsString());
+	}
+
+	private void writeName(CompoundTag tag) {
+		if (customName != null) {
+			tag.putString("CustomName", Component.Serializer.toJson(customName));
+		}
 	}
 
 	@Override
-	protected void saveAdditional(ValueOutput output) {
-		super.saveAdditional(output);
-		inventory.serialize(output.child("Inventory"));
-		writeBatch(output);
-		output.storeNullable("CustomName", ComponentSerialization.CODEC, customName);
+	protected void saveAdditional(CompoundTag tag) {
+		super.saveAdditional(tag);
+		CompoundTag slots = new CompoundTag();
+		inventory.serialize(slots);
+		tag.put("Inventory", slots);
+		writeBatch(tag);
+		writeName(tag);
 	}
 
-	/** The batch with the absolute fill time: a saved world keeps aging while it is unloaded, like a placed barrel. */
-	private void writeBatch(ValueOutput output) {
+	/**
+	 * The batch with the absolute fill time: a saved world keeps aging while it is unloaded, like a placed barrel.
+	 * 1.20.1: the batch's own "elapsed" is its age right now, which a placed barrel never reads back; it is there for the
+	 * loot table, which copies {@code Batch} as it is into the dropped barrel item (B12), where the age stays put.
+	 */
+	private void writeBatch(CompoundTag tag) {
 		if (!batch.isEmpty()) {
-			output.store("Batch", BarrelContents.CODEC, batch.withElapsed(0L));
-			output.putLong("FillTime", fillTime);
+			Tag saved = batch.withElapsed(age()).toTag();
+			if (saved == null) {
+				return;
+			}
+			tag.put("Batch", saved);
+			tag.putLong("FillTime", fillTime);
 			if (fillDayTime != NO_DAY) {
-				output.putLong("FillDayTime", fillDayTime);
+				tag.putLong("FillDayTime", fillDayTime);
 			}
 			if (pausedAge >= 0L) {
-				output.putLong("PausedAge", pausedAge);
+				tag.putLong("PausedAge", pausedAge);
 			}
 			if (homeBrewed) {
-				output.putBoolean("HomeBrewed", true);
+				tag.putBoolean("HomeBrewed", true);
 			}
 		}
 	}
@@ -639,19 +758,17 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 	/** What the client needs: the batch and its fill time (bubbles, drip colour), and the name. */
 	@Override
-	public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-		try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(this.problemPath(), LOGGER)) {
-			TagValueOutput output = TagValueOutput.createWithContext(reporter, registries);
-			writeBatch(output);
-			output.storeNullable("CustomName", ComponentSerialization.CODEC, customName);
-			return output.buildResult();
-		}
+	public CompoundTag getUpdateTag() {
+		CompoundTag tag = new CompoundTag();
+		writeBatch(tag);
+		writeName(tag);
+		return tag;
 	}
 
 	@Override
-	public void onDataPacket(Connection connection, ValueInput input) {
-		readBatch(input);
-		customName = input.read("CustomName", ComponentSerialization.CODEC).orElse(null);
+	public void onDataPacket(Connection connection, CompoundTag tag, HolderLookup.Provider registries) {
+		readBatch(tag);
+		customName = readName(tag);
 	}
 
 	private void changed() {
@@ -667,43 +784,6 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 		}
 	}
 
-
-	@Override
-	protected void applyImplicitComponents(DataComponentGetter components) {
-		super.applyImplicitComponents(components);
-		customName = components.get(DataComponents.CUSTOM_NAME);
-		BarrelContents contents = components.getOrDefault(BarrelRegistry.BARREL_CONTENTS.get(), BarrelContents.EMPTY);
-		batch = contents.withElapsed(0L);
-		// B12: the batch carries on aging from the age it had when the barrel was broken
-		pausedAge = batch.isEmpty() ? -1L : contents.elapsed();
-		fillTime = 0L;
-		fillDayTime = NO_DAY;
-		homeBrewed = !batch.isEmpty() && components.get(BarrelRegistry.HOME_BREWED.get()) != null;
-		resolvePausedAge();
-	}
-
-	@Override
-	protected void collectImplicitComponents(DataComponentMap.Builder components) {
-		super.collectImplicitComponents(components);
-		components.set(DataComponents.CUSTOM_NAME, customName);
-		if (!batch.isEmpty()) {
-			components.set(BarrelRegistry.BARREL_CONTENTS.get(), contents());
-			if (homeBrewed) {
-				components.set(BarrelRegistry.HOME_BREWED.get(), Unit.INSTANCE);
-			}
-		}
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public void removeComponentsFromTag(ValueOutput output) {
-		output.discard("CustomName");
-		output.discard("Batch");
-		output.discard("FillTime");
-		output.discard("FillDayTime");
-		output.discard("PausedAge");
-		output.discard("HomeBrewed");
-	}
 
 	/** Why something can't be poured into the barrel. */
 	public enum Refusal

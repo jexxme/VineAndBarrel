@@ -2,9 +2,8 @@ package jexxme.vineandbarrel.platform.registry;
 
 import jexxme.vineandbarrel.platform.Services;
 import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -29,7 +28,7 @@ public class DeferredRegister<T>
 {
 	private final ResourceKey<? extends Registry<T>> registryKey;
 	private final String namespace;
-	private final Map<Identifier, Function<Identifier, ? extends T>> entries = new LinkedHashMap<>();
+	private final Map<ResourceLocation, Function<ResourceLocation, ? extends T>> entries = new LinkedHashMap<>();
 	private boolean registered;
 
 	protected DeferredRegister(ResourceKey<? extends Registry<T>> registryKey, String namespace) {
@@ -49,19 +48,15 @@ public class DeferredRegister<T>
 		return new Items(namespace);
 	}
 
-	public static DataComponents createDataComponents(ResourceKey<Registry<DataComponentType<?>>> registryKey, String namespace) {
-		return new DataComponents(registryKey, namespace);
-	}
-
 	public <I extends T> DeferredHolder<T, I> register(String name, Supplier<? extends I> factory) {
 		return register(name, id -> factory.get());
 	}
 
-	public <I extends T> DeferredHolder<T, I> register(String name, Function<Identifier, ? extends I> factory) {
+	public <I extends T> DeferredHolder<T, I> register(String name, Function<ResourceLocation, ? extends I> factory) {
 		if (registered) {
-			throw new IllegalStateException("Cannot add " + name + " to " + registryKey.identifier() + " after it was handed to the loader");
+			throw new IllegalStateException("Cannot add " + name + " to " + registryKey.location() + " after it was handed to the loader");
 		}
-		Identifier id = Identifier.fromNamespaceAndPath(namespace, name);
+		ResourceLocation id = new ResourceLocation(namespace, name);
 		if (entries.putIfAbsent(id, Objects.requireNonNull(factory)) != null) {
 			throw new IllegalArgumentException("Duplicate registration " + id);
 		}
@@ -75,7 +70,7 @@ public class DeferredRegister<T>
 	/** Hands every entry to the loader (call once, from the mod's setup). */
 	public void register() {
 		if (registered) {
-			throw new IllegalStateException("Registered twice: " + registryKey.identifier());
+			throw new IllegalStateException("Registered twice: " + registryKey.location());
 		}
 		registered = true;
 		Services.PLATFORM.register(this);
@@ -90,7 +85,7 @@ public class DeferredRegister<T>
 	}
 
 	/** The entries in the order they were added: id, and the factory that makes the value (call it once). */
-	public Map<Identifier, Function<Identifier, ? extends T>> getEntries() {
+	public Map<ResourceLocation, Function<ResourceLocation, ? extends T>> getEntries() {
 		return Collections.unmodifiableMap(entries);
 	}
 
@@ -102,7 +97,7 @@ public class DeferredRegister<T>
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public <B extends Block> DeferredBlock<B> register(String name, Function<Identifier, ? extends B> factory) {
+		public <B extends Block> DeferredBlock<B> register(String name, Function<ResourceLocation, ? extends B> factory) {
 			return (DeferredBlock<B>) super.register(name, factory);
 		}
 
@@ -112,7 +107,7 @@ public class DeferredRegister<T>
 		}
 
 		public <B extends Block> DeferredBlock<B> registerBlock(String name, Function<BlockBehaviour.Properties, ? extends B> factory, Supplier<BlockBehaviour.Properties> properties) {
-			return register(name, id -> factory.apply(properties.get().setId(ResourceKey.create(Registries.BLOCK, id))));
+			return register(name, id -> factory.apply(properties.get()));
 		}
 
 		public <B extends Block> DeferredBlock<B> registerBlock(String name, Function<BlockBehaviour.Properties, ? extends B> factory, UnaryOperator<BlockBehaviour.Properties> properties) {
@@ -137,7 +132,7 @@ public class DeferredRegister<T>
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public <I extends Item> DeferredItem<I> register(String name, Function<Identifier, ? extends I> factory) {
+		public <I extends Item> DeferredItem<I> register(String name, Function<ResourceLocation, ? extends I> factory) {
 			return (DeferredItem<I>) super.register(name, factory);
 		}
 
@@ -147,7 +142,7 @@ public class DeferredRegister<T>
 		}
 
 		public <I extends Item> DeferredItem<I> registerItem(String name, Function<Item.Properties, ? extends I> factory, Supplier<Item.Properties> properties) {
-			return register(name, id -> factory.apply(properties.get().setId(ResourceKey.create(Registries.ITEM, id))));
+			return register(name, id -> factory.apply(properties.get()));
 		}
 
 		public <I extends Item> DeferredItem<I> registerItem(String name, Function<Item.Properties, ? extends I> factory, UnaryOperator<Item.Properties> properties) {
@@ -171,7 +166,7 @@ public class DeferredRegister<T>
 		}
 
 		public DeferredItem<BlockItem> registerSimpleBlockItem(String name, Supplier<? extends Block> block, Supplier<Item.Properties> properties) {
-			return registerItem(name, p -> new BlockItem(block.get(), p), () -> properties.get().useBlockDescriptionPrefix());
+			return registerItem(name, p -> new BlockItem(block.get(), p), properties);
 		}
 
 		public DeferredItem<BlockItem> registerSimpleBlockItem(String name, Supplier<? extends Block> block) {
@@ -193,17 +188,6 @@ public class DeferredRegister<T>
 		@Override
 		protected <I extends Item> DeferredItem<I> createHolder(ResourceKey<Item> key) {
 			return new DeferredItem<>(key);
-		}
-	}
-
-	public static class DataComponents extends DeferredRegister<DataComponentType<?>>
-	{
-		protected DataComponents(ResourceKey<Registry<DataComponentType<?>>> registryKey, String namespace) {
-			super(registryKey, namespace);
-		}
-
-		public <D> DeferredHolder<DataComponentType<?>, DataComponentType<D>> registerComponentType(String name, UnaryOperator<DataComponentType.Builder<D>> builder) {
-			return register(name, () -> builder.apply(DataComponentType.builder()).build());
 		}
 	}
 }

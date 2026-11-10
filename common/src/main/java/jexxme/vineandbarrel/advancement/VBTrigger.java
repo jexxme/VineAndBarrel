@@ -1,14 +1,13 @@
 package jexxme.vineandbarrel.advancement;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.advancements.triggers.Criterion;
-import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
-import net.minecraft.core.Holder;
+import com.google.gson.JsonObject;
+import net.minecraft.advancements.critereon.AbstractCriterionTriggerInstance;
+import net.minecraft.advancements.critereon.ContextAwarePredicate;
+import net.minecraft.advancements.critereon.DeserializationContext;
+import net.minecraft.advancements.critereon.SimpleCriterionTrigger;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -18,23 +17,34 @@ import java.util.function.Supplier;
  */
 public class VBTrigger extends SimpleCriterionTrigger<VBTrigger.TriggerInstance>
 {
+	private final ResourceLocation id;
+
+	public VBTrigger(ResourceLocation id) {
+		this.id = id;
+	}
+
 	@Override
-	public Codec<TriggerInstance> codec() {
-		return TriggerInstance.CODEC;
+	public ResourceLocation getId() {
+		return id;
+	}
+
+	@Override
+	protected TriggerInstance createInstance(JsonObject json, ContextAwarePredicate player, DeserializationContext context) {
+		return new TriggerInstance(id, player);
 	}
 
 	public void trigger(ServerPlayer player) {
 		this.trigger(player, instance -> true);
 	}
 
-	public static Criterion<TriggerInstance> criterion(Supplier<VBTrigger> trigger) {
-		return trigger.get().createCriterion(new TriggerInstance(Optional.empty()));
+	public static TriggerInstance criterion(Supplier<VBTrigger> trigger) {
+		return new TriggerInstance(trigger.get().getId(), ContextAwarePredicate.ANY);
 	}
 
-	public record TriggerInstance(Optional<Holder<LootItemCondition>> player) implements SimpleCriterionTrigger.SimpleInstance
+	public static class TriggerInstance extends AbstractCriterionTriggerInstance
 	{
-		public static final Codec<TriggerInstance> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-			LootItemCondition.CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player)
-		).apply(inst, TriggerInstance::new));
+		public TriggerInstance(ResourceLocation id, ContextAwarePredicate player) {
+			super(id, player);
+		}
 	}
 }

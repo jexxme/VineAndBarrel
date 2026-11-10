@@ -1,10 +1,8 @@
 package jexxme.vineandbarrel.drink;
 
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.UseRemainder;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -57,8 +55,7 @@ public enum PlacedDrink implements StringRepresentable
 			return GLASS;
 		}
 		if (stack.getItem() instanceof DrinkItem drink) {
-			UseRemainder remainder = stack.get(DataComponents.USE_REMAINDER);
-			Item vessel = remainder == null ? null : remainder.convertInto().item().value();
+			Item vessel = drink.vessel();
 			if (vessel == DrinkItems.MUG.get()) {
 				return drink.isAged() ? MUG_AGED : MUG_FULL;
 			}

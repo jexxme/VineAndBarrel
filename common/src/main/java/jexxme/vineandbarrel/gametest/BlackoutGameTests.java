@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.advancement.BlackoutTrigger;
 import jexxme.vineandbarrel.advancement.VBAdvancementGenerator;
+import jexxme.vineandbarrel.mixin.StructureTemplatePoolAccessor;
 import jexxme.vineandbarrel.barrel.AgingBarrelBlock;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.registry.VBBlocks;
@@ -16,36 +17,31 @@ import jexxme.vineandbarrel.tipsy.TipsyEvents;
 import jexxme.vineandbarrel.tipsy.TipsyRegistry;
 import jexxme.vineandbarrel.world.village.VillageStructures;
 import jexxme.vineandbarrel.world.village.VillageType;
-import net.minecraft.advancements.AdvancementHolder;
-import net.minecraft.advancements.AdvancementType;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.FrameType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.ValidateNearbyPoi;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.ai.village.poi.PoiTypes;
-import net.minecraft.world.entity.animal.cow.Cow;
+import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.zombie.Zombie;
-import net.minecraft.world.entity.npc.villager.Villager;
-import net.minecraft.world.entity.vehicle.boat.Boat;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -66,12 +62,10 @@ import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.pieces.PiecesContainer;
 import net.minecraft.world.level.levelgen.structure.pools.SinglePoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
-import net.minecraft.world.level.levelgen.structure.templatesystem.LiquidSettings;
-import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
+import static jexxme.vineandbarrel.gametest.TipsyGameTests.assertValueEqual;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
@@ -100,9 +94,8 @@ import java.util.function.Consumer;
  */
 public final class BlackoutGameTests
 {
-	private static final Identifier LARGE = VineAndBarrel.id("gametest/empty_32x6x32");
-	private static final Identifier TALL = VineAndBarrel.id("gametest/empty_16x14x16");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
+	private static final ResourceLocation LARGE = VineAndBarrel.id("gametest/empty_32x6x32");
+	private static final ResourceLocation TALL = VineAndBarrel.id("gametest/empty_16x14x16");
 	private static final List<Entry> TESTS = new ArrayList<>();
 	/** The middle of the test area, one above the floor: where the player stands. */
 	private static final BlockPos MIDDLE = new BlockPos(16, 1, 16);
@@ -110,7 +103,7 @@ public final class BlackoutGameTests
 	private static final int NEAR = 12;
 	private static final BlockPos TAVERN_AT = new BlockPos(2, 0, 2);
 
-	private record Entry(ResourceKey<Consumer<GameTestHelper>> function, Identifier structure, int maxTicks) {
+	private record Entry(String name, ResourceLocation structure, int maxTicks, Consumer<GameTestHelper> function) {
 	}
 
 	static {
@@ -146,22 +139,18 @@ public final class BlackoutGameTests
 	private BlackoutGameTests() {
 	}
 
-	private static void test(String name, Identifier structure, int maxTicks, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		TESTS.add(new Entry(ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name)), structure, maxTicks));
+	private static void test(String name, ResourceLocation structure, int maxTicks, Consumer<GameTestHelper> function) {
+		TESTS.add(new Entry(name, structure, maxTicks, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(BlackoutGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("blackout"));
 		for (Entry test : TESTS) {
 			// Under the open sky: the surface finders read the heightmaps
-			event.registerTest(test.function().identifier(), new FunctionGameTestInstance(test.function(), new TestData<>(environment,
-				Level.OVERWORLD, test.structure(), test.maxTicks(), 0, true, Rotation.NONE, false, 1, 1, true, 0)));
+			VBGameTests.add(event, "blackout", test.name(), test.structure(), test.maxTicks(), true, test.function());
 		}
 	}
 
@@ -179,11 +168,11 @@ public final class BlackoutGameTests
 	/** A real server player in the level (advancements, ticking), standing in the middle; removed by {@link #done}. */
 	private static ServerPlayer player(GameTestHelper helper) {
 		@SuppressWarnings("removal")
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		// Survival pockets: a creative inventory swallows what doesn't fit instead of dropping it
 		net.minecraft.world.level.GameType.SURVIVAL.updatePlayerAbilities(player.getAbilities());
 		Vec3 at = helper.absoluteVec(Vec3.atBottomCenterOf(MIDDLE));
-		player.snapTo(at.x, at.y, at.z, 0.0F, 0.0F);
+		player.moveTo(at.x, at.y, at.z, 0.0F, 0.0F);
 		return player;
 	}
 
@@ -210,7 +199,7 @@ public final class BlackoutGameTests
 
 	/** {@return a bed (foot here, head toward {@code facing})}; its head position */
 	private static BlockPos bed(GameTestHelper helper, BlockPos foot, Direction facing) {
-		BlockState state = Blocks.BED.red().defaultBlockState().setValue(BedBlock.FACING, facing);
+		BlockState state = Blocks.RED_BED.defaultBlockState().setValue(BedBlock.FACING, facing);
 		helper.setBlock(foot, state.setValue(BedBlock.PART, BedPart.FOOT));
 		helper.setBlock(foot.relative(facing), state.setValue(BedBlock.PART, BedPart.HEAD));
 		return helper.absolutePos(foot.relative(facing));
@@ -220,8 +209,8 @@ public final class BlackoutGameTests
 		helper.assertTrue(BlackoutSpots.isSafe(helper.getLevel(), wake.spot()), what + ": the spot " + wake.spot() + " is safe");
 	}
 
-	private static AdvancementHolder advancement(GameTestHelper helper, String name) {
-		AdvancementHolder holder = helper.getLevel().getServer().getAdvancements().get(VBAdvancementGenerator.id(name));
+	private static Advancement advancement(GameTestHelper helper, String name) {
+		Advancement holder = helper.getLevel().getServer().getAdvancements().getAdvancement(VBAdvancementGenerator.id(name));
 		helper.assertTrue(holder != null, "advancement " + name + " is loaded");
 		return holder;
 	}
@@ -263,11 +252,11 @@ public final class BlackoutGameTests
 				Blackout.Memory.NONE, random, () -> fake(BlackoutEnding.RIGHT_HERE));
 			two.merge(wake.ending(), 1, Integer::sum);
 		}
-		helper.assertValueEqual(two.keySet(), Set.of(BlackoutEnding.TAVERN, BlackoutEnding.IN_A_BOAT), "only the possible endings");
+		assertValueEqual(helper, two.keySet(), Set.of(BlackoutEnding.TAVERN, BlackoutEnding.IN_A_BOAT), "only the possible endings");
 		double tavern = two.get(BlackoutEnding.TAVERN) / 4000.0;
 		helper.assertTrue(Math.abs(tavern - 10.0 / 18.0) < 0.04, "tavern 10 : boat 8, got " + tavern);
 		// Nothing possible: right here
-		helper.assertValueEqual(Blackout.choose(e -> null, Blackout.Memory.NONE, random, () -> fake(BlackoutEnding.RIGHT_HERE)).ending(),
+		assertValueEqual(helper, Blackout.choose(e -> null, Blackout.Memory.NONE, random, () -> fake(BlackoutEnding.RIGHT_HERE)).ending(),
 			BlackoutEnding.RIGHT_HERE, "nothing possible");
 		helper.succeed();
 	}
@@ -275,7 +264,7 @@ public final class BlackoutGameTests
 	private static Map<BlackoutEnding, Integer> firstDraws(Blackout.Memory memory, int draws, RandomSource random) {
 		Map<BlackoutEnding, Integer> counts = new EnumMap<>(BlackoutEnding.class);
 		for (int i = 0; i < draws; i++) {
-			counts.merge(Blackout.drawOrder(memory, random).getFirst(), 1, Integer::sum);
+			counts.merge(Blackout.drawOrder(memory, random).get(0), 1, Integer::sum);
 		}
 		return counts;
 	}
@@ -296,21 +285,21 @@ public final class BlackoutGameTests
 		Map<BlackoutEnding, Integer> seen = new EnumMap<>(BlackoutEnding.class);
 		for (int i = 0; i < 2000; i++) {
 			List<BlackoutEnding> order = Blackout.drawOrder(memory, random);
-			helper.assertValueEqual(order.size(), BlackoutEnding.COLLECTABLE.size(), "every ending is in the order once");
+			assertValueEqual(helper, order.size(), BlackoutEnding.COLLECTABLE.size(), "every ending is in the order once");
 			if (last != null) {
-				helper.assertValueEqual(order.getLast(), last, "the last ending is tried last");
+				assertValueEqual(helper, order.get(order.size() - 1), last, "the last ending is tried last");
 			}
-			BlackoutEnding next = order.getFirst();
+			BlackoutEnding next = order.get(0);
 			helper.assertTrue(next != last, "the same ending twice in a row: " + next);
 			seen.merge(next, 1, Integer::sum);
 			memory = new Blackout.Memory(memory.seen(), next.id(), "");
 			last = next;
 		}
-		helper.assertValueEqual(seen.keySet(), Set.copyOf(BlackoutEnding.COLLECTABLE), "every ending came up");
+		assertValueEqual(helper, seen.keySet(), Set.copyOf(BlackoutEnding.COLLECTABLE), "every ending came up");
 		// The only one possible: it repeats rather than nothing
 		Blackout.Memory homeLast = new Blackout.Memory(List.of("home"), "home", "");
 		BlackoutSpots.Wake wake = Blackout.choose(e -> e == BlackoutEnding.HOME ? fake(e) : null, homeLast, random, () -> fake(BlackoutEnding.RIGHT_HERE));
-		helper.assertValueEqual(wake.ending(), BlackoutEnding.HOME, "home again when it is the only option");
+		assertValueEqual(helper, wake.ending(), BlackoutEnding.HOME, "home again when it is the only option");
 		helper.succeed();
 	}
 
@@ -327,7 +316,7 @@ public final class BlackoutGameTests
 				used.add(line);
 				last = line;
 			}
-			helper.assertValueEqual(used.size(), ending.lineCount(), ending + ": every line comes up");
+			assertValueEqual(helper, used.size(), ending.lineCount(), ending + ": every line comes up");
 		}
 		helper.succeed();
 	}
@@ -345,7 +334,7 @@ public final class BlackoutGameTests
 			for (int i = 0; i < ending.lineCount(); i++) {
 				helper.assertTrue(lang.has(ending.lineKey(i)), "missing line " + ending.lineKey(i));
 			}
-			for (Identifier souvenir : ending.souvenirs()) {
+			for (ResourceLocation souvenir : ending.souvenirs()) {
 				helper.assertTrue(net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(souvenir), ending + " souvenir " + souvenir + " exists");
 			}
 			helper.assertFalse(ending.souvenir(RandomSource.create(1L)).isEmpty(), ending + " always gives a souvenir");
@@ -370,7 +359,7 @@ public final class BlackoutGameTests
 				case SEAT -> net.minecraft.sounds.SoundEvents.BOAT_PADDLE_WATER;
 				case GROUND -> hay.getSoundType().getStepSound();
 			};
-			helper.assertTrue(sound.event() == expected, ending + " wakes up to " + sound.event().location());
+			helper.assertTrue(sound.event() == expected, ending + " wakes up to " + sound.event().getLocation());
 			helper.assertTrue(sound.volume() > 0.0F && sound.volume() <= 1.0F, ending + " is quiet: " + sound.volume());
 		}
 		helper.assertTrue(jexxme.vineandbarrel.tipsy.TipsySounds.wakeSound(BlackoutEnding.TAVERN, planks).event() == planks.getSoundType().getStepSound(),
@@ -379,12 +368,12 @@ public final class BlackoutGameTests
 		helper.assertTrue(jexxme.vineandbarrel.tipsy.TipsySounds.getUpSound(BlackoutEnding.Pose.GROUND, planks).event() == planks.getSoundType().getFallSound(),
 			"a thud on the floor");
 		helper.assertTrue(jexxme.vineandbarrel.tipsy.TipsySounds.getUpSound(BlackoutEnding.Pose.BED, planks) != null, "out of bed onto the floor");
-		helper.assertValueEqual(jexxme.vineandbarrel.tipsy.TipsySounds.HEARTBEAT_LEVEL, jexxme.vineandbarrel.tipsy.Tipsy.ABSOLUTE_MAX_LEVEL, "the heartbeat is Tipsy V's");
+		assertValueEqual(helper, jexxme.vineandbarrel.tipsy.TipsySounds.HEARTBEAT_LEVEL, jexxme.vineandbarrel.tipsy.Tipsy.ABSOLUTE_MAX_LEVEL, "the heartbeat is Tipsy V's");
 		var volume = jexxme.vineandbarrel.tipsy.TipsyConfig.HEARTBEAT_VOLUME;
 		helper.assertTrue(volume.side() == jexxme.vineandbarrel.platform.ConfigValue.Side.CLIENT && volume.min() == 0.0 && volume.getDefault() == 1.0,
 			"heartbeat volume: a client setting, 0 turns it off");
 		// On the server the heartbeat plays nothing (it is the local player's own, on their client)
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		jexxme.vineandbarrel.tipsy.TipsySounds.heartbeat(player, 1.0);
 		player.discard();
 		helper.succeed();
@@ -392,19 +381,19 @@ public final class BlackoutGameTests
 
 	/** The client's timeline: lids fall, stay shut until the eyes open, the body tips over, lies, and gets up. */
 	private static void poseMath(GameTestHelper helper) {
-		helper.assertValueEqual(BlackoutPose.eyesClosed(Blackout.TICKS), 0.0F, "eyes open at the last drink");
-		helper.assertValueEqual(BlackoutPose.eyesClosed(Blackout.TICKS - Blackout.FADE_OUT), 1.0F, "shut after the fade");
-		helper.assertValueEqual(BlackoutPose.eyesClosed(Blackout.WAKE_AT), 1.0F, "shut while waking up somewhere");
-		helper.assertValueEqual(BlackoutPose.eyesClosed(Blackout.EYES_OPEN), 1.0F, "still shut when they start to open");
-		helper.assertValueEqual(BlackoutPose.eyesClosed(Blackout.EYES_UP), 0.0F, "open");
+		assertValueEqual(helper, BlackoutPose.eyesClosed(Blackout.TICKS), 0.0F, "eyes open at the last drink");
+		assertValueEqual(helper, BlackoutPose.eyesClosed(Blackout.TICKS - Blackout.FADE_OUT), 1.0F, "shut after the fade");
+		assertValueEqual(helper, BlackoutPose.eyesClosed(Blackout.WAKE_AT), 1.0F, "shut while waking up somewhere");
+		assertValueEqual(helper, BlackoutPose.eyesClosed(Blackout.EYES_OPEN), 1.0F, "still shut when they start to open");
+		assertValueEqual(helper, BlackoutPose.eyesClosed(Blackout.EYES_UP), 0.0F, "open");
 		float peek = BlackoutPose.eyesClosed(Blackout.EYES_OPEN - 0.45F * (Blackout.EYES_OPEN - Blackout.EYES_UP));
 		float droop = BlackoutPose.eyesClosed(Blackout.EYES_OPEN - 0.6F * (Blackout.EYES_OPEN - Blackout.EYES_UP));
 		helper.assertTrue(peek < droop && droop < 1.0F, "they peek, droop and open: " + peek + " " + droop);
-		helper.assertValueEqual(BlackoutPose.lying(Blackout.TICKS), 0.0F, "standing at the last drink");
-		helper.assertValueEqual(BlackoutPose.lying(Blackout.TICKS - Blackout.TIP), 1.0F, "down after the tip");
-		helper.assertValueEqual(BlackoutPose.lying(Blackout.WAKE_AT), 1.0F, "lying");
-		helper.assertValueEqual(BlackoutPose.lying(Blackout.GET_UP), 1.0F, "lying until getting up");
-		helper.assertValueEqual(BlackoutPose.lying(0.0F), 0.0F, "up at the end");
+		assertValueEqual(helper, BlackoutPose.lying(Blackout.TICKS), 0.0F, "standing at the last drink");
+		assertValueEqual(helper, BlackoutPose.lying(Blackout.TICKS - Blackout.TIP), 1.0F, "down after the tip");
+		assertValueEqual(helper, BlackoutPose.lying(Blackout.WAKE_AT), 1.0F, "lying");
+		assertValueEqual(helper, BlackoutPose.lying(Blackout.GET_UP), 1.0F, "lying until getting up");
+		assertValueEqual(helper, BlackoutPose.lying(0.0F), 0.0F, "up at the end");
 		helper.assertTrue(BlackoutPose.lying(Blackout.GET_UP / 2.0F) > 0.0F && BlackoutPose.lying(Blackout.GET_UP / 2.0F) < 1.0F, "getting up slowly");
 		// The head ends up a body's length to the side, near the ground
 		Vec3 head = BlackoutPose.tipped(0.0F, 90.0F, 1.0F, 1.6);
@@ -438,7 +427,7 @@ public final class BlackoutGameTests
 		helper.setBlock(new BlockPos(12, 1, 10), Blocks.STONE_SLAB);
 		Vec3 slab = BlackoutSpots.standAt(level, helper.absolutePos(new BlockPos(12, 1, 10)));
 		helper.assertTrue(slab != null && Math.abs(slab.y - helper.absolutePos(new BlockPos(12, 1, 10)).getY() - 0.5) < 1.0E-4, "on top of a slab: " + slab);
-		Zombie zombie = helper.spawn(EntityTypes.ZOMBIE, new BlockPos(20, 1, 20));
+		Zombie zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(20, 1, 20));
 		zombie.setNoAi(true);
 		helper.assertTrue(BlackoutSpots.standAt(level, helper.absolutePos(new BlockPos(24, 1, 20))) == null, "a zombie nearby");
 		zombie.discard();
@@ -460,36 +449,36 @@ public final class BlackoutGameTests
 			BlockPos head = bed(h, new BlockPos(6, 1, 6), Direction.NORTH);
 			// Spawn set at the foot half, as a click on it would
 			BlockPos foot = head.south();
-			ServerPlayer.RespawnConfig spawn = new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(level.dimension(), foot, 0.0F, 0.0F), false);
-			player.setRespawnPosition(spawn, false);
+			player.setRespawnPosition(level.dimension(), foot, 0.0F, false, false);
 			BlackoutSpots.Wake wake = BlackoutSpots.home(player);
 			helper.assertTrue(wake != null && head.equals(wake.bed()), "home is the bed's head: " + wake);
-			helper.assertValueEqual(wake.ending().pose(), BlackoutEnding.Pose.BED, "home is lain in");
+			assertValueEqual(helper, wake.ending().pose(), BlackoutEnding.Pose.BED, "home is lain in");
 
 			level.setBlockAndUpdate(head, level.getBlockState(head).setValue(BedBlock.OCCUPIED, true));
 			helper.assertTrue(BlackoutSpots.home(player) == null, "someone lies in it");
 			level.setBlockAndUpdate(head, level.getBlockState(head).setValue(BedBlock.OCCUPIED, false));
 
-			player.setRespawnPosition(new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(Level.NETHER, foot, 0.0F, 0.0F), false), false);
+			player.setRespawnPosition(Level.NETHER, foot, 0.0F, false, false);
 			helper.assertTrue(BlackoutSpots.home(player) == null, "a bed in another dimension");
-			player.setRespawnPosition(spawn, false);
+			player.setRespawnPosition(level.dimension(), foot, 0.0F, false, false);
 
 			// Too far to stumble home: a blackout is no way to travel
 			Vec3 here = player.position();
-			player.snapTo(head.getX() + BlackoutSpots.HOME_RANGE + 2, here.y, head.getZ());
+			player.moveTo(head.getX() + BlackoutSpots.HOME_RANGE + 2, here.y, head.getZ());
 			helper.assertTrue(BlackoutSpots.home(player) == null, "a bed more than " + BlackoutSpots.HOME_RANGE + " blocks away");
-			player.snapTo(head.getX() + BlackoutSpots.HOME_RANGE - 2, here.y, head.getZ());
+			player.moveTo(head.getX() + BlackoutSpots.HOME_RANGE - 2, here.y, head.getZ());
 			helper.assertTrue(BlackoutSpots.home(player) != null, "a bed just within reach");
-			player.snapTo(here.x, here.y, here.z);
+			player.moveTo(here.x, here.y, here.z);
 
 			Stat<?> rest = Stats.CUSTOM.get(Stats.TIME_SINCE_REST);
 			player.getStats().setValue(player, rest, 50000);
 			blackOutTo(player, BlackoutSpots.home(player), RandomSource.create(1L));
 			helper.assertTrue(player.isSleeping() && head.equals(player.getSleepingPos().orElse(null)), "lying in the own bed");
-			helper.assertValueEqual(Blackout.pose(player), BlackoutEnding.Pose.BED, "pose");
-			helper.assertValueEqual(player.getStats().getValue(rest), 50000, "phantoms keep counting");
-			helper.assertValueEqual(player.getRespawnConfig(), spawn, "the spawn point stays");
-			helper.assertValueEqual(level.getBlockState(head).getValue(BedBlock.OCCUPIED), true, "the bed is taken while lying in it");
+			assertValueEqual(helper, Blackout.pose(player), BlackoutEnding.Pose.BED, "pose");
+			assertValueEqual(helper, player.getStats().getValue(rest), 50000, "phantoms keep counting");
+			helper.assertTrue(level.dimension().equals(player.getRespawnDimension()) && foot.equals(player.getRespawnPosition())
+				&& player.getRespawnAngle() == 0.0F && !player.isRespawnForced(), "the spawn point stays: " + player.getRespawnPosition());
+			assertValueEqual(helper, level.getBlockState(head).getValue(BedBlock.OCCUPIED), true, "the bed is taken while lying in it");
 			TipsyRegistry.BLACKOUT.remove(player);
 			player.stopSleepInBed(true, true);
 
@@ -509,7 +498,7 @@ public final class BlackoutGameTests
 		ServerPlayer player = player(helper);
 		ServerLevel level = helper.getLevel();
 		BlockPos head = bed(helper, new BlockPos(20, 1, 20), Direction.EAST);
-		player.setRespawnPosition(new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(level.dimension(), head, 0.0F, 0.0F), false), false);
+		player.setRespawnPosition(level.dimension(), head, 0.0F, false, false);
 		blackOutTo(player, BlackoutSpots.home(player), RandomSource.create(2L));
 		helper.assertTrue(player.isSleeping(), "in bed");
 		// By day vanilla asks whether you may stay in bed ("you can only sleep at night"): out cold, you may
@@ -533,7 +522,7 @@ public final class BlackoutGameTests
 			helper.assertFalse(player.isSleeping(), "out of bed");
 			helper.assertTrue(most[0] < 100 && most[0] > 50, "slept " + most[0] + " ticks, under 100");
 			helper.assertTrue(inBed[0] >= Blackout.WAKE_AT - Blackout.GET_UP - 2, "stayed in bed until getting up: " + inBed[0]);
-			helper.assertValueEqual(level.getBlockState(head).getValue(BedBlock.OCCUPIED), false, "the bed is free again");
+			assertValueEqual(helper, level.getBlockState(head).getValue(BedBlock.OCCUPIED), false, "the bed is free again");
 			done(helper, player);
 			helper.succeed();
 		});
@@ -569,9 +558,9 @@ public final class BlackoutGameTests
 		ServerLevel level = helper.getLevel();
 		Vec3 middle = helper.absoluteVec(Vec3.atBottomCenterOf(MIDDLE));
 		RandomSource random = RandomSource.create(9L);
-		helper.spawn(EntityTypes.WOLF, new BlockPos(14, 1, 14)).setNoAi(true);
+		helper.spawn(EntityType.WOLF, new BlockPos(14, 1, 14)).setNoAi(true);
 		helper.assertTrue(BlackoutSpots.farmyard(level, middle, NEAR, random) == null, "a wolf is no farmyard");
-		Cow cow = helper.spawn(EntityTypes.COW, new BlockPos(20, 1, 16));
+		Cow cow = helper.spawn(EntityType.COW, new BlockPos(20, 1, 16));
 		helper.runAfterDelay(5, () -> {
 			BlackoutSpots.Wake wake = BlackoutSpots.farmyard(level, middle, NEAR, random);
 			helper.assertTrue(wake != null && wake.friend() == cow, "next to the cow: " + wake);
@@ -583,7 +572,7 @@ public final class BlackoutGameTests
 			helper.assertTrue(look.dot(toCow) > 0.95, "facing the cow");
 			ServerPlayer player = player(helper);
 			blackOutTo(player, wake, random);
-			helper.assertValueEqual(Blackout.pose(player), BlackoutEnding.Pose.GROUND, "lying on the ground");
+			assertValueEqual(helper, Blackout.pose(player), BlackoutEnding.Pose.GROUND, "lying on the ground");
 			helper.assertTrue(player.position().distanceTo(wake.spot()) < 0.01, "moved there");
 			helper.runAfterDelay(3, () -> {
 				helper.assertTrue(cow.getLookControl().isLookingAtTarget(), "the cow stares");
@@ -591,9 +580,9 @@ public final class BlackoutGameTests
 				helper.assertTrue(cow.getNavigation().isDone(), "and stands still");
 				Blackout.Scene scene = TipsyRegistry.BLACKOUT_SCENE.get(player);
 				Component line = Component.translatable(BlackoutEnding.FARMYARD.lineKey(0),
-					EntityTypes.COW.getDescription());
+					EntityType.COW.getDescription());
 				helper.assertTrue(line.getString().contains("Cow"), "the line names it: " + line.getString());
-				helper.assertValueEqual(scene.friendType(), Optional.of("minecraft:cow"), "the scene remembers the animal");
+				assertValueEqual(helper, scene.friendType(), Optional.of("minecraft:cow"), "the scene remembers the animal");
 				done(helper, player);
 				helper.succeed();
 			});
@@ -636,21 +625,21 @@ public final class BlackoutGameTests
 		VillageType type = VillageType.PLAINS;
 		SinglePoolElement element = tavernElement(helper, type);
 		BlockPos origin = helper.absolutePos(TAVERN_AT);
-		boolean placed = element.place(level.getStructureTemplateManager(), level, level.structureManager(), level.getChunkSource().getGenerator(),
+		boolean placed = element.place(level.getStructureManager(), level, level.structureManager(), level.getChunkSource().getGenerator(),
 			origin, origin, Rotation.NONE, BoundingBox.fromCorners(origin.offset(-2, -2 - VillageStructures.CELLAR_HEIGHT, -2),
-				origin.offset(level.getStructureTemplateManager().get(type.tavern()).orElseThrow().getSize()).offset(1, 1, 1)), RandomSource.create(5L),
-			LiquidSettings.APPLY_WATERLOGGING, false);
+				origin.offset(level.getStructureManager().get(type.tavern()).orElseThrow().getSize()).offset(1, 1, 1)), RandomSource.create(5L),
+			false);
 		helper.assertTrue(placed, "the tavern places");
 		BlockPos from = helper.absolutePos(new BlockPos(7, 2, 7));
 		helper.assertTrue(BlackoutSpots.tavernBarrels(level, from, 16).isEmpty(), "barrels outside a village don't count");
 
-		BoundingBox box = element.getBoundingBox(level.getStructureTemplateManager(), origin, Rotation.NONE);
+		BoundingBox box = element.getBoundingBox(level.getStructureManager(), origin, Rotation.NONE);
 		inVillage(helper, box, () -> {
 			List<BlockPos> barrels = BlackoutSpots.tavernBarrels(level, from, 16);
 			// the tavern's casks, its cellar under its box included
 			long inTavern = BlockPos.betweenClosedStream(VillageStructures.withCellar(box)).filter(pos -> level.getBlockState(pos).is(BarrelRegistry.AGING_BARREL.get())).count();
 			helper.assertTrue(inTavern >= 6, "the tavern has its casks: " + inTavern);
-			helper.assertValueEqual((long) barrels.size(), inTavern, "every cask of the tavern");
+			assertValueEqual(helper, (long) barrels.size(), inTavern, "every cask of the tavern");
 			BlackoutSpots.Wake wake = BlackoutSpots.tavern(level, from, 16, RandomSource.create(13L));
 			helper.assertTrue(wake != null, "a spot in front of the barrels");
 			assertSafe(helper, wake, "tavern");
@@ -676,14 +665,14 @@ public final class BlackoutGameTests
 	/** {@link #inVillage(GameTestHelper, BoundingBox, Runnable)} with this pool element as the piece. */
 	static void inVillage(GameTestHelper helper, BoundingBox box, net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement element, Runnable body) {
 		ServerLevel level = helper.getLevel();
-		Structure village = level.registryAccess().lookupOrThrow(Registries.STRUCTURE).getValueOrThrow(BuiltinStructures.VILLAGE_PLAINS);
+		Structure village = level.registryAccess().registryOrThrow(Registries.STRUCTURE).getOrThrow(BuiltinStructures.VILLAGE_PLAINS);
 		BlockPos origin = new BlockPos(box.minX(), box.minY(), box.minZ());
-		PoolElementStructurePiece piece = new PoolElementStructurePiece(level.getStructureTemplateManager(), element,
-			origin, 0, Rotation.NONE, box, LiquidSettings.APPLY_WATERLOGGING);
-		ChunkPos startChunk = ChunkPos.containing(origin);
+		PoolElementStructurePiece piece = new PoolElementStructurePiece(level.getStructureManager(), element,
+			origin, 0, Rotation.NONE, box);
+		ChunkPos startChunk = new ChunkPos(origin);
 		StructureStart start = new StructureStart(village, startChunk, 0, new PiecesContainer(List.of(piece)));
 		Map<LevelChunk, Map<Structure, LongSet>> referencesBefore = new HashMap<>();
-		LevelChunk startAt = level.getChunk(startChunk.x(), startChunk.z());
+		LevelChunk startAt = level.getChunk(startChunk.x, startChunk.z);
 		Map<Structure, StructureStart> startsBefore = new HashMap<>(startAt.getAllStarts());
 		try {
 			startAt.setStartForStructure(village, start);
@@ -693,7 +682,7 @@ public final class BlackoutGameTests
 					Map<Structure, LongSet> copy = new HashMap<>();
 					chunk.getAllReferences().forEach((s, refs) -> copy.put(s, new LongOpenHashSet(refs)));
 					referencesBefore.put(chunk, copy);
-					chunk.addReferenceForStructure(village, startChunk.pack());
+					chunk.addReferenceForStructure(village, startChunk.toLong());
 				}
 			}
 			body.run();
@@ -704,10 +693,10 @@ public final class BlackoutGameTests
 	}
 
 	private static SinglePoolElement tavernElement(GameTestHelper helper, VillageType type) {
-		StructureTemplatePool pool = helper.getLevel().registryAccess().lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool());
+		StructureTemplatePool pool = helper.getLevel().registryAccess().registryOrThrow(Registries.TEMPLATE_POOL).get(type.housesPool());
 		helper.assertTrue(pool != null, type.housesPool() + " exists");
-		return pool.rawTemplates.stream().map(e -> e.getFirst()).filter(e -> VillageStructures.isTemplate(e, type.tavern()))
-			.map(e -> (SinglePoolElement) e).findFirst().orElseThrow(() -> helper.assertionException("no tavern in " + type.housesPool()));
+		return ((StructureTemplatePoolAccessor) pool).vineandbarrel$rawTemplates().stream().map(e -> e.getFirst()).filter(e -> VillageStructures.isTemplate(e, type.tavern()))
+			.map(e -> (SinglePoolElement) e).findFirst().orElseThrow(() -> VBGameTests.assertionException(helper, "no tavern in " + type.housesPool()));
 	}
 
 	/**
@@ -721,7 +710,7 @@ public final class BlackoutGameTests
 		RandomSource random = RandomSource.create(17L);
 		helper.assertTrue(BlackoutSpots.someoneElsesBed(level, player, NEAR, random) == null, "no villager, no bed");
 		BlockPos head = bed(helper, new BlockPos(10, 1, 10), Direction.NORTH);
-		Villager villager = helper.spawn(EntityTypes.VILLAGER, new BlockPos(12, 1, 10));
+		Villager villager = helper.spawn(EntityType.VILLAGER, new BlockPos(12, 1, 10));
 		villager.setNoAi(true);
 		villager.getBrain().setMemory(MemoryModuleType.HOME, GlobalPos.of(level.dimension(), head));
 		helper.assertTrue(level.getPoiManager().take(t -> t.is(PoiTypes.HOME), (t, pos) -> pos.equals(head), head, 1).isPresent(),
@@ -733,16 +722,16 @@ public final class BlackoutGameTests
 			level.setBlockAndUpdate(head, level.getBlockState(head).setValue(BedBlock.OCCUPIED, true));
 			helper.assertTrue(BlackoutSpots.someoneElsesBed(level, player, NEAR, random) == null, "the bed is occupied");
 			level.setBlockAndUpdate(head, level.getBlockState(head).setValue(BedBlock.OCCUPIED, false));
-			player.setRespawnPosition(new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(level.dimension(), head, 0.0F, 0.0F), false), false);
+			player.setRespawnPosition(level.dimension(), head, 0.0F, false, false);
 			helper.assertTrue(BlackoutSpots.someoneElsesBed(level, player, NEAR, random) == null, "the player's own bed isn't someone else's");
-			player.setRespawnPosition(null, false);
+			player.setRespawnPosition(Level.OVERWORLD, null, 0.0F, false, false);
 			found[0] = BlackoutSpots.someoneElsesBed(level, player, NEAR, random);
 		});
 		BlackoutSpots.Wake wake = found[0];
 		helper.assertTrue(wake != null && head.equals(wake.bed()) && wake.friend() == villager, "the villager's bed in the village: " + wake);
 		blackOutTo(player, wake, random);
 		helper.assertTrue(player.isSleeping() && head.equals(player.getSleepingPos().orElse(null)), "lying in it");
-		helper.assertValueEqual(villager.getUnhappyCounter(), 0, "the villager doesn't know yet");
+		assertValueEqual(helper, villager.getUnhappyCounter(), 0, "the villager doesn't know yet");
 		// Vanilla's night check (the REST schedule's ValidateNearbyPoi for HOME), run for real on the villager's brain while
 		// it stands awake next to its occupied bed: the villager keeps its home and its claim
 		var validateHome = ValidateNearbyPoi.create(t -> t.is(PoiTypes.HOME), MemoryModuleType.HOME);
@@ -758,7 +747,7 @@ public final class BlackoutGameTests
 		});
 		helper.runAfterDelay(Blackout.WAKE_AT + 3, () -> {
 			helper.assertFalse(player.isSleeping(), "up again");
-			helper.assertValueEqual(level.getBlockState(head).getValue(BedBlock.OCCUPIED), false, "the bed is free again");
+			assertValueEqual(helper, level.getBlockState(head).getValue(BedBlock.OCCUPIED), false, "the bed is free again");
 			helper.assertTrue(villager.getBrain().getMemory(MemoryModuleType.HOME).map(GlobalPos::pos).filter(head::equals).isPresent(),
 				"it is still the villager's bed");
 			helper.assertTrue(claimed(level, head), "still claimed");
@@ -827,8 +816,8 @@ public final class BlackoutGameTests
 		blackOutTo(player, wake, random);
 		helper.assertTrue(player.getVehicle() instanceof Boat, "sitting in a boat");
 		Boat boat = (Boat) player.getVehicle();
-		helper.assertValueEqual(boat.getType(), EntityTypes.OAK_BOAT, "an oak boat");
-		helper.assertValueEqual(Blackout.pose(player), BlackoutEnding.Pose.SEAT, "pose");
+		helper.assertTrue(boat.getType() == EntityType.BOAT && boat.getVariant() == Boat.Type.OAK, "an oak boat");
+		assertValueEqual(helper, Blackout.pose(player), BlackoutEnding.Pose.SEAT, "pose");
 		helper.runAfterDelay(Blackout.WAKE_AT + 3, () -> {
 			helper.assertFalse(Blackout.isOut(player), "awake");
 			helper.assertTrue(player.getVehicle() == boat, "still sitting in it after waking");
@@ -849,7 +838,7 @@ public final class BlackoutGameTests
 		helper.assertTrue(player.position().distanceTo(before) < 1.0E-6, "not moved");
 		helper.runAfterDelay(Blackout.WAKE_AT + 3, () -> {
 			helper.assertFalse(Blackout.isOut(player), "awake");
-			helper.assertValueEqual(Blackout.memory(player).last(), "right_here", "remembered as the last");
+			assertValueEqual(helper, Blackout.memory(player).last(), "right_here", "remembered as the last");
 			done(helper, player);
 			helper.succeed();
 		});
@@ -886,7 +875,7 @@ public final class BlackoutGameTests
 				helper.assertTrue(ItemStack.matches(before.get(slot), now), "slot " + slot + " changed: " + before.get(slot) + " -> " + now);
 			}
 			List<ItemEntity> dropped = helper.getLevel().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(3.0));
-			helper.assertValueEqual(dropped.size(), 1, "the souvenir lies at the feet (player at " + player.position() + ", items around: "
+			assertValueEqual(helper, dropped.size(), 1, "the souvenir lies at the feet (player at " + player.position() + ", items around: "
 				+ helper.getLevel().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(40.0)).stream().map(e -> e.getItem() + "@" + e.position()).toList() + ")");
 			done(helper, player);
 			helper.succeed();
@@ -929,10 +918,10 @@ public final class BlackoutGameTests
 	 * ending was woken up from; Where Am I? comes with the first.
 	 */
 	private static void lostWeekend(GameTestHelper helper) {
-		AdvancementHolder holder = advancement(helper, "lost_weekend");
-		helper.assertValueEqual(holder.value().display().orElseThrow().type(), AdvancementType.CHALLENGE, "a challenge");
-		helper.assertValueEqual(holder.value().parent().orElseThrow(), VBAdvancementGenerator.id("where_am_i"), "after Where Am I?");
-		helper.assertValueEqual(holder.value().criteria().keySet(),
+		Advancement holder = advancement(helper, "lost_weekend");
+		assertValueEqual(helper, holder.getDisplay().getFrame(), FrameType.CHALLENGE, "a challenge");
+		assertValueEqual(helper, holder.getParent().getId(), VBAdvancementGenerator.id("where_am_i"), "after Where Am I?");
+		assertValueEqual(helper, holder.getCriteria().keySet(),
 			Set.copyOf(BlackoutEnding.COLLECTABLE.stream().map(BlackoutEnding::id).toList()), "one criterion per ending");
 		withPlayer(helper, (h, player) -> {
 			BlackoutTrigger.award(player, BlackoutEnding.RIGHT_HERE);
@@ -963,9 +952,9 @@ public final class BlackoutGameTests
 		Blackout.Memory memory = new Blackout.Memory(List.of("home", "tavern"), "tavern", "blackout.vineandbarrel.tavern.2");
 		TipsyRegistry.BLACKOUT_MEMORY.set(player, memory);
 		TipsyRegistry.BLACKOUT.set(player, 40);
-		ServerPlayer reborn = helper.getLevel().getServer().getPlayerList().respawn(player, false, net.minecraft.world.entity.Entity.RemovalReason.KILLED);
+		ServerPlayer reborn = helper.getLevel().getServer().getPlayerList().respawn(player, false);
 		try {
-			helper.assertValueEqual(Blackout.memory(reborn), memory, "the memory after death");
+			assertValueEqual(helper, Blackout.memory(reborn), memory, "the memory after death");
 			helper.assertFalse(Blackout.isOut(reborn), "a blackout doesn't outlive death");
 		} finally {
 			done(helper, reborn);
@@ -989,7 +978,7 @@ public final class BlackoutGameTests
 		BlockState was = nether.getBlockState(roofBlock);
 		nether.setBlockAndUpdate(roofBlock, Blocks.BEDROCK.defaultBlockState());
 		int roof = nether.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, 8, 8);
-		helper.assertValueEqual(roof, 128, "the heightmap stands on the roof");
+		assertValueEqual(helper, roof, 128, "the heightmap stands on the roof");
 		helper.assertFalse(BlackoutSpots.underOpenSky(nether, new Vec3(8.5, roof, 8.5)), "the roof top is no open sky");
 		nether.setBlockAndUpdate(roofBlock, was);
 		RandomSource random = RandomSource.create(41L);
@@ -1007,7 +996,7 @@ public final class BlackoutGameTests
 		for (BlackoutEnding ending : BlackoutEnding.values()) {
 			boolean outdoors = ending == BlackoutEnding.IN_THE_OPEN || ending == BlackoutEnding.FARMYARD || ending == BlackoutEnding.IN_THE_HAY
 				|| ending == BlackoutEnding.ON_THE_ROOF || ending == BlackoutEnding.IN_A_BOAT;
-			helper.assertValueEqual(ending.needsOpenSky(), outdoors, ending + " needs the open sky");
+			assertValueEqual(helper, ending.needsOpenSky(), outdoors, ending + " needs the open sky");
 		}
 		helper.succeed();
 	}
@@ -1024,7 +1013,7 @@ public final class BlackoutGameTests
 		// A closed hut: walls and a roof all round, a bale and a cow inside
 		box(helper, new BlockPos(6, 1, 6), new BlockPos(12, 5, 12), Blocks.STONE_BRICKS);
 		helper.setBlock(new BlockPos(9, 1, 9), Blocks.HAY_BLOCK);
-		Cow cow = helper.spawn(EntityTypes.COW, new BlockPos(8, 1, 10));
+		Cow cow = helper.spawn(EntityType.COW, new BlockPos(8, 1, 10));
 		cow.setNoAi(true);
 		// A glass dome over another bale
 		box(helper, new BlockPos(18, 1, 18), new BlockPos(22, 4, 22), Blocks.GLASS);
@@ -1036,7 +1025,7 @@ public final class BlackoutGameTests
 			helper.setBlock(new BlockPos(26, 1, 26), Blocks.HAY_BLOCK);
 			BlackoutSpots.Wake hay = BlackoutSpots.inTheHay(level, from, NEAR, random);
 			helper.assertTrue(hay != null && BlackoutSpots.underOpenSky(level, hay.spot()), "the bale out in the open");
-			cow.snapTo(helper.absoluteVec(new Vec3(16.5, 1.0, 24.5)));
+			cow.moveTo(helper.absoluteVec(new Vec3(16.5, 1.0, 24.5)));
 			BlackoutSpots.Wake yard = BlackoutSpots.farmyard(level, Vec3.atCenterOf(from), NEAR, random);
 			helper.assertTrue(yard != null && BlackoutSpots.underOpenSky(level, yard.spot()), "the cow out in the open");
 			helper.succeed();
@@ -1072,12 +1061,12 @@ public final class BlackoutGameTests
 		}
 		BlackoutSpots.Wake wake = BlackoutSpots.inABoat(level, from, NEAR, random);
 		helper.assertTrue(wake != null, "the pond");
-		var drowned = helper.spawn(EntityTypes.DROWNED, new BlockPos(14, 1, 14));
+		var drowned = helper.spawn(EntityType.DROWNED, new BlockPos(14, 1, 14));
 		drowned.setNoAi(true);
 		helper.assertTrue(BlackoutSpots.inABoat(level, from, NEAR, random) == null, "a drowned nearby");
 		drowned.discard();
-		Boat other = EntityTypes.OAK_BOAT.create(level, net.minecraft.world.entity.EntitySpawnReason.TRIGGERED);
-		other.snapTo(wake.spot().x, wake.spot().y, wake.spot().z, 0.0F, 0.0F);
+		Boat other = EntityType.BOAT.create(level);
+		other.moveTo(wake.spot().x, wake.spot().y, wake.spot().z, 0.0F, 0.0F);
 		level.addFreshEntity(other);
 		helper.assertTrue(BlackoutSpots.inABoat(level, from, NEAR, random) == null, "a boat already floats there");
 		other.discard();
@@ -1089,8 +1078,8 @@ public final class BlackoutGameTests
 		blackOutTo(player, wake, random);
 		helper.assertTrue(player.position().distanceTo(before) < 1.0E-6, "not moved");
 		helper.assertFalse(player.isPassenger(), "not in a boat");
-		helper.assertValueEqual(Blackout.pose(player), BlackoutEnding.Pose.GROUND, "lying where they fell");
-		helper.assertValueEqual(Blackout.memory(player).last(), "right_here", "it counts as right here");
+		assertValueEqual(helper, Blackout.pose(player), BlackoutEnding.Pose.GROUND, "lying where they fell");
+		assertValueEqual(helper, Blackout.memory(player).last(), "right_here", "it counts as right here");
 		helper.assertTrue(level.getEntitiesOfClass(Boat.class, new AABB(BlockPos.containing(wake.spot())).inflate(4)).isEmpty(), "no boat left behind");
 		TipsyRegistry.BLACKOUT.remove(player);
 		done(helper, player);
@@ -1106,16 +1095,16 @@ public final class BlackoutGameTests
 		withPlayer(helper, (h, player) -> {
 			ServerLevel level = h.getLevel();
 			BlockPos head = bed(h, new BlockPos(20, 1, 20), Direction.EAST);
-			player.setRespawnPosition(new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(level.dimension(), head, 0.0F, 0.0F), false), false);
+			player.setRespawnPosition(level.dimension(), head, 0.0F, false, false);
 			blackOutTo(player, BlackoutSpots.home(player), RandomSource.create(53L));
 			helper.assertTrue(player.isSleeping(), "in bed");
 			net.minecraft.server.players.SleepStatus status = new net.minecraft.server.players.SleepStatus();
 			status.update(List.of(player));
-			helper.assertValueEqual(status.amountSleeping(), 0, "not counted as sleeping");
+			assertValueEqual(helper, status.amountSleeping(), 0, "not counted as sleeping");
 			// The night is skipped by the others: vanilla wakes every sleeper like this
 			player.stopSleepInBed(false, false);
 			helper.assertFalse(earned(h, player, "sleep_it_off"), "no Sleep It Off from a blackout");
-			helper.assertValueEqual(jexxme.vineandbarrel.tipsy.Tipsy.getLevel(player), 1, "still Tipsy I");
+			assertValueEqual(helper, jexxme.vineandbarrel.tipsy.Tipsy.getLevel(player), 1, "still Tipsy I");
 			TipsyRegistry.BLACKOUT.remove(player);
 		});
 		helper.succeed();
@@ -1127,9 +1116,12 @@ public final class BlackoutGameTests
 	 */
 	private static void roofNeverACliff(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
-		// A plateau 6 high over the whole area, a tower 6 higher in its middle: a roof, a fall of 6 from any side
-		for (int x = 0; x < 16; x++) {
-			for (int z = 0; z < 16; z++) {
+		// A plateau 6 high over the whole area, a tower 6 higher in its middle: a roof, a fall of 6 from any side.
+		// The roof rule looks 8 blocks out from the tower's middle, so one block past the 16 of the test area: on 1.21.1
+		// the barrier wall the game puts around every test stood there, as high as the test. 1.20.1 has no such wall, so
+		// the plateau itself goes one block further on those two sides (and is taken away again at the end)
+		for (int x = 0; x <= 16; x++) {
+			for (int z = 0; z <= 16; z++) {
 				for (int y = 0; y <= 6; y++) {
 					helper.setBlock(new BlockPos(x, y, z), Blocks.STONE);
 				}
@@ -1146,8 +1138,8 @@ public final class BlackoutGameTests
 		helper.assertTrue(BlackoutSpots.onTheRoof(level, tower, 1, RandomSource.create(59L)) != null, "the tower on the plateau");
 		// Now the plateau breaks off behind the tower: most of the ground around it is still high (its middle too), but
 		// walking off that side drops 12
-		for (int x = 0; x < 16; x++) {
-			for (int z = 11; z < 16; z++) {
+		for (int x = 0; x <= 16; x++) {
+			for (int z = 11; z <= 16; z++) {
 				for (int y = 1; y <= 6; y++) {
 					helper.setBlock(new BlockPos(x, y, z), Blocks.AIR);
 				}
@@ -1155,6 +1147,13 @@ public final class BlackoutGameTests
 		}
 		BlackoutSpots.Wake wake = BlackoutSpots.onTheRoof(level, tower, 1, RandomSource.create(59L));
 		helper.assertTrue(wake == null, "the tower over the cliff: " + wake);
+		// the row outside the test area
+		for (int i = 0; i <= 16; i++) {
+			for (int y = 0; y <= 6; y++) {
+				helper.setBlock(new BlockPos(16, y, i), Blocks.AIR);
+				helper.setBlock(new BlockPos(i, y, 16), Blocks.AIR);
+			}
+		}
 		helper.succeed();
 	}
 
@@ -1177,7 +1176,7 @@ public final class BlackoutGameTests
 				}
 			}
 			if (nearButUnloaded != null) {
-				player.setRespawnPosition(new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(level.dimension(), nearButUnloaded, 0.0F, 0.0F), false), false);
+				player.setRespawnPosition(level.dimension(), nearButUnloaded, 0.0F, false, false);
 				helper.assertTrue(BlackoutSpots.home(player) == null, "no home in an unloaded chunk");
 				helper.assertTrue(level.getChunkSource().getChunkNow(nearButUnloaded.getX() >> 4, nearButUnloaded.getZ() >> 4) == null, "and it stays unloaded");
 			}

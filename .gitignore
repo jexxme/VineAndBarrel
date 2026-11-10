@@ -47,3 +47,7 @@ run-fd
 
 # Compat mods GameTest run (runGameTestServerCompat)
 run-compat
+
+# maintainer tooling lives in its own repository
+/tools/
+__pycache__/

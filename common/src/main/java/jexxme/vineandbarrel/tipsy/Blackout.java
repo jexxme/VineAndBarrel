@@ -7,7 +7,7 @@ import jexxme.vineandbarrel.advancement.BlackoutTrigger;
 import jexxme.vineandbarrel.advancement.VBAdvancements;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,14 +19,12 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.boat.Boat;
+import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -158,7 +156,7 @@ public final class Blackout
 		TipsyRegistry.BLACKOUT_POSE.set(player, BlackoutEnding.Pose.GROUND.ordinal());
 		TipsyRegistry.BLACKOUT_SCENE.remove(player);
 		// Can't walk or jump (the client also holds the keys and the mouse still)
-		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, TICKS, 9, false, false, false));
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, TICKS, 9, false, false, false));
 		// Tipsy pauses while out (Tipsy#tick): no swirl behind the closed eyes, no hiccups
 		Tipsy.endNauseaPulse(player);
 		if (TipsyRegistry.HICCUPS.has(player)) {
@@ -184,7 +182,7 @@ public final class Blackout
 		if (next == EYES_OPEN) {
 			Scene scene = TipsyRegistry.BLACKOUT_SCENE.getExisting(player);
 			BlackoutEnding ending = scene == null ? BlackoutEnding.RIGHT_HERE : scene.endingOrHere();
-			Entity friend = scene == null ? null : scene.friend().map(player.level()::getEntity).orElse(null);
+			Entity friend = scene == null ? null : scene.friend().map(player.serverLevel()::getEntity).orElse(null);
 			TipsySounds.wakeUp(player, ending, friend, TipsyLegs.ground(player));
 		}
 		if (next == GET_UP) {
@@ -273,10 +271,10 @@ public final class Blackout
 
 	/** Puts the player where {@code wake} says, in its pose, and gives the wake-up: Tipsy I, hunger, the shakes, a souvenir. */
 	public static void wakeUp(ServerPlayer player, BlackoutSpots.Wake chosen, RandomSource random) {
-		ServerLevel level = player.level();
+		ServerLevel level = player.serverLevel();
 		BlackoutSpots.Wake wake = place(player, chosen);
 		BlackoutEnding ending = wake.ending();
-		player.fallDistance = 0.0;
+		player.fallDistance = 0.0F;
 
 		DrinkBuffs.removeAll(player);
 		Tipsy.setLevel(player, 1);
@@ -284,13 +282,13 @@ public final class Blackout
 		food.setFoodLevel(Math.max(0, food.getFoodLevel() - HUNGER_LOST));
 		food.setSaturation(0.0F);
 		// Felt, not listed: no icons, like Tipsy's own side effects
-		player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, SHAKY_TICKS, 0, false, false, false));
-		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, SHAKY_TICKS + WAKE_AT, 0, false, false, false));
+		player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, SHAKY_TICKS, 0, false, false, false));
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, SHAKY_TICKS + WAKE_AT, 0, false, false, false));
 
 		ItemStack souvenir = ending.souvenir(random);
 		if (!souvenir.isEmpty() && !player.getInventory().add(souvenir)) {
 			// Pockets full: it lies at your feet
-			player.spawnAtLocation(level, souvenir);
+			player.spawnAtLocation(souvenir);
 		}
 		if (random.nextInt(PUMPKIN_ONE_IN) == 0 && player.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
 			player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.CARVED_PUMPKIN));
@@ -309,7 +307,7 @@ public final class Blackout
 	 * moved at all) when the bed or the boat didn't work out after all (the bed was taken, something floats there now)}
 	 */
 	private static BlackoutSpots.Wake place(ServerPlayer player, BlackoutSpots.Wake wake) {
-		ServerLevel level = player.level();
+		ServerLevel level = player.serverLevel();
 		Vec3 spot = wake.spot();
 		BlackoutSpots.Wake here = new BlackoutSpots.Wake(BlackoutEnding.RIGHT_HERE, player.position(), player.getYRot(), null, null);
 		if (wake.ending() == BlackoutEnding.RIGHT_HERE) {
@@ -325,36 +323,37 @@ public final class Blackout
 					return stay(player, here);
 				}
 				player.stopRiding();
-				player.teleportTo(level, spot.x, spot.y + 0.6, spot.z, Set.of(), wake.yaw(), 0.0F, true);
+				player.teleportTo(level, spot.x, spot.y + 0.6, spot.z, Set.of(), wake.yaw(), 0.0F);
 				// Lying down is not resting: phantoms keep counting (vanilla resets the counter when you lie down)
 				Stat<?> rest = Stats.CUSTOM.get(Stats.TIME_SINCE_REST);
 				int sinceRest = player.getStats().getValue(rest);
 				// Not startSleepInBed: no sleep status, no spawn point, no message; and only until GET_UP, under deep sleep
-				if (!player.startSleeping(wake.bed())) {
-					player.teleportTo(level, from.x, from.y, from.z, Set.of(), yaw, pitch, true);
+				player.startSleeping(wake.bed());
+				if (!player.isSleeping()) {
+					player.teleportTo(level, from.x, from.y, from.z, Set.of(), yaw, pitch);
 					return stay(player, here);
 				}
 				player.getStats().setValue(player, rest, sinceRest);
 			}
 			case SEAT -> {
-				Boat boat = EntityTypes.OAK_BOAT.create(level, EntitySpawnReason.TRIGGERED);
+				Boat boat = EntityType.BOAT.create(level);
 				if (boat == null || !BlackoutSpots.boatSafe(level, spot)) {
 					return stay(player, here);
 				}
-				boat.snapTo(spot.x, spot.y, spot.z, wake.yaw(), 0.0F);
+				boat.moveTo(spot.x, spot.y, spot.z, wake.yaw(), 0.0F);
 				level.addFreshEntity(boat);
 				player.stopRiding();
-				player.teleportTo(level, spot.x, spot.y, spot.z, Set.of(), wake.yaw(), 0.0F, true);
-				if (!player.startRiding(boat, true, true)) {
+				player.teleportTo(level, spot.x, spot.y, spot.z, Set.of(), wake.yaw(), 0.0F);
+				if (!player.startRiding(boat, true)) {
 					// Never left standing on the water: the boat goes, and the player wakes where they fell
 					boat.discard();
-					player.teleportTo(level, from.x, from.y, from.z, Set.of(), yaw, pitch, true);
+					player.teleportTo(level, from.x, from.y, from.z, Set.of(), yaw, pitch);
 					return stay(player, here);
 				}
 			}
 			case GROUND -> {
 				player.stopRiding();
-				player.teleportTo(level, spot.x, spot.y, spot.z, Set.of(), wake.yaw(), LIE_PITCH, true);
+				player.teleportTo(level, spot.x, spot.y, spot.z, Set.of(), wake.yaw(), LIE_PITCH);
 			}
 		}
 		TipsyRegistry.BLACKOUT_POSE.set(player, pose.ordinal());
@@ -369,13 +368,16 @@ public final class Blackout
 	/** While waking up: the animal stares at the player, the villager stares and, as the eyes open, shakes its head. */
 	private static void watch(ServerPlayer player, int left) {
 		Scene scene = TipsyRegistry.BLACKOUT_SCENE.getExisting(player);
-		if (scene == null || scene.friend().isEmpty() || !(player.level().getEntity(scene.friend().get()) instanceof Mob friend)) {
+		if (scene == null || scene.friend().isEmpty() || !(player.serverLevel().getEntity(scene.friend().get()) instanceof Mob friend)) {
 			return;
 		}
 		friend.getNavigation().stop();
 		friend.getLookControl().setLookAt(player.getX(), player.getY() + 0.4, player.getZ(), 30.0F, 30.0F);
 		if (left == HEAD_SHAKE_AT && friend instanceof Villager villager) {
-			villager.setUnhappy();
+			// What Villager#setUnhappy does (it is private): the head shake and its "no", at the villager's own volume
+			// (1; LivingEntity#getSoundVolume is protected) and voice pitch
+			villager.setUnhappyCounter(40);
+			villager.playSound(SoundEvents.VILLAGER_NO, 1.0F, villager.getVoicePitch());
 		}
 	}
 
@@ -389,9 +391,9 @@ public final class Blackout
 		}
 		BlackoutEnding ending = scene == null ? BlackoutEnding.RIGHT_HERE : scene.endingOrHere();
 		String line = scene == null ? ending.lineKey(0) : scene.line();
-		Component friend = scene == null ? Component.empty() : scene.friendType().map(Identifier::tryParse)
+		Component friend = scene == null ? Component.empty() : scene.friendType().map(ResourceLocation::tryParse)
 			.flatMap(id -> BuiltInRegistries.ENTITY_TYPE.getOptional(id)).map(type -> (Component) type.getDescription()).orElse(Component.empty());
-		player.sendOverlayMessage(Component.translatable(line, friend));
+		player.displayClientMessage(Component.translatable(line, friend), true);
 		VBAdvancements.award(VBAdvancements.BLACKED_OUT, player);
 		BlackoutTrigger.award(player, ending);
 	}

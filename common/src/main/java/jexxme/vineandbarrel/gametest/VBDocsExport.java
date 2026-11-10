@@ -4,7 +4,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.mojang.serialization.JsonOps;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.barrel.AgingBarrelBlockEntity;
 import jexxme.vineandbarrel.barrel.AgingRecipe;
@@ -28,70 +27,55 @@ import jexxme.vineandbarrel.tipsy.TipsyLegs;
 import jexxme.vineandbarrel.tipsy.TipsyLevels;
 import jexxme.vineandbarrel.tipsy.TipsyMotion;
 import jexxme.vineandbarrel.world.village.VillageStructures;
-import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.component.TypedDataComponent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.block.ComposterBlock;
+import net.minecraft.world.food.FoodProperties;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
-import java.util.function.Consumer;
 
 /**
  * Dev-only exporter for the wiki (site/). It is registered only when the system property {@code vineandbarrel.docsExport}
  * names an output file (Gradle task {@code runDocsExport}), and then instead of the normal GameTests, so it never shows up
- * in their results. It writes the real runtime values the wiki prints: every item's data components, block properties,
+ * in their results. It writes the real runtime values the wiki prints: every item's data (on this Minecraft items have no
+ * data components: {@link #components} writes what the item itself says under the 26.x component names), block properties,
  * the loaded tags, the brewing and aging recipes as the game parsed them, the drinks' buffs, the servings rules, Cheers,
  * and the Tipsy levels and config defaults. No number on the wiki is typed in by hand.
  */
 public final class VBDocsExport
 {
 	public static final String PROPERTY = "vineandbarrel.docsExport";
-	private static final Identifier STRUCTURE = VineAndBarrel.id("gametest/empty_5x5");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
-	private static final ResourceKey<Consumer<GameTestHelper>> EXPORT = ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id("docs_export"));
-
-	static {
-		FUNCTIONS.register("docs_export", () -> VBDocsExport::export);
-	}
-
+	private static final ResourceLocation STRUCTURE = VineAndBarrel.id("gametest/empty_5x5");
 	private VBDocsExport() {
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(VBDocsExport::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("docs_export"));
-		event.registerTest(EXPORT.identifier(), new FunctionGameTestInstance(EXPORT, new TestData<>(environment, STRUCTURE, 200, 0, true)));
+		VBGameTests.add(event, "docs_export", "docs_export", STRUCTURE, 200, VBDocsExport::export);
 	}
 
 	private static String key(Item item) {
@@ -100,29 +84,18 @@ public final class VBDocsExport
 
 	private static void export(GameTestHelper helper) {
 		RegistryAccess access = helper.getLevel().registryAccess();
-		RegistryOps<JsonElement> ops = access.createSerializationContext(JsonOps.INSTANCE);
 		JsonObject root = new JsonObject();
 
-		// Items: every data component of our items
+		// Items: what every item of ours says about itself, as components (see components)
 		JsonObject items = new JsonObject();
 		for (Item item : BuiltInRegistries.ITEM) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(item);
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
 			if (!id.getNamespace().equals(VineAndBarrel.MODID)) {
 				continue;
 			}
 			ItemStack stack = new ItemStack(item);
 			JsonObject entry = new JsonObject();
-			// Sorted by component id, so a rerun writes the same file (the component map has no stable order)
-			java.util.TreeMap<String, JsonElement> sorted = new java.util.TreeMap<>();
-			for (TypedDataComponent<?> typed : stack.getComponents()) {
-				Identifier type = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(typed.type());
-				if (type != null) {
-					typed.encodeValue(ops).result().ifPresent(json -> sorted.put(type.toString(), json));
-				}
-			}
-			JsonObject components = new JsonObject();
-			sorted.forEach(components::add);
-			entry.add("components", components);
+			entry.add("components", components(item, stack));
 			entry.addProperty("class", item.getClass().getName());
 			JsonArray tags = new JsonArray();
 			item.builtInRegistryHolder().tags().map(tag -> tag.location().toString()).sorted().forEach(tags::add);
@@ -134,7 +107,7 @@ public final class VBDocsExport
 		// Our blocks
 		JsonObject blocks = new JsonObject();
 		for (Block block : BuiltInRegistries.BLOCK) {
-			Identifier id = BuiltInRegistries.BLOCK.getKey(block);
+			ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
 			if (!id.getNamespace().equals(VineAndBarrel.MODID)) {
 				continue;
 			}
@@ -163,12 +136,12 @@ public final class VBDocsExport
 
 		// Our mob effects
 		JsonObject effects = new JsonObject();
-		Registry<MobEffect> effectRegistry = access.lookupOrThrow(Registries.MOB_EFFECT);
-		effectRegistry.listElements().filter(holder -> holder.key().identifier().getNamespace().equals(VineAndBarrel.MODID)).forEach(holder -> {
+		Registry<MobEffect> effectRegistry = access.registryOrThrow(Registries.MOB_EFFECT);
+		effectRegistry.holders().filter(holder -> holder.key().location().getNamespace().equals(VineAndBarrel.MODID)).forEach(holder -> {
 			JsonObject entry = new JsonObject();
 			entry.addProperty("category", holder.value().getCategory().name());
 			entry.addProperty("color", holder.value().getColor());
-			effects.add(holder.key().identifier().toString(), entry);
+			effects.add(holder.key().location().toString(), entry);
 		});
 		root.add("effects", effects);
 
@@ -181,7 +154,8 @@ public final class VBDocsExport
 			entry.addProperty("vessel", vessel == null ? null : key(vessel));
 			entry.addProperty("color", drink.color());
 			entry.addProperty("aged", drink.isAged());
-			entry.addProperty("effect", buff.getEffect().unwrapKey().map(k -> k.identifier().toString()).orElse("?"));
+			ResourceLocation effect = BuiltInRegistries.MOB_EFFECT.getKey(buff.getEffect());
+			entry.addProperty("effect", effect == null ? "?" : effect.toString());
 			entry.addProperty("duration", buff.getDuration());
 			entry.addProperty("amplifier", buff.getAmplifier());
 			drinks.add(key(drink), entry);
@@ -193,18 +167,19 @@ public final class VBDocsExport
 		JsonArray aging = new JsonArray();
 		JsonArray loaded = new JsonArray();
 		helper.getLevel().getServer().getRecipeManager().getRecipes().stream()
-			.sorted(Comparator.comparing(holder -> holder.id().identifier().toString()))
-			.forEach((RecipeHolder<?> holder) -> {
-				String id = holder.id().identifier().toString();
+			.sorted(Comparator.comparing((Recipe<?> recipe) -> recipe.getId().toString()))
+			.forEach((Recipe<?> holder) -> {
+				String id = holder.getId().toString();
 				if (id.startsWith(VineAndBarrel.MODID + ":")) {
 					loaded.add(id);
 				}
-				if (holder.value() instanceof BrewingRecipe recipe) {
+				if (holder instanceof BrewingRecipe recipe) {
 					JsonObject entry = new JsonObject();
 					entry.addProperty("id", id);
 					JsonArray ingredients = new JsonArray();
 					for (Ingredient ingredient : recipe.ingredients()) {
-						Ingredient.CODEC.encodeStart(ops, ingredient).result().ifPresent(ingredients::add);
+						// this Minecraft's own form: {"item": ...}, {"tag": ...} or a list of those
+						ingredients.add(ingredient.toJson());
 					}
 					entry.add("ingredients", ingredients);
 					entry.addProperty("result", key(recipe.result().getItem()));
@@ -213,7 +188,7 @@ public final class VBDocsExport
 					entry.addProperty("brewingTime", recipe.brewingTime());
 					entry.addProperty("experience", recipe.experience());
 					brewing.add(entry);
-				} else if (holder.value() instanceof AgingRecipe recipe) {
+				} else if (holder instanceof AgingRecipe recipe) {
 					JsonObject entry = new JsonObject();
 					entry.addProperty("id", id);
 					entry.addProperty("base", key(recipe.base().value()));
@@ -405,9 +380,9 @@ public final class VBDocsExport
 
 		// Every loaded tag of the registries the wiki cares about (heat sources, conductors, drinks, sobering drinks...)
 		JsonObject tags = new JsonObject();
-		tags.add("item", tagsOf(access.lookupOrThrow(Registries.ITEM)));
-		tags.add("block", tagsOf(access.lookupOrThrow(Registries.BLOCK)));
-		tags.add("worldgen/biome", tagsOf(access.lookupOrThrow(Registries.BIOME)));
+		tags.add("item", tagsOf(access.registryOrThrow(Registries.ITEM)));
+		tags.add("block", tagsOf(access.registryOrThrow(Registries.BLOCK)));
+		tags.add("worldgen/biome", tagsOf(access.registryOrThrow(Registries.BIOME)));
 		root.add("tags", tags);
 
 		Path out = Path.of(System.getProperty(PROPERTY));
@@ -421,11 +396,73 @@ public final class VBDocsExport
 		helper.succeed();
 	}
 
+	/**
+	 * What 1.21.1 writes as the item's data components, from what an item says on this Minecraft, under the same
+	 * component names (the wiki's extract script reads these): stack size, name, rarity, food, consumable (the drinking
+	 * time, animation and food effects), the remainder, composting and the foil. {@code minecraft:food} / saturation is
+	 * the points, as on 1.21.1 (this Minecraft keeps nutrition x a modifier x 2); {@code minecraft:compostable} is the
+	 * chance itself (1.21.1: the name of a number provider).
+	 */
+	private static JsonObject components(Item item, ItemStack stack) {
+		JsonObject components = new JsonObject();
+		JsonObject name = new JsonObject();
+		name.addProperty("translate", item.getDescriptionId());
+		components.add("minecraft:item_name", name);
+		components.addProperty("minecraft:max_stack_size", item.getMaxStackSize());
+		components.addProperty("minecraft:rarity", item.getRarity(stack).name().toLowerCase(Locale.ROOT));
+		FoodProperties food = item.getFoodProperties();
+		if (food != null) {
+			JsonObject json = new JsonObject();
+			json.addProperty("nutrition", food.getNutrition());
+			json.addProperty("saturation", food.getNutrition() * food.getSaturationModifier() * 2.0F);
+			if (food.canAlwaysEat()) {
+				json.addProperty("can_always_eat", true);
+			}
+			components.add("minecraft:food", json);
+			JsonObject consumable = new JsonObject();
+			consumable.addProperty("consume_seconds", item.getUseDuration(stack) / 20.0F);
+			consumable.addProperty("animation", stack.getUseAnimation().name().toLowerCase(Locale.ROOT));
+			JsonArray effects = new JsonArray();
+			for (Pair<MobEffectInstance, Float> pair : food.getEffects()) {
+				MobEffectInstance effect = pair.getFirst();
+				JsonObject apply = new JsonObject();
+				apply.addProperty("type", "minecraft:apply_effects");
+				apply.addProperty("probability", pair.getSecond());
+				JsonObject one = new JsonObject();
+				one.addProperty("id", String.valueOf(BuiltInRegistries.MOB_EFFECT.getKey(effect.getEffect())));
+				one.addProperty("duration", effect.getDuration());
+				one.addProperty("amplifier", effect.getAmplifier());
+				JsonArray list = new JsonArray();
+				list.add(one);
+				apply.add("effects", list);
+				effects.add(apply);
+			}
+			consumable.add("on_consume_effects", effects);
+			components.add("minecraft:consumable", consumable);
+		}
+		Item remainder = item.getCraftingRemainingItem();
+		if (remainder != null) {
+			JsonObject json = new JsonObject();
+			json.addProperty("id", key(remainder));
+			components.add("minecraft:use_remainder", json);
+		}
+		float compost = ComposterBlock.COMPOSTABLES.getFloat(item);
+		if (compost > 0.0F) {
+			JsonObject json = new JsonObject();
+			json.addProperty("chance", compost);
+			components.add("minecraft:compostable", json);
+		}
+		if (stack.hasFoil()) {
+			components.addProperty("minecraft:enchantment_glint_override", true);
+		}
+		return components;
+	}
+
 	private static <T> JsonObject tagsOf(Registry<T> registry) {
 		JsonObject out = new JsonObject();
-		registry.getTags().sorted(Comparator.comparing(set -> set.key().location().toString())).forEach((HolderSet.Named<T> set) -> {
+		registry.getTags().map(pair -> pair.getSecond()).sorted(Comparator.comparing((HolderSet.Named<T> set) -> set.key().location().toString())).forEach((HolderSet.Named<T> set) -> {
 			JsonArray values = new JsonArray();
-			set.stream().map(holder -> holder.unwrapKey().map(k -> k.identifier().toString()).orElse("?")).sorted().forEach(values::add);
+			set.stream().map(holder -> holder.unwrapKey().map(k -> k.location().toString()).orElse("?")).sorted().forEach(values::add);
 			out.add(set.key().location().toString(), values);
 		});
 		return out;

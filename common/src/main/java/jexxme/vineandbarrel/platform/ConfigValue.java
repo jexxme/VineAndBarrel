@@ -34,6 +34,7 @@ public final class ConfigValue<T>
 	private @Nullable Supplier<T> getter;
 	private @Nullable Consumer<T> setter;
 	private @Nullable T unboundValue;
+	private @Nullable T testValue;
 
 	private ConfigValue(Side side, String section, String name, String comment, T defaultValue, @Nullable T min, @Nullable T max) {
 		this.side = side;
@@ -64,6 +65,9 @@ public final class ConfigValue<T>
 	}
 
 	public T get() {
+		if (testValue != null) {
+			return testValue;
+		}
 		if (getter != null) {
 			return getter.get();
 		}
@@ -76,6 +80,15 @@ public final class ConfigValue<T>
 		} else {
 			unboundValue = value;
 		}
+	}
+
+	/**
+	 * For GameTests: the value {@link #get()} gives until this is called with null, whatever the loader's file says.
+	 * A test must not {@link #set} a value and set it back: on Forge that writes the config file twice, and when
+	 * Forge's file watcher reloads the file in between, the test's value comes back and stays for every later test.
+	 */
+	public void setForTest(@Nullable T value) {
+		testValue = value;
 	}
 
 	public T getDefault() {

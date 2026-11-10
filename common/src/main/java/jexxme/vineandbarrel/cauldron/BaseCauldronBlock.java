@@ -1,19 +1,13 @@
 package jexxme.vineandbarrel.cauldron;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.cauldron.CauldronInteraction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Util;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.InsideBlockEffectApplier;
-import net.minecraft.world.entity.InsideBlockEffectType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.AbstractCauldronBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -22,9 +16,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.VoxelShape;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -39,22 +32,27 @@ public class BaseCauldronBlock extends AbstractCauldronBlock
 	/** A bucket's four servings. */
 	public static final int MAX_LEVEL = 4;
 	public static final IntegerProperty LEVEL = IntegerProperty.create("level", MIN_LEVEL, MAX_LEVEL);
-	/** The vanilla cauldron's floor and its 3 px per level, one level lower: 6, 9, 12, 15 px, so full sits where full water does. */
-	private static final VoxelShape[] FILLED_SHAPES = Util.make(() -> Block.boxes(MAX_LEVEL - 1,
-		level -> Shapes.or(AbstractCauldronBlock.SHAPE, Block.column(12.0, 4.0, contentPixels(level + 1)))));
 
 	private final Supplier<? extends Item> bottle;
 	private final Supplier<? extends Item> bucket;
+	/** Vanilla keeps its own reference private on this Minecraft (and has no list of every cauldron's map). */
+	private final Map<Item, CauldronInteraction> interactions;
 
 	public BaseCauldronBlock(BlockBehaviour.Properties properties, Supplier<? extends Item> bottle, Supplier<? extends Item> bucket) {
-		super(properties, new CauldronInteraction.Dispatcher());
+		this(properties, CauldronInteraction.newInteractionMap(), bottle, bucket);
+	}
+
+	private BaseCauldronBlock(BlockBehaviour.Properties properties, Map<Item, CauldronInteraction> interactions, Supplier<? extends Item> bottle,
+			Supplier<? extends Item> bucket) {
+		super(properties, interactions);
+		this.interactions = interactions;
 		this.bottle = bottle;
 		this.bucket = bucket;
 		registerDefaultState(stateDefinition.any().setValue(LEVEL, MIN_LEVEL));
 	}
 
 	/** What a click with an item does to this cauldron ({@link VBCauldrons} fills it). */
-	public CauldronInteraction.Dispatcher interactions() {
+	public Map<Item, CauldronInteraction> interactions() {
 		return interactions;
 	}
 
@@ -66,6 +64,7 @@ public class BaseCauldronBlock extends AbstractCauldronBlock
 		return bucket.get();
 	}
 
+	/** The vanilla cauldron's floor and its 3 px per level, one level lower: 6, 9, 12, 15 px, so full sits where full water does. */
 	private static double contentPixels(int level) {
 		return 3.0 + 3.0 * level;
 	}
@@ -80,23 +79,15 @@ public class BaseCauldronBlock extends AbstractCauldronBlock
 		return contentPixels(state.getValue(LEVEL)) / 16.0;
 	}
 
-	@Override
-	protected VoxelShape getEntityInsideCollisionShape(BlockState state, BlockGetter level, BlockPos pos, Entity entity) {
-		return FILLED_SHAPES[state.getValue(LEVEL) - 1];
-	}
-
 	/** A burning mob in it is put out and uses up a level, as in water. */
 	@Override
-	protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise) {
-		if (level instanceof ServerLevel serverLevel) {
-			BlockPos at = pos.immutable();
-			effectApplier.runBefore(InsideBlockEffectType.EXTINGUISH, burning -> {
-				if (burning.isOnFire() && burning.mayInteract(serverLevel, at)) {
-					lowerFillLevel(state, level, at);
-				}
-			});
+	public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
+		if (!level.isClientSide() && entity.isOnFire() && isEntityInsideContent(state, pos, entity)) {
+			entity.clearFire();
+			if (entity.mayInteract(level, pos)) {
+				lowerFillLevel(state, level, pos);
+			}
 		}
-		effectApplier.apply(InsideBlockEffectType.EXTINGUISH);
 	}
 
 	/** One level less; the last one leaves an empty cauldron. */
@@ -108,13 +99,13 @@ public class BaseCauldronBlock extends AbstractCauldronBlock
 	}
 
 	@Override
-	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
+	public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
 		return state.getValue(LEVEL);
 	}
 
 	/** Like the water cauldron, it is picked as a cauldron. */
 	@Override
-	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+	public ItemStack getCloneItemStack(BlockGetter level, BlockPos pos, BlockState state) {
 		return new ItemStack(Items.CAULDRON);
 	}
 

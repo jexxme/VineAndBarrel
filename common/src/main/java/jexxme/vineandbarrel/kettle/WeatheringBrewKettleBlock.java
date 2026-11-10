@@ -3,13 +3,17 @@ package jexxme.vineandbarrel.kettle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.Optional;
+
 /**
- * An unwaxed Brew Kettle: it oxidizes over time like vanilla copper (K8). The next stage comes from NeoForge's
- * {@code oxidizables} data map, so waxing, scraping and lightning all use vanilla's rules. Like vanilla's copper chest,
+ * An unwaxed Brew Kettle: it oxidizes over time like vanilla copper (K8), by vanilla's rules. The next stage is the
+ * kettle's own ({@link KettleRegistry#nextStage}): vanilla's table of copper blocks is fixed on this Minecraft, and Forge
+ * has no way to add to it (newer NeoForge: its {@code oxidizables} data map). Like vanilla's copper chest,
  * it does not weather while someone has it open.
  */
 public class WeatheringBrewKettleBlock extends BrewKettleBlock implements WeatheringCopper
@@ -29,14 +33,20 @@ public class WeatheringBrewKettleBlock extends BrewKettleBlock implements Weathe
 	}
 
 	@Override
-	protected boolean isRandomlyTicking(BlockState state) {
-		return WeatheringCopper.getNext(state.getBlock()).isPresent();
+	public Optional<BlockState> getNext(BlockState state) {
+		Block next = KettleRegistry.nextStage(this);
+		return next == null ? Optional.empty() : Optional.of(next.withPropertiesOf(state));
 	}
 
 	@Override
-	protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+	public boolean isRandomlyTicking(BlockState state) {
+		return KettleRegistry.nextStage(this) != null;
+	}
+
+	@Override
+	public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
 		if (!state.getValue(OPEN)) {
-			this.changeOverTime(state, level, pos, random);
+			this.onRandomTick(state, level, pos, random);
 		}
 	}
 }

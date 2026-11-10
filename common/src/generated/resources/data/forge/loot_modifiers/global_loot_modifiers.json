@@ -1,0 +1,10 @@
+{
+  "entries": [
+    "vineandbarrel:add_loot_village_desert_house",
+    "vineandbarrel:add_loot_village_plains_house",
+    "vineandbarrel:add_loot_village_taiga_house",
+    "vineandbarrel:add_loot_village_savanna_house",
+    "vineandbarrel:add_loot_village_snowy_house"
+  ],
+  "replace": false
+}

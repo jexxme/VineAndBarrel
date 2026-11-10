@@ -5,10 +5,11 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import org.jspecify.annotations.Nullable;
 
-import java.util.function.Consumer;
+import java.util.List;
 
 /** An empty mug or wine glass (DESIGN §5.3): tapped full at an Aging Barrel, and sneak-placed on a block like a drink (D1). */
 public class VesselItem extends Item
@@ -23,7 +24,7 @@ public class VesselItem extends Item
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
-		builder.accept(DrinkPlacing.PLACEABLE_SNEAKING);
+	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> builder, TooltipFlag flag) {
+		builder.add(DrinkPlacing.PLACEABLE_SNEAKING);
 	}
 }

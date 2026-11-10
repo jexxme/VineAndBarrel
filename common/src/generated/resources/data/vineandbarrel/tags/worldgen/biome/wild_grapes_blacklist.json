@@ -1,7 +1,25 @@
 {
   "values": [
-    "#c:is_mushroom",
-    "#c:is_underground",
+    "minecraft:mushroom_fields",
+    "minecraft:lush_caves",
+    "minecraft:dripstone_caves",
+    "minecraft:deep_dark",
+    {
+      "id": "#forge:is_mushroom",
+      "required": false
+    },
+    {
+      "id": "#forge:is_underground",
+      "required": false
+    },
+    {
+      "id": "#c:mushroom",
+      "required": false
+    },
+    {
+      "id": "#c:underground",
+      "required": false
+    },
     "#vineandbarrel:wild_grapes_extra"
   ]
 }

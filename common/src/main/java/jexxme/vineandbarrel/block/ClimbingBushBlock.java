@@ -3,7 +3,7 @@ package jexxme.vineandbarrel.block;
 import jexxme.vineandbarrel.platform.hooks.PlayerDestroyHook;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.sounds.SoundSource;
@@ -20,7 +20,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.Rotation;
@@ -31,7 +31,6 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -55,15 +54,15 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 {
 	public static final EnumProperty<BushSupport> SUPPORT = EnumProperty.create("support", BushSupport.class);
 	public static final EnumProperty<BushTrellis> TRELLIS = EnumProperty.create("trellis", BushTrellis.class);
-	private static final VoxelShape SHAPE_SAPLING = Block.column(10.0, 0.0, 8.0);
-	private static final VoxelShape SHAPE_GROWING = Block.column(14.0, 0.0, 16.0);
+	private static final VoxelShape SHAPE_SAPLING = Block.box(3.0, 0.0, 3.0, 13.0, 8.0, 13.0);
+	private static final VoxelShape SHAPE_GROWING = Block.box(1.0, 0.0, 1.0, 15.0, 16.0, 15.0);
 	// drawn as the foot of a vine: the young shoot, then the vine's leafy planes along a trellis, fence, wall or bars, or
 	// round a rope or chain (the outline follows what is drawn, as vanilla's do)
 	private static final VoxelShape FOOT_SHOOT_X = Block.box(3.0, 0.0, 5.0, 13.0, 8.0, 11.0);
 	private static final VoxelShape FOOT_SHOOT_Z = Block.box(5.0, 0.0, 3.0, 11.0, 8.0, 13.0);
 	private static final VoxelShape FOOT_PLANES_X = Block.box(0.0, 0.0, 5.0, 16.0, 16.0, 11.0);
 	private static final VoxelShape FOOT_PLANES_Z = Block.box(5.0, 0.0, 0.0, 11.0, 16.0, 16.0);
-	private static final VoxelShape FOOT_WOUND = Block.column(12.0, 0.0, 16.0);
+	private static final VoxelShape FOOT_WOUND = Block.box(2.0, 0.0, 2.0, 14.0, 16.0, 14.0);
 
 	private final Supplier<? extends Block> ropeVine;
 	private final Supplier<? extends Block> trellisVine;
@@ -71,7 +70,7 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 
 	public ClimbingBushBlock(Properties properties, Supplier<? extends Block> ropeVine, Supplier<? extends Block> trellisVine,
 							 Supplier<? extends Block> supportVine,
-							 Supplier<? extends Item> produce, ResourceKey<LootTable> harvestLoot) {
+							 Supplier<? extends Item> produce, ResourceLocation harvestLoot) {
 		super(properties, produce, harvestLoot);
 		this.ropeVine = ropeVine;
 		this.trellisVine = trellisVine;
@@ -121,7 +120,7 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	 * the bush's usual business: bone meal, picking.
 	 */
 	@Override
-	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand,
+	protected @Nullable InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand,
 										  BlockHitResult hitResult) {
 		if (state.getValue(TRELLIS) == BushTrellis.NONE && stack.getItem() instanceof BlockItem item && item.getBlock() instanceof TrellisBlock) {
 			BlockState above = level.getBlockState(pos.above());
@@ -137,9 +136,11 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 				level.playSound(null, pos, sound.getPlaceSound(), SoundSource.BLOCKS, (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F);
 				level.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(player, withTrellis));
 				player.awardStat(Stats.ITEM_USED.get(item));
-				stack.consume(1, player);
+				if (!player.getAbilities().instabuild) {
+					stack.shrink(1);
+				}
 			}
-			return InteractionResult.SUCCESS;
+			return InteractionResult.sidedSuccess(level.isClientSide());
 		}
 		if (state.getValue(TRELLIS) == BushTrellis.NONE && stack.getItem() instanceof BlockItem item
 				&& VineSupports.isMakeshift(item.getBlock().defaultBlockState())) {
@@ -154,9 +155,11 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 					level.playSound(null, pos, sound.getPlaceSound(), SoundSource.BLOCKS, (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F);
 					level.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(player, level.getBlockState(pos)));
 					player.awardStat(Stats.ITEM_USED.get(item));
-					stack.consume(1, player);
+					if (!player.getAbilities().instabuild) {
+						stack.shrink(1);
+					}
 				}
-				return InteractionResult.SUCCESS;
+				return InteractionResult.sidedSuccess(level.isClientSide());
 			}
 		}
 		return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
@@ -175,10 +178,10 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	 * item where flowing water or lava washed the plant away.
 	 */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
-		if (state.getValue(TRELLIS) == BushTrellis.NONE || movedByPiston) {
-			return;
+	public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		super.onRemove(state, level, pos, newState, movedByPiston);
+		if (state.is(newState.getBlock()) || level.isClientSide() || state.getValue(TRELLIS) == BushTrellis.NONE || movedByPiston) {
+			return; // onRemove also runs when only the state changes (growing, picking): the plant is still there
 		}
 		BlockState now = level.getBlockState(pos);
 		FluidState fluid = now.getFluidState();
@@ -197,13 +200,13 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	 * this and would otherwise leave nothing at all.
 	 */
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction directionToNeighbour,
-									 BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	public BlockState updateShape(BlockState state, Direction directionToNeighbour, BlockState neighbourState, LevelAccessor level, BlockPos pos,
+									 BlockPos neighbourPos) {
 		if (!state.canSurvive(level, pos)) {
-			ticks.scheduleTick(pos, this, 1);
+			level.scheduleTick(pos, this, 1);
 			return state;
 		}
-		BlockState updated = super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random);
+		BlockState updated = super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos);
 		if (directionToNeighbour == Direction.UP && updated.is(this)) {
 			return updated.setValue(SUPPORT, BushSupport.of(this, neighbourState));
 		}
@@ -211,7 +214,7 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	}
 
 	@Override
-	protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+	public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
 		if (!state.canSurvive(level, pos)) {
 			level.destroyBlock(pos, true);
 		}
@@ -222,7 +225,7 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	 * like the trellis itself); a mirror keeps them.
 	 */
 	@Override
-	protected BlockState rotate(BlockState state, Rotation rotation) {
+	public BlockState rotate(BlockState state, Rotation rotation) {
 		if (rotation == Rotation.CLOCKWISE_90 || rotation == Rotation.COUNTERCLOCKWISE_90) {
 			BlockState turned = switch (state.getValue(SUPPORT)) {
 				case TRELLIS_X -> state.setValue(SUPPORT, BushSupport.TRELLIS_Z);
@@ -245,7 +248,7 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	 * vine, its young shoot and then its leafy planes (with the panel of a trellis standing in it).
 	 */
 	@Override
-	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		int age = state.getValue(AGE);
 		Direction.Axis trellis = state.getValue(TRELLIS).axis();
 		Direction.Axis planes = trellis != null ? trellis : switch (state.getValue(SUPPORT)) {
@@ -270,15 +273,15 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 
 	/** With a trellis in it you bump into the panel, as on a bare trellis; the leaves let you through. */
 	@Override
-	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		Direction.Axis trellis = state.getValue(TRELLIS).axis();
 		return trellis == null ? super.getCollisionShape(state, level, pos, context) : TrellisBlock.panel(trellis);
 	}
 
 	/** Mobs don't plan paths through a trellis in a bush, as through a bare one. */
 	@Override
-	protected boolean isPathfindable(BlockState state, PathComputationType type) {
-		return state.getValue(TRELLIS) == BushTrellis.NONE && super.isPathfindable(state, type);
+	public boolean isPathfindable(BlockState state, BlockGetter level, BlockPos pos, PathComputationType type) {
+		return state.getValue(TRELLIS) == BushTrellis.NONE && super.isPathfindable(state, level, pos, type);
 	}
 
 	@Override

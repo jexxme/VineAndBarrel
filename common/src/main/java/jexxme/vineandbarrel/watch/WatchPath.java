@@ -2,7 +2,7 @@ package jexxme.vineandbarrel.watch;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,12 +34,12 @@ public record WatchPath(List<Station> stations, List<Branch> branches)
 	 * @param scene       the scene it plays
 	 * @param advancement the advancement that ticks it off; without one it is never ticked nor "next for you"
 	 */
-	public record Station(String verb, Identifier scene, Optional<Identifier> advancement)
+	public record Station(String verb, ResourceLocation scene, Optional<ResourceLocation> advancement)
 	{
 		public static final Codec<Station> CODEC = RecordCodecBuilder.create(inst -> inst.group(
 			Codec.STRING.fieldOf("verb").forGetter(Station::verb),
-			Identifier.CODEC.fieldOf("scene").forGetter(Station::scene),
-			Identifier.CODEC.optionalFieldOf("advancement").forGetter(Station::advancement)
+			ResourceLocation.CODEC.fieldOf("scene").forGetter(Station::scene),
+			ResourceLocation.CODEC.optionalFieldOf("advancement").forGetter(Station::advancement)
 		).apply(inst, Station::new));
 	}
 
@@ -51,11 +51,11 @@ public record WatchPath(List<Station> stations, List<Branch> branches)
 	 * @param note     lang key of a short line under its name
 	 * @param requires a mod that must be loaded for it to show
 	 */
-	public record Branch(Identifier after, Identifier scene, Optional<String> note, Optional<String> requires)
+	public record Branch(ResourceLocation after, ResourceLocation scene, Optional<String> note, Optional<String> requires)
 	{
 		public static final Codec<Branch> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-			Identifier.CODEC.fieldOf("after").forGetter(Branch::after),
-			Identifier.CODEC.fieldOf("scene").forGetter(Branch::scene),
+			ResourceLocation.CODEC.fieldOf("after").forGetter(Branch::after),
+			ResourceLocation.CODEC.fieldOf("scene").forGetter(Branch::scene),
 			Codec.STRING.optionalFieldOf("note").forGetter(Branch::note),
 			Codec.STRING.optionalFieldOf("requires").forGetter(Branch::requires)
 		).apply(inst, Branch::new));

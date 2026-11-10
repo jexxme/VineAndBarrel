@@ -15,7 +15,7 @@
 				16,
 				6.5
 			],
-			"shade_direction_override": "up",
+			"shade": false,
 			"faces": {
 				"north": {
 					"uv": [
@@ -48,7 +48,7 @@
 				16,
 				9.5
 			],
-			"shade_direction_override": "up",
+			"shade": false,
 			"faces": {
 				"north": {
 					"uv": [

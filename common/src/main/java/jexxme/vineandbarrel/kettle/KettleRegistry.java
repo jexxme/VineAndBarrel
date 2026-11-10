@@ -1,26 +1,25 @@
 package jexxme.vineandbarrel.kettle;
 
 import jexxme.vineandbarrel.VineAndBarrel;
+import com.google.gson.JsonObject;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.crafting.RecipeBookCategory;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.display.RecipeDisplay;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraft.core.component.DataComponentType;
 import jexxme.vineandbarrel.platform.Services;
 import jexxme.vineandbarrel.platform.registry.DeferredBlock;
-import jexxme.vineandbarrel.platform.registry.DeferredHolder;
 import jexxme.vineandbarrel.platform.registry.DeferredItem;
 import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
@@ -32,8 +31,9 @@ import java.util.function.Supplier;
 
 /**
  * Everything the Brew Kettle (M2) registers: the eight copper kettle blocks (four weathering stages, each also waxed),
- * their items, the block entity, menu, the {@code vineandbarrel:brewing} recipe type, recipe book categories,
- * the kettle's data component, steam particle and sounds. The bases (juice and wort) are in {@link BaseItems}.
+ * their items, the block entity, menu, the {@code vineandbarrel:brewing} recipe type, steam particle and sounds (what a
+ * kettle item holds is in its NBT on this Minecraft: {@link BrewKettleItem#CONTENTS_TAG}). The bases (juice and wort) are in {@link BaseItems}. The recipe book's tabs are client
+ * enum constants on this Minecraft (see {@code BrewingRecipeBookCategories}).
  */
 public final class KettleRegistry
 {
@@ -43,9 +43,6 @@ public final class KettleRegistry
 	public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, VineAndBarrel.MODID);
 	public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES = DeferredRegister.create(Registries.RECIPE_TYPE, VineAndBarrel.MODID);
 	public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(Registries.RECIPE_SERIALIZER, VineAndBarrel.MODID);
-	public static final DeferredRegister<RecipeDisplay.Type<?>> RECIPE_DISPLAYS = DeferredRegister.create(Registries.RECIPE_DISPLAY, VineAndBarrel.MODID);
-	public static final DeferredRegister<RecipeBookCategory> RECIPE_BOOK_CATEGORIES = DeferredRegister.create(Registries.RECIPE_BOOK_CATEGORY, VineAndBarrel.MODID);
-	public static final DeferredRegister.DataComponents DATA_COMPONENTS = DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, VineAndBarrel.MODID);
 	public static final DeferredRegister<ParticleType<?>> PARTICLE_TYPES = DeferredRegister.create(Registries.PARTICLE_TYPE, VineAndBarrel.MODID);
 	public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, VineAndBarrel.MODID);
 
@@ -71,8 +68,8 @@ public final class KettleRegistry
 			DeferredBlock<BrewKettleBlock> waxed = BLOCKS.registerBlock("waxed_" + name, p -> new BrewKettleBlock(stage, p), () -> kettleProperties(stage));
 			KETTLES.put(stage, block);
 			WAXED_KETTLES.put(stage, waxed);
-			KETTLE_ITEMS.put(stage, ITEMS.registerItem(name, p -> new BrewKettleItem(block.get(), p), p -> p.stacksTo(1).useBlockDescriptionPrefix()));
-			WAXED_KETTLE_ITEMS.put(stage, ITEMS.registerItem("waxed_" + name, p -> new BrewKettleItem(waxed.get(), p), p -> p.stacksTo(1).useBlockDescriptionPrefix()));
+			KETTLE_ITEMS.put(stage, ITEMS.registerItem(name, p -> new BrewKettleItem(block.get(), p), p -> p.stacksTo(1)));
+			WAXED_KETTLE_ITEMS.put(stage, ITEMS.registerItem("waxed_" + name, p -> new BrewKettleItem(waxed.get(), p), p -> p.stacksTo(1)));
 			PARTS.put(stage, BLOCKS.registerBlock(name + "_part", p -> new WeatheringBrewKettlePartBlock(stage, p), () -> partProperties(stage)));
 			WAXED_PARTS.put(stage, BLOCKS.registerBlock("waxed_" + name + "_part", p -> new BrewKettlePartBlock(stage, p), () -> partProperties(stage)));
 			CHIMNEYS.put(stage, BLOCKS.registerBlock(name + "_chimney", p -> new KettleChimneyBlock(stage, false, p), () -> partProperties(stage)));
@@ -94,7 +91,7 @@ public final class KettleRegistry
 
 	/** A part never moves on its own: pistons would tear a big kettle apart. */
 	private static BlockBehaviour.Properties partProperties(WeatherState stage) {
-		return kettleProperties(stage).pushReaction(net.minecraft.world.level.material.PushReaction.IMMOVEABLE).noLootTable();
+		return kettleProperties(stage).pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK).noLootTable();
 	}
 
 	/** All eight part blocks, unwaxed first, each in weathering order. */
@@ -193,7 +190,7 @@ public final class KettleRegistry
 		() -> {
 			java.util.Set<Block> valid = new java.util.HashSet<>(allKettleBlocks());
 			valid.addAll(allPartBlocks());
-			return new BlockEntityType<>(BrewKettleBlockEntity::new, valid);
+			return Services.PLATFORM.blockEntityType(BrewKettleBlockEntity::new, valid.toArray(Block[]::new));
 		});
 
 	public static final Supplier<MenuType<BrewKettleMenu>> BREW_KETTLE_MENU = MENU_TYPES.register("brew_kettle",
@@ -210,19 +207,23 @@ public final class KettleRegistry
 			}
 		});
 	public static final Supplier<RecipeSerializer<BrewingRecipe>> BREWING_SERIALIZER = RECIPE_SERIALIZERS.register("brewing",
-		() -> new RecipeSerializer<>(BrewingRecipe.CODEC, BrewingRecipe.STREAM_CODEC));
-	public static final Supplier<RecipeDisplay.Type<BrewingRecipeDisplay>> BREWING_DISPLAY = RECIPE_DISPLAYS.register("brewing",
-		() -> BrewingRecipeDisplay.TYPE);
+		() -> new RecipeSerializer<>()
+		{
+			@Override
+			public BrewingRecipe fromJson(ResourceLocation id, JsonObject json) {
+				return BrewingRecipe.fromJson(id, json);
+			}
 
-	public static final DeferredHolder<RecipeBookCategory, RecipeBookCategory> BREWING_SEARCH = RECIPE_BOOK_CATEGORIES.register("brewing_search", RecipeBookCategory::new);
-	public static final DeferredHolder<RecipeBookCategory, RecipeBookCategory> BREWING_JUICES = RECIPE_BOOK_CATEGORIES.register("brewing_juices", RecipeBookCategory::new);
-	public static final DeferredHolder<RecipeBookCategory, RecipeBookCategory> BREWING_WORTS = RECIPE_BOOK_CATEGORIES.register("brewing_worts", RecipeBookCategory::new);
-	public static final DeferredHolder<RecipeBookCategory, RecipeBookCategory> BREWING_MISC = RECIPE_BOOK_CATEGORIES.register("brewing_misc", RecipeBookCategory::new);
+			@Override
+			public BrewingRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buffer) {
+				return BrewingRecipe.fromNetwork(id, buffer);
+			}
 
-	// ------------------------------------------------------------------ data component: what a kettle item holds (K6)
-
-	public static final DeferredHolder<DataComponentType<?>, DataComponentType<KettleContents>> KETTLE_CONTENTS = DATA_COMPONENTS.registerComponentType(
-		"kettle_contents", builder -> builder.persistent(KettleContents.CODEC).networkSynchronized(KettleContents.STREAM_CODEC).cacheEncoding());
+			@Override
+			public void toNetwork(FriendlyByteBuf buffer, BrewingRecipe recipe) {
+				BrewingRecipe.toNetwork(buffer, recipe);
+			}
+		});
 
 	// ------------------------------------------------------------------ particles and sounds (K3, K4, K9)
 
@@ -249,9 +250,6 @@ public final class KettleRegistry
 		MENU_TYPES.register();
 		RECIPE_TYPES.register();
 		RECIPE_SERIALIZERS.register();
-		RECIPE_DISPLAYS.register();
-		RECIPE_BOOK_CATEGORIES.register();
-		DATA_COMPONENTS.register();
 		PARTICLE_TYPES.register();
 		SOUNDS.register();
 	}

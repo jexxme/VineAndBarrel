@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "function": "minecraft:copy_name",
+              "source": "block_entity"
+            },
+            {
+              "function": "minecraft:copy_nbt",
+              "ops": [
+                {
+                  "op": "replace",
+                  "source": "Batch",
+                  "target": "BlockEntityTag.Batch"
+                },
+                {
+                  "op": "replace",
+                  "source": "HomeBrewed",
+                  "target": "BlockEntityTag.HomeBrewed"
+                }
+              ],
+              "source": "block_entity"
+            }
+          ],
+          "name": "vineandbarrel:aging_barrel"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "vineandbarrel:blocks/aging_barrel"
+}

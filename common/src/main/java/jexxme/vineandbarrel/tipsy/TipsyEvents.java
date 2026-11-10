@@ -8,10 +8,10 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.AbstractBedBlock;
+import net.minecraft.world.level.block.BedBlock;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -31,10 +31,10 @@ public final class TipsyEvents
 		if (entity instanceof ServerPlayer player && TipsyRegistry.BLACKOUT.has(player)) {
 			Blackout.tick(player);
 		}
-		boolean tipsy = entity.hasEffect(TipsyRegistry.TIPSY);
+		boolean tipsy = entity.hasEffect(TipsyRegistry.TIPSY.get());
 		if (tipsy && !TipsyConfig.enabled()) {
 			// Non-alcoholic mode switched on mid-game (or the effect came from a command): nobody stays tipsy
-			entity.removeEffect(TipsyRegistry.TIPSY);
+			entity.removeEffect(TipsyRegistry.TIPSY.get());
 			tipsy = false;
 		}
 		// Tipsy, or was a tick ago: the last tick lets go of the side effects, the sync and the night's bookkeeping
@@ -73,7 +73,7 @@ public final class TipsyEvents
 	 */
 	public static boolean keepsSleeping(Player player) {
 		return Blackout.isOut(player) && player.getSleepingPos()
-			.map(bed -> player.level().getBlockState(bed).getBlock() instanceof AbstractBedBlock).orElse(false);
+			.map(bed -> player.level().getBlockState(bed).getBlock() instanceof BedBlock).orElse(false);
 	}
 
 	/**

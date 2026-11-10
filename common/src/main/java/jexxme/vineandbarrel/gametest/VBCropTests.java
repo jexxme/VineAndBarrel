@@ -4,9 +4,11 @@ import jexxme.vineandbarrel.block.VBFlammability;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.block.WildCropBlock;
+import jexxme.vineandbarrel.entity.AnimalFoods;
 import jexxme.vineandbarrel.entity.BeeGrowth;
 import jexxme.vineandbarrel.entity.FoxPickGrapesGoal;
 import jexxme.vineandbarrel.mixin.BeeAccessor;
+import jexxme.vineandbarrel.mixin.MobAccessor;
 import jexxme.vineandbarrel.registry.VBBlocks;
 import jexxme.vineandbarrel.registry.VBItems;
 import jexxme.vineandbarrel.tag.VBTags;
@@ -14,9 +16,9 @@ import jexxme.vineandbarrel.world.WildCropFilter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -27,27 +29,34 @@ import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.HarvestFarmland;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.entity.animal.bee.Bee;
-import net.minecraft.world.entity.animal.cow.Cow;
-import net.minecraft.world.entity.animal.equine.Horse;
-import net.minecraft.world.entity.animal.equine.Llama;
-import net.minecraft.world.entity.animal.fox.Fox;
-import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.ai.goal.TemptGoal;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Bee;
+import net.minecraft.world.entity.animal.Chicken;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.animal.horse.Llama;
+import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.animal.goat.Goat;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.npc.villager.Villager;
-import net.minecraft.world.entity.npc.villager.VillagerProfession;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.BoneMealItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.ChunkPos;
@@ -60,6 +69,8 @@ import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ProtoChunk;
+import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.gameevent.BlockPositionSource;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.GameEventListener;
@@ -121,6 +132,9 @@ final class VBCropTests
 		test("crops_burn_like_vanilla", VBCropTests::burnLikeVanilla);
 		test("farm_c3_cow_breeds_from_barley", LARGE, 600, VBCropTests::cowBreedsFromBarley);
 		test("farm_c3_c7_horse_and_llama_eat", VBCropTests::horseAndLlamaEat);
+		// 1.20.1 only: here the animals' foods are fixed in code and our mixins read the food tags on top (AnimalFoods)
+		test("farm_c3_c7_animals_eat_and_follow_our_crops", VBCropTests::animalsEatAndFollowOurCrops);
+		test("farm_c3_parrot_tamed_with_barley_seeds", VBCropTests::parrotTamedWithBarleySeeds);
 		test("farm_c4_farmer_harvests_and_replants_barley", VBCropTests::farmerHarvestsBarley);
 		test("farm_c5_fox_picks_ripe_grapes", h -> foxPicksGrapes(h, VBBlocks.GRAPE_BUSH.get(), VBBlocks.GRAPE_VINE_ON_ROPE.get(), VBItems.RED_GRAPES.get()));
 		test("farm_c5_fox_picks_ripe_white_grapes",
@@ -134,7 +148,7 @@ final class VBCropTests
 	// ------------------------------------------------------------------ helpers
 
 	private static Player player(GameTestHelper helper) {
-		return helper.makeMockPlayer(GameType.SURVIVAL);
+		return VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
 	}
 
 	private static BlockState state(GameTestHelper helper, BlockPos pos) {
@@ -186,8 +200,8 @@ final class VBCropTests
 			BlockState planted = state(helper, soil.above());
 			helper.assertTrue(planted.is(plant.crop()), "Expected " + plant.crop() + " planted from " + plant.item().get() + ", got " + planted);
 			IntegerProperty age = plant.crop() instanceof CropBlock ? CropBlock.AGE : ClimbingCropBlock.AGE;
-			helper.assertValueEqual(planted.getValue(age), 0, "age of a freshly planted " + plant.crop());
-			helper.assertValueEqual(stack.getCount(), 1, "items left after planting " + plant.item().get());
+			VBGameTests.assertValueEqual(helper, planted.getValue(age), 0, "age of a freshly planted " + plant.crop());
+			VBGameTests.assertValueEqual(helper, stack.getCount(), 1, "items left after planting " + plant.item().get());
 		}
 		// Barley seeds do not take on grass (wheat rule)
 		BlockPos grass = new BlockPos(0, 1, 3);
@@ -223,7 +237,7 @@ final class VBCropTests
 		for (int i = 0; i < 500; i++) {
 			helper.randomTick(pos);
 		}
-		helper.assertValueEqual(state(helper, pos).getValue(age), 0, "age of " + crop + " after 500 random ticks in the dark");
+		VBGameTests.assertValueEqual(helper, state(helper, pos).getValue(age), 0, "age of " + crop + " after 500 random ticks in the dark");
 		box.forEach(wall -> helper.setBlock(wall, Blocks.AIR));
 		settleLight(helper, box);
 		int bright = helper.getLevel().getRawBrightness(helper.absolutePos(lightPos), 0);
@@ -248,8 +262,8 @@ final class VBCropTests
 	/** {@link #settleLight} for absolute positions (the taverns' lighting test waits for the whole tavern this way). */
 	static void settleLightAt(GameTestHelper helper, List<BlockPos> absolute) {
 		ThreadedLevelLightEngine engine = helper.getLevel().getChunkSource().getLightEngine();
-		CompletableFuture<Void> settled = CompletableFuture.allOf(absolute.stream().map(ChunkPos::containing).distinct()
-			.map(chunk -> engine.waitForPendingTasks(chunk.x(), chunk.z())).toArray(CompletableFuture[]::new));
+		CompletableFuture<Void> settled = CompletableFuture.allOf(absolute.stream().map(ChunkPos::new).distinct()
+			.map(chunk -> pendingLightTasks(helper.getLevel(), engine, chunk)).toArray(CompletableFuture[]::new));
 		long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(20);
 		while (true) {
 			// the server tick starts the light engine's next run; the tick is held here, so start it ourselves
@@ -270,6 +284,17 @@ final class VBCropTests
 		}
 	}
 
+	/**
+	 * 1.21.1's {@code engine.waitForPendingTasks(x, z)}: done once the light engine has worked through what is queued
+	 * for the chunk. 1.20.1 has no such call and keeps its task queue private; the one public way to queue a task that
+	 * runs after the light updates is {@code lightChunk(chunk, true)} ("already lit": it spreads no light itself). It
+	 * gets a throwaway chunk object of the same position, so the real chunk is not touched; all it does besides is
+	 * release the chunk's worldgen light ticket, which a finished chunk (every chunk a test stands in) no longer holds.
+	 */
+	private static CompletableFuture<?> pendingLightTasks(ServerLevel level, ThreadedLevelLightEngine engine, ChunkPos chunk) {
+		return engine.lightChunk(new ProtoChunk(chunk, UpgradeData.EMPTY, level, level.registryAccess().registryOrThrow(Registries.BIOME), null), true);
+	}
+
 	private static void growToMax(GameTestHelper helper, Block crop, BlockPos pos, IntegerProperty age) {
 		int max = age.getPossibleValues().stream().mapToInt(Integer::intValue).max().orElseThrow();
 		int current = 0;
@@ -280,12 +305,12 @@ final class VBCropTests
 			helper.assertTrue(state.is(crop), crop + " disappeared while growing: " + state);
 			int now = state.getValue(age);
 			if (now != current) {
-				helper.assertValueEqual(now, current + 1, "next age of " + crop);
+				VBGameTests.assertValueEqual(helper, now, current + 1, "next age of " + crop);
 				current = now;
 				seen.add(now);
 			}
 		}
-		helper.assertValueEqual(current, max, "final age of " + crop + " (ages seen " + seen + ")");
+		VBGameTests.assertValueEqual(helper, current, max, "final age of " + crop + " (ages seen " + seen + ")");
 		helper.succeed();
 	}
 
@@ -297,7 +322,7 @@ final class VBCropTests
 			helper.setBlock(pos, bush);
 			for (int expected = 1; expected <= ClimbingCropBlock.MAX_AGE; expected++) {
 				helper.assertTrue(boneMeal(helper, pos), "Bone meal should work on " + bush + " at age " + (expected - 1));
-				helper.assertValueEqual(state(helper, pos).getValue(ClimbingCropBlock.AGE), expected, "age after bone meal");
+				VBGameTests.assertValueEqual(helper, state(helper, pos).getValue(ClimbingCropBlock.AGE), expected, "age after bone meal");
 			}
 			helper.assertFalse(boneMeal(helper, pos), "Bone meal must not be used up on a ripe " + bush + " without a rope");
 		}
@@ -327,7 +352,7 @@ final class VBCropTests
 		for (int i = 0; i < 32; i++) {
 			helper.setBlock(pos, bush.defaultBlockState().setValue(ClimbingCropBlock.AGE, 3));
 			helper.useBlock(pos, player);
-			helper.assertValueEqual(state(helper, pos).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "age after picking");
+			VBGameTests.assertValueEqual(helper, state(helper, pos).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "age after picking");
 			int picked = collect(helper, pos, fruit);
 			helper.assertTrue(picked == 2 || picked == 3, "A harvest should give 2 or 3 " + fruit + ", gave " + picked);
 			sawTwo |= picked == 2;
@@ -337,8 +362,8 @@ final class VBCropTests
 		for (int age = 0; age < ClimbingCropBlock.HALF_RIPE_AGE; age++) {
 			helper.setBlock(pos, bush.defaultBlockState().setValue(ClimbingCropBlock.AGE, age));
 			helper.useBlock(pos, player);
-			helper.assertValueEqual(state(helper, pos).getValue(ClimbingCropBlock.AGE), age, "age of an unripe bush after use");
-			helper.assertValueEqual(collect(helper, pos, fruit), 0, "fruit from an unripe bush");
+			VBGameTests.assertValueEqual(helper, state(helper, pos).getValue(ClimbingCropBlock.AGE), age, "age of an unripe bush after use");
+			VBGameTests.assertValueEqual(helper, collect(helper, pos, fruit), 0, "fruit from an unripe bush");
 		}
 		helper.succeed();
 	}
@@ -352,13 +377,13 @@ final class VBCropTests
 			for (int age = 0; age <= 3; age++) {
 				List<ItemStack> drops = drops(helper, bush.defaultBlockState().setValue(ClimbingCropBlock.AGE, age), pos, ItemStack.EMPTY);
 				int fruitCount = count(drops, fruit);
-				helper.assertValueEqual(drops.size() - (fruitCount > 0 ? 1 : 0), 0, "other drops of " + bush + " " + drops);
+				VBGameTests.assertValueEqual(helper, drops.size() - (fruitCount > 0 ? 1 : 0), 0, "other drops of " + bush + " " + drops);
 				if (age == 3) {
 					helper.assertTrue(fruitCount == 2 || fruitCount == 3, "Ripe " + bush + " should drop 2-3, dropped " + fruitCount);
 				} else if (age == 2) {
 					helper.assertTrue(fruitCount == 1 || fruitCount == 2, "Half-ripe " + bush + " should drop 1-2, dropped " + fruitCount);
 				} else {
-					helper.assertValueEqual(fruitCount, 0, bush + " drops at age " + age);
+					VBGameTests.assertValueEqual(helper, fruitCount, 0, bush + " drops at age " + age);
 				}
 			}
 		}
@@ -372,14 +397,14 @@ final class VBCropTests
 		BlockState mature = VBBlocks.BARLEY.get().getStateForAge(7);
 		for (int i = 0; i < 20; i++) {
 			List<ItemStack> drops = drops(helper, mature, pos, ItemStack.EMPTY);
-			helper.assertValueEqual(count(drops, VBItems.BARLEY.get()), 1, "barley from mature barley");
+			VBGameTests.assertValueEqual(helper, count(drops, VBItems.BARLEY.get()), 1, "barley from mature barley");
 			int seeds = count(drops, VBItems.BARLEY_SEEDS.get());
 			helper.assertTrue(seeds >= 1 && seeds <= 4, "Mature barley should drop 1-4 seeds, dropped " + seeds);
 		}
 		for (int age = 0; age < 7; age++) {
 			List<ItemStack> drops = drops(helper, VBBlocks.BARLEY.get().getStateForAge(age), pos, ItemStack.EMPTY);
-			helper.assertValueEqual(count(drops, VBItems.BARLEY.get()), 0, "barley from barley at age " + age);
-			helper.assertValueEqual(count(drops, VBItems.BARLEY_SEEDS.get()), 1, "seeds from barley at age " + age);
+			VBGameTests.assertValueEqual(helper, count(drops, VBItems.BARLEY.get()), 0, "barley from barley at age " + age);
+			VBGameTests.assertValueEqual(helper, count(drops, VBItems.BARLEY_SEEDS.get()), 1, "seeds from barley at age " + age);
 		}
 		helper.succeed();
 	}
@@ -406,8 +431,8 @@ final class VBCropTests
 		Block wildBarley = VBBlocks.WILD_BARLEY.get();
 		for (int i = 0; i < 10; i++) {
 			List<ItemStack> drops = drops(helper, wildBarley.defaultBlockState(), pos, ItemStack.EMPTY);
-			helper.assertValueEqual(count(drops, VBItems.BARLEY_SEEDS.get()), 1, "seeds from wild barley");
-			helper.assertValueEqual(count(drops, VBItems.BARLEY.get()), 1, "barley from wild barley, every time");
+			VBGameTests.assertValueEqual(helper, count(drops, VBItems.BARLEY_SEEDS.get()), 1, "seeds from wild barley");
+			VBGameTests.assertValueEqual(helper, count(drops, VBItems.BARLEY.get()), 1, "barley from wild barley, every time");
 		}
 		List<ItemStack> sheared = drops(helper, wildBarley.defaultBlockState(), pos, shears);
 		helper.assertTrue(sheared.size() == 1 && count(sheared, wildBarley.asItem()) == 1, "Shears should take wild barley itself, got " + sheared);
@@ -453,7 +478,7 @@ final class VBCropTests
 		helper.setBlock(bush.below(), Blocks.GRASS_BLOCK);
 		helper.setBlock(bush, VBBlocks.GRAPE_BUSH.get().defaultBlockState().setValue(ClimbingCropBlock.AGE, 3));
 		helper.setBlock(vine, VBBlocks.GRAPE_VINE_ON_ROPE.get().defaultBlockState().setValue(ClimbingCropBlock.AGE, 1));
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		BlockPos absolute = helper.absolutePos(vine);
 		AtomicInteger destroyed = new AtomicInteger();
@@ -470,8 +495,8 @@ final class VBCropTests
 			}
 
 			@Override
-			public boolean handleGameEvent(ServerLevel level, Holder<GameEvent> event, GameEvent.Context context, Vec3 at) {
-				if (event.is(GameEvent.BLOCK_DESTROY) && context.sourceEntity() == player && BlockPos.containing(at).equals(absolute)) {
+			public boolean handleGameEvent(ServerLevel level, GameEvent event, GameEvent.Context context, Vec3 at) {
+				if (event == GameEvent.BLOCK_DESTROY && context.sourceEntity() == player && BlockPos.containing(at).equals(absolute)) {
 					destroyed.incrementAndGet();
 				}
 				return false;
@@ -485,7 +510,7 @@ final class VBCropTests
 			listeners.unregister(listener);
 		}
 		helper.assertBlockNotPresent(VBBlocks.GRAPE_VINE_ON_ROPE.get(), vine);
-		helper.assertValueEqual(destroyed.get(), 1, "destroy game events for one break");
+		VBGameTests.assertValueEqual(helper, destroyed.get(), 1, "destroy game events for one break");
 		helper.succeed();
 	}
 
@@ -510,7 +535,7 @@ final class VBCropTests
 			helper.randomTick(bushPos);
 		}
 		helper.assertTrue(state(helper, bushPos.above()).is(vine), "The ripe bush should climb the rope above it");
-		helper.assertValueEqual(state(helper, bushPos.above()).getValue(ClimbingCropBlock.AGE), 0, "age of a fresh vine");
+		VBGameTests.assertValueEqual(helper, state(helper, bushPos.above()).getValue(ClimbingCropBlock.AGE), 0, "age of a fresh vine");
 		helper.assertBlockPresent(rope, bushPos.above(2));
 		// bone meal on the bush passes up to the vine and climbs on, up to 3 tall
 		for (int i = 0; i < 40; i++) {
@@ -525,12 +550,12 @@ final class VBCropTests
 		helper.useBlock(top, player(helper));
 		int picked = collect(helper, top, fruit);
 		helper.assertTrue(picked == 2 || picked == 3, "Picking a ripe vine should give 2-3, gave " + picked);
-		helper.assertValueEqual(state(helper, top).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "vine age after picking");
+		VBGameTests.assertValueEqual(helper, state(helper, top).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "vine age after picking");
 		helper.setBlock(top, vine.defaultBlockState().setValue(ClimbingCropBlock.AGE, 2));
 		helper.useBlock(top, player(helper));
 		int half = collect(helper, top, fruit);
 		helper.assertTrue(half == 1 || half == 2, "Picking a half-ripe vine should give 1-2, gave " + half);
-		helper.assertValueEqual(state(helper, top).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "vine age after picking it half-ripe");
+		VBGameTests.assertValueEqual(helper, state(helper, top).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "vine age after picking it half-ripe");
 		// remove the bush: the vines lose their support and the ropes come back
 		helper.getLevel().destroyBlock(helper.absolutePos(bushPos), false);
 		helper.succeedWhen(() -> {
@@ -563,7 +588,7 @@ final class VBCropTests
 	 */
 	private static void worldgenWildCrops(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
-		Registry<Biome> biomes = level.registryAccess().lookupOrThrow(Registries.BIOME);
+		Registry<Biome> biomes = level.registryAccess().registryOrThrow(Registries.BIOME);
 		record Expect(String crop, List<ResourceKey<Biome>> in, List<ResourceKey<Biome>> out) {
 		}
 		List<Expect> expectations = List.of(
@@ -579,17 +604,17 @@ final class VBCropTests
 			WildCropFilter.load("wild_" + expect.crop() + "_extra");
 			ResourceKey<PlacedFeature> patchKey = ResourceKey.create(Registries.PLACED_FEATURE, jexxme.vineandbarrel.VineAndBarrel.id("patch_wild_" + expect.crop()));
 			for (ResourceKey<Biome> key : expect.in()) {
-				Holder<Biome> biome = biomes.getOrThrow(key);
-				helper.assertTrue(modifier.accepts(biome), "wild " + expect.crop() + " should be chosen for " + key.identifier());
+				Holder<Biome> biome = biomes.getHolderOrThrow(key);
+				helper.assertTrue(modifier.accepts(biome), "wild " + expect.crop() + " should be chosen for " + key.location());
 				boolean inSettings = biome.value().getGenerationSettings().features().stream()
 						.anyMatch(set -> set.stream().anyMatch(feature -> feature.is(patchKey)));
-				helper.assertTrue(inSettings, "patch_wild_" + expect.crop() + " should be in the generation settings of " + key.identifier());
+				helper.assertTrue(inSettings, "patch_wild_" + expect.crop() + " should be in the generation settings of " + key.location());
 			}
 			for (ResourceKey<Biome> key : expect.out()) {
-				Holder<Biome> biome = biomes.getOrThrow(key);
+				Holder<Biome> biome = biomes.getHolderOrThrow(key);
 				boolean inSettings = biome.value().getGenerationSettings().features().stream()
 						.anyMatch(set -> set.stream().anyMatch(feature -> feature.is(patchKey)));
-				helper.assertFalse(inSettings, "patch_wild_" + expect.crop() + " must not generate in " + key.identifier());
+				helper.assertFalse(inSettings, "patch_wild_" + expect.crop() + " must not generate in " + key.location());
 			}
 		}
 
@@ -601,8 +626,8 @@ final class VBCropTests
 		}
 		int placedTotal = 0;
 		for (String crop : List.of("grapes", "hops", "barley")) {
-			PlacedFeature patch = level.registryAccess().lookupOrThrow(Registries.PLACED_FEATURE)
-					.getValue(jexxme.vineandbarrel.VineAndBarrel.id("patch_wild_" + crop));
+			PlacedFeature patch = level.registryAccess().registryOrThrow(Registries.PLACED_FEATURE)
+					.get(jexxme.vineandbarrel.VineAndBarrel.id("patch_wild_" + crop));
 			helper.assertTrue(patch != null, "patch_wild_" + crop + " should load");
 			List<PlacementModifier> placement = patch.placement().stream()
 					.filter(modifier -> !(modifier instanceof RarityFilter) && !(modifier instanceof BiomeFilter)).toList();
@@ -643,33 +668,33 @@ final class VBCropTests
 	 */
 	private static void worldgenWildWhiteGrapes(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
-		Registry<Biome> biomes = level.registryAccess().lookupOrThrow(Registries.BIOME);
+		Registry<Biome> biomes = level.registryAccess().registryOrThrow(Registries.BIOME);
 		// The biome modifier files (NeoForge loads them as biome modifiers, Fabric through WildCropFilter)
 		WildCropFilter.load("wild_white_grapes");
 		WildCropFilter.load("wild_white_grapes_extra");
 		ResourceKey<PlacedFeature> patchKey = ResourceKey.create(Registries.PLACED_FEATURE, jexxme.vineandbarrel.VineAndBarrel.id("patch_wild_white_grapes"));
 		ResourceKey<PlacedFeature> redKey = ResourceKey.create(Registries.PLACED_FEATURE, jexxme.vineandbarrel.VineAndBarrel.id("patch_wild_grapes"));
 		for (ResourceKey<Biome> key : List.of(Biomes.BIRCH_FOREST, Biomes.OLD_GROWTH_BIRCH_FOREST, Biomes.MEADOW, Biomes.CHERRY_GROVE)) {
-			boolean inSettings = biomes.getOrThrow(key).value().getGenerationSettings().features().stream()
+			boolean inSettings = biomes.getOrThrow(key).getGenerationSettings().features().stream()
 					.anyMatch(set -> set.stream().anyMatch(feature -> feature.is(patchKey)));
-			helper.assertTrue(inSettings, "wild white grapes should grow in " + key.identifier());
-			boolean red = biomes.getOrThrow(key).value().getGenerationSettings().features().stream()
+			helper.assertTrue(inSettings, "wild white grapes should grow in " + key.location());
+			boolean red = biomes.getOrThrow(key).getGenerationSettings().features().stream()
 					.anyMatch(set -> set.stream().anyMatch(feature -> feature.is(redKey)));
 			boolean birch = key == Biomes.BIRCH_FOREST || key == Biomes.OLD_GROWTH_BIRCH_FOREST;
-			helper.assertValueEqual(red, birch, "red grapes too in " + key.identifier() + " (only the birch forests, where both meet)");
+			VBGameTests.assertValueEqual(helper, red, birch, "red grapes too in " + key.location() + " (only the birch forests, where both meet)");
 		}
 		for (ResourceKey<Biome> key : List.of(Biomes.FOREST, Biomes.PLAINS, Biomes.DARK_FOREST, Biomes.TAIGA, Biomes.GROVE, Biomes.SNOWY_SLOPES,
 				Biomes.DESERT, Biomes.JUNGLE, Biomes.MUSHROOM_FIELDS)) {
-			boolean inSettings = biomes.getOrThrow(key).value().getGenerationSettings().features().stream()
+			boolean inSettings = biomes.getOrThrow(key).getGenerationSettings().features().stream()
 					.anyMatch(set -> set.stream().anyMatch(feature -> feature.is(patchKey)));
-			helper.assertFalse(inSettings, "wild white grapes must not grow in " + key.identifier());
+			helper.assertFalse(inSettings, "wild white grapes must not grow in " + key.location());
 		}
 		for (int x = 0; x < 32; x++) {
 			for (int z = 0; z < 32; z++) {
 				helper.setBlock(new BlockPos(x, 0, z), Blocks.GRASS_BLOCK);
 			}
 		}
-		PlacedFeature patch = level.registryAccess().lookupOrThrow(Registries.PLACED_FEATURE).getValue(patchKey.identifier());
+		PlacedFeature patch = level.registryAccess().registryOrThrow(Registries.PLACED_FEATURE).get(patchKey.location());
 		helper.assertTrue(patch != null, "patch_wild_white_grapes should load");
 		List<PlacementModifier> placement = patch.placement().stream()
 				.filter(modifier -> !(modifier instanceof RarityFilter) && !(modifier instanceof BiomeFilter)).toList();
@@ -709,13 +734,17 @@ final class VBCropTests
 		}
 		ItemStack barley = new ItemStack(VBItems.BARLEY.get());
 		ItemStack seeds = new ItemStack(VBItems.BARLEY_SEEDS.get());
-		for (var tag : List.of(ItemTags.COW_FOOD, ItemTags.SHEEP_FOOD, ItemTags.GOAT_FOOD, ItemTags.HORSE_FOOD, ItemTags.LLAMA_FOOD)) {
+		// the animal food tags are ours to declare on this Minecraft (AnimalFoods); the data files fill them as on 1.21.1
+		for (var tag : List.of(AnimalFoods.COW_FOOD, AnimalFoods.SHEEP_FOOD, AnimalFoods.GOAT_FOOD, AnimalFoods.HORSE_FOOD, AnimalFoods.LLAMA_FOOD)) {
 			helper.assertTrue(barley.is(tag), "Barley should be in " + tag.location() + " (C3)");
 		}
-		helper.assertTrue(seeds.is(ItemTags.CHICKEN_FOOD) && seeds.is(ItemTags.PARROT_FOOD), "Barley seeds should feed chickens and parrots (C3)");
-		helper.assertTrue(new ItemStack(VBItems.BARLEY_BALE.get()).is(ItemTags.LLAMA_FOOD), "The bale should feed llamas (C7)");
-		helper.assertTrue(seeds.is(ItemTags.VILLAGER_PLANTABLE_SEEDS) && seeds.is(ItemTags.VILLAGER_PICKS_UP), "Farmers plant and pick up barley seeds (C4)");
-		helper.assertTrue(barley.is(ItemTags.VILLAGER_PICKS_UP), "Farmers pick up the barley they harvest, like wheat (C4)");
+		helper.assertTrue(seeds.is(AnimalFoods.CHICKEN_FOOD) && seeds.is(AnimalFoods.PARROT_FOOD), "Barley seeds should feed chickens and parrots (C3)");
+		helper.assertTrue(new ItemStack(VBItems.BARLEY_BALE.get()).is(AnimalFoods.LLAMA_FOOD), "The bale should feed llamas (C7)");
+		// 1.20.1 has no villager_picks_up tag: what a villager picks up is a set in code, asked of a farmer itself
+		Villager farmer = EntityType.VILLAGER.create(helper.getLevel());
+		farmer.setVillagerData(farmer.getVillagerData().setProfession(VillagerProfession.FARMER));
+		helper.assertTrue(seeds.is(ItemTags.VILLAGER_PLANTABLE_SEEDS) && farmer.wantsToPickUp(seeds), "Farmers plant and pick up barley seeds (C4)");
+		helper.assertTrue(farmer.wantsToPickUp(barley), "Farmers pick up the barley they harvest, like wheat (C4)");
 		helper.assertTrue(new ItemStack(VBItems.RED_GRAPES.get()).is(ItemTags.FOX_FOOD), "Foxes love grapes (C5)");
 		helper.assertTrue(new ItemStack(VBItems.WHITE_GRAPES.get()).is(ItemTags.FOX_FOOD), "Foxes love white grapes too (C5)");
 		helper.assertTrue(VBBlocks.GRAPE_BUSH.get().defaultBlockState().is(VBTags.SEASONS_AUTUMN_CROPS), "Grapes are an autumn crop");
@@ -725,7 +754,7 @@ final class VBCropTests
 				&& VBBlocks.HOP_BUSH.get().defaultBlockState().is(VBTags.SEASONS_AUTUMN_CROPS), "Hops are a summer and autumn crop");
 		helper.assertTrue(VBBlocks.BARLEY.get().defaultBlockState().is(VBTags.SEASONS_SPRING_CROPS)
 				&& VBBlocks.BARLEY.get().defaultBlockState().is(VBTags.SEASONS_SUMMER_CROPS), "Barley is a spring and summer crop");
-		var unaffected = net.minecraft.tags.TagKey.create(Registries.BLOCK, net.minecraft.resources.Identifier.fromNamespaceAndPath("farmersdelight", "unaffected_by_rich_soil"));
+		var unaffected = net.minecraft.tags.TagKey.create(Registries.BLOCK, new net.minecraft.resources.ResourceLocation("farmersdelight", "unaffected_by_rich_soil"));
 		for (Block block : List.of(VBBlocks.GRAPE_BUSH.get(), VBBlocks.WHITE_GRAPE_BUSH.get(), VBBlocks.HOP_BUSH.get(), VBBlocks.BARLEY.get())) {
 			helper.assertFalse(block.defaultBlockState().is(unaffected), block + " must stay boostable by FD rich soil");
 		}
@@ -743,33 +772,33 @@ final class VBCropTests
 		BlockPos bush = new BlockPos(0, 2, 0);
 		helper.setBlock(bush.below(), Blocks.GRASS_BLOCK);
 		helper.setBlock(bush, VBBlocks.GRAPE_BUSH.get());
-		Bee first = helper.spawn(EntityTypes.BEE, bush.above());
+		Bee first = helper.spawn(EntityType.BEE, bush.above());
 		helper.assertTrue(BeeGrowth.grow(first) != null, "The bee should grow the grape bush");
-		helper.assertValueEqual(state(helper, bush).getValue(ClimbingCropBlock.AGE), 1, "bush age after a bee pass");
-		helper.assertValueEqual(((BeeAccessor) first).vineandbarrel$cropsGrown(), 1, "crops the bee grew since pollinating");
+		VBGameTests.assertValueEqual(helper, state(helper, bush).getValue(ClimbingCropBlock.AGE), 1, "bush age after a bee pass");
+		VBGameTests.assertValueEqual(helper, ((BeeAccessor) first).vineandbarrel$cropsGrown(), 1, "crops the bee grew since pollinating");
 		// a young vine on a rope over a ripe bush: the vine grows, the ripe bush does not
 		BlockPos ripeBush = new BlockPos(2, 2, 0);
 		helper.setBlock(ripeBush.below(), Blocks.GRASS_BLOCK);
 		helper.setBlock(ripeBush, VBBlocks.HOP_BUSH.get().defaultBlockState().setValue(ClimbingCropBlock.AGE, 3));
 		helper.setBlock(ripeBush.above(), VBBlocks.HOP_VINE_ON_ROPE.get());
-		Bee second = helper.spawn(EntityTypes.BEE, ripeBush.above(2));
+		Bee second = helper.spawn(EntityType.BEE, ripeBush.above(2));
 		BeeGrowth.grow(second);
-		helper.assertValueEqual(state(helper, ripeBush.above()).getValue(ClimbingCropBlock.AGE), 1, "vine age after a bee pass");
-		helper.assertValueEqual(state(helper, ripeBush).getValue(ClimbingCropBlock.AGE), 3, "a ripe bush stays as it is");
-		helper.assertValueEqual(((BeeAccessor) second).vineandbarrel$cropsGrown(), 1, "crops the second bee grew");
+		VBGameTests.assertValueEqual(helper, state(helper, ripeBush.above()).getValue(ClimbingCropBlock.AGE), 1, "vine age after a bee pass");
+		VBGameTests.assertValueEqual(helper, state(helper, ripeBush).getValue(ClimbingCropBlock.AGE), 3, "a ripe bush stays as it is");
+		VBGameTests.assertValueEqual(helper, ((BeeAccessor) second).vineandbarrel$cropsGrown(), 1, "crops the second bee grew");
 		// the mixin: tick the bee's own BeeGrowCropGoal until it grows a fresh bush (1 in 15 per tick, like vanilla)
 		BlockPos third = new BlockPos(4, 2, 0);
 		helper.setBlock(third.below(), Blocks.GRASS_BLOCK);
 		helper.setBlock(third, VBBlocks.HOP_BUSH.get());
-		Bee bee = helper.spawn(EntityTypes.BEE, third.above());
-		var growGoal = bee.goalSelector.getAvailableGoals().stream()
+		Bee bee = helper.spawn(EntityType.BEE, third.above());
+		var growGoal = ((MobAccessor) bee).vineandbarrel$goalSelector().getAvailableGoals().stream()
 				.filter(wrapped -> wrapped.getGoal().getClass().getSimpleName().equals("BeeGrowCropGoal")).findFirst()
 				.orElseThrow(() -> new IllegalStateException("Bees should have vanilla's crop growth goal")).getGoal();
 		for (int i = 0; i < 1000 && state(helper, third).getValue(ClimbingCropBlock.AGE) == 0; i++) {
 			bee.setPos(Vec3.atBottomCenterOf(helper.absolutePos(third.above())));
 			growGoal.tick();
 		}
-		helper.assertValueEqual(state(helper, third).getValue(ClimbingCropBlock.AGE), 1, "hop bush age after the bee's growth goal ran");
+		VBGameTests.assertValueEqual(helper, state(helper, third).getValue(ClimbingCropBlock.AGE), 1, "hop bush age after the bee's growth goal ran");
 		helper.assertTrue(level.getBlockState(helper.absolutePos(third)).is(BlockTags.BEE_GROWABLES), "hop bush is a bee growable");
 		helper.succeed();
 	}
@@ -791,12 +820,12 @@ final class VBCropTests
 				"climbing and wild crops found: " + plants);
 		for (Block plant : plants) {
 			BlockState state = plant.defaultBlockState();
-			helper.assertValueEqual(VBFlammability.burnOdds(state), VBFlammability.burnOdds(berries), plant + " flammability");
-			helper.assertValueEqual(VBFlammability.igniteOdds(state), VBFlammability.igniteOdds(berries), plant + " fire spread");
+			VBGameTests.assertValueEqual(helper, VBFlammability.burnOdds(state), VBFlammability.burnOdds(berries), plant + " flammability");
+			VBGameTests.assertValueEqual(helper, VBFlammability.igniteOdds(state), VBFlammability.igniteOdds(berries), plant + " fire spread");
 		}
 		BlockState bale = VBBlocks.BARLEY_BALE.get().defaultBlockState();
-		helper.assertValueEqual(VBFlammability.burnOdds(bale), VBFlammability.burnOdds(hay), "bale flammability");
-		helper.assertValueEqual(VBFlammability.igniteOdds(bale), VBFlammability.igniteOdds(hay), "bale fire spread");
+		VBGameTests.assertValueEqual(helper, VBFlammability.burnOdds(bale), VBFlammability.burnOdds(hay), "bale flammability");
+		VBGameTests.assertValueEqual(helper, VBFlammability.igniteOdds(bale), VBFlammability.igniteOdds(hay), "bale fire spread");
 		helper.succeed();
 	}
 
@@ -807,35 +836,165 @@ final class VBCropTests
 				helper.setBlock(new BlockPos(x, 0, z), Blocks.GRASS_BLOCK);
 			}
 		}
-		Cow first = helper.spawn(EntityTypes.COW, new BlockPos(15, 1, 15));
-		Cow second = helper.spawn(EntityTypes.COW, new BlockPos(17, 1, 15));
-		Player player = helper.makeMockServerPlayer(GameType.SURVIVAL); // Animal#mobInteract only breeds for server players
+		Cow first = helper.spawn(EntityType.COW, new BlockPos(15, 1, 15));
+		Cow second = helper.spawn(EntityType.COW, new BlockPos(17, 1, 15));
+		Player player = mockServerPlayer(helper, GameType.SURVIVAL); // Animal#mobInteract only breeds for server players
 		for (Cow cow : List.of(first, second)) {
 			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VBItems.BARLEY.get(), 2));
 			cow.mobInteract(player, InteractionHand.MAIN_HAND);
 			helper.assertTrue(cow.isInLove(), "A cow fed barley should be in love");
-			helper.assertValueEqual(player.getMainHandItem().getCount(), 1, "barley left after feeding one cow");
+			VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 1, "barley left after feeding one cow");
 		}
-		helper.succeedWhen(() -> helper.assertTrue(helper.getEntities(EntityTypes.COW).stream().anyMatch(Cow::isBaby), "Expected a calf"));
+		helper.succeedWhen(() -> helper.assertTrue(VBGameTests.getEntities(helper, EntityType.COW).stream().anyMatch(Cow::isBaby), "Expected a calf"));
+	}
+
+	/** A server player in the given game mode that is not in the level (26.2's GameTestHelper#makeMockServerPlayer). */
+	private static Player mockServerPlayer(GameTestHelper helper, GameType gameType) {
+		var player = new VBGameTests.MockServerPlayer(helper, gameType);
+		gameType.updatePlayerAbilities(player.getAbilities());
+		return player;
+	}
+
+	/**
+	 * C3/C7, 1.20.1 only: here every animal has its foods fixed in code, and our mixins make it read its food tag on top
+	 * ({@link AnimalFoods}; from 1.20.5 on vanilla reads those tags itself). Asked of the animals themselves: each one
+	 * takes our crop as food and still its vanilla food, not just anything; a sheep, a goat and a chicken fed by a player
+	 * fall in love and use the item up (the cow: farm_c3_cow_breeds_from_barley); a chicken, a cow and a sheep want to
+	 * follow a player holding their crop and a llama one holding the bale (their own tempt goals); a goat, which is
+	 * tempted through its brain's sensor instead, remembers that player as tempting it.
+	 */
+	private static void animalsEatAndFollowOurCrops(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		for (int x = 0; x < 5; x++) {
+			for (int z = 0; z < 5; z++) {
+				helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+			}
+		}
+		Item barley = VBItems.BARLEY.get();
+		Item seeds = VBItems.BARLEY_SEEDS.get();
+		Item bale = VBItems.BARLEY_BALE.get();
+		Cow cow = helper.spawn(EntityType.COW, new BlockPos(0, 2, 0));
+		Sheep sheep = helper.spawn(EntityType.SHEEP, new BlockPos(2, 2, 0));
+		Goat goat = helper.spawn(EntityType.GOAT, new BlockPos(4, 2, 0));
+		Chicken chicken = helper.spawn(EntityType.CHICKEN, new BlockPos(0, 2, 4));
+		Horse horse = helper.spawn(EntityType.HORSE, new BlockPos(2, 2, 4));
+		Llama llama = helper.spawn(EntityType.LLAMA, new BlockPos(4, 2, 4));
+		List<Animal> animals = List.of(cow, sheep, goat, chicken, horse, llama);
+		animals.forEach(animal -> animal.setNoAi(true)); // they keep their goals and brains, but stay where they are
+
+		// food: ours by the tag, vanilla's still, and not just anything
+		record Food(Animal animal, List<Item> ours, Item vanilla) {
+		}
+		for (Food food : List.of(new Food(cow, List.of(barley), Items.WHEAT), new Food(sheep, List.of(barley), Items.WHEAT),
+				new Food(goat, List.of(barley), Items.WHEAT), new Food(chicken, List.of(seeds), Items.WHEAT_SEEDS),
+				new Food(horse, List.of(barley, bale), Items.GOLDEN_CARROT), new Food(llama, List.of(barley, bale), Items.HAY_BLOCK))) {
+			String name = food.animal().getType().toShortString();
+			for (Item ours : food.ours()) {
+				helper.assertTrue(food.animal().isFood(new ItemStack(ours)), "a " + name + " takes " + ours + " as food");
+			}
+			helper.assertTrue(food.animal().isFood(new ItemStack(food.vanilla())), "a " + name + " still takes " + food.vanilla());
+			helper.assertFalse(food.animal().isFood(new ItemStack(Items.STICK)), "a " + name + " takes no stick as food");
+		}
+		helper.assertFalse(cow.isFood(new ItemStack(seeds)), "barley seeds are chicken food, not a cow's");
+		helper.assertFalse(chicken.isFood(new ItemStack(barley)), "barley is no chicken food (wheat is not either)");
+
+		// feeding: in love, one item used up (a server player in survival, as for the cows)
+		Player feeder = mockServerPlayer(helper, GameType.SURVIVAL);
+		record Fed(Animal animal, Item item) {
+		}
+		for (Fed fed : List.of(new Fed(sheep, barley), new Fed(goat, barley), new Fed(chicken, seeds))) {
+			String name = fed.animal().getType().toShortString();
+			feeder.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(fed.item(), 2));
+			helper.assertTrue(fed.animal().mobInteract(feeder, InteractionHand.MAIN_HAND).consumesAction(), "feeding a " + name + " " + fed.item() + " is taken");
+			helper.assertTrue(fed.animal().isInLove(), "a " + name + " fed " + fed.item() + " should be in love");
+			VBGameTests.assertValueEqual(helper, feeder.getMainHandItem().getCount(), 1, fed.item() + " left after feeding a " + name);
+		}
+
+		// following: a player in the level, two blocks from each animal, holding the crop (the tempt goals look for one)
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
+		try {
+			Vec3 middle = helper.absoluteVec(new Vec3(2.5, 2.0, 2.5));
+			player.moveTo(middle.x, middle.y, middle.z);
+			record Tempt(Animal animal, Item ours, Item vanilla) {
+			}
+			for (Tempt tempt : List.of(new Tempt(chicken, seeds, Items.WHEAT_SEEDS), new Tempt(cow, barley, Items.WHEAT),
+					new Tempt(sheep, barley, Items.WHEAT), new Tempt(llama, bale, Items.HAY_BLOCK))) {
+				String name = tempt.animal().getType().toShortString();
+				TemptGoal goal = (TemptGoal) ((MobAccessor) tempt.animal()).vineandbarrel$goalSelector().getAvailableGoals().stream()
+						.filter(wrapped -> wrapped.getGoal() instanceof TemptGoal).findFirst()
+						.orElseThrow(() -> new IllegalStateException("A " + name + " should have vanilla's tempt goal")).getGoal();
+				player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+				helper.assertFalse(goal.canUse(), "a " + name + " follows no empty hand");
+				player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
+				helper.assertFalse(goal.canUse(), "a " + name + " follows no stick");
+				player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(tempt.vanilla()));
+				helper.assertTrue(goal.canUse(), "control: a " + name + " follows " + tempt.vanilla());
+				player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(tempt.ours()));
+				helper.assertTrue(goal.canUse(), "a " + name + " follows a player holding " + tempt.ours());
+				player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+				player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(tempt.ours()));
+				helper.assertTrue(goal.canUse(), "a " + name + " follows " + tempt.ours() + " in the other hand too");
+				player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
+			}
+			// the goat: its tempting sensor runs once every 20 brain ticks
+			goat.getBrain().setMemory(MemoryModuleType.RAM_COOLDOWN_TICKS, 6000); // nothing but being tempted on its mind
+			goat.getBrain().setMemory(MemoryModuleType.LONG_JUMP_COOLDOWN_TICKS, 6000);
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
+			for (int i = 0; i < 40; i++) {
+				goat.getBrain().tick(level, goat);
+			}
+			helper.assertFalse(goat.getBrain().hasMemoryValue(MemoryModuleType.TEMPTING_PLAYER), "a goat is not tempted by a stick");
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(barley));
+			for (int i = 0; i < 40; i++) {
+				goat.getBrain().tick(level, goat);
+			}
+			helper.assertTrue(goat.getBrain().getMemory(MemoryModuleType.TEMPTING_PLAYER).orElse(null) == player, "a goat is tempted by a player holding barley");
+		} finally {
+			level.getServer().getPlayerList().remove(player);
+		}
+		helper.succeed();
+	}
+
+	/**
+	 * C3, 1.20.1 only: barley seeds tame a parrot like any seeds (one chance in ten per seed, each one used up), through
+	 * the mixin on the parrot's fixed set of taming foods; barley, no seed, does nothing.
+	 */
+	private static void parrotTamedWithBarleySeeds(GameTestHelper helper) {
+		helper.setBlock(new BlockPos(2, 0, 2), Blocks.STONE);
+		Parrot parrot = helper.spawnWithNoFreeWill(EntityType.PARROT, new BlockPos(2, 1, 2));
+		Player player = player(helper);
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VBItems.BARLEY.get(), 2));
+		helper.assertFalse(parrot.mobInteract(player, InteractionHand.MAIN_HAND).consumesAction(), "a parrot takes no barley");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 2, "barley left after offering it to a parrot");
+		int fed = 0;
+		while (!parrot.isTame() && fed < 500) {
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VBItems.BARLEY_SEEDS.get(), 2));
+			helper.assertTrue(parrot.mobInteract(player, InteractionHand.MAIN_HAND).consumesAction(), "a wild parrot takes barley seeds");
+			VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 1, "barley seeds left after feeding the parrot one");
+			fed++;
+		}
+		helper.assertTrue(parrot.isTame(), "barley seeds should tame a parrot (1 in 10 each), fed " + fed);
+		VBGameTests.assertValueEqual(helper, parrot.getOwnerUUID(), player.getUUID(), "owner of the parrot");
+		helper.succeed();
 	}
 
 	/** C3/C7: barley heals a horse like wheat; the bale heals a llama like a hay bale; both are used up. */
 	private static void horseAndLlamaEat(GameTestHelper helper) {
 		helper.setBlock(new BlockPos(1, 0, 1), Blocks.STONE);
 		helper.setBlock(new BlockPos(3, 0, 3), Blocks.STONE);
-		Horse horse = helper.spawnWithNoFreeWill(EntityTypes.HORSE, new BlockPos(1, 1, 1));
-		Llama llama = helper.spawnWithNoFreeWill(EntityTypes.LLAMA, new BlockPos(3, 1, 3));
+		Horse horse = helper.spawnWithNoFreeWill(EntityType.HORSE, new BlockPos(1, 1, 1));
+		Llama llama = helper.spawnWithNoFreeWill(EntityType.LLAMA, new BlockPos(3, 1, 3));
 		Player player = player(helper);
 		horse.setHealth(5.0F);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VBItems.BARLEY.get(), 3));
 		horse.mobInteract(player, InteractionHand.MAIN_HAND);
-		helper.assertValueEqual(horse.getHealth(), 7.0F, "horse health after barley (wheat heals 2)");
-		helper.assertValueEqual(player.getMainHandItem().getCount(), 2, "barley left after feeding the horse");
+		VBGameTests.assertValueEqual(helper, horse.getHealth(), 7.0F, "horse health after barley (wheat heals 2)");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 2, "barley left after feeding the horse");
 		llama.setHealth(5.0F);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VBItems.BARLEY_BALE.get(), 2));
 		llama.mobInteract(player, InteractionHand.MAIN_HAND);
-		helper.assertValueEqual(llama.getHealth(), Math.min(llama.getMaxHealth(), 15.0F), "llama health after a bale (a hay bale heals 10)");
-		helper.assertValueEqual(player.getMainHandItem().getCount(), 1, "bales left after feeding the llama");
+		VBGameTests.assertValueEqual(helper, llama.getHealth(), Math.min(llama.getMaxHealth(), 15.0F), "llama health after a bale (a hay bale heals 10)");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 1, "bales left after feeding the llama");
 		helper.succeed();
 	}
 
@@ -852,9 +1011,9 @@ final class VBCropTests
 		}
 		helper.setBlock(crop.below(), Blocks.FARMLAND);
 		helper.setBlock(crop, VBBlocks.BARLEY.get().getStateForAge(7));
-		Villager farmer = helper.spawnWithNoFreeWill(EntityTypes.VILLAGER, crop);
+		Villager farmer = helper.spawnWithNoFreeWill(EntityType.VILLAGER, crop);
 		ServerLevel level = helper.getLevel();
-		farmer.setVillagerData(farmer.getVillagerData().withProfession(level.registryAccess(), VillagerProfession.FARMER));
+		farmer.setVillagerData(farmer.getVillagerData().setProfession(VillagerProfession.FARMER));
 		farmer.getInventory().addItem(new ItemStack(VBItems.BARLEY_SEEDS.get(), 3));
 		farmer.getBrain().setMemory(MemoryModuleType.SECONDARY_JOB_SITE, List.of(net.minecraft.core.GlobalPos.of(level.dimension(), helper.absolutePos(crop.below()))));
 		farmer.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
@@ -867,7 +1026,7 @@ final class VBCropTests
 		behaviour.tickOrStop(level, farmer, time + 2);
 		helper.assertTrue(state(helper, crop).is(VBBlocks.BARLEY.get()) && state(helper, crop).getValue(CropBlock.AGE) == 0,
 				"The farmer should replant barley from its seeds, found " + state(helper, crop));
-		helper.assertValueEqual(farmer.getInventory().countItem(VBItems.BARLEY_SEEDS.get()), 2, "seeds left in the farmer's inventory");
+		VBGameTests.assertValueEqual(helper, farmer.getInventory().countItem(VBItems.BARLEY_SEEDS.get()), 2, "seeds left in the farmer's inventory");
 		helper.assertItemEntityPresent(VBItems.BARLEY.get(), crop, 2.0);
 		helper.succeed();
 	}
@@ -881,8 +1040,8 @@ final class VBCropTests
 		BlockPos bush = new BlockPos(2, 2, 2);
 		helper.setBlock(bush.below(), Blocks.GRASS_BLOCK);
 		helper.setBlock(new BlockPos(0, 1, 0), Blocks.GRASS_BLOCK);
-		Fox fox = helper.spawn(EntityTypes.FOX, new BlockPos(0, 2, 0)); // not spawnWithNoFreeWill: that clears every goal
-		helper.assertTrue(fox.goalSelector.getAvailableGoals().stream().anyMatch(goal -> goal.getGoal() instanceof FoxPickGrapesGoal),
+		Fox fox = helper.spawn(EntityType.FOX, new BlockPos(0, 2, 0)); // not spawnWithNoFreeWill: that clears every goal
+		helper.assertTrue(((MobAccessor) fox).vineandbarrel$goalSelector().getAvailableGoals().stream().anyMatch(goal -> goal.getGoal() instanceof FoxPickGrapesGoal),
 				"Foxes should get the grape-picking goal");
 		ServerLevel level = helper.getLevel();
 		BlockPos abs = helper.absolutePos(bush);
@@ -902,7 +1061,7 @@ final class VBCropTests
 		helper.assertTrue(FoxPickGrapesGoal.canPick(level, abs), "A ripe grape bush is a fox target");
 		// run the fox's own goal: it finds the bush, waits 40 ticks next to it like vanilla, then picks
 		fox.teleportTo(abs.getX() - 0.5, abs.getY(), abs.getZ() + 0.5);
-		FoxPickGrapesGoal goal = (FoxPickGrapesGoal) fox.goalSelector.getAvailableGoals().stream()
+		FoxPickGrapesGoal goal = (FoxPickGrapesGoal) ((MobAccessor) fox).vineandbarrel$goalSelector().getAvailableGoals().stream()
 				.filter(wrapped -> wrapped.getGoal() instanceof FoxPickGrapesGoal).findFirst().orElseThrow().getGoal();
 		helper.assertTrue(goal.canUse(), "The fox should spot the ripe grape bush");
 		goal.start();
@@ -910,7 +1069,7 @@ final class VBCropTests
 			goal.tick();
 		}
 		helper.assertTrue(fox.getItemBySlot(EquipmentSlot.MAINHAND).is(grapes), "The fox should hold a bunch of " + grapes);
-		helper.assertValueEqual(state(helper, bush).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "bush age after the fox picked it");
+		VBGameTests.assertValueEqual(helper, state(helper, bush).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "bush age after the fox picked it");
 		int dropped = collect(helper, bush, grapes);
 		helper.assertTrue(dropped == 1 || dropped == 2, "The fox should drop 1-2 more grapes (2-3 picked), dropped " + dropped);
 		// half-ripe: vanilla's 1-2, one of them into the empty mouth
@@ -921,7 +1080,7 @@ final class VBCropTests
 		helper.assertTrue(fox.getItemBySlot(EquipmentSlot.MAINHAND).is(grapes), "The fox should hold a bunch from a half-ripe bush");
 		int halfDropped = collect(helper, bush, grapes);
 		helper.assertTrue(halfDropped == 0 || halfDropped == 1, "The fox should drop 0-1 more from a half-ripe bush (1-2 picked), dropped " + halfDropped);
-		helper.assertValueEqual(state(helper, bush).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "bush age after the fox picked it half-ripe");
+		VBGameTests.assertValueEqual(helper, state(helper, bush).getValue(ClimbingCropBlock.AGE), ClimbingCropBlock.PICKED_AGE, "bush age after the fox picked it half-ripe");
 		helper.succeed();
 	}
 
@@ -934,7 +1093,7 @@ final class VBCropTests
 				VBItems.BARLEY_SEEDS.get(), VBItems.WILD_GRAPES.get(), VBItems.WILD_WHITE_GRAPES.get(), VBItems.WILD_HOPS.get(), VBItems.WILD_BARLEY.get(),
 				VBItems.BARLEY_BALE.get());
 		for (Item item : compostables) {
-			helper.assertTrue(new ItemStack(item).has(DataComponents.COMPOSTABLE), item + " should be compostable");
+			helper.assertTrue(jexxme.vineandbarrel.platform.Services.PLATFORM.compostChance(item) > 0.0F, item + " should be compostable");
 			helper.setBlock(pos, Blocks.COMPOSTER);
 			int tries = 0;
 			while (state(helper, pos).getValue(ComposterBlock.LEVEL) == 0 && tries++ < 60) {
@@ -947,7 +1106,7 @@ final class VBCropTests
 		helper.setBlock(pos, Blocks.COMPOSTER);
 		ItemStack crate = new ItemStack(VBItems.GRAPE_CRATE.get());
 		ComposterBlock.insertItem(player, state(helper, pos), level, crate, helper.absolutePos(pos));
-		helper.assertValueEqual(crate.getCount(), 1, "crates are not compostable (like FD's)");
+		VBGameTests.assertValueEqual(helper, crate.getCount(), 1, "crates are not compostable (like FD's)");
 		helper.succeed();
 	}
 
@@ -968,26 +1127,34 @@ final class VBCropTests
 			for (int i = 0; i < 9; i++) {
 				nine.add(new ItemStack(storage.produce()));
 			}
-			CraftingInput full = CraftingInput.of(3, 3, nine);
-			RecipeHolder<CraftingRecipe> pack = recipes.getRecipeFor(RecipeType.CRAFTING, full, helper.getLevel())
+			CraftingContainer full = craftingGrid(3, 3, nine);
+			CraftingRecipe pack = recipes.getRecipeFor(RecipeType.CRAFTING, full, helper.getLevel())
 					.orElseThrow(() -> new IllegalStateException("No recipe packs 9 " + storage.produce()));
-			helper.assertValueEqual(pack.id().identifier(), jexxme.vineandbarrel.VineAndBarrel.id(storage.packId()), "recipe for 9 " + storage.produce());
-			ItemStack packed = pack.value().assemble(full);
+			VBGameTests.assertValueEqual(helper, pack.getId(), jexxme.vineandbarrel.VineAndBarrel.id(storage.packId()), "recipe for 9 " + storage.produce());
+			ItemStack packed = pack.assemble(full, helper.getLevel().registryAccess());
 			helper.assertTrue(packed.is(storage.block()) && packed.getCount() == 1, "9 " + storage.produce() + " should make exactly 1 " + storage.block() + ", made " + packed);
 
 			List<ItemStack> eight = new ArrayList<>(nine);
 			eight.set(8, ItemStack.EMPTY);
-			helper.assertTrue(recipes.getRecipeFor(RecipeType.CRAFTING, CraftingInput.of(3, 3, eight), helper.getLevel()).isEmpty(),
+			helper.assertTrue(recipes.getRecipeFor(RecipeType.CRAFTING, craftingGrid(3, 3, eight), helper.getLevel()).isEmpty(),
 					"8 " + storage.produce() + " must not make a " + storage.block());
 
-			CraftingInput single = CraftingInput.of(1, 1, List.of(packed));
-			RecipeHolder<CraftingRecipe> unpack = recipes.getRecipeFor(RecipeType.CRAFTING, single, helper.getLevel())
+			CraftingContainer single = craftingGrid(1, 1, List.of(packed));
+			CraftingRecipe unpack = recipes.getRecipeFor(RecipeType.CRAFTING, single, helper.getLevel())
 					.orElseThrow(() -> new IllegalStateException("No recipe unpacks " + storage.block()));
-			helper.assertValueEqual(unpack.id().identifier(), jexxme.vineandbarrel.VineAndBarrel.id(storage.unpackId()), "recipe for 1 " + storage.block());
-			ItemStack unpacked = unpack.value().assemble(single);
+			VBGameTests.assertValueEqual(helper, unpack.getId(), jexxme.vineandbarrel.VineAndBarrel.id(storage.unpackId()), "recipe for 1 " + storage.block());
+			ItemStack unpacked = unpack.assemble(single, helper.getLevel().registryAccess());
 			helper.assertTrue(unpacked.is(storage.produce()) && unpacked.getCount() == 9, "1 " + storage.block() + " should give back exactly 9 " + storage.produce() + ", gave " + unpacked);
 		}
 		helper.succeed();
+	}
+
+	/** A crafting grid holding these stacks, for the real recipe lookup (1.21.1: {@code CraftingInput.of}). */
+	static CraftingContainer craftingGrid(int width, int height, List<ItemStack> stacks) {
+		NonNullList<ItemStack> items = NonNullList.create();
+		items.addAll(stacks);
+		AbstractContainerMenu noMenu = new VBGameTests.NoMenu();
+		return new TransientCraftingContainer(noMenu, width, height, items);
 	}
 
 	/** C7: landing on the bale hurts exactly as much as landing on a hay bale (80% less than on stone). */
@@ -997,13 +1164,13 @@ final class VBCropTests
 		for (int i = 0; i < grounds.size(); i++) {
 			BlockPos ground = new BlockPos(i * 2, 1, 2);
 			helper.setBlock(ground, grounds.get(i));
-			Pig pig = helper.spawnWithNoFreeWill(EntityTypes.PIG, ground.above());
+			Pig pig = helper.spawnWithNoFreeWill(EntityType.PIG, ground.above());
 			float before = pig.getHealth();
 			BlockState state = state(helper, ground);
-			state.getBlock().fallOn(helper.getLevel(), state, helper.absolutePos(ground), pig, 9.0);
+			state.getBlock().fallOn(helper.getLevel(), state, helper.absolutePos(ground), pig, 9.0F);
 			lost.add(before - pig.getHealth());
 		}
-		helper.assertValueEqual(lost.get(0), lost.get(1), "fall damage on the bale vs a hay bale");
+		VBGameTests.assertValueEqual(helper, lost.get(0), lost.get(1), "fall damage on the bale vs a hay bale");
 		helper.assertTrue(lost.get(0) > 0 && lost.get(0) < lost.get(2), "The bale should cut fall damage: bale " + lost.get(0) + ", stone " + lost.get(2));
 		helper.succeed();
 	}

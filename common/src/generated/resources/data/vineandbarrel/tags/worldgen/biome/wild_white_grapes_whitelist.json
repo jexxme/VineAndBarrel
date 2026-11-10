@@ -1,6 +1,21 @@
 {
   "values": [
-    "#c:is_forest",
-    "#c:is_mountain/slope"
+    "#minecraft:is_forest",
+    {
+      "id": "#c:forest",
+      "required": false
+    },
+    "minecraft:snowy_slopes",
+    "minecraft:meadow",
+    "minecraft:grove",
+    "minecraft:cherry_grove",
+    {
+      "id": "#forge:is_slope",
+      "required": false
+    },
+    {
+      "id": "#c:mountain_slope",
+      "required": false
+    }
   ]
 }

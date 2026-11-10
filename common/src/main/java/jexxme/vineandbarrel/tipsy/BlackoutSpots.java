@@ -8,7 +8,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,16 +19,15 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.monster.Enemy;
-import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.vehicle.DismountHelper;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.attribute.BedRule;
-import net.minecraft.world.level.block.AbstractBedBlock;
+import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
@@ -94,7 +96,7 @@ public final class BlackoutSpots
 
 	/** {@return where {@code ending} can happen for this player now, or null if it can't} */
 	public static @Nullable Wake find(BlackoutEnding ending, ServerPlayer player, RandomSource random) {
-		ServerLevel level = player.level();
+		ServerLevel level = player.serverLevel();
 		BlockPos from = player.blockPosition();
 		if (ending.needsOpenSky() && !hasSky(level)) {
 			return null;
@@ -119,16 +121,16 @@ public final class BlackoutSpots
 	 * slab, a path, a full block), or null}
 	 */
 	public static @Nullable Vec3 standAt(ServerLevel level, BlockPos feet) {
-		if (feet.getY() <= level.getMinY() + 1 || !level.hasChunkAt(feet)) {
+		if (feet.getY() <= level.getMinBuildHeight() + 1 || !level.hasChunkAt(feet)) {
 			return null;
 		}
-		Vec3 spot = DismountHelper.findSafeDismountLocation(EntityTypes.PLAYER, level, feet, true);
+		Vec3 spot = DismountHelper.findSafeDismountLocation(EntityType.PLAYER, level, feet, true);
 		return spot != null && isSafe(level, spot) ? spot : null;
 	}
 
 	/** {@return whether a player may wake up with their feet at {@code spot}: the rules of {@link #standAt}} */
 	public static boolean isSafe(ServerLevel level, Vec3 spot) {
-		AABB body = EntityTypes.PLAYER.getDimensions().makeBoundingBox(spot);
+		AABB body = EntityType.PLAYER.getDimensions().makeBoundingBox(spot);
 		if (!level.getWorldBorder().isWithinBounds(body) || !level.noCollision(body)) {
 			return false;
 		}
@@ -141,7 +143,7 @@ public final class BlackoutSpots
 		for (BlockPos around : BlockPos.betweenClosed(floor.offset(-1, -1, -1), feet.offset(1, 2, 1))) {
 			BlockState state = level.getBlockState(around);
 			FluidState fluid = state.getFluidState();
-			if (EntityTypes.PLAYER.isBlockDangerous(state) || fluid.is(FluidTags.LAVA)) {
+			if (EntityType.PLAYER.isBlockDangerous(state) || fluid.is(FluidTags.LAVA)) {
 				return false;
 			}
 			// Water around is fine (a pond next to you), but not where you lie
@@ -160,7 +162,7 @@ public final class BlackoutSpots
 		AABB around = box.inflate(MONSTER_FREE);
 		for (int cx = SectionPos.blockToSectionCoord(around.minX); cx <= SectionPos.blockToSectionCoord(around.maxX); cx++) {
 			for (int cz = SectionPos.blockToSectionCoord(around.minZ); cz <= SectionPos.blockToSectionCoord(around.maxZ); cz++) {
-				if (!level.areEntitiesLoaded(ChunkPos.pack(cx, cz))) {
+				if (!level.areEntitiesLoaded(ChunkPos.asLong(cx, cz))) {
 					return false;
 				}
 			}
@@ -169,12 +171,12 @@ public final class BlackoutSpots
 	}
 
 	/**
-	 * {@return whether this dimension has an open sky at all: a sky like the overworld's, with sky light and no ceiling.
-	 * Not the Nether under its roof, and not the End (which has sky light in 26.x, but its void and spikes)}
+	 * {@return whether this dimension has an open sky at all: a sky like the overworld's (its effects), with sky light and
+	 * no ceiling. Not the Nether under its roof, and not the End (no sky light in 1.20.1, and its void and spikes)}
 	 */
 	public static boolean hasSky(ServerLevel level) {
 		DimensionType type = level.dimensionType();
-		return type.hasSkyLight() && !type.hasCeiling() && type.skybox() == DimensionType.Skybox.OVERWORLD;
+		return type.hasSkyLight() && !type.hasCeiling() && type.effectsLocation().equals(BuiltinDimensionTypes.OVERWORLD_EFFECTS);
 	}
 
 	/**
@@ -218,18 +220,18 @@ public final class BlackoutSpots
 	 */
 	public static @Nullable BlockPos freeBedHead(ServerLevel level, BlockPos pos) {
 		BlockState state = level.getBlockState(pos);
-		if (!(state.getBlock() instanceof AbstractBedBlock)) {
+		if (!(state.getBlock() instanceof BedBlock)) {
 			return null;
 		}
-		Direction facing = state.getValue(AbstractBedBlock.FACING);
-		BlockPos head = state.getValue(AbstractBedBlock.PART) == BedPart.HEAD ? pos : pos.relative(facing);
+		Direction facing = state.getValue(BedBlock.FACING);
+		BlockPos head = state.getValue(BedBlock.PART) == BedPart.HEAD ? pos : pos.relative(facing);
 		BlockState headState = level.getBlockState(head);
-		if (!(headState.getBlock() instanceof AbstractBedBlock bed) || headState.getValue(AbstractBedBlock.PART) != BedPart.HEAD
-			|| headState.getValue(AbstractBedBlock.OCCUPIED) || bed.getSleepHeight(headState, level, head).isEmpty()) {
+		if (!(headState.getBlock() instanceof BedBlock) || headState.getValue(BedBlock.PART) != BedPart.HEAD
+			|| headState.getValue(BedBlock.OCCUPIED)) {
 			return null;
 		}
-		BedRule rule = bed.getBedRule(level, head);
-		if (rule.destroyOnUse() || rule.destroyOnLeave()) {
+		// There is only the one bed (no straw bed), so only a bed that blows up here is out (1.20.1: where beds don't work)
+		if (!BedBlock.canSetSpawn(level)) {
 			return null;
 		}
 		BlockPos foot = head.relative(facing.getOpposite());
@@ -239,7 +241,7 @@ public final class BlackoutSpots
 			}
 		}
 		// Somewhere safe to get up again, as vanilla looks for it
-		Vec3 standUp = AbstractBedBlock.findStandUpPosition(EntityTypes.PLAYER, level, head, facing, facing.toYRot()).orElse(null);
+		Vec3 standUp = BedBlock.findStandUpPosition(EntityType.PLAYER, level, head, facing, facing.toYRot()).orElse(null);
 		if (standUp == null || !isSafe(level, standUp)) {
 			return null;
 		}
@@ -251,12 +253,12 @@ public final class BlackoutSpots
 	 * loaded chunk, still stands and is free.
 	 */
 	public static @Nullable Wake home(ServerPlayer player) {
-		ServerPlayer.RespawnConfig config = player.getRespawnConfig();
-		ServerLevel level = player.level();
-		if (config == null || !config.respawnData().dimension().equals(level.dimension())) {
+		BlockPos pos = player.getRespawnPosition();
+		ResourceKey<Level> dimension = player.getRespawnDimension();
+		ServerLevel level = player.serverLevel();
+		if (pos == null || !dimension.equals(level.dimension())) {
 			return null;
 		}
-		BlockPos pos = config.respawnData().pos();
 		// Only a bed in a loaded chunk: one just read from disk has no entities yet, so nobody could tell whether a
 		// monster waits next to it (and it is no use loading chunks for a blackout)
 		if (!level.isInWorldBounds(pos) || !level.getWorldBorder().isWithinBounds(pos) || !loaded(level, pos.getX(), pos.getZ())
@@ -267,7 +269,7 @@ public final class BlackoutSpots
 		if (head == null) {
 			return null;
 		}
-		return new Wake(BlackoutEnding.HOME, Vec3.atBottomCenterOf(head), level.getBlockState(head).getValue(AbstractBedBlock.FACING).toYRot(), head, null);
+		return new Wake(BlackoutEnding.HOME, Vec3.atBottomCenterOf(head), level.getBlockState(head).getValue(BedBlock.FACING).toYRot(), head, null);
 	}
 
 	/**
@@ -290,7 +292,7 @@ public final class BlackoutSpots
 			if (head == null || head.equals(own) || !inVillage(level, head)) {
 				continue;
 			}
-			return new Wake(BlackoutEnding.SOMEONE_ELSES_BED, Vec3.atBottomCenterOf(head), level.getBlockState(head).getValue(AbstractBedBlock.FACING).toYRot(),
+			return new Wake(BlackoutEnding.SOMEONE_ELSES_BED, Vec3.atBottomCenterOf(head), level.getBlockState(head).getValue(BedBlock.FACING).toYRot(),
 				head, villager);
 		}
 		return null;
@@ -298,16 +300,15 @@ public final class BlackoutSpots
 
 	/** {@return the head of the player's own bed in this dimension, or null} */
 	private static @Nullable BlockPos ownBed(ServerPlayer player) {
-		ServerPlayer.RespawnConfig config = player.getRespawnConfig();
-		if (config == null || !config.respawnData().dimension().equals(player.level().dimension())) {
+		BlockPos pos = player.getRespawnPosition();
+		if (pos == null || !player.getRespawnDimension().equals(player.level().dimension())) {
 			return null;
 		}
-		BlockPos pos = config.respawnData().pos();
 		BlockState state = player.level().getBlockState(pos);
-		if (!(state.getBlock() instanceof AbstractBedBlock)) {
+		if (!(state.getBlock() instanceof BedBlock)) {
 			return pos;
 		}
-		return state.getValue(AbstractBedBlock.PART) == BedPart.HEAD ? pos : pos.relative(state.getValue(AbstractBedBlock.FACING));
+		return state.getValue(BedBlock.PART) == BedPart.HEAD ? pos : pos.relative(state.getValue(BedBlock.FACING));
 	}
 
 	// ------------------------------------------------------------------ on the ground
@@ -353,7 +354,7 @@ public final class BlackoutSpots
 					BlockPos feet = at.relative(side, 2).above(dy);
 					Vec3 spot = standAt(level, feet);
 					if (spot != null && underOpenSky(level, spot) && sees(level, spot, animal)
-						&& !animal.getBoundingBox().intersects(EntityTypes.PLAYER.getDimensions().makeBoundingBox(spot))) {
+						&& !animal.getBoundingBox().intersects(EntityType.PLAYER.getDimensions().makeBoundingBox(spot))) {
 						return new Wake(BlackoutEnding.FARMYARD, spot, yawTo(spot, animal.position()), null, animal);
 					}
 				}
@@ -382,7 +383,7 @@ public final class BlackoutSpots
 				}
 				// From a little above the heightmap: a modded bale outside #minecraft:blocks_motion isn't in it
 				int top = surface(level, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-				for (int y = top + 1; y >= top - 2 && y > level.getMinY(); y--) {
+				for (int y = top + 1; y >= top - 2 && y > level.getMinBuildHeight(); y--) {
 					cursor.set(x, y, z);
 					if (level.getBlockState(cursor).is(VBTags.HAY_BALES)) {
 						Vec3 spot = standAt(level, cursor.above());
@@ -544,8 +545,8 @@ public final class BlackoutSpots
 	 * guardians included}
 	 */
 	public static boolean boatSafe(ServerLevel level, Vec3 spot) {
-		AABB boat = EntityTypes.OAK_BOAT.getDimensions().makeBoundingBox(spot);
-		AABB both = boat.expandTowards(0.0, EntityTypes.PLAYER.getDimensions().height(), 0.0);
+		AABB boat = EntityType.BOAT.getDimensions().makeBoundingBox(spot);
+		AABB both = boat.expandTowards(0.0, EntityType.PLAYER.getDimensions().height, 0.0);
 		return level.getWorldBorder().isWithinBounds(both) && level.noCollision(both) && underOpenSky(level, spot)
 			&& level.getEntities((Entity) null, both.inflate(0.5)).isEmpty() && noMonsters(level, both);
 	}

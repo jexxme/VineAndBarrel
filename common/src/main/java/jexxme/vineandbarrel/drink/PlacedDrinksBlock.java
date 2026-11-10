@@ -2,7 +2,7 @@ package jexxme.vineandbarrel.drink;
 
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.platform.hooks.PlayerDestroyHook;
-import net.minecraft.core.particles.ColorParticleOption;
+import jexxme.vineandbarrel.barrel.ColorParticleOption;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -12,16 +12,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
@@ -73,7 +71,9 @@ public class PlacedDrinksBlock extends Block implements EntityBlock, PlayerDestr
 			state = state.setValue(spot, PlacedDrink.NONE);
 		}
 		this.registerDefaultState(state);
-		this.shapes = this.getShapeForEachState(PlacedDrinksBlock::shapeOf, WATERLOGGED);
+		// One shape per look: water doesn't change it (this Minecraft's getShapeForEachState can't leave a property out)
+		var perState = this.getShapeForEachState(PlacedDrinksBlock::shapeOf);
+		this.shapes = shapeState -> perState.get(shapeState.setValue(WATERLOGGED, false));
 	}
 
 	/** The spot under a point of the block's top (x, z in block-local 0..1). */
@@ -90,25 +90,25 @@ public class PlacedDrinksBlock extends Block implements EntityBlock, PlayerDestr
 	/**
 	 * Holding something, a right-click is that item's (drinking a drink in hand, placing a block); only an empty hand
 	 * picks up. Putting a drink down is always a sneak-use (see {@link DrinkPlacing}), so the two never mix.
+	 * <p>
+	 * Empty main hand: pick up the drink you point at (or the nearest one). (1.20.1 has one use method for both; an
+	 * empty off hand under a full main hand picks nothing up, as on 1.21.1.)
 	 */
 	@Override
-	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-		return stack.isEmpty() ? InteractionResult.TRY_WITH_EMPTY_HAND : InteractionResult.PASS;
-	}
-
-	/** Empty hand: pick up the drink you point at (or the nearest one). */
-	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+	public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+		if (hand != InteractionHand.MAIN_HAND || !player.getItemInHand(hand).isEmpty()) {
+			return InteractionResult.PASS;
+		}
 		if (!level.isClientSide()) {
 			ItemStack taken = takeFrom(level, pos, spotAt(pos, hit.getLocation()));
 			if (taken.isEmpty()) {
 				return InteractionResult.PASS;
 			}
 			if (!player.getInventory().add(taken)) {
-				player.drop(taken, false, Prediction.SERVER_ONLY);
+				player.drop(taken, false);
 			}
 		}
-		return InteractionResult.SUCCESS;
+		return InteractionResult.sidedSuccess(level.isClientSide());
 	}
 
 	/**
@@ -158,7 +158,7 @@ public class PlacedDrinksBlock extends Block implements EntityBlock, PlayerDestr
 					ItemStack drink = last.getItem(i);
 					if (!drink.isEmpty()) {
 						spill(level, pos, i, drink);
-						if (player.hasInfiniteMaterials()) {
+						if (player.getAbilities().instabuild) {
 							// Creative: the last drink goes without dropping, like the others
 							last.setItem(i, ItemStack.EMPTY);
 						}
@@ -169,11 +169,12 @@ public class PlacedDrinksBlock extends Block implements EntityBlock, PlayerDestr
 			return level.setBlock(pos, fluid.createLegacyBlock(), level.isClientSide() ? Block.UPDATE_ALL_IMMEDIATE : Block.UPDATE_ALL);
 		}
 		if (!level.isClientSide()) {
-			Vec3 aim = player.pick(player.blockInteractionRange(), 1.0F, false).getLocation();
+			// 1.20.1 has no reach attribute: vanilla's reach is 4.5 blocks, 5 in creative
+			Vec3 aim = player.pick(player.isCreative() ? 5.0 : 4.5, 1.0F, false).getLocation();
 			int spot = takenSpot(drinks, spotAt(pos, aim));
 			ItemStack knocked = takeFrom(level, pos, spot);
 			spill(level, pos, spot, knocked);
-			if (!knocked.isEmpty() && !player.hasInfiniteMaterials()) {
+			if (!knocked.isEmpty() && !player.getAbilities().instabuild) {
 				Block.popResource(level, pos, knocked);
 			}
 		}
@@ -214,28 +215,37 @@ public class PlacedDrinksBlock extends Block implements EntityBlock, PlayerDestr
 
 	/** Needs a sturdy top below, like candles. */
 	@Override
-	protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+	public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
 		return Block.canSupportCenter(level, pos.below(), Direction.UP);
 	}
 
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
 		if (state.getValue(WATERLOGGED)) {
-			ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+			level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
 		}
 		if (direction == Direction.DOWN && !state.canSurvive(level, pos)) {
 			return state.getValue(WATERLOGGED) ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState();
 		}
-		return super.updateShape(state, level, ticks, pos, direction, neighbourPos, neighbourState, random);
+		return super.updateShape(state, direction, neighbourState, level, pos, neighbourPos);
+	}
+
+	/** The drinks drop when the block goes for any reason (26.x: the block entity's preRemoveSideEffects). */
+	@Override
+	public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof PlacedDrinksBlockEntity drinks) {
+			drinks.dropContents();
+		}
+		super.onRemove(state, level, pos, newState, movedByPiston);
 	}
 
 	@Override
-	protected FluidState getFluidState(BlockState state) {
+	public FluidState getFluidState(BlockState state) {
 		return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
 	}
 
 	@Override
-	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return shapes.apply(state);
 	}
 
@@ -254,12 +264,12 @@ public class PlacedDrinksBlock extends Block implements EntityBlock, PlayerDestr
 	}
 
 	@Override
-	protected boolean isPathfindable(BlockState state, PathComputationType type) {
+	public boolean isPathfindable(BlockState state, BlockGetter level, BlockPos pos, PathComputationType type) {
 		return false;
 	}
 
 	@Override
-	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+	public ItemStack getCloneItemStack(BlockGetter level, BlockPos pos, BlockState state) {
 		if (level.getBlockEntity(pos) instanceof PlacedDrinksBlockEntity drinks) {
 			for (int i = 0; i < SPOTS; i++) {
 				if (!drinks.getItem(i).isEmpty()) {

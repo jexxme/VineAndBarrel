@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "#forge:raw_fishes",
+      "required": false
+    },
+    {
+      "id": "#c:foods/raw_fishes",
+      "required": false
+    }
+  ]
+}

@@ -3,6 +3,7 @@ pluginManagement {
         mavenLocal()
         gradlePluginPortal()
         maven { url = 'https://maven.neoforged.net/releases' }
+        maven { url = 'https://maven.minecraftforge.net' }
         exclusiveContent {
             forRepository { maven { name = 'Fabric'; url = 'https://maven.fabricmc.net' } }
             filter { includeGroupAndSubgroups('net.fabricmc') }
@@ -17,9 +18,9 @@ plugins {
 rootProject.name = 'vine-and-barrel'
 
 // One mod, two loaders (the MultiLoader layout): common holds everything that only needs vanilla Minecraft and is
-// compiled into both loader jars; neoforge and fabric hold the loader glue (entry points, events, capabilities,
-// configs, data generation on NeoForge). Convention plugins in build-logic.
+// compiled into both loader jars; forge and fabric hold the loader glue (entry points, events, capabilities,
+// configs, data generation on Forge). Convention plugins in build-logic.
 includeBuild('build-logic')
 include('common')
-include('neoforge')
+include('forge')
 include('fabric')

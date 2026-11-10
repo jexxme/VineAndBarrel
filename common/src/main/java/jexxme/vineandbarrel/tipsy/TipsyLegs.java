@@ -6,15 +6,21 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Unsteady legs at Tipsy V (Jexxme: "I can barely walk"). While walking, now and then one roll: most of the time a
@@ -259,7 +265,21 @@ public final class TipsyLegs
 
 	/** The block the entity stands on. */
 	static BlockState ground(LivingEntity entity) {
-		return entity.level().getBlockState(entity.getBlockPosBelowThatAffectsMyMovement());
+		return entity.level().getBlockState(groundPos(entity));
+	}
+
+	/**
+	 * What {@code Entity#getBlockPosBelowThatAffectsMyMovement} gives (protected on 1.20.1): the block half a block
+	 * under the feet, in the column of the block that carries the entity; a wall or a fence gate carrying it is itself.
+	 */
+	private static BlockPos groundPos(LivingEntity entity) {
+		int below = Mth.floor(entity.getY() - 0.500001F);
+		if (entity.mainSupportingBlockPos.isEmpty()) {
+			return new BlockPos(Mth.floor(entity.getX()), below, Mth.floor(entity.getZ()));
+		}
+		BlockPos support = entity.mainSupportingBlockPos.get();
+		BlockState state = entity.level().getBlockState(support);
+		return state.is(BlockTags.WALLS) || state.getBlock() instanceof FenceGateBlock ? support : support.atY(below);
 	}
 
 	private static boolean steadyGround(LivingEntity entity) {
@@ -267,15 +287,26 @@ public final class TipsyLegs
 				&& !entity.isSleeping() && !(entity instanceof Player player && player.getAbilities().flying);
 	}
 
+	/**
+	 * The last movement each player's client reported. 1.21.1 keeps it itself ({@code ServerPlayer#getKnownMovement});
+	 * here {@code mixin/PlayerKnownMovementMixin} hands it over from the same place, the movement packet. Server thread only.
+	 */
+	private static final Map<ServerPlayer, Vec3> KNOWN_MOVEMENT = new WeakHashMap<>();
+
+	/** A player's client reported this movement (how far the player moved with its last movement packet). */
+	public static void knownMovement(ServerPlayer player, Vec3 movement) {
+		KNOWN_MOVEMENT.put(player, movement);
+	}
+
 	/** Players move on their client, so the server's view of their speed is the last movement the client reported. */
 	private static Vec3 currentMotion(LivingEntity entity) {
-		return entity instanceof Player ? entity.getKnownMovement() : entity.getDeltaMovement();
+		return entity instanceof ServerPlayer player ? KNOWN_MOVEMENT.getOrDefault(player, Vec3.ZERO) : entity.getDeltaMovement();
 	}
 
 	private static void setMotion(LivingEntity entity, Vec3 motion) {
 		entity.setDeltaMovement(motion);
-		entity.needsSync = true;
+		entity.hasImpulse = true;
 		// Sends the new speed to the entity's own client too (a player moves on its client), like knockback does
-		entity.syncVelocity = true;
+		entity.hurtMarked = true;
 	}
 }

@@ -10,14 +10,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Waking up, with how (what NeoForge's {@code PlayerWakeUpEvent} is): sleeping through the night clears Tipsy. And a
- * blackout's bed by day (what NeoForge's {@code CanContinueSleepingEvent} is): the bed's rule is overruled while out cold.
+ * blackout's bed by day (what NeoForge's {@code CanContinueSleepingEvent} is): the day would get a sleeper up, but not
+ * one who is out cold.
  */
 @Mixin(Player.class)
 abstract class PlayerMixin
 {
-	@ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/attribute/BedRule;canSleep(Lnet/minecraft/world/level/Level;)Z"))
-	private boolean vineandbarrel$keepSleeping(boolean canSleep) {
-		return canSleep || TipsyEvents.keepsSleeping((Player) (Object) this);
+	@ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;isDay()Z"))
+	private boolean vineandbarrel$keepSleeping(boolean day) {
+		return day && !TipsyEvents.keepsSleeping((Player) (Object) this);
 	}
 
 	@Inject(method = "stopSleepInBed", at = @At("HEAD"))

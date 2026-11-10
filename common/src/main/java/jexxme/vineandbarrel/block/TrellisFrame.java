@@ -4,8 +4,8 @@ import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -37,20 +37,20 @@ public final class TrellisFrame
 		POST_LEFT("trellis_post_left"), POST_RIGHT("trellis_post_right"), RAIL("trellis_rail"), CAP_LEFT("trellis_cap_left"),
 		CAP_RIGHT("trellis_cap_right");
 
-		private final Identifier model;
+		private final ResourceLocation model;
 
 		Part(String model) {
 			this.model = VineAndBarrel.id("block/" + model);
 		}
 
-		public Identifier model() {
+		public ResourceLocation model() {
 			return model;
 		}
 	}
 
 	/** FD Neoforged's tomato vine on a support: its block entity keeps the support's state. */
 	private static final ResourceKey<Block> FD_TOMATOES_ON_SUPPORT = ResourceKey.create(Registries.BLOCK,
-			Identifier.fromNamespaceAndPath("farmersdelight", "tomatoes_on_support"));
+			new ResourceLocation("farmersdelight", "tomatoes_on_support"));
 	/** That block entity's {@code getSupport()}, found by name: FD is never on V&B's compile classpath. */
 	private static final ClassValue<Optional<MethodHandle>> GET_SUPPORT = new ClassValue<>() {
 		@Override
@@ -69,7 +69,7 @@ public final class TrellisFrame
 	/** What stands at {@code pos} for the row: the block there, or the support an FD tomato vine holds there. */
 	private static BlockState seenAt(BlockGetter level, BlockPos pos) {
 		BlockState state = level.getBlockState(pos);
-		if (state.is(FD_TOMATOES_ON_SUPPORT)) {
+		if (state.getBlockHolder().is(FD_TOMATOES_ON_SUPPORT)) {
 			BlockState held = heldByTomatoVine(level.getBlockEntity(pos));
 			if (held != null) {
 				return held;

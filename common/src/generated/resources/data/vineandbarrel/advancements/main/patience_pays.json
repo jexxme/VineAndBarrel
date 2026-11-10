@@ -1,0 +1,33 @@
+{
+  "parent": "vineandbarrel:main/first_brew",
+  "criteria": {
+    "tapped_aged": {
+      "conditions": {
+        "aged": true,
+        "home_brewed": true
+      },
+      "trigger": "vineandbarrel:tapped_barrel"
+    }
+  },
+  "display": {
+    "announce_to_chat": true,
+    "description": {
+      "translate": "advancements.vineandbarrel.patience_pays.description"
+    },
+    "frame": "goal",
+    "hidden": false,
+    "icon": {
+      "item": "vineandbarrel:aged_red_wine"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.vineandbarrel.patience_pays.title"
+    }
+  },
+  "requirements": [
+    [
+      "tapped_aged"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

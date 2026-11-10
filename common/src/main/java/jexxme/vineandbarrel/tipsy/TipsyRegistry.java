@@ -2,17 +2,16 @@ package jexxme.vineandbarrel.tipsy;
 
 import com.mojang.serialization.Codec;
 import jexxme.vineandbarrel.VineAndBarrel;
-import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.Item;
 import jexxme.vineandbarrel.platform.EntityAttachment;
 import jexxme.vineandbarrel.platform.Services;
+import jexxme.vineandbarrel.platform.registry.DeferredHolder;
 import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.util.List;
@@ -25,35 +24,36 @@ public final class TipsyRegistry
 	private static final DeferredRegister<ParticleType<?>> PARTICLES = DeferredRegister.create(Registries.PARTICLE_TYPE, VineAndBarrel.MODID);
 	private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, VineAndBarrel.MODID);
 
-	public static final Holder<MobEffect> TIPSY = EFFECTS.register("tipsy", TipsyEffect::new).asHolder();
+	/** The effect itself: on 1.20.1 effects are plain objects (no holders), so everything takes {@code TIPSY.get()}. */
+	public static final DeferredHolder<MobEffect, TipsyEffect> TIPSY = EFFECTS.register("tipsy", TipsyEffect::new);
 
 	public static final Supplier<SimpleParticleType> HICCUP_PARTICLE = PARTICLES.register("hiccup", () -> new SimpleParticleType(false) {});
 	/** Gold stars circling above the head of a blacked-out player (client-side only, spawned by every client itself). */
 	public static final Supplier<SimpleParticleType> DIZZY_STAR_PARTICLE = PARTICLES.register("dizzy_star", () -> new SimpleParticleType(false) {});
 
-	public static final Holder<SoundEvent> HICCUP_SOUND = SOUNDS.register("entity.player.hiccup",
-			() -> SoundEvent.createVariableRangeEvent(VineAndBarrel.id("entity.player.hiccup"))).asHolder();
+	public static final DeferredHolder<SoundEvent, SoundEvent> HICCUP_SOUND = SOUNDS.register("entity.player.hiccup",
+			() -> SoundEvent.createVariableRangeEvent(VineAndBarrel.id("entity.player.hiccup")));
 	/** Tipsy V: your own heart, heard only by you (vanilla's Warden heartbeat, lower and quieter). */
-	public static final Holder<SoundEvent> HEARTBEAT_SOUND = SOUNDS.register("entity.player.heartbeat",
-			() -> SoundEvent.createVariableRangeEvent(VineAndBarrel.id("entity.player.heartbeat"))).asHolder();
+	public static final DeferredHolder<SoundEvent, SoundEvent> HEARTBEAT_SOUND = SOUNDS.register("entity.player.heartbeat",
+			() -> SoundEvent.createVariableRangeEvent(VineAndBarrel.id("entity.player.heartbeat")));
 	/** Waking up from a blackout in a bed: the sheets rustle (vanilla's cloth steps). */
-	public static final Holder<SoundEvent> WAKE_IN_BED_SOUND = SOUNDS.register("entity.player.wake_in_bed",
-			() -> SoundEvent.createVariableRangeEvent(VineAndBarrel.id("entity.player.wake_in_bed"))).asHolder();
+	public static final DeferredHolder<SoundEvent, SoundEvent> WAKE_IN_BED_SOUND = SOUNDS.register("entity.player.wake_in_bed",
+			() -> SoundEvent.createVariableRangeEvent(VineAndBarrel.id("entity.player.wake_in_bed")));
 
 	/**
 	 * The Tipsy level of a player as other clients see it (T1: they see you sway). Not saved, only synced: the
 	 * server recomputes it from the effect every tick, so it can never drift from the real effect.
 	 */
 	public static final EntityAttachment<Integer> SYNCED_LEVEL = Services.PLATFORM.attachment(VineAndBarrel.id("tipsy_level"),
-			EntityAttachment.Spec.builder(() -> 0).sync(ByteBufCodecs.VAR_INT).build());
+			EntityAttachment.Spec.builder(() -> 0).sync(EntityAttachment.SyncCodec.VAR_INT).build());
 
 	/** Ticks left of a blackout ({@link Blackout}); synced so the client draws the black screen, saved so a relog can't skip it. */
 	public static final EntityAttachment<Integer> BLACKOUT = Services.PLATFORM.attachment(VineAndBarrel.id("blackout"),
-			EntityAttachment.Spec.builder(() -> 0).serialize(Codec.INT.fieldOf("ticks")).sync(ByteBufCodecs.VAR_INT).build());
+			EntityAttachment.Spec.builder(() -> 0).serialize(Codec.INT.fieldOf("ticks")).sync(EntityAttachment.SyncCodec.VAR_INT).build());
 
 	/** How a blacked-out player lies ({@link BlackoutEnding.Pose} ordinal); synced so every client draws the pose. */
 	public static final EntityAttachment<Integer> BLACKOUT_POSE = Services.PLATFORM.attachment(VineAndBarrel.id("blackout_pose"),
-			EntityAttachment.Spec.builder(() -> 0).serialize(Codec.INT.fieldOf("pose")).sync(ByteBufCodecs.VAR_INT).build());
+			EntityAttachment.Spec.builder(() -> 0).serialize(Codec.INT.fieldOf("pose")).sync(EntityAttachment.SyncCodec.VAR_INT).build());
 
 	/** The ending of the blackout in progress, once the player woke up ({@link Blackout.Scene}); saved, server only. */
 	public static final EntityAttachment<Blackout.Scene> BLACKOUT_SCENE = Services.PLATFORM.attachment(VineAndBarrel.id("blackout_scene"),
@@ -89,7 +89,7 @@ public final class TipsyRegistry
 	 * everyone near, so every client plays each movement as it comes. Not saved.
 	 */
 	public static final EntityAttachment<TipsyMotion.Counts> MOTION = Services.PLATFORM.attachment(VineAndBarrel.id("tipsy_motion"),
-			EntityAttachment.Spec.builder(() -> TipsyMotion.Counts.NONE).sync(TipsyMotion.Counts.STREAM_CODEC).build());
+			EntityAttachment.Spec.builder(() -> TipsyMotion.Counts.NONE).sync(TipsyMotion.Counts.SYNC_CODEC).build());
 
 	/**
 	 * Drinks that sober you up by one level (T3). Holds the water bottle; M2's grape juice only has to join it.

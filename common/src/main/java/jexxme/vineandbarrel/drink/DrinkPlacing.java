@@ -43,7 +43,7 @@ public final class DrinkPlacing
 			return InteractionResult.PASS;
 		}
 		if (level.getBlockState(clicked).is(BarrelRegistry.PLACED_DRINKS.get())) {
-			return addTo(level, clicked, stack, context.getPlayer(), context.getClickLocation()) ? InteractionResult.SUCCESS : InteractionResult.PASS;
+			return addTo(level, clicked, stack, context.getPlayer(), context.getClickLocation()) ? InteractionResult.sidedSuccess(level.isClientSide()) : InteractionResult.PASS;
 		}
 		if (context.getClickedFace() != Direction.UP) {
 			return InteractionResult.PASS;
@@ -51,7 +51,7 @@ public final class DrinkPlacing
 		BlockPos target = clicked.above();
 		BlockState there = level.getBlockState(target);
 		if (there.is(BarrelRegistry.PLACED_DRINKS.get())) {
-			return addTo(level, target, stack, context.getPlayer(), context.getClickLocation()) ? InteractionResult.SUCCESS : InteractionResult.PASS;
+			return addTo(level, target, stack, context.getPlayer(), context.getClickLocation()) ? InteractionResult.sidedSuccess(level.isClientSide()) : InteractionResult.PASS;
 		}
 		// Under water it keeps the water, like a candle or a sea pickle
 		BlockState placed = BarrelRegistry.PLACED_DRINKS.get().defaultBlockState()
@@ -69,7 +69,7 @@ public final class DrinkPlacing
 			level.setBlock(target, placed, Block.UPDATE_ALL);
 			addTo(level, target, stack, player, context.getClickLocation());
 		}
-		return InteractionResult.SUCCESS;
+		return InteractionResult.sidedSuccess(level.isClientSide());
 	}
 
 	/**
@@ -101,7 +101,9 @@ public final class DrinkPlacing
 			// table without the new drink while it refunds the held item
 			level.setBlock(pos, grown, Block.UPDATE_ALL);
 			drinks.setItem(spot, stack.copyWithCount(1));
-			stack.consume(1, player);
+			if (player == null || !player.getAbilities().instabuild) {
+				stack.shrink(1);
+			}
 			// A wine glass clinks down, a heavy mug knocks
 			if (kind.isMug()) {
 				level.playSound(null, pos, SoundEvents.DECORATED_POT_HIT, SoundSource.BLOCKS, 0.8F, 1.0F);

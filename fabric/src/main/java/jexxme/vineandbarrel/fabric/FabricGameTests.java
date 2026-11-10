@@ -26,6 +26,11 @@ final class FabricGameTests
 	private FabricGameTests() {
 	}
 
+	/** 1.21.1's {@code GameTestHelper#assertValueEqual}, which this Minecraft lacks. */
+	private static <N> void assertValueEqual(GameTestHelper helper, N actual, N expected, String name) {
+		helper.assertTrue(java.util.Objects.equals(actual, expected), "Expected " + name + " to be " + expected + ", but was " + actual);
+	}
+
 	static @Nullable Consumer<GameTestHelper> get(String name) {
 		return TESTS.get(name);
 	}
@@ -43,7 +48,7 @@ final class FabricGameTests
 				continue;
 			}
 			helper.assertTrue(dependency.isPresent(), "fabric.mod.json suggests " + mod);
-			helper.assertValueEqual(dependency.get().getKind(), ModDependency.Kind.SUGGESTS, mod + " dependency kind");
+			assertValueEqual(helper, dependency.get().getKind(), ModDependency.Kind.SUGGESTS, mod + " dependency kind");
 			FabricLoader.getInstance().getModContainer(mod).ifPresent(installed -> helper.assertTrue(
 				dependency.get().matches(installed.getMetadata().getVersion()), "the installed " + mod + " is in range"));
 		}
@@ -81,12 +86,12 @@ final class FabricGameTests
 		try {
 			java.nio.file.Files.createDirectories(worldFile.getParent());
 			java.nio.file.Files.writeString(worldFile, "tipsy.secondsPerLevel=" + own + System.lineSeparator());
-			helper.assertValueEqual(FabricConfig.serverFile(server), worldFile, "the world's own file is the one read");
+			assertValueEqual(helper, FabricConfig.serverFile(server), worldFile, "the world's own file is the one read");
 			FabricConfig.loadServer(server);
-			helper.assertValueEqual(jexxme.vineandbarrel.tipsy.TipsyConfig.SECONDS_PER_LEVEL.get(), own, "secondsPerLevel from the world's file");
+			assertValueEqual(helper, jexxme.vineandbarrel.tipsy.TipsyConfig.SECONDS_PER_LEVEL.get(), own, "secondsPerLevel from the world's file");
 			java.nio.file.Files.delete(worldFile);
 			FabricConfig.loadServer(server);
-			helper.assertValueEqual(jexxme.vineandbarrel.tipsy.TipsyConfig.SECONDS_PER_LEVEL.get(), global, "secondsPerLevel from the global file again");
+			assertValueEqual(helper, jexxme.vineandbarrel.tipsy.TipsyConfig.SECONDS_PER_LEVEL.get(), global, "secondsPerLevel from the global file again");
 		} catch (java.io.IOException e) {
 			throw new IllegalStateException(e);
 		} finally {

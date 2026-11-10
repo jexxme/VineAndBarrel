@@ -4,15 +4,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.Mirror;
@@ -92,61 +90,69 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 	// ------------------------------------------------------------------ use: everything a single kettle does, for the whole kettle
 
 	@Override
-	protected InteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-		return BrewKettleBlock.useKettle(held, state, level, pos, player, hand);
-	}
-
-	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-		return BrewKettleBlock.openScreen(level, pos, player);
+	public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+		return BrewKettleBlock.useKettle(player.getItemInHand(hand), state, level, pos, player, hand);
 	}
 
 	// ------------------------------------------------------------------ breaking: falls apart into single kettles
 
 	@Override
-	public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+	public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
 		if (level instanceof ServerLevel server) {
 			KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
 			BrewKettleBlockEntity controller = KettleMultiblock.controller(level, pos);
 			if (kettle != null && controller != null && KettleMultiblock.isIntact(level, kettle)) {
-				KettleMultiblock.split(server, kettle, controller, state.getBlock(), pos, !player.preventsBlockDrops());
+				KettleMultiblock.split(server, kettle, controller, state.getBlock(), pos, !player.getAbilities().instabuild);
 			}
 		}
-		return super.playerWillDestroy(level, pos, state, player);
+		super.playerWillDestroy(level, pos, state, player);
 	}
 
-	/** Anything else that removes a part (an explosion, a command): the rest falls apart, the brew stays with them. */
+	/**
+	 * Anything else that removes a part (an explosion, a command): the rest falls apart, the brew stays with them. The
+	 * controller's block entity sees to it itself ({@link BrewKettleBlockEntity#preRemoveSideEffects}, while it is still
+	 * there). Only a change of copper keeps the block entity (same part, another stage: vanilla's removal of it is
+	 * skipped); joining and splitting move the brew themselves.
+	 */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
-		BlockState now = level.getBlockState(pos);
-		boolean sameplace = now.getBlock() instanceof BrewKettlePartBlock && now.getValue(PART).equals(state.getValue(PART));
+	public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		if (state.is(newState.getBlock())) {
+			return;
+		}
+		boolean keepsBlockEntity = newState.getBlock() instanceof BrewKettlePartBlock;
+		if (!keepsBlockEntity && level.getBlockEntity(pos) instanceof BrewKettleBlockEntity controller) {
+			controller.preRemoveSideEffects(pos, state);
+		}
+		boolean sameplace = keepsBlockEntity && newState.getValue(PART).equals(state.getValue(PART));
 		// (a change of copper on this block, e.g. vanilla's honeycomb or lightning: onPlace turns the whole kettle)
-		if (!KettleMultiblock.isConverting() && !sameplace && !part(state).isController()) {
+		if (level instanceof ServerLevel server && !KettleMultiblock.isConverting() && !sameplace && !part(state).isController()) {
 			KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
 			if (kettle != null && KettleMultiblock.restIntact(level, kettle, pos)
 				&& level.getBlockEntity(kettle.controller()) instanceof BrewKettleBlockEntity controller) {
-				KettleMultiblock.split(level, kettle, controller, state.getBlock(), pos, false);
+				KettleMultiblock.split(server, kettle, controller, state.getBlock(), pos, false);
 			}
 		}
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+		if (!keepsBlockEntity) {
+			super.onRemove(state, level, pos, newState, movedByPiston);
+		}
 	}
 
 	/** A broken part drops as a plain kettle of its stage, carrying its share of the brew. */
 	@Override
-	protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+	public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
 		ItemStack kettle = new ItemStack(KettleRegistry.singleOf(this).asItem());
 		net.minecraft.world.phys.Vec3 origin = params.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN);
 		if (origin != null) {
 			KettleContents share = KettleMultiblock.takePendingDrop(params.getLevel(), BlockPos.containing(origin));
 			if (share != null) {
-				kettle.set(KettleRegistry.KETTLE_CONTENTS.get(), share);
+				BrewKettleItem.setContents(kettle, share);
 			}
 		}
 		return List.of(kettle);
 	}
 
 	@Override
-	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+	public ItemStack getCloneItemStack(BlockGetter level, BlockPos pos, BlockState state) {
 		return new ItemStack(KettleRegistry.singleOf(this).asItem());
 	}
 
@@ -154,7 +160,7 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 
 	/** Lightning, a command or another mod changed one block's copper: the rest of the kettle follows. */
 	@Override
-	protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+	public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
 		super.onPlace(state, level, pos, oldState, movedByPiston);
 		if (!level.isClientSide() && !KettleMultiblock.isConverting() && oldState.getBlock() instanceof BrewKettlePartBlock && oldState.getBlock() != this
 			&& oldState.getValue(PART).equals(state.getValue(PART))) {
@@ -165,16 +171,10 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 		}
 	}
 
-	/** Only a change of copper keeps the block entity (same part, another stage); joining and splitting move the brew themselves. */
-	@Override
-	protected boolean shouldChangedStateKeepBlockEntity(BlockState oldState) {
-		return oldState.getBlock() instanceof BrewKettlePartBlock;
-	}
-
 	// ------------------------------------------------------------------ shape, trays, turning
 
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
 		if (direction == Direction.DOWN && part(state).isBottom()) {
 			return state.setValue(TRAY, BrewKettleBlock.trayState(level, pos) == KettleSupport.TRAY);
 		}
@@ -182,7 +182,7 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 	}
 
 	@Override
-	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		int id = state.getValue(PART);
 		int facing = state.getValue(FACING).get2DDataValue();
 		VoxelShape shape = SHAPES[id][facing];
@@ -213,17 +213,17 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 	}
 
 	@Override
-	protected RenderShape getRenderShape(BlockState state) {
+	public RenderShape getRenderShape(BlockState state) {
 		return RenderShape.MODEL;
 	}
 
 	@Override
-	protected BlockState rotate(BlockState state, Rotation rotation) {
+	public BlockState rotate(BlockState state, Rotation rotation) {
 		return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
 	}
 
 	@Override
-	protected BlockState mirror(BlockState state, Mirror mirror) {
+	public BlockState mirror(BlockState state, Mirror mirror) {
 		if (mirror == Mirror.NONE) {
 			return state;
 		}
@@ -233,12 +233,12 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 	// ------------------------------------------------------------------ comparator, block entity
 
 	@Override
-	protected boolean hasAnalogOutputSignal(BlockState state) {
+	public boolean hasAnalogOutputSignal(BlockState state) {
 		return true;
 	}
 
 	@Override
-	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
+	public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
 		BrewKettleBlockEntity kettle = KettleMultiblock.controller(level, pos);
 		return kettle != null ? kettle.comparatorSignal() : 0;
 	}

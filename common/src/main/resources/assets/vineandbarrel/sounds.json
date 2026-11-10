@@ -38,11 +38,11 @@
     "subtitle": "subtitles.vineandbarrel.block.brew_kettle.boil"
   },
   "block.brew_kettle.open": {
-    "sounds": [{"name": "minecraft:block.copper_trapdoor.open", "type": "event"}],
+    "sounds": [{"name": "minecraft:block.iron_trapdoor.open", "type": "event"}],
     "subtitle": "subtitles.vineandbarrel.block.brew_kettle.open"
   },
   "block.brew_kettle.close": {
-    "sounds": [{"name": "minecraft:block.copper_trapdoor.close", "type": "event"}],
+    "sounds": [{"name": "minecraft:block.iron_trapdoor.close", "type": "event"}],
     "subtitle": "subtitles.vineandbarrel.block.brew_kettle.close"
   },
   "block.brew_kettle.finish": {

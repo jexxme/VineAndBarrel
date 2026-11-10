@@ -11,14 +11,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * A client without Vine & Barrel and without Fabric API ({@code -Dvineandbarrel.bare=refused}, joining a server with
- * Vine & Barrel through quick play): passes once the server refuses it with a reason on the disconnect screen; fails if
- * it gets into the world or nothing happens for 3 minutes. Then it quits.
+ * Vine & Barrel through quick play). On this Minecraft the mod itself refuses nobody (the only point early enough is the
+ * login phase, whose queries a proxy answers itself): such a client gets as far as vanilla lets it and loses the
+ * connection on the first packet it can't read (the recipes), as with any content mod. So this passes once the client
+ * is on the disconnect screen with a reason, whatever vanilla gives; it fails if the client is still in the world 20
+ * seconds after it got in, or if nothing happens for 3 minutes. Then it quits.
  */
 @Mixin(Minecraft.class)
 abstract class RefusedClientMixin
 {
 	@Unique
 	private int vineandbarrel_bare$ticks;
+	@Unique
+	private int vineandbarrel_bare$ticksInWorld;
 	@Unique
 	private boolean vineandbarrel_bare$done;
 
@@ -30,14 +35,16 @@ abstract class RefusedClientMixin
 			return;
 		}
 		String problem = null;
-		if (mc.gui.screen() instanceof DisconnectedScreen screen) {
+		if (mc.screen instanceof DisconnectedScreen screen) {
 			String reason = screen.getNarrationMessage().getString();
-			Bare.LOGGER.info("Refused by the server: {}", reason);
-			problem = reason.isBlank() ? "refused without a reason" : null;
+			Bare.LOGGER.info("Disconnected from the server: {}", reason);
+			problem = reason.isBlank() ? "disconnected without a reason" : null;
+		} else if (mc.player != null && ++vineandbarrel_bare$ticksInWorld > 20 * 20) {
+			problem = "a client without Vine & Barrel plays in the world of a server with it";
 		} else if (mc.player != null) {
-			problem = "a client without Vine & Barrel got into the world of a server with it";
+			return;
 		} else if (++vineandbarrel_bare$ticks > 20 * 180) {
-			problem = "neither refused nor joined within 3 minutes";
+			problem = "neither disconnected nor in the world within 3 minutes";
 		} else {
 			return;
 		}

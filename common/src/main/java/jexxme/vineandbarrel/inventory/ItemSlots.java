@@ -2,13 +2,14 @@ package jexxme.vineandbarrel.inventory;
 
 import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
 
 import java.util.function.Function;
@@ -65,7 +66,7 @@ public class ItemSlots implements Container
 
 	/** How many of {@code stack} this slot holds at most. */
 	public int getCapacity(int index, ItemStack stack) {
-		return stack.isEmpty() ? Item.ABSOLUTE_MAX_STACK_SIZE : Math.min(stack.getMaxStackSize(), Item.ABSOLUTE_MAX_STACK_SIZE);
+		return stack.isEmpty() ? Item.MAX_STACK_SIZE : Math.min(stack.getMaxStackSize(), Item.MAX_STACK_SIZE);
 	}
 
 	/** {@link #getCapacity}, or 0 if the slot can't take {@code stack} at all. */
@@ -105,18 +106,26 @@ public class ItemSlots implements Container
 		return (T) automationView;
 	}
 
-	public void serialize(ValueOutput output) {
-		output.store(VALUE_IO_KEY, ItemStack.OPTIONAL_CODEC.listOf(), stacks);
+	/** Writes the slots into {@code tag} (under {@link #VALUE_IO_KEY}; an empty slot is an empty compound). */
+	public void serialize(CompoundTag tag) {
+		ListTag list = new ListTag();
+		for (ItemStack stack : stacks) {
+			list.add(stack.isEmpty() ? new CompoundTag() : stack.save(new CompoundTag()));
+		}
+		tag.put(VALUE_IO_KEY, list);
 	}
 
-	public void deserialize(ValueInput input) {
+	/** Reads what {@link #serialize} wrote into {@code tag}. */
+	public void deserialize(CompoundTag tag) {
 		int index = 0;
-		for (ValueInput entry : input.childrenListOrEmpty(VALUE_IO_KEY)) {
+		ListTag list = tag.getList(VALUE_IO_KEY, Tag.TAG_COMPOUND);
+		for (int i = 0; i < list.size(); i++) {
 			if (index >= stacks.size()) {
 				VineAndBarrel.LOGGER.warn("Ignoring saved items beyond slot {} (inventory has {} slots)", index, stacks.size());
 				break;
 			}
-			stacks.set(index++, entry.read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
+			CompoundTag stack = list.getCompound(i);
+			stacks.set(index++, stack.isEmpty() ? ItemStack.EMPTY : ItemStack.of(stack));
 		}
 		while (index < stacks.size()) {
 			stacks.set(index++, ItemStack.EMPTY);

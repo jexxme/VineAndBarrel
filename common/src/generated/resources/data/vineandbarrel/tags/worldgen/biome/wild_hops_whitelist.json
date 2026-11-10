@@ -1,6 +1,14 @@
 {
   "values": [
-    "#c:is_forest",
-    "#c:is_river"
+    "#minecraft:is_forest",
+    {
+      "id": "#c:forest",
+      "required": false
+    },
+    "#minecraft:is_river",
+    {
+      "id": "#c:river",
+      "required": false
+    }
   ]
 }

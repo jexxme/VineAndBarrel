@@ -26,10 +26,12 @@ final class SmokeServer
 	private static final Logger LOGGER = LogManager.getLogger("vineandbarrel_smoke");
 	/** Both server runs share one folder (and one eula.txt), so each writes its results to its own subfolder. */
 	private static final Path OUT = FabricLoader.getInstance().getGameDir().resolve(System.getProperty("vineandbarrel.smokeOut", "smoke"));
-	/** runSmokeRefusal: only refused clients come, and the server stops when told to (a {@code stop} file). */
+	/** runSmokeRefusal: only a client without Vine & Barrel comes, and the server stops when told to (a {@code stop} file). */
 	private static final boolean REFUSAL = Boolean.getBoolean("vineandbarrel.smokeExpectRefusal");
 	private static boolean joined;
 	private static boolean finished;
+	/** How long the stop has waited for the world's generation to end (see {@link SmokeQuiet}). */
+	private static int quietTicks;
 
 	private SmokeServer() {
 	}
@@ -40,7 +42,7 @@ final class SmokeServer
 		}
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			// The same world settings the LAN host uses
-			for (String command : new String[] { "gamerule advance_time false", "gamerule spawn_mobs false" }) {
+			for (String command : new String[] { "gamerule doDaylightCycle false", "gamerule doMobSpawning false" }) {
 				server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), command);
 			}
 			write("server-ready", "ready");
@@ -48,7 +50,7 @@ final class SmokeServer
 		});
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			joined = true;
-			server.getPlayerList().op(handler.player.nameAndId());
+			server.getPlayerList().op(handler.player.getGameProfile());
 			LOGGER.info("Smoke client {} joined and is an operator", handler.player.getName().getString());
 		});
 		// Checked after the tick, not in the disconnect event: that can fire while the player is still on the list
@@ -56,11 +58,20 @@ final class SmokeServer
 			if (finished) {
 				return;
 			}
+			// The run is over, but the stop waits for the world's generation to end: see SmokeQuiet
+			boolean over = REFUSAL ? Files.isRegularFile(OUT.resolve("stop")) : joined && server.getPlayerList().getPlayerCount() == 0;
+			if (over && SmokeQuiet.generating(server) && ++quietTicks <= SmokeQuiet.LIMIT) {
+				return;
+			}
 			if (REFUSAL) {
-				// runSmokeRefusal: a client without Vine & Barrel must never get in; the Gradle task says when it gave up
+				// runSmokeRefusal: on this Minecraft the mod refuses nobody (see VineAndBarrelFabric), so a client without Vine &
+				// Barrel gets in as far as vanilla lets it and drops out on the first packet it can't read. What must hold
+				// here: this server is still up and ticking when the Gradle task says the client has quit, and that client
+				// is not in the world (the task's log check adds: no error of ours while it came and went)
 				if (Files.isRegularFile(OUT.resolve("stop"))) {
 					finished = true;
-					finish(server, "refuses_a_client_without_vb", joined ? "a client without Vine & Barrel joined" : null);
+					int players = server.getPlayerList().getPlayerCount();
+					finish(server, "refuses_a_client_without_vb", players > 0 ? "a client without Vine & Barrel is still in the world" : null);
 				}
 			} else if (joined && server.getPlayerList().getPlayerCount() == 0) {
 				finished = true;

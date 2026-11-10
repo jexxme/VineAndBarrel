@@ -1,13 +1,11 @@
 package jexxme.vineandbarrel.tipsy;
 
 import jexxme.vineandbarrel.tipsy.TipsyLevels.Level;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -15,12 +13,14 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.PotionItem;
+import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.ToIntFunction;
 
 /**
@@ -69,7 +69,7 @@ public final class Tipsy
 	 * refreshed or removed. A pulse is not refreshed: {@link #nauseaPulse} starts it and it runs out on its own (or goes
 	 * when the level drops below).
 	 */
-	record SideEffect(Holder<MobEffect> effect, int bit, ToIntFunction<Level> amplifierAt, int ticks, boolean pulse)
+	record SideEffect(MobEffect effect, int bit, ToIntFunction<Level> amplifierAt, int ticks, boolean pulse)
 	{
 		/** {@return the amplifier at this level, -1 for none} */
 		int amplifier(Level level) {
@@ -99,10 +99,10 @@ public final class Tipsy
 
 	/** Bits 0 and 1 are the ones saved before playtest 1, so old saves keep their meaning. */
 	static final List<SideEffect> SIDE_EFFECTS = List.of(
-			new SideEffect(MobEffects.SLOWNESS, 1, Level::slowness, STEADY_EFFECT_TICKS, false),
-			new SideEffect(MobEffects.MINING_FATIGUE, 1 << 1, Level::miningFatigue, STEADY_EFFECT_TICKS, false),
+			new SideEffect(MobEffects.MOVEMENT_SLOWDOWN, 1, Level::slowness, STEADY_EFFECT_TICKS, false),
+			new SideEffect(MobEffects.DIG_SLOWDOWN, 1 << 1, Level::miningFatigue, STEADY_EFFECT_TICKS, false),
 			new SideEffect(MobEffects.WEAKNESS, 1 << 2, level -> level.weakness() ? 0 : -1, STEADY_EFFECT_TICKS, false),
-			new SideEffect(MobEffects.NAUSEA, 1 << 3, level -> level.nausea() ? 0 : -1, NAUSEA_PULSE_TICKS, true));
+			new SideEffect(MobEffects.CONFUSION, 1 << 3, level -> level.nausea() ? 0 : -1, NAUSEA_PULSE_TICKS, true));
 	private static final SideEffect NAUSEA = SIDE_EFFECTS.get(3);
 
 	private Tipsy() {
@@ -112,7 +112,7 @@ public final class Tipsy
 
 	/** {@return the current Tipsy level, 0 when sober} */
 	public static int getLevel(LivingEntity entity) {
-		MobEffectInstance effect = entity.getEffect(TipsyRegistry.TIPSY);
+		MobEffectInstance effect = entity.getEffect(TipsyRegistry.TIPSY.get());
 		return effect == null ? 0 : effect.getAmplifier() + 1;
 	}
 
@@ -138,7 +138,7 @@ public final class Tipsy
 	 * @return whether there was anything to lower
 	 */
 	public static boolean lowerLevel(LivingEntity entity) {
-		MobEffectInstance effect = entity.getEffect(TipsyRegistry.TIPSY);
+		MobEffectInstance effect = entity.getEffect(TipsyRegistry.TIPSY.get());
 		if (effect == null || entity.level().isClientSide()) {
 			return false;
 		}
@@ -160,11 +160,11 @@ public final class Tipsy
 	/** Sets the level directly (clamped to 0..max) with a fresh timer. For commands and tests; drinks use {@link #addLevel}. */
 	public static void setLevel(LivingEntity entity, int level) {
 		int perLevel = TipsyConfig.ticksPerLevel();
-		apply(entity, Math.clamp(level, 0, TipsyConfig.maxLevel()), perLevel, perLevel);
+		apply(entity, Mth.clamp(level, 0, TipsyConfig.maxLevel()), perLevel, perLevel);
 	}
 
 	private static void apply(LivingEntity entity, int level, int topTicks, int perLevel) {
-		entity.removeEffect(TipsyRegistry.TIPSY);
+		entity.removeEffect(TipsyRegistry.TIPSY.get());
 		if (level > 0) {
 			entity.addEffect(chain(level, topTicks, perLevel));
 		}
@@ -182,7 +182,7 @@ public final class Tipsy
 		MobEffectInstance below = null;
 		for (int amplifier = 0; amplifier < level; amplifier++) {
 			int duration = topTicks + (level - 1 - amplifier) * perLevel;
-			below = new MobEffectInstance(TipsyRegistry.TIPSY, duration, amplifier, false, true, true, below);
+			below = new MobEffectInstance(TipsyRegistry.TIPSY.get(), duration, amplifier, false, true, true, below, Optional.empty());
 		}
 		return below;
 	}
@@ -202,8 +202,9 @@ public final class Tipsy
 		if (!stack.is(TipsyRegistry.SOBERING_DRINKS)) {
 			return false;
 		}
-		PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
-		return contents == null || (contents.is(Potions.WATER) && contents.customEffects().isEmpty());
+		// 1.20.1 keeps a potion in the stack's tag: none there is no potion at all (the "uncraftable" one), not water
+		return !(stack.getItem() instanceof PotionItem)
+			|| (PotionUtils.getPotion(stack) == Potions.WATER && PotionUtils.getCustomEffects(stack).isEmpty());
 	}
 
 	// ------------------------------------------------------------------ the tick
@@ -331,27 +332,21 @@ public final class Tipsy
 		}
 	}
 
+	/** The key vanilla 1.20.1 saves an instance's hidden effect under. */
+	private static final String HIDDEN_EFFECT = "HiddenEffect";
+
 	/** Whether vanilla keeps a weaker, longer instance of the same effect underneath this one. */
 	static boolean hasHiddenEffect(MobEffectInstance effect) {
-		Tag saved = MobEffectInstance.CODEC.encodeStart(NbtOps.INSTANCE, effect).result().orElse(null);
-		return saved instanceof CompoundTag compound && compound.contains("hidden_effect");
+		return effect.save(new CompoundTag()).contains(HIDDEN_EFFECT, Tag.TAG_COMPOUND);
 	}
 
 	/**
-	 * The weaker, longer instance vanilla keeps underneath this one, or null. It isn't exposed, but it is saved: as the
-	 * outer instance's details without the effect id (it is the same effect), so the id is put back to read it.
+	 * The weaker, longer instance vanilla keeps underneath this one, or null. It isn't exposed, but it is saved
+	 * ({@link MobEffectInstance#save}): as a whole instance of its own, which {@link MobEffectInstance#load} reads back.
 	 */
 	static @Nullable MobEffectInstance hiddenEffect(MobEffectInstance effect) {
-		Tag saved = MobEffectInstance.CODEC.encodeStart(NbtOps.INSTANCE, effect).result().orElse(null);
-		if (!(saved instanceof CompoundTag compound) || !(compound.get("hidden_effect") instanceof CompoundTag hidden)) {
-			return null;
-		}
-		CompoundTag whole = hidden.copy();
-		Tag id = compound.get("id");
-		if (id != null) {
-			whole.put("id", id);
-		}
-		return MobEffectInstance.CODEC.parse(NbtOps.INSTANCE, whole).result().orElse(null);
+		CompoundTag saved = effect.save(new CompoundTag());
+		return saved.contains(HIDDEN_EFFECT, Tag.TAG_COMPOUND) ? MobEffectInstance.load(saved.getCompound(HIDDEN_EFFECT)) : null;
 	}
 
 	// ------------------------------------------------------------------ hiccups

@@ -6,7 +6,7 @@ import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.world.WildCropFilter;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.ModificationPhase;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jspecify.annotations.Nullable;
@@ -22,7 +22,7 @@ import java.util.Map;
  * have them: every file of our type in any namespace's {@code neoforge/biome_modifier} folder, so a datapack can
  * replace one of ours (other biomes or temperatures, or {@code neoforge:none} to turn it off) or add its own, as on
  * NeoForge. The files are read from the resources the world's registries were just loaded from
- * ({@code ResourceManagerRegistryLoadTaskMixin}), when Fabric applies biome modifications as the server starts; our own
+ * ({@code RegistryDataLoaderMixin}), when Fabric applies biome modifications as the server starts; our own
  * copies are the fallback. Like NeoForge's biome modifiers they apply once per server start, not on /reload.
  */
 public final class FabricWildCrops
@@ -66,7 +66,7 @@ public final class FabricWildCrops
 			WildCropFilter.NAMES.forEach(name -> found.add(WildCropFilter.load(name)));
 			return found;
 		}
-		for (Map.Entry<Identifier, Resource> file : resources.listResources(WildCropFilter.FOLDER, path -> path.getPath().endsWith(".json")).entrySet()) {
+		for (Map.Entry<ResourceLocation, Resource> file : resources.listResources(WildCropFilter.FOLDER, path -> path.getPath().endsWith(".json")).entrySet()) {
 			String source = file.getKey() + " from " + file.getValue().sourcePackId();
 			try (Reader reader = file.getValue().openAsReader()) {
 				JsonElement json = JsonParser.parseReader(reader);

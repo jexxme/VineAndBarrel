@@ -1,14 +1,16 @@
 package jexxme.vineandbarrel.world.village;
 
 import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.MapCodec;
 import jexxme.vineandbarrel.VineAndBarrel;
+import jexxme.vineandbarrel.mixin.SinglePoolElementAccessor;
+import jexxme.vineandbarrel.mixin.StructureProcessorListAccessor;
+import jexxme.vineandbarrel.mixin.StructureTemplatePoolAccessor;
 import jexxme.vineandbarrel.registry.VBBlocks;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
@@ -17,9 +19,11 @@ import net.minecraft.world.level.levelgen.structure.pools.SinglePoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorList;
 import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 import net.minecraft.server.MinecraftServer;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +34,8 @@ import java.util.function.Supplier;
  * Villages (DESIGN 3 and 8), done exactly like Farmer's Delight's {@code VillageStructures}: on every server start the
  * taverns join the village house pools and the village farm processor lists (a living village's and an abandoned one's)
  * get one more rule processor that turns some of their wheat into our crops. Both are code, not data, because a data pack can only replace a vanilla pool or
- * processor list as a whole, which would fight every other mod that adds to them.
+ * processor list as a whole, which would fight every other mod that adds to them. The pools' and lists' own fields are
+ * private: they are reached through mixin accessors, the same on both loaders.
  */
 public final class VillageStructures
 {
@@ -39,7 +44,7 @@ public final class VillageStructures
 	 * type's house pool.
 	 */
 	public record TavernLayout(VillageType type, String name, int weight) {
-		public Identifier id() {
+		public ResourceLocation id() {
 			return VineAndBarrel.id("village/" + type.id() + "/houses/" + name);
 		}
 
@@ -47,7 +52,7 @@ public final class VillageStructures
 		 * Its barrel cellar: a template of its own, which the tavern's dressing processor lays under the floor as the tavern
 		 * is placed (see {@link TavernDressingProcessor#finalizeProcessing}).
 		 */
-		public Identifier cellarId() {
+		public ResourceLocation cellarId() {
 			return VineAndBarrel.id("village/" + type.id() + "/tavern_cellars/" + name);
 		}
 	}
@@ -89,12 +94,12 @@ public final class VillageStructures
 	public static final List<VillageType> TAVERN_TYPES = List.of(VillageType.values());
 
 	/** The processor list each tavern is placed with: the one most vanilla houses of that type use (then the dressing). */
-	private static final Map<VillageType, Identifier> TAVERN_PROCESSORS = Map.of(
-		VillageType.PLAINS, Identifier.withDefaultNamespace("mossify_10_percent"),
-		VillageType.DESERT, Identifier.withDefaultNamespace("empty"),
-		VillageType.SAVANNA, Identifier.withDefaultNamespace("empty"),
-		VillageType.SNOWY, Identifier.withDefaultNamespace("empty"),
-		VillageType.TAIGA, Identifier.withDefaultNamespace("mossify_10_percent"));
+	private static final Map<VillageType, ResourceLocation> TAVERN_PROCESSORS = Map.of(
+		VillageType.PLAINS, new ResourceLocation("mossify_10_percent"),
+		VillageType.DESERT, new ResourceLocation("empty"),
+		VillageType.SAVANNA, new ResourceLocation("empty"),
+		VillageType.SNOWY, new ResourceLocation("empty"),
+		VillageType.TAIGA, new ResourceLocation("mossify_10_percent"));
 
 	/** Each village type's tavern floor, which closes the stairwell where the ground is too shallow for a cellar. */
 	private static final Map<VillageType, Block> TAVERN_FLOORS = Map.of(
@@ -156,13 +161,11 @@ public final class VillageStructures
 	private VillageStructures() {
 	}
 
-	private static final DeferredRegister<MapCodec<? extends StructureProcessor>> PROCESSORS =
+	private static final DeferredRegister<StructureProcessorType<?>> PROCESSORS =
 		DeferredRegister.create(Registries.STRUCTURE_PROCESSOR, VineAndBarrel.MODID);
 
-	static {
-		PROCESSORS.register("farm_crops", () -> FarmCropProcessor.CODEC);
-		PROCESSORS.register("tavern_dressing", () -> TavernDressingProcessor.CODEC);
-	}
+	static final Supplier<StructureProcessorType<FarmCropProcessor>> FARM_CROP_PROCESSOR = PROCESSORS.register("farm_crops", () -> () -> FarmCropProcessor.CODEC);
+	static final Supplier<StructureProcessorType<TavernDressingProcessor>> TAVERN_DRESSING_PROCESSOR = PROCESSORS.register("tavern_dressing", () -> () -> TavernDressingProcessor.CODEC);
 
 	public static void register() {
 		PROCESSORS.register();
@@ -175,15 +178,15 @@ public final class VillageStructures
 
 	/** Adds the taverns and the farm crops to this server's registries. Safe to call again: nothing is added twice. */
 	public static void apply(RegistryAccess access) {
-		Registry<StructureTemplatePool> pools = access.lookupOrThrow(Registries.TEMPLATE_POOL);
-		Registry<StructureProcessorList> processorLists = access.lookupOrThrow(Registries.PROCESSOR_LIST);
+		Registry<StructureTemplatePool> pools = access.registryOrThrow(Registries.TEMPLATE_POOL);
+		Registry<StructureProcessorList> processorLists = access.registryOrThrow(Registries.PROCESSOR_LIST);
 		for (TavernLayout layout : TAVERNS) {
 			addBuildingToPool(pools, processorLists, layout.type().housesPool(), layout.id(), TAVERN_PROCESSORS.get(layout.type()), layout.weight(),
 				dressing(layout.type()).withCellar(layout.cellarId(), TAVERN_FLOORS.get(layout.type()).defaultBlockState()));
 		}
 		for (VillageType type : VillageType.values()) {
 			// abandoned (zombie) villages too: their farms are placed with the zombie list, which carries the same farm rules
-			for (Identifier list : type.farmProcessorLists()) {
+			for (ResourceLocation list : type.farmProcessorLists()) {
 				addProcessorToList(processorLists, list, farmCropProcessor(FARM_CROPS.get(type)));
 			}
 		}
@@ -193,41 +196,47 @@ public final class VillageStructures
 	 * FD's {@code addBuildingToPool}, with the processor list of the pool's own houses instead of {@code empty}, and our
 	 * own processors after it ({@code extra}, if any).
 	 */
-	public static void addBuildingToPool(Registry<StructureTemplatePool> pools, Registry<StructureProcessorList> processorLists, Identifier poolId,
-		Identifier template, Identifier processors, int weight, StructureProcessor... extra) {
-		StructureTemplatePool pool = pools.getValue(poolId);
+	public static void addBuildingToPool(Registry<StructureTemplatePool> pools, Registry<StructureProcessorList> processorLists, ResourceLocation poolId,
+		ResourceLocation template, ResourceLocation processors, int weight, StructureProcessor... extra) {
+		StructureTemplatePool pool = pools.get(poolId);
 		if (pool == null) {
 			VineAndBarrel.LOGGER.warn("Village pool {} is missing, so {} is not added", poolId, template);
 			return;
 		}
-		if (pool.rawTemplates.stream().anyMatch(entry -> isTemplate(entry.getFirst(), template))) {
+		StructureTemplatePoolAccessor poolAccess = (StructureTemplatePoolAccessor) pool;
+		if (poolAccess.vineandbarrel$rawTemplates().stream().anyMatch(entry -> isTemplate(entry.getFirst(), template))) {
 			return;
 		}
-		Holder<StructureProcessorList> processorHolder = processorLists.getOrThrow(ResourceKey.create(Registries.PROCESSOR_LIST, processors));
+		Holder<StructureProcessorList> processorHolder = processorLists.getHolderOrThrow(ResourceKey.create(Registries.PROCESSOR_LIST, processors));
 		if (extra.length > 0) {
 			List<StructureProcessor> all = new ArrayList<>(processorHolder.value().list());
 			all.addAll(List.of(extra));
 			processorHolder = Holder.direct(new StructureProcessorList(all));
 		}
-		// never waterlogged by the water it is placed into (a tavern at the water's edge would flood its cellar stairs)
-		SinglePoolElement piece = SinglePoolElement.single(template.toString(), processorHolder,
-			net.minecraft.world.level.levelgen.structure.templatesystem.LiquidSettings.IGNORE_WATERLOGGING).apply(StructureTemplatePool.Projection.RIGID);
+		// never waterlogged by the water it is placed into (a tavern at the water's edge would flood its cellar stairs):
+		// on this Minecraft the tavern's dressing processor sees to that (TavernDressingProcessor#finalizeProcessing)
+		SinglePoolElement piece = SinglePoolElement.single(template.toString(), processorHolder).apply(StructureTemplatePool.Projection.RIGID);
 		for (int i = 0; i < weight; i++) {
-			pool.templates.add(piece);
+			poolAccess.vineandbarrel$templates().add(piece);
 		}
-		List<Pair<StructurePoolElement, Integer>> entries = new ArrayList<>(pool.rawTemplates);
+		List<Pair<StructurePoolElement, Integer>> entries = new ArrayList<>(poolAccess.vineandbarrel$rawTemplates());
 		entries.add(new Pair<>(piece, weight));
-		pool.rawTemplates = entries;
+		poolAccess.vineandbarrel$setRawTemplates(entries);
 	}
 
-	public static boolean isTemplate(StructurePoolElement element, Identifier template) {
-		return element instanceof SinglePoolElement single && single.getTemplateLocation().equals(template);
+	public static boolean isTemplate(StructurePoolElement element, ResourceLocation template) {
+		return element instanceof SinglePoolElement single && template.equals(templateOf(single));
+	}
+
+	/** The template a single pool element places, by name (null for one built around a template itself). */
+	private static @Nullable ResourceLocation templateOf(SinglePoolElement single) {
+		return ((SinglePoolElementAccessor) single).vineandbarrel$template().left().orElse(null);
 	}
 
 	/** Whether this pool element is one of this village type's taverns, a 0.9.0 one included. */
 	public static boolean isTavern(StructurePoolElement element, VillageType type) {
 		return element instanceof SinglePoolElement single
-			&& (type.taverns().contains(single.getTemplateLocation()) || type.legacyTavern().equals(single.getTemplateLocation()));
+			&& (type.taverns().contains(templateOf(single)) || type.legacyTavern().equals(templateOf(single)));
 	}
 
 	/**
@@ -285,7 +294,7 @@ public final class VillageStructures
 		return new FarmCropProcessor(crops.stream().map(crop -> new FarmCropProcessor.Rule(crop.crop().get().defaultBlockState(), crop.chance())).toList());
 	}
 
-	private static void addProcessorToList(Registry<StructureProcessorList> processorLists, Identifier listId, StructureProcessor processor) {
+	private static void addProcessorToList(Registry<StructureProcessorList> processorLists, ResourceLocation listId, StructureProcessor processor) {
 		processorLists.getOptional(listId).ifPresent(list -> {
 			if (list.list().stream().anyMatch(VillageStructures::isOurFarmProcessor)) {
 				return;
@@ -294,7 +303,7 @@ public final class VillageStructures
 			// doesn't depend on what the others took or on the mod load order
 			List<StructureProcessor> processors = new ArrayList<>(list.list());
 			processors.add(0, processor);
-			list.list = processors;
+			((StructureProcessorListAccessor) list).vineandbarrel$setList(processors);
 		});
 	}
 

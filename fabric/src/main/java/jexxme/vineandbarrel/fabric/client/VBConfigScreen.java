@@ -6,10 +6,20 @@ import jexxme.vineandbarrel.platform.ConfigValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.OptionsSubScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.options.OptionsSubScreen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -29,7 +39,11 @@ public class VBConfigScreen extends OptionsSubScreen
 	/** Its slider moves in steps of this, up to {@link #COARSE_RANGE} (or the current value); the file takes any value. */
 	private static final int COARSE_STEP = 10;
 
+	/** As wide as a full-width option row. */
+	private static final int HEADER_WIDTH = 310;
+
 	private final boolean worldSettings;
+	private Rows list;
 
 	public VBConfigScreen(Screen parent) {
 		super(parent, Minecraft.getInstance().options, Component.translatable(PREFIX + "title"));
@@ -38,20 +52,89 @@ public class VBConfigScreen extends OptionsSubScreen
 			|| minecraft.hasSingleplayerServer() && !minecraft.getSingleplayerServer().isPublished();
 	}
 
+	/** The list and the Done button, laid out as vanilla's own options screens are on this Minecraft. */
 	@Override
-	protected void addOptions() {
+	protected void init() {
+		this.list = new Rows(this.minecraft, this.width, this.height);
 		section(ConfigValue.Side.CLIENT);
 		if (worldSettings) {
 			section(ConfigValue.Side.SERVER);
 		}
+		this.addWidget(this.list);
+		this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> this.minecraft.setScreen(this.lastScreen))
+			.bounds(this.width / 2 - 100, this.height - 27, 200, 20).build());
+	}
+
+	@Override
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		// What vanilla's basicListRender does for its own options list
+		this.renderBackground(graphics);
+		this.list.render(graphics, mouseX, mouseY, partialTick);
+		graphics.drawCenteredString(this.font, this.title, this.width / 2, 20, 16777215);
+		super.render(graphics, mouseX, mouseY, partialTick);
 	}
 
 	private void section(ConfigValue.Side side) {
-		this.list.addHeader(Component.translatable(PREFIX + "section." + VineAndBarrel.MODID + ".tipsy." + side.name().toLowerCase(Locale.ROOT) + ".toml"));
+		// A header row: the section's name across the row, centred (this Minecraft's options list has no header rows of its own)
+		Component header = Component.translatable(PREFIX + "section." + VineAndBarrel.MODID + ".tipsy." + side.name().toLowerCase(Locale.ROOT) + ".toml");
+		this.list.add(new StringWidget(this.width / 2 - HEADER_WIDTH / 2, 0, HEADER_WIDTH, Button.DEFAULT_HEIGHT, header, this.font));
 		for (ConfigValue<?> value : ConfigValue.all()) {
 			if (value.side() == side) {
-				this.list.addBig(option(value));
+				this.list.add(option(value).createButton(this.options, this.width / 2 - HEADER_WIDTH / 2, 0, HEADER_WIDTH));
 			}
+		}
+	}
+
+	/**
+	 * Vanilla's options list with one full-width widget per row, sized and placed like it (its own class only takes
+	 * options on this Minecraft, and a header is not one).
+	 */
+	private static final class Rows extends ContainerObjectSelectionList<Row>
+	{
+		Rows(Minecraft minecraft, int width, int height) {
+			super(minecraft, width, height, 32, height - 32, 25);
+			this.centerListVertically = false;
+		}
+
+		void add(AbstractWidget widget) {
+			this.addEntry(new Row(widget));
+		}
+
+		@Override
+		public int getRowWidth() {
+			return 400;
+		}
+
+		@Override
+		protected int getScrollbarPosition() {
+			return super.getScrollbarPosition() + 32;
+		}
+	}
+
+	private static final class Row extends ContainerObjectSelectionList.Entry<Row>
+	{
+		private final List<AbstractWidget> widgets;
+
+		Row(AbstractWidget widget) {
+			this.widgets = List.of(widget);
+		}
+
+		@Override
+		public void render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovered, float partialTick) {
+			for (AbstractWidget widget : widgets) {
+				widget.setY(top);
+				widget.render(graphics, mouseX, mouseY, partialTick);
+			}
+		}
+
+		@Override
+		public List<? extends GuiEventListener> children() {
+			return widgets;
+		}
+
+		@Override
+		public List<? extends NarratableEntry> narratables() {
+			return widgets;
 		}
 	}
 
@@ -71,7 +154,7 @@ public class VBConfigScreen extends OptionsSubScreen
 				int bottom = Math.max(1, (setting.min() + COARSE_STEP - 1) / COARSE_STEP);
 				return new OptionInstance<>(key, OptionInstance.cachedConstantTooltip(Component.translatable(key + ".tooltip")),
 					(caption, steps) -> Options.genericValueLabel(caption, steps * COARSE_STEP), new OptionInstance.IntRange(bottom, top),
-					Math.clamp(Math.round(number / (float) COARSE_STEP), bottom, top), steps -> setting.set(steps * COARSE_STEP));
+					Mth.clamp(Math.round(number / (float) COARSE_STEP), bottom, top), steps -> setting.set(steps * COARSE_STEP));
 			}
 			return new OptionInstance<>(key, OptionInstance.cachedConstantTooltip(Component.translatable(key + ".tooltip")),
 				(caption, shown) -> Options.genericValueLabel(caption, shown), new OptionInstance.IntRange(setting.min(), setting.max()), number, setting::set);

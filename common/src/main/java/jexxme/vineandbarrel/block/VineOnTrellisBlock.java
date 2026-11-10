@@ -3,7 +3,7 @@ package jexxme.vineandbarrel.block;
 import jexxme.vineandbarrel.platform.hooks.PlayerDestroyHook;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
@@ -45,7 +45,7 @@ public class VineOnTrellisBlock extends ClimbingCropBlock implements PlayerDestr
 	private final Supplier<? extends Block> trellis;
 
 	public VineOnTrellisBlock(Properties properties, Supplier<? extends ClimbingBushBlock> bush, Supplier<? extends Block> trellis,
-							  Supplier<? extends Item> produce, ResourceKey<LootTable> harvestLoot) {
+							  Supplier<? extends Item> produce, ResourceLocation harvestLoot) {
 		super(properties, produce, harvestLoot);
 		this.bush = bush;
 		this.trellis = trellis;
@@ -69,38 +69,38 @@ public class VineOnTrellisBlock extends ClimbingCropBlock implements PlayerDestr
 	}
 
 	@Override
-	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return state.getValue(AXIS) == Direction.Axis.X ? LEAVES_X : LEAVES_Z;
 	}
 
 	/** The wood is still there: you bump into the panel like on a bare trellis, the leaves let you through. */
 	@Override
-	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return TrellisBlock.panel(state.getValue(AXIS));
 	}
 
 	@Override
-	protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+	public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
 		return VineClimbing.vineCanSurvive(level, pos, this);
 	}
 
 	/** Mobs don't plan paths through the panel (like vanilla's chains and bars). */
 	@Override
-	protected boolean isPathfindable(BlockState state, PathComputationType type) {
+	public boolean isPathfindable(BlockState state, BlockGetter level, BlockPos pos, PathComputationType type) {
 		return false;
 	}
 
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction directionToNeighbour,
-									 BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	public BlockState updateShape(BlockState state, Direction directionToNeighbour, BlockState neighbourState, LevelAccessor level, BlockPos pos,
+									 BlockPos neighbourPos) {
 		if (!state.canSurvive(level, pos)) {
-			ticks.scheduleTick(pos, this, 1); // like the vine on a rope: break on the next tick, which then puts the trellis back
+			level.scheduleTick(pos, this, 1); // like the vine on a rope: break on the next tick, which then puts the trellis back
 		}
 		return state;
 	}
 
 	@Override
-	protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+	public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
 		if (!state.canSurvive(level, pos)) {
 			level.destroyBlock(pos, true);
 		}
@@ -117,8 +117,11 @@ public class VineOnTrellisBlock extends ClimbingCropBlock implements PlayerDestr
 	 * too (the trellis puts the fire out, as under a bush).
 	 */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+	public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		super.onRemove(state, level, pos, newState, movedByPiston);
+		if (state.is(newState.getBlock()) || level.isClientSide()) {
+			return; // onRemove also runs when only the state changes (growing, picking): the vine is still there
+		}
 		BlockState now = level.getBlockState(pos);
 		if (!movedByPiston && (now.isAir() || now.is(BlockTags.FIRE))) {
 			level.setBlock(pos, trellisState(state), Block.UPDATE_ALL);
@@ -126,7 +129,7 @@ public class VineOnTrellisBlock extends ClimbingCropBlock implements PlayerDestr
 	}
 
 	@Override
-	protected BlockState rotate(BlockState state, Rotation rotation) {
+	public BlockState rotate(BlockState state, Rotation rotation) {
 		return TrellisBlock.rotateAxis(state, rotation);
 	}
 

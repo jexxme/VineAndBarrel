@@ -14,7 +14,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
@@ -62,13 +62,13 @@ public class TrellisBlock extends Block implements SimpleWaterloggedBlock
 	}
 
 	@Override
-	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return panel(state.getValue(AXIS));
 	}
 
 	/** Mobs don't plan paths through the panel (like vanilla's chains and bars). */
 	@Override
-	protected boolean isPathfindable(BlockState state, PathComputationType type) {
+	public boolean isPathfindable(BlockState state, BlockGetter level, BlockPos pos, PathComputationType type) {
 		return false;
 	}
 
@@ -91,8 +91,8 @@ public class TrellisBlock extends Block implements SimpleWaterloggedBlock
 	 * trellis stays in the bush (see {@link ClimbingBushBlock#TRELLIS}). Not under water, as no bush grows there.
 	 */
 	@Override
-	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand,
-										  BlockHitResult hitResult) {
+	public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+		ItemStack stack = player.getItemInHand(hand);
 		if (!state.getValue(WATERLOGGED) && stack.getItem() instanceof BlockItem item && item.getBlock() instanceof ClimbingBushBlock bush) {
 			BlockState planted = bush.plantedIn(state, level, pos);
 			if (planted.canSurvive(level, pos)) {
@@ -102,30 +102,32 @@ public class TrellisBlock extends Block implements SimpleWaterloggedBlock
 					level.playSound(null, pos, sound.getPlaceSound(), SoundSource.BLOCKS, (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F);
 					level.gameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Context.of(player, planted));
 					player.awardStat(Stats.ITEM_USED.get(item));
-					stack.consume(1, player);
+					if (!player.getAbilities().instabuild) {
+						stack.shrink(1);
+					}
 				}
-				return InteractionResult.SUCCESS;
+				return InteractionResult.sidedSuccess(level.isClientSide());
 			}
 		}
-		return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
+		return super.use(state, level, pos, player, hand, hitResult);
 	}
 
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction directionToNeighbour,
-									 BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	public BlockState updateShape(BlockState state, Direction directionToNeighbour, BlockState neighbourState, LevelAccessor level, BlockPos pos,
+									 BlockPos neighbourPos) {
 		if (state.getValue(WATERLOGGED)) {
-			ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+			level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
 		}
-		return super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random);
+		return super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos);
 	}
 
 	@Override
-	protected FluidState getFluidState(BlockState state) {
+	public FluidState getFluidState(BlockState state) {
 		return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
 	}
 
 	@Override
-	protected BlockState rotate(BlockState state, Rotation rotation) {
+	public BlockState rotate(BlockState state, Rotation rotation) {
 		return rotateAxis(state, rotation);
 	}
 

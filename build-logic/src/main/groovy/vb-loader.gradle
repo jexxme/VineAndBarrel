@@ -1,4 +1,4 @@
-// A loader project (neoforge, fabric): compiles the common sources into its own jar, with its own glue code on top.
+// A loader project (forge, fabric): compiles the common sources into its own jar, with its own glue code on top.
 // The common project hands over its source folders (not a jar), so each loader compiles everything in one go and the
 // IDE still sees every file in exactly one module (the MultiLoader-Template way).
 plugins {
@@ -24,16 +24,51 @@ tasks.named('compileJava', JavaCompile) {
     source(configurations.commonJava)
 }
 
-tasks.named('processResources', ProcessResources) {
-    dependsOn(configurations.commonResources)
-    from(configurations.commonResources) {
-        exclude '.cache'
-        // Each loader ships only its own access file: the access transformer on NeoForge, the class tweaker on Fabric
-        exclude(project.name == 'fabric' ? 'META-INF/accesstransformer.cfg' : 'vineandbarrel.classtweaker')
+// This older-Minecraft branch only: structure templates are saved by 26.3, whose block states read {id, properties};
+// this Minecraft reads {Name, Properties} and would load every block as air. The source .nbt files stay exactly as on
+// 26.3 (so structure changes cherry-pick cleanly) and the jar gets converted copies: the palette keys renamed, sign
+// text as this Minecraft reads it, and item frames where 26.3 has shelves (see BackportNbt).
+def structureNbt = project(':common').fileTree('src/main/resources') { include 'data/*/structures/**/*.nbt' }
+def downgradedStructures = layout.buildDirectory.dir('backport/structures')
+def downgradeStructures = tasks.register('downgradeStructures') {
+    group = 'build'
+    description = 'Converts the 26.3 structure templates to the block state format of this Minecraft version.'
+    def sources = structureNbt
+    def resourcesRoot = project(':common').file('src/main/resources')
+    def out = downgradedStructures
+    inputs.files(sources)
+    outputs.dir(out)
+    doLast {
+        def target = out.get().asFile
+        target.deleteDir()
+        sources.each { File source ->
+            def rel = resourcesRoot.toPath().relativize(source.toPath()).toString()
+            BackportNbt.downgrade(source, new File(target, rel))
+        }
     }
 }
 
-// The wiki exporter is dev-only (runDocsExport); it never ships in a jar
+tasks.named('processResources', ProcessResources) {
+    dependsOn(configurations.commonResources)
+    from(downgradeStructures)
+    from(configurations.commonResources) {
+        exclude 'data/*/structures/**/*.nbt' // converted copies come from downgradeStructures
+        exclude '.cache'
+        // Each loader ships only its own access file: the access transformer on Forge (forge/build.gradle leaves it out
+        // when it has no entries), the class tweaker on Fabric
+        exclude(project.name == 'fabric' ? 'META-INF/accesstransformer.cfg' : 'vineandbarrel.classtweaker')
+        // Forge's global loot modifiers stay out of the Fabric jar and its dev runs (Porting Lib, which Farmer's Delight
+        // Refabricated carries, tries to decode them and warns on every data load). The rest of the Forge-named data
+        // stays in: our own tags are built on the forge: tags (data/forge/tags), and FabricWildCrops reads the biome
+        // modifier files (data/vineandbarrel/forge/biome_modifier) on Fabric.
+        if (project.name == 'fabric') {
+            exclude 'data/forge/loot_modifiers/**', 'data/vineandbarrel/loot_modifiers/**'
+        }
+    }
+}
+
+// The wiki exporter is dev-only (runDocsExport); it never ships in a jar. (On Forge the shipped jar is reobfJar's, made
+// from this jar task's output, so everything set on the jar task here is in it too.)
 tasks.named('jar', Jar) {
     exclude 'jexxme/vineandbarrel/gametest/VBDocsExport*'
 }
@@ -46,15 +81,16 @@ tasks.named('jar', Jar).configure {
     from(rootProject.file('NOTICE_farmersdelight.txt'))
 }
 
-// The metadata files (neoforge.mods.toml, fabric.mod.json) get the mod's properties from gradle.properties
+// The metadata files (mods.toml, fabric.mod.json) get the mod's properties from gradle.properties
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [
             minecraft_version      : minecraft_version,
             minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            neo_version_range      : neo_version_range,
+            forge_version          : forge_version,
+            forge_version_range    : forge_version_range,
             loader_version_range   : loader_version_range,
             fabric_loader_version  : fabric_loader_version,
+            fabric_loader_min_version: fabric_loader_min_version,
             // Fabric API's own version without the "+26.3" build suffix, for fabric.mod.json's "depends"
             fabric_api_min_version : fabric_api_version.tokenize('+')[0],
             mod_id                 : mod_id,
@@ -65,7 +101,7 @@ tasks.withType(ProcessResources).configureEach {
             mod_description        : mod_description
     ]
     inputs.properties replaceProperties
-    filesMatching(['META-INF/neoforge.mods.toml', 'fabric.mod.json']) {
+    filesMatching(['META-INF/mods.toml', 'fabric.mod.json']) {
         expand replaceProperties
     }
 }

@@ -9,8 +9,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
@@ -91,10 +91,11 @@ public class KettleChimneyBlock extends Block
 
 	/** A copper ingot on the chimney grows it, like on the kettle (you see where it goes). */
 	@Override
-	protected net.minecraft.world.InteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, net.minecraft.world.entity.player.Player player,
+	public net.minecraft.world.InteractionResult use(BlockState state, Level level, BlockPos pos, net.minecraft.world.entity.player.Player player,
 		net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hit) {
+		ItemStack held = player.getItemInHand(hand);
 		if (!held.is(Items.COPPER_INGOT)) {
-			return net.minecraft.world.InteractionResult.TRY_WITH_EMPTY_HAND;
+			return net.minecraft.world.InteractionResult.PASS;
 		}
 		BlockPos below = pos.below();
 		for (int i = 0; i < MAX && level.getBlockState(below).getBlock() instanceof KettleChimneyBlock; i++) {
@@ -104,16 +105,16 @@ public class KettleChimneyBlock extends Block
 		if (kettle == null || !KettleMultiblock.extendChimney(level, kettle, player)) {
 			return net.minecraft.world.InteractionResult.PASS;
 		}
-		if (!level.isClientSide()) {
-			held.consume(1, player);
+		if (!level.isClientSide() && !player.getAbilities().instabuild) {
+			held.shrink(1);
 		}
-		return net.minecraft.world.InteractionResult.SUCCESS;
+		return net.minecraft.world.InteractionResult.sidedSuccess(level.isClientSide());
 	}
 
 	// ------------------------------------------------------------------ standing on the kettle
 
 	@Override
-	protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+	public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
 		BlockState below = level.getBlockState(pos.below());
 		if (below.getBlock() instanceof KettleChimneyBlock) {
 			return below.getValue(SIZE).equals(state.getValue(SIZE)) && below.getValue(FACING) == state.getValue(FACING);
@@ -123,9 +124,9 @@ public class KettleChimneyBlock extends Block
 
 	/** Lost its footing (the kettle or the piece below went): breaks on the next tick, dropping its ingot. */
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
 		if (direction == Direction.DOWN && !state.canSurvive(level, pos)) {
-			ticks.scheduleTick(pos, this, 1);
+			level.scheduleTick(pos, this, 1);
 		}
 		if (direction == Direction.UP) {
 			// the top piece carries the cap: the piece under a removed top becomes the new top
@@ -138,7 +139,7 @@ public class KettleChimneyBlock extends Block
 	}
 
 	@Override
-	protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+	public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
 		if (!state.canSurvive(level, pos)) {
 			level.destroyBlock(pos, true);
 		}
@@ -146,31 +147,31 @@ public class KettleChimneyBlock extends Block
 
 	/** The last piece taken off: the kettle's chimney gets its own cap back. */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+	public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
 		if (!KettleMultiblock.isConverting()) {
 			BlockPos below = pos.below();
 			BlockState kettle = level.getBlockState(below);
-			if (KettleMultiblock.isExtended(kettle) && !(level.getBlockState(pos).getBlock() instanceof KettleChimneyBlock)) {
+			if (KettleMultiblock.isExtended(kettle) && !(newState.getBlock() instanceof KettleChimneyBlock)) {
 				level.setBlock(below, KettleMultiblock.withExtended(kettle, false), Block.UPDATE_ALL);
 			}
 		}
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+		super.onRemove(state, level, pos, newState, movedByPiston);
 	}
 
 	@Override
-	protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+	public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
 		return List.of(new ItemStack(Items.COPPER_INGOT));
 	}
 
 	@Override
-	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+	public ItemStack getCloneItemStack(BlockGetter level, BlockPos pos, BlockState state) {
 		return new ItemStack(Items.COPPER_INGOT);
 	}
 
 	// ------------------------------------------------------------------ shape, turning
 
 	@Override
-	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		int size = state.getValue(SIZE);
 		double w = KettleGeometry.chimneyHalfWidth(size) + 0.5D;
 		double top = 16.0D; // (the top piece's cap stands in the block above, like the kettle's own)
@@ -187,17 +188,17 @@ public class KettleChimneyBlock extends Block
 	}
 
 	@Override
-	protected RenderShape getRenderShape(BlockState state) {
+	public RenderShape getRenderShape(BlockState state) {
 		return RenderShape.MODEL;
 	}
 
 	@Override
-	protected BlockState rotate(BlockState state, Rotation rotation) {
+	public BlockState rotate(BlockState state, Rotation rotation) {
 		return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
 	}
 
 	@Override
-	protected BlockState mirror(BlockState state, Mirror mirror) {
+	public BlockState mirror(BlockState state, Mirror mirror) {
 		return state.setValue(FACING, mirror.mirror(state.getValue(FACING)));
 	}
 }

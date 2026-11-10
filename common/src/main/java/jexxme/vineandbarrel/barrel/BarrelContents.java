@@ -3,21 +3,31 @@ package jexxme.vineandbarrel.barrel;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.RecordBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import jexxme.vineandbarrel.VineAndBarrel;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * One batch in an Aging Barrel: what was poured in, what it turns into and when, and how much is left. The barrel copies
  * its {@link AgingRecipe} into the batch at the first fill, so a batch keeps its course even if data packs change.
  * <p>
- * Also the item component of a barrel broken with a batch inside (B12). There {@link #elapsed()} is the age of the
+ * Also what a barrel broken with a batch inside carries as an item (B12; 1.20.1: in the item's NBT, see
+ * {@link AgingBarrelItem}). There {@link #elapsed()} is the age of the
  * batch, which stays put while the barrel is an item: aging pauses until it is placed again. In a placed barrel the
  * age comes from the world's game time instead, so it keeps aging while the chunk is unloaded.
  *
@@ -27,7 +37,7 @@ import java.util.Objects;
  * @param young          the young drink (count 1)
  * @param aged           the aged drink (count 1)
  * @param servings       servings left, 0 to {@link AgingBarrelBlockEntity#CAPACITY}
- * @param elapsed        ticks since the first fill (item component only)
+ * @param elapsed        ticks since the first fill (what the barrel item goes by; a placed barrel saves it too, for its drop)
  * @param fermentingTime ticks from the first fill until it is the young drink
  * @param agingTime      ticks from then until it is the aged drink
  */
@@ -43,20 +53,48 @@ public final class BarrelContents
 	 */
 	private static final Codec<ItemStack> LENIENT_STACK = new Codec<>()
 	{
+		/**
+		 * The shape 1.21.1 and 26.x write a stack in ({@code {id: "...", count: 1}}, an empty stack as {@code {}}), not
+		 * 1.20.1's own ({@code id, Count, tag}): the taverns' structure files carry batches saved by 26.3, and a world's
+		 * barrels keep one format across versions. A stack's NBT, which only 1.20.1 has, is kept under {@code tag}; 26.x's
+		 * {@code components} can't be read here and are left out.
+		 */
 		@Override
 		public <T> DataResult<Pair<ItemStack, T>> decode(DynamicOps<T> ops, T input) {
-			DataResult<Pair<ItemStack, T>> result = ItemStack.OPTIONAL_CODEC.decode(ops, input);
-			if (result.isError()) {
-				VineAndBarrel.LOGGER.warn("An Aging Barrel batch names an item that no longer exists, ignoring it: {}",
-					result.error().map(DataResult.Error::message).orElse("?"));
+			Dynamic<T> saved = new Dynamic<>(ops, input);
+			Optional<String> id = saved.get("id").asString().result();
+			if (id.isEmpty()) {
 				return DataResult.success(Pair.of(ItemStack.EMPTY, input));
 			}
-			return result;
+			ResourceLocation key = ResourceLocation.tryParse(id.get());
+			Item item = key == null ? null : BuiltInRegistries.ITEM.getOptional(key).orElse(null);
+			if (item == null || item == Items.AIR) {
+				VineAndBarrel.LOGGER.warn("An Aging Barrel batch names an item that no longer exists, ignoring it: {}", id.get());
+				return DataResult.success(Pair.of(ItemStack.EMPTY, input));
+			}
+			// "Count" too: a batch whose stacks were rewritten in 1.20.1's own shape still reads
+			int count = saved.get("count").asNumber().result().map(Number::intValue).orElseGet(() -> saved.get("Count").asInt(1));
+			ItemStack stack = new ItemStack(item, count);
+			saved.get("tag").result().map(tag -> tag.convert(NbtOps.INSTANCE).getValue()).ifPresent(tag -> {
+				if (tag instanceof CompoundTag compound) {
+					stack.setTag(compound.copy());
+				}
+			});
+			return DataResult.success(Pair.of(stack, input));
 		}
 
 		@Override
 		public <T> DataResult<T> encode(ItemStack stack, DynamicOps<T> ops, T prefix) {
-			return ItemStack.OPTIONAL_CODEC.encode(stack, ops, prefix);
+			RecordBuilder<T> map = ops.mapBuilder();
+			if (!stack.isEmpty()) {
+				map.add("id", ops.createString(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString()));
+				map.add("count", ops.createInt(stack.getCount()));
+				CompoundTag tag = stack.getTag();
+				if (tag != null) {
+					map.add("tag", NbtOps.INSTANCE.convertTo(ops, tag));
+				}
+			}
+			return map.build(prefix);
 		}
 	};
 
@@ -72,16 +110,17 @@ public final class BarrelContents
 		Codec.intRange(1, Integer.MAX_VALUE).optionalFieldOf("aging_time", AgingRecipe.DEFAULT_AGING_TIME).forGetter(c -> c.agingTime)
 	).apply(inst, BarrelContents::new));
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, BarrelContents> STREAM_CODEC = StreamCodec.composite(
-		ItemStack.OPTIONAL_STREAM_CODEC, c -> c.base,
-		ItemStack.OPTIONAL_STREAM_CODEC, c -> c.bucket,
-		ItemStack.OPTIONAL_STREAM_CODEC, c -> c.young,
-		ItemStack.OPTIONAL_STREAM_CODEC, c -> c.aged,
-		ByteBufCodecs.VAR_INT, c -> c.servings,
-		ByteBufCodecs.VAR_LONG, c -> c.elapsed,
-		ByteBufCodecs.VAR_INT, c -> c.fermentingTime,
-		ByteBufCodecs.VAR_INT, c -> c.agingTime,
-		BarrelContents::new);
+	// No network form: 1.20.1 sends an item with its NBT, and the barrel item keeps its batch there (AgingBarrelItem)
+
+	/** The batch as NBT, in {@link #CODEC}'s shape; null for an empty batch (nothing is saved then). */
+	public @Nullable Tag toTag() {
+		return isEmpty() ? null : CODEC.encodeStart(NbtOps.INSTANCE, this).result().orElse(null);
+	}
+
+	/** The batch saved in {@code tag} (empty if there is none); what can't be read is told to {@code onProblem}. */
+	public static BarrelContents fromTag(@Nullable Tag tag, Consumer<String> onProblem) {
+		return tag == null ? EMPTY : CODEC.parse(NbtOps.INSTANCE, tag).resultOrPartial(onProblem).orElse(EMPTY);
+	}
 
 	private final ItemStack base;
 	private final ItemStack bucket;
@@ -93,7 +132,7 @@ public final class BarrelContents
 	private final int agingTime;
 	private final int hashCode;
 
-	/** Component values must never change once created (copies of an item share them), so stacks are copied in and out. */
+	/** A batch never changes once created (the block entity and its item form share it), so stacks are copied in and out. */
 	public BarrelContents(ItemStack base, ItemStack bucket, ItemStack young, ItemStack aged, int servings, long elapsed, int fermentingTime, int agingTime) {
 		this.base = base.copyWithCount(Math.min(base.getCount(), 1));
 		this.bucket = bucket.copyWithCount(Math.min(bucket.getCount(), 1));
@@ -104,9 +143,13 @@ public final class BarrelContents
 		this.elapsed = Math.max(0L, elapsed);
 		this.fermentingTime = fermentingTime;
 		this.agingTime = agingTime;
-		this.hashCode = Objects.hash(ItemStack.hashItemAndComponents(this.base), ItemStack.hashItemAndComponents(this.bucket),
-			ItemStack.hashItemAndComponents(this.young), ItemStack.hashItemAndComponents(this.aged), this.servings, this.elapsed,
+		this.hashCode = Objects.hash(hashItemAndTag(this.base), hashItemAndTag(this.bucket),
+			hashItemAndTag(this.young), hashItemAndTag(this.aged), this.servings, this.elapsed,
 			fermentingTime, agingTime);
+	}
+
+	private static int hashItemAndTag(ItemStack stack) {
+		return stack.isEmpty() ? 0 : 31 * stack.getItem().hashCode() + Objects.hashCode(stack.getTag());
 	}
 
 	public ItemStack base() {

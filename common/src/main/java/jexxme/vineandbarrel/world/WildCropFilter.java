@@ -10,10 +10,9 @@ import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
-import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
@@ -29,9 +28,9 @@ import java.util.function.Predicate;
 
 /**
  * Where a wild crop patch generates: biomes in a list or tag (minus a deny list or tag) within a base temperature range.
- * The files are NeoForge biome modifiers of our type ({@code data/<namespace>/neoforge/biome_modifier},
+ * The files are Forge biome modifiers of our type ({@code data/<namespace>/forge/biome_modifier},
  * {@code vineandbarrel:add_features_by_filter}, after FD's {@code add_features_by_filter}, Farmer's Delight by vectorwing,
- * MIT). Fabric reads the same files with this class, with the same shapes NeoForge's codec takes (a {@code #tag}, one id
+ * MIT). Fabric reads the same files with this class, with the same shapes Forge's codec takes (a {@code #tag}, one id
  * or a list of ids, for the biomes and the features), and adds the features through Fabric's biome API, so both loaders
  * place wild crops in exactly the same biomes.
  */
@@ -48,7 +47,7 @@ public record WildCropFilter(
 	public static final List<String> NAMES = List.of("wild_grapes", "wild_grapes_extra", "wild_hops", "wild_hops_extra", "wild_barley", "wild_barley_extra",
 		"wild_white_grapes", "wild_white_grapes_extra");
 	/** Where biome modifier files live in a datapack, in any namespace. */
-	public static final String FOLDER = "neoforge/biome_modifier";
+	public static final String FOLDER = "forge/biome_modifier";
 	public static final String TYPE = VineAndBarrel.MODID + ":add_features_by_filter";
 
 	/** The biome modifier's fields, read like NeoForge's {@code AddFeaturesByFilterBiomeModifier} reads them. */
@@ -57,9 +56,16 @@ public record WildCropFilter(
 			Keys.codec(Registries.BIOME).optionalFieldOf("denied_biomes").forGetter(WildCropFilter::deniedBiomes),
 			Codec.FLOAT.optionalFieldOf("min_temperature").forGetter(WildCropFilter::minimumTemperature),
 			Codec.FLOAT.optionalFieldOf("max_temperature").forGetter(WildCropFilter::maximumTemperature),
-			ExtraCodecs.compactListCodec(ResourceKey.codec(Registries.PLACED_FEATURE)).fieldOf("features").forGetter(WildCropFilter::features),
+			compactListCodec(ResourceKey.codec(Registries.PLACED_FEATURE)).fieldOf("features").forGetter(WildCropFilter::features),
 			GenerationStep.Decoration.CODEC.fieldOf("step").forGetter(WildCropFilter::step)
 	).apply(builder, WildCropFilter::new));
+
+	/** One element or a list of them, written as the single element when there is just one (26.x: {@code ExtraCodecs.compactListCodec}). */
+	private static <E> Codec<List<E>> compactListCodec(Codec<E> element) {
+		return Codec.either(element.listOf(), element).xmap(
+				either -> either.map(list -> list, List::of),
+				list -> list.size() == 1 ? Either.right(list.get(0)) : Either.left(list));
+	}
 
 	/**
 	 * A registry list the way vanilla's holder-set codec writes one: a {@code #tag}, a single id, or a list of ids.
@@ -69,7 +75,7 @@ public record WildCropFilter(
 	{
 		public static <T> Codec<Keys<T>> codec(ResourceKey<? extends Registry<T>> registry) {
 			Codec<TagKey<T>> tag = TagKey.hashedCodec(registry);
-			Codec<List<ResourceKey<T>>> ids = ExtraCodecs.compactListCodec(ResourceKey.codec(registry));
+			Codec<List<ResourceKey<T>>> ids = compactListCodec(ResourceKey.codec(registry));
 			return Codec.either(tag, ids).xmap(
 					either -> either.map(t -> new Keys<>(Optional.of(t), List.of()), list -> new Keys<>(Optional.empty(), list)),
 					keys -> keys.tag().<Either<TagKey<T>, List<ResourceKey<T>>>>map(Either::left).orElseGet(() -> Either.right(keys.ids())));
@@ -85,8 +91,8 @@ public record WildCropFilter(
 		}
 	}
 
-	/** The file's id: {@code vineandbarrel:<name>} in {@code data/vineandbarrel/neoforge/biome_modifier}. */
-	public static Identifier file(String name) {
+	/** The file's id: {@code vineandbarrel:<name>} in {@code data/vineandbarrel/forge/biome_modifier}. */
+	public static ResourceLocation file(String name) {
 		return VineAndBarrel.id(FOLDER + "/" + name + ".json");
 	}
 
@@ -110,19 +116,21 @@ public record WildCropFilter(
 	}
 
 	/**
-	 * One of our files as a datapack may have replaced it: ours, or NeoForge's {@code neoforge:none} (no wild crops from
-	 * it), which is empty. Any other type is one we can't read off NeoForge, also empty (with a warning).
+	 * One of our files as a datapack may have replaced it: ours, or Forge's {@code forge:none} (no wild crops from
+	 * it), which is empty. Any other type is one we can't read off Forge, also empty (with a warning).
 	 */
 	public static Optional<WildCropFilter> fromJson(JsonElement json, String source) {
 		String type = typeOf(json);
-		if (type.equals("neoforge:none")) {
+		if (type.equals("forge:none")) {
 			return Optional.empty();
 		}
 		if (!type.equals(TYPE)) {
-			VineAndBarrel.LOGGER.warn("{}: biome modifier type {} only works on NeoForge; no wild crops from it", source, type);
+			VineAndBarrel.LOGGER.warn("{}: biome modifier type {} only works on Forge; no wild crops from it", source, type);
 			return Optional.empty();
 		}
-		return Optional.of(CODEC.parse(JsonOps.INSTANCE, json).getOrThrow(message -> new IllegalStateException(source + ": " + message)));
+		return Optional.of(CODEC.parse(JsonOps.INSTANCE, json).getOrThrow(false, message -> {
+			throw new IllegalStateException(source + ": " + message);
+		}));
 	}
 
 	public boolean accepts(Holder<Biome> biome) {

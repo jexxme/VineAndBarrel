@@ -1,7 +1,6 @@
 package jexxme.vineandbarrel.world.village;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
@@ -11,6 +10,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import org.jspecify.annotations.Nullable;
 
@@ -24,7 +24,7 @@ import java.util.List;
  * that survived vanilla's rules drew at least 0.3, 0.2 and 0.1, so lower chances after it never hit at all. This one
  * draws from its own salted seed: independent of vanilla's (and FD's) rules, and still the same for the same block.
  */
-public final class FarmCropProcessor implements StructureProcessor
+public final class FarmCropProcessor extends StructureProcessor
 {
 	public record Rule(BlockState output, float chance) {
 		static final Codec<Rule> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -33,7 +33,7 @@ public final class FarmCropProcessor implements StructureProcessor
 		).apply(i, Rule::new));
 	}
 
-	public static final MapCodec<FarmCropProcessor> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+	public static final Codec<FarmCropProcessor> CODEC = RecordCodecBuilder.create(i -> i.group(
 		Rule.CODEC.listOf().fieldOf("rules").forGetter(FarmCropProcessor::rules)
 	).apply(i, FarmCropProcessor::new));
 
@@ -51,7 +51,7 @@ public final class FarmCropProcessor implements StructureProcessor
 
 	@Override
 	public StructureTemplate.@Nullable StructureBlockInfo processBlock(LevelReader level, BlockPos targetPosition, BlockPos referencePos,
-		BlockPos templateRelativePos, StructureTemplate.StructureBlockInfo processedBlockInfo, StructurePlaceSettings settings) {
+		StructureTemplate.StructureBlockInfo originalBlockInfo, StructureTemplate.StructureBlockInfo processedBlockInfo, StructurePlaceSettings settings) {
 		if (!processedBlockInfo.state().is(Blocks.WHEAT)) {
 			return processedBlockInfo;
 		}
@@ -71,7 +71,7 @@ public final class FarmCropProcessor implements StructureProcessor
 	}
 
 	@Override
-	public MapCodec<? extends StructureProcessor> codec() {
-		return CODEC;
+	protected StructureProcessorType<?> getType() {
+		return VillageStructures.FARM_CROP_PROCESSOR.get();
 	}
 }

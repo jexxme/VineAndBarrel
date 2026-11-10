@@ -1,0 +1,36 @@
+{
+  "type": "farmersdelight:cooking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "experience": 1.0,
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "farmersdelight"
+      ]
+    }
+  ],
+  "ingredients": [
+    {
+      "tag": "vineandbarrel:cooking/raw_mutton"
+    },
+    {
+      "tag": "vineandbarrel:cooking/barley"
+    },
+    {
+      "tag": "vineandbarrel:cooking/carrot"
+    },
+    {
+      "tag": "vineandbarrel:cooking/onion"
+    }
+  ],
+  "recipe_book_tab": "meals",
+  "result": {
+    "item": "vineandbarrel:barley_mutton_broth"
+  }
+}

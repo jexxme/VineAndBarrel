@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "#forge:shears",
+      "required": false
+    },
+    {
+      "id": "#c:shears",
+      "required": false
+    }
+  ]
+}

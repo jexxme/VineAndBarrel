@@ -3,11 +3,11 @@ package jexxme.vineandbarrel.tipsy;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import org.jspecify.annotations.Nullable;
 
@@ -41,9 +41,9 @@ public final class DrinkBuffs
 			Codec.INT.fieldOf("left").forGetter(Buff::left)
 		).apply(inst, Buff::new));
 
-		Optional<Holder.Reference<MobEffect>> holder() {
-			Identifier id = Identifier.tryParse(effect);
-			return id == null ? Optional.empty() : BuiltInRegistries.MOB_EFFECT.get(id);
+		Optional<MobEffect> type() {
+			ResourceLocation id = ResourceLocation.tryParse(effect);
+			return id == null ? Optional.empty() : BuiltInRegistries.MOB_EFFECT.getOptional(id);
 		}
 
 		/** Whether {@code instance} is the one this drink gave. */
@@ -82,7 +82,7 @@ public final class DrinkBuffs
 			&& instance.getDuration() == given.getDuration());
 		if (there) {
 			List<Buff> buffs = new ArrayList<>(list(entity));
-			buffs.add(new Buff(given.getEffect().getRegisteredName(), given.getAmplifier(), given.getDuration()));
+			buffs.add(new Buff(id(given.getEffect()), given.getAmplifier(), given.getDuration()));
 			TipsyRegistry.DRINK_BUFFS.set(entity, List.copyOf(buffs));
 		}
 	}
@@ -91,8 +91,8 @@ public final class DrinkBuffs
 	 * A cheers made our buff last longer ({@code Cheers}): the entry for the instance that had {@code before} ticks left
 	 * now has {@code after}.
 	 */
-	public static void extended(LivingEntity entity, Holder<MobEffect> effect, int amplifier, int before, int after) {
-		String id = effect.getRegisteredName();
+	public static void extended(LivingEntity entity, MobEffect effect, int amplifier, int before, int after) {
+		String id = id(effect);
 		List<Buff> buffs = new ArrayList<>(list(entity));
 		for (int i = 0; i < buffs.size(); i++) {
 			Buff buff = buffs.get(i);
@@ -114,12 +114,12 @@ public final class DrinkBuffs
 			byEffect.computeIfAbsent(buff.effect(), k -> new ArrayList<>()).add(buff);
 		}
 		for (List<Buff> buffs : byEffect.values()) {
-			buffs.getFirst().holder().ifPresent(effect -> removeOurs(entity, effect, buffs));
+			buffs.get(0).type().ifPresent(effect -> removeOurs(entity, effect, buffs));
 		}
 		forget(entity);
 	}
 
-	private static void removeOurs(LivingEntity entity, Holder<MobEffect> effect, List<Buff> buffs) {
+	private static void removeOurs(LivingEntity entity, MobEffect effect, List<Buff> buffs) {
 		List<MobEffectInstance> chain = chain(entity.getEffect(effect));
 		if (chain.isEmpty()) {
 			return;
@@ -142,14 +142,17 @@ public final class DrinkBuffs
 		if (kept.size() == chain.size()) {
 			return;
 		}
-		// Rebuild the stack without ours: the strongest first, vanilla tucks each weaker, longer one underneath. Re-adding
-		// Absorption would top its hearts back up (AbsorptionMobEffect.onEffectStarted), so what was left stays (clamped
-		// to what the kept instances allow)
+		// Rebuild the stack without ours: the strongest first, vanilla tucks each weaker, longer one underneath. Removing
+		// Absorption takes its hearts off and re-adding it puts fresh ones on (AbsorptionMobEffect), so what was left
+		// stays, at most what the strongest kept instance gives (1.20.1 has no max-absorption attribute to cap it)
 		float absorption = entity.getAbsorptionAmount();
 		entity.removeEffect(effect);
 		for (MobEffectInstance instance : kept) {
 			entity.addEffect(new MobEffectInstance(instance.getEffect(), instance.getDuration(), instance.getAmplifier(), instance.isAmbient(),
 				instance.isVisible(), instance.showIcon()));
+		}
+		if (effect == MobEffects.ABSORPTION) {
+			absorption = Math.min(absorption, kept.isEmpty() ? 0.0F : 4.0F * (kept.get(0).getAmplifier() + 1));
 		}
 		entity.setAbsorptionAmount(absorption);
 	}
@@ -166,7 +169,7 @@ public final class DrinkBuffs
 		List<Buff> kept = new ArrayList<>(buffs.size());
 		for (Buff buff : buffs) {
 			Buff next = new Buff(buff.effect(), buff.amplifier(), buff.left() - 1);
-			MobEffectInstance current = buff.holder().map(entity::getEffect).orElse(null);
+			MobEffectInstance current = buff.type().map(entity::getEffect).orElse(null);
 			if (next.left() > 0 && chain(current).stream().anyMatch(next::matches)) {
 				kept.add(next);
 			}
@@ -176,6 +179,11 @@ public final class DrinkBuffs
 		} else {
 			TipsyRegistry.DRINK_BUFFS.set(entity, List.copyOf(kept));
 		}
+	}
+
+	/** The effect's registry id as the saves hold it, e.g. {@code minecraft:haste} (1.21.1: the holder's registered name). */
+	private static String id(MobEffect effect) {
+		return String.valueOf(BuiltInRegistries.MOB_EFFECT.getKey(effect));
 	}
 
 	/** Forgets every buff (sober again: the next night starts with a clean slate). The effects themselves stay. */

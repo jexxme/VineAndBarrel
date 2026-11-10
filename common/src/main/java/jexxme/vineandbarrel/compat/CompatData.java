@@ -5,7 +5,7 @@ import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.compat.thirst.Quench;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 
@@ -28,21 +28,21 @@ public final class CompatData
 	public static final String HOMEOSTATIC_FOLDER = "environment/drinkable";
 	public static final String TWT_FOLDER = "thirstwastaken2/drinks";
 	/** Our one Thirst Was Taken 2 file: data/vineandbarrel/thirstwastaken2/drinks/vineandbarrel.json. */
-	public static final Identifier TWT_FILE = VineAndBarrel.id(TWT_FOLDER + "/" + VineAndBarrel.MODID + ".json");
+	public static final ResourceLocation TWT_FILE = VineAndBarrel.id(TWT_FOLDER + "/" + VineAndBarrel.MODID + ".json");
 
 	private CompatData() {
 	}
 
 	public static TagKey<Item> tanThirstTag(int thirst) {
-		return TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(TAN, "thirst/" + thirst + "_thirst_drinks"));
+		return TagKey.create(Registries.ITEM, new ResourceLocation(TAN, "thirst/" + thirst + "_thirst_drinks"));
 	}
 
 	public static TagKey<Item> tanHydrationTag(int hydration) {
-		return TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(TAN, "hydration/" + hydration + "_hydration_drinks"));
+		return TagKey.create(Registries.ITEM, new ResourceLocation(TAN, "hydration/" + hydration + "_hydration_drinks"));
 	}
 
 	/** Where Homeostatic reads an item's values: data/vineandbarrel/environment/drinkable/<item>.json. */
-	public static Identifier homeostaticFile(Item item) {
+	public static ResourceLocation homeostaticFile(Item item) {
 		return VineAndBarrel.id(HOMEOSTATIC_FOLDER + "/" + BuiltInRegistries.ITEM.getKey(item).getPath() + ".json");
 	}
 

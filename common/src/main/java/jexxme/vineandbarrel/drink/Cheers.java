@@ -3,7 +3,6 @@ package jexxme.vineandbarrel.drink;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.tipsy.DrinkBuffs;
-import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
@@ -44,7 +43,7 @@ public final class Cheers
 		final Player player;
 		final long time;
 		final Vec3 pos;
-		final Holder<MobEffect> effect;
+		final MobEffect effect;
 		final int amplifier;
 		final int bonusTicks;
 		/** Whether the drink gave its buff: from Tipsy IV it doesn't, and then a cheers adds nothing to it either. */

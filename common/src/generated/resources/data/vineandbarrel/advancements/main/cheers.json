@@ -1,0 +1,30 @@
+{
+  "parent": "vineandbarrel:main/on_tap",
+  "criteria": {
+    "cheers": {
+      "conditions": {},
+      "trigger": "vineandbarrel:cheers"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.vineandbarrel.cheers.description"
+    },
+    "frame": "task",
+    "hidden": false,
+    "icon": {
+      "item": "vineandbarrel:wheat_beer"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.vineandbarrel.cheers.title"
+    }
+  },
+  "requirements": [
+    [
+      "cheers"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

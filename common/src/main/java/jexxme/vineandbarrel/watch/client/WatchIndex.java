@@ -15,13 +15,12 @@ import jexxme.vineandbarrel.watch.WatchScene;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
@@ -38,11 +37,11 @@ import java.util.TreeMap;
  */
 public final class WatchIndex implements ResourceManagerReloadListener
 {
-	public static final Identifier ID = VineAndBarrel.id("watch_scenes");
+	public static final ResourceLocation ID = VineAndBarrel.id("watch_scenes");
 	public static final WatchIndex INSTANCE = new WatchIndex();
 	private static final String FOLDER = "watch";
 
-	private volatile Map<Identifier, WatchScene> scenes = Map.of();
+	private volatile Map<ResourceLocation, WatchScene> scenes = Map.of();
 	private volatile WatchPath path = WatchPath.EMPTY;
 
 	private WatchIndex() {
@@ -50,10 +49,10 @@ public final class WatchIndex implements ResourceManagerReloadListener
 
 	@Override
 	public void onResourceManagerReload(ResourceManager resources) {
-		Map<Identifier, WatchScene> read = new LinkedHashMap<>();
+		Map<ResourceLocation, WatchScene> read = new LinkedHashMap<>();
 		Map<String, WatchPath> paths = new TreeMap<>();
-		for (Map.Entry<Identifier, Resource> entry : resources.listResources(FOLDER, id -> id.getPath().endsWith(".json")).entrySet()) {
-			Identifier file = entry.getKey();
+		for (Map.Entry<ResourceLocation, Resource> entry : resources.listResources(FOLDER, id -> id.getPath().endsWith(".json")).entrySet()) {
+			ResourceLocation file = entry.getKey();
 			if (file.getPath().equals(FOLDER + "/" + WatchPath.FILE)) {
 				try (Reader reader = entry.getValue().openAsReader()) {
 					WatchPath.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader))
@@ -64,7 +63,7 @@ public final class WatchIndex implements ResourceManagerReloadListener
 				}
 				continue;
 			}
-			Identifier id = file.withPath(path -> path.substring(FOLDER.length() + 1, path.length() - ".json".length()));
+			ResourceLocation id = file.withPath(path -> path.substring(FOLDER.length() + 1, path.length() - ".json".length()));
 			try (Reader reader = entry.getValue().openAsReader()) {
 				JsonElement json = JsonParser.parseReader(reader);
 				if (!WatchScene.requirementsMet(json)) {
@@ -95,8 +94,8 @@ public final class WatchIndex implements ResourceManagerReloadListener
 	}
 
 	/** {@return the id a loaded scene goes by} */
-	public @Nullable Identifier idOf(WatchScene scene) {
-		for (Map.Entry<Identifier, WatchScene> entry : scenes.entrySet()) {
+	public @Nullable ResourceLocation idOf(WatchScene scene) {
+		for (Map.Entry<ResourceLocation, WatchScene> entry : scenes.entrySet()) {
 			if (entry.getValue() == scene) {
 				return entry.getKey();
 			}
@@ -104,16 +103,16 @@ public final class WatchIndex implements ResourceManagerReloadListener
 		return null;
 	}
 
-	public Optional<WatchScene> scene(Identifier id) {
+	public Optional<WatchScene> scene(ResourceLocation id) {
 		return Optional.ofNullable(scenes.get(id));
 	}
 
 	/** {@return the scene this item opens from its tooltip} */
-	public Optional<Identifier> forItem(ItemStack stack) {
+	public Optional<ResourceLocation> forItem(ItemStack stack) {
 		if (stack.isEmpty()) {
 			return Optional.empty();
 		}
-		for (Map.Entry<Identifier, WatchScene> entry : scenes.entrySet()) {
+		for (Map.Entry<ResourceLocation, WatchScene> entry : scenes.entrySet()) {
 			for (String selector : entry.getValue().opens().items()) {
 				if (matches(selector, stack)) {
 					return Optional.of(entry.getKey());
@@ -124,7 +123,7 @@ public final class WatchIndex implements ResourceManagerReloadListener
 	}
 
 	/** A block in the world that opens a scene, at a step, maybe with a line about what the block is doing. */
-	public record BlockEntry(Identifier scene, int step, Optional<String> now) {
+	public record BlockEntry(ResourceLocation scene, int step, Optional<String> now) {
 	}
 
 	public Optional<BlockEntry> forBlock(Level level, BlockPos pos, BlockState state) {
@@ -144,7 +143,7 @@ public final class WatchIndex implements ResourceManagerReloadListener
 		}
 		final BlockState look = state;
 		final Optional<Boolean> heat = kettleHeat;
-		for (Map.Entry<Identifier, WatchScene> entry : scenes.entrySet()) {
+		for (Map.Entry<ResourceLocation, WatchScene> entry : scenes.entrySet()) {
 			for (WatchScene.Entry block : entry.getValue().opens().blocks()) {
 				if (block.fits(look) && block.heated().map(heated -> heated == heat.orElseGet(() -> KettleTags.isHeated(level, pos))).orElse(true)) {
 					int step = Math.min(block.step(), entry.getValue().steps().size()) - 1;
@@ -156,8 +155,8 @@ public final class WatchIndex implements ResourceManagerReloadListener
 	}
 
 	/** {@return the scene a JEI recipe category gets a button for} */
-	public Optional<Identifier> forJeiCategory(Identifier category) {
-		for (Map.Entry<Identifier, WatchScene> entry : scenes.entrySet()) {
+	public Optional<ResourceLocation> forJeiCategory(ResourceLocation category) {
+		for (Map.Entry<ResourceLocation, WatchScene> entry : scenes.entrySet()) {
 			if (entry.getValue().opens().jei().contains(category)) {
 				return Optional.of(entry.getKey());
 			}
@@ -166,14 +165,14 @@ public final class WatchIndex implements ResourceManagerReloadListener
 	}
 
 	/** {@return the item that stands for a scene (its "Also watch" icon)} */
-	public ItemStack icon(Identifier id) {
+	public ItemStack icon(ResourceLocation id) {
 		WatchScene scene = scenes.get(id);
 		return scene == null ? ItemStack.EMPTY : new ItemStack(scene.icon());
 	}
 
 	private static boolean matches(String selector, ItemStack stack) {
 		if (selector.startsWith("#")) {
-			Identifier tag = Identifier.tryParse(selector.substring(1));
+			ResourceLocation tag = ResourceLocation.tryParse(selector.substring(1));
 			return tag != null && stack.is(TagKey.create(Registries.ITEM, tag));
 		}
 		if (selector.equals("@drinks")) {
@@ -184,14 +183,14 @@ public final class WatchIndex implements ResourceManagerReloadListener
 			if (minecraft.level == null) {
 				return false;
 			}
-			for (RecipeHolder<AgingRecipe> holder : AgingRecipes.all(minecraft.level)) {
-				if (holder.value().servingsOf(stack) > 0) {
+			for (AgingRecipe recipe : AgingRecipes.all(minecraft.level)) {
+				if (recipe.servingsOf(stack) > 0) {
 					return true;
 				}
 			}
 			return false;
 		}
-		Identifier item = Identifier.tryParse(selector);
+		ResourceLocation item = ResourceLocation.tryParse(selector);
 		return item != null && BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(item);
 	}
 }

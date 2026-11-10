@@ -3,7 +3,7 @@
   "id": "vineandbarrel_bare",
   "version": "1",
   "name": "Vine & Barrel smoke test without Vine & Barrel (dev only)",
-  "description": "The other side of the cross-version smoke tests: a Fabric server without Vine & Barrel that a client with it joins, or a client without it (and without Fabric API) that a server with it must refuse. Hidden window, never grabs the mouse. Never in the release jar.",
+  "description": "The other side of the cross-version smoke tests: a Fabric server without Vine & Barrel that a client with it joins, or a client without it (and without Fabric API) that joins a server with it and must end up disconnected. Hidden window, never grabs the mouse. Never in the release jar.",
   "license": "MIT",
   "environment": "*",
   "mixins": [

@@ -1,0 +1,97 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+issueTrackerURL = "https://github.com/jexxme/VineAndBarrel/issues"
+license = "${mod_license}"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+displayURL = "https://jexxme.github.io/VineAndBarrel/"
+# Forge 1.20.1 reads logoFile (the mod list picture); bannerFile and iconFile are for newer loaders
+logoFile = "banner.png"
+bannerFile = "banner.png"
+iconFile = "icon.png"
+logoBlur = false
+credits = "Some art, the boiling sounds, and the Brew Kettle, rope-climbing, wild-crop and biome-filter code are adapted from Farmer's Delight by vectorwing (MIT); see NOTICE_farmersdelight.txt."
+authors = "${mod_authors}"
+description = "${mod_description}"
+
+# The mixin configs (vineandbarrel.mixins.json, vineandbarrel.forge.mixins.json) are named by the jar manifest's
+# MixinConfigs attribute on this Forge (forge/build.gradle), not here.
+
+[[dependencies.${mod_id}]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "${forge_version_range}"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "${minecraft_version_range}"
+    ordering = "NONE"
+    side = "BOTH"
+
+# Optional: with Farmer's Delight installed, Vine & Barrel plugs into it (stove heat, ropes, rich soil, cooking pot recipes,
+# FD drinks in the barrel). On this Minecraft that is the original Farmer's Delight (1.2 is its 1.20.1 line).
+[[dependencies.${mod_id}]]
+    modId = "farmersdelight"
+    mandatory = false
+    versionRange = "[1.2,)"
+    ordering = "AFTER"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "jei"
+    mandatory = false
+    versionRange = "*"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "jade"
+    mandatory = false
+    versionRange = "*"
+    ordering = "NONE"
+    side = "BOTH"
+
+# Optional: AppleSkin shows the food a drink really gives (wheat beer feeds through its Saturation buff)
+[[dependencies.${mod_id}]]
+    modId = "appleskin"
+    mandatory = false
+    versionRange = "*"
+    ordering = "NONE"
+    side = "BOTH"
+
+# Optional, data only: our drinks quench thirst in Tough As Nails, Homeostatic and Thirst Was Taken 2 (tags and JSON in
+# common/src/generated/resources, see compat/CompatData)
+[[dependencies.${mod_id}]]
+    modId = "toughasnails"
+    mandatory = false
+    versionRange = "*"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "homeostatic"
+    mandatory = false
+    versionRange = "*"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "thirstwastaken2"
+    mandatory = false
+    versionRange = "*"
+    ordering = "NONE"
+    side = "BOTH"
+
+# Optional: works as it is, our meals count toward Spice of Life Onion's food variety (tested in the compat run)
+[[dependencies.${mod_id}]]
+    modId = "solonion"
+    mandatory = false
+    versionRange = "*"
+    ordering = "NONE"
+    side = "BOTH"

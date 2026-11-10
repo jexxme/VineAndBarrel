@@ -1,0 +1,43 @@
+{
+  "type": "farmersdelight:cooking",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "cookingtime": 400,
+  "experience": 2.0,
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "farmersdelight"
+      ]
+    }
+  ],
+  "ingredients": [
+    {
+      "tag": "vineandbarrel:cooking/raw_chicken"
+    },
+    {
+      "tag": "vineandbarrel:cooking/raw_chicken"
+    },
+    {
+      "tag": "vineandbarrel:cooking/red_wine"
+    },
+    {
+      "item": "minecraft:brown_mushroom"
+    },
+    {
+      "tag": "vineandbarrel:cooking/onion"
+    },
+    {
+      "tag": "vineandbarrel:cooking/raw_bacon"
+    }
+  ],
+  "recipe_book_tab": "meals",
+  "result": {
+    "item": "vineandbarrel:coq_au_vin_block"
+  }
+}

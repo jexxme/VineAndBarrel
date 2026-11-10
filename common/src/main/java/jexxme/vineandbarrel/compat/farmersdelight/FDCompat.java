@@ -1,11 +1,10 @@
 package jexxme.vineandbarrel.compat.farmersdelight;
 
 import jexxme.vineandbarrel.VineAndBarrel;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
@@ -21,10 +20,11 @@ import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Farmer's Delight integration (DESIGN §7). Almost all of it is data: tags with optional FD entries, and recipes behind
- * {@code neoforge:mod_loaded}. Nothing here touches an FD class; FD things are looked up by id at runtime, so this
+ * the loaders' mod-loaded conditions. Nothing here touches an FD class; FD things are looked up by id at runtime, so this
  * works the same with and without FD on the classpath.
  * <p>
  * The cooking pot meals (§7), the Coq au Vin feast and the beer bread always exist, so worlds and loot stay stable without FD; only their recipes need FD.
@@ -34,8 +34,8 @@ import java.util.Optional;
 public final class FDCompat
 {
 	public static final String MODID = "farmersdelight";
-	public static final Identifier NOURISHMENT = id("nourishment");
-	public static final Identifier COMFORT = id("comfort");
+	public static final ResourceLocation NOURISHMENT = id("nourishment");
+	public static final ResourceLocation COMFORT = id("comfort");
 	/** FD's {@code MEDIUM_DURATION} (3 minutes) and {@code LONG_DURATION} (5 minutes) for meal effects. */
 	public static final int MEDIUM_DURATION = 3600;
 	public static final int LONG_DURATION = 6000;
@@ -44,8 +44,8 @@ public final class FDCompat
 	public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(VineAndBarrel.MODID);
 	private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, VineAndBarrel.MODID);
 	/** Serving from the feast: vanilla's equip sound with a subtitle of its own, like FD's {@code block.food.take_portion}. */
-	public static final Holder<SoundEvent> FEAST_SERVE = SOUNDS.register("block.feast.serve",
-		() -> SoundEvent.createVariableRangeEvent(VineAndBarrel.id("block.feast.serve"))).asHolder();
+	public static final Supplier<SoundEvent> FEAST_SERVE = SOUNDS.register("block.feast.serve",
+		() -> SoundEvent.createVariableRangeEvent(VineAndBarrel.id("block.feast.serve")));
 
 	/** Fish + pale ale + wheat: three ingredients like FD's fish stew, so its values (12, 0.8, Nourishment 3 min). */
 	public static final DeferredItem<MealItem> BEER_BATTERED_FISH = meal("beer_battered_fish", 12, 0.8F, MEDIUM_DURATION);
@@ -61,20 +61,20 @@ public final class FDCompat
 	public static final DeferredItem<MealItem> COQ_AU_VIN = meal("coq_au_vin", 14, 0.75F, LONG_DURATION);
 	/** Wheat and ale or wheat beer, crafted: a plain loaf, a little more than vanilla bread (5, 0.6), no effect. */
 	public static final DeferredItem<Item> BEER_BREAD = ITEMS.registerSimpleItem("beer_bread", () -> new Item.Properties()
-		.food(new FoodProperties.Builder().nutrition(6).saturationModifier(0.6F).build()));
+		.food(new FoodProperties.Builder().nutrition(6).saturationMod(0.6F).build()));
 
 	/** Coq au Vin, braised in its iron pot and placed as a feast: four bowls, then the bones. Cooked in FD's pot. */
 	public static final DeferredBlock<FeastBlock> COQ_AU_VIN_BLOCK = BLOCKS.registerBlock("coq_au_vin_block",
 		p -> new FeastBlock(p, COQ_AU_VIN), () -> BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_GRAY)
-			.strength(0.8F).sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED));
+			.strength(0.8F).sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.DESTROY));
 	public static final DeferredItem<BlockItem> COQ_AU_VIN_BLOCK_ITEM = ITEMS.registerSimpleBlockItem(COQ_AU_VIN_BLOCK,
 		() -> new Item.Properties().stacksTo(1));
 
 	private FDCompat() {
 	}
 
-	public static Identifier id(String path) {
-		return Identifier.fromNamespaceAndPath(MODID, path);
+	public static ResourceLocation id(String path) {
+		return new ResourceLocation(MODID, path);
 	}
 
 	public static boolean isLoaded() {
@@ -82,8 +82,8 @@ public final class FDCompat
 	}
 
 	/** FD's Nourishment, if Farmer's Delight is installed. */
-	public static Optional<Holder.Reference<MobEffect>> nourishment() {
-		return BuiltInRegistries.MOB_EFFECT.get(NOURISHMENT);
+	public static Optional<MobEffect> nourishment() {
+		return BuiltInRegistries.MOB_EFFECT.getOptional(NOURISHMENT);
 	}
 
 	public static List<MealItem> meals() {
@@ -100,10 +100,10 @@ public final class FDCompat
 
 	/** Like FD's {@code ModItems.bowlFoodItem}: a bowl meal stacks to 16 and gives its bowl back. */
 	private static DeferredItem<MealItem> meal(String name, int nutrition, float saturation, int nourishmentTicks) {
-		FoodProperties food = new FoodProperties.Builder().nutrition(nutrition).saturationModifier(saturation).build();
+		// 1.20.1: the bowl that comes back is the item's crafting remainder (MealItem hands it back)
+		FoodProperties food = new FoodProperties.Builder().nutrition(nutrition).saturationMod(saturation).build();
 		return ITEMS.registerItem(name, p -> new MealItem(p, nourishmentTicks), () -> new Item.Properties()
 			.food(food)
-			.usingConvertsTo(Items.BOWL)
 			.craftRemainder(Items.BOWL)
 			.stacksTo(16));
 	}

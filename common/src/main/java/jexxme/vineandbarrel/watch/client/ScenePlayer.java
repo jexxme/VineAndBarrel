@@ -6,37 +6,28 @@ import jexxme.vineandbarrel.barrel.AgingBarrelBlockEntity;
 import jexxme.vineandbarrel.barrel.AgingRecipe;
 import jexxme.vineandbarrel.barrel.AgingRecipes;
 import jexxme.vineandbarrel.barrel.BarrelContents;
-import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.barrel.BarrelStage;
 import jexxme.vineandbarrel.compat.jei.JeiRecipeCache;
 import jexxme.vineandbarrel.drink.DrinkColors;
 import jexxme.vineandbarrel.kettle.BrewKettleBlock;
 import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
 import jexxme.vineandbarrel.kettle.BrewingRecipe;
-import jexxme.vineandbarrel.kettle.KettleContents;
-import jexxme.vineandbarrel.kettle.KettleRegistry;
-import jexxme.vineandbarrel.mixin.ParticleEngineAccessor;
 import jexxme.vineandbarrel.watch.WatchScene;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleType;
-import net.minecraft.core.component.DataComponentPatch;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -61,7 +52,7 @@ public final class ScenePlayer
 
 	private final WatchScene scene;
 	private final SceneWorld world;
-	private final ParticleEngine particles;
+	private final SceneParticles particles = new SceneParticles();
 	private final ClientLevel level;
 	private final Map<String, SceneFigure> figures = new LinkedHashMap<>();
 	private final RandomSource random = RandomSource.create();
@@ -75,7 +66,6 @@ public final class ScenePlayer
 		this.scene = scene;
 		this.level = level;
 		this.world = new SceneWorld(level.registryAccess().lookupOrThrow(Registries.BIOME).get(Biomes.PLAINS).orElse(null));
-		this.particles = new ParticleEngine(level, ((ParticleEngineAccessor) Minecraft.getInstance().particleEngine).vineandbarrel$resources());
 		jumpTo(0);
 	}
 
@@ -87,7 +77,7 @@ public final class ScenePlayer
 		return world;
 	}
 
-	ParticleEngine particles() {
+	SceneParticles particles() {
 		return particles;
 	}
 
@@ -199,12 +189,12 @@ public final class ScenePlayer
 		for (WatchScene.Action action : currentStep().actions()) {
 			if (action.at() == at) {
 				applyToStage(action, true);
-				switch (action) {
-					case WatchScene.Sound sound -> play(sound);
-					case WatchScene.Swing swing -> figure(swing.id()).ifPresent(SceneFigure::swing);
-					case WatchScene.Drink drink -> figure(drink.id()).ifPresent(f -> f.drink(drink.ticks()));
-					default -> {
-					}
+				if (action instanceof WatchScene.Sound sound) {
+					play(sound);
+				} else if (action instanceof WatchScene.Swing swing) {
+					figure(swing.id()).ifPresent(SceneFigure::swing);
+				} else if (action instanceof WatchScene.Drink drink) {
+					figure(drink.id()).ifPresent(f -> f.drink(drink.ticks()));
 				}
 			}
 		}
@@ -215,26 +205,29 @@ public final class ScenePlayer
 	 * walks and turns), or false when jumping to a step (it is just there).
 	 */
 	private void applyToStage(WatchScene.Action action, boolean live) {
-		switch (action) {
-			case WatchScene.Place place -> world.set(place.pos(), place.block());
-			case WatchScene.SetBlock set -> world.set(set.pos(), set.block());
-			case WatchScene.SetProperties set -> world.set(set.pos(), set.applyTo(world.getBlockState(set.pos())));
-			case WatchScene.Barrel barrel -> fillBarrel(barrel);
-			case WatchScene.Kettle kettle -> fillKettle(kettle);
-			case WatchScene.Figure figure -> {
-				SceneFigure existing = figures.get(figure.id());
-				if (existing == null) {
-					figures.put(figure.id(), new SceneFigure(level, figure.id(), figure.skin().equals("viewer"), figure.pos(), figure.yaw()));
-				} else if (live && figure.ticks() > 0) {
-					existing.walkTo(figure.pos(), figure.ticks());
-				} else {
-					existing.teleport(figure.pos(), figure.yaw());
-				}
+		if (action instanceof WatchScene.Place place) {
+			world.set(place.pos(), place.block());
+		} else if (action instanceof WatchScene.SetBlock set) {
+			world.set(set.pos(), set.block());
+		} else if (action instanceof WatchScene.SetProperties set) {
+			world.set(set.pos(), set.applyTo(world.getBlockState(set.pos())));
+		} else if (action instanceof WatchScene.Barrel barrel) {
+			fillBarrel(barrel);
+		} else if (action instanceof WatchScene.Kettle kettle) {
+			fillKettle(kettle);
+		} else if (action instanceof WatchScene.Figure figure) {
+			SceneFigure existing = figures.get(figure.id());
+			if (existing == null) {
+				figures.put(figure.id(), new SceneFigure(level, figure.id(), figure.skin().equals("viewer"), figure.pos(), figure.yaw()));
+			} else if (live && figure.ticks() > 0) {
+				existing.walkTo(figure.pos(), figure.ticks());
+			} else {
+				existing.teleport(figure.pos(), figure.yaw());
 			}
-			case WatchScene.Hold hold -> figure(hold.id()).ifPresent(f -> f.hold(SceneItems.resolve(hold.item())));
-			case WatchScene.Look look -> figure(look.id()).ifPresent(f -> f.lookAt(look.pos(), !live));
-			default -> {
-			}
+		} else if (action instanceof WatchScene.Hold hold) {
+			figure(hold.id()).ifPresent(f -> f.hold(SceneItems.resolve(hold.item())));
+		} else if (action instanceof WatchScene.Look look) {
+			figure(look.id()).ifPresent(f -> f.lookAt(look.pos(), !live));
 		}
 	}
 
@@ -268,9 +261,8 @@ public final class ScenePlayer
 				.setValue(AgingBarrelBlock.BUNG, stage.bung());
 			world.set(barrel.pos(), state);
 		}
-		BlockEntity entity = world.getBlockEntity(barrel.pos());
-		if (entity instanceof AgingBarrelBlockEntity) {
-			entity.applyComponents(DataComponentMap.builder().set(BarrelRegistry.BARREL_CONTENTS.get(), contents).build(), DataComponentPatch.EMPTY);
+		if (world.getBlockEntity(barrel.pos()) instanceof AgingBarrelBlockEntity entity) {
+			entity.applyContents(contents, false);
 		}
 	}
 
@@ -286,19 +278,18 @@ public final class ScenePlayer
 		}
 		if (world.getBlockEntity(kettle.pos()) instanceof BrewKettleBlockEntity entity) {
 			ItemStack brew = kettle.servings() > 0 ? recipe.result().copyWithCount(kettle.servings()) : ItemStack.EMPTY;
-			entity.applyComponents(DataComponentMap.builder().set(KettleRegistry.KETTLE_CONTENTS.get(),
-				new KettleContents(brew, brew.isEmpty() ? ItemStack.EMPTY : recipe.bucket())).build(), DataComponentPatch.EMPTY);
+			entity.setBrew(brew, brew.isEmpty() ? ItemStack.EMPTY : recipe.bucket());
 		}
 	}
 
-	static @Nullable BrewingRecipe brewingRecipe(net.minecraft.resources.Identifier id) {
+	static @Nullable BrewingRecipe brewingRecipe(net.minecraft.resources.ResourceLocation id) {
 		return brewingRecipe(id, true);
 	}
 
-	static @Nullable BrewingRecipe brewingRecipe(net.minecraft.resources.Identifier id, boolean warn) {
-		for (RecipeHolder<BrewingRecipe> holder : JeiRecipeCache.brewing()) {
-			if (holder.id().identifier().equals(id)) {
-				return holder.value();
+	static @Nullable BrewingRecipe brewingRecipe(net.minecraft.resources.ResourceLocation id, boolean warn) {
+		for (BrewingRecipe recipe : JeiRecipeCache.brewing()) {
+			if (recipe.getId().equals(id)) {
+				return recipe;
 			}
 		}
 		if (warn) {
@@ -311,14 +302,14 @@ public final class ScenePlayer
 		return agingRecipe(barrel.recipe());
 	}
 
-	static @Nullable AgingRecipe agingRecipe(net.minecraft.resources.Identifier id) {
+	static @Nullable AgingRecipe agingRecipe(net.minecraft.resources.ResourceLocation id) {
 		ClientLevel level = Minecraft.getInstance().level;
 		if (level == null) {
 			return null;
 		}
-		for (RecipeHolder<AgingRecipe> holder : AgingRecipes.all(level)) {
-			if (holder.id().identifier().equals(id)) {
-				return holder.value();
+		for (AgingRecipe recipe : AgingRecipes.all(level)) {
+			if (recipe.getId().equals(id)) {
+				return recipe;
 			}
 		}
 		VineAndBarrel.LOGGER.warn("Watch it: no aging recipe {} on this server", id);
@@ -339,23 +330,36 @@ public final class ScenePlayer
 						(random.nextDouble() - 0.5) * 2.0 * spread.y,
 						(random.nextDouble() - 0.5) * 2.0 * spread.z);
 					Vec3 v = emitter.velocity();
-					particles.createParticle(coloured(emitter), at.x, at.y, at.z, v.x, v.y, v.z);
+					Particle particle = particles.createParticle(emitter.particle(), at.x, at.y, at.z, v.x, v.y, v.z);
+					if (particle != null) {
+						colour(particle, emitter);
+					}
 				}
 			}
 		}
 	}
 
-	/** A coloured particle in the colour of the item it names (a drink's liquid colour), else as written. */
-	private static ParticleOptions coloured(WatchScene.Particles emitter) {
-		if (emitter.particle() instanceof ColorParticleOption option && emitter.colorOf().isPresent()) {
+	/**
+	 * A coloured particle takes the colour of the item it names (a drink's liquid colour), else the colour written with
+	 * it. On this Minecraft version particles have no colour option: vanilla's effect particles read theirs out of the
+	 * velocity (the scene gives them the velocity it names instead, as on newer versions), so the colour is set on the
+	 * particle once it is made.
+	 */
+	private static void colour(Particle particle, WatchScene.Particles emitter) {
+		Optional<Integer> color = emitter.color();
+		if (emitter.colorOf().isPresent()) {
 			ItemStack stack = SceneItems.resolve(emitter.colorOf().get());
 			if (!stack.isEmpty()) {
-				@SuppressWarnings("unchecked")
-				ParticleType<ColorParticleOption> type = (ParticleType<ColorParticleOption>) option.getType();
-				return ColorParticleOption.create(type, 0xFF000000 | DrinkColors.of(stack));
+				color = Optional.of(DrinkColors.of(stack));
 			}
 		}
-		return emitter.particle();
+		if (color.isPresent()) {
+			int rgb = color.get();
+			particle.setColor((rgb >> 16 & 0xFF) / 255.0F, (rgb >> 8 & 0xFF) / 255.0F, (rgb & 0xFF) / 255.0F);
+		} else if (emitter.particle().getType() == ParticleTypes.ENTITY_EFFECT || emitter.particle().getType() == ParticleTypes.AMBIENT_ENTITY_EFFECT) {
+			// no colour named: white, as newer versions' effect particle is without one (not whatever the velocity spells)
+			particle.setColor(1.0F, 1.0F, 1.0F);
+		}
 	}
 
 	private void play(WatchScene.Sound sound) {

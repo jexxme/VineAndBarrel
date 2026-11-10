@@ -1,8 +1,7 @@
 package jexxme.vineandbarrel.tipsy;
 
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -60,13 +59,13 @@ public enum BlackoutEnding
 	private final int weight;
 	private final Pose pose;
 	private final int lines;
-	private final List<Identifier> souvenirs;
+	private final List<ResourceLocation> souvenirs;
 
 	BlackoutEnding(int weight, Pose pose, int lines, String... souvenirs) {
 		this.weight = weight;
 		this.pose = pose;
 		this.lines = lines;
-		this.souvenirs = Arrays.stream(souvenirs).map(Identifier::parse).toList();
+		this.souvenirs = Arrays.stream(souvenirs).map(ResourceLocation::new).toList();
 	}
 
 	/** {@return the id used in saves, lang keys and the advancement criteria, e.g. {@code in_the_hay}} */
@@ -104,7 +103,7 @@ public enum BlackoutEnding
 	}
 
 	/** {@return the souvenir ids of this ending; {@link #RIGHT_HERE} draws from all of them} */
-	public List<Identifier> souvenirs() {
+	public List<ResourceLocation> souvenirs() {
 		if (this == RIGHT_HERE) {
 			return COLLECTABLE.stream().flatMap(e -> e.souvenirs.stream()).distinct().toList();
 		}
@@ -113,9 +112,9 @@ public enum BlackoutEnding
 
 	/** {@return one souvenir from this ending's pool (empty only if none of its items exist)} */
 	public ItemStack souvenir(RandomSource random) {
-		List<Identifier> pool = souvenirs();
+		List<ResourceLocation> pool = souvenirs();
 		for (int tries = 0; tries < pool.size(); tries++) {
-			Optional<Holder.Reference<Item>> item = BuiltInRegistries.ITEM.get(pool.get(random.nextInt(pool.size())));
+			Optional<Item> item = BuiltInRegistries.ITEM.getOptional(pool.get(random.nextInt(pool.size())));
 			if (item.isPresent()) {
 				return new ItemStack(item.get());
 			}

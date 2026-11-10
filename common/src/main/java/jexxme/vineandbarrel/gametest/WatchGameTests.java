@@ -13,10 +13,10 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -98,7 +98,7 @@ final class WatchGameTests
 					problems.add(name + ": no block " + entry.block());
 				} else {
 					// a block state the scene waits for must be one the block can have (a renamed state would never match)
-					StateDefinition<Block, BlockState> states = BuiltInRegistries.BLOCK.getValue(entry.block()).getStateDefinition();
+					StateDefinition<Block, BlockState> states = BuiltInRegistries.BLOCK.get(entry.block()).getStateDefinition();
 					entry.when().forEach((property, value) -> {
 						Property<?> found = states.getProperty(property);
 						if (found == null || found.getValue(value).isEmpty()) {
@@ -110,7 +110,7 @@ final class WatchGameTests
 					problems.add(name + ": " + entry.block() + " opens at step " + entry.step() + " of " + scene.steps().size());
 				}
 			}
-			for (Identifier also : scene.also()) {
+			for (ResourceLocation also : scene.also()) {
 				if (!isScene(also, names)) {
 					problems.add(name + ": offers " + also + ", which isn't one of the scenes");
 				}
@@ -132,13 +132,13 @@ final class WatchGameTests
 		if (path.stations().isEmpty()) {
 			problems.add("path: no stations");
 		}
-		Set<Identifier> stations = new HashSet<>();
+		Set<ResourceLocation> stations = new HashSet<>();
 		for (WatchPath.Station station : path.stations()) {
 			key(lang, station.verb(), "path", problems);
 			if (!isScene(station.scene(), names)) {
 				problems.add("path: station " + station.scene() + " is not one of the scenes");
 			}
-			station.advancement().filter(id -> helper.getLevel().getServer().getAdvancements().get(id) == null)
+			station.advancement().filter(id -> helper.getLevel().getServer().getAdvancements().getAdvancement(id) == null)
 				.ifPresent(id -> problems.add("path: no advancement " + id));
 			stations.add(station.scene());
 		}
@@ -153,7 +153,7 @@ final class WatchGameTests
 		}
 	}
 
-	private static boolean isScene(Identifier id, List<String> names) {
+	private static boolean isScene(ResourceLocation id, List<String> names) {
 		return id.getNamespace().equals(VineAndBarrel.MODID) && names.contains(id.getPath());
 	}
 
@@ -194,25 +194,25 @@ final class WatchGameTests
 	}
 
 	private static void check(GameTestHelper helper, String name, WatchScene.Action action, Set<String> figures, List<String> problems) {
-		switch (action) {
-			case WatchScene.Barrel barrel -> recipe(helper, barrel.recipe(), name, problems);
-			case WatchScene.Kettle kettle -> brewing(helper, kettle.recipe(), name, problems);
-			case WatchScene.Particles particles -> particles.colorOf().ifPresent(item -> item(helper, item, name, problems));
-			case WatchScene.Sound sound -> {
-				if (!BuiltInRegistries.SOUND_EVENT.containsKey(sound.sound())) {
-					problems.add(name + ": no sound event " + sound.sound());
-				}
+		// Java 17: no pattern switch over the sealed actions, so one instanceof after the other, in the same order
+		if (action instanceof WatchScene.Barrel barrel) {
+			recipe(helper, barrel.recipe(), name, problems);
+		} else if (action instanceof WatchScene.Kettle kettle) {
+			brewing(helper, kettle.recipe(), name, problems);
+		} else if (action instanceof WatchScene.Particles particles) {
+			particles.colorOf().ifPresent(item -> item(helper, item, name, problems));
+		} else if (action instanceof WatchScene.Sound sound) {
+			if (!BuiltInRegistries.SOUND_EVENT.containsKey(sound.sound())) {
+				problems.add(name + ": no sound event " + sound.sound());
 			}
-			case WatchScene.Figure figure -> figures.add(figure.id());
-			case WatchScene.FigureAction other -> {
-				if (!figures.contains(other.id())) {
-					problems.add(name + ": " + other.type().getSerializedName() + " for " + other.id() + " before it is on the stage");
-				}
-				if (other instanceof WatchScene.Hold hold) {
-					item(helper, hold.item(), name, problems);
-				}
+		} else if (action instanceof WatchScene.Figure figure) {
+			figures.add(figure.id());
+		} else if (action instanceof WatchScene.FigureAction other) {
+			if (!figures.contains(other.id())) {
+				problems.add(name + ": " + other.type().getSerializedName() + " for " + other.id() + " before it is on the stage");
 			}
-			default -> {
+			if (other instanceof WatchScene.Hold hold) {
+				item(helper, hold.item(), name, problems);
 			}
 		}
 	}
@@ -232,21 +232,21 @@ final class WatchGameTests
 		});
 	}
 
-	private static void recipe(GameTestHelper helper, Identifier id, String name, List<String> problems) {
+	private static void recipe(GameTestHelper helper, ResourceLocation id, String name, List<String> problems) {
 		if (!isType(helper, id, BarrelRegistry.AGING.get())) {
 			problems.add(name + ": no aging recipe " + id);
 		}
 	}
 
-	private static void brewing(GameTestHelper helper, Identifier id, String name, List<String> problems) {
+	private static void brewing(GameTestHelper helper, ResourceLocation id, String name, List<String> problems) {
 		if (!isType(helper, id, KettleRegistry.BREWING.get())) {
 			problems.add(name + ": no brewing recipe " + id);
 		}
 	}
 
-	private static boolean isType(GameTestHelper helper, Identifier id, RecipeType<?> type) {
-		Optional<RecipeHolder<?>> recipe = helper.getLevel().recipeAccess().byKey(ResourceKey.create(Registries.RECIPE, id));
-		return recipe.isPresent() && recipe.get().value().getType() == type;
+	private static boolean isType(GameTestHelper helper, ResourceLocation id, RecipeType<?> type) {
+		Optional<? extends Recipe<?>> recipe = helper.getLevel().getRecipeManager().byKey(id);
+		return recipe.isPresent() && recipe.get().getType() == type;
 	}
 
 	private static void key(JsonObject lang, String key, String name, List<String> problems) {

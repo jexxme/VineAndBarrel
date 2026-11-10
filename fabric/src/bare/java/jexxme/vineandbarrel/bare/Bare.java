@@ -14,8 +14,8 @@ import java.nio.file.Path;
 /**
  * The cross-version smoke tests' other side, without Vine & Barrel: {@code -Dvineandbarrel.bare=server} is a Fabric server
  * with only Fabric API that a client with Vine & Barrel joins ({@code runSmokeForeign}); {@code -Dvineandbarrel.bare=refused}
- * is a client with neither Vine & Barrel nor Fabric API, so vanilla on the wire, that a server with Vine & Barrel must
- * refuse with a reason ({@code runSmokeRefusal}). Each writes {@code results.json} to its {@code smoke} folder (or
+ * is a client with neither Vine & Barrel nor Fabric API, so vanilla on the wire, that joins a server with Vine & Barrel
+ * and must end up disconnected with a reason, not playing ({@code runSmokeRefusal}). Each writes {@code results.json} to its {@code smoke} folder (or
  * {@code vineandbarrel.smokeOut}). Plain mixins only: it runs where Fabric API is missing too.
  */
 public final class Bare

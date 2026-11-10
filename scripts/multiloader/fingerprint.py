@@ -3,7 +3,7 @@ A fingerprint of files and folders, for verify-all.sh: one SHA-1 per group of pa
 contents (folders recursively). A path that does not exist counts too, so a folder that appears or disappears changes
 the fingerprint.
 
-    python scripts/multiloader/fingerprint.py common/src neoforge/src/main -- fabric/src/main
+    python scripts/multiloader/fingerprint.py common/src forge/src/main -- fabric/src/main
     (prints one line per group, the groups separated by --)
 
 Paths are relative to the checkout. Folders named .cache, logs, saves, screenshots, smoke and world* are skipped: the
