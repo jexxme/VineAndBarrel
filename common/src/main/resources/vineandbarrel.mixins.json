@@ -24,6 +24,7 @@
     "FenceGateBlockMixin",
     "HorseFoodMixin",
     "IronBarsBlockMixin",
+    "JigsawPlacerMixin",
     "LeadItemMixin",
     "LeashFenceKnotEntityMixin",
     "PlayerKnownMovementMixin",
