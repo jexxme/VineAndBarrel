@@ -11,6 +11,7 @@
       "translate": "advancements.vineandbarrel.first_brew.description"
     },
     "icon": {
+      "count": 1,
       "id": "vineandbarrel:brew_kettle"
     },
     "title": {

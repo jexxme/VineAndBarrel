@@ -2,7 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "#": "vineandbarrel:red_grapes"
+    "#": {
+      "item": "vineandbarrel:red_grapes"
+    }
   },
   "pattern": [
     "###",
@@ -10,6 +12,7 @@
     "###"
   ],
   "result": {
+    "count": 1,
     "id": "vineandbarrel:grape_crate"
   }
 }

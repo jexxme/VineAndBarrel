@@ -1,8 +1,9 @@
 // Vine & Barrel on Fabric: the common sources plus the Fabric glue (entry points, Fabric API events, transfer API,
-// data attachments, the config file). Minecraft 26.x is unobfuscated, so Loom needs no mappings and remaps nothing.
+// data attachments, the config file). This Minecraft is obfuscated: Loom compiles against Mojang's official names and
+// remaps the jar (remapJar) and the mods it depends on (the mod* configurations).
 plugins {
     id 'vb-loader'
-    id 'net.fabricmc.fabric-loom'
+    id 'net.fabricmc.fabric-loom-remap'
 }
 
 sourceSets {
@@ -27,34 +28,72 @@ sourceSets {
         java.srcDirs = []
         resources.srcDirs = []
     }
+    // The runs with Farmer's Delight Refabricated: the GameTests and the smoke test with FD next to them. No sources: only
+    // a runtime classpath each (below). FD is on no compile classpath and in no other run.
+    gametestFd {
+        java.srcDirs = []
+        resources.srcDirs = []
+    }
+    smoketestFd {
+        java.srcDirs = []
+        resources.srcDirs = []
+    }
 }
-def withoutVb = sourceSets.main.runtimeClasspath - sourceSets.main.output - configurations.localRuntime
-// Without Fabric API the project's Minecraft jar can't run (Loom injects Fabric API's interfaces and our class tweaker
-// into it), so the vanilla-on-the-wire client gets Loom's untouched one from the Gradle cache instead
-def plainMinecraft = new File(gradle.gradleUserHomeDir, "caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/${minecraft_version}/minecraft-merged-deobf-${minecraft_version}.jar")
-sourceSets.bare.runtimeClasspath = sourceSets.bare.output + files(plainMinecraft) + withoutVb.filter {
+// Farmer's Delight Refabricated (MIT), from Modrinth's Maven, remapped by Loom to this project's names like every other
+// mod of the dev runs. Not in a mods folder: Fabric Loader would remap it when the game starts, and its remapper fails on
+// FD's class tweaker (extend-enum). FD carries no jars of its own.
+loom.createRemapConfigurations(sourceSets.gametestFd)
+dependencies {
+    modGametestFdRuntimeOnly "maven.modrinth:farmers-delight-refabricated:${fd_refabricated_version}"
+}
+def fdRemapped = configurations.gametestFdRuntimeClasspath
+sourceSets.gametestFd.runtimeClasspath = sourceSets.gametest.runtimeClasspath + fdRemapped
+sourceSets.smoketestFd.runtimeClasspath = sourceSets.smoketest.runtimeClasspath + fdRemapped
+// JEI, Jade and AppleSkin (modLocalRuntime) reach the runtime classpath remapped, next to Fabric API: every remapped mod
+// that is not Fabric's own is left out
+def withoutVb = (sourceSets.main.runtimeClasspath - sourceSets.main.output).filter {
     def path = it.path.replace('\\', '/')
-    !path.contains('net.fabricmc.fabric-api') && !path.contains('loom-cache/minecraftMaven/net/minecraft/')
+    !path.contains('loom-cache/remapped_mods/') || path.contains('/remapped/net/fabricmc/')
+}
+// Without Fabric API the project's Minecraft jar can't run (Loom injects Fabric API's interfaces and our class tweaker
+// into it: the jar in this project's .gradle/loom-cache), so the vanilla-on-the-wire client gets the jar Loom made that
+// one from: Minecraft merged and in Mojang's names, untouched, in the Gradle user home (the same path without the hash
+// of what was injected)
+def projectMinecraft = ~'.*/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-[0-9a-f]+/([^/]+)/[^/]+\\.jar'
+def gradleHome = gradle.gradleUserHomeDir
+def plainMinecraft = files(provider {
+    sourceSets.main.runtimeClasspath.files.collect { it.path.replace('\\', '/') }.findAll { it ==~ projectMinecraft }.collect {
+        def version = (it =~ projectMinecraft)[0][1]
+        new File(gradleHome, "caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged/${version}/minecraft-merged-${version}.jar")
+    }
+})
+sourceSets.bare.runtimeClasspath = sourceSets.bare.output + plainMinecraft + withoutVb.filter {
+    def path = it.path.replace('\\', '/')
+    !path.contains('/net/fabricmc/fabric-api/') && !path.contains('loom-cache/minecraftMaven/net/minecraft/')
 }
 sourceSets.bareApi.runtimeClasspath = sourceSets.bare.output + withoutVb
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
 
     // JEI and Jade: optional at runtime, compile-only APIs (the plugins are in common), both in every dev run
-    compileOnly "mezz.jei:jei-${jei_minecraft}-common-api:${jei_version}"
-    localRuntime "mezz.jei:jei-${jei_minecraft}-fabric:${jei_version}"
-    compileOnly "maven.modrinth:jade:${jade_fabric_version}"
-    localRuntime "maven.modrinth:jade:${jade_fabric_version}"
+    modCompileOnly "mezz.jei:jei-${jei_minecraft}-common-api:${jei_version}"
+    modLocalRuntime "mezz.jei:jei-${jei_minecraft}-fabric:${jei_version}"
+    // JEI needs its config library at runtime (Loom leaves a mod's own dependencies out of the dev runs)
+    modLocalRuntime "net.mezzdev.config:mezz_config-${jei_minecraft}-fabric:${mezz_config_version}"
+    modCompileOnly "maven.modrinth:jade:${jade_fabric_version}"
+    modLocalRuntime "maven.modrinth:jade:${jade_fabric_version}"
     // Mod Menu: optional, only its API to offer our config screen (VBModMenu)
-    compileOnly "maven.modrinth:modmenu:${modmenu_version}"
-    smoketestCompileOnly "mezz.jei:jei-${jei_minecraft}-common-api:${jei_version}"
+    modCompileOnly "maven.modrinth:modmenu:${modmenu_version}"
 
     // AppleSkin: optional at runtime, set up like JEI and Jade (its Fabric hook is in compat/AppleSkinFabric)
-    compileOnly "squeek.appleskin:appleskin-fabric:${appleskin_version}:api"
-    localRuntime "squeek.appleskin:appleskin-fabric:${appleskin_version}"
+    modCompileOnly "squeek.appleskin:appleskin-fabric:${appleskin_fabric_version}"
+    modLocalRuntime "squeek.appleskin:appleskin-fabric:${appleskin_fabric_version}"
+    // This AppleSkin's client needs Cloth Config, which it carries as a jar in its jar: the dev runs don't load those
+    modLocalRuntime "maven.modrinth:cloth-config:15.0.127+fabric"
 }
 
 def buildDir = project.layout.buildDirectory.get().asFile
@@ -97,16 +136,14 @@ loom {
             source sourceSets.gametest
             runDir 'run/gametest'
             property 'fabric-api.gametest'
-            property 'fabric-api.gametest.filter', "${mod_id}:*" // only this mod's GameTests, never another mod's in the run
             property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest.xml" // for the parity checklist
         }
-        // The same with Farmer's Delight Refabricated in run-fd/mods: ./gradlew :fabric:runGameTestFd
+        // The same with Farmer's Delight Refabricated on the classpath: ./gradlew :fabric:runGameTestFd
         gameTestFd {
             server()
-            source sourceSets.gametest
+            source sourceSets.gametestFd
             runDir 'run-fd'
             property 'fabric-api.gametest'
-            property 'fabric-api.gametest.filter', "${mod_id}:*" // only this mod's GameTests, never another mod's in the run
             property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest-fd.xml"
             property 'vineandbarrel.expectFd', 'true'
         }
@@ -117,7 +154,7 @@ loom {
             source sourceSets.gametest
             runDir 'run-compat'
             property 'fabric-api.gametest'
-            property 'fabric-api.gametest.filter', "${mod_id}:compat_*"
+            property 'vineandbarrel.tests', 'compat_' // only the tests whose name starts like this (VBGameTests)
             property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest-compat.xml"
             property 'vineandbarrel.expectCompat', 'true'
         }
@@ -136,7 +173,7 @@ loom {
         }
         smokeClientFd {
             client()
-            source sourceSets.smoketest
+            source sourceSets.smoketestFd
             runDir 'run/smoke-client-fd'
             property 'vineandbarrel.smoke', 'client'
             programArgs '--width', '1280', '--height', '720'
@@ -147,7 +184,7 @@ loom {
             def folder = suffix ? '-fd' : ''
             "smokeHost${suffix}" {
                 client()
-                source sourceSets.smoketest
+                source suffix ? sourceSets.smoketestFd : sourceSets.smoketest
                 runDir "run/smoke-host${folder}"
                 property 'vineandbarrel.smoke', 'host'
                 property 'vineandbarrel.smokePort', "${port}"
@@ -155,7 +192,7 @@ loom {
             }
             "smokeJoin${suffix}" {
                 client()
-                source sourceSets.smoketest
+                source suffix ? sourceSets.smoketestFd : sourceSets.smoketest
                 runDir "run/smoke-join${folder}"
                 property 'vineandbarrel.smoke', 'join'
                 // Starts with its host and joins once the host is up (see runSmokeJoin)
@@ -167,19 +204,21 @@ loom {
 
         // The dedicated-server smoke test: a real Fabric server (no client code at all, so client-only classes that
         // leak into common code crash it) and a hidden client that joins it. Both server runs share run/server-smoke and
-        // its eula.txt; the FD run adds FD Refabricated through fabric.addMods. ./gradlew :fabric:runSmokeServer(Fd)
-        smokeDedicatedServer {
-            server()
-            source sourceSets.smoketest
-            runDir 'run/server-smoke'
-            property 'vineandbarrel.smoke', 'server'
-            programArgs '--nogui'
+        // its eula.txt; the FD run has FD Refabricated on its classpath. ./gradlew :fabric:runSmokeServer(Fd)
+        ['', 'Fd'].each { suffix ->
+            "smokeDedicatedServer${suffix}" {
+                server()
+                source suffix ? sourceSets.smoketestFd : sourceSets.smoketest
+                runDir 'run/server-smoke'
+                property 'vineandbarrel.smoke', 'server'
+                programArgs '--nogui'
+            }
         }
         [['', smokePort - 2], ['Fd', smokePort - 3]].each { pair ->
             def (suffix, port) = pair
             "smokeJoinServer${suffix}" {
                 client()
-                source sourceSets.smoketest
+                source suffix ? sourceSets.smoketestFd : sourceSets.smoketest
                 runDir "run/smoke-join-server${suffix ? '-fd' : ''}"
                 property 'vineandbarrel.smoke', 'join'
                 // The server's own setting (see runSmokeJoinServer), which the client must use while it is connected
@@ -224,23 +263,23 @@ loom {
     }
 }
 
-// Farmer's Delight Refabricated (MIT) for the FD runs, from Modrinth's Maven. Like on NeoForge it is never on the
-// compile classpath: it is copied into the run's own mods folder.
 configurations {
-    fdRefabricated { canBeResolved = true; canBeConsumed = false; transitive = false }
     // The mod jars for runGameTestCompat: resolved on their own, never on a classpath (the probes compile against them)
     compatMods { canBeResolved = true; canBeConsumed = false; transitive = false }
 }
 dependencies {
-    fdRefabricated "maven.modrinth:farmers-delight-refabricated:${fd_refabricated_version}"
     [
         "maven.modrinth:tough-as-nails:${tough_as_nails_fabric_modrinth}",
         "maven.modrinth:glitchcore:${glitchcore_fabric_modrinth}",
         "maven.modrinth:homeostatic:${homeostatic_fabric_modrinth}",
         "maven.modrinth:thirst-was-taken-2:${thirst_was_taken_fabric_modrinth}",
-        "maven.modrinth:spice-of-life-onion:${spice_of_life_fabric_modrinth}",
-        "maven.modrinth:creativecore:${creativecore_fabric_modrinth}",
-    ].each { compileOnly it; compatMods it }
+    ].each { modCompileOnly it; compatMods it }
+    // Spice of Life Onion has no Fabric build for this Minecraft: its NeoForge jar (same names as this project's code,
+    // never remapped, never run) only compiles the probe; the compat run doesn't install it (FabricCompatProbes#compatRunMods)
+    [
+        "maven.modrinth:spice-of-life-onion:${spice_of_life_modrinth}",
+        "maven.modrinth:creativecore:${creativecore_modrinth}",
+    ].each { compileOnly it }
 }
 def prepareCompatRun = tasks.register('prepareCompatRun', Sync) {
     group = 'verification'
@@ -252,11 +291,11 @@ tasks.matching { it.name == 'runGameTestCompat' }.configureEach {
     dependsOn prepareCompatRun
     mustRunAfter 'runGameTest', 'runGameTestFd'
 }
-def prepareFdRun = tasks.register('prepareFdRun', Sync) {
+// FD is on the run's classpath (gametestFd): a jar an older build copied into run-fd/mods would be loaded a second time
+def prepareFdRun = tasks.register('prepareFdRun', Delete) {
     group = 'verification'
-    description = "Copies Farmer's Delight Refabricated into run-fd/mods for runGameTestFd."
-    from(configurations.fdRefabricated)
-    into(layout.projectDirectory.dir('run-fd/mods'))
+    description = "Empties run-fd/mods for runGameTestFd (Farmer's Delight Refabricated is on the run's classpath)."
+    delete(layout.projectDirectory.dir('run-fd/mods'))
 }
 tasks.matching { it.name == 'runGameTestFd' }.configureEach {
     dependsOn prepareFdRun
@@ -300,22 +339,18 @@ tasks.register('gameTestsAll') {
 //////////////// Client smoke tests
 
 // Each smoke client's folder: a muted options.txt that never pauses when unfocused (the window is hidden), and only
-// the mods it should have (FD Refabricated in the -fd folders, none elsewhere).
+// an empty mods folder (FD Refabricated is on the classpath of the -fd runs).
 def smokeDirs = ['smoke-client', 'smoke-client-fd', 'smoke-host', 'smoke-join', 'smoke-host-fd', 'smoke-join-fd', 'smoke-join-server', 'smoke-join-server-fd',
                  'smoke-visit', 'bare-refused']
 smokeDirs.each { name ->
     def dir = project.file("run/${name}")
-    def withFd = name.endsWith('-fd')
-    def fdJars = withFd ? configurations.fdRefabricated : files()
     def prepare = tasks.register("prepare${name.split('-').collect { it.capitalize() }.join('')}") {
         group = 'verification'
         description = "Prepares run/${name} for its smoke test."
-        inputs.files(fdJars)
         doLast {
             def mods = new File(dir, 'mods')
             mods.deleteDir()
             mods.mkdirs()
-            fdJars.files.each { jar -> java.nio.file.Files.copy(jar.toPath(), new File(mods, jar.name).toPath()) }
             new File(dir, 'options.txt').text = [
                 'pauseOnLostFocus:false', 'soundCategory_master:0.0', 'renderDistance:6', 'simulationDistance:6',
                 'onboardAccessibility:false', 'skipMultiplayerWarning:true', 'tutorialStep:none', 'joinedFirstServer:true',
@@ -336,8 +371,9 @@ smokeDirs.each { name ->
             def failed = report.checks.findAll { !it.ok }
             def log = new File(dir, 'logs/latest.log')
             // A dev client has no Microsoft account, so Minecraft's own profile and Realms requests fail; those lines
-            // (and their exceptions) are the only ones allowed, everything else fails the test
-            def devAccount = ~/Failed to fetch user properties|Couldn't look up profile properties|sessionserver.mojang.com|Failed to fetch Realms feature flags|Couldn't connect to realms|InvalidCredentialsException|RealmsServiceException/
+            // (and their exceptions) are the only ones allowed, everything else fails the test. This older Minecraft
+            // also asks for the profile's chat key pair, which fails the same way (26.1.x prints its 401 on a line of its own).
+            def devAccount = ~/Failed to retrieve profile key pair|authlib\.exceptions\.MinecraftClientHttpException: Status: 401$|Failed to fetch user properties|Couldn't look up profile properties|sessionserver.mojang.com|Failed to fetch Realms feature flags|Couldn't connect to realms|InvalidCredentialsException|RealmsServiceException/
             def errors = log.isFile() ? log.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ devAccount) } : ['no log']
             println "${name}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; screenshots in ${dir}/smoke"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
@@ -483,13 +519,11 @@ The folder is gitignored: never commit that file. Then run the test again.""")
         dependsOn 'checkSmokeServerEula'
         notCompatibleWithConfigurationCache('starts the smoke server as a second process')
         Process[] server = new Process[1]
-        def fdJars = suffix ? configurations.fdRefabricated : files()
-        inputs.files(fdJars)
         doFirst {
             out.deleteDir()
             new File(serverDir, "world${folder}").deleteDir()
             new File(serverDir, 'server.properties').text = [
-                // white-list is on by default since 26.x; a normal world like the singleplayer run (the scene floats at y 140)
+                // white-list is off by default on this Minecraft (written all the same); a normal world like the singleplayer run (the scene floats at y 140)
                 'online-mode=false', 'server-ip=127.0.0.1', "server-port=${port}", 'enforce-secure-profile=false',
                 'white-list=false', 'level-seed=20261107', 'difficulty=peaceful', 'allow-flight=true', 'spawn-protection=0',
                 'view-distance=6', 'simulation-distance=6', 'max-players=2', 'motd=Vine & Barrel smoke test',
@@ -499,10 +533,7 @@ The folder is gitignored: never commit that file. Then run the test again.""")
             config.parentFile.mkdirs()
             config.text = SMOKE_SERVER_SETTING + System.lineSeparator()
             def jvm = ["-Dvineandbarrel.smokeOut=smoke${folder}".toString()]
-            if (suffix) {
-                jvm << "-Dfabric.addMods=${fdJars.files*.absolutePath.join(File.pathSeparator)}".toString()
-            }
-            server[0] = startGameProcess('runSmokeDedicatedServer', serverDir, serverLog, jvm, ['--port', "${port}".toString(), '--world', "world${folder}".toString()])
+            server[0] = startGameProcess("runSmokeDedicatedServer${suffix}", serverDir, serverLog, jvm, ['--port', "${port}".toString(), '--world', "world${folder}".toString()])
             watchUntilReady(server[0], new File(out, 'server-ready'), 'smoke server', serverLog)
             println "Smoke server${folder} is starting on 127.0.0.1:${port}; the client joins once it is up"
         }

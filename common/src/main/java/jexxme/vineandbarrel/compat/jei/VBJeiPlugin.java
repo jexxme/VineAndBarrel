@@ -24,15 +24,14 @@ import jexxme.vineandbarrel.registry.VBItems;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.recipe.types.IRecipeHolderType;
-import mezz.jei.api.recipe.types.IRecipeType;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.IRecipeTransferRegistration;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 
@@ -45,13 +44,13 @@ import java.util.List;
 @JeiPlugin
 public class VBJeiPlugin implements IModPlugin
 {
-	private static final Identifier ID = VineAndBarrel.id("jei_plugin");
+	private static final ResourceLocation ID = VineAndBarrel.id("jei_plugin");
 	// By id, not from the registered RecipeType: JEI loads this class while mods are still loading, before registration
-	public static final IRecipeType<RecipeHolder<BrewingRecipe>> BREWING = IRecipeHolderType.create(VineAndBarrel.id("brewing"));
-	public static final IRecipeType<RecipeHolder<AgingRecipe>> AGING = IRecipeHolderType.create(VineAndBarrel.id("aging"));
+	public static final RecipeType<RecipeHolder<BrewingRecipe>> BREWING = RecipeType.createRecipeHolderType(VineAndBarrel.id("brewing"));
+	public static final RecipeType<RecipeHolder<AgingRecipe>> AGING = RecipeType.createRecipeHolderType(VineAndBarrel.id("aging"));
 
 	@Override
-	public Identifier getPluginUid() {
+	public ResourceLocation getPluginUid() {
 		return ID;
 	}
 
@@ -92,16 +91,16 @@ public class VBJeiPlugin implements IModPlugin
 		{
 			@Override
 			public <T> @org.jspecify.annotations.Nullable IIconButtonController createButtonController(IRecipeLayoutDrawable<T> layout) {
-				Identifier category = layout.getRecipeCategory().getRecipeType().getUid();
+				ResourceLocation category = layout.getRecipeCategory().getRecipeType().getUid();
 				return WatchIndex.INSTANCE.forJeiCategory(category).map(scene -> new WatchButton(scene, icon)).orElse(null);
 			}
 		});
 	}
 
-	private static final Identifier WATCH_ICON = VineAndBarrel.id("textures/gui/watch_jei.png");
+	private static final ResourceLocation WATCH_ICON = VineAndBarrel.id("textures/gui/watch_jei.png");
 
 	/** Opens the category's scene; Escape comes back to this JEI page. */
-	private record WatchButton(Identifier scene, IDrawableStatic icon) implements IIconButtonController
+	private record WatchButton(ResourceLocation scene, IDrawableStatic icon) implements IIconButtonController
 	{
 		@Override
 		public void initState(IButtonState state) {
@@ -117,7 +116,7 @@ public class VBJeiPlugin implements IModPlugin
 		public boolean onPress(IJeiUserInput input) {
 			if (!input.isSimulate()) {
 				net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-				WatchScreen.open(scene, 0, null, minecraft.gui.screen());
+				WatchScreen.open(scene, 0, null, minecraft.screen);
 			}
 			return true;
 		}
@@ -179,8 +178,8 @@ public class VBJeiPlugin implements IModPlugin
 
 	@Override
 	public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-		registration.addCraftingStation(BREWING, KettleRegistry.kettleItem());
-		registration.addCraftingStation(AGING, BarrelRegistry.AGING_BARREL_ITEM.get());
+		registration.addRecipeCatalysts(BREWING, KettleRegistry.kettleItem());
+		registration.addRecipeCatalysts(AGING, BarrelRegistry.AGING_BARREL_ITEM.get());
 	}
 
 	@Override

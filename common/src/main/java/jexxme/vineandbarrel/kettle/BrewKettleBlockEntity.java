@@ -5,28 +5,25 @@ import jexxme.vineandbarrel.platform.hooks.DataPacketReceiver;
 import com.google.common.collect.Lists;
 import jexxme.vineandbarrel.advancement.VBAdvancements;
 import com.mojang.logging.LogUtils;
-import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Clearable;
 import net.minecraft.world.Containers;
@@ -41,26 +38,20 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.RecipeCraftingHolder;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.world.item.crafting.RecipeMap;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import jexxme.vineandbarrel.inventory.ItemSlots;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -87,8 +78,6 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	public static final int SERVINGS_PER_BUCKET = 4;
 	/** Like FD's meal slot: a kettle holds up to 64 servings of one brew. */
 	public static final int MAX_SERVINGS = 64;
-
-	private static final Codec<Map<ResourceKey<Recipe<?>>, Integer>> RECIPES_USED_CODEC = Codec.unboundedMap(Recipe.KEY_CODEC, Codec.INT);
 
 	/** FD's ingredient remainder overrides: items that leave a container behind when used as an ingredient. */
 	public static final Map<Item, Item> INGREDIENT_REMAINDER_OVERRIDES = Map.ofEntries(
@@ -118,22 +107,22 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	private int openCount;
 	/**
 	 * Whether the ingredients make a brew, as the server last matched them on the fire. Synced, not saved: the client
-	 * has no recipes, and this is what tells it a kettle of odds and ends stays quiet (K3).
+	 * never matches recipes itself, and this is what tells it a kettle of odds and ends stays quiet (K3).
 	 */
 	private boolean ingredientsMatch;
 	/** Set while the dropped slots are cleared on removal, so that clearing doesn't notify a block that is going away. */
 	private boolean clearingDrops;
 
 	protected final ContainerData kettleData;
-	private final Object2IntOpenHashMap<ResourceKey<Recipe<?>>> usedRecipeTracker = new Object2IntOpenHashMap<>();
+	private final Object2IntOpenHashMap<ResourceLocation> usedRecipeTracker = new Object2IntOpenHashMap<>();
 	private final RecipeManager.CachedCheck<RecipeInput, BrewingRecipe> quickCheck;
 	/**
 	 * The last recipe match, kept while the ingredient slots and the recipes stay the same: a heated kettle asks every
 	 * tick, and matching is the kettle's main cost. The slots are compared with a copy of what they held (any change
-	 * counts, however it was made: hopper, menu, command), the recipes by identity (a reload makes a new map).
+	 * counts, however it was made: hopper, menu, command), the recipes by identity (a reload makes a new collection).
 	 */
 	private final ItemStack[] matchedInputs = new ItemStack[INPUT_SLOTS];
-	private @Nullable RecipeMap matchedRecipes;
+	private @Nullable Collection<RecipeHolder<?>> matchedRecipes;
 	private @Nullable RecipeHolder<BrewingRecipe> matched;
 	/** What {@link #matched} makes (its result never depends on the input), for {@link #canBrew}. */
 	private ItemStack matchedResult = ItemStack.EMPTY;
@@ -347,7 +336,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 
 	/** The recipe the ingredient slots make, matched again only when they or the recipes changed since the last match. */
 	private @Nullable RecipeHolder<BrewingRecipe> matchRecipe(ServerLevel level) {
-		RecipeMap recipes = level.recipeAccess().recipes;
+		Collection<RecipeHolder<?>> recipes = level.getRecipeManager().getRecipes();
 		boolean same = recipes == matchedRecipes;
 		for (int i = 0; i < INPUT_SLOTS && same; ++i) {
 			ItemStack now = inventory.getStack(i);
@@ -356,7 +345,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		}
 		if (!same) {
 			matched = quickCheck.getRecipeFor(new KettleRecipeInput(inventory), level).orElse(null);
-			matchedResult = matched == null ? ItemStack.EMPTY : matched.value().assemble(new KettleRecipeInput(inventory));
+			matchedResult = matched == null ? ItemStack.EMPTY : matched.value().assemble(new KettleRecipeInput(inventory), level.registryAccess());
 			matchedRecipes = recipes;
 			for (int i = 0; i < INPUT_SLOTS; ++i) {
 				matchedInputs[i] = inventory.copyStack(i);
@@ -472,7 +461,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		if (taken == null) {
 			return false;
 		}
-		ItemStack result = recipe.assemble(new KettleRecipeInput(inventory));
+		ItemStack result = recipe.result();
 		ItemStack stored = getBrew();
 		if (stored.isEmpty()) {
 			setStack(BREW_SLOT, result.copy());
@@ -489,9 +478,9 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 				continue;
 			}
 			for (int n = 0; n < taken[i]; ++n) {
-				ItemStackTemplate remainder = Services.PLATFORM.craftingRemainder(slotStack);
+				ItemStack remainder = Services.PLATFORM.craftingRemainder(slotStack);
 				if (remainder != null) {
-					ejectIngredientRemainder(remainder.create());
+					ejectIngredientRemainder(remainder);
 				} else if (INGREDIENT_REMAINDER_OVERRIDES.containsKey(slotStack.getItem())) {
 					ejectIngredientRemainder(INGREDIENT_REMAINDER_OVERRIDES.get(slotStack.getItem()).getDefaultInstance());
 				}
@@ -548,11 +537,11 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	public int servingsFor(ItemStack container) {
 		ItemStack brew = getBrew();
 		if (container.isEmpty() || brew.isEmpty()) return 0;
-		ItemStackTemplate bottle = Services.PLATFORM.craftingRemainder(brew);
-		if (bottle != null && container.is(bottle.item())) return 1;
+		ItemStack bottle = Services.PLATFORM.craftingRemainder(brew);
+		if (bottle != null && container.is(bottle.getItem())) return 1;
 		if (!bucketForm.isEmpty()) {
-			ItemStackTemplate bucket = Services.PLATFORM.craftingRemainder(bucketForm);
-			if (bucket != null && container.is(bucket.item())) return SERVINGS_PER_BUCKET;
+			ItemStack bucket = Services.PLATFORM.craftingRemainder(bucketForm);
+			if (bucket != null && container.is(bucket.getItem())) return SERVINGS_PER_BUCKET;
 		}
 		return 0;
 	}
@@ -616,7 +605,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 
 	/** What taking brew out gives, for the output slot and for right-clicks alike: the recipes, their experience, the advancement. */
 	public void awardServing(Player player, ItemStack served, int count) {
-		served.onCraftedBy(player, count);
+		served.onCraftedBy(player.level(), player, count);
 		if (!player.level().isClientSide()) {
 			awardUsedRecipes(player, getDroppableInventory());
 			if (!served.isEmpty()) {
@@ -720,8 +709,8 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 
 	public List<RecipeHolder<?>> getUsedRecipesAndPopExperience(ServerLevel level, Vec3 pos) {
 		List<RecipeHolder<?>> list = Lists.newArrayList();
-		for (Object2IntMap.Entry<ResourceKey<Recipe<?>>> entry : usedRecipeTracker.object2IntEntrySet()) {
-			level.recipeAccess().byKey(entry.getKey()).ifPresent(recipe -> {
+		for (Object2IntMap.Entry<ResourceLocation> entry : usedRecipeTracker.object2IntEntrySet()) {
+			level.getRecipeManager().byKey(entry.getKey()).ifPresent(recipe -> {
 				list.add(recipe);
 				if (recipe.value() instanceof BrewingRecipe brewing) {
 					splitAndSpawnExperience(level, pos, entry.getIntValue(), brewing.experience());
@@ -806,7 +795,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 
 	/** What kettles joining into one bring together: the brew, the grid, the buffers, and what doesn't fit. */
 	record Merged(ItemStack brew, ItemStack bucket, List<ItemStack> grid, ItemStack containers, ItemStack output,
-		List<ItemStack> spills, Map<ResourceKey<Recipe<?>>, Integer> recipesUsed, @Nullable Component name) {
+		List<ItemStack> spills, Map<ResourceLocation, Integer> recipesUsed, @Nullable Component name) {
 	}
 
 	/**
@@ -820,7 +809,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		List<ItemStack> spills = new java.util.ArrayList<>();
 		ItemStack containers = ItemStack.EMPTY;
 		ItemStack output = ItemStack.EMPTY;
-		Map<ResourceKey<Recipe<?>>, Integer> used = new java.util.HashMap<>();
+		Map<ResourceLocation, Integer> used = new java.util.HashMap<>();
 		Component name = null;
 		for (BrewKettleBlockEntity kettle : kettles) {
 			ItemStack b = kettle.getBrew();
@@ -952,8 +941,10 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 		bucketForm = ItemStack.EMPTY;
 	}
 
-	/** 26.x: the block entity is already gone in Block#affectNeighborsAfterRemoval, so contents are dropped here. */
-	@Override
+	/**
+	 * The kettle goes (its block changed to something that isn't this kettle): contents are dropped here. Called by the
+	 * kettle blocks' onRemove, while the block entity is still there (26.x: BlockEntity#preRemoveSideEffects).
+	 */
 	public void preRemoveSideEffects(BlockPos pos, BlockState state) {
 		if (KettleMultiblock.isConverting()) {
 			// joining, splitting or a change of copper moves the contents itself
@@ -1019,58 +1010,76 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	// ------------------------------------------------------------------ save, sync, item components
 
 	@Override
-	protected void loadAdditional(ValueInput input) {
-		super.loadAdditional(input);
-		inventory.deserialize(input.childOrEmpty("Inventory"));
+	protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.loadAdditional(tag, registries);
+		inventory.deserialize(tag.getCompound("Inventory"), registries);
 		// a big kettle's brew can exceed what an item stack saves (99): the true count is kept beside it
-		int servings = input.getIntOr("Servings", 0);
+		int servings = tag.getInt("Servings");
 		if (servings > 0 && !inventory.getStack(BREW_SLOT).isEmpty()) {
 			inventory.setQuietly(BREW_SLOT, inventory.getStack(BREW_SLOT).copyWithCount(servings));
 		}
-		brewTime = input.getIntOr("BrewTime", 0);
-		brewTimeTotal = input.getIntOr("BrewTimeTotal", 0);
-		bucketForm = input.read("BucketForm", ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY);
-		customName = input.read("CustomName", ComponentSerialization.CODEC).orElse(null);
+		brewTime = tag.getInt("BrewTime");
+		brewTimeTotal = tag.getInt("BrewTimeTotal");
+		bucketForm = ItemStack.parseOptional(registries, tag.getCompound("BucketForm"));
+		// (the name is saved as vanilla's block entities save theirs on this Minecraft: a JSON string)
+		customName = tag.contains("CustomName", Tag.TAG_STRING) ? parseCustomNameSafe(tag.getString("CustomName"), registries) : null;
 		// only in the sync data; a loaded world matches again on the first heated tick
-		ingredientsMatch = input.getBooleanOr("IngredientsMatch", false);
+		ingredientsMatch = tag.getBoolean("IngredientsMatch");
 		usedRecipeTracker.clear();
-		usedRecipeTracker.putAll(input.read("RecipesUsed", RECIPES_USED_CODEC).orElse(Collections.emptyMap()));
+		CompoundTag used = tag.getCompound("RecipesUsed");
+		for (String id : used.getAllKeys()) {
+			ResourceLocation recipe = ResourceLocation.tryParse(id);
+			if (recipe != null) {
+				usedRecipeTracker.put(recipe, used.getInt(id));
+			}
+		}
 	}
 
 	@Override
-	protected void saveAdditional(ValueOutput output) {
-		super.saveAdditional(output);
-		output.putInt("BrewTime", brewTime);
-		output.putInt("BrewTimeTotal", brewTimeTotal);
-		output.storeNullable("BucketForm", ItemStack.CODEC, bucketForm.isEmpty() ? null : bucketForm);
-		output.storeNullable("CustomName", ComponentSerialization.CODEC, customName);
-		serializeInventory(output);
-		output.store("RecipesUsed", RECIPES_USED_CODEC, usedRecipeTracker);
+	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.saveAdditional(tag, registries);
+		tag.putInt("BrewTime", brewTime);
+		tag.putInt("BrewTimeTotal", brewTimeTotal);
+		saveBucketFormAndName(tag, registries);
+		serializeInventory(tag, registries);
+		CompoundTag used = new CompoundTag();
+		usedRecipeTracker.forEach((recipe, count) -> used.putInt(recipe.toString(), count));
+		tag.put("RecipesUsed", used);
+	}
+
+	private void saveBucketFormAndName(CompoundTag tag, HolderLookup.Provider registries) {
+		if (!bucketForm.isEmpty()) {
+			tag.put("BucketForm", bucketForm.save(registries));
+		}
+		if (customName != null) {
+			tag.putString("CustomName", Component.Serializer.toJson(customName, registries));
+		}
 	}
 
 	/** What the client needs: the inventory (brew colour, tooltips, bubbling sound), the bucket form, the name and whether the batch brews. */
-	private void writeSyncData(ValueOutput output) {
-		output.putBoolean("IngredientsMatch", ingredientsMatch);
-		output.storeNullable("BucketForm", ItemStack.CODEC, bucketForm.isEmpty() ? null : bucketForm);
-		output.storeNullable("CustomName", ComponentSerialization.CODEC, customName);
-		serializeInventory(output);
+	private void writeSyncData(CompoundTag tag, HolderLookup.Provider registries) {
+		tag.putBoolean("IngredientsMatch", ingredientsMatch);
+		saveBucketFormAndName(tag, registries);
+		serializeInventory(tag, registries);
 	}
 
 	/** The inventory, with the brew's stack capped to what a stack saves (64) and its true count as "Servings" if larger. */
-	private void serializeInventory(ValueOutput output) {
+	private void serializeInventory(CompoundTag tag, HolderLookup.Provider registries) {
+		CompoundTag items = new CompoundTag();
 		int servings = getServings();
 		if (servings > MAX_SERVINGS) {
 			ItemStack brew = inventory.getStack(BREW_SLOT);
 			inventory.setQuietly(BREW_SLOT, brew.copyWithCount(MAX_SERVINGS));
 			try {
-				inventory.serialize(output.child("Inventory"));
+				inventory.serialize(items, registries);
 			} finally {
 				inventory.setQuietly(BREW_SLOT, brew);
 			}
-			output.putInt("Servings", servings);
+			tag.putInt("Servings", servings);
 		} else {
-			inventory.serialize(output.child("Inventory"));
+			inventory.serialize(items, registries);
 		}
+		tag.put("Inventory", items);
 	}
 
 	@Override
@@ -1080,16 +1089,14 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 
 	@Override
 	public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-		try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(this.problemPath(), LOGGER)) {
-			TagValueOutput output = TagValueOutput.createWithContext(reporter, registries);
-			writeSyncData(output);
-			return output.buildResult();
-		}
+		CompoundTag tag = new CompoundTag();
+		writeSyncData(tag, registries);
+		return tag;
 	}
 
 	@Override
-	public void onDataPacket(Connection connection, ValueInput input) {
-		loadWithComponents(input);
+	public void onDataPacket(Connection connection, CompoundTag tag, HolderLookup.Provider registries) {
+		loadWithComponents(tag, registries);
 		// The open lid shows the brew's colour (K2): re-render when the brew changes while the lid is up
 		if (level != null && level.isClientSide()) {
 			BlockState state = getBlockState();
@@ -1125,7 +1132,7 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 	}
 
 	@Override
-	protected void applyImplicitComponents(DataComponentGetter components) {
+	protected void applyImplicitComponents(BlockEntity.DataComponentInput components) {
 		super.applyImplicitComponents(components);
 		customName = components.get(DataComponents.CUSTOM_NAME);
 		KettleContents contents = components.getOrDefault(KettleRegistry.KETTLE_CONTENTS.get(), KettleContents.EMPTY);
@@ -1144,8 +1151,8 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 
 	@Override
 	@SuppressWarnings("deprecation")
-	public void removeComponentsFromTag(ValueOutput output) {
-		output.discard("CustomName");
+	public void removeComponentsFromTag(CompoundTag tag) {
+		tag.remove("CustomName");
 	}
 
 	// ------------------------------------------------------------------ helpers

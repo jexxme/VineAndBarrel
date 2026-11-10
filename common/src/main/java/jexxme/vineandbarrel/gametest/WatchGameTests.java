@@ -13,7 +13,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -98,7 +98,7 @@ final class WatchGameTests
 					problems.add(name + ": no block " + entry.block());
 				} else {
 					// a block state the scene waits for must be one the block can have (a renamed state would never match)
-					StateDefinition<Block, BlockState> states = BuiltInRegistries.BLOCK.getValue(entry.block()).getStateDefinition();
+					StateDefinition<Block, BlockState> states = BuiltInRegistries.BLOCK.get(entry.block()).getStateDefinition();
 					entry.when().forEach((property, value) -> {
 						Property<?> found = states.getProperty(property);
 						if (found == null || found.getValue(value).isEmpty()) {
@@ -110,7 +110,7 @@ final class WatchGameTests
 					problems.add(name + ": " + entry.block() + " opens at step " + entry.step() + " of " + scene.steps().size());
 				}
 			}
-			for (Identifier also : scene.also()) {
+			for (ResourceLocation also : scene.also()) {
 				if (!isScene(also, names)) {
 					problems.add(name + ": offers " + also + ", which isn't one of the scenes");
 				}
@@ -132,7 +132,7 @@ final class WatchGameTests
 		if (path.stations().isEmpty()) {
 			problems.add("path: no stations");
 		}
-		Set<Identifier> stations = new HashSet<>();
+		Set<ResourceLocation> stations = new HashSet<>();
 		for (WatchPath.Station station : path.stations()) {
 			key(lang, station.verb(), "path", problems);
 			if (!isScene(station.scene(), names)) {
@@ -153,7 +153,7 @@ final class WatchGameTests
 		}
 	}
 
-	private static boolean isScene(Identifier id, List<String> names) {
+	private static boolean isScene(ResourceLocation id, List<String> names) {
 		return id.getNamespace().equals(VineAndBarrel.MODID) && names.contains(id.getPath());
 	}
 
@@ -232,20 +232,20 @@ final class WatchGameTests
 		});
 	}
 
-	private static void recipe(GameTestHelper helper, Identifier id, String name, List<String> problems) {
+	private static void recipe(GameTestHelper helper, ResourceLocation id, String name, List<String> problems) {
 		if (!isType(helper, id, BarrelRegistry.AGING.get())) {
 			problems.add(name + ": no aging recipe " + id);
 		}
 	}
 
-	private static void brewing(GameTestHelper helper, Identifier id, String name, List<String> problems) {
+	private static void brewing(GameTestHelper helper, ResourceLocation id, String name, List<String> problems) {
 		if (!isType(helper, id, KettleRegistry.BREWING.get())) {
 			problems.add(name + ": no brewing recipe " + id);
 		}
 	}
 
-	private static boolean isType(GameTestHelper helper, Identifier id, RecipeType<?> type) {
-		Optional<RecipeHolder<?>> recipe = helper.getLevel().recipeAccess().byKey(ResourceKey.create(Registries.RECIPE, id));
+	private static boolean isType(GameTestHelper helper, ResourceLocation id, RecipeType<?> type) {
+		Optional<RecipeHolder<?>> recipe = helper.getLevel().getRecipeManager().byKey(id);
 		return recipe.isPresent() && recipe.get().value().getType() == type;
 	}
 

@@ -1,7 +1,7 @@
 package jexxme.vineandbarrel.entity;
 
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.fox.Fox;
+import net.minecraft.world.entity.animal.Fox;
 
 /** Hooks for mobs, called from each loader's entity events. */
 public final class VBEntityEvents

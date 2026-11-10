@@ -16,13 +16,13 @@ import java.net.InetAddress;
 @Mixin(IntegratedServer.class)
 abstract class LoopbackLanMixin
 {
-	@ModifyArg(method = "publishServer(Lnet/minecraft/server/MinecraftServer$MultiplayerScope;I)Z",
+	@ModifyArg(method = "publishServer(Lnet/minecraft/world/level/GameType;ZI)Z",
 		at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerConnectionListener;startTcpServerListener(Ljava/net/InetAddress;I)V"), index = 0)
 	private InetAddress vineandbarrel_smoke$loopbackOnly(InetAddress address) {
 		return InetAddress.getLoopbackAddress();
 	}
 
-	@Redirect(method = "publishServer(Lnet/minecraft/server/MinecraftServer$MultiplayerScope;I)Z",
+	@Redirect(method = "publishServer(Lnet/minecraft/world/level/GameType;ZI)Z",
 		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/server/LanServerPinger;start()V"))
 	private void vineandbarrel_smoke$noAnnouncement(LanServerPinger pinger) {
 	}

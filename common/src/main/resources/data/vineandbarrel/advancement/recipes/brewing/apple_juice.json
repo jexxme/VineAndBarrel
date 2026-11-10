@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "vineandbarrel:brewing/apple_juice"
+        "recipe": "vineandbarrel:brewing/apple_juice"
       }
     }
   },

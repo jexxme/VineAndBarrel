@@ -12,6 +12,7 @@ import net.neoforged.neoforge.network.registration.NetworkRegistry;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ public final class NeoForgeCompatProbes implements CompatProbes
 {
 	@Override
 	public List<String> compatRunMods() {
+		// 1.21.1: every compat mod has a build, with the libraries two of them need (neoforge/run-compat/mods)
 		return List.of(ModCompatGameTests.TOUGH_AS_NAILS, "glitchcore", ModCompatGameTests.HOMEOSTATIC, ModCompatGameTests.THIRST_WAS_TAKEN,
 			ModCompatGameTests.NUTRITIONAL_BALANCE, ModCompatGameTests.SPICE_OF_LIFE, "creativecore");
 	}
@@ -79,7 +81,7 @@ public final class NeoForgeCompatProbes implements CompatProbes
 	private static final class AppleSkin
 	{
 		static FoodProperties[] foodValues(Player player, ItemStack stack) {
-			FoodProperties own = stack.getOrDefault(DataComponents.FOOD, new FoodProperties(0, 0.0F, false));
+			FoodProperties own = stack.getOrDefault(DataComponents.FOOD, new FoodProperties(0, 0.0F, false, 1.6F, Optional.empty(), List.of()));
 			squeek.appleskin.api.event.FoodValuesEvent event = new squeek.appleskin.api.event.FoodValuesEvent(player, stack, own, own);
 			NeoForge.EVENT_BUS.post(event);
 			return new FoodProperties[] {event.defaultFoodProperties, event.modifiedFoodProperties};

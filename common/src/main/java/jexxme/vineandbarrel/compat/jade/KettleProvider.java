@@ -5,7 +5,7 @@ import jexxme.vineandbarrel.barrel.BarrelStatus;
 import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
@@ -21,10 +21,10 @@ public enum KettleProvider implements IBlockComponentProvider
 {
 	INSTANCE;
 
-	static final Identifier UID = VineAndBarrel.id("brew_kettle");
+	static final ResourceLocation UID = VineAndBarrel.id("brew_kettle");
 
 	@Override
-	public Identifier getUid() {
+	public ResourceLocation getUid() {
 		return UID;
 	}
 

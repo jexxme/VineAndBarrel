@@ -9,10 +9,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
-import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
-import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
@@ -53,8 +53,8 @@ public final class Rowdy
 
 	/** One wild swing: the arm, the whoosh, and a punch on whoever stands right in front (if anyone may be hit). */
 	public static @Nullable Entity swing(ServerPlayer player) {
-		ServerLevel level = player.level();
-		player.swing(InteractionHand.MAIN_HAND, net.minecraft.world.item.component.SwingAnimation.DEFAULT, true);
+		ServerLevel level = player.serverLevel();
+		player.swing(InteractionHand.MAIN_HAND, true);
 		Entity target = inFront(player);
 		if (target == null || !mayHit(player, target)) {
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_ATTACK_NODAMAGE, SoundSource.PLAYERS, 0.8F, 0.8F);
@@ -62,9 +62,9 @@ public final class Rowdy
 		}
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_ATTACK_WEAK, SoundSource.PLAYERS, 1.0F, 0.9F);
 		var source = level.damageSources().playerAttack(player);
-		if (target.hurtServer(level, source, PUNCH_DAMAGE) && target instanceof LivingEntity living) {
+		if (target.hurt(source, PUNCH_DAMAGE) && target instanceof LivingEntity living) {
 			Vec3 look = player.getLookAngle();
-			living.knockback(PUNCH_KNOCKBACK, -look.x, -look.z, source, PUNCH_DAMAGE);
+			living.knockback(PUNCH_KNOCKBACK, -look.x, -look.z);
 		}
 		return target;
 	}
@@ -85,7 +85,7 @@ public final class Rowdy
 		if (!(target instanceof LivingEntity) || target instanceof ArmorStand || target instanceof IronGolem) {
 			return false;
 		}
-		if (target instanceof OwnableEntity pet && pet.getOwnerReference() != null) {
+		if (target instanceof OwnableEntity pet && pet.getOwnerUUID() != null) {
 			return false;
 		}
 		if (target instanceof Player other) {

@@ -2,7 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "#": "vineandbarrel:barley"
+    "#": {
+      "item": "vineandbarrel:barley"
+    }
   },
   "pattern": [
     "###",
@@ -10,6 +12,7 @@
     "###"
   ],
   "result": {
+    "count": 1,
     "id": "vineandbarrel:barley_bale"
   }
 }

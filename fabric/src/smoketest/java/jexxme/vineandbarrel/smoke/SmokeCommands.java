@@ -39,11 +39,9 @@ import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
-import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
-import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -92,7 +90,7 @@ public final class SmokeCommands implements ModInitializer
 	public void onInitialize() {
 		SmokeServer.register();
 		CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> dispatcher.register(Commands.literal("vbsmoke")
-			.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+			.requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
 			.then(Commands.literal("setup").executes(SmokeCommands::setup))
 			.then(Commands.literal("vines").executes(SmokeCommands::vines))
 			.then(Commands.literal("look").then(Commands.argument("what", StringArgumentType.word()).executes(SmokeCommands::look)))
@@ -118,13 +116,13 @@ public final class SmokeCommands implements ModInitializer
 
 	/** The scene's origin: above the world spawn. */
 	static BlockPos origin(ServerLevel level) {
-		BlockPos spawn = level.getRespawnData().pos();
+		BlockPos spawn = level.getLevelData().getSpawnPos();
 		return new BlockPos(spawn.getX(), HEIGHT, spawn.getZ());
 	}
 
 	private static int setup(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		ServerPlayer player = context.getSource().getPlayerOrException();
-		ServerLevel level = player.level();
+		ServerLevel level = player.serverLevel();
 		BlockPos o = origin(level);
 		boolean fd = FDCompat.isLoaded();
 		for (int x = -6; x <= 6; x++) {
@@ -165,7 +163,7 @@ public final class SmokeCommands implements ModInitializer
 		// A table with four drinks, put down the way a player does (sneak-use), and an empty one for the client to use
 		level.setBlock(o.offset(TABLE), Blocks.OAK_PLANKS.defaultBlockState(), Block.UPDATE_ALL);
 		level.setBlock(o.offset(EMPTY_TABLE), Blocks.OAK_PLANKS.defaultBlockState(), Block.UPDATE_ALL);
-		GameType mode = player.gameMode();
+		GameType mode = player.gameMode.getGameModeForPlayer();
 		player.setGameMode(GameType.SURVIVAL);
 		player.setShiftKeyDown(true);
 		ItemStack[] drinks = {new ItemStack(DrinkItems.AGED_RED_WINE.get()), new ItemStack(DrinkItems.BARLEY_ALE.get()),
@@ -200,7 +198,7 @@ public final class SmokeCommands implements ModInitializer
 	 */
 	private static int vines(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		ServerPlayer player = context.getSource().getPlayerOrException();
-		ServerLevel level = player.level();
+		ServerLevel level = player.serverLevel();
 		BlockPos o = origin(level);
 		for (int x = -6; x <= 6; x++) {
 			for (int z = 11; z <= 17; z++) {
@@ -246,7 +244,7 @@ public final class SmokeCommands implements ModInitializer
 			}
 		}
 		fly(player);
-		player.teleportTo(level, o.getX() + 0.5, o.getY() + 2.5, o.getZ() + 8.5, java.util.Set.of(), 0.0F, 20.0F, true);
+		player.teleportTo(level, o.getX() + 0.5, o.getY() + 2.5, o.getZ() + 8.5, java.util.Set.of(), 0.0F, 20.0F);
 		return reply(context, "vines at " + o.offset(VINE_FENCE));
 	}
 
@@ -257,8 +255,8 @@ public final class SmokeCommands implements ModInitializer
 	/** The whole scene in view, from behind the kettle's row. */
 	private static int view(ServerPlayer player) {
 		fly(player);
-		BlockPos o = origin(player.level());
-		player.teleportTo(player.level(), o.getX() + 0.5, o.getY() + 1.5, o.getZ() - 1.5, java.util.Set.of(), 0.0F, 30.0F, true);
+		BlockPos o = origin(player.serverLevel());
+		player.teleportTo(player.serverLevel(), o.getX() + 0.5, o.getY() + 1.5, o.getZ() - 1.5, java.util.Set.of(), 0.0F, 30.0F);
 		return 1;
 	}
 
@@ -266,11 +264,11 @@ public final class SmokeCommands implements ModInitializer
 	private static int look(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		ServerPlayer player = context.getSource().getPlayerOrException();
 		fly(player);
-		BlockPos o = origin(player.level());
+		BlockPos o = origin(player.serverLevel());
 		String what = StringArgumentType.getString(context, "what");
 		if (what.equals("sky")) {
 			// Nothing in reach: a held use key then only uses the item in hand
-			player.teleportTo(player.level(), o.getX() + 0.5, o.getY() + 1.5, o.getZ() - 1.5, java.util.Set.of(), 0.0F, -80.0F, true);
+			player.teleportTo(player.serverLevel(), o.getX() + 0.5, o.getY() + 1.5, o.getZ() - 1.5, java.util.Set.of(), 0.0F, -80.0F);
 			return reply(context, "looking at the sky");
 		}
 		BlockPos target = switch (what) {
@@ -288,14 +286,14 @@ public final class SmokeCommands implements ModInitializer
 		Vec3 d = center.subtract(eye);
 		float yaw = (float) Math.toDegrees(Math.atan2(-d.x, d.z));
 		float pitch = (float) -Math.toDegrees(Math.atan2(d.y, Math.hypot(d.x, d.z)));
-		player.teleportTo(player.level(), eye.x, eye.y - player.getEyeHeight(), eye.z, java.util.Set.of(), yaw, pitch, true);
+		player.teleportTo(player.serverLevel(), eye.x, eye.y - player.getEyeHeight(), eye.z, java.util.Set.of(), yaw, pitch);
 		return reply(context, "looking at " + target);
 	}
 
 	/** Opens the kettle's screen the way the block does (the platform's extended menu, with the block's position). */
 	private static int openKettle(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		ServerPlayer player = context.getSource().getPlayerOrException();
-		BlockPos pos = origin(player.level()).offset(KETTLE);
+		BlockPos pos = origin(player.serverLevel()).offset(KETTLE);
 		if (player.level().getBlockEntity(pos) instanceof BrewKettleBlockEntity kettle) {
 			Services.PLATFORM.openBlockMenu(player, kettle, pos);
 			return reply(context, "opened the kettle");
@@ -310,13 +308,13 @@ public final class SmokeCommands implements ModInitializer
 	 */
 	private static int blackoutHome(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		ServerPlayer player = context.getSource().getPlayerOrException();
-		ServerLevel level = player.level();
+		ServerLevel level = player.serverLevel();
 		BlockPos foot = origin(level).offset(BED_FOOT);
 		BlockPos head = foot.east();
-		BlockState bed = Blocks.BED.red().defaultBlockState().setValue(BedBlock.FACING, Direction.EAST);
+		BlockState bed = Blocks.RED_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.EAST);
 		level.setBlock(foot, bed.setValue(BedBlock.PART, BedPart.FOOT), Block.UPDATE_ALL);
 		level.setBlock(head, bed.setValue(BedBlock.PART, BedPart.HEAD), Block.UPDATE_ALL);
-		player.setRespawnPosition(new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(level.dimension(), head, 0.0F, 0.0F), false), false);
+		player.setRespawnPosition(level.dimension(), head, 0.0F, false, false);
 		forcedEnding = BlackoutEnding.HOME;
 		Blackout.start(player);
 		return reply(context, "blackout, ending in the bed at " + head);
@@ -329,15 +327,15 @@ public final class SmokeCommands implements ModInitializer
 	 */
 	private static int village(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		ServerPlayer player = context.getSource().getPlayerOrException();
-		ServerLevel level = player.level();
+		ServerLevel level = player.serverLevel();
 		Holder.Reference<Structure> village = level.registryAccess().lookupOrThrow(Registries.STRUCTURE).getOrThrow(BuiltinStructures.VILLAGE_PLAINS);
 		ChunkGenerator generator = level.getChunkSource().getGenerator();
 		RandomState randomState = level.getChunkSource().randomState();
-		ChunkPos spawn = ChunkPos.containing(level.getRespawnData().pos());
+		ChunkPos spawn = new ChunkPos(level.getLevelData().getSpawnPos());
 		for (int i = 0; i < 64; i++) {
-			ChunkPos at = new ChunkPos(spawn.x() + 16 + 8 * i, spawn.z());
-			StructureStart start = village.value().generate(village, level.dimension(), level.registryAccess(), generator, generator.getBiomeSource(),
-				randomState.createClimateSampler(SamplerContext.EMPTY_UNCACHED), randomState, level.getStructureTemplateManager(), level.getSeed(), at, 0, level,
+			ChunkPos at = new ChunkPos(spawn.x + 16 + 8 * i, spawn.z);
+			StructureStart start = village.value().generate(level.registryAccess(), generator, generator.getBiomeSource(),
+				randomState, level.getStructureManager(), level.getSeed(), at, 0, level,
 				biome -> true);
 			if (!start.isValid()) {
 				continue;
@@ -351,9 +349,9 @@ public final class SmokeCommands implements ModInitializer
 			BoundingBox box = start.getBoundingBox();
 			ChunkPos min = new ChunkPos(SectionPos.blockToSectionCoord(box.minX()), SectionPos.blockToSectionCoord(box.minZ()));
 			ChunkPos max = new ChunkPos(SectionPos.blockToSectionCoord(box.maxX()), SectionPos.blockToSectionCoord(box.maxZ()));
-			ChunkPos.rangeClosed(min, max).forEach(chunk -> level.getChunk(chunk.x(), chunk.z()));
+			ChunkPos.rangeClosed(min, max).forEach(chunk -> level.getChunk(chunk.x, chunk.z));
 			ChunkPos.rangeClosed(min, max).forEach(chunk -> start.placeInChunk(level, level.structureManager(), generator, level.getRandom(),
-				new BoundingBox(chunk.getMinBlockX(), level.getMinY(), chunk.getMinBlockZ(), chunk.getMaxBlockX(), level.getMaxY() + 1, chunk.getMaxBlockZ()), chunk));
+				new BoundingBox(chunk.getMinBlockX(), level.getMinBuildHeight(), chunk.getMinBlockZ(), chunk.getMaxBlockX(), level.getMaxBuildHeight(), chunk.getMaxBlockZ()), chunk));
 			BlockPos centre = tavern.get().getCenter();
 			Vec3 target = Vec3.atCenterOf(centre);
 			Vec3 eye = target.add(0.0, 12.0, -20.0);
@@ -361,7 +359,7 @@ public final class SmokeCommands implements ModInitializer
 			float yaw = (float) Math.toDegrees(Math.atan2(-d.x, d.z));
 			float pitch = (float) -Math.toDegrees(Math.atan2(d.y, Math.hypot(d.x, d.z)));
 			fly(player);
-			player.teleportTo(level, eye.x, eye.y - player.getEyeHeight(), eye.z, java.util.Set.of(), yaw, pitch, true);
+			player.teleportTo(level, eye.x, eye.y - player.getEyeHeight(), eye.z, java.util.Set.of(), yaw, pitch);
 			fly(player);
 			return reply(context, "a plains village with a tavern at " + centre + " (spot " + (i + 1) + ")");
 		}
@@ -378,7 +376,7 @@ public final class SmokeCommands implements ModInitializer
 	}
 
 	private static Optional<BlockState> fdBlock(String name) {
-		return BuiltInRegistries.BLOCK.getOptional(Identifier.fromNamespaceAndPath(FDCompat.MODID, name)).map(Block::defaultBlockState);
+		return BuiltInRegistries.BLOCK.getOptional(ResourceLocation.fromNamespaceAndPath(FDCompat.MODID, name)).map(Block::defaultBlockState);
 	}
 
 	private static int reply(CommandContext<CommandSourceStack> context, String message) {

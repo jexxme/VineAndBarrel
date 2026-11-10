@@ -5,7 +5,7 @@ import jexxme.vineandbarrel.drink.DrinkItems;
 import jexxme.vineandbarrel.kettle.BaseItems;
 import jexxme.vineandbarrel.registry.VBItems;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 
@@ -38,7 +38,7 @@ public enum Nutrient
 
 	Nutrient(String name) {
 		this.name = name;
-		this.tag = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "nutrients/" + name));
+		this.tag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "nutrients/" + name));
 	}
 
 	private static final Map<Supplier<? extends Item>, Set<Nutrient>> GROUPS = new LinkedHashMap<>();

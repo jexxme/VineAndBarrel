@@ -5,7 +5,7 @@ import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.StreamServerDataProvider;
 
@@ -15,7 +15,7 @@ public enum KettleDataProvider implements StreamServerDataProvider<BlockAccessor
 	INSTANCE;
 
 	@Override
-	public Identifier getUid() {
+	public ResourceLocation getUid() {
 		return KettleProvider.UID;
 	}
 

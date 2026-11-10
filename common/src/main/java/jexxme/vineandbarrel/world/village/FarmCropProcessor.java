@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import org.jspecify.annotations.Nullable;
 
@@ -24,7 +25,7 @@ import java.util.List;
  * that survived vanilla's rules drew at least 0.3, 0.2 and 0.1, so lower chances after it never hit at all. This one
  * draws from its own salted seed: independent of vanilla's (and FD's) rules, and still the same for the same block.
  */
-public final class FarmCropProcessor implements StructureProcessor
+public final class FarmCropProcessor extends StructureProcessor
 {
 	public record Rule(BlockState output, float chance) {
 		static final Codec<Rule> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -51,7 +52,7 @@ public final class FarmCropProcessor implements StructureProcessor
 
 	@Override
 	public StructureTemplate.@Nullable StructureBlockInfo processBlock(LevelReader level, BlockPos targetPosition, BlockPos referencePos,
-		BlockPos templateRelativePos, StructureTemplate.StructureBlockInfo processedBlockInfo, StructurePlaceSettings settings) {
+		StructureTemplate.StructureBlockInfo originalBlockInfo, StructureTemplate.StructureBlockInfo processedBlockInfo, StructurePlaceSettings settings) {
 		if (!processedBlockInfo.state().is(Blocks.WHEAT)) {
 			return processedBlockInfo;
 		}
@@ -71,7 +72,7 @@ public final class FarmCropProcessor implements StructureProcessor
 	}
 
 	@Override
-	public MapCodec<? extends StructureProcessor> codec() {
-		return CODEC;
+	protected StructureProcessorType<?> getType() {
+		return VillageStructures.FARM_CROP_PROCESSOR.get();
 	}
 }

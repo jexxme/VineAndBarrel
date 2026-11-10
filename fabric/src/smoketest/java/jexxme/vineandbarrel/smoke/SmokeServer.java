@@ -30,6 +30,8 @@ final class SmokeServer
 	private static final boolean REFUSAL = Boolean.getBoolean("vineandbarrel.smokeExpectRefusal");
 	private static boolean joined;
 	private static boolean finished;
+	/** How long the stop has waited for the world's generation to end (see {@link SmokeQuiet}). */
+	private static int quietTicks;
 
 	private SmokeServer() {
 	}
@@ -40,7 +42,7 @@ final class SmokeServer
 		}
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			// The same world settings the LAN host uses
-			for (String command : new String[] { "gamerule advance_time false", "gamerule spawn_mobs false" }) {
+			for (String command : new String[] { "gamerule doDaylightCycle false", "gamerule doMobSpawning false" }) {
 				server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), command);
 			}
 			write("server-ready", "ready");
@@ -48,12 +50,17 @@ final class SmokeServer
 		});
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			joined = true;
-			server.getPlayerList().op(handler.player.nameAndId());
+			server.getPlayerList().op(handler.player.getGameProfile());
 			LOGGER.info("Smoke client {} joined and is an operator", handler.player.getName().getString());
 		});
 		// Checked after the tick, not in the disconnect event: that can fire while the player is still on the list
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (finished) {
+				return;
+			}
+			// The run is over, but the stop waits for the world's generation to end: see SmokeQuiet
+			boolean over = REFUSAL ? Files.isRegularFile(OUT.resolve("stop")) : joined && server.getPlayerList().getPlayerCount() == 0;
+			if (over && SmokeQuiet.generating(server) && ++quietTicks <= SmokeQuiet.LIMIT) {
 				return;
 			}
 			if (REFUSAL) {

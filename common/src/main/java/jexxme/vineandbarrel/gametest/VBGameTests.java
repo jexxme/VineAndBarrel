@@ -15,36 +15,58 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
+import net.minecraft.gametest.framework.GameTestAssertException;
+import net.minecraft.gametest.framework.GameTestAssertPosException;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
+import net.minecraft.gametest.framework.TestFunction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
  * Headless GameTests: run with {@code ./gradlew runGameTestServer} (no window). Each milestone adds tests that check
  * real behaviour (brewing, fermenting, tapping, item conservation), not just that the game starts.
+ *
+ * <p>The harness on this Minecraft (1.21.1): a test is a vanilla {@link TestFunction} (26.x: entries of the test
+ * registries). Every test class adds its tests through {@link #add}, from the consumer it gives
+ * {@code Platform.addGameTests}:
+ * <ul>
+ * <li><b>Names</b> are the plain 26.x names ({@code kettle_boils}); the report writes them as
+ * {@code vineandbarrel:<name>}, the id they had on 26.x (see {@link TestReports}).</li>
+ * <li><b>Batches</b> stand in for the 26.x test environments: the batch of a test is the path of its old environment
+ * id ({@code "default"}, {@code "tipsy"}, {@code "tipsy_legs"}, ...; {@link #add} turns it into
+ * {@code vineandbarrel:<path>}). Vanilla runs the batches one after the other and the tests of one batch together,
+ * as 26.x did with environments. All our 26.x environments were empty (no weather, time or game rule), so no batch
+ * has setup code. A test that needs such a world state sets it at its own start (and undoes it when it ends):
+ * vanilla's before/after-batch consumers in {@code GameTestRegistry} are private maps that only its
+ * {@code @BeforeBatch} / {@code @AfterBatch} annotation scan fills, so they are not used here.</li>
+ * <li><b>{@code -Dvineandbarrel.tests=<prefix>}</b>: only tests whose name starts with the prefix are added (the
+ * compat run sets {@code compat_}; 26.x did this with vanilla's {@code --tests} selector).</li>
+ * </ul>
+ *
+ * <p>Helpers for what 26.x's {@code GameTestHelper} had and 1.21.1's lacks (use these in every test class, so all
+ * read the same): {@link #blockEntity}, {@link #assertBlockState}, {@link #assertionException}.
  */
 public final class VBGameTests
 {
-	static final Identifier SMALL = VineAndBarrel.id("gametest/empty_5x5");
-	static final Identifier LARGE = VineAndBarrel.id("gametest/empty_32x6x32");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
+	static final ResourceLocation SMALL = VineAndBarrel.id("gametest/empty_5x5");
+	static final ResourceLocation LARGE = VineAndBarrel.id("gametest/empty_32x6x32");
+	/** Only tests whose name starts with this are added; not set or empty: all of them. */
+	public static final String TESTS_PROPERTY = "vineandbarrel.tests";
 	private static final List<Entry> TESTS = new ArrayList<>();
+	/** The names of every test added through {@link #add} (the report gives these their {@code vineandbarrel:} id). */
+	private static final Set<String> OURS = ConcurrentHashMap.newKeySet();
 
-	private record Entry(ResourceKey<Consumer<GameTestHelper>> function, Identifier structure, int maxTicks, boolean skyAccess) {
+	private record Entry(String name, ResourceLocation structure, int maxTicks, boolean skyAccess, Consumer<GameTestHelper> function) {
 	}
 
 	static {
@@ -65,27 +87,112 @@ public final class VBGameTests
 		test(name, SMALL, 200, function);
 	}
 
-	static void test(String name, Identifier structure, int maxTicks, Consumer<GameTestHelper> function) {
+	static void test(String name, ResourceLocation structure, int maxTicks, Consumer<GameTestHelper> function) {
 		test(name, structure, maxTicks, false, function);
 	}
 
 	/** {@code skyAccess}: no barrier ceiling over the test, e.g. for worldgen placement that follows the heightmap. */
-	static void test(String name, Identifier structure, int maxTicks, boolean skyAccess, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		TESTS.add(new Entry(ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name)), structure, maxTicks, skyAccess));
+	static void test(String name, ResourceLocation structure, int maxTicks, boolean skyAccess, Consumer<GameTestHelper> function) {
+		TESTS.add(new Entry(name, structure, maxTicks, skyAccess, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(VBGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("default"));
 		for (Entry test : TESTS) {
-			event.registerTest(test.function().identifier(), new FunctionGameTestInstance(test.function(), new TestData<>(environment,
-					Level.OVERWORLD, test.structure(), test.maxTicks(), 0, true, Rotation.NONE, false, 1, 1, test.skyAccess(), 0)));
+			add(event, "default", test.name(), test.structure(), test.maxTicks(), test.skyAccess(), test.function());
 		}
+	}
+
+	// ------------------------------------------------------------------ the harness, for every test class
+
+	/** {@link #add(GameTestRegistrar, String, String, ResourceLocation, int, boolean, Consumer)} under a barrier ceiling. */
+	static void add(GameTestRegistrar event, String batch, String name, ResourceLocation structure, int maxTicks, Consumer<GameTestHelper> function) {
+		add(event, batch, name, structure, maxTicks, false, function);
+	}
+
+	/**
+	 * Adds one test, as 26.x's {@code new FunctionGameTestInstance(function, new TestData<>(environment, structure,
+	 * maxTicks, 0, true, Rotation.NONE, false, 1, 1, skyAccess, 0))} did: required, not rotated, no setup ticks, one
+	 * attempt. Left out if {@code -Dvineandbarrel.tests} asks for other tests.
+	 *
+	 * @param batch the path of the test's 26.x environment id ({@code "kettle"} for {@code vineandbarrel:kettle});
+	 *              tests of one batch run together, batches one after the other
+	 * @param name the test's 26.x name, without namespace ({@code "kettle_boils"})
+	 * @param structure a template under {@code data/<namespace>/structure/}, e.g. {@link #SMALL}
+	 */
+	static void add(GameTestRegistrar event, String batch, String name, ResourceLocation structure, int maxTicks, boolean skyAccess,
+			Consumer<GameTestHelper> function) {
+		if (!selected(name)) {
+			return;
+		}
+		OURS.add(name);
+		event.registerTest(new TestFunction(VineAndBarrel.MODID + ":" + batch, name, structure.toString(), Rotation.NONE, maxTicks, 0L, true,
+				false, 1, 1, skyAccess, function));
+	}
+
+	/** Whether {@code -Dvineandbarrel.tests} lets this test run (no property: every test). */
+	static boolean selected(String name) {
+		String prefix = System.getProperty(TESTS_PROPERTY);
+		return prefix == null || prefix.isEmpty() || name.startsWith(prefix);
+	}
+
+	/** Whether a test of this name was added through {@link #add} (so it is ours, not another mod's). */
+	static boolean isOurs(String testName) {
+		return OURS.contains(testName);
+	}
+
+	// ------------------------------------------------------------------ what 26.x's GameTestHelper had
+
+	/**
+	 * 26.x's {@code helper.getBlockEntity(pos, type)}: the block entity at the test-relative position, failing the test
+	 * if there is none or it is of another class (1.21.1's {@code getBlockEntity(pos)} casts unchecked).
+	 */
+	static <T extends BlockEntity> T blockEntity(GameTestHelper helper, BlockPos pos, Class<T> type) {
+		BlockEntity entity = helper.getBlockEntity(pos);
+		if (!type.isInstance(entity)) {
+			throw new GameTestAssertPosException("Expected a " + type.getSimpleName() + ", got " + entity.getClass().getSimpleName(),
+				helper.absolutePos(pos), pos, helper.getTick());
+		}
+		return type.cast(entity);
+	}
+
+	/** 26.x's {@code helper.assertBlockState(pos, expected)}: exactly this state at the test-relative position. */
+	static void assertBlockState(GameTestHelper helper, BlockPos pos, BlockState expected) {
+		helper.assertBlockState(pos, state -> state == expected, () -> "Expected " + expected + ", got " + helper.getBlockState(pos));
+	}
+
+	/**
+	 * Vanilla's {@code helper.makeMockServerPlayerInLevel()} with a connection the loader has prepared
+	 * ({@code Platform#prepareMockConnection}): mods send their payloads to a player the moment it joins.
+	 */
+	static net.minecraft.server.level.ServerPlayer mockServerPlayerInLevel(GameTestHelper helper) {
+		net.minecraft.server.network.CommonListenerCookie cookie = net.minecraft.server.network.CommonListenerCookie.createInitial(
+			new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "test-mock-player"), false);
+		net.minecraft.server.level.ServerPlayer player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
+			cookie.gameProfile(), cookie.clientInformation()) {
+			@Override
+			public boolean isSpectator() {
+				return false;
+			}
+
+			@Override
+			public boolean isCreative() {
+				return true;
+			}
+		};
+		net.minecraft.network.Connection connection = new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND);
+		new io.netty.channel.embedded.EmbeddedChannel(connection);
+		jexxme.vineandbarrel.platform.Services.PLATFORM.prepareMockConnection(connection);
+		helper.getLevel().getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
+		return player;
+	}
+
+	/** 26.x's {@code helper.assertionException(message)}: the exception that fails a test, to {@code throw}. */
+	static GameTestAssertException assertionException(GameTestHelper helper, String message) {
+		return new GameTestAssertException(message);
 	}
 
 	// ------------------------------------------------------------------ M0: the harness itself works
@@ -121,11 +228,11 @@ public final class VBGameTests
 			throw new UncheckedIOException(e);
 		}
 		List<String> missing = new ArrayList<>();
-		BuiltInRegistries.BLOCK.listElements().filter(h -> h.key().identifier().getNamespace().equals(VineAndBarrel.MODID))
+		BuiltInRegistries.BLOCK.holders().filter(h -> h.key().location().getNamespace().equals(VineAndBarrel.MODID))
 			.forEach(h -> need(lang, h.value().getDescriptionId(), missing));
-		BuiltInRegistries.ITEM.listElements().filter(h -> h.key().identifier().getNamespace().equals(VineAndBarrel.MODID))
+		BuiltInRegistries.ITEM.holders().filter(h -> h.key().location().getNamespace().equals(VineAndBarrel.MODID))
 			.forEach(h -> need(lang, h.value().getDescriptionId(), missing));
-		BuiltInRegistries.MOB_EFFECT.listElements().filter(h -> h.key().identifier().getNamespace().equals(VineAndBarrel.MODID))
+		BuiltInRegistries.MOB_EFFECT.holders().filter(h -> h.key().location().getNamespace().equals(VineAndBarrel.MODID))
 			.forEach(h -> need(lang, h.value().getDescriptionId(), missing));
 		for (String name : jexxme.vineandbarrel.advancement.VBAdvancementGenerator.ALL) {
 			need(lang, "advancements.vineandbarrel." + name + ".title", missing);

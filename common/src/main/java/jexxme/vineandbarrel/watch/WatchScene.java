@@ -15,7 +15,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.Item;
@@ -46,7 +46,7 @@ import java.util.Optional;
  * @param needs   what the scene uses, for the "What you need" rail (items or parts of real recipes)
  */
 public record WatchScene(String title, Holder<Item> icon, int width, int depth, Optional<BlockState> floor, List<Placed> blocks, View view,
-						 Opens opens, List<Identifier> also, List<Step> steps, List<Either<Holder<Item>, RecipePart>> needs)
+						 Opens opens, List<ResourceLocation> also, List<Step> steps, List<Either<Holder<Item>, RecipePart>> needs)
 {
 	/** A block state as a string, the way commands write it: {@code vineandbarrel:aging_barrel[facing=south,fill=4]}. */
 	public static final Codec<BlockState> BLOCK_STATE = Codec.STRING.comapFlatMap(WatchScene::parseState, WatchScene::writeState);
@@ -63,14 +63,14 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 		Placed.CODEC.listOf().optionalFieldOf("blocks", List.of()).forGetter(WatchScene::blocks),
 		View.CODEC.optionalFieldOf("view", View.DEFAULT).forGetter(WatchScene::view),
 		Opens.CODEC.optionalFieldOf("opens", Opens.NONE).forGetter(WatchScene::opens),
-		Identifier.CODEC.listOf().optionalFieldOf("also", List.of()).forGetter(WatchScene::also),
+		ResourceLocation.CODEC.listOf().optionalFieldOf("also", List.of()).forGetter(WatchScene::also),
 		Step.CODEC.listOf().fieldOf("steps").forGetter(WatchScene::steps),
 		ITEM_REF.listOf().optionalFieldOf("needs", List.of()).forGetter(WatchScene::needs)
 	).apply(inst, WatchScene::new));
 
 	private static DataResult<BlockState> parseState(String text) {
 		try {
-			return DataResult.success(BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK, text, false).blockState());
+			return DataResult.success(BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(), text, false).blockState());
 		} catch (CommandSyntaxException e) {
 			return DataResult.error(() -> "Bad block state '" + text + "': " + e.getMessage());
 		}
@@ -120,14 +120,14 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 	 * recipe takes) and {@code @drinks} (every drink). {@code blocks}: a block in the world, in a state, opens the scene
 	 * at a step, with a line saying what that block is doing now. {@code jei}: JEI categories that get a button for it.
 	 */
-	public record Opens(List<String> items, List<Entry> blocks, List<Identifier> jei)
+	public record Opens(List<String> items, List<Entry> blocks, List<ResourceLocation> jei)
 	{
 		public static final Opens NONE = new Opens(List.of(), List.of(), List.of());
 
 		public static final Codec<Opens> CODEC = RecordCodecBuilder.create(inst -> inst.group(
 			Codec.STRING.listOf().optionalFieldOf("items", List.of()).forGetter(Opens::items),
 			Entry.CODEC.listOf().optionalFieldOf("blocks", List.of()).forGetter(Opens::blocks),
-			Identifier.CODEC.listOf().optionalFieldOf("jei", List.of()).forGetter(Opens::jei)
+			ResourceLocation.CODEC.listOf().optionalFieldOf("jei", List.of()).forGetter(Opens::jei)
 		).apply(inst, Opens::new));
 	}
 
@@ -137,10 +137,10 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 	 * {@code step} (1 = the first), with the lang key {@code now} of a line saying what the block is doing. The first
 	 * entry that fits wins.
 	 */
-	public record Entry(Identifier block, Map<String, String> when, Optional<Boolean> heated, int step, Optional<String> now)
+	public record Entry(ResourceLocation block, Map<String, String> when, Optional<Boolean> heated, int step, Optional<String> now)
 	{
 		public static final Codec<Entry> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-			Identifier.CODEC.fieldOf("block").forGetter(Entry::block),
+			ResourceLocation.CODEC.fieldOf("block").forGetter(Entry::block),
 			Codec.unboundedMap(Codec.STRING, Codec.STRING).optionalFieldOf("when", Map.of()).forGetter(Entry::when),
 			Codec.BOOL.optionalFieldOf("heated").forGetter(Entry::heated),
 			ExtraCodecs.POSITIVE_INT.optionalFieldOf("step", 1).forGetter(Entry::step),
@@ -291,12 +291,12 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 	 * at {@code stage} ({@code fermenting}, {@code young} or {@code aged}) and {@code progress} (0 to 1) through it. The
 	 * barrel's fill and bung follow, as in the world.
 	 */
-	public record Barrel(int at, BlockPos pos, Identifier recipe, int servings, String stage, float progress) implements Action
+	public record Barrel(int at, BlockPos pos, ResourceLocation recipe, int servings, String stage, float progress) implements Action
 	{
 		static final MapCodec<Barrel> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
 			atField(),
 			BlockPos.CODEC.fieldOf("pos").forGetter(Barrel::pos),
-			Identifier.CODEC.fieldOf("recipe").forGetter(Barrel::recipe),
+			ResourceLocation.CODEC.fieldOf("recipe").forGetter(Barrel::recipe),
 			ExtraCodecs.intRange(0, 64).fieldOf("servings").forGetter(Barrel::servings),
 			Codec.STRING.validate(WatchScene::validStage).fieldOf("stage").forGetter(Barrel::stage),
 			Codec.floatRange(0.0F, 1.0F).optionalFieldOf("progress", 0.0F).forGetter(Barrel::progress)
@@ -312,12 +312,12 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 	 * A Brew Kettle's brew, from a real brewing recipe (so a data pack's changes show up): {@code servings} of the
 	 * recipe's result, in its bucket form too. The kettle's fill follows, as in the world.
 	 */
-	public record Kettle(int at, BlockPos pos, Identifier recipe, int servings) implements Action
+	public record Kettle(int at, BlockPos pos, ResourceLocation recipe, int servings) implements Action
 	{
 		static final MapCodec<Kettle> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
 			atField(),
 			BlockPos.CODEC.fieldOf("pos").forGetter(Kettle::pos),
-			Identifier.CODEC.fieldOf("recipe").forGetter(Kettle::recipe),
+			ResourceLocation.CODEC.fieldOf("recipe").forGetter(Kettle::recipe),
 			ExtraCodecs.intRange(0, 64).fieldOf("servings").forGetter(Kettle::servings)
 		).apply(inst, Kettle::new));
 
@@ -339,10 +339,10 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 	 * {@code aged} drink. A brewing recipe: its {@code result} (a bottle of it), its {@code bucket}, or an
 	 * {@code ingredient} (the first item of its first ingredient).
 	 */
-	public record RecipePart(Identifier recipe, String part)
+	public record RecipePart(ResourceLocation recipe, String part)
 	{
 		public static final Codec<RecipePart> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-			Identifier.CODEC.fieldOf("recipe").forGetter(RecipePart::recipe),
+			ResourceLocation.CODEC.fieldOf("recipe").forGetter(RecipePart::recipe),
 			Codec.STRING.fieldOf("part").forGetter(RecipePart::part)
 		).apply(inst, RecipePart::new));
 	}
@@ -378,11 +378,11 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 	}
 
 	/** A real sound event, played at a point of the stage (vanilla's subtitles show it). */
-	public record Sound(int at, Identifier sound, Vec3 pos, float volume, float pitch) implements Action
+	public record Sound(int at, ResourceLocation sound, Vec3 pos, float volume, float pitch) implements Action
 	{
 		static final MapCodec<Sound> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
 			atField(),
-			Identifier.CODEC.fieldOf("sound").forGetter(Sound::sound),
+			ResourceLocation.CODEC.fieldOf("sound").forGetter(Sound::sound),
 			Vec3.CODEC.optionalFieldOf("pos", Vec3.ZERO).forGetter(Sound::pos),
 			Codec.FLOAT.optionalFieldOf("volume", 1.0F).forGetter(Sound::volume),
 			Codec.FLOAT.optionalFieldOf("pitch", 1.0F).forGetter(Sound::pitch)

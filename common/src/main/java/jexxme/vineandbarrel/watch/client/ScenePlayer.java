@@ -15,11 +15,9 @@ import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
 import jexxme.vineandbarrel.kettle.BrewingRecipe;
 import jexxme.vineandbarrel.kettle.KettleContents;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
-import jexxme.vineandbarrel.mixin.ParticleEngineAccessor;
 import jexxme.vineandbarrel.watch.WatchScene;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
@@ -61,7 +59,7 @@ public final class ScenePlayer
 
 	private final WatchScene scene;
 	private final SceneWorld world;
-	private final ParticleEngine particles;
+	private final SceneParticles particles = new SceneParticles();
 	private final ClientLevel level;
 	private final Map<String, SceneFigure> figures = new LinkedHashMap<>();
 	private final RandomSource random = RandomSource.create();
@@ -75,7 +73,6 @@ public final class ScenePlayer
 		this.scene = scene;
 		this.level = level;
 		this.world = new SceneWorld(level.registryAccess().lookupOrThrow(Registries.BIOME).get(Biomes.PLAINS).orElse(null));
-		this.particles = new ParticleEngine(level, ((ParticleEngineAccessor) Minecraft.getInstance().particleEngine).vineandbarrel$resources());
 		jumpTo(0);
 	}
 
@@ -87,7 +84,7 @@ public final class ScenePlayer
 		return world;
 	}
 
-	ParticleEngine particles() {
+	SceneParticles particles() {
 		return particles;
 	}
 
@@ -291,13 +288,13 @@ public final class ScenePlayer
 		}
 	}
 
-	static @Nullable BrewingRecipe brewingRecipe(net.minecraft.resources.Identifier id) {
+	static @Nullable BrewingRecipe brewingRecipe(net.minecraft.resources.ResourceLocation id) {
 		return brewingRecipe(id, true);
 	}
 
-	static @Nullable BrewingRecipe brewingRecipe(net.minecraft.resources.Identifier id, boolean warn) {
+	static @Nullable BrewingRecipe brewingRecipe(net.minecraft.resources.ResourceLocation id, boolean warn) {
 		for (RecipeHolder<BrewingRecipe> holder : JeiRecipeCache.brewing()) {
-			if (holder.id().identifier().equals(id)) {
+			if (holder.id().equals(id)) {
 				return holder.value();
 			}
 		}
@@ -311,13 +308,13 @@ public final class ScenePlayer
 		return agingRecipe(barrel.recipe());
 	}
 
-	static @Nullable AgingRecipe agingRecipe(net.minecraft.resources.Identifier id) {
+	static @Nullable AgingRecipe agingRecipe(net.minecraft.resources.ResourceLocation id) {
 		ClientLevel level = Minecraft.getInstance().level;
 		if (level == null) {
 			return null;
 		}
 		for (RecipeHolder<AgingRecipe> holder : AgingRecipes.all(level)) {
-			if (holder.id().identifier().equals(id)) {
+			if (holder.id().equals(id)) {
 				return holder.value();
 			}
 		}

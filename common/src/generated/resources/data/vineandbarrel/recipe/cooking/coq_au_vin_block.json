@@ -17,18 +17,28 @@
     }
   ],
   "ingredients": [
-    "#c:foods/raw_chicken",
-    "#c:foods/raw_chicken",
-    [
-      "vineandbarrel:red_wine",
-      "vineandbarrel:aged_red_wine"
-    ],
-    "minecraft:brown_mushroom",
-    "#c:crops/onion",
-    "#c:foods/raw_bacon"
+    {
+      "tag": "c:foods/raw_chicken"
+    },
+    {
+      "tag": "c:foods/raw_chicken"
+    },
+    {
+      "tag": "vineandbarrel:cooking/red_wine"
+    },
+    {
+      "item": "minecraft:brown_mushroom"
+    },
+    {
+      "tag": "c:crops/onion"
+    },
+    {
+      "tag": "c:foods/raw_bacon"
+    }
   ],
   "recipe_book_tab": "meals",
   "result": {
+    "count": 1,
     "id": "vineandbarrel:coq_au_vin_block"
   }
 }

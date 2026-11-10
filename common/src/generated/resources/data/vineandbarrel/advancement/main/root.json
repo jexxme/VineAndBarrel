@@ -6,11 +6,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "background": "minecraft:block/spruce_planks",
+    "background": "minecraft:textures/block/spruce_planks.png",
     "description": {
       "translate": "advancements.vineandbarrel.root.description"
     },
     "icon": {
+      "count": 1,
       "id": "vineandbarrel:aging_barrel"
     },
     "show_toast": false,

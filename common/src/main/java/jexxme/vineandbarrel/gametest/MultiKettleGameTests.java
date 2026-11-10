@@ -13,19 +13,12 @@ import jexxme.vineandbarrel.kettle.KettleRegistry;
 import jexxme.vineandbarrel.kettle.KettleShape;
 import jexxme.vineandbarrel.kettle.KettleSupport;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -40,13 +33,10 @@ import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -56,11 +46,11 @@ import java.util.function.Consumer;
  */
 public final class MultiKettleGameTests
 {
-	private static final Identifier ROOM = VineAndBarrel.id("gametest/empty_16x14x16");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
-	private static final List<ResourceKey<Consumer<GameTestHelper>>> TESTS = new ArrayList<>();
-	private static final Map<ResourceKey<Consumer<GameTestHelper>>, Integer> TIMEOUTS = new HashMap<>();
-	private static final Map<ResourceKey<Consumer<GameTestHelper>>, Identifier> STRUCTURES = new HashMap<>();
+	private static final ResourceLocation ROOM = VineAndBarrel.id("gametest/empty_16x14x16");
+	private static final List<Entry> TESTS = new ArrayList<>();
+
+	private record Entry(String name, int timeout, ResourceLocation structure, Consumer<GameTestHelper> function) {
+	}
 
 	/** The kettles' bottom corner: fires go one block below. */
 	private static final BlockPos BASE = new BlockPos(3, 2, 3);
@@ -106,23 +96,17 @@ public final class MultiKettleGameTests
 		test(name, timeout, ROOM, function);
 	}
 
-	private static void test(String name, int timeout, Identifier structure, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		ResourceKey<Consumer<GameTestHelper>> key = ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name));
-		TESTS.add(key);
-		TIMEOUTS.put(key, timeout);
-		STRUCTURES.put(key, structure);
+	private static void test(String name, int timeout, ResourceLocation structure, Consumer<GameTestHelper> function) {
+		TESTS.add(new Entry(name, timeout, structure, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(MultiKettleGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("multikettle"));
-		for (ResourceKey<Consumer<GameTestHelper>> function : TESTS) {
-			event.registerTest(function.identifier(), new FunctionGameTestInstance(function, new TestData<>(environment, STRUCTURES.get(function), TIMEOUTS.get(function), 0, true)));
+		for (Entry test : TESTS) {
+			VBGameTests.add(event, "multikettle", test.name(), test.structure(), test.timeout(), test.function());
 		}
 	}
 
@@ -284,10 +268,10 @@ public final class MultiKettleGameTests
 		for (int i = 0; i < 7; i++) {
 			place(helper, BASE.offset(i & 1, (i >> 2) & 1, (i >> 1) & 1), false);
 		}
-		fillBrew(helper.getBlockEntity(BASE, BrewKettleBlockEntity.class), 4);
+		fillBrew(VBGameTests.blockEntity(helper, BASE, BrewKettleBlockEntity.class), 4);
 		ItemStack item = new ItemStack(KettleRegistry.kettleItem());
 		item.set(KettleRegistry.KETTLE_CONTENTS.get(), new KettleContents(new ItemStack(BaseItems.GRAPE_JUICE.get(), 4), new ItemStack(BaseItems.GRAPE_JUICE_BUCKET.get())));
-		helper.getBlockEntity(BASE.east(), BrewKettleBlockEntity.class).applyComponentsFromItemStack(item);
+		VBGameTests.blockEntity(helper, BASE.east(), BrewKettleBlockEntity.class).applyComponentsFromItemStack(item);
 		place(helper, BASE.offset(1, 1, 1), false);
 		helper.runAfterDelay(2, () -> {
 			assertAllParts(helper, 2, false);
@@ -300,10 +284,10 @@ public final class MultiKettleGameTests
 		for (int i = 0; i < 7; i++) {
 			place(helper, BASE.offset(i & 1, (i >> 2) & 1, (i >> 1) & 1), false);
 		}
-		fillBrew(helper.getBlockEntity(BASE, BrewKettleBlockEntity.class), 5);
-		fillBrew(helper.getBlockEntity(BASE.east(), BrewKettleBlockEntity.class), 3);
-		helper.getBlockEntity(BASE.south(), BrewKettleBlockEntity.class).setStack(0, new ItemStack(Items.SWEET_BERRIES, 10));
-		helper.getBlockEntity(BASE.south().east(), BrewKettleBlockEntity.class).setStack(2, new ItemStack(Items.SWEET_BERRIES, 6));
+		fillBrew(VBGameTests.blockEntity(helper, BASE, BrewKettleBlockEntity.class), 5);
+		fillBrew(VBGameTests.blockEntity(helper, BASE.east(), BrewKettleBlockEntity.class), 3);
+		VBGameTests.blockEntity(helper, BASE.south(), BrewKettleBlockEntity.class).setStack(0, new ItemStack(Items.SWEET_BERRIES, 10));
+		VBGameTests.blockEntity(helper, BASE.south().east(), BrewKettleBlockEntity.class).setStack(2, new ItemStack(Items.SWEET_BERRIES, 6));
 		place(helper, BASE.offset(1, 1, 1), false);
 		helper.runAfterDelay(2, () -> joinPoolsTheBrewAfter(helper));
 	}
@@ -347,7 +331,7 @@ public final class MultiKettleGameTests
 	private static void breakSharesTheBrew(GameTestHelper helper) {
 		BrewKettleBlockEntity kettle = bigKettle(helper, KettleShape.BIG, 4);
 		fillBrew(kettle, 32);
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		player.gameMode.destroyBlock(helper.absolutePos(BASE.offset(1, 1, 1)));
 		helper.assertTrue(helper.getBlockState(BASE).getBlock() instanceof BrewKettleBlock, "the rest fell apart into single kettles");
@@ -359,7 +343,7 @@ public final class MultiKettleGameTests
 	private static void breakingTheControllerSplits(GameTestHelper helper) {
 		BrewKettleBlockEntity kettle = bigKettle(helper, KettleShape.BIG, 4);
 		fillBrew(kettle, 32);
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		player.gameMode.destroyBlock(helper.absolutePos(BASE));
 		helper.assertTrue(helper.getBlockState(BASE.offset(1, 1, 1)).getBlock() instanceof BrewKettleBlock, "the rest fell apart into single kettles");
@@ -416,8 +400,8 @@ public final class MultiKettleGameTests
 		bigKettle(helper, KettleShape.BIG, 4);
 		BlockPos hopper = BASE.offset(1, 2, 1);
 		helper.setBlock(hopper, Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.DOWN));
-		helper.getBlockEntity(hopper, HopperBlockEntity.class).setItem(0, new ItemStack(Items.SWEET_BERRIES, 4));
-		helper.getBlockEntity(hopper, HopperBlockEntity.class).setItem(1, new ItemStack(Items.SUGAR, 1));
+		VBGameTests.blockEntity(helper, hopper, HopperBlockEntity.class).setItem(0, new ItemStack(Items.SWEET_BERRIES, 4));
+		VBGameTests.blockEntity(helper, hopper, HopperBlockEntity.class).setItem(1, new ItemStack(Items.SUGAR, 1));
 		helper.succeedWhen(() -> {
 			int berries = 0;
 			for (int i = 0; i < BrewKettleBlockEntity.INPUT_SLOTS; i++) {
@@ -483,7 +467,7 @@ public final class MultiKettleGameTests
 		helper.assertValueEqual(kettle.getServings(), 320, "a Big Kettle holds 320");
 		var tag = kettle.saveWithFullMetadata(helper.getLevel().registryAccess());
 		kettle.clearContent();
-		kettle.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), tag));
+		kettle.loadWithComponents(tag, helper.getLevel().registryAccess());
 		helper.assertValueEqual(kettle.getServings(), 320, "320 servings after saving and loading");
 		helper.assertTrue(kettle.getBucketForm().is(BaseItems.SWEET_BERRY_JUICE_BUCKET.get()), "bucket form after loading");
 		helper.succeed();
@@ -568,7 +552,7 @@ public final class MultiKettleGameTests
 		place(helper, BASE, false);
 		// a plank roof two blocks up
 		for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) helper.setBlock(BASE.offset(x, 3, z), Blocks.OAK_PLANKS);
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.COPPER_INGOT, 4));
 		for (int i = 0; i < 4; i++) helper.useBlock(BASE, player);
@@ -583,7 +567,7 @@ public final class MultiKettleGameTests
 	private static void chimneyStopsAtObsidian(GameTestHelper helper) {
 		place(helper, BASE, false);
 		helper.setBlock(BASE.above(2), Blocks.OBSIDIAN);
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.COPPER_INGOT, 4));
 		for (int i = 0; i < 4; i++) helper.useBlock(BASE, player);
@@ -593,7 +577,7 @@ public final class MultiKettleGameTests
 	}
 
 	private static ServerPlayer survivorWithIngots(GameTestHelper helper) {
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.COPPER_INGOT, 4));
 		return player;
@@ -649,7 +633,7 @@ public final class MultiKettleGameTests
 		helper.setBlock(BASE.offset(1, 1, 1), Blocks.AIR);
 		for (int y = 0; y < 2; y++) for (int z = 0; z < 2; z++) for (int x = 0; x < 2; x++) {
 			if (x == 1 && y == 1 && z == 1) continue;
-			BrewKettleBlockEntity single = helper.getBlockEntity(BASE.offset(x, y, z), BrewKettleBlockEntity.class);
+			BrewKettleBlockEntity single = VBGameTests.blockEntity(helper, BASE.offset(x, y, z), BrewKettleBlockEntity.class);
 			helper.assertValueEqual(single.getServings(), BrewKettleBlockEntity.MAX_SERVINGS, "each kettle full, never over");
 		}
 		helper.succeedWhen(() -> helper.assertValueEqual(dropped(helper, BaseItems.SWEET_BERRY_JUICE_BUCKET.get()), 16, "the 64 left over drop as buckets"));
@@ -670,7 +654,7 @@ public final class MultiKettleGameTests
 	private static void smallSightGlass(GameTestHelper helper) {
 		fires(helper, 1, 0);
 		place(helper, BASE, false);
-		fillBrew(helper.getBlockEntity(BASE, BrewKettleBlockEntity.class), 33);
+		fillBrew(VBGameTests.blockEntity(helper, BASE, BrewKettleBlockEntity.class), 33);
 		helper.succeedWhen(() -> {
 			helper.assertValueEqual(helper.getBlockState(BASE).getValue(BrewKettleBlock.FILL), 3, "the Kettle's sight glass shows 33 of 64");
 			helper.assertTrue(!helper.getBlockState(BASE).getValue(BrewKettleBlock.OPEN), "the lid stays shut: the glass shows the brew");
@@ -698,8 +682,8 @@ public final class MultiKettleGameTests
 			state = net.minecraft.commands.arguments.blocks.BlockStateParser.parseForBlock(helper.getLevel().holderLookup(Registries.BLOCK), STATE_1_0, false).blockState();
 			helper.getLevel().setBlock(helper.absolutePos(at), state, Block.UPDATE_ALL);
 			helper.getLevel().setBlock(helper.absolutePos(at.east()), state.setValue(BrewKettleBlock.FILL, 0), Block.UPDATE_ALL);
-			var tag = net.minecraft.nbt.TagParser.parseCompoundFully(DATA_1_0);
-			helper.getBlockEntity(at, BrewKettleBlockEntity.class).loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), tag));
+			var tag = net.minecraft.nbt.TagParser.parseTag(DATA_1_0);
+			VBGameTests.blockEntity(helper, at, BrewKettleBlockEntity.class).loadWithComponents(tag, helper.getLevel().registryAccess());
 		} catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
 			throw new IllegalStateException(e);
 		}
@@ -707,7 +691,7 @@ public final class MultiKettleGameTests
 		helper.assertTrue(state.getBlock() instanceof BrewKettleBlock, "still a single kettle");
 		helper.assertValueEqual(state.getValue(BrewKettleBlock.SUPPORT), KettleSupport.TRAY, "on its tray");
 		helper.assertTrue(!state.getValue(BrewKettleBlock.EXTENDED), "chimney not extended");
-		BrewKettleBlockEntity kettle = helper.getBlockEntity(at, BrewKettleBlockEntity.class);
+		BrewKettleBlockEntity kettle = VBGameTests.blockEntity(helper, at, BrewKettleBlockEntity.class);
 		helper.assertValueEqual(kettle.getServings(), 8, "servings kept");
 		helper.assertTrue(kettle.getBrew().is(BaseItems.SWEET_BERRY_JUICE.get()), "the brew kept");
 		helper.assertTrue(kettle.getBucketForm().is(BaseItems.SWEET_BERRY_JUICE_BUCKET.get()), "bucket form kept");

@@ -2,7 +2,7 @@ package jexxme.vineandbarrel.advancement;
 
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.drink.DrankTogether;
-import net.minecraft.advancements.triggers.CriterionTrigger;
+import net.minecraft.advancements.CriterionTrigger;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;

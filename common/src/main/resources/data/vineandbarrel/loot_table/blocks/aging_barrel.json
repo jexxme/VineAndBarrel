@@ -2,36 +2,23 @@
   "type": "minecraft:block",
   "pools": [
     {
-      "condition": {
-        "type": "minecraft:survives_explosion"
-      },
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
       "entries": [
         {
           "type": "minecraft:item",
-          "modifier": [
+          "functions": [
             {
-              "type": "minecraft:copy_components",
+              "function": "minecraft:copy_components",
               "include": [
                 "minecraft:custom_name",
                 "vineandbarrel:barrel_contents",
                 "vineandbarrel:home_brewed"
               ],
               "source": "block_entity"
-            },
-            {
-              "type": "minecraft:set_components",
-              "condition": {
-                "type": "minecraft:match_block",
-                "blocks": "vineandbarrel:aging_barrel",
-                "state": {
-                  "fill": {
-                    "min": "1"
-                  }
-                }
-              },
-              "components": {
-                "!minecraft:cooking_fuel": {}
-              }
             }
           ],
           "name": "vineandbarrel:aging_barrel"

@@ -5,17 +5,17 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -32,7 +32,6 @@ import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.Prediction;
 
 import java.util.function.Supplier;
 
@@ -66,17 +65,18 @@ public class FeastBlock extends Block
 
 	/** What a serving is eaten from: the serving's bowl (its crafting remainder). */
 	public Item container() {
-		var remainder = serving.get().getCraftingRemainder();
-		return remainder == null ? net.minecraft.world.item.Items.BOWL : remainder.item().value();
+		Item remainder = serving.get().getCraftingRemainingItem();
+		return remainder == null ? net.minecraft.world.item.Items.BOWL : remainder;
 	}
 
 	@Override
-	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
 		if (state.getValue(SERVINGS) == 0) {
-			return clearLeftovers(level, pos, player);
+			clearLeftovers(level, pos, player);
+			return ItemInteractionResult.sidedSuccess(level.isClientSide());
 		}
 		if (!stack.is(container())) {
-			return InteractionResult.TRY_WITH_EMPTY_HAND;
+			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 		}
 		if (!level.isClientSide()) {
 			ItemStack meal = serving();
@@ -84,16 +84,16 @@ public class FeastBlock extends Block
 			stack.consume(1, player);
 			player.awardStat(Stats.ITEM_USED.get(bowl));
 			if (!player.getInventory().add(meal)) {
-				player.drop(meal, false, Prediction.SERVER_ONLY);
+				player.drop(meal, false);
 			}
 			level.setBlock(pos, state.setValue(SERVINGS, state.getValue(SERVINGS) - 1), Block.UPDATE_ALL);
 			level.playSound(null, pos, FDCompat.FEAST_SERVE.value(), SoundSource.BLOCKS, 1.0F, 1.0F);
 			if (level instanceof ServerLevel server) {
-				server.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, serving.get()), pos.getX() + 0.5D, pos.getY() + 0.4D,
+				server.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, serving()), pos.getX() + 0.5D, pos.getY() + 0.4D,
 					pos.getZ() + 0.5D, 6, 0.2D, 0.1D, 0.2D, 0.05D);
 			}
 		}
-		return InteractionResult.SUCCESS;
+		return ItemInteractionResult.sidedSuccess(level.isClientSide());
 	}
 
 	@Override
@@ -103,7 +103,7 @@ public class FeastBlock extends Block
 		}
 		// PASS, as FD's feasts: a bowl in the off hand still serves, and a block in the main hand still places
 		if (!player.getOffhandItem().is(container())) {
-			player.sendOverlayMessage(Component.translatable("block.vineandbarrel.feast.use_container", new ItemStack(container()).getHoverName()));
+			player.displayClientMessage(Component.translatable("block.vineandbarrel.feast.use_container", new ItemStack(container()).getHoverName()), true);
 		}
 		return InteractionResult.PASS;
 	}
@@ -113,7 +113,7 @@ public class FeastBlock extends Block
 			level.playSound(null, pos, SoundEvents.LANTERN_BREAK, SoundSource.BLOCKS, 0.8F, 0.8F);
 			level.destroyBlock(pos, true, player);
 		}
-		return InteractionResult.SUCCESS;
+		return InteractionResult.sidedSuccess(level.isClientSide());
 	}
 
 	@Override
@@ -127,9 +127,9 @@ public class FeastBlock extends Block
 	}
 
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	protected BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
 		return direction == Direction.DOWN && !state.canSurvive(level, pos) ? Blocks.AIR.defaultBlockState()
-			: super.updateShape(state, level, ticks, pos, direction, neighbourPos, neighbourState, random);
+			: super.updateShape(state, direction, neighbourState, level, pos, neighbourPos);
 	}
 
 	@Override
@@ -144,7 +144,7 @@ public class FeastBlock extends Block
 	}
 
 	@Override
-	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
+	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
 		return state.getValue(SERVINGS);
 	}
 

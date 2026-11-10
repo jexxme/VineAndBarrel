@@ -4,7 +4,7 @@ import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.mixin.BeeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.entity.animal.bee.Bee;
+import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;

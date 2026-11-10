@@ -30,7 +30,7 @@ abstract class RefusedClientMixin
 			return;
 		}
 		String problem = null;
-		if (mc.gui.screen() instanceof DisconnectedScreen screen) {
+		if (mc.screen instanceof DisconnectedScreen screen) {
 			String reason = screen.getNarrationMessage().getString();
 			Bare.LOGGER.info("Refused by the server: {}", reason);
 			problem = reason.isBlank() ? "refused without a reason" : null;

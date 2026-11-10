@@ -8,6 +8,7 @@ import net.minecraft.world.food.FoodConstants;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -34,7 +35,9 @@ public final class DrinkFood
 		int nutrition = perTick * buff.getDuration();
 		float saturation = FoodConstants.saturationByModifier(perTick, 1.0F) * buff.getDuration();
 		FoodProperties own = stack.get(DataComponents.FOOD);
-		return Optional.of(own == null ? new FoodProperties(nutrition, saturation, true)
-			: new FoodProperties(own.nutrition() + nutrition, own.saturation() + saturation, own.canAlwaysEat()));
+		// 1.21.1: the food component also carries the eating time, the vessel and the buff; they stay as they are
+		return Optional.of(own == null ? new FoodProperties(nutrition, saturation, true, 1.6F, Optional.empty(), List.of())
+			: new FoodProperties(own.nutrition() + nutrition, own.saturation() + saturation, own.canAlwaysEat(), own.eatSeconds(),
+				own.usingConvertsTo(), own.effects()));
 	}
 }

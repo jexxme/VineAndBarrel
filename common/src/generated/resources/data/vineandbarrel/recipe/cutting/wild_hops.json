@@ -15,11 +15,14 @@
     }
   ],
   "ingredients": [
-    "vineandbarrel:wild_hops"
+    {
+      "item": "vineandbarrel:wild_hops"
+    }
   ],
   "result": [
     {
       "item": {
+        "count": 1,
         "id": "vineandbarrel:hops"
       }
     },
@@ -31,5 +34,7 @@
       }
     }
   ],
-  "tool": "#c:tools/knife"
+  "tool": {
+    "tag": "c:tools/knife"
+  }
 }

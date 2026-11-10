@@ -5,6 +5,42 @@
       "name": "VINEANDBARREL_BREWING",
       "constructor": "()V",
       "parameters": []
+    },
+    {
+      "enum": "net/minecraft/client/RecipeBookCategories",
+      "name": "VINEANDBARREL_BREWING_SEARCH",
+      "constructor": "(Ljava/util/function/Supplier;)V",
+      "parameters": {
+        "class": "jexxme/vineandbarrel/neoforge/client/BrewingBookEnumParams",
+        "field": "SEARCH"
+      }
+    },
+    {
+      "enum": "net/minecraft/client/RecipeBookCategories",
+      "name": "VINEANDBARREL_BREWING_JUICES",
+      "constructor": "(Ljava/util/function/Supplier;)V",
+      "parameters": {
+        "class": "jexxme/vineandbarrel/neoforge/client/BrewingBookEnumParams",
+        "field": "JUICES"
+      }
+    },
+    {
+      "enum": "net/minecraft/client/RecipeBookCategories",
+      "name": "VINEANDBARREL_BREWING_WORTS",
+      "constructor": "(Ljava/util/function/Supplier;)V",
+      "parameters": {
+        "class": "jexxme/vineandbarrel/neoforge/client/BrewingBookEnumParams",
+        "field": "WORTS"
+      }
+    },
+    {
+      "enum": "net/minecraft/client/RecipeBookCategories",
+      "name": "VINEANDBARREL_BREWING_MISC",
+      "constructor": "(Ljava/util/function/Supplier;)V",
+      "parameters": {
+        "class": "jexxme/vineandbarrel/neoforge/client/BrewingBookEnumParams",
+        "field": "MISC"
+      }
     }
   ]
 }

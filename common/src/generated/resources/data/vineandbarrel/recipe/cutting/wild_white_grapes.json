@@ -15,11 +15,14 @@
     }
   ],
   "ingredients": [
-    "vineandbarrel:wild_white_grapes"
+    {
+      "item": "vineandbarrel:wild_white_grapes"
+    }
   ],
   "result": [
     {
       "item": {
+        "count": 1,
         "id": "vineandbarrel:white_grapes"
       }
     },
@@ -31,5 +34,7 @@
       }
     }
   ],
-  "tool": "#c:tools/knife"
+  "tool": {
+    "tag": "c:tools/knife"
+  }
 }

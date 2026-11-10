@@ -10,22 +10,22 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementRewards;
 import net.minecraft.advancements.AdvancementType;
-import net.minecraft.advancements.triggers.ConsumeItemTrigger;
-import net.minecraft.advancements.triggers.InventoryChangeTrigger;
-import net.minecraft.advancements.triggers.ItemUsedOnLocationTrigger;
-import net.minecraft.core.HolderGetter;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.advancements.critereon.ConsumeItemTrigger;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
+import net.minecraft.advancements.critereon.ItemUsedOnLocationTrigger;
+import net.minecraft.advancements.critereon.StatePropertiesPredicate;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.data.advancements.AdvancementSubProvider;
-import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -34,28 +34,22 @@ import java.util.function.Supplier;
  * melon wine (FD only) is not required, so the tab can be finished without Farmer's Delight. Mead Hall and Cider House ask
  * for mead and hard cider, young and aged; hard cider is made from apple juice too, so both work without FD.
  */
-public class VBAdvancementGenerator extends AdvancementSubProvider
+public class VBAdvancementGenerator implements AdvancementSubProvider
 {
 	/** Every advancement of the tab, by name ({@code vineandbarrel:main/<name>}). */
 	public static final List<String> ALL = List.of("root", "first_brew", "patience_pays", "vintner", "brewmaster", "mead_hall",
 		"cider_house", "cellar_master", "on_tap", "cheers", "sleep_it_off", "where_am_i", "lost_weekend");
 
-	public VBAdvancementGenerator(BootstrapContext<Advancement> output) {
-		super(output);
-	}
-
-	public static Identifier id(String name) {
+	public static ResourceLocation id(String name) {
 		return VineAndBarrel.id("main/" + name);
 	}
 
 	@Override
-	public void generate() {
-		HolderGetter<Item> items = output.lookup(Registries.ITEM);
-		HolderGetter<Block> blocks = output.lookup(Registries.BLOCK);
-
+	public void generate(HolderLookup.Provider registries, Consumer<AdvancementHolder> output) {
 		AdvancementHolder root = Advancement.Builder.advancement()
-			.rootDisplay(BarrelRegistry.AGING_BARREL_ITEM.get(), title("root"), description("root"),
-				Identifier.withDefaultNamespace("block/spruce_planks"), AdvancementType.TASK, false, false, false)
+			.display(BarrelRegistry.AGING_BARREL_ITEM.get(), title("root"), description("root"),
+				// 1.21.1: the background is the texture file itself
+				ResourceLocation.withDefaultNamespace("textures/block/spruce_planks.png"), AdvancementType.TASK, false, false, false)
 			.addCriterion("any_item", InventoryChangeTrigger.TriggerInstance.hasItems(new ItemLike[]{}))
 			.save(output, path("root"));
 
@@ -69,26 +63,27 @@ public class VBAdvancementGenerator extends AdvancementSubProvider
 			.save(output, path("patience_pays"));
 
 		Advancement.Builder vintner = child(patiencePays, DrinkItems.AGED_SWEET_BERRY_WINE.get(), "vintner", AdvancementType.CHALLENGE);
-		drank(vintner, items, DrinkItems.RED_WINE, DrinkItems.AGED_RED_WINE, DrinkItems.WHITE_WINE, DrinkItems.AGED_WHITE_WINE,
+		drank(vintner, DrinkItems.RED_WINE, DrinkItems.AGED_RED_WINE, DrinkItems.WHITE_WINE, DrinkItems.AGED_WHITE_WINE,
 			DrinkItems.SWEET_BERRY_WINE, DrinkItems.AGED_SWEET_BERRY_WINE);
 		vintner.rewards(AdvancementRewards.Builder.experience(100)).save(output, path("vintner"));
 
 		Advancement.Builder brewmaster = child(patiencePays, DrinkItems.AGED_BARLEY_ALE.get(), "brewmaster", AdvancementType.CHALLENGE);
-		drank(brewmaster, items, DrinkItems.BARLEY_ALE, DrinkItems.AGED_BARLEY_ALE, DrinkItems.WHEAT_BEER, DrinkItems.AGED_WHEAT_BEER);
+		drank(brewmaster, DrinkItems.BARLEY_ALE, DrinkItems.AGED_BARLEY_ALE, DrinkItems.WHEAT_BEER, DrinkItems.AGED_WHEAT_BEER);
 		brewmaster.rewards(AdvancementRewards.Builder.experience(100)).save(output, path("brewmaster"));
 
 		// Mead and our own cider, young and aged
 		Advancement.Builder meadHall = child(patiencePays, DrinkItems.AGED_MEAD.get(), "mead_hall", AdvancementType.GOAL);
-		drank(meadHall, items, DrinkItems.MEAD, DrinkItems.AGED_MEAD);
+		drank(meadHall, DrinkItems.MEAD, DrinkItems.AGED_MEAD);
 		meadHall.save(output, path("mead_hall"));
 
 		Advancement.Builder ciderHouse = child(patiencePays, DrinkItems.AGED_HARD_CIDER.get(), "cider_house", AdvancementType.GOAL);
-		drank(ciderHouse, items, DrinkItems.HARD_CIDER, DrinkItems.AGED_HARD_CIDER);
+		drank(ciderHouse, DrinkItems.HARD_CIDER, DrinkItems.AGED_HARD_CIDER);
 		ciderHouse.save(output, path("cider_house"));
 
 		child(firstBrew, BarrelRegistry.AGING_BARREL_ITEM.get(), "cellar_master", AdvancementType.GOAL)
-			.addCriterion("stacked_barrel", ItemUsedOnLocationTrigger.TriggerInstance.placedBlockWithProperties(blocks,
-				BarrelRegistry.AGING_BARREL.get(), AgingBarrelBlock.STACKED, true))
+			.addCriterion("stacked_barrel", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(
+				LootItemBlockStatePropertyCondition.hasBlockStateProperties(BarrelRegistry.AGING_BARREL.get())
+					.setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(AgingBarrelBlock.STACKED, true))))
 			.save(output, path("cellar_master"));
 
 		// Tavern branch: a village barrel, drinking together, the morning after
@@ -100,7 +95,7 @@ public class VBAdvancementGenerator extends AdvancementSubProvider
 			.addCriterion("cheers", VBTrigger.criterion(VBAdvancements.CHEERS))
 			.save(output, path("cheers"));
 
-		AdvancementHolder sleepItOff = child(cheers, Items.BED.red(), "sleep_it_off", AdvancementType.TASK)
+		AdvancementHolder sleepItOff = child(cheers, Items.RED_BED, "sleep_it_off", AdvancementType.TASK)
 			.addCriterion("slept_it_off", VBTrigger.criterion(VBAdvancements.SLEPT_IT_OFF))
 			.save(output, path("sleep_it_off"));
 
@@ -117,16 +112,16 @@ public class VBAdvancementGenerator extends AdvancementSubProvider
 	}
 
 	@SafeVarargs
-	private static void drank(Advancement.Builder builder, HolderGetter<Item> items, Supplier<? extends Item>... drinks) {
+	private static void drank(Advancement.Builder builder, Supplier<? extends Item>... drinks) {
 		for (Supplier<? extends Item> drink : drinks) {
 			Item item = drink.get();
-			builder.addCriterion(item.builtInRegistryHolder().key().identifier().getPath(), ConsumeItemTrigger.TriggerInstance.usedItem(items, item));
+			builder.addCriterion(item.builtInRegistryHolder().key().location().getPath(), ConsumeItemTrigger.TriggerInstance.usedItem(item));
 		}
 	}
 
 	/** Like FD: every one toasts, goals and challenges are also announced in chat. */
 	private static Advancement.Builder child(AdvancementHolder parent, ItemLike icon, String name, AdvancementType frame) {
-		return Advancement.Builder.advancement().parent(parent).display(icon.asItem(), title(name), description(name), frame, true,
+		return Advancement.Builder.advancement().parent(parent).display(icon.asItem(), title(name), description(name), null, frame, true,
 			frame != AdvancementType.TASK, false);
 	}
 

@@ -6,10 +6,13 @@ import jexxme.vineandbarrel.platform.ConfigValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
 import net.minecraft.network.chat.Component;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -29,6 +32,9 @@ public class VBConfigScreen extends OptionsSubScreen
 	/** Its slider moves in steps of this, up to {@link #COARSE_RANGE} (or the current value); the file takes any value. */
 	private static final int COARSE_STEP = 10;
 
+	/** As wide as a full-width option row. */
+	private static final int HEADER_WIDTH = 310;
+
 	private final boolean worldSettings;
 
 	public VBConfigScreen(Screen parent) {
@@ -47,7 +53,9 @@ public class VBConfigScreen extends OptionsSubScreen
 	}
 
 	private void section(ConfigValue.Side side) {
-		this.list.addHeader(Component.translatable(PREFIX + "section." + VineAndBarrel.MODID + ".tipsy." + side.name().toLowerCase(Locale.ROOT) + ".toml"));
+		// A header row: the section's name across the row, centred (this Minecraft's options list has no header rows of its own)
+		Component header = Component.translatable(PREFIX + "section." + VineAndBarrel.MODID + ".tipsy." + side.name().toLowerCase(Locale.ROOT) + ".toml");
+		this.list.addSmall(List.of(new StringWidget(HEADER_WIDTH, Button.DEFAULT_HEIGHT, header, this.font)));
 		for (ConfigValue<?> value : ConfigValue.all()) {
 			if (value.side() == side) {
 				this.list.addBig(option(value));

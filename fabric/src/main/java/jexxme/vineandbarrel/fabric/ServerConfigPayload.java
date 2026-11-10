@@ -44,7 +44,7 @@ public record ServerConfigPayload(Map<String, String> values) implements CustomP
 	}
 
 	static void register() {
-		PayloadTypeRegistry.clientboundPlay().register(TYPE, CODEC);
+		PayloadTypeRegistry.playS2C().register(TYPE, CODEC);
 		ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
 			if (ServerPlayNetworking.canSend(listener, TYPE)) {
 				sender.sendPacket(current());

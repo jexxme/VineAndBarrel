@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
+          java-version: 21
 
       - uses: gradle/actions/setup-gradle@v4
 
@@ -44,18 +44,18 @@ jobs:
             exit 1
           fi
 
-      - name: GameTests, headless (gameplay, edge cases, item conservation), on NeoForge and on Fabric (also with Farmer's Delight Refabricated, and with the compat mods)
-        # NeoForge with Farmer's Delight Neoforged (runGameTestServerFd) stays local for now: that run needs an FD
-        # Neoforged jar, and its Modrinth project (8Vb5dzx9) isn't public yet, so its Maven has nothing to fetch.
+      - name: GameTests, headless (gameplay, edge cases, item conservation), on NeoForge and on Fabric (also with Farmer's Delight, and with the compat mods)
+        # The NeoForge FD run uses the original Farmer's Delight from Modrinth's Maven (nothing to download by hand)
         run: |
           set -o pipefail
-          ./gradlew :neoforge:runGameTestServer :neoforge:runGameTestServerCompat :fabric:runGameTest :fabric:runGameTestFd :fabric:runGameTestCompat --console=plain 2>&1 | tee gametest.log
+          ./gradlew :neoforge:runGameTestServer :neoforge:runGameTestServerFd :neoforge:runGameTestServerCompat :fabric:runGameTest :fabric:runGameTestFd :fabric:runGameTestCompat --console=plain 2>&1 | tee gametest.log
 
       - name: No errors in the GameTest server log
         run: |
           # A clean run logs no ERROR lines at all. Any ERROR (data that failed to load, a swallowed exception,
-          # a broken recipe) fails the build, even when every test passed.
-          if grep -E "/ERROR\]" gametest.log; then
+          # a broken recipe) fails the build, even when every test passed. Except the ones other mods log about
+          # themselves in a dev environment (scripts/multiloader/known-errors.txt).
+          if grep -E "/ERROR\]" gametest.log | grep -vEf <(grep -v '^#' scripts/multiloader/known-errors.txt | tr -d '\r'); then
             echo "::error::Errors were logged while the GameTests ran (see above)."
             exit 1
           fi

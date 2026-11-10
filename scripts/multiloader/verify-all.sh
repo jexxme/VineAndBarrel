@@ -79,13 +79,18 @@ log_seconds() {
     b=$((10#${last:0:2} * 3600 + 10#${last:3:2} * 60 + 10#${last:6:2}))
     echo $(( (b - a + 86400) % 86400 ))
 }
+# This older-Minecraft branch only: ERROR lines other mods log about their own data on this Minecraft version, which
+# change nothing for our tests (one extended regex per line in known-errors.txt, matched against the whole line)
+known_errors=scripts/multiloader/known-errors.txt
 errors_in_log() { # prints the first ERROR lines and fails if there are any
     if [ ! -f "$1" ]; then
         echo "no log: $1"
         return 1
     fi
-    if grep -q '/ERROR\]' "$1"; then
-        grep '/ERROR\]' "$1" | head -5
+    local found
+    found=$(grep '/ERROR\]' "$1" | { if [ -s "$known_errors" ]; then grep -vEf <(grep -v '^#' "$known_errors" | tr -d '\r'); else cat; fi; })
+    if [ -n "$found" ]; then
+        echo "$found" | head -5
         return 1
     fi
 }
@@ -109,7 +114,7 @@ add_run neoforge :neoforge:runGameTestServer neoforge/run/logs/latest.log "${neo
 add_run neoforge-fd :neoforge:runGameTestServerFd neoforge/run-fd/logs/latest.log "${neoforge_inputs[*]}" neoforge/run-fd/config neoforge/run-fd/mods
 add_run neoforge-compat :neoforge:runGameTestServerCompat neoforge/run-compat/logs/latest.log "${neoforge_inputs[*]}" neoforge/run-compat/config neoforge/run-compat/mods
 add_run fabric :fabric:runGameTest fabric/run/gametest/logs/latest.log "${fabric_inputs[*]}" fabric/run/gametest/config fabric/run/gametest/mods fabric/run/gametest/server.properties
-add_run fabric-fd :fabric:runGameTestFd fabric/run-fd/logs/latest.log "${fabric_inputs[*]}" fabric/run-fd/config fabric/run-fd/mods fabric/run-fd/server.properties
+add_run fabric-fd :fabric:runGameTestFd fabric/run-fd/logs/latest.log "${fabric_inputs[*]}" fabric/run-fd/config fabric/run-fd/server.properties
 add_run fabric-compat :fabric:runGameTestCompat fabric/run-compat/logs/latest.log "${fabric_inputs[*]}" fabric/run-compat/config fabric/run-compat/mods fabric/run-compat/server.properties
 add_run smoke-client :fabric:runSmokeClient fabric/run/smoke-client/logs/latest.log "${fabric_inputs[*]}" fabric/src/smoketest fabric/run/smoke-client/config
 add_run smoke-client-fd :fabric:runSmokeClientFd fabric/run/smoke-client-fd/logs/latest.log "${fabric_inputs[*]}" fabric/src/smoketest fabric/run/smoke-client-fd/config

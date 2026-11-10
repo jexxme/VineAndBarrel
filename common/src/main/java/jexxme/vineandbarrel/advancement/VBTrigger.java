@@ -2,11 +2,11 @@ package jexxme.vineandbarrel.advancement;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.advancements.triggers.Criterion;
-import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
-import net.minecraft.core.Holder;
+import net.minecraft.advancements.critereon.ContextAwarePredicate;
+import net.minecraft.advancements.critereon.EntityPredicate;
+import net.minecraft.advancements.Criterion;
+import net.minecraft.advancements.critereon.SimpleCriterionTrigger;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -31,10 +31,10 @@ public class VBTrigger extends SimpleCriterionTrigger<VBTrigger.TriggerInstance>
 		return trigger.get().createCriterion(new TriggerInstance(Optional.empty()));
 	}
 
-	public record TriggerInstance(Optional<Holder<LootItemCondition>> player) implements SimpleCriterionTrigger.SimpleInstance
+	public record TriggerInstance(Optional<ContextAwarePredicate> player) implements SimpleCriterionTrigger.SimpleInstance
 	{
 		public static final Codec<TriggerInstance> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-			LootItemCondition.CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player)
+			EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player)
 		).apply(inst, TriggerInstance::new));
 	}
 }

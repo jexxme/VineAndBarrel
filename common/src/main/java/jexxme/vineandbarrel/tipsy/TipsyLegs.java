@@ -274,8 +274,8 @@ public final class TipsyLegs
 
 	private static void setMotion(LivingEntity entity, Vec3 motion) {
 		entity.setDeltaMovement(motion);
-		entity.needsSync = true;
+		entity.hasImpulse = true;
 		// Sends the new speed to the entity's own client too (a player moves on its client), like knockback does
-		entity.syncVelocity = true;
+		entity.hurtMarked = true;
 	}
 }

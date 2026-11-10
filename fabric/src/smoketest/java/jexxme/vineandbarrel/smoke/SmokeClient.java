@@ -1,7 +1,6 @@
 package jexxme.vineandbarrel.smoke;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.input.KeyEvent;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.network.chat.Component;
 import jexxme.vineandbarrel.VineAndBarrel;
@@ -54,7 +53,7 @@ import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockState;
@@ -63,6 +62,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
@@ -132,7 +132,7 @@ public final class SmokeClient implements ClientModInitializer
 		}
 	}
 
-	private enum Phase { TITLE, LOADING, SETTLING, STEPS, HOSTING, DONE }
+	private enum Phase { TITLE, LOADING, SETTLING, STEPS, HOSTING, QUIETING, DONE }
 
 	private final Path out = FabricLoader.getInstance().getGameDir().resolve("smoke");
 	private final List<Step> steps = new ArrayList<>();
@@ -150,6 +150,10 @@ public final class SmokeClient implements ClientModInitializer
 	private int leftAt = -1;
 	/** Whether the table of drinks was still there right after the client's own guess of a break. */
 	private boolean keptAtOnce;
+	/** Stopping: what {@link #finish} was told, how long the stop has waited for the world's generation, and what the server last said. */
+	private boolean completedRun;
+	private int quietTicks;
+	private volatile boolean generating = true;
 	/** Chat lines this client received (for the slurred-chat step). */
 	private final List<String> chat = new java.util.concurrent.CopyOnWriteArrayList<>();
 	private static final String TYPED = "cheers to the cellar";
@@ -172,7 +176,7 @@ public final class SmokeClient implements ClientModInitializer
 
 	/** Moves the pointer down the open inventory's effect list until an effect tooltip was drawn. */
 	private void hover(Minecraft mc) {
-		if (hoverY < 0 || !effectTooltip.isEmpty() || !(mc.gui.screen() instanceof InventoryScreen screen)) {
+		if (hoverY < 0 || !effectTooltip.isEmpty() || !(mc.screen instanceof InventoryScreen screen)) {
 			return;
 		}
 		AbstractContainerScreenAccessor panel = (AbstractContainerScreenAccessor) screen;
@@ -220,8 +224,8 @@ public final class SmokeClient implements ClientModInitializer
 	private void defineSteps() {
 		steps.add(new Step("scene_builds", 100, mc -> {
 			command(mc, "gamemode creative");
-			command(mc, "gamerule advance_time false");
-			command(mc, "gamerule spawn_mobs false");
+			command(mc, "gamerule doDaylightCycle false");
+			command(mc, "gamerule doMobSpawning false");
 			command(mc, "weather clear 1000000");
 			command(mc, "time set 6000");
 			command(mc, "vbsmoke setup");
@@ -304,20 +308,20 @@ public final class SmokeClient implements ClientModInitializer
 			BlockPos kettle = origin(mc).offset(SmokeCommands.KETTLE);
 			useOn(mc, kettle, Vec3.atCenterOf(kettle).add(0.0, 0.3, -0.4), Direction.NORTH);
 		}, mc -> {
-			if (!(mc.gui.screen() instanceof BrewKettleScreen screen)) {
-				return "the screen is " + mc.gui.screen();
+			if (!(mc.screen instanceof BrewKettleScreen screen)) {
+				return "the screen is " + mc.screen;
 			}
 			BrewKettleMenu menu = screen.getMenu();
 			return menu.getServings() == 6 ? null : "the kettle screen shows " + menu.getServings() + " servings instead of 6";
 		}, "kettle_screen", true));
 		steps.add(new Step("kettle_takes_an_ingredient_by_shift_click", 20, mc -> {
-			if (mc.gui.screen() instanceof BrewKettleScreen screen) {
+			if (mc.screen instanceof BrewKettleScreen screen) {
 				// The hotbar's first slot, right after the 6 ingredient slots and the 27 inventory slots
 				int hotbar0 = BrewKettleMenu.INDEX_INVENTORY + 27;
-				mc.gameMode.handleContainerInput(screen.getMenu().containerId, hotbar0, 0, ContainerInput.QUICK_MOVE, mc.player);
+				mc.gameMode.handleInventoryMouseClick(screen.getMenu().containerId, hotbar0, 0, ClickType.QUICK_MOVE, mc.player);
 			}
 		}, mc -> {
-			if (!(mc.gui.screen() instanceof BrewKettleScreen screen)) {
+			if (!(mc.screen instanceof BrewKettleScreen screen)) {
 				return "the kettle screen closed";
 			}
 			ItemStack grid = screen.getMenu().getSlot(0).getItem();
@@ -328,13 +332,13 @@ public final class SmokeClient implements ClientModInitializer
 			if (!VBJeiPlugin.showOurCategories()) {
 				LOGGER.warn("JEI did not open our categories");
 			}
-		}, mc -> mc.gui.screen() != null && mc.gui.screen().getClass().getName().toLowerCase(java.util.Locale.ROOT).contains("jei")
-			? null : "the screen is " + mc.gui.screen(), "jei", true));
+		}, mc -> mc.screen != null && mc.screen.getClass().getName().toLowerCase(java.util.Locale.ROOT).contains("jei")
+			? null : "the screen is " + mc.screen, "jei", true));
 		// Mod Menu's Config button opens this screen (Mod Menu isn't in the run): the settings as vanilla options rows
-		steps.add(new Step("the_settings_screen_opens", 20, mc -> mc.gui.setScreen(new VBConfigScreen(null)),
-			mc -> mc.gui.screen() instanceof VBConfigScreen ? null : "the screen is " + mc.gui.screen(), "settings", true));
+		steps.add(new Step("the_settings_screen_opens", 20, mc -> mc.setScreen(new VBConfigScreen(null)),
+			mc -> mc.screen instanceof VBConfigScreen ? null : "the screen is " + mc.screen, "settings", true));
 		steps.add(new Step("place_a_drink_by_sneak_click", 30, mc -> {
-			mc.gui.setScreen(null);
+			mc.setScreen(null);
 			command(mc, "vbsmoke look empty_table");
 			command(mc, "item replace entity @s weapon.mainhand with vineandbarrel:aged_red_wine");
 			mc.options.keyShift.setDown(true);
@@ -407,7 +411,7 @@ public final class SmokeClient implements ClientModInitializer
 		}, "after_one_ale", true));
 		steps.add(new Step("tipsy_reaches_the_client", 100, mc -> {
 			command(mc, "gamemode creative");
-			mc.gui.setScreen(null);
+			mc.setScreen(null);
 			command(mc, "vbsmoke view");
 			command(mc, "vbsmoke tipsy 4");
 		}, mc -> {
@@ -442,8 +446,8 @@ public final class SmokeClient implements ClientModInitializer
 		// The survival inventory, which lists the effects (Tipsy's own entry, its side effects hidden when icon-less)
 		steps.add(new Step("survival_for_the_inventory", 20, mc -> command(mc, "gamemode survival"),
 			mc -> mc.player.isCreative() ? "still in creative" : null, null, true).polled());
-		steps.add(new Step("inventory_with_tipsy", 30, mc -> mc.gui.setScreen(new InventoryScreen(mc.player)),
-			mc -> mc.gui.screen() instanceof InventoryScreen ? null : "the screen is " + mc.gui.screen(), "inventory_tipsy", true));
+		steps.add(new Step("inventory_with_tipsy", 30, mc -> mc.setScreen(new InventoryScreen(mc.player)),
+			mc -> mc.screen instanceof InventoryScreen ? null : "the screen is " + mc.screen, "inventory_tipsy", true));
 		// Hovering Tipsy in that list explains the level (Fabric: EffectsInInventoryMixin; the pointer moves down the
 		// list a little each tick until something shows a tooltip)
 		steps.add(new Step("hovering_tipsy_explains_the_level", 80, mc -> {
@@ -456,13 +460,14 @@ public final class SmokeClient implements ClientModInitializer
 			if (!shown.contains(expected)) {
 				return "the Tipsy tooltip shows [" + shown + "], expected the line " + expected;
 			}
-			// What is drawn, not only what was built: name, time and every line of the level
+			// What is drawn, not only what was built: name, time and every line of the level, in one tooltip (JEI is in every
+			// run and makes the effect list the narrow one, icons alone, whose tooltip starts with vanilla's name and time)
 			int lines = 2 + TipsyInfo.lines(4).size();
 			return drawnTooltipLines >= lines ? null : "the drawn tooltip has " + drawnTooltipLines + " lines, expected " + lines;
 		}, "inventory_tipsy_tooltip", true).polled());
 		steps.add(new Step("sway_in_third_person", 60, mc -> {
 			hoverY = -1;
-			mc.gui.setScreen(null);
+			mc.setScreen(null);
 			command(mc, "gamemode creative");
 			command(mc, "vbsmoke view");
 			mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);
@@ -491,7 +496,7 @@ public final class SmokeClient implements ClientModInitializer
 			if (!mc.player.getSleepingPos().map(head::equals).orElse(false)) {
 				return "in another bed: " + mc.player.getSleepingPos() + " instead of " + head;
 			}
-			return mc.gui.screen() instanceof InBedChatScreen ? "the Leave Bed screen opened" : null;
+			return mc.screen instanceof InBedChatScreen ? "the Leave Bed screen opened" : null;
 		}, "blackout_home_bed", true).polled());
 		steps.add(new Step("wakes_up_after_the_blackout", 300, mc -> {
 		}, mc -> {
@@ -522,10 +527,10 @@ public final class SmokeClient implements ClientModInitializer
 			command(mc, "item replace entity @s hotbar.8 with vineandbarrel:aging_barrel");
 		}, null, null, false));
 		steps.add(new Step("watch_it_open_the_inventory", 5, mc -> {
-			mc.gui.setScreen(new InventoryScreen(mc.player));
+			mc.setScreen(new InventoryScreen(mc.player));
 		}, null, null, false));
 		steps.add(new Step("watch_it_key_over_the_barrel", 10, mc -> {
-			if (mc.gui.screen() instanceof InventoryScreen screen) {
+			if (mc.screen instanceof InventoryScreen screen) {
 				AbstractContainerScreenAccessor panel = (AbstractContainerScreenAccessor) screen;
 				Slot slot = screen.getMenu().slots.stream().filter(s -> s.container == mc.player.getInventory() && s.getContainerSlot() == 8).findFirst().orElseThrow();
 				MouseHandlerAccessor mouse = (MouseHandlerAccessor) mc.mouseHandler;
@@ -535,19 +540,19 @@ public final class SmokeClient implements ClientModInitializer
 			}
 		}, null, "watch_tooltip", false));
 		steps.add(new Step("watch_it_opens_from_the_inventory", 20, mc ->
-			mc.keyboardHandler.keyPress(mc.getWindow().handle(), InputConstants.PRESS, new KeyEvent(InputConstants.KEY_G, 0, 0)),
-			mc -> mc.gui.screen() instanceof WatchScreen ? null : "G over the barrel: the screen is " + mc.gui.screen(), null, false));
+			mc.keyboardHandler.keyPress(mc.getWindow().getWindow(), InputConstants.KEY_G, 0, InputConstants.PRESS, 0),
+			mc -> mc.screen instanceof WatchScreen ? null : "G over the barrel: the screen is " + mc.screen, null, false));
 		steps.add(new Step("watch_it_goes_back_to_the_inventory", 5, mc -> {
-			if (mc.gui.screen() != null) {
-				mc.gui.screen().onClose();
+			if (mc.screen != null) {
+				mc.screen.onClose();
 			}
-		}, mc -> mc.gui.screen() instanceof InventoryScreen ? null : "after Escape the screen is " + mc.gui.screen(), null, false));
+		}, mc -> mc.screen instanceof InventoryScreen ? null : "after Escape the screen is " + mc.screen, null, false));
 		steps.add(new Step("watch_it_done", 2, mc -> {
-			mc.gui.setScreen(null);
+			mc.setScreen(null);
 			command(mc, "gamemode creative");
 		}, null, null, true));
 		steps.add(new Step("watch_it_opens_at_the_barrel", 40, mc -> {
-			mc.gui.setScreen(null);
+			mc.setScreen(null);
 			BlockPos barrel = origin(mc).offset(SmokeCommands.BARREL);
 			WatchIndex.INSTANCE.forBlock(mc.level, barrel, mc.level.getBlockState(barrel)).ifPresent(entry ->
 				WatchScreen.open(entry.scene(), entry.step(), entry.now().map(Component::translatable).orElse(null), null));
@@ -558,20 +563,20 @@ public final class SmokeClient implements ClientModInitializer
 			if (entry.isEmpty()) {
 				return "no scene for the barrel " + state;
 			}
-			if (!(mc.gui.screen() instanceof WatchScreen screen)) {
-				return "the screen is " + mc.gui.screen();
+			if (!(mc.screen instanceof WatchScreen screen)) {
+				return "the screen is " + mc.screen;
 			}
 			return screen.player().step() == entry.get().step() ? null : "the scene opened at step " + screen.player().step() + " for " + state;
 		}, "watch_barrel_from_the_world", false));
 		// It plays: the brewer, the real blocks, particles and sounds in a 3D view
 		steps.add(new Step("watch_it_plays", 60, mc -> {
-			mc.gui.setScreen(null);
-			if (WatchScreen.open(VineAndBarrel.id("aging_barrel")) && mc.gui.screen() instanceof WatchScreen screen) {
+			mc.setScreen(null);
+			if (WatchScreen.open(VineAndBarrel.id("aging_barrel")) && mc.screen instanceof WatchScreen screen) {
 				screen.player().jumpTo(1);
 			}
 		}, mc -> {
-			if (!(mc.gui.screen() instanceof WatchScreen screen)) {
-				return "the screen is " + mc.gui.screen();
+			if (!(mc.screen instanceof WatchScreen screen)) {
+				return "the screen is " + mc.screen;
 			}
 			ScenePlayer player = screen.player();
 			if (player.scene().steps().size() != 5) {
@@ -585,9 +590,9 @@ public final class SmokeClient implements ClientModInitializer
 			steps.add(watchScene("watch_farmers_delight_plays", "farmers_delight", 1, "watch_farmers_delight"));
 		}
 		// The Brewer's path: every station of the journey, with what the player has done ticked off
-		steps.add(new Step("watch_path_opens", 40, mc -> mc.gui.setScreen(new WatchPathScreen(null)),
-			mc -> mc.gui.screen() instanceof WatchPathScreen ? null : "the path didn't open: the screen is " + mc.gui.screen(), "watch_path", false));
-		steps.add(new Step("watch_it_closes", 5, mc -> mc.gui.setScreen(null), mc -> mc.gui.screen() == null ? null : "still open: " + mc.gui.screen(), null, true));
+		steps.add(new Step("watch_path_opens", 40, mc -> mc.setScreen(new WatchPathScreen(null)),
+			mc -> mc.screen instanceof WatchPathScreen ? null : "the path didn't open: the screen is " + mc.screen, "watch_path", false));
+		steps.add(new Step("watch_it_closes", 5, mc -> mc.setScreen(null), mc -> mc.screen == null ? null : "still open: " + mc.screen, null, true));
 		// A real plains village grown by the game with our tavern in it; its casks reach the client
 		// Growing villages until one has a tavern can keep the server busy for a while (with FD, up to ten tries)
 		steps.add(new Step("a_village_with_a_tavern", 600, mc -> {
@@ -609,13 +614,13 @@ public final class SmokeClient implements ClientModInitializer
 	/** A scene opens at a step and plays there for a few seconds, its screenshot taken. */
 	private static Step watchScene(String name, String scene, int step, String shot) {
 		return new Step(name, 60, mc -> {
-			mc.gui.setScreen(null);
-			if (WatchScreen.open(VineAndBarrel.id(scene)) && mc.gui.screen() instanceof WatchScreen screen) {
+			mc.setScreen(null);
+			if (WatchScreen.open(VineAndBarrel.id(scene)) && mc.screen instanceof WatchScreen screen) {
 				screen.player().jumpTo(step);
 			}
 		}, mc -> {
-			if (!(mc.gui.screen() instanceof WatchScreen screen)) {
-				return "the " + scene + " scene didn't open: the screen is " + mc.gui.screen();
+			if (!(mc.screen instanceof WatchScreen screen)) {
+				return "the " + scene + " scene didn't open: the screen is " + mc.screen;
 			}
 			return screen.player().step() == step && screen.player().tick() > 30 ? null
 				: "the scene is at step " + screen.player().step() + ", tick " + screen.player().tick();
@@ -643,11 +648,11 @@ public final class SmokeClient implements ClientModInitializer
 						LOGGER.info("Joined the host");
 						ticks = 0;
 						phase = Phase.SETTLING;
-					} else if (mc.gui.screen() instanceof DisconnectedScreen screen) {
+					} else if (mc.screen instanceof DisconnectedScreen screen) {
 						// Refused or kicked: fail now instead of waiting for the timeout
 						record("joins_the_server", "could not join: " + screen.getNarrationMessage().getString());
 						finish(mc, false);
-					} else if (!connecting && CONNECT != null && READY != null && mc.gui.screen() instanceof TitleScreen) {
+					} else if (!connecting && CONNECT != null && READY != null && mc.screen instanceof TitleScreen) {
 						if (Files.exists(Path.of(READY + ".failed"))) {
 							record("joins_the_server", "the host stopped before it was ready");
 							finish(mc, false);
@@ -658,10 +663,10 @@ public final class SmokeClient implements ClientModInitializer
 								new ServerData("V&B smoke test", CONNECT, ServerData.Type.OTHER), false, null);
 						}
 					}
-				} else if (mc.gui.screen() instanceof TitleScreen) {
+				} else if (mc.screen instanceof TitleScreen) {
 					LOGGER.info("Creating the smoke test world");
-					LevelSettings settings = new LevelSettings("V&B smoke test", GameType.CREATIVE,
-						new LevelSettings.DifficultySettings(Difficulty.PEACEFUL, false, false), true, WorldDataConfiguration.DEFAULT);
+					LevelSettings settings = new LevelSettings("V&B smoke test", GameType.CREATIVE, false, Difficulty.PEACEFUL, true, new GameRules(),
+						WorldDataConfiguration.DEFAULT);
 					mc.createWorldOpenFlows().createFreshLevel(WORLD, settings, new WorldOptions(20261107L, false, false),
 						WorldPresets::createNormalWorldDimensions, new TitleScreen());
 					phase = Phase.LOADING;
@@ -704,6 +709,18 @@ public final class SmokeClient implements ClientModInitializer
 					}
 				}
 			}
+			case QUIETING -> {
+				// See SmokeQuiet: this Minecraft may never finish "Saving worlds" when stopped while chunks generate
+				MinecraftServer server = mc.getSingleplayerServer();
+				if (server == null || !generating || ++quietTicks > SmokeQuiet.LIMIT) {
+					if (server != null && generating) {
+						LOGGER.warn("The world still generates chunks after {} ticks; stopping anyway", quietTicks);
+					}
+					stop(mc);
+				} else {
+					server.execute(() -> generating = SmokeQuiet.generating(server));
+				}
+			}
 			case DONE -> {
 			}
 		}
@@ -718,10 +735,10 @@ public final class SmokeClient implements ClientModInitializer
 	}
 
 	private void host(Minecraft mc, IntegratedServer server) {
-		command(mc, "gamerule advance_time false");
-		command(mc, "gamerule spawn_mobs false");
+		command(mc, "gamerule doDaylightCycle false");
+		command(mc, "gamerule doMobSpawning false");
 		server.setUsesAuthentication(false);
-		boolean published = server.publishServer(MinecraftServer.MultiplayerScope.LAN, true, PORT);
+		boolean published = server.publishServer(null, true, PORT);
 		record("host_opens_to_lan", published ? null : "could not open to LAN on port " + PORT);
 		try {
 			Files.writeString(out.resolve("host-ready"), Integer.toString(PORT), StandardCharsets.UTF_8);
@@ -756,7 +773,7 @@ public final class SmokeClient implements ClientModInitializer
 
 	private void runStep(Minecraft mc) {
 		if (mc.player == null || mc.level == null) {
-			if (mc.gui.screen() instanceof DisconnectedScreen screen) {
+			if (mc.screen instanceof DisconnectedScreen screen) {
 				record(steps.get(step).name(), "disconnected: " + screen.getNarrationMessage().getString());
 			}
 			LOGGER.error("Lost the world during step {}", steps.get(step).name());
@@ -764,8 +781,8 @@ public final class SmokeClient implements ClientModInitializer
 			return;
 		}
 		Step current = steps.get(step);
-		if (mc.gui.hud.isHidden() == current.hud()) {
-			mc.gui.hud.toggle();
+		if (mc.options.hideGui == current.hud()) {
+			mc.options.hideGui = !mc.options.hideGui;
 		}
 		ticks++;
 		if (current.poll() && passedAt < 0 && ticks < current.delay() && passes(mc, current)) {
@@ -815,7 +832,7 @@ public final class SmokeClient implements ClientModInitializer
 
 	private void shoot(Minecraft mc, String name) {
 		String file = name + ".png";
-		Screenshot.grab(mc.gameDirectory, file, mc.gameRenderer.mainRenderTarget(), 1, message -> {
+		Screenshot.grab(mc.gameDirectory, file, mc.getMainRenderTarget(), message -> {
 			Path saved = mc.gameDirectory.toPath().resolve(Screenshot.SCREENSHOT_DIR).resolve(file);
 			try {
 				Files.copy(saved, out.resolve(file), StandardCopyOption.REPLACE_EXISTING);
@@ -825,7 +842,18 @@ public final class SmokeClient implements ClientModInitializer
 		});
 	}
 
+	/** The run is over: its own world first gets to finish generating (see {@link SmokeQuiet}), then the results are written and the game stops. */
 	private void finish(Minecraft mc, boolean completed) {
+		completedRun = completed;
+		if (mc.getSingleplayerServer() != null && phase != Phase.QUIETING) {
+			phase = Phase.QUIETING;
+			return;
+		}
+		stop(mc);
+	}
+
+	private void stop(Minecraft mc) {
+		boolean completed = completedRun;
 		phase = Phase.DONE;
 		JsonObject report = new JsonObject();
 		report.addProperty("mode", MODE);
@@ -847,7 +875,7 @@ public final class SmokeClient implements ClientModInitializer
 	}
 
 	private static BlockPos origin(Minecraft mc) {
-		BlockPos spawn = mc.level.getLevelData().getRespawnData().pos();
+		BlockPos spawn = mc.level.getLevelData().getSpawnPos();
 		return new BlockPos(spawn.getX(), SmokeCommands.HEIGHT, spawn.getZ());
 	}
 

@@ -4,16 +4,14 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStackTemplate;
-import net.minecraft.world.item.crafting.PlacementInfo;
 import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeBookCategory;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -34,8 +32,8 @@ import java.util.Optional;
  *   "fermenting_time": 24000, "aging_time": 72000   (optional, in ticks: 1 day, then 3 more days)
  * }
  * </pre>
- * The drinks are served into the vessel their use remainder names (a mug or a wine glass); a recipe whose drink has
- * none is rejected once loaded. If two recipes share a base, the lowest id wins ({@link AgingRecipes}).
+ * The drinks are served into the vessel their food component converts to (a mug or a wine glass; 26.x: their use
+ * remainder); a recipe whose drink has none is rejected once loaded. If two recipes share a base, the lowest id wins ({@link AgingRecipes}).
  */
 public class AgingRecipe implements Recipe<RecipeInput>
 {
@@ -44,33 +42,37 @@ public class AgingRecipe implements Recipe<RecipeInput>
 	/** Three more in-game days. */
 	public static final int DEFAULT_AGING_TIME = 3 * 24000;
 
+	/** A drink: its id alone ({@code "vineandbarrel:red_wine"}), or a whole stack ({@code {"id": ..., "components": ...}}), as on 26.x. */
+	private static final Codec<ItemStack> DRINK_CODEC = Codec.withAlternative(ItemStack.STRICT_SINGLE_ITEM_CODEC, ItemStack.ITEM_NON_AIR_CODEC, ItemStack::new);
+
 	public static final MapCodec<AgingRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
-		Item.CODEC.fieldOf("base").forGetter(AgingRecipe::base),
-		Item.CODEC.optionalFieldOf("bucket").forGetter(AgingRecipe::bucket),
-		ItemStackTemplate.CODEC.fieldOf("young").forGetter(r -> r.young),
-		ItemStackTemplate.CODEC.fieldOf("aged").forGetter(r -> r.aged),
+		ItemStack.ITEM_NON_AIR_CODEC.fieldOf("base").forGetter(AgingRecipe::base),
+		ItemStack.ITEM_NON_AIR_CODEC.optionalFieldOf("bucket").forGetter(AgingRecipe::bucket),
+		DRINK_CODEC.fieldOf("young").forGetter(r -> r.young),
+		DRINK_CODEC.fieldOf("aged").forGetter(r -> r.aged),
 		Codec.intRange(1, Integer.MAX_VALUE).optionalFieldOf("fermenting_time", DEFAULT_FERMENTING_TIME).forGetter(AgingRecipe::fermentingTime),
 		Codec.intRange(1, Integer.MAX_VALUE).optionalFieldOf("aging_time", DEFAULT_AGING_TIME).forGetter(AgingRecipe::agingTime)
 	).apply(inst, AgingRecipe::new));
 
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, AgingRecipe> STREAM_CODEC = StreamCodec.composite(
-		Item.STREAM_CODEC, AgingRecipe::base,
-		ByteBufCodecs.optional(Item.STREAM_CODEC), AgingRecipe::bucket,
-		ItemStackTemplate.STREAM_CODEC, r -> r.young,
-		ItemStackTemplate.STREAM_CODEC, r -> r.aged,
+		ByteBufCodecs.holderRegistry(Registries.ITEM), AgingRecipe::base,
+		ByteBufCodecs.optional(ByteBufCodecs.holderRegistry(Registries.ITEM)), AgingRecipe::bucket,
+		ItemStack.STREAM_CODEC, r -> r.young,
+		ItemStack.STREAM_CODEC, r -> r.aged,
 		ByteBufCodecs.VAR_INT, AgingRecipe::fermentingTime,
 		ByteBufCodecs.VAR_INT, AgingRecipe::agingTime,
 		AgingRecipe::new);
 
 	private final Holder<Item> base;
 	private final Optional<Holder<Item>> bucket;
-	private final ItemStackTemplate young;
-	private final ItemStackTemplate aged;
+	/** Never changed or handed out: {@link #young()} and {@link #aged()} copy (26.x: an ItemStackTemplate). */
+	private final ItemStack young;
+	private final ItemStack aged;
 	private final int fermentingTime;
 	private final int agingTime;
 
-	public AgingRecipe(Holder<Item> base, Optional<Holder<Item>> bucket, ItemStackTemplate young, ItemStackTemplate aged, int fermentingTime, int agingTime) {
+	public AgingRecipe(Holder<Item> base, Optional<Holder<Item>> bucket, ItemStack young, ItemStack aged, int fermentingTime, int agingTime) {
 		this.base = base;
 		this.bucket = bucket;
 		this.young = young;
@@ -88,11 +90,11 @@ public class AgingRecipe implements Recipe<RecipeInput>
 	}
 
 	public ItemStack young() {
-		return young.create();
+		return young.copy();
 	}
 
 	public ItemStack aged() {
-		return aged.create();
+		return aged.copy();
 	}
 
 	public int fermentingTime() {
@@ -104,15 +106,14 @@ public class AgingRecipe implements Recipe<RecipeInput>
 	}
 
 	/**
-	 * Why this recipe can't work, if it can't: a drink is tapped into the vessel its use remainder names, so a drink
-	 * without one could never be tapped. Checked once the recipes are loaded (26.3 binds item components after recipe
-	 * decoding), see {@link AgingRecipes}.
+	 * Why this recipe can't work, if it can't: a drink is tapped into the vessel its food component converts to, so a
+	 * drink without one could never be tapped. Checked once the recipes are loaded, see {@link AgingRecipes}.
 	 */
 	public Optional<String> problem() {
-		for (ItemStackTemplate drink : List.of(young, aged)) {
-			if (drink.create().get(DataComponents.USE_REMAINDER) == null) {
-				return Optional.of("its drink " + drink.item().getRegisteredName()
-					+ " has no minecraft:use_remainder, so it names no vessel (mug, wine glass) to be tapped into");
+		for (ItemStack drink : List.of(young, aged)) {
+			if (AgingBarrelBlockEntity.vesselOf(drink) == null) {
+				return Optional.of("its drink " + drink.getItemHolder().getRegisteredName()
+					+ " has no minecraft:food with using_converts_to, so it names no vessel (mug, wine glass) to be tapped into");
 			}
 		}
 		return Optional.empty();
@@ -131,7 +132,7 @@ public class AgingRecipe implements Recipe<RecipeInput>
 
 	/** The batch this recipe starts in an empty barrel, with no servings yet. */
 	public BarrelContents newBatch() {
-		return new BarrelContents(new ItemStack(base), bucket.map(ItemStack::new).orElse(ItemStack.EMPTY), young(), aged(), 0, 0L,
+		return new BarrelContents(new ItemStack(base), bucket.<ItemStack>map(ItemStack::new).orElse(ItemStack.EMPTY), young(), aged(), 0, 0L,
 			fermentingTime, agingTime);
 	}
 
@@ -141,7 +142,17 @@ public class AgingRecipe implements Recipe<RecipeInput>
 	}
 
 	@Override
-	public ItemStack assemble(RecipeInput input) {
+	public ItemStack assemble(RecipeInput input, HolderLookup.Provider registries) {
+		return young();
+	}
+
+	@Override
+	public boolean canCraftInDimensions(int width, int height) {
+		return true;
+	}
+
+	@Override
+	public ItemStack getResultItem(HolderLookup.Provider registries) {
 		return young();
 	}
 
@@ -157,7 +168,7 @@ public class AgingRecipe implements Recipe<RecipeInput>
 	}
 
 	@Override
-	public String group() {
+	public String getGroup() {
 		return "";
 	}
 
@@ -169,15 +180,5 @@ public class AgingRecipe implements Recipe<RecipeInput>
 	@Override
 	public RecipeType<AgingRecipe> getType() {
 		return BarrelRegistry.AGING.get();
-	}
-
-	@Override
-	public PlacementInfo placementInfo() {
-		return PlacementInfo.NOT_PLACEABLE;
-	}
-
-	@Override
-	public RecipeBookCategory recipeBookCategory() {
-		return BarrelRegistry.AGING_CATEGORY.get();
 	}
 }

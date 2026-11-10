@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipes": "vineandbarrel:barley_from_bale"
+        "recipe": "vineandbarrel:barley_from_bale"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

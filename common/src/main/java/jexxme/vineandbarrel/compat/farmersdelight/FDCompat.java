@@ -5,7 +5,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
@@ -34,8 +34,8 @@ import java.util.Optional;
 public final class FDCompat
 {
 	public static final String MODID = "farmersdelight";
-	public static final Identifier NOURISHMENT = id("nourishment");
-	public static final Identifier COMFORT = id("comfort");
+	public static final ResourceLocation NOURISHMENT = id("nourishment");
+	public static final ResourceLocation COMFORT = id("comfort");
 	/** FD's {@code MEDIUM_DURATION} (3 minutes) and {@code LONG_DURATION} (5 minutes) for meal effects. */
 	public static final int MEDIUM_DURATION = 3600;
 	public static final int LONG_DURATION = 6000;
@@ -66,15 +66,15 @@ public final class FDCompat
 	/** Coq au Vin, braised in its iron pot and placed as a feast: four bowls, then the bones. Cooked in FD's pot. */
 	public static final DeferredBlock<FeastBlock> COQ_AU_VIN_BLOCK = BLOCKS.registerBlock("coq_au_vin_block",
 		p -> new FeastBlock(p, COQ_AU_VIN), () -> BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_GRAY)
-			.strength(0.8F).sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED));
+			.strength(0.8F).sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.DESTROY));
 	public static final DeferredItem<BlockItem> COQ_AU_VIN_BLOCK_ITEM = ITEMS.registerSimpleBlockItem(COQ_AU_VIN_BLOCK,
 		() -> new Item.Properties().stacksTo(1));
 
 	private FDCompat() {
 	}
 
-	public static Identifier id(String path) {
-		return Identifier.fromNamespaceAndPath(MODID, path);
+	public static ResourceLocation id(String path) {
+		return ResourceLocation.fromNamespaceAndPath(MODID, path);
 	}
 
 	public static boolean isLoaded() {
@@ -83,7 +83,7 @@ public final class FDCompat
 
 	/** FD's Nourishment, if Farmer's Delight is installed. */
 	public static Optional<Holder.Reference<MobEffect>> nourishment() {
-		return BuiltInRegistries.MOB_EFFECT.get(NOURISHMENT);
+		return BuiltInRegistries.MOB_EFFECT.getHolder(NOURISHMENT);
 	}
 
 	public static List<MealItem> meals() {
@@ -100,10 +100,10 @@ public final class FDCompat
 
 	/** Like FD's {@code ModItems.bowlFoodItem}: a bowl meal stacks to 16 and gives its bowl back. */
 	private static DeferredItem<MealItem> meal(String name, int nutrition, float saturation, int nourishmentTicks) {
-		FoodProperties food = new FoodProperties.Builder().nutrition(nutrition).saturationModifier(saturation).build();
+		// 1.21.1: the bowl that comes back is part of the food component
+		FoodProperties food = new FoodProperties.Builder().nutrition(nutrition).saturationModifier(saturation).usingConvertsTo(Items.BOWL).build();
 		return ITEMS.registerItem(name, p -> new MealItem(p, nourishmentTicks), () -> new Item.Properties()
 			.food(food)
-			.usingConvertsTo(Items.BOWL)
 			.craftRemainder(Items.BOWL)
 			.stacksTo(16));
 	}

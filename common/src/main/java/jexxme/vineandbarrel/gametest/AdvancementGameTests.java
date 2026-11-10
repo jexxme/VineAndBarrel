@@ -22,11 +22,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -38,10 +35,11 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -56,9 +54,8 @@ import java.util.function.Consumer;
  */
 public final class AdvancementGameTests
 {
-	private static final Identifier STRUCTURE = VineAndBarrel.id("gametest/empty_5x5");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
-	private static final List<ResourceKey<Consumer<GameTestHelper>>> TESTS = new ArrayList<>();
+	private static final ResourceLocation STRUCTURE = VineAndBarrel.id("gametest/empty_5x5");
+	private static final Map<String, Consumer<GameTestHelper>> TESTS = new LinkedHashMap<>();
 	private static final BlockPos AT = new BlockPos(2, 1, 2);
 
 	static {
@@ -78,20 +75,15 @@ public final class AdvancementGameTests
 	}
 
 	private static void test(String name, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		TESTS.add(ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name)));
+		TESTS.put(name, function);
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(AdvancementGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("advancements"));
-		for (ResourceKey<Consumer<GameTestHelper>> function : TESTS) {
-			event.registerTest(function.identifier(), new FunctionGameTestInstance(function, new TestData<>(environment, STRUCTURE, 100, 0, true)));
-		}
+		TESTS.forEach((name, function) -> VBGameTests.add(event, "advancements", name, STRUCTURE, 100, function));
 	}
 
 	// ------------------------------------------------------------------ helpers
@@ -99,7 +91,7 @@ public final class AdvancementGameTests
 	/** Runs {@code body} with a real server player in the level (it has advancement progress), removed afterwards. */
 	private static void withPlayer(GameTestHelper helper, BiConsumer<GameTestHelper, ServerPlayer> body) {
 		@SuppressWarnings("removal")
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		try {
 			body.accept(helper, player);
 		} finally {
@@ -131,7 +123,7 @@ public final class AdvancementGameTests
 
 	private static AgingBarrelBlockEntity wineBarrel(GameTestHelper helper, BlockPos pos, long age) {
 		helper.setBlock(pos, BarrelRegistry.AGING_BARREL.get());
-		AgingBarrelBlockEntity barrel = helper.getBlockEntity(pos, AgingBarrelBlockEntity.class);
+		AgingBarrelBlockEntity barrel = VBGameTests.blockEntity(helper, pos, AgingBarrelBlockEntity.class);
 		helper.assertTrue(barrel.pour(new ItemStack(BaseItems.GRAPE_JUICE_BUCKET.get()), null) != null, "the barrel takes a bucket of grape juice");
 		barrel.setAge(age);
 		return barrel;
@@ -143,18 +135,18 @@ public final class AdvancementGameTests
 	private static void tabLoads(GameTestHelper helper) {
 		AdvancementHolder root = advancement(helper, "root");
 		DisplayInfo rootDisplay = root.value().display().orElseThrow();
-		helper.assertTrue(rootDisplay.background().isPresent(), "the root has a tab background");
+		helper.assertTrue(rootDisplay.getBackground().isPresent(), "the root has a tab background");
 		helper.assertTrue(root.value().parent().isEmpty(), "the root starts its own tab");
 		for (String name : VBAdvancementGenerator.ALL) {
 			AdvancementHolder holder = advancement(helper, name);
 			helper.assertTrue(holder.value().display().isPresent(), name + " is shown");
 			if (!name.equals("root")) {
-				Identifier parent = holder.value().parent().orElseThrow();
+				ResourceLocation parent = holder.value().parent().orElseThrow();
 				helper.assertTrue(parent.getNamespace().equals(VineAndBarrel.MODID), name + " sits in our tab");
 			}
 		}
-		helper.assertValueEqual(advancement(helper, "vintner").value().display().orElseThrow().type(), AdvancementType.CHALLENGE, "Vintner frame");
-		helper.assertValueEqual(advancement(helper, "patience_pays").value().display().orElseThrow().type(), AdvancementType.GOAL, "Patience Pays frame");
+		helper.assertValueEqual(advancement(helper, "vintner").value().display().orElseThrow().getType(), AdvancementType.CHALLENGE, "Vintner frame");
+		helper.assertValueEqual(advancement(helper, "patience_pays").value().display().orElseThrow().getType(), AdvancementType.GOAL, "Patience Pays frame");
 		helper.succeed();
 	}
 
@@ -163,7 +155,7 @@ public final class AdvancementGameTests
 	/** First Brew: filling a bottle or a bucket at the kettle by hand. */
 	private static void firstBrew(GameTestHelper helper) {
 		helper.setBlock(AT, KettleRegistry.kettle());
-		BrewKettleBlockEntity kettle = helper.getBlockEntity(AT, BrewKettleBlockEntity.class);
+		BrewKettleBlockEntity kettle = VBGameTests.blockEntity(helper, AT, BrewKettleBlockEntity.class);
 		ItemStack item = new ItemStack(KettleRegistry.kettleItem());
 		item.set(KettleRegistry.KETTLE_CONTENTS.get(), new KettleContents(new ItemStack(BaseItems.GRAPE_JUICE.get(), 4),
 			new ItemStack(BaseItems.GRAPE_JUICE_BUCKET.get())));
@@ -220,7 +212,7 @@ public final class AdvancementGameTests
 		withPlayer(helper, (h, player) -> {
 			player.setItemInHand(InteractionHand.MAIN_HAND, dropped);
 			helper.placeAt(player, dropped, AT.below(), Direction.UP);
-			AgingBarrelBlockEntity barrel = helper.getBlockEntity(AT, AgingBarrelBlockEntity.class);
+			AgingBarrelBlockEntity barrel = VBGameTests.blockEntity(helper, AT, AgingBarrelBlockEntity.class);
 			helper.assertTrue(barrel.isHomeBrewed(), "the placed barrel is home-brewed");
 			barrel.setAge(4L * 24000L + 100L);
 			helper.assertValueEqual(barrel.stage(), BarrelStage.AGED, "stage");

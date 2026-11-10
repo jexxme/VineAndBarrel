@@ -2,9 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "b": "minecraft:brick",
-    "c": "#c:ingots/copper",
-    "W": "#c:buckets/water"
+    "b": {
+      "item": "minecraft:brick"
+    },
+    "c": {
+      "tag": "c:ingots/copper"
+    },
+    "W": {
+      "tag": "c:buckets/water"
+    }
   },
   "pattern": [
     "bcb",

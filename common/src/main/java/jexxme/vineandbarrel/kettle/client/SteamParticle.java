@@ -1,17 +1,17 @@
 package jexxme.vineandbarrel.kettle.client;
 
 import jexxme.vineandbarrel.kettle.BrewKettleBlock;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
-import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
+import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -21,7 +21,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * frames, steam_0 to steam_7), fading in and out so it never pops, and fading away under a ceiling. Size and alpha
  * follow the partial tick, so the wisp grows smoothly in recordings too.
  */
-public class SteamParticle extends SingleQuadParticle
+public class SteamParticle extends TextureSheetParticle
 {
 	/** Half the quad's width at the start and at the end of its life, before the per-wisp size jitter. */
 	private static final float START_SIZE = 0.10F;
@@ -40,7 +40,7 @@ public class SteamParticle extends SingleQuadParticle
 	private final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
 
 	protected SteamParticle(ClientLevel level, double x, double y, double z, double motionX, double motionY, double motionZ, float maxAlpha, SpriteSet sprites) {
-		super(level, x, y, z, sprites.first());
+		super(level, x, y, z);
 		this.sprites = sprites;
 		this.maxAlpha = maxAlpha;
 		this.setSize(0.25F, 0.25F);
@@ -58,8 +58,8 @@ public class SteamParticle extends SingleQuadParticle
 	}
 
 	@Override
-	protected Layer getLayer() {
-		return Layer.TRANSLUCENT;
+	public ParticleRenderType getRenderType() {
+		return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
 	}
 
 	@Override
@@ -136,14 +136,14 @@ public class SteamParticle extends SingleQuadParticle
 	}
 
 	@Override
-	public void extract(QuadParticleRenderState state, Camera camera, float partialTick) {
+	public void render(VertexConsumer buffer, Camera camera, float partialTick) {
 		// fades in over the first fifth, out over the last three fifths (the big late frames stay faint)
 		float t = this.life(partialTick);
 		float in = Mth.clamp(t / 0.2F, 0.0F, 1.0F);
 		float out = Mth.clamp((1.0F - t) / 0.6F, 0.0F, 1.0F);
 		float ceiling = Mth.lerp(partialTick, this.ceilingFadeO, this.ceilingFade);
 		this.alpha = this.maxAlpha * smooth(in) * smooth(out) * Math.max(0.0F, ceiling);
-		super.extract(state, camera, partialTick);
+		super.render(buffer, camera, partialTick);
 	}
 
 	private static float smooth(float x) {
@@ -170,8 +170,8 @@ public class SteamParticle extends SingleQuadParticle
 		}
 
 		@Override
-		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, RandomSource random) {
-			return new SteamParticle(level, x, y, z, xSpeed, ySpeed, zSpeed, 0.62F + random.nextFloat() * 0.16F, this.sprites);
+		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+			return new SteamParticle(level, x, y, z, xSpeed, ySpeed, zSpeed, 0.62F + level.random.nextFloat() * 0.16F, this.sprites);
 		}
 	}
 }

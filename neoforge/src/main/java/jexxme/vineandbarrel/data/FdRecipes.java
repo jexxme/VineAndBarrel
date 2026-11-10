@@ -19,8 +19,12 @@ import java.util.function.Supplier;
 /**
  * The recipes that need Farmer's Delight, and the advancement that unlocks each one in the recipe book, written as
  * plain JSON (FD is never compiled against, so its recipe types have no builder here). Every file carries both loaders'
- * conditions, so it loads only with FD: FD Neoforged on NeoForge, FD Refabricated on Fabric. Each recipe gets its
+ * conditions, so it loads only with FD: Farmer's Delight on NeoForge, FD Refabricated on Fabric. Each recipe gets its
  * unlock from the same row, as FD does for its own: unlocked by holding one of its ingredients.
+ * <p>
+ * The shapes are those of the 1.21.1 builds' own files (Farmer's Delight 1.21.1-1.3.4, FD Refabricated 1.21.1-3.3.6):
+ * ingredients are {@code {"item": ...}} / {@code {"tag": ...}} objects (several items: a list of them), and item stacks
+ * always name their {@code count}.
  */
 public class FdRecipes implements DataProvider
 {
@@ -44,19 +48,19 @@ public class FdRecipes implements DataProvider
 		List<Row> rows = new ArrayList<>();
 		// Three ingredients: FD's fish stew values. Four: FD's baked cod stew values (FDCompat).
 		rows.add(cooking("beer_battered_fish", FDCompat.BEER_BATTERED_FISH, 1.0F, 0, List.of(BARLEY_ALE, AGED_BARLEY_ALE),
-			tag("c:foods/safe_raw_fish"), any(BARLEY_ALE, AGED_BARLEY_ALE), tag("c:crops/wheat")));
+			tag("c:foods/safe_raw_fish"), eitherAge("barley_ale"), tag("c:crops/wheat")));
 		rows.add(cooking("wine_braised_beef", FDCompat.WINE_BRAISED_BEEF, 1.0F, 0, List.of(RED_WINE, AGED_RED_WINE),
-			tag("c:foods/raw_beef"), any(RED_WINE, AGED_RED_WINE), tag("c:crops/onion"), tag("c:crops/carrot")));
+			tag("c:foods/raw_beef"), eitherAge("red_wine"), tag("c:crops/onion"), tag("c:crops/carrot")));
 		rows.add(cooking("cider_braised_pork", FDCompat.CIDER_BRAISED_PORK, 1.0F, 0, List.of(HARD_CIDER, AGED_HARD_CIDER),
-			tag("c:foods/raw_pork"), any(HARD_CIDER, AGED_HARD_CIDER), item("minecraft:apple"), tag("c:crops/onion")));
+			tag("c:foods/raw_pork"), eitherAge("hard_cider"), ingredient("minecraft:apple"), tag("c:crops/onion")));
 		rows.add(cooking("barley_mutton_broth", FDCompat.BARLEY_MUTTON_BROTH, 1.0F, 0, List.of("vineandbarrel:barley"),
 			tag("c:foods/raw_mutton"), tag("c:crops/barley"), tag("c:crops/carrot"), tag("c:crops/onion")));
 		// The risotto's stock is FD's bone broth; its bowl comes back out of the pot like a drink's glass
 		rows.add(cooking("white_wine_risotto", FDCompat.WHITE_WINE_RISOTTO, 1.0F, 0, List.of(WHITE_WINE, AGED_WHITE_WINE),
-			tag("c:crops/rice"), any(WHITE_WINE, AGED_WHITE_WINE), tag("c:crops/onion"), item("farmersdelight:bone_broth")));
+			tag("c:crops/rice"), eitherAge("white_wine"), tag("c:crops/onion"), ingredient("farmersdelight:bone_broth")));
 		// A feast, like FD's stuffed pumpkin: six ingredients, twice the cooking time, and no bowl (it is served from the pot)
 		rows.add(cooking("coq_au_vin_block", FDCompat.COQ_AU_VIN_BLOCK_ITEM, 2.0F, 400, List.of(RED_WINE, AGED_RED_WINE),
-			tag("c:foods/raw_chicken"), tag("c:foods/raw_chicken"), any(RED_WINE, AGED_RED_WINE), item("minecraft:brown_mushroom"),
+			tag("c:foods/raw_chicken"), tag("c:foods/raw_chicken"), eitherAge("red_wine"), ingredient("minecraft:brown_mushroom"),
 			tag("c:crops/onion"), tag("c:foods/raw_bacon")));
 		// Beer bread: three wheat and a beer for the dough, two loaves (the mug stays in the grid)
 		JsonObject bread = new JsonObject();
@@ -101,19 +105,19 @@ public class FdRecipes implements DataProvider
 	private static Row wildCutting(String wild, Supplier<? extends Item> crop, String extra, int count) {
 		JsonObject cutting = new JsonObject();
 		cutting.addProperty("type", "farmersdelight:cutting");
-		cutting.add("ingredients", array(item("vineandbarrel:" + wild)));
+		cutting.add("ingredients", array(ingredient("vineandbarrel:" + wild)));
 		JsonObject grain = new JsonObject();
 		grain.add("item", result(crop, 1));
 		JsonObject bonus = new JsonObject();
 		bonus.addProperty("chance", 0.5F);
 		JsonObject bonusItem = new JsonObject();
-		if (count > 1) {
-			bonusItem.addProperty("count", count);
-		}
+		bonusItem.addProperty("count", count);
 		bonusItem.addProperty("id", extra);
 		bonus.add("item", bonusItem);
 		cutting.add("result", array(grain, bonus));
-		cutting.addProperty("tool", "#c:tools/knife");
+		// FD's own cutting recipes also take anything with its knife ability; that ingredient type is spelled differently on
+		// each loader (NeoForge "type", Fabric "fabric:type"), so ours take the knives tag only, which both read
+		cutting.add("tool", tag("c:tools/knife"));
 		return new Row("cutting/" + wild, cutting, List.of());
 	}
 
@@ -147,7 +151,7 @@ public class FdRecipes implements DataProvider
 		JsonObject hasRecipe = new JsonObject();
 		hasRecipe.addProperty("trigger", "minecraft:recipe_unlocked");
 		JsonObject hasRecipeConditions = new JsonObject();
-		hasRecipeConditions.addProperty("recipes", recipe);
+		hasRecipeConditions.addProperty("recipe", recipe);
 		hasRecipe.add("conditions", hasRecipeConditions);
 		criteria.add("has_the_recipe", hasRecipe);
 		root.add("criteria", criteria);
@@ -175,9 +179,7 @@ public class FdRecipes implements DataProvider
 
 	private static JsonObject result(Supplier<? extends Item> item, int count) {
 		JsonObject result = new JsonObject();
-		if (count > 1) {
-			result.addProperty("count", count);
-		}
+		result.addProperty("count", count);
 		result.addProperty("id", BuiltInRegistries.ITEM.getKey(item.get()).toString());
 		return result;
 	}
@@ -186,18 +188,38 @@ public class FdRecipes implements DataProvider
 		return path.substring(path.lastIndexOf('/') + 1);
 	}
 
+	/** A plain id (in a list of ids, a requirement, a reward). */
 	private static JsonElement item(String id) {
 		return new com.google.gson.JsonPrimitive(id);
 	}
 
-	private static JsonElement tag(String id) {
-		return item("#" + id);
+	/** An ingredient of one item. */
+	private static JsonElement ingredient(String id) {
+		JsonObject ingredient = new JsonObject();
+		ingredient.addProperty("item", id);
+		return ingredient;
 	}
 
+	/** An ingredient of a tag. */
+	private static JsonElement tag(String id) {
+		JsonObject ingredient = new JsonObject();
+		ingredient.addProperty("tag", id);
+		return ingredient;
+	}
+
+	/**
+	 * A drink, young or aged: the item tag {@code vineandbarrel:cooking/<drink>} (VBTagProviders). Farmer's Delight's
+	 * cooking pot on NeoForge reads each ingredient as one JSON object, so a list of items can't stand there.
+	 */
+	private static JsonElement eitherAge(String drink) {
+		return tag("vineandbarrel:cooking/" + drink);
+	}
+
+	/** An ingredient of any of these items. */
 	private static JsonElement any(String... ids) {
 		JsonArray array = new JsonArray();
 		for (String id : ids) {
-			array.add(id);
+			array.add(ingredient(id));
 		}
 		return array;
 	}

@@ -1,31 +1,28 @@
 package jexxme.vineandbarrel.watch.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import com.mojang.blaze3d.systems.RenderSystem;
 import jexxme.vineandbarrel.VineAndBarrel;
-import jexxme.vineandbarrel.mixin.GuiGraphicsExtractorAccessor;
 import jexxme.vineandbarrel.platform.Services;
 import jexxme.vineandbarrel.watch.WatchScene;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.SpriteIconButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.PageButton;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.BlockPos;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -66,9 +63,9 @@ public class WatchScreen extends Screen
 	private static final int STAGE = 0xFF1D2327;
 	private static final int NIGHT = 0xFF141C30;
 	private static final int DAY = 0xFF79A6DC;
-	private static final Identifier PANEL = VineAndBarrel.id("watch/panel");
-	private static final Identifier INSET = VineAndBarrel.id("watch/window");
-	private static final Identifier SLOT = Identifier.withDefaultNamespace("container/slot");
+	private static final ResourceLocation PANEL = VineAndBarrel.id("watch/panel");
+	private static final ResourceLocation INSET = VineAndBarrel.id("watch/window");
+	private static final ResourceLocation SLOT = ResourceLocation.withDefaultNamespace("container/slot");
 
 	private static final int HEADER = 20;
 	private static final int FOOTER = 36;
@@ -91,7 +88,7 @@ public class WatchScreen extends Screen
 	/** Where Escape goes back to: the inventory, JEI page or path the scene was opened from. */
 	private final @Nullable Screen parent;
 	/** Watching the Brewer's path in order: its stations' scenes, this one among them (null: a single scene). */
-	private @Nullable List<Identifier> chapters;
+	private @Nullable List<ResourceLocation> chapters;
 
 	private int ox, oy, ow, oh;
 	private int stageX, stageY, stageW, stageH;
@@ -105,6 +102,9 @@ public class WatchScreen extends Screen
 	private long lastTick = Util.getNanos();
 	private boolean dragging, moved;
 	private double pressX, pressY;
+	/** The last click, to tell a double click (this Minecraft version doesn't). */
+	private long lastClickAt;
+	private int lastClickButton = -1;
 	private @Nullable SpriteIconButton pauseButton, playButton;
 	private final List<Button> endButtons = new ArrayList<>();
 
@@ -117,11 +117,11 @@ public class WatchScreen extends Screen
 		this.parent = parent;
 	}
 
-	public static boolean open(Identifier id) {
+	public static boolean open(ResourceLocation id) {
 		return open(id, 0, null, null);
 	}
 
-	public static boolean open(Identifier id, int step, @Nullable Component now, @Nullable Screen parent) {
+	public static boolean open(ResourceLocation id, int step, @Nullable Component now, @Nullable Screen parent) {
 		Minecraft minecraft = Minecraft.getInstance();
 		Optional<WatchScene> scene = WatchIndex.INSTANCE.scene(id);
 		if (minecraft.level == null || scene.isEmpty()) {
@@ -131,16 +131,16 @@ public class WatchScreen extends Screen
 		if (step > 0) {
 			player.jumpTo(step);
 		}
-		minecraft.gui.setScreen(new WatchScreen(player, now, parent));
+		minecraft.setScreen(new WatchScreen(player, now, parent));
 		return true;
 	}
 
 	/** Plays the path's scenes in order like chapters, starting at {@code id}. */
-	static boolean openChapters(Identifier id, List<Identifier> chapters, @Nullable Screen parent) {
+	static boolean openChapters(ResourceLocation id, List<ResourceLocation> chapters, @Nullable Screen parent) {
 		if (!open(id, 0, null, parent)) {
 			return false;
 		}
-		if (Minecraft.getInstance().gui.screen() instanceof WatchScreen screen) {
+		if (Minecraft.getInstance().screen instanceof WatchScreen screen) {
 			screen.chapters = List.copyOf(chapters);
 			screen.rebuildWidgets();
 		}
@@ -167,7 +167,7 @@ public class WatchScreen extends Screen
 
 	@Override
 	public void onClose() {
-		minecraft.gui.setScreen(parent);
+		minecraft.setScreen(parent);
 	}
 
 	// ------------------------------------------------------------------ layout
@@ -227,7 +227,7 @@ public class WatchScreen extends Screen
 		SpriteIconButton path = addRenderableWidget(icon("watch/big/path", Component.translatable("watch.vineandbarrel.path"), 20, b -> openPath()));
 		path.setPosition(ox + ow - 8 - DONE_W - 4 - 20, rowY);
 		path.visible = WatchPathScreen.available();
-		addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> minecraft.gui.setScreen(outside(parent)))
+		addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> minecraft.setScreen(outside(parent)))
 			.bounds(ox + ow - 8 - DONE_W, rowY, DONE_W, 20).build());
 
 		// pause and play: a small button in the stage's corner, so a new player sees how (Space and a click work too)
@@ -240,7 +240,9 @@ public class WatchScreen extends Screen
 	}
 
 	private static SpriteIconButton icon(String sprite, Component name, int size, Button.OnPress action) {
-		return SpriteIconButton.builder(name, action, true).sprite(VineAndBarrel.id(sprite), 14, 14).size(size, size).withTootip().build();
+		SpriteIconButton button = SpriteIconButton.builder(name, action, true).sprite(VineAndBarrel.id(sprite), 14, 14).size(size, size).build();
+		button.setTooltip(Tooltip.create(name));
+		return button;
 	}
 
 	/** "Pause (Space)": the action and its key, in the player's language. */
@@ -252,7 +254,7 @@ public class WatchScreen extends Screen
 	private void layoutEndCard() {
 		endButtons.forEach(this::removeWidget);
 		endButtons.clear();
-		List<Identifier> also = alsoScenes();
+		List<ResourceLocation> also = alsoScenes();
 		int alsoLines = Math.max(0, also.size() - 1);
 		cardW = END_W;
 		cardH = also.isEmpty() ? 76 : 112 + (alsoLines > 0 ? 12 + alsoLines * 18 : 0);
@@ -260,7 +262,7 @@ public class WatchScreen extends Screen
 		cardY = stageY + 8;
 		int y = cardY + (also.isEmpty() ? 28 : 44);
 		if (!also.isEmpty()) {
-			Identifier next = also.getFirst();
+			ResourceLocation next = also.getFirst();
 			endButtons.add(addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.watch_next"), b -> {
 				if (chapters != null) {
 					openChapters(next, chapters, parent);
@@ -318,7 +320,7 @@ public class WatchScreen extends Screen
 	}
 
 	private void openPath() {
-		minecraft.gui.setScreen(new WatchPathScreen(this));
+		minecraft.setScreen(new WatchPathScreen(this));
 	}
 
 	// ------------------------------------------------------------------ ticking
@@ -331,7 +333,7 @@ public class WatchScreen extends Screen
 		lastTick = Util.getNanos();
 		if (player.step() != step) {
 			// the narrator reads each new step's caption, as it reads a screen's title
-			minecraft.getNarrator().saySystemQueued(Component.translatable(player.currentStep().caption()));
+			minecraft.getNarrator().say(Component.translatable(player.currentStep().caption()));
 		}
 		if (player.isFinished() != finished) {
 			updateButtons();
@@ -351,24 +353,17 @@ public class WatchScreen extends Screen
 		return true;
 	}
 
-	@Override
-	public boolean isInGameUi() {
-		return true;
-	}
-
 	// ------------------------------------------------------------------ drawing
 
+	/** Everything under the buttons: the window, the scene and what is written over it. */
 	@Override
-	public void extractBackground(GuiGraphicsExtractor gui, int mouseX, int mouseY, float a) {
-		extractBlurredBackground(gui);
-		extractMenuBackground(gui);
+	public void renderBackground(GuiGraphics gui, int mouseX, int mouseY, float frameTicks) {
+		super.renderBackground(gui, mouseX, mouseY, frameTicks);
 		gui.fill(0, 0, width, height, 0x60000000);
-		gui.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL, ox, oy, ow, oh);
+		RenderSystem.enableBlend();
+		gui.blitSprite(PANEL, ox, oy, ow, oh);
 		gui.fill(stageX, stageY, stageX + stageW, stageY + stageH, STAGE);
-	}
 
-	@Override
-	public void extractRenderState(GuiGraphicsExtractor gui, int mouseX, int mouseY, float frameTicks) {
 		float a = partialTick();
 		// the title where a container has it, top left (watching the path: which station of how many)
 		int titleRoom = ow - 16;
@@ -379,43 +374,47 @@ public class WatchScreen extends Screen
 		}
 		FormattedCharSequence titleLine = font.width(title) <= titleRoom ? title.getVisualOrderText()
 			: Language.getInstance().getVisualOrder(FormattedText.composite(font.substrByWidth(title, titleRoom - font.width("…")), FormattedText.of("…")));
-		gui.text(font, titleLine, ox + 8, oy + 6, TITLE_INK, false);
+		gui.drawString(font, titleLine, ox + 8, oy + 6, TITLE_INK, false);
 		if (chapter != null) {
-			gui.text(font, chapter, ox + 8 + font.width(titleLine) + 6, oy + 6, TITLE_MUTED, false);
+			gui.drawString(font, chapter, ox + 8 + font.width(titleLine) + 6, oy + 6, TITLE_MUTED, false);
 		}
 
-		extractSky(gui, a);
+		renderSky(gui, a);
 		int sx = sceneX(), sy = sceneY();
 		// finished, the scene keeps its last frame: what came of it, and what's next beside it
-		((GuiGraphicsExtractorAccessor) gui).vineandbarrel$guiRenderState().addPicturesInPictureState(
-			new SceneRenderState(player, view, a, sx, sy, sx + sceneW(), sy + sceneH(), sceneScale(), player.isFinished() ? null : anchorBlock(a), null));
-		gui.nextStratum();
-		gui.blitSprite(RenderPipelines.GUI_TEXTURED, INSET, stageX - 2, stageY - 2, stageW + 4, stageH + 4);
+		SceneRenderer.render(gui,
+			new SceneRenderState(player, view, a, sx, sy, sx + sceneW(), sy + sceneH(), sceneScale(), player.isFinished() ? null : anchorBlock(a)));
+		RenderSystem.enableBlend();
+		gui.blitSprite(INSET, stageX - 2, stageY - 2, stageW + 4, stageH + 4);
 
 		int topY = stageY + 8;
 		if (now != null && player.step() == nowStep && !player.isFinished()) {
 			int w = font.width(now) + 12;
 			int x = stageX + (stageW - w) / 2;
 			gui.fill(x, topY, x + w, topY + 16, 0xC0000000);
-			gui.centeredText(font, now, stageX + stageW / 2, topY + 4, HIGHLIGHT);
+			gui.drawCenteredString(font, now, stageX + stageW / 2, topY + 4, HIGHLIGHT);
 			topY += 20;
 		}
 		if (player.isPaused() && !player.isFinished()) {
 			Component paused = Component.translatable("watch.vineandbarrel.paused");
 			int w = font.width(paused) + 12;
 			gui.fill(stageX + (stageW - w) / 2, topY, stageX + (stageW + w) / 2, topY + 14, 0xA0000000);
-			gui.centeredText(font, paused, stageX + stageW / 2, topY + 3, INK);
+			gui.drawCenteredString(font, paused, stageX + stageW / 2, topY + 3, INK);
 		}
 		if (player.isFinished()) {
 			gui.fill(cardX, cardY, cardX + cardW, cardY + cardH, 0xD0000000);
-			extractEndCard(gui);
+			renderEndCard(gui);
 		} else {
-			extractTag(gui, a);
+			renderTag(gui, a);
 		}
-		extractRail(gui);
-		extractSteps(gui, mouseX, mouseY, a);
-		super.extractRenderState(gui, mouseX, mouseY, frameTicks);
-		extractHover(gui, mouseX, mouseY);
+		renderRail(gui);
+		renderSteps(gui, mouseX, mouseY, a);
+	}
+
+	@Override
+	public void render(GuiGraphics gui, int mouseX, int mouseY, float frameTicks) {
+		super.render(gui, mouseX, mouseY, frameTicks);
+		renderHover(gui, mouseX, mouseY);
 	}
 
 	/** The scene's own area: the stage less a margin. */
@@ -478,7 +477,7 @@ public class WatchScreen extends Screen
 		return player.anchor(a);
 	}
 
-	private void extractTag(GuiGraphicsExtractor gui, float a) {
+	private void renderTag(GuiGraphics gui, float a) {
 		if (tagStep != player.step()) {
 			tagStep = player.step();
 			stepShownAt = Util.getMillis();
@@ -525,7 +524,7 @@ public class WatchScreen extends Screen
 		gui.fill(x, y, x + tagW, y + tagH, mulAlpha(0xC0000000, alpha));
 		int ty = y + TAG_PAD;
 		for (FormattedCharSequence line : lines) {
-			gui.text(font, line, x + TAG_PAD + (tagOnLeft ? 0 : 1), ty, mulAlpha(INK, Math.max(alpha, 0.05F)), false);
+			gui.drawString(font, line, x + TAG_PAD + (tagOnLeft ? 0 : 1), ty, mulAlpha(INK, Math.max(alpha, 0.05F)), false);
 			ty += LINE_H;
 		}
 	}
@@ -570,7 +569,7 @@ public class WatchScreen extends Screen
 	}
 
 	/** The steps as vanilla buttons: playing = highlighted with how far it has played, done = plain, ahead = disabled. */
-	private void extractSteps(GuiGraphicsExtractor gui, int mouseX, int mouseY, float a) {
+	private void renderSteps(GuiGraphics gui, int mouseX, int mouseY, float a) {
 		int steps = player.scene().steps().size();
 		int hovered = stepAt(mouseX, mouseY);
 		int y = footerY + 12;
@@ -578,8 +577,8 @@ public class WatchScreen extends Screen
 			int x = stepX(i);
 			boolean current = i == player.step() && !player.isFinished();
 			boolean past = player.isFinished() || i < player.step();
-			Identifier sprite = Identifier.withDefaultNamespace(current || i == hovered ? "widget/button_highlighted" : past ? "widget/button" : "widget/button_disabled");
-			gui.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, CHIP, CHIP);
+			ResourceLocation sprite = ResourceLocation.withDefaultNamespace(current || i == hovered ? "widget/button_highlighted" : past ? "widget/button" : "widget/button_disabled");
+			gui.blitSprite(sprite, x, y, CHIP, CHIP);
 			if (current) {
 				gui.fill(x + 3, y + CHIP - 4, x + 3 + Math.round((CHIP - 6) * player.stepProgress(a)), y + CHIP - 3, INK);
 			}
@@ -587,13 +586,7 @@ public class WatchScreen extends Screen
 			if (current) {
 				number = number.copy().withStyle(ChatFormatting.BOLD);
 			}
-			gui.text(font, number, x + (CHIP - font.width(number)) / 2 + 1, y + 6, past || current ? INK : INK_MUTED, true);
-		}
-		if (hovered >= 0) {
-			gui.requestCursor(CursorTypes.POINTING_HAND);
-			gui.setComponentTooltipForNextFrame(font, List.of(
-				Component.translatable("watch.vineandbarrel.step", hovered + 1, steps).withStyle(s -> s.withColor(HIGHLIGHT)),
-				Component.translatable(player.scene().steps().get(hovered).caption())), mouseX, mouseY);
+			gui.drawString(font, number, x + (CHIP - font.width(number)) / 2 + 1, y + 6, past || current ? INK : INK_MUTED, true);
 		}
 	}
 
@@ -620,19 +613,19 @@ public class WatchScreen extends Screen
 	}
 
 	/** "What you need": a container's row of slots with its label above; what the brewer holds now is framed. */
-	private void extractRail(GuiGraphicsExtractor gui) {
+	private void renderRail(GuiGraphics gui) {
 		if (railX < 0) {
 			return;
 		}
-		gui.text(font, Component.translatable("watch.vineandbarrel.needs"), railX, footerY + 2, TITLE_INK, false);
+		gui.drawString(font, Component.translatable("watch.vineandbarrel.needs"), railX, footerY + 2, TITLE_INK, false);
 		List<ItemStack> held = player.heldItems();
 		int x = railX;
 		for (ItemStack stack : needs()) {
-			gui.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT, x, railY, SLOT_SIZE, SLOT_SIZE);
-			gui.item(stack, x + 1, railY + 1);
+			gui.blitSprite(SLOT, x, railY, SLOT_SIZE, SLOT_SIZE);
+			gui.renderItem(stack, x + 1, railY + 1);
 			if (held.stream().anyMatch(h -> ItemStack.isSameItem(h, stack))) {
-				gui.outline(x - 1, railY - 1, SLOT_SIZE + 2, SLOT_SIZE + 2, INK);
-				gui.outline(x - 2, railY - 2, SLOT_SIZE + 4, SLOT_SIZE + 4, 0xFF000000);
+				gui.renderOutline(x - 1, railY - 1, SLOT_SIZE + 2, SLOT_SIZE + 2, INK);
+				gui.renderOutline(x - 2, railY - 2, SLOT_SIZE + 4, SLOT_SIZE + 4, 0xFF000000);
 			}
 			x += SLOT_SIZE;
 		}
@@ -652,9 +645,15 @@ public class WatchScreen extends Screen
 
 	// ------------------------------------------------------------------ hover
 
-	private void extractHover(GuiGraphicsExtractor gui, int mouseX, int mouseY) {
+	private void renderHover(GuiGraphics gui, int mouseX, int mouseY) {
+		int step = stepAt(mouseX, mouseY);
+		if (step >= 0) {
+			int steps = player.scene().steps().size();
+			gui.renderComponentTooltip(font, List.of(
+				Component.translatable("watch.vineandbarrel.step", step + 1, steps).withStyle(s -> s.withColor(HIGHLIGHT)),
+				Component.translatable(player.scene().steps().get(step).caption())), mouseX, mouseY);
+		}
 		if (dragging && moved) {
-			gui.requestCursor(CursorTypes.RESIZE_ALL);
 			return;
 		}
 		int slot = railSlotAt(mouseX, mouseY);
@@ -663,9 +662,8 @@ public class WatchScreen extends Screen
 			List<Component> lines = new ArrayList<>(Screen.getTooltipFromItem(minecraft, stack));
 			if (jei()) {
 				lines.add(Component.translatable("watch.vineandbarrel.click_recipes").withStyle(s -> s.withColor(INK_MUTED)));
-				gui.requestCursor(CursorTypes.POINTING_HAND);
 			}
-			gui.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
+			gui.renderComponentTooltip(font, lines, mouseX, mouseY);
 			return;
 		}
 		if (!isInStage(mouseX, mouseY) || player.isFinished() && isInCard(mouseX, mouseY) || isOverButton(mouseX, mouseY)) {
@@ -673,7 +671,7 @@ public class WatchScreen extends Screen
 		}
 		ItemStack inHand = heldUnder(mouseX, mouseY);
 		if (!inHand.isEmpty()) {
-			gui.setTooltipForNextFrame(font, inHand, mouseX, mouseY);
+			gui.renderTooltip(font, inHand, mouseX, mouseY);
 			return;
 		}
 		BlockPos hovered = blockUnder(mouseX, mouseY);
@@ -683,9 +681,8 @@ public class WatchScreen extends Screen
 			lines.add(state.getBlock().getName());
 			if (sceneOf(state).isPresent()) {
 				lines.add(Component.translatable("watch.vineandbarrel.click_watch").withStyle(s -> s.withColor(INK_MUTED)));
-				gui.requestCursor(CursorTypes.POINTING_HAND);
 			}
-			gui.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
+			gui.renderComponentTooltip(font, lines, mouseX, mouseY);
 		}
 	}
 
@@ -694,7 +691,7 @@ public class WatchScreen extends Screen
 	}
 
 	/** The scene a block on the stage has of its own (not this one), if any. */
-	private Optional<Identifier> sceneOf(BlockState state) {
+	private Optional<ResourceLocation> sceneOf(BlockState state) {
 		return WatchIndex.INSTANCE.forItem(new ItemStack(state.getBlock().asItem())).filter(id -> !id.equals(sceneId()));
 	}
 
@@ -751,14 +748,14 @@ public class WatchScreen extends Screen
 	// ------------------------------------------------------------------ sky and end box
 
 	/** Days passing: the sky fills the stage, the sun or moon crosses it, and a dot per day counts them. */
-	private void extractSky(GuiGraphicsExtractor gui, float a) {
+	private void renderSky(GuiGraphics gui, float a) {
 		Optional<ScenePlayer.Lapse> lapse = player.timelapse(a);
 		if (lapse.isEmpty()) {
 			return;
 		}
 		float day = lapse.get().dayFraction();
 		float light = Mth.clamp(Mth.sin(day * Mth.TWO_PI) * 1.6F + 0.5F, 0.0F, 1.0F);
-		gui.fill(stageX, stageY, stageX + stageW, stageY + stageH, (ARGB.srgbLerp(light, NIGHT, DAY) & 0xFFFFFF) | 0xA0000000);
+		gui.fill(stageX, stageY, stageX + stageW, stageY + stageH, (FastColor.ARGB32.lerp(light, NIGHT, DAY) & 0xFFFFFF) | 0xA0000000);
 		boolean sunUp = day < 0.5F;
 		float along = sunUp ? day * 2.0F : (day - 0.5F) * 2.0F;
 		int size = 16;
@@ -780,24 +777,24 @@ public class WatchScreen extends Screen
 		}
 	}
 
-	private void extractEndCard(GuiGraphicsExtractor gui) {
-		List<Identifier> also = alsoScenes();
+	private void renderEndCard(GuiGraphics gui) {
+		List<ResourceLocation> also = alsoScenes();
 		if (also.isEmpty()) {
-			gui.text(font, Component.translatable("watch.vineandbarrel.finished"), cardX + 8, cardY + 10, INK, true);
+			gui.drawString(font, Component.translatable("watch.vineandbarrel.finished"), cardX + 8, cardY + 10, INK, true);
 			return;
 		}
-		Identifier next = also.getFirst();
-		gui.text(font, Component.translatable("watch.vineandbarrel.next_up"), cardX + 8, cardY + 6, INK_MUTED, false);
-		gui.item(WatchIndex.INSTANCE.icon(next), cardX + 8, cardY + 18);
-		gui.text(font, titleOf(next).copy().withStyle(ChatFormatting.BOLD), cardX + 28, cardY + 18, INK, true);
+		ResourceLocation next = also.getFirst();
+		gui.drawString(font, Component.translatable("watch.vineandbarrel.next_up"), cardX + 8, cardY + 6, INK_MUTED, false);
+		gui.renderItem(WatchIndex.INSTANCE.icon(next), cardX + 8, cardY + 18);
+		gui.drawString(font, titleOf(next).copy().withStyle(ChatFormatting.BOLD), cardX + 28, cardY + 18, INK, true);
 		int steps = WatchIndex.INSTANCE.scene(next).map(scene -> scene.steps().size()).orElse(0);
-		gui.text(font, Component.translatable("watch.vineandbarrel.steps", steps), cardX + 28, cardY + 29, INK_MUTED, false);
+		gui.drawString(font, Component.translatable("watch.vineandbarrel.steps", steps), cardX + 28, cardY + 29, INK_MUTED, false);
 		if (also.size() > 1) {
-			gui.text(font, Component.translatable("watch.vineandbarrel.also"), cardX + 8, cardY + 114, INK_MUTED, false);
+			gui.drawString(font, Component.translatable("watch.vineandbarrel.also"), cardX + 8, cardY + 114, INK_MUTED, false);
 			for (int i = 1; i < also.size(); i++) {
 				int y = alsoY(i);
-				gui.item(WatchIndex.INSTANCE.icon(also.get(i)), cardX + 8, y);
-				gui.text(font, titleOf(also.get(i)), cardX + 28, y + 4, INK, false);
+				gui.renderItem(WatchIndex.INSTANCE.icon(also.get(i)), cardX + 8, y);
+				gui.drawString(font, titleOf(also.get(i)), cardX + 28, y + 4, INK, false);
 			}
 		}
 	}
@@ -806,12 +803,12 @@ public class WatchScreen extends Screen
 		return cardY + 124 + (i - 1) * 18;
 	}
 
-	private static Component titleOf(Identifier scene) {
+	private static Component titleOf(ResourceLocation scene) {
 		return WatchIndex.INSTANCE.scene(scene).map(s -> (Component) Component.translatable(s.title())).orElse(Component.empty());
 	}
 
 	/** {@return what the end offers: watching the path, its next station; else the scene's own offers that are here} */
-	private List<Identifier> alsoScenes() {
+	private List<ResourceLocation> alsoScenes() {
 		if (chapters != null) {
 			int at = chapters.indexOf(sceneId());
 			return at >= 0 && at + 1 < chapters.size() ? List.of(chapters.get(at + 1)) : List.of();
@@ -821,7 +818,7 @@ public class WatchScreen extends Screen
 			.toList();
 	}
 
-	private @Nullable Identifier sceneId() {
+	private @Nullable ResourceLocation sceneId() {
 		return WatchIndex.INSTANCE.idOf(player.scene());
 	}
 
@@ -832,72 +829,77 @@ public class WatchScreen extends Screen
 	// ------------------------------------------------------------------ input
 
 	@Override
-	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		if (super.mouseClicked(event, doubleClick)) {
+	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+		// a double click: the same button again within a quarter of a second
+		long clickAt = Util.getMillis();
+		boolean doubleClick = button == lastClickButton && clickAt - lastClickAt < 250L;
+		lastClickButton = button;
+		lastClickAt = clickAt;
+		if (super.mouseClicked(mouseX, mouseY, button)) {
 			return true;
 		}
-		if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
+		if (button != InputConstants.MOUSE_BUTTON_LEFT) {
 			return false;
 		}
-		int step = stepAt(event.x(), event.y());
+		int step = stepAt(mouseX, mouseY);
 		if (step >= 0) {
 			player.jumpTo(step);
 			updateButtons();
 			return true;
 		}
-		int slot = railSlotAt(event.x(), event.y());
+		int slot = railSlotAt(mouseX, mouseY);
 		if (slot >= 0) {
 			return jei() && jexxme.vineandbarrel.compat.jei.VBJeiPlugin.showRecipes(needs().get(slot));
 		}
-		if (player.isFinished() && isInCard(event.x(), event.y())) {
-			List<Identifier> also = alsoScenes();
+		if (player.isFinished() && isInCard(mouseX, mouseY)) {
+			List<ResourceLocation> also = alsoScenes();
 			for (int i = 1; i < also.size(); i++) {
 				int y = alsoY(i);
-				if (event.x() >= cardX + 8 && event.x() < cardX + cardW - 8 && event.y() >= y && event.y() < y + 16) {
+				if (mouseX >= cardX + 8 && mouseX < cardX + cardW - 8 && mouseY >= y && mouseY < y + 16) {
 					return open(also.get(i), 0, null, parent);
 				}
 			}
 			return true;
 		}
-		if (isInStage(event.x(), event.y())) {
+		if (isInStage(mouseX, mouseY)) {
 			if (doubleClick) {
 				view.reset();
 				return true;
 			}
-			BlockPos hovered = blockUnder(event.x(), event.y());
+			BlockPos hovered = blockUnder(mouseX, mouseY);
 			if (hovered != null) {
-				Optional<Identifier> own = sceneOf(player.world().getBlockState(hovered));
+				Optional<ResourceLocation> own = sceneOf(player.world().getBlockState(hovered));
 				if (own.isPresent()) {
 					return open(own.get(), 0, null, this);
 				}
 			}
 			dragging = true;
 			moved = false;
-			pressX = event.x();
-			pressY = event.y();
+			pressX = mouseX;
+			pressY = mouseY;
 			return true;
 		}
 		return false;
 	}
 
 	@Override
-	public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+	public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
 		if (dragging) {
 			view.turn((float) dx * 1.2F, (float) dy * 0.8F);
-			moved |= Math.abs(event.x() - pressX) + Math.abs(event.y() - pressY) > 3;
+			moved |= Math.abs(mouseX - pressX) + Math.abs(mouseY - pressY) > 3;
 			return true;
 		}
-		return super.mouseDragged(event, dx, dy);
+		return super.mouseDragged(mouseX, mouseY, button, dx, dy);
 	}
 
 	@Override
-	public boolean mouseReleased(MouseButtonEvent event) {
+	public boolean mouseReleased(double mouseX, double mouseY, int button) {
 		if (dragging && !moved && !player.isFinished()) {
 			// a click on the scene, not a turn: pause or play
 			togglePause();
 		}
 		dragging = false;
-		return super.mouseReleased(event);
+		return super.mouseReleased(mouseX, mouseY, button);
 	}
 
 	@Override
@@ -910,15 +912,15 @@ public class WatchScreen extends Screen
 	}
 
 	@Override
-	public boolean keyPressed(KeyEvent event) {
-		switch (event.key()) {
+	public boolean keyPressed(int key, int scanCode, int modifiers) {
+		switch (key) {
 			case InputConstants.KEY_LEFT -> back();
 			case InputConstants.KEY_RIGHT -> next();
 			case InputConstants.KEY_SPACE -> togglePause();
 			case InputConstants.KEY_R -> replay();
 			case InputConstants.KEY_HOME -> view.reset();
 			default -> {
-				return super.keyPressed(event);
+				return super.keyPressed(key, scanCode, modifiers);
 			}
 		}
 		return true;

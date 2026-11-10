@@ -29,7 +29,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "vineandbarrel:aging_barrel"
+        "recipe": "vineandbarrel:aging_barrel"
       }
     }
   },

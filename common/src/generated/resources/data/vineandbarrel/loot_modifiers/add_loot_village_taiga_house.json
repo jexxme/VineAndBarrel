@@ -1,8 +1,10 @@
 {
   "type": "neoforge:add_table",
-  "condition": {
-    "type": "neoforge:loot_table_id",
-    "loot_table_id": "minecraft:chests/village/village_taiga_house"
-  },
+  "conditions": [
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": "minecraft:chests/village/village_taiga_house"
+    }
+  ],
   "table": "vineandbarrel:chests/village/village_taiga_house"
 }

@@ -16,16 +16,22 @@
     }
   ],
   "ingredients": [
-    "#c:foods/raw_pork",
-    [
-      "vineandbarrel:hard_cider",
-      "vineandbarrel:aged_hard_cider"
-    ],
-    "minecraft:apple",
-    "#c:crops/onion"
+    {
+      "tag": "c:foods/raw_pork"
+    },
+    {
+      "tag": "vineandbarrel:cooking/hard_cider"
+    },
+    {
+      "item": "minecraft:apple"
+    },
+    {
+      "tag": "c:crops/onion"
+    }
   ],
   "recipe_book_tab": "meals",
   "result": {
+    "count": 1,
     "id": "vineandbarrel:cider_braised_pork"
   }
 }

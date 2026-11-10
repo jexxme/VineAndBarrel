@@ -6,7 +6,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
@@ -62,7 +61,7 @@ public record AddFeaturesByFilterBiomeModifier(
 	}
 
 	@Override
-	public void modify(RegistryAccess registries, Holder<Biome> biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
+	public void modify(Holder<Biome> biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
 		if (phase == Phase.ADD && accepts(biome)) {
 			BiomeGenerationSettingsBuilder generationSettings = builder.getGenerationSettings();
 			features.forEach(holder -> generationSettings.addFeature(step, holder));

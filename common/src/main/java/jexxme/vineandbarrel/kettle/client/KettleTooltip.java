@@ -1,13 +1,16 @@
 package jexxme.vineandbarrel.kettle.client;
 
 import jexxme.vineandbarrel.kettle.BrewKettleItem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.util.ARGB;
+import net.minecraft.ChatFormatting;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Matrix4f;
 
 /** The kettle item's tooltip (K6): "Holds 4 servings of:" and the brew with its icon, exactly like FD's cooking pot. */
 public class KettleTooltip implements ClientTooltipComponent
@@ -26,7 +29,8 @@ public class KettleTooltip implements ClientTooltipComponent
 	}
 
 	@Override
-	public int getHeight(Font font) {
+	public int getHeight() {
+		Font font = Minecraft.getInstance().font;
 		return brew.isEmpty() ? lineHeight(font) : lineHeight(font) + ITEM_SIZE;
 	}
 
@@ -36,20 +40,21 @@ public class KettleTooltip implements ClientTooltipComponent
 	}
 
 	@Override
-	public void extractImage(Font font, int x, int y, int w, int h, GuiGraphicsExtractor gui) {
+	public void renderImage(Font font, int x, int y, GuiGraphics gui) {
 		if (!brew.isEmpty()) {
-			gui.item(brew, x, y + lineHeight(font), 0);
+			gui.renderItem(brew, x, y + lineHeight(font), 0);
 		}
 	}
 
 	@Override
-	public void extractText(GuiGraphicsExtractor gui, Font font, int x, int y) {
-		// gui.text skips text with zero alpha, and chat colours are plain RGB
-		Integer color = TextColor.GRAY.getValue();
-		int gray = color == null ? -1 : ARGB.opaque(color);
-		gui.text(font, headline(), x, y, gray, brew.isEmpty());
+	public void renderText(Font font, int x, int y, Matrix4f matrix, MultiBufferSource.BufferSource buffers) {
+		// chat colours are plain RGB
+		Integer color = ChatFormatting.GRAY.getColor();
+		int gray = color == null ? -1 : 0xFF000000 | color;
+		font.drawInBatch(headline(), x, y, gray, brew.isEmpty(), matrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
 		if (!brew.isEmpty()) {
-			gui.text(font, brew.getHoverName(), x + ITEM_SIZE + MARGIN, y + lineHeight(font) + MARGIN, -1);
+			font.drawInBatch(brew.getHoverName(), x + ITEM_SIZE + MARGIN, y + lineHeight(font) + MARGIN, -1, true, matrix, buffers, Font.DisplayMode.NORMAL, 0,
+				LightTexture.FULL_BRIGHT);
 		}
 	}
 

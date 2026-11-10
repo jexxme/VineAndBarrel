@@ -49,9 +49,8 @@ neoForge {
         // This is THE test entry point, locally and in CI: ./gradlew :neoforge:runGameTestServer
         gameTestServer {
             type = "gameTestServer"
-            // Only this mod's GameTests (vanilla's --tests selector): another mod's jar in the run can carry its own, and
-            // neoforge.enabledGameTestNamespaces no longer filters anything since the 26.x GameTest registry.
-            programArguments.addAll '--tests', "${project.mod_id}:*"
+            // Only this mod's GameTests: another mod's jar in the run can carry its own
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest.xml').absolutePath // for the parity checklist
         }
 
@@ -61,9 +60,8 @@ neoForge {
         gameTestServerFd {
             type = "gameTestServer"
             gameDirectory = project.file('run-fd')
-            // Only this mod's GameTests (vanilla's --tests selector): another mod's jar in the run can carry its own, and
-            // neoforge.enabledGameTestNamespaces no longer filters anything since the 26.x GameTest registry.
-            programArguments.addAll '--tests', "${project.mod_id}:*"
+            // Only this mod's GameTests: Farmer's Delight's jar carries its own
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             systemProperty 'vineandbarrel.expectFd', 'true' // fd_run_has_the_right_mods fails if FD did not load
             systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest-fd.xml').absolutePath
         }
@@ -76,7 +74,8 @@ neoForge {
         gameTestServerCompat {
             type = "gameTestServer"
             gameDirectory = project.file('run-compat')
-            programArguments.addAll '--tests', "${project.mod_id}:compat_*"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'vineandbarrel.tests', 'compat_' // only the tests whose name starts like this (VBGameTests)
             systemProperty 'vineandbarrel.expectCompat', 'true' // compat_run_has_the_right_mods fails if one did not load
             // ...or if one is not the version gradle.properties (and so the wiki) names
             systemProperty 'vineandbarrel.compatVersions', [
@@ -113,7 +112,7 @@ neoForge {
 
         // Writes common/src/generated/resources (shared by both loaders): ./gradlew runData
         data {
-            clientData()
+            data()
             programArguments.addAll '--mod', project.mod_id, '--all', '--output', file(project.findProperty('datagenOutput') ?: generatedResourcesDir).getAbsolutePath(), '--existing', commonResourcesDir.getAbsolutePath()
         }
 
@@ -131,6 +130,8 @@ configurations {
     runtimeClasspath.extendsFrom localRuntime
     // The mod jars for runGameTestServerCompat (see prepareCompatRun): resolved on their own, never on a classpath
     compatMods { transitive = false }
+    // Farmer's Delight for the FD runs (see prepareFdRun)
+    fdMod { transitive = false }
 }
 
 dependencies {
@@ -160,45 +161,19 @@ dependencies {
         "maven.modrinth:creativecore:${creativecore_modrinth}",
     ]
     compatJars.each { compileOnly it; compatMods it }
+
+    // Farmer's Delight (vectorwing's own build for this Minecraft, MIT), for the FD runs only: see prepareFdRun
+    fdMod "maven.modrinth:farmers-delight:${farmers_delight_modrinth}"
 }
 
-// The Farmer's Delight jar for runGameTestServerFd, a built FD Neoforged jar (MIT). Pass -PfdJar=<path> or set FD_JAR;
-// otherwise the build output of the FD Neoforged project next to this one (../Season4/farmersdelight-port, also looked
-// up three folders further up, for a checkout nested inside this one) is used. Run it with
-// `./gradlew runGameTestServerFd`, or all runs with `./gradlew :neoforge:gameTestsAll`.
-def fdProjectDir = rootDir // plain values only: these closures also run at execution time (configuration cache)
-def fdRootDir = rootDir
-def fdJarFile = providers.gradleProperty('fdJar').orElse(providers.environmentVariable('FD_JAR')).map { String path ->
-    def jar = new File(path)
-    jar.isAbsolute() ? jar : new File(fdProjectDir, path)
-}.orElse(provider {
-    def roots = [fdRootDir.parentFile, fdRootDir.parentFile?.parentFile?.parentFile?.parentFile].findAll { it != null }
-    def found = roots.collect { new File(it, 'Season4/farmersdelight-port/build/libs') }
-            .findAll { it.isDirectory() }
-            .collectMany { dir -> (dir.listFiles() ?: []).findAll { it.name.startsWith('FarmersDelight') && it.name.endsWith('.jar') && !it.name.contains('-sources') } }
-            .sort { -it.lastModified() }
-    found ? found.first() : new File(fdProjectDir, 'fd-jar-not-found.jar')
-})
-ext.fdJarFile = fdJarFile // for other scripts applied to this project
-
-// Always runs (no inputs or outputs), so a missing jar fails the FD run with this message. A check inside the Sync
-// below would be skipped: Gradle skips a Sync with no source files (NO-SOURCE), and the server would start without FD.
-def verifyFdJar = tasks.register('verifyFdJar') {
-    group = 'verification'
-    description = "Fails unless the Farmer's Delight jar for runGameTestServerFd exists."
-    def jar = fdJarFile
-    doLast {
-        if (!jar.get().isFile()) {
-            throw new GradleException("No Farmer's Delight jar for the FD GameTest run: ${jar.get()}. Build FD Neoforged (./gradlew jar there) or pass -PfdJar=<path to the jar>.")
-        }
-    }
-}
-
+// Farmer's Delight for runGameTestServerFd and the playtest: the original mod's build for this Minecraft version, from
+// Modrinth's Maven (gradle.properties: farmers_delight_modrinth). It is never on the compile classpath; its jar is
+// copied into the run's own mods folder. Run it with `./gradlew runGameTestServerFd`, or all runs with
+// `./gradlew :neoforge:gameTestsAll`.
 def prepareFdRun = tasks.register('prepareFdRun', Sync) {
     group = 'verification'
     description = "Copies the Farmer's Delight jar into run-fd/mods for runGameTestServerFd."
-    dependsOn verifyFdJar
-    from(fdJarFile)
+    from(configurations.fdMod)
     into(layout.projectDirectory.dir('run-fd/mods'))
 }
 
@@ -225,10 +200,10 @@ def devClientMods = project.file('run/playtest-client/mods')
 def preparePlaytest = tasks.register('preparePlaytest') {
     group = 'application'
     description = "Copies the Farmer's Delight jar into the playtest server's and client's mods, and writes a local-only server.properties."
-    dependsOn verifyFdJar
-    def jar = fdJarFile
+    def jars = configurations.fdMod
+    inputs.files(jars)
     doLast {
-        def source = jar.get()
+        def source = jars.singleFile
         [new File(playtestDir, 'mods'), devClientMods].each { dir ->
             dir.mkdirs()
             def target = new File(dir, source.name)
@@ -251,6 +226,24 @@ def preparePlaytest = tasks.register('preparePlaytest') {
 }
 tasks.matching { it.name == 'runPlaytest' || it.name == 'runPlaytestClient' }.configureEach {
     dependsOn preparePlaytest
+}
+
+// A fresh run folder (a clean checkout, CI) has no server.properties, and vanilla logs an ERROR for the missing file,
+// which the log checks would count. An empty one (all defaults) is written when it is missing.
+[['run', 'runGameTestServer'], ['run-fd', 'runGameTestServerFd'], ['run-compat', 'runGameTestServerCompat']].each { pair ->
+    def (folder, run) = pair
+    def properties = project.file("${folder}/server.properties")
+    def prepare = tasks.register("prepare${run.capitalize()}Folder") {
+        group = 'verification'
+        description = "Writes the empty server.properties a fresh ${folder} needs."
+        doLast {
+            if (!properties.exists()) {
+                properties.parentFile.mkdirs()
+                properties.text = ''
+            }
+        }
+    }
+    tasks.matching { it.name == run }.configureEach { dependsOn prepare }
 }
 
 tasks.register('gameTestsAll') {

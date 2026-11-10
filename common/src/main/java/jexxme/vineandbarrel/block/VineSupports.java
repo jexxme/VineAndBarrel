@@ -6,7 +6,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.EmptyBlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -14,10 +13,6 @@ import net.minecraft.world.level.block.state.properties.WallSide;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 /**
  * The blocks a grape or hop plant climbs besides the Trellis and FD's ropes: fences, walls, upright chains and bars
@@ -34,7 +29,6 @@ public final class VineSupports
 {
 	/** Half the width across a row (in pixels) up to which a support counts as thin: a fence post (2), bars (1); a wall is 3 or 4. */
 	private static final double THIN_HALF_WIDTH = 2.5;
-	private static final Map<Level, Map<BlockPos, Stashed>> STASH = new WeakHashMap<>();
 
 	/**
 	 * The switch for fences, walls, chains and bars as vine supports. Off for 1.1.0 (they need more work); everything
@@ -113,30 +107,5 @@ public final class VineSupports
 		AABB bounds = shape.bounds();
 		double across = alongX ? bounds.maxZ - bounds.minZ : bounds.maxX - bounds.minX;
 		return across * 16.0 / 2.0 > THIN_HALF_WIDTH;
-	}
-
-	// ------------------------------------------------------------------ giving the support back
-
-	/**
-	 * Remembers the support of a vine whose block entity is about to go ({@code BlockEntity#preRemoveSideEffects}), so
-	 * that {@link VineOnSupportBlock#affectNeighborsAfterRemoval} can put it back right after: the vine went by fire, an
-	 * explosion or anything else that isn't a player.
-	 */
-	static void stash(Level level, BlockPos pos, BlockState support) {
-		Map<BlockPos, Stashed> stashed = STASH.computeIfAbsent(level, l -> new HashMap<>());
-		long now = level.getGameTime();
-		stashed.values().removeIf(entry -> entry.gameTime() != now); // never taken (a removal that told no neighbours)
-		stashed.put(pos.immutable(), new Stashed(support, now));
-	}
-
-	/** The support stashed for {@code pos} in this very tick (anything older is stale), removed either way. */
-	static @Nullable BlockState takeStash(Level level, BlockPos pos) {
-		Map<BlockPos, Stashed> stashed = STASH.get(level);
-		Stashed entry = stashed == null ? null : stashed.remove(pos);
-		return entry != null && entry.gameTime() == level.getGameTime() ? entry.support() : null;
-	}
-
-	private record Stashed(BlockState support, long gameTime)
-	{
 	}
 }

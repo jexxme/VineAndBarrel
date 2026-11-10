@@ -1,14 +1,16 @@
 package jexxme.vineandbarrel.inventory;
 
 import jexxme.vineandbarrel.VineAndBarrel;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
 
 import java.util.function.Function;
@@ -105,18 +107,25 @@ public class ItemSlots implements Container
 		return (T) automationView;
 	}
 
-	public void serialize(ValueOutput output) {
-		output.store(VALUE_IO_KEY, ItemStack.OPTIONAL_CODEC.listOf(), stacks);
+	/** Writes the slots into {@code tag} (under {@link #VALUE_IO_KEY}; an empty slot is an empty compound). */
+	public void serialize(CompoundTag tag, HolderLookup.Provider registries) {
+		ListTag list = new ListTag();
+		for (ItemStack stack : stacks) {
+			list.add(stack.saveOptional(registries));
+		}
+		tag.put(VALUE_IO_KEY, list);
 	}
 
-	public void deserialize(ValueInput input) {
+	/** Reads what {@link #serialize} wrote into {@code tag}. */
+	public void deserialize(CompoundTag tag, HolderLookup.Provider registries) {
 		int index = 0;
-		for (ValueInput entry : input.childrenListOrEmpty(VALUE_IO_KEY)) {
+		ListTag list = tag.getList(VALUE_IO_KEY, Tag.TAG_COMPOUND);
+		for (int i = 0; i < list.size(); i++) {
 			if (index >= stacks.size()) {
 				VineAndBarrel.LOGGER.warn("Ignoring saved items beyond slot {} (inventory has {} slots)", index, stacks.size());
 				break;
 			}
-			stacks.set(index++, entry.read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
+			stacks.set(index++, ItemStack.parseOptional(registries, list.getCompound(i)));
 		}
 		while (index < stacks.size()) {
 			stacks.set(index++, ItemStack.EMPTY);

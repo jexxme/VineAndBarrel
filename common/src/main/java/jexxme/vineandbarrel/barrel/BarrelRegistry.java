@@ -10,10 +10,11 @@ import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.Holder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.crafting.RecipeBookCategory;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.SoundType;
@@ -23,7 +24,6 @@ import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.util.Unit;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
-import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
 import jexxme.vineandbarrel.platform.registry.DeferredBlock;
 import jexxme.vineandbarrel.platform.registry.DeferredHolder;
 import jexxme.vineandbarrel.platform.registry.DeferredItem;
@@ -43,7 +43,6 @@ public final class BarrelRegistry
 	public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, VineAndBarrel.MODID);
 	public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES = DeferredRegister.create(Registries.RECIPE_TYPE, VineAndBarrel.MODID);
 	public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(Registries.RECIPE_SERIALIZER, VineAndBarrel.MODID);
-	public static final DeferredRegister<RecipeBookCategory> RECIPE_BOOK_CATEGORIES = DeferredRegister.create(Registries.RECIPE_BOOK_CATEGORY, VineAndBarrel.MODID);
 	public static final DeferredRegister.DataComponents DATA_COMPONENTS = DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, VineAndBarrel.MODID);
 	public static final DeferredRegister<ParticleType<?>> PARTICLE_TYPES = DeferredRegister.create(Registries.PARTICLE_TYPE, VineAndBarrel.MODID);
 	public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, VineAndBarrel.MODID);
@@ -55,20 +54,19 @@ public final class BarrelRegistry
 			.sound(SoundType.WOOD).ignitedByLava().noOcclusion());
 	/** Keeps its contents when broken (B12), so it stacks to 1 like a shulker box or FD's cooking pot; burns like a vanilla barrel. */
 	public static final DeferredItem<AgingBarrelItem> AGING_BARREL_ITEM = ITEMS.registerItem("aging_barrel",
-		p -> new AgingBarrelItem(AGING_BARREL.get(), p), p -> p.stacksTo(1).useBlockDescriptionPrefix()
-			.cookingFuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+		p -> new AgingBarrelItem(AGING_BARREL.get(), p), p -> p.stacksTo(1)); // fuel: AgingBarrelItem#getBurnTime
 
 	public static final Supplier<BlockEntityType<AgingBarrelBlockEntity>> AGING_BARREL_BE = BLOCK_ENTITY_TYPES.register("aging_barrel",
-		() -> new BlockEntityType<>(AgingBarrelBlockEntity::new, java.util.Set.of(AGING_BARREL.get())));
+		() -> BlockEntityType.Builder.of(AgingBarrelBlockEntity::new, AGING_BARREL.get()).build(null));
 
 	// ------------------------------------------------------------------ placed drinks (D1): candles and sea pickles
 
 	public static final DeferredBlock<PlacedDrinksBlock> PLACED_DRINKS = BLOCKS.registerBlock("placed_drinks", PlacedDrinksBlock::new,
 		() -> BlockBehaviour.Properties.of().mapColor(MapColor.NONE).strength(0.1F).sound(SoundType.GLASS).noOcclusion()
-			.pushReaction(PushReaction.POPPED));
+			.pushReaction(PushReaction.DESTROY));
 
 	public static final Supplier<BlockEntityType<PlacedDrinksBlockEntity>> PLACED_DRINKS_BE = BLOCK_ENTITY_TYPES.register("placed_drinks",
-		() -> new BlockEntityType<>(PlacedDrinksBlockEntity::new, java.util.Set.of(PLACED_DRINKS.get())));
+		() -> BlockEntityType.Builder.of(PlacedDrinksBlockEntity::new, PLACED_DRINKS.get()).build(null));
 
 	// ------------------------------------------------------------------ recipe: base -> young -> aged, pure data
 
@@ -81,9 +79,19 @@ public final class BarrelRegistry
 			}
 		});
 	public static final Supplier<RecipeSerializer<AgingRecipe>> AGING_SERIALIZER = RECIPE_SERIALIZERS.register("aging",
-		() -> new RecipeSerializer<>(AgingRecipe.CODEC, AgingRecipe.STREAM_CODEC));
-	/** Aging recipes are not in the recipe book (like stonecutting), but every recipe must name a category. */
-	public static final DeferredHolder<RecipeBookCategory, RecipeBookCategory> AGING_CATEGORY = RECIPE_BOOK_CATEGORIES.register("aging", RecipeBookCategory::new);
+		() -> new RecipeSerializer<>()
+		{
+			@Override
+			public com.mojang.serialization.MapCodec<AgingRecipe> codec() {
+				return AgingRecipe.CODEC;
+			}
+
+			@Override
+			public StreamCodec<RegistryFriendlyByteBuf, AgingRecipe> streamCodec() {
+				return AgingRecipe.STREAM_CODEC;
+			}
+		});
+	// Aging recipes are not in the recipe book (like stonecutting); 1.21.1 has no recipe book category registry to name one in
 
 	// ------------------------------------------------------------------ data component: what a barrel item holds (B12)
 
@@ -95,11 +103,11 @@ public final class BarrelRegistry
 	 * aged still earns Patience Pays after the barrel was moved (B12).
 	 */
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Unit>> HOME_BREWED = DATA_COMPONENTS.registerComponentType(
-		"home_brewed", builder -> builder.persistent(Unit.CODEC).networkSynchronized(Unit.STREAM_CODEC));
+		"home_brewed", builder -> builder.persistent(Unit.CODEC).networkSynchronized(StreamCodec.unit(Unit.INSTANCE)));
 
 	// ------------------------------------------------------------------ tags
 
-	/** Empty vessels a hopper may feed into a barrel's side (B14). Which vessel a drink needs is the drink's own use remainder. */
+	/** Empty vessels a hopper may feed into a barrel's side (B14). Which vessel a drink needs is what the drink's own food converts to. */
 	public static final TagKey<Item> DRINK_VESSELS = TagKey.create(Registries.ITEM, VineAndBarrel.id("drink_vessels"));
 
 	// ------------------------------------------------------------------ particles (B5, B6, D2) and sounds
@@ -151,7 +159,6 @@ public final class BarrelRegistry
 		BLOCK_ENTITY_TYPES.register();
 		RECIPE_TYPES.register();
 		RECIPE_SERIALIZERS.register();
-		RECIPE_BOOK_CATEGORIES.register();
 		DATA_COMPONENTS.register();
 		PARTICLE_TYPES.register();
 		SOUNDS.register();

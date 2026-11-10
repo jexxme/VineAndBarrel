@@ -22,23 +22,16 @@ import jexxme.vineandbarrel.tipsy.TipsyMotion;
 import jexxme.vineandbarrel.tipsy.TipsyVision;
 import jexxme.vineandbarrel.tipsy.TipsyWobble;
 import net.minecraft.world.inventory.MerchantMenu;
-import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
-import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
+import net.minecraft.world.entity.npc.WanderingTrader;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
@@ -62,7 +55,6 @@ import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -80,10 +72,12 @@ import java.util.function.Consumer;
  */
 public final class TipsyGameTests
 {
-	private static final Identifier STRUCTURE = VineAndBarrel.id("gametest/empty_5x5");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
-	private static final List<ResourceKey<Consumer<GameTestHelper>>> TESTS = new ArrayList<>();
-	private static final List<ResourceKey<Consumer<GameTestHelper>>> LEGS_TESTS = new ArrayList<>();
+	private static final ResourceLocation STRUCTURE = VineAndBarrel.id("gametest/empty_5x5");
+	private static final List<Entry> TESTS = new ArrayList<>();
+
+	/** {@code batch}: the test's 26.x environment ("tipsy", or "tipsy_legs" for the trip tests). */
+	private record Entry(String batch, String name, Consumer<GameTestHelper> function) {
+	}
 
 	static {
 		test("tipsy_stacks_to_cap", TipsyGameTests::stacksToCap);
@@ -137,8 +131,7 @@ public final class TipsyGameTests
 	}
 
 	private static void test(String name, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		TESTS.add(ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name)));
+		TESTS.add(new Entry("tipsy", name, function));
 	}
 
 	/** A test only one loader has (it uses that loader's own API), registered under the same name where it exists. */
@@ -151,23 +144,16 @@ public final class TipsyGameTests
 
 	/** A trip test: in a batch of its own, so no other test's monster stands near (a trip never happens then). */
 	private static void legsTest(String name, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		LEGS_TESTS.add(ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name)));
+		TESTS.add(new Entry("tipsy_legs", name, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(TipsyGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("tipsy"));
-		for (ResourceKey<Consumer<GameTestHelper>> function : TESTS) {
-			event.registerTest(function.identifier(), new FunctionGameTestInstance(function, new TestData<>(environment, STRUCTURE, 100, 0, true)));
-		}
-		Holder<TestEnvironmentDefinition<?>> legs = event.registerEnvironment(VineAndBarrel.id("tipsy_legs"));
-		for (ResourceKey<Consumer<GameTestHelper>> function : LEGS_TESTS) {
-			event.registerTest(function.identifier(), new FunctionGameTestInstance(function, new TestData<>(legs, STRUCTURE, 100, 0, true)));
+		for (Entry test : TESTS) {
+			VBGameTests.add(event, test.batch(), test.name(), STRUCTURE, 100, test.function());
 		}
 	}
 
@@ -184,16 +170,6 @@ public final class TipsyGameTests
 			super(server, level, profile, ClientInformation.createDefault());
 		}
 
-		@Override
-		public GameType gameMode() {
-			return GameType.SURVIVAL;
-		}
-
-		@Override
-		public boolean isClientAuthoritative() {
-			return false;
-		}
-
 		/** Vanilla's in-level mock is never a spectator, so the spectator case sets this. */
 		boolean spectator;
 
@@ -205,6 +181,16 @@ public final class TipsyGameTests
 		/** One tick of vanilla's effect loop (durations, hidden-effect downgrades, our effect tick). */
 		void tickEffectsOnce() {
 			this.tickEffects();
+		}
+
+		/**
+		 * The 60 ticks after joining in which a player can't be hurt at all, waited out with the player's own tick (26.x:
+		 * until its client had loaded the world).
+		 */
+		void waitOutSpawnProtection() {
+			for (int i = 0; i < 60; i++) {
+				this.tick();
+			}
 		}
 
 		/** Drinks what is in the main hand exactly the way the game finishes using an item. */
@@ -221,6 +207,7 @@ public final class TipsyGameTests
 		GameType.SURVIVAL.updatePlayerAbilities(player.getAbilities());
 		Connection connection = new Connection(PacketFlow.SERVERBOUND);
 		new EmbeddedChannel(connection);
+		jexxme.vineandbarrel.platform.Services.PLATFORM.prepareMockConnection(connection);
 		new ServerGamePacketListenerImpl(level.getServer(), connection, player, cookie);
 		Vec3 pos = helper.absoluteVec(new Vec3(2.5, 1.0, 2.5));
 		player.setPos(pos.x, pos.y, pos.z);
@@ -268,7 +255,7 @@ public final class TipsyGameTests
 			for (int i = 0; i < 6; i++) Tipsy.addLevel(player);
 		});
 		helper.assertValueEqual(Tipsy.getLevel(player), 3, "level with maxLevel = 3");
-		helper.assertFalse(player.hasEffect(MobEffects.SLOWNESS), "Level 3 must not slow you down");
+		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Level 3 must not slow you down");
 		helper.succeed();
 	}
 
@@ -303,13 +290,13 @@ public final class TipsyGameTests
 	private static void level5SlownessAndFatigue(GameTestHelper helper) {
 		TestPlayer player = player(helper);
 		Tipsy.setLevel(player, 4);
-		helper.assertFalse(player.hasEffect(MobEffects.SLOWNESS), "No Slowness at level 4");
-		helper.assertFalse(player.hasEffect(MobEffects.MINING_FATIGUE), "No Mining Fatigue at level 4");
+		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "No Slowness at level 4");
+		helper.assertFalse(player.hasEffect(MobEffects.DIG_SLOWDOWN), "No Mining Fatigue at level 4");
 
 		Tipsy.addLevel(player);
 		helper.assertValueEqual(Tipsy.getLevel(player), 5, "level");
-		MobEffectInstance slowness = player.getEffect(MobEffects.SLOWNESS);
-		MobEffectInstance fatigue = player.getEffect(MobEffects.MINING_FATIGUE);
+		MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+		MobEffectInstance fatigue = player.getEffect(MobEffects.DIG_SLOWDOWN);
 		helper.assertTrue(slowness != null && slowness.getAmplifier() == 1, "Level 5 gives Slowness II: " + slowness);
 		helper.assertTrue(fatigue != null && fatigue.getAmplifier() == 0, "Level 5 gives Mining Fatigue I: " + fatigue);
 
@@ -319,13 +306,13 @@ public final class TipsyGameTests
 			TipsyEvents.onEntityTick(player);
 		}
 		helper.assertValueEqual(Tipsy.getLevel(player), 5, "level after 10 s");
-		helper.assertTrue(player.hasEffect(MobEffects.SLOWNESS), "Slowness still there while at level 5");
-		helper.assertTrue(player.hasEffect(MobEffects.MINING_FATIGUE), "Mining Fatigue still there while at level 5");
+		helper.assertTrue(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Slowness still there while at level 5");
+		helper.assertTrue(player.hasEffect(MobEffects.DIG_SLOWDOWN), "Mining Fatigue still there while at level 5");
 
 		Tipsy.lowerLevel(player);
 		helper.assertValueEqual(Tipsy.getLevel(player), 4, "level after one sobering drink");
-		helper.assertFalse(player.hasEffect(MobEffects.SLOWNESS), "Slowness gone below level 5");
-		helper.assertFalse(player.hasEffect(MobEffects.MINING_FATIGUE), "Mining Fatigue gone below level 5");
+		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Slowness gone below level 5");
+		helper.assertFalse(player.hasEffect(MobEffects.DIG_SLOWDOWN), "Mining Fatigue gone below level 5");
 		helper.succeed();
 	}
 
@@ -336,21 +323,21 @@ public final class TipsyGameTests
 	private static void level5KeepsForeignSlowness(GameTestHelper helper) {
 		TestPlayer player = player(helper);
 		Tipsy.setLevel(player, 5);
-		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 1800, 0));
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 1800, 0));
 		Tipsy.lowerLevel(player);
 		tick(player, 61);
-		MobEffectInstance slowness = player.getEffect(MobEffects.SLOWNESS);
+		MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
 		helper.assertTrue(slowness != null && slowness.getAmplifier() == 0 && slowness.getDuration() > 1000, "A Slowness potion must survive Tipsy dropping below 5: " + slowness);
-		helper.assertFalse(player.hasEffect(MobEffects.MINING_FATIGUE), "Tipsy's own Mining Fatigue is gone");
+		helper.assertFalse(player.hasEffect(MobEffects.DIG_SLOWDOWN), "Tipsy's own Mining Fatigue is gone");
 		helper.succeed();
 	}
 
 	/** A short particleless Slowness I from a command ({@code /effect give @s slowness 3 0 true}) is not Tipsy's to take. */
 	private static void soberKeepsCommandSlowness(GameTestHelper helper) {
 		TestPlayer player = player(helper);
-		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 60, 0, false, false, true));
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 0, false, false, true));
 		helper.runAfterDelay(5, () -> {
-			helper.assertTrue(player.hasEffect(MobEffects.SLOWNESS), "A sober player keeps a command's Slowness");
+			helper.assertTrue(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "A sober player keeps a command's Slowness");
 			helper.succeed();
 		});
 	}
@@ -363,8 +350,8 @@ public final class TipsyGameTests
 		Tipsy.setLevel(player, 5);
 		drink(player, new ItemStack(Items.MILK_BUCKET));
 		helper.assertValueEqual(Tipsy.getLevel(player), 0, "level after milk");
-		helper.assertFalse(player.hasEffect(MobEffects.SLOWNESS), "Milk clears Slowness too");
-		helper.assertFalse(player.hasEffect(MobEffects.MINING_FATIGUE), "Milk clears Mining Fatigue too");
+		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Milk clears Slowness too");
+		helper.assertFalse(player.hasEffect(MobEffects.DIG_SLOWDOWN), "Milk clears Mining Fatigue too");
 		helper.assertTrue(player.getMainHandItem().is(Items.BUCKET), "The empty bucket comes back");
 		helper.succeed();
 	}
@@ -425,8 +412,8 @@ public final class TipsyGameTests
 	private static void sleepClears(GameTestHelper helper) {
 		BlockPos foot = new BlockPos(2, 1, 1);
 		BlockPos head = foot.south();
-		helper.setBlock(foot, Blocks.BED.pick(DyeColor.RED).defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH).setValue(BlockStateProperties.BED_PART, BedPart.FOOT));
-		helper.setBlock(head, Blocks.BED.pick(DyeColor.RED).defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH).setValue(BlockStateProperties.BED_PART, BedPart.HEAD));
+		helper.setBlock(foot, Blocks.RED_BED.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH).setValue(BlockStateProperties.BED_PART, BedPart.FOOT));
+		helper.setBlock(head, Blocks.RED_BED.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH).setValue(BlockStateProperties.BED_PART, BedPart.HEAD));
 		TestPlayer player = player(helper);
 		Tipsy.setLevel(player, 4);
 
@@ -440,7 +427,7 @@ public final class TipsyGameTests
 		player.stopSleepInBed(false, false);
 		helper.assertFalse(player.isSleeping(), "Player should be awake");
 		helper.assertValueEqual(Tipsy.getLevel(player), 0, "level after sleeping through the night");
-		helper.assertFalse(player.hasEffect(MobEffects.SLOWNESS), "No Slowness after sleeping");
+		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "No Slowness after sleeping");
 		helper.succeed();
 	}
 
@@ -452,7 +439,7 @@ public final class TipsyGameTests
 				helper.assertFalse(Tipsy.addLevel(player), "addLevel must be a no-op in non-alcoholic mode");
 			}
 			helper.assertValueEqual(Tipsy.getLevel(player), 0, "level in non-alcoholic mode");
-			helper.assertFalse(player.hasEffect(MobEffects.SLOWNESS), "No Slowness in non-alcoholic mode");
+			helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "No Slowness in non-alcoholic mode");
 		});
 		helper.assertTrue(Tipsy.addLevel(player), "addLevel works again with Tipsy on");
 		helper.assertValueEqual(Tipsy.getLevel(player), 1, "level with Tipsy back on");
@@ -541,7 +528,7 @@ public final class TipsyGameTests
 		Vec3 nudge = player.getDeltaMovement();
 		helper.assertTrue(Math.abs(nudge.x) < 1.0E-6 && Math.abs(nudge.y) < 1.0E-6, "The lurch is purely sideways, got " + nudge);
 		helper.assertTrue(Math.abs(Math.abs(nudge.z) - TipsyLegs.STUMBLE_NUDGE) < 1.0E-6, "The lurch is about a step, got " + nudge);
-		helper.assertTrue(player.syncVelocity, "The lurch is sent to the player's client");
+		helper.assertTrue(player.hurtMarked, "The lurch is sent to the player's client");
 		helper.assertValueEqual(motion(player).stumbles(), before + 1, "every client is told to play the stumble");
 		helper.assertValueEqual(motion(player).stumbleLeft(), nudge.z > 0, "to the side it lurched");
 		helper.succeed();
@@ -656,7 +643,7 @@ public final class TipsyGameTests
 		Tipsy.addLevel(player);
 		MobEffectInstance weakness = player.getEffect(MobEffects.WEAKNESS);
 		helper.assertTrue(weakness != null && weakness.getAmplifier() == 0 && !weakness.isVisible(), "Level 4 gives Weakness I without particles: " + weakness);
-		helper.assertFalse(player.hasEffect(MobEffects.SLOWNESS), "No Slowness yet at level 4");
+		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "No Slowness yet at level 4");
 		for (int i = 0; i < 200; i++) {
 			player.tickEffectsOnce();
 			TipsyEvents.onEntityTick(player);
@@ -665,7 +652,7 @@ public final class TipsyGameTests
 		Tipsy.addLevel(player);
 		helper.assertTrue(player.hasEffect(MobEffects.WEAKNESS), "Weakness stays at level 5");
 		// A random Nausea pulse may have come along in those 10 s; it isn't what this test is about
-		player.removeEffect(MobEffects.NAUSEA);
+		player.removeEffect(MobEffects.CONFUSION);
 		Tipsy.lowerLevel(player);
 		Tipsy.lowerLevel(player);
 		helper.assertValueEqual(Tipsy.getLevel(player), 3, "level");
@@ -706,17 +693,17 @@ public final class TipsyGameTests
 		helper.assertFalse(Tipsy.nauseaPulse(player), "No pulse at level 3");
 		Tipsy.setLevel(player, 4);
 		helper.assertTrue(Tipsy.nauseaPulse(player), "A pulse at level 4");
-		MobEffectInstance nausea = player.getEffect(MobEffects.NAUSEA);
+		MobEffectInstance nausea = player.getEffect(MobEffects.CONFUSION);
 		helper.assertTrue(nausea != null && nausea.getDuration() == Tipsy.NAUSEA_PULSE_TICKS && nausea.getAmplifier() == 0, "A short pulse: " + nausea);
 		helper.assertFalse(Tipsy.nauseaPulse(player), "No second pulse on top of the first");
 		// It runs out on its own
 		tick(player, Tipsy.NAUSEA_PULSE_TICKS + 1);
 		Tipsy.setLevel(player, 4);
-		helper.assertFalse(player.hasEffect(MobEffects.NAUSEA), "The pulse is over after " + Tipsy.NAUSEA_PULSE_TICKS + " ticks");
+		helper.assertFalse(player.hasEffect(MobEffects.CONFUSION), "The pulse is over after " + Tipsy.NAUSEA_PULSE_TICKS + " ticks");
 		// Dropping below IV ends a pulse right away
 		helper.assertTrue(Tipsy.nauseaPulse(player), "Another pulse");
 		Tipsy.lowerLevel(player);
-		helper.assertFalse(player.hasEffect(MobEffects.NAUSEA), "Nausea gone below level 4");
+		helper.assertFalse(player.hasEffect(MobEffects.CONFUSION), "Nausea gone below level 4");
 		helper.assertFalse(TipsyRegistry.HEAVY_EFFECTS_OWNED.has(player), "Tipsy owns nothing at III");
 		helper.succeed();
 	}
@@ -725,15 +712,15 @@ public final class TipsyGameTests
 	private static void keepsForeignSideEffects(GameTestHelper helper) {
 		TestPlayer player = player(helper);
 		player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 1800, 0));
-		player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 1800, 0));
+		player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 1800, 0));
 		Tipsy.setLevel(player, 5);
 		helper.assertFalse(Tipsy.nauseaPulse(player), "No pulse while a foreign Nausea runs");
 		Tipsy.setLevel(player, 1);
 		MobEffectInstance weakness = player.getEffect(MobEffects.WEAKNESS);
-		MobEffectInstance nausea = player.getEffect(MobEffects.NAUSEA);
+		MobEffectInstance nausea = player.getEffect(MobEffects.CONFUSION);
 		helper.assertTrue(weakness != null && weakness.getDuration() > 1000, "A Weakness potion survives Tipsy dropping: " + weakness);
 		helper.assertTrue(nausea != null && nausea.getDuration() > 1000, "A foreign Nausea survives Tipsy dropping: " + nausea);
-		helper.assertFalse(player.hasEffect(MobEffects.SLOWNESS), "Tipsy's own Slowness is gone");
+		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Tipsy's own Slowness is gone");
 		// A sober player's short particleless Weakness from a command is not Tipsy's either
 		TestPlayer sober = player(helper);
 		sober.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 0, false, false, true));
@@ -749,14 +736,14 @@ public final class TipsyGameTests
 	private static void keepsForeignEffectUnderItsOwn(GameTestHelper helper) {
 		TestPlayer player = player(helper);
 		Tipsy.setLevel(player, 5);
-		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 1800, 0, false, false, true));
-		helper.assertValueEqual(player.getEffect(MobEffects.SLOWNESS).getAmplifier(), 1, "Tipsy's Slowness II on top");
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 1800, 0, false, false, true));
+		helper.assertValueEqual(player.getEffect(MobEffects.MOVEMENT_SLOWDOWN).getAmplifier(), 1, "Tipsy's Slowness II on top");
 		Tipsy.lowerLevel(player);
 		for (int i = 0; i < 80; i++) {
 			player.tickEffectsOnce();
 			TipsyEvents.onEntityTick(player);
 		}
-		MobEffectInstance slowness = player.getEffect(MobEffects.SLOWNESS);
+		MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
 		helper.assertTrue(slowness != null && slowness.getAmplifier() == 0 && slowness.getDuration() > 1000, "The other mod's Slowness I is back: " + slowness);
 		helper.succeed();
 	}
@@ -787,7 +774,7 @@ public final class TipsyGameTests
 		helper.assertFalse(Blackout.isOut(player), "awake again after the blackout");
 		helper.assertValueEqual(Tipsy.getLevel(player), 1, "Tipsy after waking");
 		helper.assertTrue(player.getFoodData().getFoodLevel() <= 20 - Blackout.HUNGER_LOST, "woke up hungry: " + player.getFoodData().getFoodLevel());
-		helper.assertTrue(player.hasEffect(MobEffects.NAUSEA) && player.hasEffect(MobEffects.SLOWNESS), "woke up shaky");
+		helper.assertTrue(player.hasEffect(MobEffects.CONFUSION) && player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "woke up shaky");
 		helper.assertValueEqual(countItems(player), itemsBefore + 1, "a mystery souvenir in the pockets");
 		helper.succeed();
 	}
@@ -800,37 +787,37 @@ public final class TipsyGameTests
 	private static void blackoutDamageRules(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		TestPlayer player = player(helper);
-		// Until its client has loaded the world a player can't be hurt at all; this one has
-		player.connection.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
+		// For 60 ticks after joining a player can't be hurt at all; this one has waited them out
+		player.waitOutSpawnProtection();
 		Tipsy.setLevel(player, 5);
 		Blackout.start(player);
 		helper.assertTrue(Blackout.isOut(player), "out cold");
-		net.minecraft.world.entity.monster.zombie.Zombie zombie = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new Vec3(1.5, 1.0, 1.5));
+		net.minecraft.world.entity.monster.Zombie zombie = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new Vec3(1.5, 1.0, 1.5));
 		TestPlayer other = player(helper);
 		var sources = level.damageSources();
 		float health = player.getHealth();
-		player.hurtServer(level, sources.mobAttack(zombie), 4.0F);
+		player.hurt(sources.mobAttack(zombie), 4.0F);
 		helper.assertValueEqual(player.getHealth(), health, "a zombie can't hurt you while you're out");
-		player.hurtServer(level, sources.playerAttack(other), 4.0F);
+		player.hurt(sources.playerAttack(other), 4.0F);
 		helper.assertValueEqual(player.getHealth(), health, "nor can another player");
-		player.hurtServer(level, sources.fall(), 4.0F);
+		player.hurt(sources.fall(), 4.0F);
 		helper.assertValueEqual(player.getHealth(), health, "nor the fall");
 		zombie.discard();
 		helper.assertFalse(TipsyEvents.cancelsIncomingDamage(player, sources.genericKill()), "/kill still kills");
 		helper.assertFalse(TipsyEvents.cancelsIncomingDamage(player, sources.fellOutOfWorld()), "the void still counts");
 		helper.assertFalse(TipsyEvents.cancelsIncomingDamage(player, sources.starve()), "starving still counts");
-		player.hurtServer(level, sources.mobProjectile(zombie, zombie), 4.0F);
+		player.hurt(sources.mobProjectile(zombie, zombie), 4.0F);
 		helper.assertValueEqual(player.getHealth(), health, "nor a mob's arrow");
-		player.hurtServer(level, sources.thrown(zombie, zombie), 4.0F);
+		player.hurt(sources.thrown(zombie, zombie), 4.0F);
 		helper.assertValueEqual(player.getHealth(), health, "nor anything a mob throws");
-		player.hurtServer(level, sources.lava(), 2.0F);
+		player.hurt(sources.lava(), 2.0F);
 		helper.assertTrue(player.getHealth() < health, "lava still burns: " + player.getHealth());
 		// Each a little harder than the last, so the half-second of hurt-immunity after a hit lets it through
 		float afterLava = player.getHealth();
-		player.hurtServer(level, sources.inFire(), 3.0F);
+		player.hurt(sources.inFire(), 3.0F);
 		helper.assertTrue(player.getHealth() < afterLava, "fire still burns: " + player.getHealth());
 		float afterFire = player.getHealth();
-		player.hurtServer(level, sources.drown(), 4.0F);
+		player.hurt(sources.drown(), 4.0F);
 		helper.assertTrue(player.getHealth() < afterFire, "you can still drown: " + player.getHealth());
 		TipsyRegistry.BLACKOUT.remove(player);
 		helper.assertFalse(TipsyEvents.cancelsIncomingDamage(player, sources.mobAttack(other)), "awake, a hit is a hit");
@@ -844,14 +831,14 @@ public final class TipsyGameTests
 		helper.assertTrue(Tipsy.nauseaPulse(player), "dizzy before");
 		TipsyRegistry.HICCUPS.set(player, new Tipsy.HiccupBout(3, 0, 0));
 		Blackout.start(player);
-		helper.assertFalse(player.hasEffect(MobEffects.NAUSEA), "the swirl stops when the eyes close");
+		helper.assertFalse(player.hasEffect(MobEffects.CONFUSION), "the swirl stops when the eyes close");
 		helper.assertFalse(TipsyRegistry.HICCUPS.has(player), "the bout of hiccups is over");
 		helper.assertFalse(Tipsy.nauseaPulse(player), "no new swirl while out");
 		TipsyMotion.Counts before = motion(player);
 		// Not as far as the wake-up (that would move the player: BlackoutGameTests covers it)
 		for (int i = 0; i < Blackout.TICKS - Blackout.WAKE_AT - 5; i++) {
 			TipsyEvents.onEntityTick(player);
-			helper.assertFalse(player.hasEffect(MobEffects.NAUSEA), "no swirl while out");
+			helper.assertFalse(player.hasEffect(MobEffects.CONFUSION), "no swirl while out");
 		}
 		helper.assertValueEqual(motion(player), before, "no hiccup, stumble or trip while out");
 		helper.assertTrue(Blackout.isOut(player), "still out");
@@ -861,7 +848,7 @@ public final class TipsyGameTests
 	/** The items in the pockets (not what is worn: a blackout may add a pumpkin hat). */
 	private static int countItems(TestPlayer player) {
 		int count = 0;
-		for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
+		for (ItemStack stack : player.getInventory().items) {
 			count += stack.getCount();
 		}
 		return count;
@@ -921,7 +908,7 @@ public final class TipsyGameTests
 
 	/** A wild swing is a real punch: half a heart on the pig right in front. */
 	private static void rowdyPunches(GameTestHelper helper) {
-		net.minecraft.world.entity.animal.pig.Pig pig = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityTypes.PIG, new Vec3(2.5, 1.0, 3.0));
+		net.minecraft.world.entity.animal.Pig pig = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityType.PIG, new Vec3(2.5, 1.0, 3.0));
 		TestPlayer player = facing(helper, pig);
 		float before = pig.getHealth();
 		helper.assertTrue(Rowdy.swing(player) == pig, "the swing hits the pig in front");
@@ -932,7 +919,7 @@ public final class TipsyGameTests
 
 	/** Never pets, iron golems or armor stands; other players only where PvP allows it. */
 	private static void rowdySpares(GameTestHelper helper) {
-		net.minecraft.world.entity.animal.wolf.Wolf wolf = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityTypes.WOLF, new Vec3(2.5, 1.0, 3.0));
+		net.minecraft.world.entity.animal.Wolf wolf = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityType.WOLF, new Vec3(2.5, 1.0, 3.0));
 		TestPlayer owner = player(helper);
 		wolf.tame(owner);
 		TestPlayer player = facing(helper, wolf);
@@ -940,10 +927,10 @@ public final class TipsyGameTests
 		helper.assertTrue(Rowdy.swing(player) == null, "a pet is never punched");
 		helper.assertValueEqual(wolf.getHealth(), before, "the wolf's health");
 		wolf.discard();
-		net.minecraft.world.entity.animal.golem.IronGolem golem = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityTypes.IRON_GOLEM, new Vec3(2.5, 1.0, 3.5));
+		net.minecraft.world.entity.animal.IronGolem golem = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityType.IRON_GOLEM, new Vec3(2.5, 1.0, 3.5));
 		helper.assertFalse(Rowdy.mayHit(player, golem), "iron golems are never punched");
 		golem.discard();
-		net.minecraft.world.entity.decoration.ArmorStand stand = helper.spawn(EntityTypes.ARMOR_STAND, new BlockPos(2, 1, 3));
+		net.minecraft.world.entity.decoration.ArmorStand stand = helper.spawn(EntityType.ARMOR_STAND, new BlockPos(2, 1, 3));
 		helper.assertFalse(Rowdy.mayHit(player, stand), "armor stands are never punched");
 		TestPlayer other = player(helper);
 		helper.assertValueEqual(Rowdy.mayHit(player, other), player.canHarmPlayer(other), "another player only where PvP allows it");
@@ -975,12 +962,18 @@ public final class TipsyGameTests
 	 */
 	private static void rowdyCutOffClick(GameTestHelper helper) {
 		TestPlayer player = player(helper);
-		player.connection.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
-		WanderingTrader trader = helper.spawn(EntityTypes.WANDERING_TRADER, new BlockPos(2, 1, 2));
+		WanderingTrader trader = helper.spawn(EntityType.WANDERING_TRADER, new BlockPos(2, 1, 2));
 		trader.setNoAi(true);
 		Vec3 at = helper.absoluteVec(new Vec3(2.5, 1.0, 3.8));
-		player.snapTo(at.x, at.y, at.z, 180.0F, 0.0F);
-		Runnable click = () -> player.connection.handleInteract(new ServerboundInteractPacket(trader.getId(), InteractionHand.MAIN_HAND, Vec3.ZERO, false));
+		player.moveTo(at.x, at.y, at.z, 180.0F, 0.0F);
+		// A click as the client sends it on this Minecraft: "interact at" first, and plain "interact" unless that already did
+		// something (here: opened the trades or got the head shake)
+		Runnable click = () -> {
+			player.connection.handleInteract(ServerboundInteractPacket.createInteractionPacket(trader, false, InteractionHand.MAIN_HAND, Vec3.ZERO));
+			if (!(player.containerMenu instanceof MerchantMenu) && trader.getUnhappyCounter() == 0) {
+				player.connection.handleInteract(ServerboundInteractPacket.createInteractionPacket(trader, false, InteractionHand.MAIN_HAND));
+			}
+		};
 
 		Tipsy.setLevel(player, 3);
 		click.run();
@@ -1086,13 +1079,13 @@ public final class TipsyGameTests
 		TestPlayer player = player(helper);
 		Tipsy.setLevel(player, 2);
 		drink(player, new ItemStack(DrinkItems.BARLEY_ALE.get()));
-		helper.assertTrue(player.hasEffect(MobEffects.HASTE), "level 2 to 3: the ale still gives Haste");
+		helper.assertTrue(player.hasEffect(MobEffects.DIG_SPEED), "level 2 to 3: the ale still gives Haste");
 		drink(player, new ItemStack(DrinkItems.BARLEY_ALE.get()));
 		helper.assertValueEqual(Tipsy.getLevel(player), Tipsy.NO_BUFF_LEVEL, "level after the fourth drink");
-		helper.assertFalse(player.hasEffect(MobEffects.HASTE), "level 4: too drunk, and the earlier ale's Haste is gone too");
-		player.addEffect(new MobEffectInstance(MobEffects.SPEED, 1000, 0));
+		helper.assertFalse(player.hasEffect(MobEffects.DIG_SPEED), "level 4: too drunk, and the earlier ale's Haste is gone too");
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 1000, 0));
 		drink(player, new ItemStack(DrinkItems.AGED_SWEET_BERRY_WINE.get()));
-		MobEffectInstance speed = player.getEffect(MobEffects.SPEED);
+		MobEffectInstance speed = player.getEffect(MobEffects.MOVEMENT_SPEED);
 		helper.assertTrue(speed != null && speed.getAmplifier() == 0 && speed.getDuration() <= 1000, "an earlier Speed stays as it was: " + speed);
 		helper.succeed();
 	}
@@ -1142,34 +1135,34 @@ public final class TipsyGameTests
 		drink(player, new ItemStack(DrinkItems.BARLEY_ALE.get()));
 		helper.assertValueEqual(DrinkBuffs.list(player).size(), 1, "the ale's Haste is remembered");
 		// The ale's Haste runs out (or milk): the next tick forgets it
-		player.removeEffect(MobEffects.HASTE);
+		player.removeEffect(MobEffects.DIG_SPEED);
 		TipsyEvents.onEntityTick(player);
 		helper.assertTrue(DrinkBuffs.list(player).isEmpty(), "a buff that is gone is forgotten");
 		// Later the same night: a Haste "potion", then one drink too many
-		player.addEffect(new MobEffectInstance(MobEffects.HASTE, 6000, 0));
+		player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 6000, 0));
 		Tipsy.setLevel(player, 3);
 		drink(player, new ItemStack(DrinkItems.BARLEY_ALE.get()));
 		helper.assertValueEqual(Tipsy.getLevel(player), 4, "level after the drink too many");
-		MobEffectInstance potion = player.getEffect(MobEffects.HASTE);
+		MobEffectInstance potion = player.getEffect(MobEffects.DIG_SPEED);
 		helper.assertTrue(potion != null && potion.getDuration() > 5000, "the potion's Haste stays: " + potion);
 
 		// A stronger potion (or a beacon) on top of a drink's buff: the potion stays, and the drink's buff hidden under
 		// it is taken away too, so it doesn't come back once the potion is over
 		TestPlayer second = player(helper);
 		drink(second, new ItemStack(DrinkItems.BARLEY_ALE.get()));
-		second.addEffect(new MobEffectInstance(MobEffects.HASTE, 200, 1));
+		second.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 200, 1));
 		DrinkBuffs.removeAll(second);
-		MobEffectInstance top = second.getEffect(MobEffects.HASTE);
+		MobEffectInstance top = second.getEffect(MobEffects.DIG_SPEED);
 		helper.assertTrue(top != null && top.getAmplifier() == 1, "the stronger potion stays: " + top);
 		tick(second, 201);
-		helper.assertFalse(second.hasEffect(MobEffects.HASTE), "and nothing of the drink comes back after it: " + second.getEffect(MobEffects.HASTE));
+		helper.assertFalse(second.hasEffect(MobEffects.DIG_SPEED), "and nothing of the drink comes back after it: " + second.getEffect(MobEffects.DIG_SPEED));
 
 		// Sober again (a night's sleep): nothing is remembered, and the buff itself stays
 		TestPlayer third = player(helper);
 		drink(third, new ItemStack(DrinkItems.BARLEY_ALE.get()));
 		Tipsy.clear(third);
 		helper.assertTrue(DrinkBuffs.list(third).isEmpty(), "sober: the night's buffs are forgotten");
-		helper.assertTrue(third.hasEffect(MobEffects.HASTE), "but the buff itself stays");
+		helper.assertTrue(third.hasEffect(MobEffects.DIG_SPEED), "but the buff itself stays");
 		helper.succeed();
 	}
 
@@ -1183,9 +1176,9 @@ public final class TipsyGameTests
 		TestPlayer one = player(helper);
 		TestPlayer two = player(helper);
 		drink(one, new ItemStack(DrinkItems.BARLEY_ALE.get()));
-		int plain = one.getEffect(MobEffects.HASTE).getDuration();
+		int plain = one.getEffect(MobEffects.DIG_SPEED).getDuration();
 		drink(two, new ItemStack(DrinkItems.BARLEY_ALE.get()));
-		helper.assertTrue(one.getEffect(MobEffects.HASTE).getDuration() > plain, "the cheers made the ale's Haste last longer");
+		helper.assertTrue(one.getEffect(MobEffects.DIG_SPEED).getDuration() > plain, "the cheers made the ale's Haste last longer");
 		for (int i = 0; i < 20; i++) {
 			one.tickEffectsOnce();
 			TipsyEvents.onEntityTick(one);
@@ -1193,24 +1186,24 @@ public final class TipsyGameTests
 		helper.assertValueEqual(DrinkBuffs.list(one).size(), 1, "still remembered as the ale's after the cheers");
 		Tipsy.setLevel(one, 3);
 		drink(one, new ItemStack(DrinkItems.BARLEY_ALE.get()));
-		helper.assertFalse(one.hasEffect(MobEffects.HASTE), "at IV the cheered Haste goes too: " + one.getEffect(MobEffects.HASTE));
+		helper.assertFalse(one.hasEffect(MobEffects.DIG_SPEED), "at IV the cheered Haste goes too: " + one.getEffect(MobEffects.DIG_SPEED));
 
 		// Our stronger buff with a weaker, longer potion waiting underneath: the potion comes back, as it was
 		TestPlayer three = player(helper);
 		Tipsy.setLevel(three, 1);
-		MobEffectInstance strong = new MobEffectInstance(MobEffects.HASTE, 400, 1);
+		MobEffectInstance strong = new MobEffectInstance(MobEffects.DIG_SPEED, 400, 1);
 		three.addEffect(strong);
 		DrinkBuffs.remember(three, strong);
-		three.addEffect(new MobEffectInstance(MobEffects.HASTE, 6000, 0));
+		three.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 6000, 0));
 		DrinkBuffs.removeAll(three);
-		MobEffectInstance back = three.getEffect(MobEffects.HASTE);
+		MobEffectInstance back = three.getEffect(MobEffects.DIG_SPEED);
 		helper.assertTrue(back != null && back.getAmplifier() == 0 && back.getDuration() > 5000, "the potion underneath is back: " + back);
 
 		// A beacon's Haste II refreshed over the ale's Haste I, then a drink too many: the beacon's stays, the ale's goes
 		TestPlayer four = player(helper);
 		drink(four, new ItemStack(DrinkItems.BARLEY_ALE.get()));
 		for (int refresh = 0; refresh < 3; refresh++) {
-			four.addEffect(new MobEffectInstance(MobEffects.HASTE, 260, 1, true, true));
+			four.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 260, 1, true, true));
 			for (int i = 0; i < 80; i++) {
 				four.tickEffectsOnce();
 				TipsyEvents.onEntityTick(four);
@@ -1218,10 +1211,10 @@ public final class TipsyGameTests
 		}
 		helper.assertValueEqual(DrinkBuffs.list(four).size(), 1, "the ale's Haste is still known under the beacon's");
 		DrinkBuffs.removeAll(four);
-		MobEffectInstance beacon = four.getEffect(MobEffects.HASTE);
+		MobEffectInstance beacon = four.getEffect(MobEffects.DIG_SPEED);
 		helper.assertTrue(beacon != null && beacon.getAmplifier() == 1 && beacon.isAmbient(), "the beacon's Haste stays: " + beacon);
 		tick(four, 261);
-		helper.assertFalse(four.hasEffect(MobEffects.HASTE), "and the ale's doesn't come back after it");
+		helper.assertFalse(four.hasEffect(MobEffects.DIG_SPEED), "and the ale's doesn't come back after it");
 
 		// A relog: the saved entries read back (time only runs while the player is there, like the effect's)
 		TestPlayer five = player(helper);
@@ -1233,7 +1226,7 @@ public final class TipsyGameTests
 		var saved = DrinkBuffs.CODEC.codec().encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, DrinkBuffs.list(five)).getOrThrow();
 		TipsyRegistry.DRINK_BUFFS.set(five, DrinkBuffs.CODEC.codec().parse(net.minecraft.nbt.NbtOps.INSTANCE, saved).getOrThrow());
 		DrinkBuffs.removeAll(five);
-		helper.assertFalse(five.hasEffect(MobEffects.HASTE), "after a relog the ale's Haste is still known and taken away");
+		helper.assertFalse(five.hasEffect(MobEffects.DIG_SPEED), "after a relog the ale's Haste is still known and taken away");
 		helper.succeed();
 	}
 
@@ -1241,12 +1234,12 @@ public final class TipsyGameTests
 	private static void nonAlcoholicMidGame(GameTestHelper helper) {
 		TestPlayer player = player(helper);
 		Tipsy.setLevel(player, 5);
-		helper.assertTrue(player.hasEffect(MobEffects.SLOWNESS), "Slowness at V");
+		helper.assertTrue(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Slowness at V");
 		with(TipsyConfig.ENABLED, false, () -> {
 			TipsyEvents.onEntityTick(player);
 			TipsyEvents.onEntityTick(player);
 			helper.assertValueEqual(Tipsy.getLevel(player), 0, "sober the moment it is switched on");
-			helper.assertFalse(player.hasEffect(MobEffects.SLOWNESS), "Tipsy's Slowness is gone too");
+			helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Tipsy's Slowness is gone too");
 			helper.assertTrue(TipsyRegistry.SYNCED_LEVEL.getExisting(player) == null, "the other clients stop the sway");
 		});
 		helper.succeed();
@@ -1263,7 +1256,7 @@ public final class TipsyGameTests
 		}
 		TestPlayer player = player(helper);
 		Vec3 at = helper.absoluteVec(new Vec3(2.5, 1.0, 0.5));
-		player.snapTo(at.x, at.y, at.z, 0.0F, 0.0F);
+		player.moveTo(at.x, at.y, at.z, 0.0F, 0.0F);
 		player.setOnGround(true);
 		Tipsy.setLevel(player, 5);
 		return player;
@@ -1312,7 +1305,7 @@ public final class TipsyGameTests
 		helper.assertFalse(TipsyLegs.canTrip(player), "not at a step down");
 		helper.setBlock(new BlockPos(2, 0, 2), Blocks.STONE);
 		helper.assertTrue(TipsyLegs.canTrip(player), "safe again");
-		net.minecraft.world.entity.monster.zombie.Zombie zombie = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new Vec3(4.5, 1.0, 4.5));
+		net.minecraft.world.entity.monster.Zombie zombie = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new Vec3(4.5, 1.0, 4.5));
 		helper.assertFalse(TipsyLegs.canTrip(player), "never with a monster near");
 		zombie.discard();
 		Tipsy.setLevel(player, 4);

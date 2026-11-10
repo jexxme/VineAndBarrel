@@ -11,7 +11,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -20,7 +20,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.Rotation;
@@ -55,15 +55,15 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 {
 	public static final EnumProperty<BushSupport> SUPPORT = EnumProperty.create("support", BushSupport.class);
 	public static final EnumProperty<BushTrellis> TRELLIS = EnumProperty.create("trellis", BushTrellis.class);
-	private static final VoxelShape SHAPE_SAPLING = Block.column(10.0, 0.0, 8.0);
-	private static final VoxelShape SHAPE_GROWING = Block.column(14.0, 0.0, 16.0);
+	private static final VoxelShape SHAPE_SAPLING = Block.box(3.0, 0.0, 3.0, 13.0, 8.0, 13.0);
+	private static final VoxelShape SHAPE_GROWING = Block.box(1.0, 0.0, 1.0, 15.0, 16.0, 15.0);
 	// drawn as the foot of a vine: the young shoot, then the vine's leafy planes along a trellis, fence, wall or bars, or
 	// round a rope or chain (the outline follows what is drawn, as vanilla's do)
 	private static final VoxelShape FOOT_SHOOT_X = Block.box(3.0, 0.0, 5.0, 13.0, 8.0, 11.0);
 	private static final VoxelShape FOOT_SHOOT_Z = Block.box(5.0, 0.0, 3.0, 11.0, 8.0, 13.0);
 	private static final VoxelShape FOOT_PLANES_X = Block.box(0.0, 0.0, 5.0, 16.0, 16.0, 11.0);
 	private static final VoxelShape FOOT_PLANES_Z = Block.box(5.0, 0.0, 0.0, 11.0, 16.0, 16.0);
-	private static final VoxelShape FOOT_WOUND = Block.column(12.0, 0.0, 16.0);
+	private static final VoxelShape FOOT_WOUND = Block.box(2.0, 0.0, 2.0, 14.0, 16.0, 14.0);
 
 	private final Supplier<? extends Block> ropeVine;
 	private final Supplier<? extends Block> trellisVine;
@@ -121,7 +121,7 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	 * the bush's usual business: bone meal, picking.
 	 */
 	@Override
-	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand,
+	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand,
 										  BlockHitResult hitResult) {
 		if (state.getValue(TRELLIS) == BushTrellis.NONE && stack.getItem() instanceof BlockItem item && item.getBlock() instanceof TrellisBlock) {
 			BlockState above = level.getBlockState(pos.above());
@@ -129,7 +129,7 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 					? above.getValue(TrellisBlock.AXIS) : player.getDirection().getClockWise().getAxis();
 			BlockState withTrellis = state.setValue(TRELLIS, BushTrellis.of(axis));
 			if (!level.isUnobstructed(withTrellis, pos, CollisionContext.of(player))) {
-				return InteractionResult.FAIL; // the panel would stand in someone, as a placed block can't
+				return ItemInteractionResult.FAIL; // the panel would stand in someone, as a placed block can't
 			}
 			if (level instanceof ServerLevel) {
 				level.setBlock(pos, withTrellis, Block.UPDATE_ALL);
@@ -139,14 +139,14 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 				player.awardStat(Stats.ITEM_USED.get(item));
 				stack.consume(1, player);
 			}
-			return InteractionResult.SUCCESS;
+			return ItemInteractionResult.sidedSuccess(level.isClientSide());
 		}
 		if (state.getValue(TRELLIS) == BushTrellis.NONE && stack.getItem() instanceof BlockItem item
 				&& VineSupports.isMakeshift(item.getBlock().defaultBlockState())) {
 			BlockState support = Block.updateFromNeighbourShapes(item.getBlock().defaultBlockState(), level, pos);
 			if (VineSupports.isMakeshift(support)) {
 				if (!level.isUnobstructed(support, pos, CollisionContext.of(player))) {
-					return InteractionResult.FAIL; // the fence or wall would stand in someone, as a placed block can't
+					return ItemInteractionResult.FAIL; // the fence or wall would stand in someone, as a placed block can't
 				}
 				if (level instanceof ServerLevel) {
 					VineOnSupportBlock.place(level, pos, supportVineBlock().defaultBlockState().setValue(AGE, state.getValue(AGE)), support, true, false);
@@ -156,7 +156,7 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 					player.awardStat(Stats.ITEM_USED.get(item));
 					stack.consume(1, player);
 				}
-				return InteractionResult.SUCCESS;
+				return ItemInteractionResult.sidedSuccess(level.isClientSide());
 			}
 		}
 		return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
@@ -175,10 +175,10 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	 * item where flowing water or lava washed the plant away.
 	 */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
-		if (state.getValue(TRELLIS) == BushTrellis.NONE || movedByPiston) {
-			return;
+	protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		super.onRemove(state, level, pos, newState, movedByPiston);
+		if (state.is(newState.getBlock()) || level.isClientSide() || state.getValue(TRELLIS) == BushTrellis.NONE || movedByPiston) {
+			return; // onRemove also runs when only the state changes (growing, picking): the plant is still there
 		}
 		BlockState now = level.getBlockState(pos);
 		FluidState fluid = now.getFluidState();
@@ -197,13 +197,13 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	 * this and would otherwise leave nothing at all.
 	 */
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction directionToNeighbour,
-									 BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	protected BlockState updateShape(BlockState state, Direction directionToNeighbour, BlockState neighbourState, LevelAccessor level, BlockPos pos,
+									 BlockPos neighbourPos) {
 		if (!state.canSurvive(level, pos)) {
-			ticks.scheduleTick(pos, this, 1);
+			level.scheduleTick(pos, this, 1);
 			return state;
 		}
-		BlockState updated = super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random);
+		BlockState updated = super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos);
 		if (directionToNeighbour == Direction.UP && updated.is(this)) {
 			return updated.setValue(SUPPORT, BushSupport.of(this, neighbourState));
 		}

@@ -9,8 +9,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
@@ -91,10 +91,10 @@ public class KettleChimneyBlock extends Block
 
 	/** A copper ingot on the chimney grows it, like on the kettle (you see where it goes). */
 	@Override
-	protected net.minecraft.world.InteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, net.minecraft.world.entity.player.Player player,
+	protected net.minecraft.world.ItemInteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, net.minecraft.world.entity.player.Player player,
 		net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hit) {
 		if (!held.is(Items.COPPER_INGOT)) {
-			return net.minecraft.world.InteractionResult.TRY_WITH_EMPTY_HAND;
+			return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 		}
 		BlockPos below = pos.below();
 		for (int i = 0; i < MAX && level.getBlockState(below).getBlock() instanceof KettleChimneyBlock; i++) {
@@ -102,12 +102,12 @@ public class KettleChimneyBlock extends Block
 		}
 		KettleMultiblock.Kettle kettle = KettleMultiblock.kettleAt(level, below);
 		if (kettle == null || !KettleMultiblock.extendChimney(level, kettle, player)) {
-			return net.minecraft.world.InteractionResult.PASS;
+			return net.minecraft.world.ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
 		}
 		if (!level.isClientSide()) {
 			held.consume(1, player);
 		}
-		return net.minecraft.world.InteractionResult.SUCCESS;
+		return net.minecraft.world.ItemInteractionResult.sidedSuccess(level.isClientSide());
 	}
 
 	// ------------------------------------------------------------------ standing on the kettle
@@ -123,9 +123,9 @@ public class KettleChimneyBlock extends Block
 
 	/** Lost its footing (the kettle or the piece below went): breaks on the next tick, dropping its ingot. */
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	protected BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
 		if (direction == Direction.DOWN && !state.canSurvive(level, pos)) {
-			ticks.scheduleTick(pos, this, 1);
+			level.scheduleTick(pos, this, 1);
 		}
 		if (direction == Direction.UP) {
 			// the top piece carries the cap: the piece under a removed top becomes the new top
@@ -146,15 +146,15 @@ public class KettleChimneyBlock extends Block
 
 	/** The last piece taken off: the kettle's chimney gets its own cap back. */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+	protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
 		if (!KettleMultiblock.isConverting()) {
 			BlockPos below = pos.below();
 			BlockState kettle = level.getBlockState(below);
-			if (KettleMultiblock.isExtended(kettle) && !(level.getBlockState(pos).getBlock() instanceof KettleChimneyBlock)) {
+			if (KettleMultiblock.isExtended(kettle) && !(newState.getBlock() instanceof KettleChimneyBlock)) {
 				level.setBlock(below, KettleMultiblock.withExtended(kettle, false), Block.UPDATE_ALL);
 			}
 		}
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+		super.onRemove(state, level, pos, newState, movedByPiston);
 	}
 
 	@Override
@@ -163,7 +163,7 @@ public class KettleChimneyBlock extends Block
 	}
 
 	@Override
-	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		return new ItemStack(Items.COPPER_INGOT);
 	}
 

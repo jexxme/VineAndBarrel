@@ -7,18 +7,19 @@ import net.minecraft.world.level.storage.loot.predicates.MatchTool;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.predicates.AnyOfCondition;
 import net.minecraft.tags.TagKey;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.advancements.predicates.ItemPredicate;
+import net.minecraft.advancements.critereon.ItemPredicate;
 import jexxme.vineandbarrel.compat.farmersdelight.FDCompat;
 import jexxme.vineandbarrel.compat.farmersdelight.FeastBlock;
 import jexxme.vineandbarrel.tag.VBTags;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.entries.TagEntry;
-import net.minecraft.advancements.predicates.StatePropertiesPredicate;
-import net.minecraft.core.Holder;
+import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.data.loot.BlockLootSubProvider;
-import net.minecraft.data.loot.LootTableSubProvider;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -31,8 +32,9 @@ import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
 import net.minecraft.world.level.storage.loot.functions.ApplyExplosionDecay;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
-import net.minecraft.world.level.storage.loot.predicates.MatchBlock;
-import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
+import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.minecraft.world.level.storage.loot.predicates.InvertedLootItemCondition;
 
 import java.util.Set;
@@ -40,8 +42,11 @@ import java.util.Set;
 /** Block drops. */
 public class VBBlockLoot extends BlockLootSubProvider
 {
-	public VBBlockLoot(LootTableSubProvider.Context output) {
-		super(Set.of(), FeatureFlags.REGISTRY.allFlags(), output);
+	private final HolderGetter<Enchantment> enchantments;
+
+	public VBBlockLoot(HolderLookup.Provider registries) {
+		super(Set.of(), FeatureFlags.REGISTRY.allFlags(), registries);
+		this.enchantments = registries.lookupOrThrow(Registries.ENCHANTMENT);
 	}
 
 	@Override
@@ -77,12 +82,12 @@ public class VBBlockLoot extends BlockLootSubProvider
 		// Barley like wheat, and like FD's straw_from_mature_wheat: FD's knife also cuts a straw from ripe barley (#vineandbarrel:straw
 		// holds FD's straw and #vineandbarrel:straw_harvesters FD's knives, both empty without FD, so the same table works everywhere)
 		add(VBBlocks.BARLEY.get(), block -> {
-			var ripe = MatchBlock.blockMatches(blocks, block, StatePropertiesPredicate.Builder.properties().hasProperty(CropBlock.AGE, 7));
+			var ripe = LootItemBlockStatePropertyCondition.hasBlockStateProperties(block).setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(CropBlock.AGE, 7));
 			return createCropDrops(block, VBItems.BARLEY.get(), VBItems.BARLEY_SEEDS.get(), ripe)
 					.withPool(LootPool.lootPool()
 							.when(ripe)
-							.when(MatchTool.toolMatches(ItemPredicate.Builder.item().of(items, VBTags.STRAW_HARVESTERS)))
-							.add(TagEntry.tagContents(items.getOrThrow(VBTags.STRAW))));
+							.when(MatchTool.toolMatches(ItemPredicate.Builder.item().of(VBTags.STRAW_HARVESTERS)))
+							.add(TagEntry.tagContents(VBTags.STRAW)));
 		});
 
 		// Wild crops exactly like FD's (wild carrots/potatoes for produce-planted crops, wild beetroots for seeded ones)
@@ -98,7 +103,7 @@ public class VBBlockLoot extends BlockLootSubProvider
 
 		// The Coq au Vin feast: whole, itself; once served from, only the bones (like FD's roast chicken leaves bone meal)
 		Block feast = FDCompat.COQ_AU_VIN_BLOCK.get();
-		var whole = MatchBlock.blockMatches(blocks, feast, StatePropertiesPredicate.Builder.properties().hasProperty(FeastBlock.SERVINGS, FeastBlock.MAX_SERVINGS));
+		var whole = LootItemBlockStatePropertyCondition.hasBlockStateProperties(feast).setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(FeastBlock.SERVINGS, FeastBlock.MAX_SERVINGS));
 		add(feast, LootTable.lootTable()
 				.withPool(LootPool.lootPool().when(whole).add(LootItem.lootTableItem(feast)))
 				.withPool(LootPool.lootPool().when(InvertedLootItemCondition.invert(whole)).add(LootItem.lootTableItem(Items.BONE))));
@@ -120,21 +125,21 @@ public class VBBlockLoot extends BlockLootSubProvider
 
 	private LootPool.Builder fruitPool(Block block, Item fruit, int age, int min, int max) {
 		return LootPool.lootPool()
-				.when(MatchBlock.blockMatches(blocks, block, StatePropertiesPredicate.Builder.properties().hasProperty(ClimbingCropBlock.AGE, age)))
+				.when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(block).setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(ClimbingCropBlock.AGE, age)))
 				.add(LootItem.lootTableItem(fruit))
-				.apply(SetItemCountFunction.setCount(ContextIntProviders.between(min, max)))
+				.apply(SetItemCountFunction.setCount(UniformGenerator.between(min, max)))
 				.apply(ApplyBonusCount.addUniformBonusCount(enchantments.getOrThrow(Enchantments.FORTUNE)));
 	}
 
 	/**
-	 * Shears: vanilla's own {@code minecraft:tool/can_shear} predicate (as for tall grass; NeoForge widens it to every tool
-	 * that can shear) or any tool in the common {@code #c:tools/shear} tag, so modded shears work on Fabric too.
+	 * Shears: vanilla's shears or any tool in the common {@code #c:tools/shear} tag, so modded shears work on both loaders.
+	 * The tables are shared with Fabric, so no NeoForge-only condition (its item ability check) either.
 	 */
 	private LootItemCondition.Builder shears() {
-		return new AnyOfCondition.Builder(MatchTool.toolMatches(ItemPredicate.Builder.item().of(items, SHEAR_TOOLS))).or(hasShears());
+		return new AnyOfCondition.Builder(MatchTool.toolMatches(ItemPredicate.Builder.item().of(SHEAR_TOOLS))).or(HAS_SHEARS);
 	}
 
-	private static final TagKey<Item> SHEAR_TOOLS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "tools/shear"));
+	private static final TagKey<Item> SHEAR_TOOLS = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "tools/shear"));
 
 	/**
 	 * FD's wildCrop, with the produce always instead of 20% of the time (so a patch of wild barley makes a wort, as a patch
@@ -143,11 +148,11 @@ public class VBBlockLoot extends BlockLootSubProvider
 	private LootTable.Builder wildCrop(Block block, Item crop, Item seeds) {
 		return LootTable.lootTable()
 				.withPool(LootPool.lootPool()
-						.setRolls(ContextIntProviders.exactly(1))
+						.setRolls(ConstantValue.exactly(1))
 						.add(LootItem.lootTableItem(crop).apply(ApplyExplosionDecay.explosionDecay()))
 						.when(InvertedLootItemCondition.invert(shears())))
 				.withPool(LootPool.lootPool()
-						.setRolls(ContextIntProviders.exactly(1))
+						.setRolls(ConstantValue.exactly(1))
 						.add(AlternativesEntry.alternatives(
 								LootItem.lootTableItem(block)
 										.when(shears()),
@@ -160,7 +165,7 @@ public class VBBlockLoot extends BlockLootSubProvider
 	private LootTable.Builder wildCropNoSeeds(Block block, Item crop) {
 		return LootTable.lootTable()
 				.withPool(LootPool.lootPool()
-						.setRolls(ContextIntProviders.exactly(1))
+						.setRolls(ConstantValue.exactly(1))
 						.add(AlternativesEntry.alternatives(
 								LootItem.lootTableItem(block)
 										.when(shears()),

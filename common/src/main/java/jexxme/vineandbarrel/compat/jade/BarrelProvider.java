@@ -5,7 +5,7 @@ import jexxme.vineandbarrel.barrel.AgingBarrelBlockEntity;
 import jexxme.vineandbarrel.barrel.BarrelStage;
 import jexxme.vineandbarrel.barrel.BarrelStatus;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.ITooltip;
@@ -19,10 +19,10 @@ public enum BarrelProvider implements IBlockComponentProvider
 {
 	INSTANCE;
 
-	private static final Identifier UID = VineAndBarrel.id("aging_barrel");
+	private static final ResourceLocation UID = VineAndBarrel.id("aging_barrel");
 
 	@Override
-	public Identifier getUid() {
+	public ResourceLocation getUid() {
 		return UID;
 	}
 

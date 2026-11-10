@@ -16,15 +16,19 @@
     }
   ],
   "ingredients": [
-    "#c:foods/safe_raw_fish",
-    [
-      "vineandbarrel:barley_ale",
-      "vineandbarrel:aged_barley_ale"
-    ],
-    "#c:crops/wheat"
+    {
+      "tag": "c:foods/safe_raw_fish"
+    },
+    {
+      "tag": "vineandbarrel:cooking/barley_ale"
+    },
+    {
+      "tag": "c:crops/wheat"
+    }
   ],
   "recipe_book_tab": "meals",
   "result": {
+    "count": 1,
     "id": "vineandbarrel:beer_battered_fish"
   }
 }

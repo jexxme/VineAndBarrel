@@ -3,41 +3,39 @@ package jexxme.vineandbarrel.compat.jei;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.barrel.AgingRecipe;
 import jexxme.vineandbarrel.barrel.AgingRecipes;
-import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.kettle.BrewingRecipe;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.RecipeMap;
 
 import java.util.Comparator;
 import java.util.List;
 
 /**
- * The recipes the server sent, kept for the JEI plugin (as FD's JEI integration keeps them). Uses no JEI class, so it
- * loads fine without JEI.
+ * The recipes the server sent, for the JEI plugin (as FD's JEI integration reads them). 1.21.1: vanilla sends every
+ * recipe to the client, so they are read from the client world's recipe manager when asked, and nothing is kept here.
+ * Uses no JEI class, so it loads fine without JEI. Client only.
  */
 public final class JeiRecipeCache
 {
-	private static RecipeMap recipes = RecipeMap.EMPTY;
-
 	private JeiRecipeCache() {
 	}
 
-	/** When the server's recipes arrive on the client (each loader calls this from its own event). */
-	public static void onRecipesReceived(RecipeMap received) {
-		recipes = received;
-	}
-
-	/** Every brewing recipe, sorted by id. */
+	/** Every brewing recipe, sorted by id (none while in no world). */
 	public static List<RecipeHolder<BrewingRecipe>> brewing() {
-		return recipes.byType(KettleRegistry.BREWING.get()).stream()
-			.sorted(Comparator.comparing(holder -> holder.id().identifier().toString()))
+		ClientLevel level = Minecraft.getInstance().level;
+		if (level == null) {
+			return List.of();
+		}
+		return level.getRecipeManager().getAllRecipesFor(KettleRegistry.BREWING.get()).stream()
+			.sorted(Comparator.comparing(holder -> holder.id().toString()))
 			.toList();
 	}
 
 	/** Every aging recipe that can work, sorted by id (the same ones the barrel takes). */
 	public static List<RecipeHolder<AgingRecipe>> aging() {
-		return AgingRecipes.usable(recipes.byType(BarrelRegistry.AGING.get()), message -> {
-		});
+		ClientLevel level = Minecraft.getInstance().level;
+		return level == null ? List.of() : AgingRecipes.all(level);
 	}
 }

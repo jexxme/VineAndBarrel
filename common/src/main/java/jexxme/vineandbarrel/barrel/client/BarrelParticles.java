@@ -4,8 +4,9 @@ import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
-import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.SimpleParticleType;
@@ -19,10 +20,11 @@ public final class BarrelParticles
 	}
 
 	/** B5: a little bubble rising out of the airlock and popping after a moment, like the brewing stand's. */
-	public static class FermentBubble extends SingleQuadParticle
+	public static class FermentBubble extends TextureSheetParticle
 	{
 		FermentBubble(ClientLevel level, double x, double y, double z, double ySpeed, SpriteSet sprites, RandomSource random) {
-			super(level, x, y, z, sprites.first());
+			super(level, x, y, z);
+			this.setSprite(sprites.get(0, 1));
 			this.lifetime = 10 + random.nextInt(8);
 			this.gravity = 0.0F;
 			this.hasPhysics = false;
@@ -33,8 +35,8 @@ public final class BarrelParticles
 		}
 
 		@Override
-		protected Layer getLayer() {
-			return Layer.TRANSLUCENT;
+		public ParticleRenderType getRenderType() {
+			return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
 		}
 
 		@Override
@@ -59,8 +61,8 @@ public final class BarrelParticles
 			}
 
 			@Override
-			public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, RandomSource random) {
-				return new FermentBubble(level, x, y, z, ySpeed, this.sprites, random);
+			public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+				return new FermentBubble(level, x, y, z, ySpeed, this.sprites, level.random);
 			}
 		}
 	}
@@ -70,7 +72,7 @@ public final class BarrelParticles
 	 * with a speed, it is a drop of a pour or a splash instead: it flies at once and lands without a sound (the pour or
 	 * the splash has its own).
 	 */
-	public static class TapDrip extends SingleQuadParticle
+	public static class TapDrip extends TextureSheetParticle
 	{
 		private static final int HANG_TICKS = 20;
 		private final int hangTicks;
@@ -78,7 +80,8 @@ public final class BarrelParticles
 		private boolean landed;
 
 		TapDrip(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, ColorParticleOption color, SpriteSet sprites) {
-			super(level, x, y, z, sprites.first());
+			super(level, x, y, z);
+			this.setSprite(sprites.get(0, 1));
 			this.setColor(color.getRed(), color.getGreen(), color.getBlue());
 			this.silent = xSpeed != 0.0 || ySpeed != 0.0 || zSpeed != 0.0;
 			this.hangTicks = silent ? 0 : HANG_TICKS;
@@ -92,8 +95,8 @@ public final class BarrelParticles
 		}
 
 		@Override
-		protected Layer getLayer() {
-			return Layer.OPAQUE;
+		public ParticleRenderType getRenderType() {
+			return ParticleRenderType.PARTICLE_SHEET_OPAQUE;
 		}
 
 		@Override
@@ -131,17 +134,18 @@ public final class BarrelParticles
 			}
 
 			@Override
-			public Particle createParticle(ColorParticleOption options, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, RandomSource random) {
+			public Particle createParticle(ColorParticleOption options, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
 				return new TapDrip(level, x, y, z, xSpeed, ySpeed, zSpeed, options, this.sprites);
 			}
 		}
 	}
 
 	/** D2: a golden sparkle drifting up from clinking glasses. */
-	public static class CheersSparkle extends SingleQuadParticle
+	public static class CheersSparkle extends TextureSheetParticle
 	{
 		CheersSparkle(ClientLevel level, double x, double y, double z, double xSpeed, double zSpeed, SpriteSet sprites, RandomSource random) {
-			super(level, x, y, z, sprites.first());
+			super(level, x, y, z);
+			this.setSprite(sprites.get(0, 1));
 			this.lifetime = 16 + random.nextInt(10);
 			this.gravity = 0.0F;
 			this.hasPhysics = false;
@@ -152,8 +156,8 @@ public final class BarrelParticles
 		}
 
 		@Override
-		protected Layer getLayer() {
-			return Layer.TRANSLUCENT;
+		public ParticleRenderType getRenderType() {
+			return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
 		}
 
 		@Override
@@ -182,8 +186,8 @@ public final class BarrelParticles
 			}
 
 			@Override
-			public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, RandomSource random) {
-				return new CheersSparkle(level, x, y, z, xSpeed, zSpeed, this.sprites, random);
+			public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+				return new CheersSparkle(level, x, y, z, xSpeed, zSpeed, this.sprites, level.random);
 			}
 		}
 	}

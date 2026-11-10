@@ -72,16 +72,27 @@ public final class BarrelContents
 		Codec.intRange(1, Integer.MAX_VALUE).optionalFieldOf("aging_time", AgingRecipe.DEFAULT_AGING_TIME).forGetter(c -> c.agingTime)
 	).apply(inst, BarrelContents::new));
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, BarrelContents> STREAM_CODEC = StreamCodec.composite(
-		ItemStack.OPTIONAL_STREAM_CODEC, c -> c.base,
-		ItemStack.OPTIONAL_STREAM_CODEC, c -> c.bucket,
-		ItemStack.OPTIONAL_STREAM_CODEC, c -> c.young,
-		ItemStack.OPTIONAL_STREAM_CODEC, c -> c.aged,
-		ByteBufCodecs.VAR_INT, c -> c.servings,
-		ByteBufCodecs.VAR_LONG, c -> c.elapsed,
-		ByteBufCodecs.VAR_INT, c -> c.fermentingTime,
-		ByteBufCodecs.VAR_INT, c -> c.agingTime,
-		BarrelContents::new);
+	/** The same fields in the same order as on 26.x (written by hand: 1.21.1's StreamCodec.composite ends at six). */
+	public static final StreamCodec<RegistryFriendlyByteBuf, BarrelContents> STREAM_CODEC = StreamCodec.of(
+		(buf, c) -> {
+			ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, c.base);
+			ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, c.bucket);
+			ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, c.young);
+			ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, c.aged);
+			ByteBufCodecs.VAR_INT.encode(buf, c.servings);
+			ByteBufCodecs.VAR_LONG.encode(buf, c.elapsed);
+			ByteBufCodecs.VAR_INT.encode(buf, c.fermentingTime);
+			ByteBufCodecs.VAR_INT.encode(buf, c.agingTime);
+		},
+		buf -> new BarrelContents(
+			ItemStack.OPTIONAL_STREAM_CODEC.decode(buf),
+			ItemStack.OPTIONAL_STREAM_CODEC.decode(buf),
+			ItemStack.OPTIONAL_STREAM_CODEC.decode(buf),
+			ItemStack.OPTIONAL_STREAM_CODEC.decode(buf),
+			ByteBufCodecs.VAR_INT.decode(buf),
+			ByteBufCodecs.VAR_LONG.decode(buf),
+			ByteBufCodecs.VAR_INT.decode(buf),
+			ByteBufCodecs.VAR_INT.decode(buf)));
 
 	private final ItemStack base;
 	private final ItemStack bucket;

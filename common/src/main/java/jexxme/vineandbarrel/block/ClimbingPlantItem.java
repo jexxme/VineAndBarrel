@@ -6,7 +6,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemNameBlockItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.SoundType;
@@ -17,8 +17,9 @@ import net.minecraft.world.level.gameevent.GameEvent;
  * Grapes, white grapes and hops: they plant their bush like sweet berries, and also straight into a fence, wall, upright
  * chain or bars standing on soil the bush grows on (the plant grows inside it, the block stays; see {@link VineOnSupportBlock}).
  * Not into one under water, as no bush grows there. (Planting into a trellis is the trellis's own business.)
+ * Named like an item ("item.vineandbarrel.red_grapes"), not like its bush block.
  */
-public class ClimbingPlantItem extends BlockItem
+public class ClimbingPlantItem extends ItemNameBlockItem
 {
 	public ClimbingPlantItem(ClimbingBushBlock bush, Properties properties) {
 		super(bush, properties);
@@ -43,7 +44,7 @@ public class ClimbingPlantItem extends BlockItem
 					}
 					context.getItemInHand().consume(1, player);
 				}
-				return InteractionResult.SUCCESS;
+				return InteractionResult.sidedSuccess(level.isClientSide());
 			}
 		}
 		return super.useOn(context);

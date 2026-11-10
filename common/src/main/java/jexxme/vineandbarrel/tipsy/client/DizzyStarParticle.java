@@ -3,8 +3,9 @@ package jexxme.vineandbarrel.tipsy.client;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
-import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -14,7 +15,7 @@ import net.minecraft.util.RandomSource;
  * flies its round itself, twinkling between its two frames, and fades in and out. One spawns every
  * {@link #SPAWN_EVERY} ticks, so they follow each other around the circle evenly.
  */
-public class DizzyStarParticle extends SingleQuadParticle
+public class DizzyStarParticle extends TextureSheetParticle
 {
 	public static final int LIFETIME = 30;
 	public static final int SPAWN_EVERY = 6;
@@ -29,7 +30,8 @@ public class DizzyStarParticle extends SingleQuadParticle
 	private final int twinkleOffset;
 
 	protected DizzyStarParticle(ClientLevel level, double x, double y, double z, SpriteSet sprites, RandomSource random) {
-		super(level, x + RADIUS, y, z, sprites.get(0, 1));
+		super(level, x + RADIUS, y, z);
+		this.setSprite(sprites.get(0, 1));
 		this.sprites = sprites;
 		this.cx = x;
 		this.cy = y;
@@ -55,8 +57,8 @@ public class DizzyStarParticle extends SingleQuadParticle
 	}
 
 	@Override
-	protected Layer getLayer() {
-		return Layer.TRANSLUCENT;
+	public ParticleRenderType getRenderType() {
+		return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
 	}
 
 	@Override
@@ -76,7 +78,7 @@ public class DizzyStarParticle extends SingleQuadParticle
 
 	/** Stars shine: always fully lit, even at night. */
 	@Override
-	protected int getLightCoords(float a) {
+	protected int getLightColor(float a) {
 		return 0xF000F0;
 	}
 
@@ -89,8 +91,8 @@ public class DizzyStarParticle extends SingleQuadParticle
 		}
 
 		@Override
-		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, RandomSource random) {
-			return new DizzyStarParticle(level, x, y, z, this.sprites, random);
+		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+			return new DizzyStarParticle(level, x, y, z, this.sprites, level.random);
 		}
 	}
 }

@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "jexxme.vineandbarrel.neoforge.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ServerPlayerGameModeMixin"
+  ],
+  "client": [
+    "client.ClientPacketListenerMixin",
+    "client.MultiPlayerGameModeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

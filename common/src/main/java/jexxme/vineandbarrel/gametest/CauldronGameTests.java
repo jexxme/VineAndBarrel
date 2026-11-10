@@ -8,22 +8,15 @@ import jexxme.vineandbarrel.cauldron.BaseCauldronBlock;
 import jexxme.vineandbarrel.cauldron.VBCauldrons;
 import jexxme.vineandbarrel.kettle.BaseItems;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -38,23 +31,22 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
  * WP2: our bases in a cauldron, by water's rules. Every click goes through the real path (the block's
- * {@code useItemOn}, which asks the cauldron's interaction dispatcher), as a player's click does; the same tests run on
+ * {@code useItemOn}, which asks the cauldron's interaction map), as a player's click does; the same tests run on
  * NeoForge (its cauldron events) and Fabric (direct registration), with and without Farmer's Delight.
  */
 public final class CauldronGameTests
 {
-	private static final Identifier SMALL = VineAndBarrel.id("gametest/empty_5x5");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
-	private static final List<ResourceKey<Consumer<GameTestHelper>>> TESTS = new ArrayList<>();
-	private static final Map<ResourceKey<Consumer<GameTestHelper>>, Integer> TIMEOUTS = new HashMap<>();
+	private static final ResourceLocation SMALL = VineAndBarrel.id("gametest/empty_5x5");
+	private static final List<Entry> TESTS = new ArrayList<>();
 	private static final BlockPos POS = new BlockPos(2, 1, 2);
+
+	private record Entry(String name, int maxTicks, Consumer<GameTestHelper> function) {
+	}
 
 	static {
 		test("cauldron_bucket_fills_and_empties", 20, CauldronGameTests::bucketFillsAndEmpties);
@@ -73,28 +65,23 @@ public final class CauldronGameTests
 	}
 
 	private static void test(String name, int timeout, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		ResourceKey<Consumer<GameTestHelper>> key = ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name));
-		TESTS.add(key);
-		TIMEOUTS.put(key, timeout);
+		TESTS.add(new Entry(name, timeout, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(CauldronGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("cauldron"));
-		for (ResourceKey<Consumer<GameTestHelper>> function : TESTS) {
-			event.registerTest(function.identifier(), new FunctionGameTestInstance(function, new TestData<>(environment, SMALL, TIMEOUTS.get(function), 0, true)));
+		for (Entry test : TESTS) {
+			VBGameTests.add(event, "cauldron", test.name(), SMALL, test.maxTicks(), test.function());
 		}
 	}
 
 	// ------------------------------------------------------------------ helpers
 
 	/** A right-click on the block with {@code held} in the main hand, the way the game handles it. */
-	private static InteractionResult click(GameTestHelper helper, Player player, BlockPos pos, ItemStack held) {
+	private static ItemInteractionResult click(GameTestHelper helper, Player player, BlockPos pos, ItemStack held) {
 		player.setItemInHand(InteractionHand.MAIN_HAND, held);
 		BlockPos absolute = helper.absolutePos(pos);
 		BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absolute).add(0.0, 0.5, 0.0), Direction.UP, absolute, false);
@@ -130,10 +117,10 @@ public final class CauldronGameTests
 		Player player = player(helper);
 		for (BaseCauldronBlock cauldron : VBCauldrons.all()) {
 			helper.setBlock(POS, Blocks.CAULDRON);
-			helper.assertTrue(click(helper, player, POS, new ItemStack(cauldron.bucket())) == InteractionResult.SUCCESS, cauldron + ": the bucket pours");
+			helper.assertTrue(click(helper, player, POS, new ItemStack(cauldron.bucket())) == ItemInteractionResult.CONSUME, cauldron + ": the bucket pours");
 			assertState(helper, filled(cauldron, BaseCauldronBlock.MAX_LEVEL), cauldron + " after the bucket");
 			helper.assertTrue(player.getMainHandItem().is(Items.BUCKET) && player.getMainHandItem().getCount() == 1, "the empty bucket comes back");
-			helper.assertTrue(click(helper, player, POS, new ItemStack(Items.BUCKET)) == InteractionResult.SUCCESS, cauldron + ": the bucket fills");
+			helper.assertTrue(click(helper, player, POS, new ItemStack(Items.BUCKET)) == ItemInteractionResult.CONSUME, cauldron + ": the bucket fills");
 			assertState(helper, Blocks.CAULDRON.defaultBlockState(), cauldron + " emptied");
 			helper.assertTrue(player.getMainHandItem().is(cauldron.bucket()), "the base's bucket comes back: " + player.getMainHandItem());
 		}
@@ -147,18 +134,18 @@ public final class CauldronGameTests
 			helper.setBlock(POS, Blocks.CAULDRON);
 			ItemStack bottles = new ItemStack(cauldron.bottle(), 5);
 			for (int level = 1; level <= BaseCauldronBlock.MAX_LEVEL; level++) {
-				helper.assertTrue(click(helper, player, POS, bottles) == InteractionResult.SUCCESS, cauldron + ": bottle " + level + " pours");
+				helper.assertTrue(click(helper, player, POS, bottles) == ItemInteractionResult.CONSUME, cauldron + ": bottle " + level + " pours");
 				assertState(helper, filled(cauldron, level), cauldron + " after " + level + " bottles");
 				bottles = player.getMainHandItem();
 			}
-			helper.assertTrue(click(helper, player, POS, bottles) == InteractionResult.TRY_WITH_EMPTY_HAND, cauldron + ": a full cauldron takes no fifth bottle");
+			helper.assertTrue(click(helper, player, POS, bottles) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION, cauldron + ": a full cauldron takes no fifth bottle");
 			helper.assertValueEqual(count(player, cauldron.bottle()), 1, cauldron + ": the fifth bottle is kept");
 			helper.assertValueEqual(count(player, Items.GLASS_BOTTLE), 4, cauldron + ": four empty bottles back");
 
 			ItemStack empties = new ItemStack(Items.GLASS_BOTTLE, 4);
 			player.getInventory().clearContent();
 			for (int level = BaseCauldronBlock.MAX_LEVEL - 1; level >= 0; level--) {
-				helper.assertTrue(click(helper, player, POS, empties) == InteractionResult.SUCCESS, cauldron + ": an empty bottle fills");
+				helper.assertTrue(click(helper, player, POS, empties) == ItemInteractionResult.CONSUME, cauldron + ": an empty bottle fills");
 				assertState(helper, level == 0 ? Blocks.CAULDRON.defaultBlockState() : filled(cauldron, level), cauldron + " down to " + level);
 				empties = player.getMainHandItem();
 			}
@@ -174,7 +161,7 @@ public final class CauldronGameTests
 		BaseCauldronBlock cauldron = VBCauldrons.BARLEY_WORT.get();
 		for (int level = BaseCauldronBlock.MIN_LEVEL; level < BaseCauldronBlock.MAX_LEVEL; level++) {
 			helper.setBlock(POS, filled(cauldron, level));
-			helper.assertTrue(click(helper, player, POS, new ItemStack(Items.BUCKET)) == InteractionResult.TRY_WITH_EMPTY_HAND, "no bucket at level " + level);
+			helper.assertTrue(click(helper, player, POS, new ItemStack(Items.BUCKET)) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION, "no bucket at level " + level);
 			assertState(helper, filled(cauldron, level), "unchanged at level " + level);
 			helper.assertTrue(player.getMainHandItem().is(Items.BUCKET), "the bucket stays empty at level " + level);
 		}
@@ -189,7 +176,7 @@ public final class CauldronGameTests
 		for (BlockState other : others) {
 			helper.setBlock(POS, other);
 			ItemStack wort = new ItemStack(BaseItems.BARLEY_WORT_BOTTLE.get());
-			helper.assertTrue(click(helper, player, POS, wort) == InteractionResult.TRY_WITH_EMPTY_HAND, "a wort bottle on " + other + " is refused");
+			helper.assertTrue(click(helper, player, POS, wort) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION, "a wort bottle on " + other + " is refused");
 			assertState(helper, other, "unchanged " + other);
 			helper.assertTrue(player.getMainHandItem().is(BaseItems.BARLEY_WORT_BOTTLE.get()), "the bottle is kept");
 		}
@@ -222,14 +209,14 @@ public final class CauldronGameTests
 			new Pour(filled(must, 1), Items.POWDER_SNOW_BUCKET, Blocks.POWDER_SNOW_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3)));
 		for (Pour pour : pours) {
 			helper.setBlock(POS, pour.before());
-			helper.assertTrue(click(helper, player, POS, new ItemStack(pour.bucket())) == InteractionResult.SUCCESS, pour.bucket() + " into " + pour.before());
+			helper.assertTrue(click(helper, player, POS, new ItemStack(pour.bucket())) == ItemInteractionResult.CONSUME, pour.bucket() + " into " + pour.before());
 			assertState(helper, pour.after(), pour.bucket() + " into " + pour.before());
 			helper.assertTrue(player.getMainHandItem().is(Items.BUCKET), "the empty bucket comes back from " + pour.bucket());
 		}
 		// The same base into a cauldron of it, at any level: nothing happens, the bucket stays full
 		for (int level = BaseCauldronBlock.MIN_LEVEL; level <= BaseCauldronBlock.MAX_LEVEL; level++) {
 			helper.setBlock(POS, filled(wort, level));
-			helper.assertTrue(click(helper, player, POS, new ItemStack(wort.bucket())) == InteractionResult.TRY_WITH_EMPTY_HAND,
+			helper.assertTrue(click(helper, player, POS, new ItemStack(wort.bucket())) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION,
 				"a cauldron of wort at level " + level + " takes no bucket of wort");
 			assertState(helper, filled(wort, level), "unchanged at level " + level);
 			helper.assertTrue(player.getMainHandItem().is(wort.bucket()), "the bucket of wort is kept at level " + level);
@@ -248,14 +235,14 @@ public final class CauldronGameTests
 			for (int level = BaseCauldronBlock.MIN_LEVEL; level <= BaseCauldronBlock.MAX_LEVEL; level++) {
 				helper.setBlock(POS, filled(cauldron, level));
 				BlockState state = helper.getBlockState(POS);
-				helper.assertValueEqual(state.getAnalogOutputSignal(helper.getLevel(), absolute, Direction.NORTH), level, cauldron + " comparator at " + level);
+				helper.assertValueEqual(state.getAnalogOutputSignal(helper.getLevel(), absolute), level, cauldron + " comparator at " + level);
 				state.getBlock().handlePrecipitation(state, helper.getLevel(), absolute, Biome.Precipitation.RAIN);
 				assertState(helper, state, cauldron + " takes no rain");
 			}
 			BlockState state = helper.getBlockState(POS);
 			List<ItemStack> drops = Block.getDrops(state, helper.getLevel(), absolute, null, player, new ItemStack(Items.IRON_PICKAXE));
 			helper.assertTrue(drops.size() == 1 && drops.getFirst().is(Items.CAULDRON) && drops.getFirst().getCount() == 1, cauldron + " drops a cauldron: " + drops);
-			helper.assertTrue(state.getCloneItemStack(helper.getLevel(), absolute, false).is(Items.CAULDRON), cauldron + " is picked as a cauldron");
+			helper.assertTrue(state.getBlock().getCloneItemStack(helper.getLevel(), absolute, state).is(Items.CAULDRON), cauldron + " is picked as a cauldron");
 			helper.assertTrue(state.is(BlockTags.CAULDRONS), cauldron + " is in #minecraft:cauldrons");
 			helper.assertTrue(state.is(BlockTags.MINEABLE_WITH_PICKAXE), cauldron + " is mined with a pickaxe");
 			helper.assertTrue(cauldron.asItem() == Items.AIR, cauldron + " has no item of its own");
@@ -272,7 +259,7 @@ public final class CauldronGameTests
 		BaseCauldronBlock cauldron = VBCauldrons.APPLE_JUICE.get();
 		helper.setBlock(POS, filled(cauldron, 2));
 		// on the cauldron's floor, in the liquid
-		Pig pig = helper.spawn(EntityTypes.PIG, new Vec3(POS.getX() + 0.5, POS.getY() + 0.25, POS.getZ() + 0.5));
+		Pig pig = helper.spawn(EntityType.PIG, new Vec3(POS.getX() + 0.5, POS.getY() + 0.25, POS.getZ() + 0.5));
 		pig.igniteForSeconds(10.0F);
 		helper.succeedWhen(() -> {
 			helper.assertFalse(pig.isOnFire(), "the pig is put out");
@@ -294,7 +281,7 @@ public final class CauldronGameTests
 		helper.assertValueEqual(count(player, BaseItems.WHEAT_WORT_BOTTLE.get()), 4, "four bottles of wort");
 		BlockPos barrelPos = new BlockPos(1, 1, 1);
 		helper.setBlock(barrelPos, BarrelRegistry.AGING_BARREL.get().defaultBlockState().setValue(AgingBarrelBlock.FACING, Direction.NORTH));
-		AgingBarrelBlockEntity barrel = helper.getBlockEntity(barrelPos, AgingBarrelBlockEntity.class);
+		AgingBarrelBlockEntity barrel = VBGameTests.blockEntity(helper, barrelPos, AgingBarrelBlockEntity.class);
 		for (int i = 0; i < 4; i++) {
 			helper.assertTrue(barrel.pour(new ItemStack(BaseItems.WHEAT_WORT_BOTTLE.get()), null) != null, "the barrel takes bottle " + (i + 1));
 		}
@@ -334,15 +321,17 @@ public final class CauldronGameTests
 	}
 
 	/**
-	 * Our cauldrons' dispatchers are in vanilla's list of them (its codec names them), so mods that add an interaction to
-	 * every cauldron reach ours too: NeoForge's event, and on Fabric the list itself.
+	 * Our cauldrons' interaction maps are in vanilla's list of them ({@code CauldronInteraction.INTERACTIONS}; its codec names
+	 * them), so mods that add an interaction to every cauldron reach ours too.
 	 */
 	private static void inVanillasDispatcherList(GameTestHelper helper) {
 		for (BaseCauldronBlock cauldron : VBCauldrons.all()) {
 			String expected = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(cauldron).toString();
-			var encoded = net.minecraft.core.cauldron.CauldronInteractions.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, cauldron.interactions());
+			var encoded = net.minecraft.core.cauldron.CauldronInteraction.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, cauldron.interactions());
 			helper.assertTrue(encoded.result().map(json -> json.getAsString().equals(expected)).orElse(false),
-				cauldron + "'s dispatcher is listed as " + expected + ": " + encoded);
+				cauldron + "'s interaction map is listed as " + expected + ": " + encoded);
+			helper.assertTrue(net.minecraft.core.cauldron.CauldronInteraction.INTERACTIONS.get(expected) == cauldron.interactions(),
+				expected + " in vanilla's list is " + cauldron + "'s interaction map");
 		}
 		helper.succeed();
 	}

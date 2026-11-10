@@ -15,20 +15,26 @@
     }
   ],
   "ingredients": [
-    "vineandbarrel:wild_barley"
+    {
+      "item": "vineandbarrel:wild_barley"
+    }
   ],
   "result": [
     {
       "item": {
+        "count": 1,
         "id": "vineandbarrel:barley"
       }
     },
     {
       "chance": 0.5,
       "item": {
+        "count": 1,
         "id": "farmersdelight:straw"
       }
     }
   ],
-  "tool": "#c:tools/knife"
+  "tool": {
+    "tag": "c:tools/knife"
+  }
 }

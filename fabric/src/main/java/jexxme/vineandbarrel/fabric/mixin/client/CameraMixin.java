@@ -4,6 +4,7 @@ import jexxme.vineandbarrel.tipsy.TipsyWobble;
 import jexxme.vineandbarrel.tipsy.client.TipsyClient;
 import net.minecraft.client.Camera;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -36,8 +37,8 @@ abstract class CameraMixin
 	@Shadow
 	protected abstract void setRotation(float yRot, float xRot);
 
-	@Inject(method = "alignWithEntity", at = @At("TAIL"))
-	private void vineandbarrel$wobble(float partialTicks, CallbackInfo ci) {
+	@Inject(method = "setup", at = @At("TAIL"))
+	private void vineandbarrel$wobble(BlockGetter level, Entity cameraEntity, boolean detached, boolean thirdPersonReverse, float partialTicks, CallbackInfo ci) {
 		TipsyWobble.Angles angles = TipsyClient.cameraAngles(entity, partialTicks);
 		if (angles.isNone()) {
 			return;

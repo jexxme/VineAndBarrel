@@ -1,7 +1,7 @@
 package jexxme.vineandbarrel.compat;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 
@@ -23,6 +23,6 @@ public final class Conventions
 	}
 
 	private static TagKey<Item> tag(String path) {
-		return TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", path));
+		return TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", path));
 	}
 }

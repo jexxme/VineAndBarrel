@@ -6,16 +6,13 @@ import jexxme.vineandbarrel.registry.VBBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -51,18 +48,13 @@ public class VineSupportBlockEntity extends BlockEntity implements DataPacketRec
 		}
 	}
 
-	/** Remembered for a moment so the vine block can put the support back once this block entity is gone. */
 	@Override
-	public void preRemoveSideEffects(BlockPos pos, BlockState state) {
-		if (level != null && !support.isAir()) {
-			VineSupports.stash(level, pos, support);
-		}
-	}
-
-	@Override
-	protected void loadAdditional(ValueInput input) {
-		super.loadAdditional(input);
-		support = holdable(input.read(SUPPORT, BlockState.CODEC).orElse(Blocks.AIR.defaultBlockState()));
+	protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.loadAdditional(tag, registries);
+		support = holdable(tag.contains(SUPPORT)
+				? BlockState.CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE), tag.get(SUPPORT))
+						.resultOrPartial(error -> LOGGER.warn("Vine support at {}: {}", worldPosition, error)).orElse(Blocks.AIR.defaultBlockState())
+				: Blocks.AIR.defaultBlockState());
 	}
 
 	/**
@@ -74,10 +66,12 @@ public class VineSupportBlockEntity extends BlockEntity implements DataPacketRec
 	}
 
 	@Override
-	protected void saveAdditional(ValueOutput output) {
-		super.saveAdditional(output);
+	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.saveAdditional(tag, registries);
 		if (!support.isAir()) {
-			output.store(SUPPORT, BlockState.CODEC, support);
+			BlockState.CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE), support)
+					.resultOrPartial(error -> LOGGER.warn("Vine support at {}: {}", worldPosition, error))
+					.ifPresent(encoded -> tag.put(SUPPORT, encoded));
 		}
 	}
 
@@ -88,16 +82,14 @@ public class VineSupportBlockEntity extends BlockEntity implements DataPacketRec
 
 	@Override
 	public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-		try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(this.problemPath(), LOGGER)) {
-			TagValueOutput output = TagValueOutput.createWithContext(reporter, registries);
-			saveAdditional(output);
-			return output.buildResult();
-		}
+		CompoundTag tag = new CompoundTag();
+		saveAdditional(tag, registries);
+		return tag;
 	}
 
 	@Override
-	public void onDataPacket(Connection connection, ValueInput input) {
-		loadWithComponents(input);
+	public void onDataPacket(Connection connection, CompoundTag tag, HolderLookup.Provider registries) {
+		loadWithComponents(tag, registries);
 		// The support is drawn with the vine: draw the block again now that the client knows it
 		if (level != null && level.isClientSide()) {
 			level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_IMMEDIATE);

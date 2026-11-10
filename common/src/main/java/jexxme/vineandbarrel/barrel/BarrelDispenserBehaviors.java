@@ -9,7 +9,7 @@ import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.core.dispenser.OptionalDispenseItemBehavior;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.DispenserBlock;
@@ -35,7 +35,7 @@ public final class BarrelDispenserBehaviors
 		List<Item> bases = new ArrayList<>(BaseItems.all());
 		// FD's drinks that ferment here (§5.2), only when Farmer's Delight is installed
 		for (String fd : List.of("apple_cider", "melon_juice")) {
-			BuiltInRegistries.ITEM.getOptional(Identifier.fromNamespaceAndPath(VBTags.FARMERS_DELIGHT, fd)).ifPresent(bases::add);
+			BuiltInRegistries.ITEM.getOptional(ResourceLocation.fromNamespaceAndPath(VBTags.FARMERS_DELIGHT, fd)).ifPresent(bases::add);
 		}
 		bases.forEach(base -> wrap(base, false));
 	}

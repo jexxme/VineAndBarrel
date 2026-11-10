@@ -28,20 +28,15 @@ import jexxme.vineandbarrel.tipsy.TipsyLegs;
 import jexxme.vineandbarrel.tipsy.TipsyLevels;
 import jexxme.vineandbarrel.tipsy.TipsyMotion;
 import jexxme.vineandbarrel.world.village.VillageStructures;
-import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.TypedDataComponent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.Item;
@@ -52,16 +47,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
-import java.util.function.Consumer;
 
 /**
  * Dev-only exporter for the wiki (site/). It is registered only when the system property {@code vineandbarrel.docsExport}
@@ -73,25 +65,16 @@ import java.util.function.Consumer;
 public final class VBDocsExport
 {
 	public static final String PROPERTY = "vineandbarrel.docsExport";
-	private static final Identifier STRUCTURE = VineAndBarrel.id("gametest/empty_5x5");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
-	private static final ResourceKey<Consumer<GameTestHelper>> EXPORT = ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id("docs_export"));
-
-	static {
-		FUNCTIONS.register("docs_export", () -> VBDocsExport::export);
-	}
-
+	private static final ResourceLocation STRUCTURE = VineAndBarrel.id("gametest/empty_5x5");
 	private VBDocsExport() {
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(VBDocsExport::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("docs_export"));
-		event.registerTest(EXPORT.identifier(), new FunctionGameTestInstance(EXPORT, new TestData<>(environment, STRUCTURE, 200, 0, true)));
+		VBGameTests.add(event, "docs_export", "docs_export", STRUCTURE, 200, VBDocsExport::export);
 	}
 
 	private static String key(Item item) {
@@ -106,7 +89,7 @@ public final class VBDocsExport
 		// Items: every data component of our items
 		JsonObject items = new JsonObject();
 		for (Item item : BuiltInRegistries.ITEM) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(item);
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
 			if (!id.getNamespace().equals(VineAndBarrel.MODID)) {
 				continue;
 			}
@@ -115,7 +98,7 @@ public final class VBDocsExport
 			// Sorted by component id, so a rerun writes the same file (the component map has no stable order)
 			java.util.TreeMap<String, JsonElement> sorted = new java.util.TreeMap<>();
 			for (TypedDataComponent<?> typed : stack.getComponents()) {
-				Identifier type = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(typed.type());
+				ResourceLocation type = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(typed.type());
 				if (type != null) {
 					typed.encodeValue(ops).result().ifPresent(json -> sorted.put(type.toString(), json));
 				}
@@ -134,7 +117,7 @@ public final class VBDocsExport
 		// Our blocks
 		JsonObject blocks = new JsonObject();
 		for (Block block : BuiltInRegistries.BLOCK) {
-			Identifier id = BuiltInRegistries.BLOCK.getKey(block);
+			ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
 			if (!id.getNamespace().equals(VineAndBarrel.MODID)) {
 				continue;
 			}
@@ -163,12 +146,12 @@ public final class VBDocsExport
 
 		// Our mob effects
 		JsonObject effects = new JsonObject();
-		Registry<MobEffect> effectRegistry = access.lookupOrThrow(Registries.MOB_EFFECT);
-		effectRegistry.listElements().filter(holder -> holder.key().identifier().getNamespace().equals(VineAndBarrel.MODID)).forEach(holder -> {
+		Registry<MobEffect> effectRegistry = access.registryOrThrow(Registries.MOB_EFFECT);
+		effectRegistry.holders().filter(holder -> holder.key().location().getNamespace().equals(VineAndBarrel.MODID)).forEach(holder -> {
 			JsonObject entry = new JsonObject();
 			entry.addProperty("category", holder.value().getCategory().name());
 			entry.addProperty("color", holder.value().getColor());
-			effects.add(holder.key().identifier().toString(), entry);
+			effects.add(holder.key().location().toString(), entry);
 		});
 		root.add("effects", effects);
 
@@ -181,7 +164,7 @@ public final class VBDocsExport
 			entry.addProperty("vessel", vessel == null ? null : key(vessel));
 			entry.addProperty("color", drink.color());
 			entry.addProperty("aged", drink.isAged());
-			entry.addProperty("effect", buff.getEffect().unwrapKey().map(k -> k.identifier().toString()).orElse("?"));
+			entry.addProperty("effect", buff.getEffect().unwrapKey().map(k -> k.location().toString()).orElse("?"));
 			entry.addProperty("duration", buff.getDuration());
 			entry.addProperty("amplifier", buff.getAmplifier());
 			drinks.add(key(drink), entry);
@@ -193,9 +176,9 @@ public final class VBDocsExport
 		JsonArray aging = new JsonArray();
 		JsonArray loaded = new JsonArray();
 		helper.getLevel().getServer().getRecipeManager().getRecipes().stream()
-			.sorted(Comparator.comparing(holder -> holder.id().identifier().toString()))
+			.sorted(Comparator.comparing(holder -> holder.id().toString()))
 			.forEach((RecipeHolder<?> holder) -> {
-				String id = holder.id().identifier().toString();
+				String id = holder.id().toString();
 				if (id.startsWith(VineAndBarrel.MODID + ":")) {
 					loaded.add(id);
 				}
@@ -405,9 +388,9 @@ public final class VBDocsExport
 
 		// Every loaded tag of the registries the wiki cares about (heat sources, conductors, drinks, sobering drinks...)
 		JsonObject tags = new JsonObject();
-		tags.add("item", tagsOf(access.lookupOrThrow(Registries.ITEM)));
-		tags.add("block", tagsOf(access.lookupOrThrow(Registries.BLOCK)));
-		tags.add("worldgen/biome", tagsOf(access.lookupOrThrow(Registries.BIOME)));
+		tags.add("item", tagsOf(access.registryOrThrow(Registries.ITEM)));
+		tags.add("block", tagsOf(access.registryOrThrow(Registries.BLOCK)));
+		tags.add("worldgen/biome", tagsOf(access.registryOrThrow(Registries.BIOME)));
 		root.add("tags", tags);
 
 		Path out = Path.of(System.getProperty(PROPERTY));
@@ -423,9 +406,9 @@ public final class VBDocsExport
 
 	private static <T> JsonObject tagsOf(Registry<T> registry) {
 		JsonObject out = new JsonObject();
-		registry.getTags().sorted(Comparator.comparing(set -> set.key().location().toString())).forEach((HolderSet.Named<T> set) -> {
+		registry.getTags().map(pair -> pair.getSecond()).sorted(Comparator.comparing((HolderSet.Named<T> set) -> set.key().location().toString())).forEach((HolderSet.Named<T> set) -> {
 			JsonArray values = new JsonArray();
-			set.stream().map(holder -> holder.unwrapKey().map(k -> k.identifier().toString()).orElse("?")).sorted().forEach(values::add);
+			set.stream().map(holder -> holder.unwrapKey().map(k -> k.location().toString()).orElse("?")).sorted().forEach(values::add);
 			out.add(set.key().location().toString(), values);
 		});
 		return out;

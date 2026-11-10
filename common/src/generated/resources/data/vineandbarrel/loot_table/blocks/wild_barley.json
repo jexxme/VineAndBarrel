@@ -2,63 +2,81 @@
   "type": "minecraft:block",
   "pools": [
     {
-      "condition": {
-        "type": "minecraft:inverted",
-        "term": {
-          "type": "minecraft:any_of",
-          "terms": [
-            {
-              "type": "minecraft:match_tool",
-              "predicate": {
-                "items": "#c:tools/shear"
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:inverted",
+          "term": {
+            "condition": "minecraft:any_of",
+            "terms": [
+              {
+                "condition": "minecraft:match_tool",
+                "predicate": {
+                  "items": "#c:tools/shear"
+                }
+              },
+              {
+                "condition": "minecraft:match_tool",
+                "predicate": {
+                  "items": "minecraft:shears"
+                }
               }
-            },
-            "minecraft:tool/can_shear"
-          ]
+            ]
+          }
         }
-      },
+      ],
       "entries": [
         {
           "type": "minecraft:item",
-          "modifier": {
-            "type": "minecraft:explosion_decay"
-          },
+          "functions": [
+            {
+              "function": "minecraft:explosion_decay"
+            }
+          ],
           "name": "vineandbarrel:barley"
         }
       ],
-      "rolls": 1
+      "rolls": 1.0
     },
     {
+      "bonus_rolls": 0.0,
       "entries": [
         {
           "type": "minecraft:alternatives",
           "children": [
             {
               "type": "minecraft:item",
-              "condition": {
-                "type": "minecraft:any_of",
-                "terms": [
-                  {
-                    "type": "minecraft:match_tool",
-                    "predicate": {
-                      "items": "#c:tools/shear"
+              "conditions": [
+                {
+                  "condition": "minecraft:any_of",
+                  "terms": [
+                    {
+                      "condition": "minecraft:match_tool",
+                      "predicate": {
+                        "items": "#c:tools/shear"
+                      }
+                    },
+                    {
+                      "condition": "minecraft:match_tool",
+                      "predicate": {
+                        "items": "minecraft:shears"
+                      }
                     }
-                  },
-                  "minecraft:tool/can_shear"
-                ]
-              },
+                  ]
+                }
+              ],
               "name": "vineandbarrel:wild_barley"
             },
             {
               "type": "minecraft:item",
-              "modifier": [
+              "functions": [
                 {
-                  "type": "minecraft:explosion_decay"
+                  "function": "minecraft:explosion_decay"
                 },
                 {
-                  "type": "minecraft:apply_bonus",
                   "enchantment": "minecraft:fortune",
                   "formula": "minecraft:uniform_bonus_count",
+                  "function": "minecraft:apply_bonus",
                   "parameters": {
                     "bonusMultiplier": 2
                   }
@@ -69,7 +87,7 @@
           ]
         }
       ],
-      "rolls": 1
+      "rolls": 1.0
     }
   ],
   "random_sequence": "vineandbarrel:blocks/wild_barley"

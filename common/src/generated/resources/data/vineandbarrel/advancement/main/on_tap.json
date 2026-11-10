@@ -14,6 +14,7 @@
       "translate": "advancements.vineandbarrel.on_tap.description"
     },
     "icon": {
+      "count": 1,
       "id": "vineandbarrel:mug"
     },
     "title": {

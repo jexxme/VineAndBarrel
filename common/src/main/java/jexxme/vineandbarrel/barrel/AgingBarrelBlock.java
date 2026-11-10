@@ -12,6 +12,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -20,8 +21,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.Mirror;
@@ -95,7 +96,7 @@ public class AgingBarrelBlock extends Block implements EntityBlock
 	}
 
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	protected BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
 		return direction == Direction.UP ? state : withConnections(state, level, pos);
 	}
 
@@ -152,20 +153,21 @@ public class AgingBarrelBlock extends Block implements EntityBlock
 
 	/** Rules shared by hand, client prediction and tests: see {@link #useFor}. */
 	@Override
-	protected InteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+	protected ItemInteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
 		if (held.isEmpty()) {
-			return InteractionResult.TRY_WITH_EMPTY_HAND;
+			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 		}
+		// Not the barrel's business: straight on to the item's own use, without the status line of an empty hand
 		if (!(level.getBlockEntity(pos) instanceof AgingBarrelBlockEntity barrel)) {
-			return InteractionResult.PASS;
+			return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
 		}
 		Use use = useFor(barrel, held);
 		if (use == Use.NONE) {
-			return InteractionResult.PASS;
+			return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
 		}
 		if (level.isClientSide()) {
 			// The client knows the batch and the aging recipes (synced), so it claims exactly the clicks the server takes
-			return InteractionResult.SUCCESS;
+			return ItemInteractionResult.SUCCESS;
 		}
 		switch (use) {
 			case TAP -> {
@@ -211,7 +213,8 @@ public class AgingBarrelBlock extends Block implements EntityBlock
 			default -> {
 			}
 		}
-		return InteractionResult.SUCCESS;
+		// The client swings the arm itself (it returned SUCCESS above)
+		return ItemInteractionResult.CONSUME;
 	}
 
 	/** What a held item does at this barrel. The same answer on client and server, so neither claims a click alone. */
@@ -261,7 +264,7 @@ public class AgingBarrelBlock extends Block implements EntityBlock
 	}
 
 	private static void hint(Player player, Component message) {
-		player.sendOverlayMessage(message);
+		player.displayClientMessage(message, true);
 	}
 
 	/** B10: the status line on an empty-hand right-click. */
@@ -270,7 +273,7 @@ public class AgingBarrelBlock extends Block implements EntityBlock
 		if (!level.isClientSide() && level.getBlockEntity(pos) instanceof AgingBarrelBlockEntity barrel) {
 			hint(player, BarrelStatus.of(barrel));
 		}
-		return InteractionResult.SUCCESS;
+		return InteractionResult.sidedSuccess(level.isClientSide());
 	}
 
 	/** B9: the tap handle turns back after tapping. */
@@ -289,23 +292,23 @@ public class AgingBarrelBlock extends Block implements EntityBlock
 	}
 
 	@Override
-	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
+	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
 		return level.getBlockEntity(pos) instanceof AgingBarrelBlockEntity barrel ? barrel.comparatorSignal() : 0;
 	}
 
-	@Override
-	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
-		if (includeData && level.getBlockEntity(pos) instanceof AgingBarrelBlockEntity barrel) {
-			return barrel.getAsItem();
-		}
-		return super.getCloneItemStack(level, pos, state, includeData);
-	}
+	// Pick block with Ctrl (creative): 1.21.1's client itself adds the block entity's components (the batch, the name)
+	// to the plain barrel item, so there is no getCloneItemStack here (26.x asks the block for the item with its data)
 
+	/** The automation slots drop when the barrel goes (the batch stays in the barrel item, B12), and comparators look again. */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
-		// The automation slots are dropped by AgingBarrelBlockEntity#preRemoveSideEffects (26.x)
-		level.updateNeighbourForOutputSignal(pos, this);
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+	protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		if (!state.is(newState.getBlock())) {
+			if (level.getBlockEntity(pos) instanceof AgingBarrelBlockEntity barrel) {
+				barrel.dropInventory();
+			}
+			level.updateNeighbourForOutputSignal(pos, this);
+		}
+		super.onRemove(state, level, pos, newState, movedByPiston);
 	}
 
 	@Override

@@ -11,12 +11,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
@@ -24,22 +25,17 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Containers;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStackTemplate;
-import net.minecraft.world.item.component.UseRemainder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -132,14 +128,19 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 	/**
 	 * The dimension's day clock (0 where there is none, e.g. the Nether: game time alone counts there). During this
-	 * barrel's own tick it is the value read when the tick began: a tick asks five or six times, and every read is a
-	 * clock lookup (nothing in the tick can move the clock).
+	 * barrel's own tick it is the value read when the tick began: a tick asks five or six times (nothing in the tick
+	 * can move the clock).
 	 */
 	private long today() {
 		if (ticking) {
 			return tickToday;
 		}
-		return level != null ? level.getDefaultClockTime() : 0L;
+		return level != null ? dayClock(level) : 0L;
+	}
+
+	/** 1.21.1: every dimension reports the Overworld's day time; one without a day of its own (fixed time) has no clock. */
+	private static long dayClock(Level level) {
+		return level.dimensionType().hasFixedTime() ? 0L : level.getDayTime();
 	}
 
 	private void stamp(long age) {
@@ -283,8 +284,8 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 	/** The empty container a poured-in base leaves behind (its crafting remainder: a bucket or a glass bottle). */
 	public static ItemStack containerOf(ItemStack filled) {
-		ItemStackTemplate remainder = Services.PLATFORM.craftingRemainder(filled);
-		return remainder != null ? remainder.create() : ItemStack.EMPTY;
+		ItemStack remainder = Services.PLATFORM.craftingRemainder(filled);
+		return remainder != null ? remainder : ItemStack.EMPTY;
 	}
 
 	/**
@@ -371,10 +372,13 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 	// ------------------------------------------------------------------ tapping (B9, B13, B14)
 
-	/** The vessel a drink is served in: its use remainder (a mug or a wine glass), or null if it has none. */
+	/**
+	 * The vessel a drink is served in: what its food component converts to once drunk (a mug or a wine glass), or null
+	 * if it has none. (26.x: its use remainder component.)
+	 */
 	public static @Nullable Item vesselOf(ItemStack drink) {
-		UseRemainder remainder = drink.get(DataComponents.USE_REMAINDER);
-		return remainder == null ? null : remainder.convertInto().item().value();
+		FoodProperties food = drink.get(DataComponents.FOOD);
+		return food == null ? null : food.usingConvertsTo().map(ItemStack::getItem).orElse(null);
 	}
 
 	/** The vessel the current drink needs, or null while it is not a drink yet. */
@@ -439,7 +443,7 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 	// ------------------------------------------------------------------ ticking
 
 	public static void serverTick(ServerLevel level, BlockPos pos, BlockState state, AgingBarrelBlockEntity barrel) {
-		barrel.tickToday = level.getDefaultClockTime();
+		barrel.tickToday = dayClock(level);
 		barrel.ticking = true;
 		try {
 			tick(level, pos, state, barrel);
@@ -531,22 +535,17 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 		return drops;
 	}
 
-	/** 26.x: the block entity is already gone in Block#affectNeighborsAfterRemoval, so slot items are dropped here. */
-	@Override
-	public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+	/** Drops the slot items where the barrel stood; called by {@link AgingBarrelBlock#onRemove} when the barrel goes. */
+	public void dropInventory() {
 		if (level instanceof ServerLevel serverLevel) {
-			Containers.dropContents(serverLevel, pos, getDroppableInventory());
+			Containers.dropContents(serverLevel, worldPosition, getDroppableInventory());
 		}
 	}
 
 	public ItemStack getAsItem() {
 		ItemStack stack = new ItemStack(getBlockState().getBlock().asItem());
 		stack.applyComponents(collectComponents());
-		if (!batch.isEmpty()) {
-			// B16: an empty barrel is furnace fuel like a vanilla barrel, a full one never (it would burn the batch)
-			stack.remove(DataComponents.COOKING_FUEL);
-		}
-		return stack;
+		return stack; // 26.2: AgingBarrelItem#getBurnTime keeps a full barrel out of the furnace
 	}
 
 	private ItemSlots createHandler() {
@@ -592,42 +591,60 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 	// ------------------------------------------------------------------ save, sync, item components
 
 	@Override
-	protected void loadAdditional(ValueInput input) {
-		super.loadAdditional(input);
-		inventory.deserialize(input.childOrEmpty("Inventory"));
-		readBatch(input);
-		customName = input.read("CustomName", ComponentSerialization.CODEC).orElse(null);
+	protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.loadAdditional(tag, registries);
+		inventory.deserialize(tag.getCompound("Inventory"), registries);
+		readBatch(tag, registries);
+		customName = readName(tag, registries);
 	}
 
-	private void readBatch(ValueInput input) {
-		batch = input.read("Batch", BarrelContents.CODEC).orElse(BarrelContents.EMPTY);
-		fillTime = input.getLongOr("FillTime", 0L);
-		fillDayTime = input.getLongOr("FillDayTime", NO_DAY);
-		pausedAge = input.getLongOr("PausedAge", -1L);
-		homeBrewed = !batch.isEmpty() && input.getBooleanOr("HomeBrewed", false);
+	// The tag has the same keys and shapes as 26.x's (there read and written through ValueInput/ValueOutput)
+
+	private void readBatch(CompoundTag tag, HolderLookup.Provider registries) {
+		Tag saved = tag.get("Batch");
+		batch = saved == null ? BarrelContents.EMPTY : BarrelContents.CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE), saved)
+			.resultOrPartial(problem -> LOGGER.warn("Aging Barrel at {}: can't read its batch: {}", worldPosition, problem)).orElse(BarrelContents.EMPTY);
+		fillTime = tag.contains("FillTime", Tag.TAG_ANY_NUMERIC) ? tag.getLong("FillTime") : 0L;
+		fillDayTime = tag.contains("FillDayTime", Tag.TAG_ANY_NUMERIC) ? tag.getLong("FillDayTime") : NO_DAY;
+		pausedAge = tag.contains("PausedAge", Tag.TAG_ANY_NUMERIC) ? tag.getLong("PausedAge") : -1L;
+		homeBrewed = !batch.isEmpty() && tag.getBoolean("HomeBrewed");
+	}
+
+	private @Nullable Component readName(CompoundTag tag, HolderLookup.Provider registries) {
+		Tag saved = tag.get("CustomName");
+		return saved == null ? null : ComponentSerialization.CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE), saved)
+			.resultOrPartial(problem -> LOGGER.warn("Aging Barrel at {}: can't read its name: {}", worldPosition, problem)).orElse(null);
+	}
+
+	private void writeName(CompoundTag tag, HolderLookup.Provider registries) {
+		if (customName != null) {
+			tag.put("CustomName", ComponentSerialization.CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE), customName).getOrThrow());
+		}
 	}
 
 	@Override
-	protected void saveAdditional(ValueOutput output) {
-		super.saveAdditional(output);
-		inventory.serialize(output.child("Inventory"));
-		writeBatch(output);
-		output.storeNullable("CustomName", ComponentSerialization.CODEC, customName);
+	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.saveAdditional(tag, registries);
+		CompoundTag slots = new CompoundTag();
+		inventory.serialize(slots, registries);
+		tag.put("Inventory", slots);
+		writeBatch(tag, registries);
+		writeName(tag, registries);
 	}
 
 	/** The batch with the absolute fill time: a saved world keeps aging while it is unloaded, like a placed barrel. */
-	private void writeBatch(ValueOutput output) {
+	private void writeBatch(CompoundTag tag, HolderLookup.Provider registries) {
 		if (!batch.isEmpty()) {
-			output.store("Batch", BarrelContents.CODEC, batch.withElapsed(0L));
-			output.putLong("FillTime", fillTime);
+			tag.put("Batch", BarrelContents.CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE), batch.withElapsed(0L)).getOrThrow());
+			tag.putLong("FillTime", fillTime);
 			if (fillDayTime != NO_DAY) {
-				output.putLong("FillDayTime", fillDayTime);
+				tag.putLong("FillDayTime", fillDayTime);
 			}
 			if (pausedAge >= 0L) {
-				output.putLong("PausedAge", pausedAge);
+				tag.putLong("PausedAge", pausedAge);
 			}
 			if (homeBrewed) {
-				output.putBoolean("HomeBrewed", true);
+				tag.putBoolean("HomeBrewed", true);
 			}
 		}
 	}
@@ -640,18 +657,16 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 	/** What the client needs: the batch and its fill time (bubbles, drip colour), and the name. */
 	@Override
 	public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-		try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(this.problemPath(), LOGGER)) {
-			TagValueOutput output = TagValueOutput.createWithContext(reporter, registries);
-			writeBatch(output);
-			output.storeNullable("CustomName", ComponentSerialization.CODEC, customName);
-			return output.buildResult();
-		}
+		CompoundTag tag = new CompoundTag();
+		writeBatch(tag, registries);
+		writeName(tag, registries);
+		return tag;
 	}
 
 	@Override
-	public void onDataPacket(Connection connection, ValueInput input) {
-		readBatch(input);
-		customName = input.read("CustomName", ComponentSerialization.CODEC).orElse(null);
+	public void onDataPacket(Connection connection, CompoundTag tag, HolderLookup.Provider registries) {
+		readBatch(tag, registries);
+		customName = readName(tag, registries);
 	}
 
 	private void changed() {
@@ -669,7 +684,7 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 
 	@Override
-	protected void applyImplicitComponents(DataComponentGetter components) {
+	protected void applyImplicitComponents(BlockEntity.DataComponentInput components) {
 		super.applyImplicitComponents(components);
 		customName = components.get(DataComponents.CUSTOM_NAME);
 		BarrelContents contents = components.getOrDefault(BarrelRegistry.BARREL_CONTENTS.get(), BarrelContents.EMPTY);
@@ -696,13 +711,13 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 
 	@Override
 	@SuppressWarnings("deprecation")
-	public void removeComponentsFromTag(ValueOutput output) {
-		output.discard("CustomName");
-		output.discard("Batch");
-		output.discard("FillTime");
-		output.discard("FillDayTime");
-		output.discard("PausedAge");
-		output.discard("HomeBrewed");
+	public void removeComponentsFromTag(CompoundTag tag) {
+		tag.remove("CustomName");
+		tag.remove("Batch");
+		tag.remove("FillTime");
+		tag.remove("FillDayTime");
+		tag.remove("PausedAge");
+		tag.remove("HomeBrewed");
 	}
 
 	/** Why something can't be poured into the barrel. */

@@ -98,9 +98,9 @@ public final class VineClimbing
 	 * tag (another mod's rope, or the test stand-in), otherwise air.
 	 */
 	public static BlockState ropeState(Level level, BlockPos pos) {
-		Optional<Holder.Reference<Block>> fdRope = BuiltInRegistries.BLOCK.get(VBTags.FD_ROPE);
+		Optional<Holder.Reference<Block>> fdRope = BuiltInRegistries.BLOCK.getHolder(VBTags.FD_ROPE);
 		Block rope = fdRope.map(Holder::value).filter(block -> block.defaultBlockState().is(VBTags.FD_ROPES))
-				.orElseGet(() -> BuiltInRegistries.BLOCK.get(VBTags.FD_ROPES)
+				.orElseGet(() -> BuiltInRegistries.BLOCK.getTag(VBTags.FD_ROPES)
 						.flatMap(set -> set.stream().findFirst())
 						.map(Holder::value)
 						.orElse(Blocks.AIR));

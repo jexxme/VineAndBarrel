@@ -1,28 +1,22 @@
 {
   "values": {
     "vineandbarrel:brew_kettle": {
-      "next_oxidation_stage": "vineandbarrel:exposed_brew_kettle",
-      "generate_block_transform": false
+      "next_oxidation_stage": "vineandbarrel:exposed_brew_kettle"
     },
     "vineandbarrel:exposed_brew_kettle": {
-      "next_oxidation_stage": "vineandbarrel:weathered_brew_kettle",
-      "generate_block_transform": false
+      "next_oxidation_stage": "vineandbarrel:weathered_brew_kettle"
     },
     "vineandbarrel:weathered_brew_kettle": {
-      "next_oxidation_stage": "vineandbarrel:oxidized_brew_kettle",
-      "generate_block_transform": false
+      "next_oxidation_stage": "vineandbarrel:oxidized_brew_kettle"
     },
     "vineandbarrel:brew_kettle_part": {
-      "next_oxidation_stage": "vineandbarrel:exposed_brew_kettle_part",
-      "generate_block_transform": false
+      "next_oxidation_stage": "vineandbarrel:exposed_brew_kettle_part"
     },
     "vineandbarrel:exposed_brew_kettle_part": {
-      "next_oxidation_stage": "vineandbarrel:weathered_brew_kettle_part",
-      "generate_block_transform": false
+      "next_oxidation_stage": "vineandbarrel:weathered_brew_kettle_part"
     },
     "vineandbarrel:weathered_brew_kettle_part": {
-      "next_oxidation_stage": "vineandbarrel:oxidized_brew_kettle_part",
-      "generate_block_transform": false
+      "next_oxidation_stage": "vineandbarrel:oxidized_brew_kettle_part"
     }
   }
 }

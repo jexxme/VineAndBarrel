@@ -17,18 +17,13 @@ import jexxme.vineandbarrel.drink.DrinkItem;
 import jexxme.vineandbarrel.drink.DrinkItems;
 import jexxme.vineandbarrel.kettle.BaseItems;
 import jexxme.vineandbarrel.registry.VBItems;
-import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
@@ -48,7 +43,6 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
 import jexxme.vineandbarrel.platform.Services;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -68,13 +62,15 @@ import java.util.stream.Collectors;
  * ({@code ./gradlew runGameTestServerCompat}), where Tough As Nails, Homeostatic, Thirst Was Taken 2, Nutritional
  * Balance and Spice of Life are installed, it also asks each mod itself what it made of our data. The nested probes are
  * the only code that touches those mods' classes ({@link CompatProbes}, per loader), and only run when the mod is loaded.
- * Fabric's compat run has every mod but Nutritional Balance, which has no Fabric build.
+ * Fabric's compat run has neither Nutritional Balance nor Spice of Life, which have no Fabric build for this Minecraft.
  */
 public final class ModCompatGameTests
 {
-	private static final Identifier SMALL = VineAndBarrel.id("gametest/empty_5x5");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
-	private static final List<ResourceKey<Consumer<GameTestHelper>>> TESTS = new ArrayList<>();
+	private static final ResourceLocation SMALL = VineAndBarrel.id("gametest/empty_5x5");
+	private static final List<Entry> TESTS = new ArrayList<>();
+
+	private record Entry(String name, Consumer<GameTestHelper> function) {
+	}
 
 	public static final String TOUGH_AS_NAILS = "toughasnails";
 	public static final String HOMEOSTATIC = "homeostatic";
@@ -118,19 +114,16 @@ public final class ModCompatGameTests
 	}
 
 	private static void test(String name, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		TESTS.add(ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name)));
+		TESTS.add(new Entry(name, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(ModCompatGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("mod_compat"));
-		for (ResourceKey<Consumer<GameTestHelper>> function : TESTS) {
-			event.registerTest(function.identifier(), new FunctionGameTestInstance(function, new TestData<>(environment, SMALL, 40, 0, true)));
+		for (Entry test : TESTS) {
+			VBGameTests.add(event, "mod_compat", test.name(), SMALL, 40, test.function());
 		}
 	}
 
@@ -145,16 +138,16 @@ public final class ModCompatGameTests
 		return BuiltInRegistries.ITEM.stream().filter(item -> BuiltInRegistries.ITEM.getKey(item).getNamespace().equals(VineAndBarrel.MODID)).toList();
 	}
 
-	/** Eaten or drunk. */
+	/** Eaten or drunk: on this Minecraft that is having food (a drink is a food whose item drinks). */
 	private static boolean consumable(Item item) {
-		return item.components().has(DataComponents.CONSUMABLE);
+		return item.components().has(DataComponents.FOOD);
 	}
 
 	private static String id(Item item) {
 		return BuiltInRegistries.ITEM.getKey(item).toString();
 	}
 
-	private static JsonElement readJson(GameTestHelper helper, Identifier file) {
+	private static JsonElement readJson(GameTestHelper helper, ResourceLocation file) {
 		ResourceManager resources = helper.getLevel().getServer().getResourceManager();
 		Optional<Resource> resource = resources.getResource(file);
 		helper.assertTrue(resource.isPresent(), "data file " + file + " is loaded");
@@ -175,13 +168,14 @@ public final class ModCompatGameTests
 			super(server, level, profile, ClientInformation.createDefault());
 		}
 
+		// always in survival (26.x: gameMode(); this Minecraft asks these two)
 		@Override
-		public GameType gameMode() {
-			return GameType.SURVIVAL;
+		public boolean isCreative() {
+			return false;
 		}
 
 		@Override
-		public boolean isClientAuthoritative() {
+		public boolean isSpectator() {
 			return false;
 		}
 
@@ -280,7 +274,7 @@ public final class ModCompatGameTests
 		helper.succeed();
 	}
 
-	private static final TagKey<Item> TAN_DRINKS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(CompatData.TAN, "drinks"));
+	private static final TagKey<Item> TAN_DRINKS = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(CompatData.TAN, "drinks"));
 
 	/** Each drink is in exactly one of Tough As Nails' thirst tags and one hydration tag, its row's; food in none. */
 	private static void toughAsNailsTags(GameTestHelper helper) {

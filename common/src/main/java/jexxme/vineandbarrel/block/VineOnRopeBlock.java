@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -59,10 +59,10 @@ public class VineOnRopeBlock extends ClimbingCropBlock implements PlayerDestroyH
 	}
 
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction directionToNeighbour,
-									 BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	protected BlockState updateShape(BlockState state, Direction directionToNeighbour, BlockState neighbourState, LevelAccessor level, BlockPos pos,
+									 BlockPos neighbourPos) {
 		if (!state.canSurvive(level, pos)) {
-			ticks.scheduleTick(pos, this, 1); // like FD: break on the next tick, which then puts the rope back
+			level.scheduleTick(pos, this, 1); // like FD: break on the next tick, which then puts the rope back
 		}
 		return state;
 	}
@@ -85,8 +85,11 @@ public class VineOnRopeBlock extends ClimbingCropBlock implements PlayerDestroyH
 	 * (as a trellis is).
 	 */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+	protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		super.onRemove(state, level, pos, newState, movedByPiston);
+		if (state.is(newState.getBlock()) || level.isClientSide()) {
+			return; // onRemove also runs when only the state changes (growing, picking): the vine is still there
+		}
 		BlockState now = level.getBlockState(pos);
 		if (!movedByPiston && (now.isAir() || now.is(BlockTags.FIRE))) {
 			BlockState rope = VineClimbing.ropeState(level, pos);

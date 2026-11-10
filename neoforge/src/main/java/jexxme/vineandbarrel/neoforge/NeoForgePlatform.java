@@ -7,16 +7,14 @@ import jexxme.vineandbarrel.platform.GameTestRegistrar;
 import jexxme.vineandbarrel.platform.Platform;
 import jexxme.vineandbarrel.platform.SlotAccess;
 import jexxme.vineandbarrel.platform.registry.DeferredRegister;
-import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.GameTestInstance;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
+import net.minecraft.gametest.framework.GameTestRegistry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,14 +32,23 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.common.DataMapHooks;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
+import net.neoforged.neoforge.event.village.VillagerTradesEvent;
+import net.neoforged.neoforge.event.village.WandererTradesEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
-import net.neoforged.neoforge.transfer.transaction.Transaction;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.entity.npc.VillagerTrades;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -55,9 +62,38 @@ public final class NeoForgePlatform implements Platform
 	private static final net.neoforged.neoforge.registries.DeferredRegister<AttachmentType<?>> ATTACHMENTS =
 		net.neoforged.neoforge.registries.DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, jexxme.vineandbarrel.VineAndBarrel.MODID);
 
+	/** The GameTest classes' registrations, run once the GameTest server collects its tests (see {@link #addGameTests}). */
+	private static final List<Consumer<GameTestRegistrar>> GAME_TESTS = new ArrayList<>();
+	private static boolean gameTestsRegistered;
+	/** Our trades by profession and level, and the wandering trader's, added whenever NeoForge builds the trade tables. */
+	private static final Map<VillagerProfession, Map<Integer, List<VillagerTrades.ItemListing>>> VILLAGER_TRADES = new HashMap<>();
+	private static final List<VillagerTrades.ItemListing> WANDERING_TRADES = new ArrayList<>();
+
 	static void init(IEventBus bus) {
 		modBus = bus;
 		ATTACHMENTS.register(bus);
+		// The GameTest server asks for tests right before it collects them; a dev client's own server never does, so there
+		// they are added when a server starts (for /test)
+		bus.addListener(RegisterGameTestsEvent.class, event -> registerGameTests());
+		NeoForge.EVENT_BUS.addListener(ServerAboutToStartEvent.class, event -> registerGameTests());
+		// Both fire from the vanilla tables on every server start and tag reload, so nothing is added twice
+		NeoForge.EVENT_BUS.addListener(VillagerTradesEvent.class, event -> {
+			Map<Integer, List<VillagerTrades.ItemListing>> levels = VILLAGER_TRADES.get(event.getType());
+			if (levels != null) {
+				levels.forEach((level, trades) -> event.getTrades().get(level.intValue()).addAll(trades));
+			}
+		});
+		NeoForge.EVENT_BUS.addListener(WandererTradesEvent.class, event -> event.getGenericTrades().addAll(WANDERING_TRADES));
+	}
+
+	/** Adds every test to vanilla's registry, once (the event's own methods only take annotated classes). */
+	private static synchronized void registerGameTests() {
+		if (gameTestsRegistered) {
+			return;
+		}
+		gameTestsRegistered = true;
+		GameTestRegistrar registrar = test -> GameTestRegistry.getAllTestFunctions().add(test);
+		GAME_TESTS.forEach(tests -> tests.accept(registrar));
 	}
 
 	private static IEventBus modBus() {
@@ -81,7 +117,7 @@ public final class NeoForgePlatform implements Platform
 
 	@Override
 	public boolean isDevelopment() {
-		return !FMLEnvironment.isProduction();
+		return !FMLEnvironment.production;
 	}
 
 	// ------------------------------------------------------------------ registration
@@ -98,11 +134,11 @@ public final class NeoForgePlatform implements Platform
 	}
 
 	@Override
-	public <T> EntityAttachment<T> attachment(Identifier id, EntityAttachment.Spec<T> spec) {
+	public <T> EntityAttachment<T> attachment(ResourceLocation id, EntityAttachment.Spec<T> spec) {
 		Supplier<AttachmentType<T>> type = ATTACHMENTS.register(id.getPath(), () -> {
 			AttachmentType.Builder<T> builder = AttachmentType.builder(spec.defaultValue());
 			if (spec.saveCodec() != null) {
-				builder.serialize(spec.saveCodec());
+				builder.serialize(spec.saveCodec().codec());
 			}
 			if (spec.syncCodec() != null) {
 				builder.sync(spec.syncCodec());
@@ -143,18 +179,7 @@ public final class NeoForgePlatform implements Platform
 
 	@Override
 	public void addGameTests(Consumer<GameTestRegistrar> registrar) {
-		modBus().addListener(RegisterGameTestsEvent.class, event -> registrar.accept(new GameTestRegistrar()
-		{
-			@Override
-			public Holder<TestEnvironmentDefinition<?>> registerEnvironment(Identifier name, TestEnvironmentDefinition<?> definition) {
-				return event.registerEnvironment(name, definition);
-			}
-
-			@Override
-			public void registerTest(Identifier name, GameTestInstance test) {
-				event.registerTest(name, test);
-			}
-		}));
+		GAME_TESTS.add(registrar);
 	}
 
 	@Override
@@ -217,13 +242,30 @@ public final class NeoForgePlatform implements Platform
 	}
 
 	@Override
+	public boolean canScrape(ItemStack stack) {
+		return stack.canPerformAction(net.neoforged.neoforge.common.ItemAbilities.AXE_SCRAPE);
+	}
+
+	@Override
+	public int burnTime(ItemStack stack, ServerLevel level) {
+		return stack.getBurnTime(null);
+	}
+
+	@Override
+	public float compostChance(net.minecraft.world.item.Item item) {
+		var compostable = item.builtInRegistryHolder().getData(net.neoforged.neoforge.registries.datamaps.builtin.NeoForgeDataMaps.COMPOSTABLES);
+		return compostable == null ? 0.0F : compostable.chance();
+	}
+
+	@Override
 	public Component decorateChat(ServerPlayer player, Component message) {
 		return CommonHooks.getServerChatSubmittedDecorator().decorate(player, message);
 	}
 
 	@Override
-	public @Nullable ItemStackTemplate craftingRemainder(ItemStack stack) {
-		return stack.getCraftingRemainder();
+	public @Nullable ItemStack craftingRemainder(ItemStack stack) {
+		// A new stack each time: items hand out a fresh one (vanilla's is new ItemStack(getCraftingRemainingItem()))
+		return stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem().copy() : null;
 	}
 
 	// ------------------------------------------------------------------ item automation
@@ -235,7 +277,23 @@ public final class NeoForgePlatform implements Platform
 
 	@Override
 	public SlotAccess.Tx openTransaction() {
-		Transaction transaction = Transaction.openRoot();
-		return new NeoForgeItemAccess.Tx(transaction);
+		return NeoForgeItemAccess.Tx.openRoot();
+	}
+
+	// ------------------------------------------------------------------ villager trades
+
+	@Override
+	public void addVillagerTrades(VillagerProfession profession, int level, List<VillagerTrades.ItemListing> trades) {
+		VILLAGER_TRADES.computeIfAbsent(profession, p -> new HashMap<>()).computeIfAbsent(level, l -> new ArrayList<>()).addAll(trades);
+	}
+
+	@Override
+	public void addWanderingTraderTrades(List<VillagerTrades.ItemListing> trades) {
+		WANDERING_TRADES.addAll(trades);
+	}
+
+	@Override
+	public void prepareMockConnection(net.minecraft.network.Connection connection) {
+		net.neoforged.neoforge.network.registration.NetworkRegistry.configureMockConnection(connection);
 	}
 }

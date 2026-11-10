@@ -1,7 +1,7 @@
 package jexxme.vineandbarrel.mixin;
 
 import jexxme.vineandbarrel.entity.BeeGrowth;
-import net.minecraft.world.entity.animal.bee.Bee;
+import net.minecraft.world.entity.animal.Bee;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -14,10 +14,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * sweet berry bush's case here. The tick only runs while the goal is active (the bee carries nectar), and vanilla's own
  * pass never matches our blocks, so nothing can grow twice.
  */
-@Mixin(targets = "net.minecraft.world.entity.animal.bee.Bee$BeeGrowCropGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.Bee$BeeGrowCropGoal")
 public abstract class BeeGrowCropGoalMixin
 {
-	@Shadow
+	// The outer bee: a compiler-made field that Mojang's names leave out, so on Fabric it keeps its intermediary name
+	@Shadow(aliases = "field_20373", remap = false)
 	@Final
 	Bee this$0;
 

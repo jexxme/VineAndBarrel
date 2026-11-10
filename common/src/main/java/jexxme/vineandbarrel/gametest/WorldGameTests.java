@@ -23,26 +23,23 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.entity.npc.VillagerTrades;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraft.world.item.trading.TradeSet;
-import net.minecraft.world.item.trading.TradeSets;
-import net.minecraft.world.item.trading.VillagerTrade;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -65,7 +62,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import java.util.function.Predicate;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.pools.JigsawPlacement;
@@ -74,7 +70,6 @@ import net.minecraft.world.level.levelgen.structure.structures.JigsawStructure;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
-import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.pools.SinglePoolElement;
@@ -91,9 +86,9 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -101,6 +96,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * M6 World GameTests: village farms grow our crops, farmers and the wandering trader sell our seeds, village chests
@@ -109,9 +105,8 @@ import java.util.function.Consumer;
  */
 public final class WorldGameTests
 {
-	private static final Identifier LARGE = VineAndBarrel.id("gametest/empty_32x6x32");
-	private static final Identifier TALL = VineAndBarrel.id("gametest/empty_20x22x20");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
+	private static final ResourceLocation LARGE = VineAndBarrel.id("gametest/empty_32x6x32");
+	private static final ResourceLocation TALL = VineAndBarrel.id("gametest/empty_20x22x20");
 	private static final List<Entry> TESTS = new ArrayList<>();
 
 	/** Where the tavern goes in its test area (room for the street side in front of it). */
@@ -123,7 +118,7 @@ public final class WorldGameTests
 	 */
 	private static final int TAVERN_FLOOR = 0;
 
-	private record Entry(ResourceKey<Consumer<GameTestHelper>> function, Identifier structure, int maxTicks, boolean skyAccess) {
+	private record Entry(String name, ResourceLocation structure, int maxTicks, boolean skyAccess, Consumer<GameTestHelper> function) {
 	}
 
 	static {
@@ -167,25 +162,21 @@ public final class WorldGameTests
 		return StructureTemplate.transform(absolute, net.minecraft.world.level.block.Mirror.NONE, inverse, origin).subtract(origin);
 	}
 
-	private static void register(String name, Identifier structure, int timeout, Consumer<GameTestHelper> function) {
+	private static void register(String name, ResourceLocation structure, int timeout, Consumer<GameTestHelper> function) {
 		register(name, structure, timeout, false, function);
 	}
 
-	private static void register(String name, Identifier structure, int timeout, boolean skyAccess, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		TESTS.add(new Entry(ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name)), structure, timeout, skyAccess));
+	private static void register(String name, ResourceLocation structure, int timeout, boolean skyAccess, Consumer<GameTestHelper> function) {
+		TESTS.add(new Entry(name, structure, timeout, skyAccess, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(WorldGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("world"));
 		for (Entry test : TESTS) {
-			event.registerTest(test.function().identifier(), new FunctionGameTestInstance(test.function(), new TestData<>(environment,
-				Level.OVERWORLD, test.structure(), test.maxTicks(), 0, true, Rotation.NONE, false, 1, 1, test.skyAccess(), 0)));
+			VBGameTests.add(event, "world", test.name(), test.structure(), test.maxTicks(), test.skyAccess(), test.function());
 		}
 	}
 
@@ -214,17 +205,17 @@ public final class WorldGameTests
 		farms(helper, VillageType::zombieProcessors, false);
 	}
 
-	private static void farms(GameTestHelper helper, java.util.function.Function<VillageType, Identifier> listOf, boolean fdToo) {
+	private static void farms(GameTestHelper helper, java.util.function.Function<VillageType, ResourceLocation> listOf, boolean fdToo) {
 		ServerLevel level = helper.getLevel();
-		Registry<StructureProcessorList> lists = level.registryAccess().lookupOrThrow(Registries.PROCESSOR_LIST);
-		StructureTemplate farm = level.getStructureTemplateManager().get(Identifier.withDefaultNamespace("village/plains/houses/plains_large_farm_1"))
+		Registry<StructureProcessorList> lists = level.registryAccess().registryOrThrow(Registries.PROCESSOR_LIST);
+		StructureTemplate farm = level.getStructureManager().get(ResourceLocation.withDefaultNamespace("village/plains/houses/plains_large_farm_1"))
 			.orElseThrow();
 		BlockPos origin = helper.absolutePos(new BlockPos(1, 0, 1));
 		boolean fd = jexxme.vineandbarrel.platform.Services.PLATFORM.isModLoaded("farmersdelight");
 		Set<Block> ours = Set.of(VBBlocks.BARLEY.get(), VBBlocks.GRAPE_BUSH.get(), VBBlocks.HOP_BUSH.get(), VBBlocks.WHITE_GRAPE_BUSH.get());
 		for (VillageType type : VillageType.values()) {
-			Identifier listId = listOf.apply(type);
-			StructureProcessorList list = lists.getValue(listId);
+			ResourceLocation listId = listOf.apply(type);
+			StructureProcessorList list = lists.get(listId);
 			helper.assertTrue(list != null, "processor list " + listId);
 			long count = list.list().stream().filter(VillageStructures::isOurFarmProcessor).count();
 			helper.assertValueEqual((int) count, 1, "our farm processors in " + listId);
@@ -293,84 +284,81 @@ public final class WorldGameTests
 
 	// ------------------------------------------------------------------ 2. trades
 
-	/** The trades are in the trade sets villagers draw from, and each gives what it says for one emerald. */
+	/**
+	 * The trades are in the pools villagers draw from, and each gives what it says for one emerald. On this Minecraft
+	 * the pools are vanilla's {@link VillagerTrades#TRADES} and {@link VillagerTrades#WANDERING_TRADER_TRADES} (26.x:
+	 * the trade sets, data), as the loader left them after adding ours.
+	 */
 	private static void trades(GameTestHelper helper) {
-		ServerLevel level = helper.getLevel();
-		Registry<TradeSet> sets = level.registryAccess().lookupOrThrow(Registries.TRADE_SET);
-		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_1, VillageData.FARMER_1_BARLEY_SEEDS);
-		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_2, VillageData.FARMER_2_RED_GRAPES);
-		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_2, VillageData.FARMER_2_HOPS);
-		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_2, VillageData.FARMER_2_WHITE_GRAPES);
-		assertInSet(helper, sets, TradeSets.WANDERING_TRADER_COMMON, VillageData.WANDERING_TRADER_RED_GRAPES);
-		assertInSet(helper, sets, TradeSets.WANDERING_TRADER_COMMON, VillageData.WANDERING_TRADER_WHITE_GRAPES);
-		assertInSet(helper, sets, TradeSets.WANDERING_TRADER_COMMON, VillageData.WANDERING_TRADER_HOPS);
-		assertInSet(helper, sets, TradeSets.WANDERING_TRADER_COMMON, VillageData.WANDERING_TRADER_BARLEY_SEEDS);
-		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_1, VillageData.FARMER_1_BARLEY_EMERALD);
-		assertInSet(helper, sets, TradeSets.FARMER_LEVEL_2, VillageData.FARMER_2_RED_GRAPES_EMERALD);
-		Villager villager = helper.spawn(EntityTypes.VILLAGER, new BlockPos(4, 1, 4));
-		LootContext context = new LootContext.Builder(new LootParams.Builder(level)
-			.withParameter(LootContextParams.ORIGIN, villager.position())
-			.withParameter(LootContextParams.THIS_ENTITY, villager)
-			.withParameter(LootContextParams.ADDITIONAL_COST_COMPONENT_ALLOWED, Unit.INSTANCE)
-			.create(LootContextParamSets.VILLAGER_TRADE)).create(Optional.empty());
+		Int2ObjectMap<VillagerTrades.ItemListing[]> farmer = VillagerTrades.TRADES.get(VillagerProfession.FARMER);
+		// the wandering trader's ordinary pool (26.x: #minecraft:wandering_trader/common); 2 is the rare one
+		VillagerTrades.ItemListing[] wanderingCommon = VillagerTrades.WANDERING_TRADER_TRADES.get(1);
+		assertInSet(helper, farmer.get(1), "farmer level 1", VillageData.FARMER_1_BARLEY_SEEDS);
+		assertInSet(helper, farmer.get(2), "farmer level 2", VillageData.FARMER_2_RED_GRAPES);
+		assertInSet(helper, farmer.get(2), "farmer level 2", VillageData.FARMER_2_HOPS);
+		assertInSet(helper, farmer.get(2), "farmer level 2", VillageData.FARMER_2_WHITE_GRAPES);
+		assertInSet(helper, wanderingCommon, "the wandering trader's common trades", VillageData.WANDERING_TRADER_RED_GRAPES);
+		assertInSet(helper, wanderingCommon, "the wandering trader's common trades", VillageData.WANDERING_TRADER_WHITE_GRAPES);
+		assertInSet(helper, wanderingCommon, "the wandering trader's common trades", VillageData.WANDERING_TRADER_HOPS);
+		assertInSet(helper, wanderingCommon, "the wandering trader's common trades", VillageData.WANDERING_TRADER_BARLEY_SEEDS);
+		assertInSet(helper, farmer.get(1), "farmer level 1", VillageData.FARMER_1_BARLEY_EMERALD);
+		assertInSet(helper, farmer.get(2), "farmer level 2", VillageData.FARMER_2_RED_GRAPES_EMERALD);
+		Villager villager = helper.spawn(EntityType.VILLAGER, new BlockPos(4, 1, 4));
 		// Every vanilla trade a farmer is sure to offer stays sure: a level that draws as many trades as vanilla gives it
 		// (or more) gets nothing of ours, and a level that already draws at random gets at most one of our buying trades
-		for (ResourceKey<TradeSet> farmerLevel : List.of(TradeSets.FARMER_LEVEL_1, TradeSets.FARMER_LEVEL_2, TradeSets.FARMER_LEVEL_3, TradeSets.FARMER_LEVEL_4,
-				TradeSets.FARMER_LEVEL_5)) {
-			TradeSet set = sets.getValue(farmerLevel);
-			long vanilla = set.trades().stream().filter(h -> h.unwrapKey().map(k -> k.identifier().getNamespace().equals("minecraft")).orElse(false)).count();
-			long ours = set.trades().stream().filter(h -> h.unwrapKey().map(k -> k.identifier().getNamespace().equals(VineAndBarrel.MODID)).orElse(false)).count();
-			long buys = set.trades().stream().filter(h -> h.unwrapKey().map(k -> k.identifier().getNamespace().equals(VineAndBarrel.MODID)
-				&& k.identifier().getPath().endsWith("_emerald")).orElse(false)).count();
-			int drawn = set.calculateNumberOfTrades(context);
+		int drawn = 2; // Villager#updateTrades: two offers per level
+		for (int farmerLevel = 1; farmerLevel <= 5; farmerLevel++) {
+			List<VillagerTrades.ItemListing> set = List.of(farmer.get(farmerLevel));
+			// vanilla's own listings are all classes of VillagerTrades (a listing has no id on this Minecraft)
+			long vanilla = set.stream().filter(listing -> listing.getClass().getName().startsWith("net.minecraft.")).count();
+			long ours = set.stream().filter(listing -> listing instanceof VillageData.Trade).count();
+			long buys = set.stream().filter(listing -> listing instanceof VillageData.Trade trade && trade.buys()
+				&& trade.id().getPath().endsWith("_emerald")).count();
 			if (vanilla <= drawn) {
-				helper.assertValueEqual((int) ours, 0, farmerLevel.identifier() + " offers all " + vanilla + " of its vanilla trades, so none of ours");
+				helper.assertValueEqual((int) ours, 0, "farmer level " + farmerLevel + " offers all " + vanilla + " of its vanilla trades, so none of ours");
 			}
-			helper.assertTrue(buys <= 1, farmerLevel.identifier() + " has " + buys + " of our buying trades");
+			helper.assertTrue(buys <= 1, "farmer level " + farmerLevel + " has " + buys + " of our buying trades");
 		}
-		assertOffer(helper, context, VillageData.FARMER_1_BARLEY_SEEDS, VBItems.BARLEY_SEEDS.get(), 6, 16);
-		assertOffer(helper, context, VillageData.FARMER_2_RED_GRAPES, VBItems.RED_GRAPES.get(), 3, 16);
-		assertOffer(helper, context, VillageData.FARMER_2_HOPS, VBItems.HOPS.get(), 3, 16);
-		assertOffer(helper, context, VillageData.WANDERING_TRADER_RED_GRAPES, VBItems.RED_GRAPES.get(), 1, 12);
-		assertOffer(helper, context, VillageData.WANDERING_TRADER_HOPS, VBItems.HOPS.get(), 1, 12);
-		assertOffer(helper, context, VillageData.WANDERING_TRADER_BARLEY_SEEDS, VBItems.BARLEY_SEEDS.get(), 1, 12);
-		assertOffer(helper, context, VillageData.FARMER_2_WHITE_GRAPES, VBItems.WHITE_GRAPES.get(), 3, 16);
-		assertOffer(helper, context, VillageData.WANDERING_TRADER_WHITE_GRAPES, VBItems.WHITE_GRAPES.get(), 1, 12);
+		assertOffer(helper, villager, VillageData.FARMER_1_BARLEY_SEEDS, VBItems.BARLEY_SEEDS.get(), 6, 16);
+		assertOffer(helper, villager, VillageData.FARMER_2_RED_GRAPES, VBItems.RED_GRAPES.get(), 3, 16);
+		assertOffer(helper, villager, VillageData.FARMER_2_HOPS, VBItems.HOPS.get(), 3, 16);
+		assertOffer(helper, villager, VillageData.WANDERING_TRADER_RED_GRAPES, VBItems.RED_GRAPES.get(), 1, 12);
+		assertOffer(helper, villager, VillageData.WANDERING_TRADER_HOPS, VBItems.HOPS.get(), 1, 12);
+		assertOffer(helper, villager, VillageData.WANDERING_TRADER_BARLEY_SEEDS, VBItems.BARLEY_SEEDS.get(), 1, 12);
+		assertOffer(helper, villager, VillageData.FARMER_2_WHITE_GRAPES, VBItems.WHITE_GRAPES.get(), 3, 16);
+		assertOffer(helper, villager, VillageData.WANDERING_TRADER_WHITE_GRAPES, VBItems.WHITE_GRAPES.get(), 1, 12);
 		// Farmers buy the harvest like vanilla's wheat and FD's crops: 20 for an emerald
-		assertBuys(helper, context, VillageData.FARMER_1_BARLEY_EMERALD, VBItems.BARLEY.get(), 20, 16);
-		assertBuys(helper, context, VillageData.FARMER_2_RED_GRAPES_EMERALD, VBItems.RED_GRAPES.get(), 20, 16);
-		long ours = level.registryAccess().lookupOrThrow(Registries.VILLAGER_TRADE).listElementIds()
-			.filter(key -> key.identifier().getNamespace().equals(VineAndBarrel.MODID)).count();
+		assertBuys(helper, villager, VillageData.FARMER_1_BARLEY_EMERALD, VBItems.BARLEY.get(), 20, 16);
+		assertBuys(helper, villager, VillageData.FARMER_2_RED_GRAPES_EMERALD, VBItems.RED_GRAPES.get(), 20, 16);
+		// every trade of ours any villager or wandering trader can draw, whatever the profession, level or pool
+		long ours = Stream.concat(VillagerTrades.TRADES.values().stream().flatMap(levels -> levels.values().stream()),
+				VillagerTrades.WANDERING_TRADER_TRADES.values().stream())
+			.flatMap(Arrays::stream).filter(listing -> listing instanceof VillageData.Trade trade && trade.id().getNamespace().equals(VineAndBarrel.MODID)).count();
 		helper.assertValueEqual((int) ours, 10, "our villager trades");
 		helper.succeed();
 	}
 
 	/** A trade where the villager takes {@code count} of {@code wants} for one emerald. */
-	private static void assertBuys(GameTestHelper helper, LootContext context, ResourceKey<VillagerTrade> key, Item wants, int count, int maxUses) {
-		VillagerTrade trade = helper.getLevel().registryAccess().lookupOrThrow(Registries.VILLAGER_TRADE).getValue(key);
-		helper.assertTrue(trade != null, "trade " + key.identifier());
-		MerchantOffer offer = trade.getOffer(context);
-		helper.assertTrue(offer != null, "an offer from " + key.identifier());
+	private static void assertBuys(GameTestHelper helper, Villager villager, VillageData.Trade trade, Item wants, int count, int maxUses) {
+		MerchantOffer offer = trade.getOffer(villager, villager.getRandom());
+		helper.assertTrue(offer != null, "an offer from " + trade.id());
 		helper.assertTrue(offer.getCostA().is(wants) && offer.getCostA().getCount() == count && offer.getCostB().isEmpty(),
-			key.identifier() + " wants " + offer.getCostA() + " + " + offer.getCostB());
-		helper.assertTrue(offer.getResult().is(Items.EMERALD) && offer.getResult().getCount() == 1, key.identifier() + " gives " + offer.getResult());
-		helper.assertValueEqual(offer.getMaxUses(), maxUses, key.identifier() + " uses");
+			trade.id() + " wants " + offer.getCostA() + " + " + offer.getCostB());
+		helper.assertTrue(offer.getResult().is(Items.EMERALD) && offer.getResult().getCount() == 1, trade.id() + " gives " + offer.getResult());
+		helper.assertValueEqual(offer.getMaxUses(), maxUses, trade.id() + " uses");
 	}
 
-	private static void assertInSet(GameTestHelper helper, Registry<TradeSet> sets, ResourceKey<TradeSet> set, ResourceKey<VillagerTrade> trade) {
-		TradeSet tradeSet = sets.getValue(set);
-		helper.assertTrue(tradeSet != null && tradeSet.trades().stream().anyMatch(h -> h.is(trade)), trade.identifier() + " is not in " + set.identifier());
+	private static void assertInSet(GameTestHelper helper, VillagerTrades.ItemListing[] set, String setName, VillageData.Trade trade) {
+		helper.assertTrue(set != null && Arrays.asList(set).contains(trade), trade.id() + " is not in " + setName);
 	}
 
-	private static void assertOffer(GameTestHelper helper, LootContext context, ResourceKey<VillagerTrade> key, Item gives, int count, int maxUses) {
-		VillagerTrade trade = helper.getLevel().registryAccess().lookupOrThrow(Registries.VILLAGER_TRADE).getValue(key);
-		helper.assertTrue(trade != null, "trade " + key.identifier());
-		MerchantOffer offer = trade.getOffer(context);
-		helper.assertTrue(offer != null, "an offer from " + key.identifier());
-		helper.assertTrue(offer.getResult().is(gives) && offer.getResult().getCount() == count, key.identifier() + " gives " + offer.getResult());
+	private static void assertOffer(GameTestHelper helper, Villager villager, VillageData.Trade trade, Item gives, int count, int maxUses) {
+		MerchantOffer offer = trade.getOffer(villager, villager.getRandom());
+		helper.assertTrue(offer != null, "an offer from " + trade.id());
+		helper.assertTrue(offer.getResult().is(gives) && offer.getResult().getCount() == count, trade.id() + " gives " + offer.getResult());
 		helper.assertTrue(offer.getCostA().is(Items.EMERALD) && offer.getCostA().getCount() == 1 && offer.getCostB().isEmpty(),
-			key.identifier() + " costs " + offer.getCostA() + " + " + offer.getCostB());
-		helper.assertValueEqual(offer.getMaxUses(), maxUses, key.identifier() + " uses");
+			trade.id() + " costs " + offer.getCostA() + " + " + offer.getCostB());
+		helper.assertValueEqual(offer.getMaxUses(), maxUses, trade.id() + " uses");
 	}
 
 	// ------------------------------------------------------------------ 3. chest loot
@@ -418,15 +406,20 @@ public final class WorldGameTests
 
 	// ------------------------------------------------------------------ 4. the taverns
 
+	/** The template a pool element places, by name (26.x: {@code SinglePoolElement#getTemplateLocation}). */
+	private static ResourceLocation templateOf(SinglePoolElement element) {
+		return ((jexxme.vineandbarrel.mixin.SinglePoolElementAccessor) element).vineandbarrel$template().left().orElseThrow();
+	}
+
 	private static SinglePoolElement tavernElement(GameTestHelper helper, VillageStructures.TavernLayout layout) {
-		StructureTemplatePool pool = helper.getLevel().registryAccess().lookupOrThrow(Registries.TEMPLATE_POOL).getValue(layout.type().housesPool());
+		StructureTemplatePool pool = helper.getLevel().registryAccess().registryOrThrow(Registries.TEMPLATE_POOL).get(layout.type().housesPool());
 		helper.assertTrue(pool != null, "pool " + layout.type().housesPool());
 		for (var entry : pool.rawTemplates) {
 			if (VillageStructures.isTemplate(entry.getFirst(), layout.id())) {
 				return (SinglePoolElement) entry.getFirst();
 			}
 		}
-		throw helper.assertionException(layout.name() + " is not in " + layout.type().housesPool());
+		throw VBGameTests.assertionException(helper, layout.name() + " is not in " + layout.type().housesPool());
 	}
 
 	/** Applying again (a second server start in the same JVM) changes no pool and no farm processor list, a zombie village's included. */
@@ -434,17 +427,17 @@ public final class WorldGameTests
 		var access = helper.getLevel().registryAccess();
 		Map<VillageType, List<Object>> before = new HashMap<>();
 		for (VillageType type : VillageType.values()) {
-			before.put(type, List.of(List.copyOf(access.lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool()).rawTemplates),
-				access.lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool()).templates.size(),
-				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.farmProcessors()).list()),
-				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.zombieProcessors()).list())));
+			before.put(type, List.of(List.copyOf(access.registryOrThrow(Registries.TEMPLATE_POOL).get(type.housesPool()).rawTemplates),
+				access.registryOrThrow(Registries.TEMPLATE_POOL).get(type.housesPool()).templates.size(),
+				List.copyOf(access.registryOrThrow(Registries.PROCESSOR_LIST).get(type.farmProcessors()).list()),
+				List.copyOf(access.registryOrThrow(Registries.PROCESSOR_LIST).get(type.zombieProcessors()).list())));
 		}
 		VillageStructures.apply(access);
 		for (VillageType type : VillageType.values()) {
-			List<Object> after = List.of(List.copyOf(access.lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool()).rawTemplates),
-				access.lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool()).templates.size(),
-				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.farmProcessors()).list()),
-				List.copyOf(access.lookupOrThrow(Registries.PROCESSOR_LIST).getValue(type.zombieProcessors()).list()));
+			List<Object> after = List.of(List.copyOf(access.registryOrThrow(Registries.TEMPLATE_POOL).get(type.housesPool()).rawTemplates),
+				access.registryOrThrow(Registries.TEMPLATE_POOL).get(type.housesPool()).templates.size(),
+				List.copyOf(access.registryOrThrow(Registries.PROCESSOR_LIST).get(type.farmProcessors()).list()),
+				List.copyOf(access.registryOrThrow(Registries.PROCESSOR_LIST).get(type.zombieProcessors()).list()));
 			helper.assertValueEqual(after, before.get(type), type.id() + " pool and farm processors after applying again");
 		}
 		helper.succeed();
@@ -463,7 +456,7 @@ public final class WorldGameTests
 		}
 		for (VillageStructures.TavernLayout layout : VillageStructures.TAVERNS) {
 			VillageType type = layout.type();
-			StructureTemplatePool pool = level.registryAccess().lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool());
+			StructureTemplatePool pool = level.registryAccess().registryOrThrow(Registries.TEMPLATE_POOL).get(type.housesPool());
 			helper.assertTrue(pool != null, "pool " + type.housesPool());
 			long entries = pool.rawTemplates.stream().filter(e -> VillageStructures.isTemplate(e.getFirst(), layout.id())).count();
 			helper.assertValueEqual((int) entries, 1, layout.name() + " entries in " + type.housesPool());
@@ -476,13 +469,13 @@ public final class WorldGameTests
 			String encoded = net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement.CODEC.encodeStart(
 				net.minecraft.resources.RegistryOps.create(com.mojang.serialization.JsonOps.INSTANCE, level.registryAccess()), element).getOrThrow().toString();
 			helper.assertTrue(encoded.contains(VineAndBarrel.id("tavern_dressing").toString()), layout.name() + " is dressed: " + encoded);
-			StructureTemplate template = level.getStructureTemplateManager().get(layout.id()).orElse(null);
+			StructureTemplate template = level.getStructureManager().get(layout.id()).orElse(null);
 			helper.assertTrue(template != null, layout.name() + " template loads");
 			helper.assertTrue(template.getSize().getX() <= 15 && template.getSize().getZ() <= 15, layout.name() + " fits a village plot: " + template.getSize());
 			helper.assertValueEqual(entranceOf(template).getY(), TAVERN_FLOOR + 1, layout.name() + " street joint one above the floor");
 			// the cellar: its own template, which the dressing lays under the floor
 			helper.assertTrue(encoded.contains(layout.cellarId().toString()), layout.name() + " lays its cellar: " + encoded);
-			StructureTemplate cellar = level.getStructureTemplateManager().get(layout.cellarId()).orElse(null);
+			StructureTemplate cellar = level.getStructureManager().get(layout.cellarId()).orElse(null);
 			helper.assertTrue(cellar != null && cellar.getSize().getY() == VillageStructures.CELLAR_HEIGHT, layout.name() + " cellar template loads, " + VillageStructures.CELLAR_HEIGHT + " high");
 			helper.assertTrue(cellar.getSize().getX() == template.getSize().getX() && cellar.getSize().getZ() == template.getSize().getZ(),
 				layout.name() + " cellar " + cellar.getSize() + " under the whole house " + template.getSize());
@@ -502,7 +495,7 @@ public final class WorldGameTests
 		StringBuilder report = new StringBuilder();
 		for (VillageType type : VillageType.values()) {
 			int with = 0;
-			Map<Identifier, Integer> byLayout = new HashMap<>();
+			Map<ResourceLocation, Integer> byLayout = new HashMap<>();
 			for (int v = 0; v < villages; v++) {
 				var stub = layOutVillage(helper, type, new BlockPos(4096 + v * 304, 1, 4096), 7919L * v + type.ordinal());
 				boolean any = false;
@@ -510,7 +503,7 @@ public final class WorldGameTests
 					for (var piece : stub.get().getPiecesBuilder().build().pieces()) {
 						if (piece instanceof PoolElementStructurePiece poolPiece && VillageStructures.isTavern(poolPiece.getElement(), type)) {
 							any = true;
-							byLayout.merge(((SinglePoolElement) poolPiece.getElement()).getTemplateLocation(), 1, Integer::sum);
+							byLayout.merge(templateOf((SinglePoolElement) poolPiece.getElement()), 1, Integer::sum);
 						}
 					}
 				}
@@ -519,7 +512,7 @@ public final class WorldGameTests
 			double share = with / (double) villages;
 			report.append(' ').append(type.id()).append(' ').append(Math.round(share * 100)).append("% ").append(byLayout.values());
 			helper.assertTrue(share >= 0.25 && share <= 0.65, type.id() + " villages with a tavern: " + Math.round(share * 100) + "% of " + villages);
-			for (Identifier id : type.taverns()) {
+			for (ResourceLocation id : type.taverns()) {
 				helper.assertTrue(byLayout.getOrDefault(id, 0) >= 3, id.getPath() + " laid out in only " + byLayout.getOrDefault(id, 0) + " of " + villages + " villages");
 			}
 		}
@@ -535,14 +528,14 @@ public final class WorldGameTests
 	private static Optional<Structure.GenerationStub> layOutVillage(GameTestHelper helper, VillageType type, BlockPos centre, long seed) {
 		ServerLevel level = helper.getLevel();
 		var pools = level.registryAccess().lookupOrThrow(Registries.TEMPLATE_POOL);
-		var centres = pools.get(ResourceKey.create(Registries.TEMPLATE_POOL, Identifier.withDefaultNamespace("village/" + type.id() + "/town_centers"))).orElseThrow();
+		var centres = pools.get(ResourceKey.create(Registries.TEMPLATE_POOL, ResourceLocation.withDefaultNamespace("village/" + type.id() + "/town_centers"))).orElseThrow();
 		var generator = deepFlatGenerator(level);
 		var randomState = level.getChunkSource().randomState();
 		var context = new Structure.GenerationContext(level.registryAccess(), generator, generator.getBiomeSource(),
-			randomState.createClimateSampler(SamplerContext.EMPTY_UNCACHED), randomState, level.getStructureTemplateManager(), seed,
-			ChunkPos.containing(centre), level, biome -> true);
+			randomState, level.getStructureManager(), seed,
+			new ChunkPos(centre), level, biome -> true);
 		return JigsawPlacement.addPieces(context, centres, Optional.empty(), 6, centre, true, Optional.empty(),
-			new JigsawStructure.MaxDistance(80), PoolAliasLookup.EMPTY, JigsawStructure.DEFAULT_DIMENSION_PADDING, JigsawStructure.DEFAULT_LIQUID_SETTINGS);
+			80, PoolAliasLookup.EMPTY, JigsawStructure.DEFAULT_DIMENSION_PADDING, JigsawStructure.DEFAULT_LIQUID_SETTINGS);
 	}
 
 	private static net.minecraft.world.level.chunk.ChunkGenerator deepFlat;
@@ -594,16 +587,16 @@ public final class WorldGameTests
 
 	private static BlockPos entranceOf(StructureTemplate template) {
 		return template.filterBlocks(BlockPos.ZERO, new StructurePlaceSettings(), Blocks.JIGSAW).stream()
-			.filter(info -> info.nbt() != null && "minecraft:building_entrance".equals(info.nbt().getStringOr("name", ""))).findFirst().orElseThrow().pos();
+			.filter(info -> info.nbt() != null && "minecraft:building_entrance".equals(info.nbt().getString("name"))).findFirst().orElseThrow().pos();
 	}
 
 	private static Placed placeTavern(GameTestHelper helper, VillageStructures.TavernLayout layout) {
 		ServerLevel level = helper.getLevel();
 		SinglePoolElement element = tavernElement(helper, layout);
-		StructureTemplate template = level.getStructureTemplateManager().get(layout.id()).orElseThrow();
+		StructureTemplate template = level.getStructureManager().get(layout.id()).orElseThrow();
 		BlockPos origin = helper.absolutePos(TAVERN_AT);
 		// the clip box reaches down to the cellar, as a chunk's does in a world
-		boolean placed = element.place(level.getStructureTemplateManager(), level, level.structureManager(), level.getChunkSource().getGenerator(),
+		boolean placed = element.place(level.getStructureManager(), level, level.structureManager(), level.getChunkSource().getGenerator(),
 			origin, origin, Rotation.NONE, BoundingBox.fromCorners(origin.offset(-2, -2 - VillageStructures.CELLAR_HEIGHT, -2), origin.offset(template.getSize()).offset(1, 1, 1)),
 			RandomSource.create(5L), LiquidSettings.APPLY_WATERLOGGING, false);
 		helper.assertTrue(placed, layout.name() + " places");
@@ -631,7 +624,7 @@ public final class WorldGameTests
 			helper.assertTrue(blocks(t.level(), pos.below()),
 				"a path under the way to the " + type + " door at " + pos.below().subtract(t.origin()));
 		}
-		throw helper.assertionException("no door in line with the " + type + " tavern's street joint");
+		throw VBGameTests.assertionException(helper, "no door in line with the " + type + " tavern's street joint");
 	}
 
 	/**
@@ -659,7 +652,7 @@ public final class WorldGameTests
 		// the hanging sign, in the reader's language (audit 2026-11-08), "Tavern" where the key is unknown
 		List<BlockPos> signs = t.find(s -> s.getBlock() instanceof CeilingHangingSignBlock || s.getBlock() instanceof WallHangingSignBlock);
 		helper.assertTrue(signs.stream().anyMatch(pos -> level.getBlockEntity(pos) instanceof SignBlockEntity sign
-			&& sign.getText(SignTextSlot.FRONT).getMessages(false).stream().anyMatch(c -> c.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents tr
+			&& java.util.Arrays.stream(sign.getFrontText().getMessages(false)).anyMatch(c -> c.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents tr
 				&& tr.getKey().equals("sign.vineandbarrel.tavern") && "Tavern".equals(tr.getFallback()))), "a " + name + " hanging sign saying Tavern in every language");
 		// hops climb the trellis (no Farmer's Delight needed), their bushes drawn as the base of the vine
 		for (BlockPos pos : t.find(s -> s.getBlock() instanceof jexxme.vineandbarrel.block.ClimbingCropBlock)) {
@@ -738,14 +731,14 @@ public final class WorldGameTests
 				}
 			}
 			for (BlockPos barrel : stock) {
-				helper.assertFalse(helper.getBlockEntity(barrel, AgingBarrelBlockEntity.class).isHomeBrewed(), "tavern stock is not home-brewed at " + barrel);
+				helper.assertFalse(VBGameTests.blockEntity(helper, barrel, AgingBarrelBlockEntity.class).isHomeBrewed(), "tavern stock is not home-brewed at " + barrel);
 			}
 			// they keep aging from where the template left them: the saved age is a start, not a frozen value (every cask of
 			// stock, before any is tapped dry)
 			Map<BlockPos, Long> ages = new HashMap<>();
 			Map<BlockPos, Long> toNext = new HashMap<>();
 			for (BlockPos barrel : stock) {
-				AgingBarrelBlockEntity be = helper.getBlockEntity(barrel, AgingBarrelBlockEntity.class);
+				AgingBarrelBlockEntity be = VBGameTests.blockEntity(helper, barrel, AgingBarrelBlockEntity.class);
 				ages.put(barrel, be.age());
 				toNext.put(barrel, be.ticksToNextStage());
 			}
@@ -753,7 +746,7 @@ public final class WorldGameTests
 			helper.runAfterDelay(20, () -> {
 				long waited = level.getGameTime() - start;
 				for (BlockPos barrel : stock) {
-					AgingBarrelBlockEntity be = helper.getBlockEntity(barrel, AgingBarrelBlockEntity.class);
+					AgingBarrelBlockEntity be = VBGameTests.blockEntity(helper, barrel, AgingBarrelBlockEntity.class);
 					helper.assertTrue(be.age() >= ages.get(barrel) + waited, "the barrel at " + barrel + " aged " + (be.age() - ages.get(barrel))
 						+ " ticks in " + waited);
 					if (be.stage() == BarrelStage.YOUNG) {
@@ -778,12 +771,12 @@ public final class WorldGameTests
 	private static void tavernClearsTerrain(GameTestHelper helper, VillageStructures.TavernLayout layout) {
 		ServerLevel level = helper.getLevel();
 		BlockPos origin = helper.absolutePos(TAVERN_AT);
-		StructureTemplate template = level.getStructureTemplateManager().get(layout.id()).orElseThrow();
+		StructureTemplate template = level.getStructureManager().get(layout.id()).orElseThrow();
 		for (BlockPos pos : BlockPos.betweenClosed(origin.below(VillageStructures.CELLAR_HEIGHT), origin.offset(template.getSize()).offset(-1, -1, -1))) {
 			level.setBlock(pos, Blocks.STONE.defaultBlockState(), Block.UPDATE_CLIENTS);
 		}
 		Placed t = placeTavern(helper, layout);
-		StructureTemplate cellar = level.getStructureTemplateManager().get(layout.cellarId()).orElseThrow();
+		StructureTemplate cellar = level.getStructureManager().get(layout.cellarId()).orElseThrow();
 		for (StructureTemplate.StructureBlockInfo info : cellar.filterBlocks(BlockPos.ZERO, new StructurePlaceSettings(), Blocks.AIR)) {
 			helper.assertTrue(level.getBlockState(origin.below(VillageStructures.CELLAR_HEIGHT).offset(info.pos())).isAir(),
 				"stone left at " + info.pos() + " in the cellar of " + layout.name());
@@ -872,7 +865,7 @@ public final class WorldGameTests
 		}
 
 		// the cellar: no bare ground beside its room
-		StructureTemplate cellar = level.getStructureTemplateManager().get(layout.cellarId()).orElseThrow();
+		StructureTemplate cellar = level.getStructureManager().get(layout.cellarId()).orElseThrow();
 		BlockPos cellarAt = t.origin().below(VillageStructures.CELLAR_HEIGHT);
 		for (StructureTemplate.StructureBlockInfo info : cellar.filterBlocks(BlockPos.ZERO, new StructurePlaceSettings(), Blocks.AIR)) {
 			for (Direction d : Direction.values()) {
@@ -942,7 +935,7 @@ public final class WorldGameTests
 			.map(pos -> pos.relative(level.getBlockState(pos).getValue(AgingBarrelBlock.FACING)))
 			.filter(front -> level.getBlockState(front).isAir() && level.getBlockState(front.above()).isAir())
 			.findFirst().orElseThrow();
-		Villager villager = helper.spawn(EntityTypes.VILLAGER, relativePos(helper, t.street()));
+		Villager villager = helper.spawn(EntityType.VILLAGER, relativePos(helper, t.street()));
 		// a mob plans paths only while it stands on the ground; it has not fallen onto it yet on its first tick
 		villager.setOnGround(true);
 		for (BlockPos target : List.of(bar, cellar)) {
@@ -965,8 +958,7 @@ public final class WorldGameTests
 	private static void tavernTakesAVillagePlot(GameTestHelper helper, VillageStructures.TavernLayout layout) {
 		ServerLevel level = helper.getLevel();
 		VillageType type = layout.type();
-		var pools = level.registryAccess().lookupOrThrow(Registries.TEMPLATE_POOL);
-		StructureTemplatePool houses = pools.getValue(type.housesPool());
+		StructureTemplatePool houses = level.registryAccess().registryOrThrow(Registries.TEMPLATE_POOL).get(type.housesPool());
 		SinglePoolElement tavern = tavernElement(helper, layout);
 		int favour = 30;
 		for (int i = 0; i < favour; i++) {
@@ -1047,14 +1039,14 @@ public final class WorldGameTests
 		BoundingBox piece = BoundingBox.fromCorners(t.origin(), t.origin().offset(t.template().getSize()).offset(-1, -1, -1));
 		BlockPos cask = t.find(s -> s.is(BarrelRegistry.AGING_BARREL.get())).stream()
 			.filter(pos -> pos.getY() < t.origin().getY() && ((AgingBarrelBlockEntity) level.getBlockEntity(pos)).servings() > 0)
-			.findFirst().orElseThrow(() -> helper.assertionException("no full cask in the cellar"));
+			.findFirst().orElseThrow(() -> VBGameTests.assertionException(helper, "no full cask in the cellar"));
 		helper.assertFalse(piece.isInside(cask), "the cellar cask lies under the piece's box");
 		BlackoutGameTests.inVillage(helper, piece, () -> {
 			helper.assertTrue(VillageStructures.villageAt(level, cask).isValid(), "the cellar cask is in the village");
 			helper.assertTrue(jexxme.vineandbarrel.tipsy.BlackoutSpots.inTavern(level, cask), "the cellar cask is in the tavern");
 			helper.assertTrue(jexxme.vineandbarrel.tipsy.BlackoutSpots.tavernBarrels(level, cask.above(2), 16).contains(cask), "the blackout counts the cellar cask");
 			@SuppressWarnings("removal")
-			net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+			net.minecraft.server.level.ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 			try {
 				AgingBarrelBlockEntity barrel = (AgingBarrelBlockEntity) level.getBlockEntity(cask);
 				player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(AgingBarrelBlockEntity.vesselOf(barrel.drink()), 1));
@@ -1076,12 +1068,12 @@ public final class WorldGameTests
 	private static void legacyTavernsResolveAndCount(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		for (VillageType type : VillageType.values()) {
-			Identifier legacy = type.legacyTavern();
+			ResourceLocation legacy = type.legacyTavern();
 			helper.assertFalse(type.taverns().contains(legacy), legacy + " is not one of the layouts");
-			StructureTemplate template = level.getStructureTemplateManager().get(legacy).orElse(null);
+			StructureTemplate template = level.getStructureManager().get(legacy).orElse(null);
 			helper.assertTrue(template != null, legacy + " still loads");
 			helper.assertTrue(template.getSize().equals(new net.minecraft.core.Vec3i(11, 11, 11)), legacy + " is the 0.9.0 tavern: " + template.getSize());
-			StructureTemplatePool pool = level.registryAccess().lookupOrThrow(Registries.TEMPLATE_POOL).getValue(type.housesPool());
+			StructureTemplatePool pool = level.registryAccess().registryOrThrow(Registries.TEMPLATE_POOL).get(type.housesPool());
 			helper.assertFalse(pool.rawTemplates.stream().anyMatch(e -> VillageStructures.isTemplate(e.getFirst(), legacy)), legacy + " is not in " + type.housesPool());
 			helper.assertFalse(pool.templates.stream().anyMatch(e -> VillageStructures.isTemplate(e, legacy)), legacy + " is never drawn");
 			SinglePoolElement element = legacyTavernElement(level, type);
@@ -1090,20 +1082,20 @@ public final class WorldGameTests
 		}
 		// A 0.9.0 plains tavern, placed the way its saved piece places it, in a village
 		SinglePoolElement element = legacyTavernElement(level, VillageType.PLAINS);
-		StructureTemplate template = level.getStructureTemplateManager().get(VillageType.PLAINS.legacyTavern()).orElseThrow();
+		StructureTemplate template = level.getStructureManager().get(VillageType.PLAINS.legacyTavern()).orElseThrow();
 		BlockPos origin = helper.absolutePos(TAVERN_AT);
-		boolean placed = element.place(level.getStructureTemplateManager(), level, level.structureManager(), level.getChunkSource().getGenerator(),
+		boolean placed = element.place(level.getStructureManager(), level, level.structureManager(), level.getChunkSource().getGenerator(),
 			origin, origin, Rotation.NONE, BoundingBox.fromCorners(origin.offset(-2, -2, -2), origin.offset(template.getSize()).offset(1, 1, 1)),
 			RandomSource.create(5L), LiquidSettings.APPLY_WATERLOGGING, false);
 		helper.assertTrue(placed, "the 0.9.0 tavern places");
-		BoundingBox box = element.getBoundingBox(level.getStructureTemplateManager(), origin, Rotation.NONE);
+		BoundingBox box = element.getBoundingBox(level.getStructureManager(), origin, Rotation.NONE);
 		BlockPos cask = BlockPos.betweenClosedStream(box).filter(pos -> level.getBlockEntity(pos) instanceof AgingBarrelBlockEntity barrel && barrel.servings() > 0)
-			.map(BlockPos::immutable).findFirst().orElseThrow(() -> helper.assertionException("no full cask in the 0.9.0 tavern"));
+			.map(BlockPos::immutable).findFirst().orElseThrow(() -> VBGameTests.assertionException(helper, "no full cask in the 0.9.0 tavern"));
 		BlackoutGameTests.inVillage(helper, box, element, () -> {
 			helper.assertTrue(jexxme.vineandbarrel.tipsy.BlackoutSpots.inTavern(level, cask), "the 0.9.0 cask is in the tavern");
 			helper.assertTrue(jexxme.vineandbarrel.tipsy.BlackoutSpots.tavernBarrels(level, cask.above(2), 16).contains(cask), "the blackout counts the 0.9.0 cask");
 			@SuppressWarnings("removal")
-			net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+			net.minecraft.server.level.ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 			try {
 				AgingBarrelBlockEntity barrel = (AgingBarrelBlockEntity) level.getBlockEntity(cask);
 				helper.assertFalse(barrel.isHomeBrewed(), "the 0.9.0 cask holds tavern stock");
@@ -1121,7 +1113,7 @@ public final class WorldGameTests
 	/** A 0.9.0 tavern's pool element, as a 0.9.0 village saved it: its template and the plain processor list, no dressing. */
 	private static SinglePoolElement legacyTavernElement(ServerLevel level, VillageType type) {
 		var processors = level.registryAccess().lookupOrThrow(Registries.PROCESSOR_LIST)
-			.getOrThrow(ResourceKey.create(Registries.PROCESSOR_LIST, Identifier.withDefaultNamespace("empty")));
+			.getOrThrow(ResourceKey.create(Registries.PROCESSOR_LIST, ResourceLocation.withDefaultNamespace("empty")));
 		return (SinglePoolElement) SinglePoolElement.single(type.legacyTavern().toString(), processors).apply(StructureTemplatePool.Projection.RIGID);
 	}
 
@@ -1132,14 +1124,14 @@ public final class WorldGameTests
 	private static void tavernWithoutCellar(GameTestHelper helper, VillageStructures.TavernLayout layout) {
 		ServerLevel level = helper.getLevel();
 		SinglePoolElement element = tavernElement(helper, layout);
-		StructureTemplate template = level.getStructureTemplateManager().get(layout.id()).orElseThrow();
+		StructureTemplate template = level.getStructureManager().get(layout.id()).orElseThrow();
 		BlockPos test = helper.absolutePos(TAVERN_AT);
-		BlockPos origin = new BlockPos(test.getX(), level.getMinY() + 2, test.getZ());
-		boolean placed = element.place(level.getStructureTemplateManager(), level, level.structureManager(), level.getChunkSource().getGenerator(),
-			origin, origin, Rotation.NONE, BoundingBox.fromCorners(new BlockPos(origin.getX() - 2, level.getMinY(), origin.getZ() - 2), origin.offset(template.getSize()).offset(1, 1, 1)),
+		BlockPos origin = new BlockPos(test.getX(), level.getMinBuildHeight() + 2, test.getZ());
+		boolean placed = element.place(level.getStructureManager(), level, level.structureManager(), level.getChunkSource().getGenerator(),
+			origin, origin, Rotation.NONE, BoundingBox.fromCorners(new BlockPos(origin.getX() - 2, level.getMinBuildHeight(), origin.getZ() - 2), origin.offset(template.getSize()).offset(1, 1, 1)),
 			RandomSource.create(5L), LiquidSettings.APPLY_WATERLOGGING, false);
 		helper.assertTrue(placed, layout.name() + " places at the bottom of the world");
-		for (BlockPos pos : BlockPos.betweenClosed(origin.getX(), level.getMinY(), origin.getZ(), origin.getX() + template.getSize().getX() - 1, origin.getY() - 1,
+		for (BlockPos pos : BlockPos.betweenClosed(origin.getX(), level.getMinBuildHeight(), origin.getZ(), origin.getX() + template.getSize().getX() - 1, origin.getY() - 1,
 			origin.getZ() + template.getSize().getZ() - 1)) {
 			helper.assertFalse(level.getBlockState(pos).is(BarrelRegistry.AGING_BARREL.get()), "a cask under " + layout.name() + " without room for its cellar");
 		}
@@ -1168,7 +1160,7 @@ public final class WorldGameTests
 
 	/** Taps one serving into the vessel the barrel's drink needs, as a player would. Returns whether it was aged. */
 	private static boolean tapsByHand(GameTestHelper helper, BlockPos relative) {
-		AgingBarrelBlockEntity barrel = helper.getBlockEntity(relative, AgingBarrelBlockEntity.class);
+		AgingBarrelBlockEntity barrel = VBGameTests.blockEntity(helper, relative, AgingBarrelBlockEntity.class);
 		int servings = barrel.servings();
 		BarrelStage stage = barrel.stage();
 		ItemStack drink = barrel.drink();

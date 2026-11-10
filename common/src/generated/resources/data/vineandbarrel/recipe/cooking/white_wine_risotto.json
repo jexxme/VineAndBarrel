@@ -16,16 +16,22 @@
     }
   ],
   "ingredients": [
-    "#c:crops/rice",
-    [
-      "vineandbarrel:white_wine",
-      "vineandbarrel:aged_white_wine"
-    ],
-    "#c:crops/onion",
-    "farmersdelight:bone_broth"
+    {
+      "tag": "c:crops/rice"
+    },
+    {
+      "tag": "vineandbarrel:cooking/white_wine"
+    },
+    {
+      "tag": "c:crops/onion"
+    },
+    {
+      "item": "farmersdelight:bone_broth"
+    }
   ],
   "recipe_book_tab": "meals",
   "result": {
+    "count": 1,
     "id": "vineandbarrel:white_wine_risotto"
   }
 }

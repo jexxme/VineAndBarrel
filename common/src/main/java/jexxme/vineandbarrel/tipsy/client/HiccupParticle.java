@@ -3,18 +3,21 @@ package jexxme.vineandbarrel.tipsy.client;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
-import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.RandomSource;
 
 /** A little hiccup bubble: pops out in front of the face, drifts up with a slight wobble and fades. */
-public class HiccupParticle extends SingleQuadParticle
+public class HiccupParticle extends TextureSheetParticle
 {
 	private static final int FADE_TICKS = 8;
 
 	protected HiccupParticle(ClientLevel level, double x, double y, double z, SpriteSet sprites, RandomSource random) {
-		super(level, x, y, z, sprites.first());
+		super(level, x, y, z);
+		// The first sprite (1.21.1 has no SpriteSet#first)
+		this.setSprite(sprites.get(0, 1));
 		this.lifetime = 14 + random.nextInt(6);
 		this.gravity = 0.0F;
 		this.hasPhysics = false;
@@ -26,8 +29,8 @@ public class HiccupParticle extends SingleQuadParticle
 	}
 
 	@Override
-	protected Layer getLayer() {
-		return Layer.TRANSLUCENT;
+	public ParticleRenderType getRenderType() {
+		return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
 	}
 
 	@Override
@@ -57,8 +60,8 @@ public class HiccupParticle extends SingleQuadParticle
 		}
 
 		@Override
-		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, RandomSource random) {
-			return new HiccupParticle(level, x, y, z, this.sprites, random);
+		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+			return new HiccupParticle(level, x, y, z, this.sprites, level.random);
 		}
 	}
 }

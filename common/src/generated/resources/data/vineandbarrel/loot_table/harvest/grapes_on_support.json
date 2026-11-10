@@ -1,42 +1,52 @@
 {
-  "type": "minecraft:block_interact",
+  "type": "minecraft:block",
   "pools": [
     {
-      "condition": {
-        "type": "minecraft:match_block",
-        "blocks": "vineandbarrel:grape_vine_on_support",
-        "state": {
-          "age": "3"
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "block": "vineandbarrel:grape_vine_on_support",
+          "condition": "minecraft:block_state_property",
+          "properties": {
+            "age": "3"
+          }
         }
-      },
+      ],
       "entries": [
         {
           "type": "minecraft:item",
-          "modifier": {
-            "type": "minecraft:set_count",
-            "count": {
-              "type": "minecraft:uniform",
-              "max": 1,
-              "min": 0
+          "functions": [
+            {
+              "add": false,
+              "count": {
+                "type": "minecraft:uniform",
+                "max": 1.0,
+                "min": 0.0
+              },
+              "function": "minecraft:set_count"
             }
-          },
+          ],
           "name": "vineandbarrel:red_grapes"
         }
       ],
-      "rolls": 1
+      "rolls": 1.0
     },
     {
+      "bonus_rolls": 0.0,
       "entries": [
         {
           "type": "minecraft:item",
-          "modifier": {
-            "type": "minecraft:set_count",
-            "count": 1
-          },
+          "functions": [
+            {
+              "add": false,
+              "count": 1.0,
+              "function": "minecraft:set_count"
+            }
+          ],
           "name": "vineandbarrel:red_grapes"
         }
       ],
-      "rolls": 1
+      "rolls": 1.0
     }
   ],
   "random_sequence": "vineandbarrel:harvest/grapes_on_support"

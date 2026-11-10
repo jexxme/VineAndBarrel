@@ -1,108 +1,108 @@
 package jexxme.vineandbarrel.fabric.client;
 
-import com.mojang.math.OctahedralGroup;
 import jexxme.vineandbarrel.block.TrellisFrame;
-import net.fabricmc.fabric.api.client.model.loading.v1.ExtraModelKey;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
-import net.fabricmc.fabric.api.client.model.loading.v1.SimpleUnbakedExtraModel;
-import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadEmitter;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
-import net.minecraft.client.renderer.block.dispatch.BlockModelRotation;
-import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
-import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
-import net.minecraft.client.resources.model.sprite.Material;
+import net.fabricmc.fabric.api.renderer.v1.model.ForwardingBakedModel;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
+import net.minecraft.client.renderer.block.BlockModelShaper;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.BlockModelRotation;
+import net.minecraft.client.resources.model.ModelBaker;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * A trellis, a vine on one, or a bush under one, with the row's frame added ({@link TrellisFrame}): end posts, the top
  * rail and its caps, worked out from the neighbours each time the block is drawn. The Fabric twin of NeoForge's
  * {@code TrellisFrameModel}.
  */
-final class TrellisFrameModel implements BlockStateModel
+final class TrellisFrameModel extends ForwardingBakedModel
 {
-	private static final Map<TrellisFrame.Part, ExtraModelKey<BlockStateModel>> ALONG_X = new EnumMap<>(TrellisFrame.Part.class);
-	private static final Map<TrellisFrame.Part, ExtraModelKey<BlockStateModel>> ALONG_Z = new EnumMap<>(TrellisFrame.Part.class);
+	private final Map<TrellisFrame.Part, BakedModel> alongX;
+	private final Map<TrellisFrame.Part, BakedModel> alongZ;
 
-	static {
-		for (TrellisFrame.Part part : TrellisFrame.Part.values()) {
-			ALONG_X.put(part, ExtraModelKey.create(() -> part.model() + " (east-west)"));
-			ALONG_Z.put(part, ExtraModelKey.create(() -> part.model() + " (north-south)"));
-		}
-	}
-
-	private final BlockStateModel model;
-
-	private TrellisFrameModel(BlockStateModel model) {
-		this.model = model;
+	private TrellisFrameModel(BakedModel model, Map<TrellisFrame.Part, BakedModel> alongX, Map<TrellisFrame.Part, BakedModel> alongZ) {
+		this.wrapped = model;
+		this.alongX = alongX;
+		this.alongZ = alongZ;
 	}
 
 	/** The frame pieces (baked for an east-west row and turned for a north-south one), and the wrapper, once at client start. */
 	static void register() {
 		ModelLoadingPlugin.register(context -> {
-			for (TrellisFrame.Part part : TrellisFrame.Part.values()) {
-				context.addModel(ALONG_X.get(part), SimpleUnbakedExtraModel.blockStateModel(part.model()));
-				context.addModel(ALONG_Z.get(part), SimpleUnbakedExtraModel.blockStateModel(part.model(), BlockModelRotation.get(OctahedralGroup.BLOCK_ROT_Y_90)));
-			}
-			context.modifyBlockModelAfterBake().register((model, bake) -> TrellisFrame.draws(bake.state()) ? new TrellisFrameModel(model) : model);
+			// Loaded with the other models; each wrapped block model bakes them (once per reload: the baker keeps them)
+			context.addModels(Arrays.stream(TrellisFrame.Part.values()).map(TrellisFrame.Part::model).toList());
+			Map<ModelResourceLocation, BlockState> states = stateModels(block -> TrellisFrame.draws(block.defaultBlockState()));
+			context.modifyModelAfterBake().register((model, bake) -> {
+				if (model == null || bake.topLevelId() == null || !states.containsKey(bake.topLevelId())) {
+					return model;
+				}
+				return new TrellisFrameModel(model, bakeParts(bake.baker(), BlockModelRotation.X0_Y0), bakeParts(bake.baker(), BlockModelRotation.X0_Y90));
+			});
 		});
 	}
 
+	private static Map<TrellisFrame.Part, BakedModel> bakeParts(ModelBaker baker, BlockModelRotation rotation) {
+		Map<TrellisFrame.Part, BakedModel> parts = new EnumMap<>(TrellisFrame.Part.class);
+		for (TrellisFrame.Part part : TrellisFrame.Part.values()) {
+			BakedModel baked = baker.bake(part.model(), rotation);
+			if (baked != null) {
+				parts.put(part, baked);
+			}
+		}
+		return parts;
+	}
+
+	/**
+	 * The block state behind each block state model's id, for the blocks {@code wrapped} picks (on this Minecraft a baked
+	 * model is told its id, not its state; a wrapper is chosen by the block, as NeoForge's twin does it).
+	 */
+	static Map<ModelResourceLocation, BlockState> stateModels(Predicate<Block> wrapped) {
+		Map<ModelResourceLocation, BlockState> states = new HashMap<>();
+		for (Block block : BuiltInRegistries.BLOCK) {
+			if (wrapped.test(block)) {
+				for (BlockState state : block.getStateDefinition().getPossibleStates()) {
+					states.put(BlockModelShaper.stateToModelLocation(state), state);
+				}
+			}
+		}
+		return states;
+	}
+
 	@Override
-	public void emitQuads(QuadEmitter emitter, BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random, Predicate<@Nullable Direction> cullTest) {
-		model.emitQuads(emitter, level, pos, state, random, cullTest);
+	public boolean isVanillaAdapter() {
+		return false;
+	}
+
+	@Override
+	public void emitBlockQuads(BlockAndTintGetter level, BlockState state, BlockPos pos, Supplier<RandomSource> random, RenderContext context) {
+		wrapped.emitBlockQuads(level, state, pos, random, context);
 		Direction.Axis axis = TrellisFrame.latticeAxis(state);
 		if (axis == null) {
 			return;
 		}
-		Map<TrellisFrame.Part, ExtraModelKey<BlockStateModel>> keys = axis == Direction.Axis.X ? ALONG_X : ALONG_Z;
+		Map<TrellisFrame.Part, BakedModel> models = axis == Direction.Axis.X ? alongX : alongZ;
 		for (TrellisFrame.Part part : TrellisFrame.parts(level, pos, state)) {
-			BlockStateModel frame = Minecraft.getInstance().getModelManager().getModel(keys.get(part));
+			@Nullable BakedModel frame = models.get(part);
 			if (frame != null) {
-				frame.emitQuads(emitter, level, pos, state, random, cullTest);
+				frame.emitBlockQuads(level, state, pos, random, context);
 			}
 		}
 	}
 
-	/** Drawn from the neighbours each time: no geometry to share between positions. */
-	@Override
-	public @Nullable Object createGeometryKey(BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random) {
-		return null;
-	}
-
-	@Override
-	public int materialFlags(BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random) {
-		return model.materialFlags(level, pos, state, random);
-	}
-
-	@Override
-	public Material.Baked particleMaterial(BlockAndTintGetter level, BlockPos pos, BlockState state) {
-		return model.particleMaterial(level, pos, state);
-	}
-
-	// Without a level (an item, a falling block): no frame
-
-	@Override
-	public void collectParts(RandomSource random, List<BlockStateModelPart> output) {
-		model.collectParts(random, output);
-	}
-
-	@Override
-	public Material.Baked particleMaterial() {
-		return model.particleMaterial();
-	}
-
-	@Override
-	public int materialFlags() {
-		return model.materialFlags();
-	}
+	// As an item: no frame (ForwardingBakedModel hands everything else to the model)
 }

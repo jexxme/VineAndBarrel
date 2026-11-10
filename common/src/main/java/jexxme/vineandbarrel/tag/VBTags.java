@@ -2,7 +2,7 @@ package jexxme.vineandbarrel.tag;
 
 import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.biome.Biome;
@@ -37,6 +37,14 @@ public final class VBTags
 	public static final TagKey<Block> MAKESHIFT_VINE_SUPPORTS = block(VineAndBarrel.MODID, "makeshift_vine_supports");
 	public static final TagKey<Item> WILD_CROPS_ITEM = item(VineAndBarrel.MODID, "wild_crops");
 	/** FD's straw (empty without FD), and the tools that cut it from ripe barley: FD's straw harvesters, its knives. */
+	/**
+	 * A drink young or aged, as one ingredient of a Farmer's Delight cooking pot recipe (on this Minecraft FD's pot
+	 * reads each ingredient as one item or one tag, never a list).
+	 */
+	public static final TagKey<Item> COOKING_BARLEY_ALE = item(VineAndBarrel.MODID, "cooking/barley_ale");
+	public static final TagKey<Item> COOKING_RED_WINE = item(VineAndBarrel.MODID, "cooking/red_wine");
+	public static final TagKey<Item> COOKING_HARD_CIDER = item(VineAndBarrel.MODID, "cooking/hard_cider");
+	public static final TagKey<Item> COOKING_WHITE_WINE = item(VineAndBarrel.MODID, "cooking/white_wine");
 	public static final TagKey<Item> STRAW = item(VineAndBarrel.MODID, "straw");
 	public static final TagKey<Item> STRAW_HARVESTERS = item(VineAndBarrel.MODID, "straw_harvesters");
 
@@ -69,7 +77,7 @@ public final class VBTags
 	public static final TagKey<Block> FD_TOMATO_SUPPORTS = block(FARMERS_DELIGHT, "tomato_supports");
 	public static final TagKey<Item> FD_FEASTS_ITEM = item(FARMERS_DELIGHT, "feasts");
 	/** FD's own rope block: put back when a vine on a rope is removed (FD's "rope permanence"). */
-	public static final Identifier FD_ROPE = Identifier.fromNamespaceAndPath(FARMERS_DELIGHT, "rope");
+	public static final ResourceLocation FD_ROPE = ResourceLocation.fromNamespaceAndPath(FARMERS_DELIGHT, "rope");
 
 	// ------------------------------------------------------------------ Serene Seasons (optional)
 	public static final String SERENE_SEASONS = "sereneseasons";
@@ -81,14 +89,14 @@ public final class VBTags
 	public static final TagKey<Item> SEASONS_AUTUMN_CROPS_ITEM = item(SERENE_SEASONS, "autumn_crops");
 
 	private static TagKey<Block> block(String namespace, String path) {
-		return TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(namespace, path));
+		return TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(namespace, path));
 	}
 
 	private static TagKey<Item> item(String namespace, String path) {
-		return TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(namespace, path));
+		return TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(namespace, path));
 	}
 
 	private static TagKey<Biome> biome(String namespace, String path) {
-		return TagKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath(namespace, path));
+		return TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath(namespace, path));
 	}
 }

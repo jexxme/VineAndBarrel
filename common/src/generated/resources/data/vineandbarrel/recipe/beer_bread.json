@@ -16,14 +16,28 @@
     }
   ],
   "ingredients": [
-    "#c:crops/wheat",
-    "#c:crops/wheat",
-    "#c:crops/wheat",
+    {
+      "tag": "c:crops/wheat"
+    },
+    {
+      "tag": "c:crops/wheat"
+    },
+    {
+      "tag": "c:crops/wheat"
+    },
     [
-      "vineandbarrel:barley_ale",
-      "vineandbarrel:aged_barley_ale",
-      "vineandbarrel:wheat_beer",
-      "vineandbarrel:aged_wheat_beer"
+      {
+        "item": "vineandbarrel:barley_ale"
+      },
+      {
+        "item": "vineandbarrel:aged_barley_ale"
+      },
+      {
+        "item": "vineandbarrel:wheat_beer"
+      },
+      {
+        "item": "vineandbarrel:aged_wheat_beer"
+      }
     ]
   ],
   "result": {

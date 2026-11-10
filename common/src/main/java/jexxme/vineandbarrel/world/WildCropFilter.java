@@ -10,10 +10,9 @@ import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
-import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
@@ -57,9 +56,16 @@ public record WildCropFilter(
 			Keys.codec(Registries.BIOME).optionalFieldOf("denied_biomes").forGetter(WildCropFilter::deniedBiomes),
 			Codec.FLOAT.optionalFieldOf("min_temperature").forGetter(WildCropFilter::minimumTemperature),
 			Codec.FLOAT.optionalFieldOf("max_temperature").forGetter(WildCropFilter::maximumTemperature),
-			ExtraCodecs.compactListCodec(ResourceKey.codec(Registries.PLACED_FEATURE)).fieldOf("features").forGetter(WildCropFilter::features),
+			compactListCodec(ResourceKey.codec(Registries.PLACED_FEATURE)).fieldOf("features").forGetter(WildCropFilter::features),
 			GenerationStep.Decoration.CODEC.fieldOf("step").forGetter(WildCropFilter::step)
 	).apply(builder, WildCropFilter::new));
+
+	/** One element or a list of them, written as the single element when there is just one (26.x: {@code ExtraCodecs.compactListCodec}). */
+	private static <E> Codec<List<E>> compactListCodec(Codec<E> element) {
+		return Codec.either(element.listOf(), element).xmap(
+				either -> either.map(list -> list, List::of),
+				list -> list.size() == 1 ? Either.right(list.get(0)) : Either.left(list));
+	}
 
 	/**
 	 * A registry list the way vanilla's holder-set codec writes one: a {@code #tag}, a single id, or a list of ids.
@@ -69,7 +75,7 @@ public record WildCropFilter(
 	{
 		public static <T> Codec<Keys<T>> codec(ResourceKey<? extends Registry<T>> registry) {
 			Codec<TagKey<T>> tag = TagKey.hashedCodec(registry);
-			Codec<List<ResourceKey<T>>> ids = ExtraCodecs.compactListCodec(ResourceKey.codec(registry));
+			Codec<List<ResourceKey<T>>> ids = compactListCodec(ResourceKey.codec(registry));
 			return Codec.either(tag, ids).xmap(
 					either -> either.map(t -> new Keys<>(Optional.of(t), List.of()), list -> new Keys<>(Optional.empty(), list)),
 					keys -> keys.tag().<Either<TagKey<T>, List<ResourceKey<T>>>>map(Either::left).orElseGet(() -> Either.right(keys.ids())));
@@ -86,7 +92,7 @@ public record WildCropFilter(
 	}
 
 	/** The file's id: {@code vineandbarrel:<name>} in {@code data/vineandbarrel/neoforge/biome_modifier}. */
-	public static Identifier file(String name) {
+	public static ResourceLocation file(String name) {
 		return VineAndBarrel.id(FOLDER + "/" + name + ".json");
 	}
 

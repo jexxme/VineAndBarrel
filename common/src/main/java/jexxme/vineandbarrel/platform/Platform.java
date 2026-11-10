@@ -6,7 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,7 +18,6 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.RecipeBookType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
@@ -58,7 +57,7 @@ public interface Platform
 	 */
 	<T> Holder<T> holder(ResourceKey<T> key);
 
-	<T> EntityAttachment<T> attachment(Identifier id, EntityAttachment.Spec<T> spec);
+	<T> EntityAttachment<T> attachment(ResourceLocation id, EntityAttachment.Spec<T> spec);
 
 	/** Adds GameTests when the GameTest registries load (dev only; see {@code VineAndBarrel}). */
 	void addGameTests(Consumer<GameTestRegistrar> registrar);
@@ -119,10 +118,22 @@ public interface Platform
 
 	/**
 	 * What this stack leaves behind in a recipe (a bucket, a glass bottle), asked of the stack, so items whose remainder
-	 * depends on their components (both loaders let items override it per stack) get theirs; null if nothing.
+	 * depends on their components (both loaders let items override it per stack) get theirs; null if nothing. A new stack
+	 * each time (this Minecraft has no ItemStackTemplate; the caller may keep or change it).
 	 */
 	@Nullable
-	ItemStackTemplate craftingRemainder(ItemStack stack);
+	ItemStack craftingRemainder(ItemStack stack);
+
+	// ------------------------------------------------------------------ older Minecraft (26.2 and below have no item components for these)
+
+	/** Whether this tool scrapes wax and oxidation off copper, as an axe does (26.3: the block_transformer component). */
+	boolean canScrape(ItemStack stack);
+
+	/** How long this stack burns, asked the way the loader's furnaces ask (26.3: the cooking_fuel component). */
+	int burnTime(ItemStack stack, ServerLevel level);
+
+	/** The composter's chance for this item, 0 if it can't be composted (26.3: the compostable component). */
+	float compostChance(net.minecraft.world.item.Item item);
 
 	// ------------------------------------------------------------------ item automation (GameTests)
 
@@ -132,4 +143,30 @@ public interface Platform
 
 	/** A new outermost loader transaction for {@link SlotAccess}. */
 	SlotAccess.Tx openTransaction();
+
+	// ---- blocks (1.21.1 port)
+
+	/**
+	 * Adds trades to the pool a villager of this profession draws from at this level (1 novice to 5 master), next to the
+	 * vanilla ones and other mods' (26.x: a {@code villager_trade} tag). Called once at startup, before any world loads.
+	 * NeoForge: {@code VillagerTradesEvent}; Fabric: {@code TradeOfferHelper.registerVillagerOffers}.
+	 */
+	void addVillagerTrades(net.minecraft.world.entity.npc.VillagerProfession profession, int level,
+			java.util.List<net.minecraft.world.entity.npc.VillagerTrades.ItemListing> trades);
+
+	/**
+	 * Adds trades to the wandering trader's ordinary pool (the one five offers are drawn from, not the rare one).
+	 * Called once at startup. NeoForge: {@code WandererTradesEvent#getGenericTrades}; Fabric:
+	 * {@code TradeOfferHelper.registerWanderingTraderOffers(1, ...)}.
+	 */
+	void addWanderingTraderTrades(java.util.List<net.minecraft.world.entity.npc.VillagerTrades.ItemListing> trades);
+
+	// ---- gametest (1.21.1 port)
+
+	/**
+	 * Makes a GameTest's mock connection take what a real client's takes. NeoForge refuses to send a mod's payload
+	 * (its own attachment sync, Jade's ping) over a connection that never negotiated channels:
+	 * {@code NetworkRegistry.configureMockConnection}. Fabric: nothing to do.
+	 */
+	void prepareMockConnection(net.minecraft.network.Connection connection);
 }

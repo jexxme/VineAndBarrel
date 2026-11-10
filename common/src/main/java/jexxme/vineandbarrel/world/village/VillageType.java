@@ -2,7 +2,7 @@ package jexxme.vineandbarrel.world.village;
 
 import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -29,25 +29,25 @@ public enum VillageType
 	}
 
 	/** {@code minecraft:village/<type>/houses}, where every house and FD's compost pile live. */
-	public Identifier housesPool() {
-		return Identifier.withDefaultNamespace("village/" + name + "/houses");
+	public ResourceLocation housesPool() {
+		return ResourceLocation.withDefaultNamespace("village/" + name + "/houses");
 	}
 
 	/** {@code minecraft:farm_<type>}, the processor list every farm of this village type is placed with. */
-	public Identifier farmProcessors() {
-		return Identifier.withDefaultNamespace("farm_" + name);
+	public ResourceLocation farmProcessors() {
+		return ResourceLocation.withDefaultNamespace("farm_" + name);
 	}
 
 	/**
 	 * {@code minecraft:zombie_<type>}, the processor list every piece of an abandoned (zombie) village of this type is placed
 	 * with, its farms included: vanilla gives it the same farm rules as {@link #farmProcessors()}.
 	 */
-	public Identifier zombieProcessors() {
-		return Identifier.withDefaultNamespace("zombie_" + name);
+	public ResourceLocation zombieProcessors() {
+		return ResourceLocation.withDefaultNamespace("zombie_" + name);
 	}
 
 	/** Both lists a farm of this village type can be placed with: a living village's and an abandoned one's. */
-	public java.util.List<Identifier> farmProcessorLists() {
+	public java.util.List<ResourceLocation> farmProcessorLists() {
 		return java.util.List.of(farmProcessors(), zombieProcessors());
 	}
 
@@ -67,7 +67,7 @@ public enum VillageType
 	}
 
 	/** The first tavern layout's template. */
-	public Identifier tavern() {
+	public ResourceLocation tavern() {
 		return taverns().getFirst();
 	}
 
@@ -76,12 +76,12 @@ public enum VillageType
 	 * template still ships, so a village laid out by 0.9.0 builds the rest of it in the chunks it hadn't generated yet, and
 	 * it still counts as a tavern.
 	 */
-	public Identifier legacyTavern() {
+	public ResourceLocation legacyTavern() {
 		return VineAndBarrel.id("village/" + name + "/houses/" + name + "_tavern");
 	}
 
 	/** Every tavern layout's template of this type (see {@link VillageStructures#TAVERNS}). */
-	public java.util.List<Identifier> taverns() {
+	public java.util.List<ResourceLocation> taverns() {
 		return VillageStructures.taverns(this).stream().map(VillageStructures.TavernLayout::id).toList();
 	}
 }

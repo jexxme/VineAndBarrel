@@ -2,8 +2,10 @@ package jexxme.vineandbarrel.advancement;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.advancements.triggers.Criterion;
-import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
+import net.minecraft.advancements.critereon.ContextAwarePredicate;
+import net.minecraft.advancements.critereon.EntityPredicate;
+import net.minecraft.advancements.Criterion;
+import net.minecraft.advancements.critereon.SimpleCriterionTrigger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,7 +27,7 @@ public class TappedBarrelTrigger extends SimpleCriterionTrigger<TappedBarrelTrig
 
 	public void trigger(ServerPlayer player, BlockPos barrel, boolean aged, boolean homeBrewed) {
 		// a tavern's cellar counts: it lies under the tavern piece's box
-		boolean inVillage = jexxme.vineandbarrel.world.village.VillageStructures.villageAt(player.level(), barrel).isValid();
+		boolean inVillage = jexxme.vineandbarrel.world.village.VillageStructures.villageAt(player.serverLevel(), barrel).isValid();
 		trigger(player, aged, inVillage, homeBrewed);
 	}
 
@@ -37,12 +39,12 @@ public class TappedBarrelTrigger extends SimpleCriterionTrigger<TappedBarrelTrig
 		return VBAdvancements.TAPPED_BARREL.get().createCriterion(new TriggerInstance(Optional.empty(), aged, inVillage, homeBrewed));
 	}
 
-	public record TriggerInstance(Optional<Holder<LootItemCondition>> player, Optional<Boolean> aged, Optional<Boolean> inVillage,
+	public record TriggerInstance(Optional<ContextAwarePredicate> player, Optional<Boolean> aged, Optional<Boolean> inVillage,
 								  Optional<Boolean> homeBrewed)
 		implements SimpleCriterionTrigger.SimpleInstance
 	{
 		public static final Codec<TriggerInstance> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-			LootItemCondition.CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player),
+			EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player),
 			Codec.BOOL.optionalFieldOf("aged").forGetter(TriggerInstance::aged),
 			Codec.BOOL.optionalFieldOf("in_village").forGetter(TriggerInstance::inVillage),
 			Codec.BOOL.optionalFieldOf("home_brewed").forGetter(TriggerInstance::homeBrewed)

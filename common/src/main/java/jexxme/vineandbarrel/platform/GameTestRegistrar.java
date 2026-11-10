@@ -1,24 +1,12 @@
 package jexxme.vineandbarrel.platform;
 
-import net.minecraft.core.Holder;
-import net.minecraft.gametest.framework.GameTestInstance;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
-
-import java.util.List;
+import net.minecraft.gametest.framework.TestFunction;
 
 /**
- * Where the GameTest classes add their tests: NeoForge's {@code RegisterGameTestsEvent}, or on Fabric the test
- * registries while the server loads them. Same methods as the NeoForge event.
+ * Where the GameTest classes add their tests. On this Minecraft a test is a {@link TestFunction} (its name, structure,
+ * time limit and code) that each loader adds to vanilla's {@code GameTestRegistry} (26.x: the test registries).
  */
 public interface GameTestRegistrar
 {
-	/** A test environment that sets nothing up (NeoForge's {@code registerEnvironment(name)}). */
-	default Holder<TestEnvironmentDefinition<?>> registerEnvironment(Identifier name) {
-		return registerEnvironment(name, new TestEnvironmentDefinition.AllOf(List.of()));
-	}
-
-	Holder<TestEnvironmentDefinition<?>> registerEnvironment(Identifier name, TestEnvironmentDefinition<?> definition);
-
-	void registerTest(Identifier name, GameTestInstance test);
+	void registerTest(TestFunction test);
 }

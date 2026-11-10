@@ -51,7 +51,7 @@ public final class BarrelStatus
 	 */
 	public static Component when(@Nullable Level level, long ticksLeft) {
 		boolean clock = level != null && !level.dimensionType().hasFixedTime();
-		return when(clock ? level.getDefaultClockTime() : -1L, ticksLeft);
+		return when(clock ? level.getDayTime() : -1L, ticksLeft);
 	}
 
 	/** As {@link #when(Level, long)}, for a clock time ({@code -1} where there is no day: the Nether, the End). */

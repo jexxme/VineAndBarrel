@@ -16,16 +16,22 @@
     }
   ],
   "ingredients": [
-    "#c:foods/raw_beef",
-    [
-      "vineandbarrel:red_wine",
-      "vineandbarrel:aged_red_wine"
-    ],
-    "#c:crops/onion",
-    "#c:crops/carrot"
+    {
+      "tag": "c:foods/raw_beef"
+    },
+    {
+      "tag": "vineandbarrel:cooking/red_wine"
+    },
+    {
+      "tag": "c:crops/onion"
+    },
+    {
+      "tag": "c:crops/carrot"
+    }
   ],
   "recipe_book_tab": "meals",
   "result": {
+    "count": 1,
     "id": "vineandbarrel:wine_braised_beef"
   }
 }

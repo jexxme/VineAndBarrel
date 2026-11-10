@@ -21,7 +21,7 @@ final class NeoForgeConfig
 
 	static void register(ModContainer container) {
 		TipsyConfig.load();
-		container.registerConfig(ModConfig.Type.SYNCED, build(ConfigValue.Side.SERVER, TipsyConfig.SERVER_COMMENT), VineAndBarrel.MODID + "-tipsy-server.toml");
+		container.registerConfig(ModConfig.Type.SERVER, build(ConfigValue.Side.SERVER, TipsyConfig.SERVER_COMMENT), VineAndBarrel.MODID + "-tipsy-server.toml");
 		container.registerConfig(ModConfig.Type.CLIENT, build(ConfigValue.Side.CLIENT, TipsyConfig.CLIENT_COMMENT), VineAndBarrel.MODID + "-tipsy-client.toml");
 	}
 

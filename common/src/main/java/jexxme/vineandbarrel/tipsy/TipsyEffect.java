@@ -2,7 +2,7 @@ package jexxme.vineandbarrel.tipsy;
 
 import java.util.function.BiConsumer;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
@@ -26,8 +26,8 @@ public class TipsyEffect extends MobEffect
 	/** Warm amber, the colour of the icon's drink. */
 	public static final int COLOR = 0xE8A23C;
 
-	private static final Identifier COURAGE_KNOCKBACK = VineAndBarrel.id("tipsy_courage_knockback");
-	private static final Identifier COURAGE_FALL = VineAndBarrel.id("tipsy_courage_fall");
+	private static final ResourceLocation COURAGE_KNOCKBACK = VineAndBarrel.id("tipsy_courage_knockback");
+	private static final ResourceLocation COURAGE_FALL = VineAndBarrel.id("tipsy_courage_fall");
 
 	public TipsyEffect() {
 		super(MobEffectCategory.NEUTRAL, COLOR);

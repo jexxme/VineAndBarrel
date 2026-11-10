@@ -24,7 +24,7 @@ import jexxme.vineandbarrel.registry.VBItems;
 import jexxme.vineandbarrel.tag.VBTags;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -38,14 +38,10 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -56,7 +52,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.GameType;
@@ -64,15 +59,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.CropBlock;
-import net.minecraft.world.level.block.FarmlandBlock;
+import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -86,13 +79,14 @@ import java.util.function.Consumer;
  */
 public final class FdCompatGameTests
 {
-	private static final Identifier SMALL = VineAndBarrel.id("gametest/empty_5x5");
-	private static final DeferredRegister<Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
-	private static final List<ResourceKey<Consumer<GameTestHelper>>> TESTS = new ArrayList<>();
-	private static final Map<ResourceKey<Consumer<GameTestHelper>>, Integer> TIMEOUTS = new HashMap<>();
+	private static final ResourceLocation SMALL = VineAndBarrel.id("gametest/empty_5x5");
+	private static final List<Entry> TESTS = new ArrayList<>();
 
 	private static final int FERMENT = AgingRecipe.DEFAULT_FERMENTING_TIME;
 	private static final int AGE = AgingRecipe.DEFAULT_AGING_TIME;
+
+	private record Entry(String name, int maxTicks, Consumer<GameTestHelper> function) {
+	}
 
 	static {
 		test("fd_run_has_the_right_mods", 20, FdCompatGameTests::rightMods);
@@ -149,21 +143,16 @@ public final class FdCompatGameTests
 	}
 
 	private static void test(String name, int timeout, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		ResourceKey<Consumer<GameTestHelper>> key = ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name));
-		TESTS.add(key);
-		TIMEOUTS.put(key, timeout);
+		TESTS.add(new Entry(name, timeout, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(FdCompatGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("farmersdelight"));
-		for (ResourceKey<Consumer<GameTestHelper>> function : TESTS) {
-			event.registerTest(function.identifier(), new FunctionGameTestInstance(function, new TestData<>(environment, SMALL, TIMEOUTS.get(function), 0, true)));
+		for (Entry test : TESTS) {
+			VBGameTests.add(event, "farmersdelight", test.name(), SMALL, test.maxTicks(), test.function());
 		}
 	}
 
@@ -192,7 +181,7 @@ public final class FdCompatGameTests
 	}
 
 	private static Optional<RecipeHolder<?>> recipe(GameTestHelper helper, String path) {
-		return helper.getLevel().getServer().getRecipeManager().byKey(ResourceKey.create(Registries.RECIPE, VineAndBarrel.id(path)));
+		return helper.getLevel().getServer().getRecipeManager().byKey(VineAndBarrel.id(path));
 	}
 
 	private static BlockState litStove() {
@@ -213,7 +202,7 @@ public final class FdCompatGameTests
 
 	private static List<Component> tooltip(GameTestHelper helper, ItemStack stack) {
 		List<Component> lines = new ArrayList<>();
-		stack.getItem().appendHoverText(stack, Item.TooltipContext.of(helper.getLevel()), TooltipDisplay.DEFAULT, lines::add, TooltipFlag.NORMAL);
+		stack.getItem().appendHoverText(stack, Item.TooltipContext.of(helper.getLevel()), lines, TooltipFlag.NORMAL);
 		return lines;
 	}
 
@@ -261,7 +250,7 @@ public final class FdCompatGameTests
 			helper.assertTrue(Blocks.MAGMA_BLOCK.defaultBlockState().is(KettleTags.HEAT_SOURCES), "the heat tag still loads its vanilla entries");
 			helper.setBlock(heat, Blocks.MAGMA_BLOCK);
 			helper.setBlock(kettlePos, KettleRegistry.kettle());
-			helper.assertTrue(helper.getBlockEntity(kettlePos, BrewKettleBlockEntity.class).isHeated(), "magma heats the kettle without FD");
+			helper.assertTrue(VBGameTests.blockEntity(helper, kettlePos, BrewKettleBlockEntity.class).isHeated(), "magma heats the kettle without FD");
 			helper.succeed();
 			return;
 		}
@@ -271,11 +260,11 @@ public final class FdCompatGameTests
 		BlockPos coldHeat = new BlockPos(3, 1, 2);
 		helper.setBlock(coldHeat, stove.setValue(BlockStateProperties.LIT, false));
 		helper.setBlock(coldHeat.above(), KettleRegistry.kettle());
-		helper.assertFalse(helper.getBlockEntity(coldHeat.above(), BrewKettleBlockEntity.class).isHeated(), "an unlit stove heats nothing");
+		helper.assertFalse(VBGameTests.blockEntity(helper, coldHeat.above(), BrewKettleBlockEntity.class).isHeated(), "an unlit stove heats nothing");
 		helper.setBlock(heat, stove);
 		helper.setBlock(kettlePos, KettleRegistry.kettle().defaultBlockState()
 			.setValue(BrewKettleBlock.SUPPORT, BrewKettleBlock.trayState(helper.getLevel(), helper.absolutePos(kettlePos))));
-		BrewKettleBlockEntity kettle = helper.getBlockEntity(kettlePos, BrewKettleBlockEntity.class);
+		BrewKettleBlockEntity kettle = VBGameTests.blockEntity(helper, kettlePos, BrewKettleBlockEntity.class);
 		helper.assertTrue(kettle.isHeated(), "a kettle on a lit FD stove is heated");
 		for (int i = 0; i < 4; i++) {
 			kettle.setStack(i, new ItemStack(Items.SWEET_BERRIES));
@@ -351,7 +340,7 @@ public final class FdCompatGameTests
 		helper.getLevel().destroyBlock(helper.absolutePos(bush), false);
 		helper.succeedWhen(() -> {
 			helper.assertBlockPresent(rope, bush.above());
-			helper.assertBlockState(bush.above(2), trellis);
+			VBGameTests.assertBlockState(helper, bush.above(2), trellis);
 		});
 	}
 
@@ -359,8 +348,8 @@ public final class FdCompatGameTests
 	private static void pistonKeepsRope(GameTestHelper helper) {
 		Optional<Block> fdRope = fdBlock("rope");
 		assertFdThing(helper, fdRope, "FD's rope");
-		helper.assertValueEqual(VBBlocks.GRAPE_VINE_ON_ROPE.get().defaultBlockState().getPistonPushReaction(), PushReaction.PUSH_PULL, "grape vine push reaction");
-		helper.assertValueEqual(VBBlocks.HOP_VINE_ON_ROPE.get().defaultBlockState().getPistonPushReaction(), PushReaction.PUSH_PULL, "hop vine push reaction");
+		helper.assertValueEqual(VBBlocks.GRAPE_VINE_ON_ROPE.get().defaultBlockState().getPistonPushReaction(), PushReaction.NORMAL, "grape vine push reaction");
+		helper.assertValueEqual(VBBlocks.HOP_VINE_ON_ROPE.get().defaultBlockState().getPistonPushReaction(), PushReaction.NORMAL, "hop vine push reaction");
 		if (fdRope.isEmpty()) {
 			helper.succeed();
 			return;
@@ -399,7 +388,7 @@ public final class FdCompatGameTests
 		BlockPos barleySoil = new BlockPos(2, 1, 2);
 		helper.setBlock(grapeSoil, richSoil.get());
 		helper.setBlock(hopSoil, richSoil.get());
-		helper.setBlock(barleySoil, richFarmland.get().defaultBlockState().setValue(FarmlandBlock.MOISTURE, 7));
+		helper.setBlock(barleySoil, richFarmland.get().defaultBlockState().setValue(FarmBlock.MOISTURE, 7));
 		helper.setBlock(new BlockPos(4, 1, 2), Blocks.WATER); // keeps the farmland wet, so it boosts
 		// planted by a player, as in a real field: grapes and hops on rich soil, barley seeds on rich soil farmland
 		Player farmer = player(helper);
@@ -440,7 +429,7 @@ public final class FdCompatGameTests
 		}
 		BlockPos pos = new BlockPos(2, 1, 2);
 		helper.setBlock(pos, BarrelRegistry.AGING_BARREL.get().defaultBlockState().setValue(AgingBarrelBlock.FACING, Direction.NORTH));
-		AgingBarrelBlockEntity barrel = helper.getBlockEntity(pos, AgingBarrelBlockEntity.class);
+		AgingBarrelBlockEntity barrel = VBGameTests.blockEntity(helper, pos, AgingBarrelBlockEntity.class);
 		for (int i = 1; i <= 2; i++) {
 			ItemStack bottle = new ItemStack(base.get());
 			ItemStack left = barrel.pour(bottle, null);
@@ -472,7 +461,7 @@ public final class FdCompatGameTests
 			helper.assertTrue(theirs != null && theirs.young().is(DrinkItems.HARD_CIDER.get()), "FD's apple cider becomes the same hard cider");
 			BlockPos pos = new BlockPos(2, 1, 2);
 			helper.setBlock(pos, BarrelRegistry.AGING_BARREL.get().defaultBlockState().setValue(AgingBarrelBlock.FACING, Direction.NORTH));
-			AgingBarrelBlockEntity barrel = helper.getBlockEntity(pos, AgingBarrelBlockEntity.class);
+			AgingBarrelBlockEntity barrel = VBGameTests.blockEntity(helper, pos, AgingBarrelBlockEntity.class);
 			helper.assertTrue(barrel.pour(new ItemStack(BaseItems.APPLE_JUICE.get()), null) != null, "apple juice pours in");
 			ItemStack fdBottle = new ItemStack(fdCider.get());
 			helper.assertTrue(barrel.pour(fdBottle, null) == null && fdBottle.getCount() == 1, "FD's apple cider does not top up apple juice");
@@ -548,7 +537,7 @@ public final class FdCompatGameTests
 			MobEffectInstance buff = player.getEffect(drink.buff().getEffect());
 			// at least its own duration (drinking the next one right after counts as a cheers, which lengthens it)
 			helper.assertTrue(buff != null && buff.getDuration() >= drink.buff().getDuration(), drink + " gives its own buff: " + buff);
-			BuiltInRegistries.MOB_EFFECT.get(FDCompat.COMFORT).ifPresent(comfort -> helper.assertFalse(player.hasEffect(comfort), drink + " gives no Comfort"));
+			BuiltInRegistries.MOB_EFFECT.getHolder(FDCompat.COMFORT).ifPresent(comfort -> helper.assertFalse(player.hasEffect(comfort), drink + " gives no Comfort"));
 			for (Component line : tooltip(helper, new ItemStack(drink))) {
 				helper.assertFalse(text(line).toLowerCase(java.util.Locale.ROOT).contains("comfort"), drink + " tooltip names Comfort: " + text(line));
 			}
@@ -579,7 +568,7 @@ public final class FdCompatGameTests
 			helper.assertTrue(food != null && food.nutrition() == e.nutrition() && Math.abs(food.saturation() - e.nutrition() * e.saturation() * 2.0F) < 0.01F,
 				e.meal() + " food values: " + food);
 			helper.assertValueEqual(stack.getMaxStackSize(), 16, e.meal() + " stacks to 16");
-			helper.assertTrue(stack.getItem().getCraftingRemainder() != null && stack.getItem().getCraftingRemainder().item().value() == Items.BOWL, e.meal() + " leaves a bowl in recipes");
+			helper.assertTrue(stack.getItem().getCraftingRemainingItem() == Items.BOWL, e.meal() + " leaves a bowl in recipes");
 			helper.assertTrue(stack.is(meals), e.meal() + " is in farmersdelight:meals");
 			Player player = player(helper);
 			player.getFoodData().setFoodLevel(0);
@@ -683,7 +672,7 @@ public final class FdCompatGameTests
 		ItemStack bowls = new ItemStack(Items.BOWL, 5);
 		player.setItemInHand(InteractionHand.MAIN_HAND, bowls);
 		for (int taken = 1; taken <= FeastBlock.MAX_SERVINGS; taken++) {
-			InteractionResult result = helper.getBlockState(pos).useItemOn(bowls, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit(helper, pos));
+			ItemInteractionResult result = helper.getBlockState(pos).useItemOn(bowls, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit(helper, pos));
 			helper.assertTrue(result.consumesAction(), "serving " + taken + " takes the click");
 			helper.assertValueEqual(helper.getBlockState(pos).getValue(FeastBlock.SERVINGS), FeastBlock.MAX_SERVINGS - taken, "servings left");
 			helper.assertValueEqual(player.getInventory().countItem(FDCompat.COQ_AU_VIN.get()), taken, "bowls of coq au vin");
@@ -745,7 +734,7 @@ public final class FdCompatGameTests
 			CraftingInput input = CraftingInput.of(2, 2, List.of(new ItemStack(Items.WHEAT), new ItemStack(Items.WHEAT), new ItemStack(Items.WHEAT), new ItemStack(beer)));
 			RecipeHolder<CraftingRecipe> holder = helper.getLevel().getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel())
 				.orElseThrow(() -> new IllegalStateException("no beer bread from " + beer));
-			ItemStack made = holder.value().assemble(input);
+			ItemStack made = holder.value().assemble(input, helper.getLevel().registryAccess());
 			helper.assertTrue(made.is(FDCompat.BEER_BREAD.get()) && made.getCount() == 2, "3 wheat + " + beer + " make 2 beer bread: " + made);
 			helper.assertTrue(holder.value().getRemainingItems(input).stream().anyMatch(left -> left.is(DrinkItems.MUG.get())), "the mug stays in the grid");
 		}
@@ -798,7 +787,7 @@ public final class FdCompatGameTests
 		// a real server player: FD Refabricated's board triggers its advancement criteria with one. The mock one is
 		// always in creative, so the board takes a copy and the hand keeps its item
 		@SuppressWarnings("removal")
-		net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		net.minecraft.server.level.ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		ItemStack knife = fdStack("flint_knife");
 		int cuts = 16;
 		for (int i = 0; i < cuts; i++) {
@@ -825,9 +814,9 @@ public final class FdCompatGameTests
 	private static void cuttingBoardWildGrapesAndHops(GameTestHelper helper) {
 		record Cut(String recipe, Item wild, Item crop, Item dye) {
 		}
-		List<Cut> cuts = List.of(new Cut("cutting/wild_grapes", VBItems.WILD_GRAPES.get(), VBItems.RED_GRAPES.get(), Items.DYE.pick(net.minecraft.world.item.DyeColor.PURPLE)),
-			new Cut("cutting/wild_white_grapes", VBItems.WILD_WHITE_GRAPES.get(), VBItems.WHITE_GRAPES.get(), Items.DYE.pick(net.minecraft.world.item.DyeColor.YELLOW)),
-			new Cut("cutting/wild_hops", VBItems.WILD_HOPS.get(), VBItems.HOPS.get(), Items.DYE.pick(net.minecraft.world.item.DyeColor.LIME)));
+		List<Cut> cuts = List.of(new Cut("cutting/wild_grapes", VBItems.WILD_GRAPES.get(), VBItems.RED_GRAPES.get(), Items.PURPLE_DYE),
+			new Cut("cutting/wild_white_grapes", VBItems.WILD_WHITE_GRAPES.get(), VBItems.WHITE_GRAPES.get(), Items.YELLOW_DYE),
+			new Cut("cutting/wild_hops", VBItems.WILD_HOPS.get(), VBItems.HOPS.get(), Items.LIME_DYE));
 		for (Cut cut : cuts) {
 			helper.assertValueEqual(recipe(helper, cut.recipe()).isPresent(), fd(), cut.recipe() + " loads exactly when FD is installed");
 		}
@@ -836,7 +825,7 @@ public final class FdCompatGameTests
 			return;
 		}
 		@SuppressWarnings("removal")
-		net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		net.minecraft.server.level.ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		ItemStack knife = fdStack("flint_knife");
 		int times = 16;
 		BlockPos board = new BlockPos(2, 1, 2);
@@ -863,8 +852,11 @@ public final class FdCompatGameTests
 
 	/**
 	 * FD's melon juice, apple cider and milk bottle lower Tipsy by exactly one level, like our juices and a water bottle.
-	 * The milk bottle would otherwise take one random effect, which could be all of Tipsy: Tipsy is in FD's
-	 * milk-bottle-ignored tag (FDN's and FD Refabricated's names), so only our one level goes.
+	 * The milk bottle would otherwise take one random effect, which could be all of Tipsy. FD Refabricated (Fabric) leaves
+	 * out the effects in its tag {@code farmersdelight:ignored/milk_bottle}, which Tipsy is in, so only our one level goes.
+	 * The original Farmer's Delight 1.21.1 (NeoForge) has no such tag: its milk bottle takes any effect that milk cures,
+	 * after asking NeoForge's {@code MobEffectEvent.Remove} (cure: milk), so there the NeoForge side has to keep Tipsy out
+	 * of it (26.x: FDN's tag {@code farmersdelight:milk_bottle_ignored}).
 	 */
 	private static void fdDrinksSoberByOne(GameTestHelper helper) {
 		List<String> drinks = List.of("melon_juice", "apple_cider", "milk_bottle");
@@ -898,12 +890,12 @@ public final class FdCompatGameTests
 		for (String path : List.of("cooking/beer_battered_fish", "cooking/wine_braised_beef", "cooking/cider_braised_pork", "cooking/barley_mutton_broth",
 				"cooking/white_wine_risotto", "cooking/coq_au_vin_block", "beer_bread")) {
 			helper.assertValueEqual(recipe(helper, path).isPresent(), fd(), path + " loads exactly when FD is installed");
-			Identifier unlockId = VineAndBarrel.id("recipes/food/" + path.substring(path.lastIndexOf('/') + 1));
+			ResourceLocation unlockId = VineAndBarrel.id("recipes/food/" + path.substring(path.lastIndexOf('/') + 1));
 			AdvancementHolder unlock = helper.getLevel().getServer().getAdvancements().get(unlockId);
 			helper.assertValueEqual(unlock != null, fd(), unlockId + " loads exactly when FD is installed");
 			if (unlock != null) {
-				List<ResourceKey<Recipe<?>>> rewards = unlock.value().rewards().recipes();
-				helper.assertTrue(rewards.contains(ResourceKey.create(Registries.RECIPE, VineAndBarrel.id(path))), unlockId + " unlocks " + path + ": " + rewards);
+				List<ResourceLocation> rewards = unlock.value().rewards().recipes();
+				helper.assertTrue(rewards.contains(VineAndBarrel.id(path)), unlockId + " unlocks " + path + ": " + rewards);
 			}
 		}
 		helper.succeed();
@@ -921,6 +913,7 @@ public final class FdCompatGameTests
 		GameType.SURVIVAL.updatePlayerAbilities(player.getAbilities());
 		net.minecraft.network.Connection connection = new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND);
 		new io.netty.channel.embedded.EmbeddedChannel(connection);
+		jexxme.vineandbarrel.platform.Services.PLATFORM.prepareMockConnection(connection);
 		new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(), connection, player, cookie);
 		Vec3 pos = helper.absoluteVec(at);
 		player.setPos(pos.x, pos.y, pos.z);
@@ -989,14 +982,14 @@ public final class FdCompatGameTests
 		BlockState full = feast();
 		helper.assertTrue(full.hasAnalogOutputSignal(), "the feast has a comparator output");
 		for (int servings = 0; servings <= FeastBlock.MAX_SERVINGS; servings++) {
-			helper.assertValueEqual(full.setValue(FeastBlock.SERVINGS, servings).getAnalogOutputSignal(helper.getLevel(), helper.absolutePos(pos), Direction.SOUTH),
+			helper.assertValueEqual(full.setValue(FeastBlock.SERVINGS, servings).getAnalogOutputSignal(helper.getLevel(), helper.absolutePos(pos)),
 				servings, "comparator output with " + servings + " servings");
 		}
 		// facing north, the comparator reads the block north of it: the feast, set down after it so the comparator updates
 		helper.setBlock(comparator, Blocks.COMPARATOR.defaultBlockState().setValue(net.minecraft.world.level.block.ComparatorBlock.FACING, Direction.NORTH));
 		helper.setBlock(pos, full.setValue(FeastBlock.SERVINGS, 3));
 		helper.succeedWhen(() -> helper.assertValueEqual(
-			helper.getBlockEntity(comparator, net.minecraft.world.level.block.entity.ComparatorBlockEntity.class).getOutputSignal(), 3,
+			VBGameTests.blockEntity(helper, comparator, net.minecraft.world.level.block.entity.ComparatorBlockEntity.class).getOutputSignal(), 3,
 			"a real comparator reads 3 servings"));
 	}
 }

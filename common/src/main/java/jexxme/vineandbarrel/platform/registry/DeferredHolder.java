@@ -4,7 +4,7 @@ import jexxme.vineandbarrel.platform.Services;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import org.jspecify.annotations.Nullable;
 
@@ -31,7 +31,7 @@ public class DeferredHolder<R, T extends R> implements Supplier<T>
 	public T get() {
 		T result = value;
 		if (result == null) {
-			R found = registry().getValue(key);
+			R found = registry().get(key);
 			if (found == null) {
 				throw new IllegalStateException("Trying to access unregistered value: " + key);
 			}
@@ -50,8 +50,8 @@ public class DeferredHolder<R, T extends R> implements Supplier<T>
 		return value != null || registry().containsKey(key);
 	}
 
-	public Identifier getId() {
-		return key.identifier();
+	public ResourceLocation getId() {
+		return key.location();
 	}
 
 	public ResourceKey<R> getKey() {
@@ -74,7 +74,7 @@ public class DeferredHolder<R, T extends R> implements Supplier<T>
 
 	@SuppressWarnings("unchecked")
 	private Registry<R> registry() {
-		Registry<R> registry = (Registry<R>) BuiltInRegistries.REGISTRY.getValue(key.registry());
+		Registry<R> registry = (Registry<R>) BuiltInRegistries.REGISTRY.get(key.registry());
 		if (registry == null) {
 			throw new IllegalStateException("No registry " + key.registry() + " for " + key);
 		}

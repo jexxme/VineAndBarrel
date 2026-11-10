@@ -22,7 +22,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipes": "vineandbarrel:cooking/white_wine_risotto"
+        "recipe": "vineandbarrel:cooking/white_wine_risotto"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

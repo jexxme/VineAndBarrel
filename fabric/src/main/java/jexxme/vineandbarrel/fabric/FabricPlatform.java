@@ -9,12 +9,11 @@ import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -24,7 +23,7 @@ import net.minecraft.core.WritableRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,9 +36,12 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.RecipeBookType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.HoneycombItem;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.entity.npc.VillagerTrades;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -52,8 +54,6 @@ public final class FabricPlatform implements Platform
 {
 	/** Every register the common code handed over; added to the game's registries by {@link #registerAll()}. */
 	private static final List<DeferredRegister<?>> REGISTERS = new ArrayList<>();
-	/** The GameTest classes' registrations, run when the GameTest registries load (see {@code RegistryDataLoaderMixin}). */
-	static final List<Consumer<GameTestRegistrar>> GAME_TESTS = new ArrayList<>();
 
 	@Override
 	public Loader loader() {
@@ -95,8 +95,8 @@ public final class FabricPlatform implements Platform
 			}
 		}
 		for (DeferredRegister<?> register : REGISTERS) {
-			if (!BuiltInRegistries.REGISTRY.containsKey(register.getRegistryKey().identifier())) {
-				throw new IllegalStateException("No registry " + register.getRegistryKey().identifier() + " on Fabric");
+			if (!BuiltInRegistries.REGISTRY.containsKey(register.getRegistryKey().location())) {
+				throw new IllegalStateException("No registry " + register.getRegistryKey().location() + " on Fabric");
 			}
 		}
 		REGISTERS.clear();
@@ -104,18 +104,18 @@ public final class FabricPlatform implements Platform
 
 	@SuppressWarnings("unchecked")
 	private static <T> void registerEntries(DeferredRegister<T> register) {
-		Registry<T> registry = (Registry<T>) BuiltInRegistries.REGISTRY.getValue(register.getRegistryKey().identifier());
+		Registry<T> registry = (Registry<T>) BuiltInRegistries.REGISTRY.get(register.getRegistryKey().location());
 		register.getEntries().forEach((id, factory) -> Registry.register(registry, id, factory.apply(id)));
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Holder<T> holder(ResourceKey<T> key) {
-		Registry<T> registry = (Registry<T>) BuiltInRegistries.REGISTRY.getValue(key.registry());
+		Registry<T> registry = (Registry<T>) BuiltInRegistries.REGISTRY.get(key.registry());
 		if (registry == null) {
 			throw new IllegalStateException("No registry " + key.registry());
 		}
-		Optional<Holder.Reference<T>> registered = registry.get(key);
+		Optional<Holder.Reference<T>> registered = registry.getHolder(key);
 		if (registered.isPresent()) {
 			return registered.get();
 		}
@@ -124,7 +124,7 @@ public final class FabricPlatform implements Platform
 	}
 
 	@Override
-	public <T> EntityAttachment<T> attachment(Identifier id, EntityAttachment.Spec<T> spec) {
+	public <T> EntityAttachment<T> attachment(ResourceLocation id, EntityAttachment.Spec<T> spec) {
 		AttachmentType<T> type = AttachmentRegistry.create(id, builder -> {
 			builder.initializer(spec.defaultValue());
 			if (spec.saveCodec() != null) {
@@ -168,7 +168,7 @@ public final class FabricPlatform implements Platform
 
 	@Override
 	public void addGameTests(Consumer<GameTestRegistrar> registrar) {
-		GAME_TESTS.add(registrar);
+		FabricGameTestRegistration.add(registrar);
 	}
 
 	@Override
@@ -183,19 +183,19 @@ public final class FabricPlatform implements Platform
 
 	@Override
 	public CreativeModeTab.Builder creativeTabBuilder() {
-		return FabricCreativeModeTab.builder();
+		return FabricItemGroup.builder();
 	}
 
 	// ------------------------------------------------------------------ menus
 
 	@Override
 	public <M extends AbstractContainerMenu> MenuType<M> blockMenuType(BlockMenuFactory<M> factory) {
-		return new ExtendedMenuType<>(factory::create, BlockPos.STREAM_CODEC);
+		return new ExtendedScreenHandlerType<>(factory::create, BlockPos.STREAM_CODEC);
 	}
 
 	@Override
 	public void openBlockMenu(ServerPlayer player, MenuProvider provider, BlockPos pos) {
-		player.openMenu(new ExtendedMenuProvider<BlockPos>()
+		player.openMenu(new ExtendedScreenHandlerFactory<BlockPos>()
 		{
 			@Override
 			public BlockPos getScreenOpeningData(ServerPlayer opener) {
@@ -219,7 +219,7 @@ public final class FabricPlatform implements Platform
 		openBlockMenu(player, provider, pos);
 	}
 
-	/** The kettle's own book type, added by the class tweaker and {@code RecipeBookTypeMixin} (see {@link FabricRecipeBook}). */
+	/** The kettle's own book type, added by {@code RecipeBookTypeMixin} (see {@link FabricRecipeBook}). */
 	@Override
 	public RecipeBookType brewingRecipeBookType() {
 		return FabricRecipeBook.brewingType();
@@ -238,7 +238,7 @@ public final class FabricPlatform implements Platform
 
 	@Override
 	public boolean canEntityGrief(ServerLevel level, Entity entity) {
-		return level.getGameRules().get(GameRules.MOB_GRIEFING);
+		return level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
 	}
 
 	@Override
@@ -247,13 +247,32 @@ public final class FabricPlatform implements Platform
 	}
 
 	@Override
+	public boolean canScrape(ItemStack stack) {
+		return stack.getItem() instanceof net.minecraft.world.item.AxeItem;
+	}
+
+	@Override
+	public int burnTime(ItemStack stack, ServerLevel level) {
+		// The furnace's own table (Fabric's FuelRegistry is a view of it), asked through isFuel so a barrel with a batch in it
+		// says no (AbstractFurnaceBlockEntityMixin)
+		return AbstractFurnaceBlockEntity.isFuel(stack) ? AbstractFurnaceBlockEntity.getFuel().getOrDefault(stack.getItem(), 0) : 0;
+	}
+
+	@Override
+	public float compostChance(net.minecraft.world.item.Item item) {
+		return net.minecraft.world.level.block.ComposterBlock.COMPOSTABLES.getOrDefault(item, 0.0F);
+	}
+
+	@Override
 	public Component decorateChat(ServerPlayer player, Component message) {
 		return player.level().getServer().getChatDecorator().decorate(player, FabricChat.slur(player, message));
 	}
 
 	@Override
-	public @Nullable ItemStackTemplate craftingRemainder(ItemStack stack) {
-		return stack.getCraftingRemainder();
+	public @Nullable ItemStack craftingRemainder(ItemStack stack) {
+		// Fabric's per-stack remainder (FabricItem#getRecipeRemainder; vanilla's item remainder by default)
+		ItemStack remainder = stack.getRecipeRemainder();
+		return remainder.isEmpty() ? null : remainder.copy();
 	}
 
 	// ------------------------------------------------------------------ item automation
@@ -266,5 +285,31 @@ public final class FabricPlatform implements Platform
 	@Override
 	public SlotAccess.Tx openTransaction() {
 		return new FabricItemAccess.Tx(Transaction.openOuter());
+	}
+
+	// ------------------------------------------------------------------ villager trades
+
+	@Override
+	public void addVillagerTrades(VillagerProfession profession, int level, List<VillagerTrades.ItemListing> trades) {
+		// Straight into vanilla's own pools. Fabric API's TradeOfferHelper also makes a pool for the profession in the
+		// "trade rebalance" experiment's map, which has none for farmers: with the experiment on, a farmer would then
+		// offer nothing but our trades.
+		append(VillagerTrades.TRADES.computeIfAbsent(profession, key -> new it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap<>()), level, trades);
+	}
+
+	@Override
+	public void addWanderingTraderTrades(List<VillagerTrades.ItemListing> trades) {
+		// Level 1 is the ordinary pool (five offers are drawn from it), 2 the rare one
+		append(VillagerTrades.WANDERING_TRADER_TRADES, 1, trades);
+	}
+
+	private static void append(it.unimi.dsi.fastutil.ints.Int2ObjectMap<VillagerTrades.ItemListing[]> pools, int level, List<VillagerTrades.ItemListing> trades) {
+		List<VillagerTrades.ItemListing> pool = new java.util.ArrayList<>(List.of(pools.getOrDefault(level, new VillagerTrades.ItemListing[0])));
+		trades.stream().filter(trade -> !pool.contains(trade)).forEach(pool::add);
+		pools.put(level, pool.toArray(VillagerTrades.ItemListing[]::new));
+	}
+
+	@Override
+	public void prepareMockConnection(net.minecraft.network.Connection connection) {
 	}
 }

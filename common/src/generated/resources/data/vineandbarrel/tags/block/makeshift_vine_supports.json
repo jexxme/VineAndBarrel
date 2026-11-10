@@ -2,7 +2,7 @@
   "values": [
     "#minecraft:fences",
     "#minecraft:walls",
-    "#minecraft:chains",
-    "#minecraft:bars"
+    "minecraft:chain",
+    "minecraft:iron_bars"
   ]
 }

@@ -3,7 +3,7 @@ package jexxme.vineandbarrel.compat.jade;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.drink.PlacedDrinksBlock;
 import jexxme.vineandbarrel.drink.PlacedDrinksBlockEntity;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
@@ -17,10 +17,10 @@ public enum PlacedDrinksProvider implements IBlockComponentProvider
 {
 	INSTANCE;
 
-	private static final Identifier UID = VineAndBarrel.id("placed_drinks");
+	private static final ResourceLocation UID = VineAndBarrel.id("placed_drinks");
 
 	@Override
-	public Identifier getUid() {
+	public ResourceLocation getUid() {
 		return UID;
 	}
 

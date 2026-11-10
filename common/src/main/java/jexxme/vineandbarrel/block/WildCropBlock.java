@@ -12,7 +12,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.BonemealSource;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,14 +36,10 @@ public class WildCropBlock extends FlowerBlock implements BonemealableBlock
 		return SHAPE;
 	}
 
-	/**
-	 * FD: "dirt or sand". In 26.3 grass, podzol, mycelium and moss left {@code #minecraft:dirt} for
-	 * {@code #minecraft:substrate_overworld}, so that is the tag that keeps FD's meaning (FD's own 26.x port still
-	 * checks {@code #dirt}, which rejects grass).
-	 */
+	/** FD: "dirt or sand" (on 1.21.1 {@code #minecraft:dirt} still holds grass, podzol, mycelium and moss). */
 	@Override
 	protected boolean mayPlaceOn(BlockState state, BlockGetter level, BlockPos pos) {
-		return state.is(BlockTags.SUBSTRATE_OVERWORLD) || state.is(BlockTags.SAND);
+		return state.is(BlockTags.DIRT) || state.is(BlockTags.SAND);
 	}
 
 	@Override
@@ -55,17 +50,17 @@ public class WildCropBlock extends FlowerBlock implements BonemealableBlock
 
 
 	@Override
-	public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
+	public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
 		return true;
 	}
 
 	@Override
-	public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
+	public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
 		return random.nextFloat() < 0.8F;
 	}
 
 	@Override
-	public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
+	public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
 		int wildCropLimit = 10;
 		for (BlockPos nearbyPos : BlockPos.betweenClosed(pos.offset(-4, -1, -4), pos.offset(4, 1, 4))) {
 			if (level.getBlockState(nearbyPos).is(this)) {

@@ -28,7 +28,7 @@ final class SceneItems
 				return brewing.result().copyWithCount(1);
 			}
 			return brewing.ingredients().stream().findFirst()
-				.flatMap(ingredient -> ingredient.items().findFirst()).map(ItemStack::new).orElse(ItemStack.EMPTY);
+				.flatMap(ingredient -> java.util.Arrays.stream(ingredient.getItems()).findFirst()).map(stack -> new ItemStack(stack.getItem())).orElse(ItemStack.EMPTY);
 		}
 		if (part.part().equals("bucket") && ScenePlayer.brewingRecipe(part.recipe(), false) != null) {
 			return ScenePlayer.brewingRecipe(part.recipe(), false).bucket();

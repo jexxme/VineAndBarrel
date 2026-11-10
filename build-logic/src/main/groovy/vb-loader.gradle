@@ -24,9 +24,35 @@ tasks.named('compileJava', JavaCompile) {
     source(configurations.commonJava)
 }
 
+// This older-Minecraft branch only: structure templates are saved by 26.3, whose block states read {id, properties};
+// this Minecraft reads {Name, Properties} and would load every block as air. The source .nbt files stay exactly as on
+// 26.3 (so structure changes cherry-pick cleanly) and the jar gets converted copies: the palette keys renamed, sign
+// text as this Minecraft reads it, and item frames where 26.3 has shelves (see BackportNbt).
+def structureNbt = project(':common').fileTree('src/main/resources') { include 'data/*/structure/**/*.nbt' }
+def downgradedStructures = layout.buildDirectory.dir('backport/structures')
+def downgradeStructures = tasks.register('downgradeStructures') {
+    group = 'build'
+    description = 'Converts the 26.3 structure templates to the block state format of this Minecraft version.'
+    def sources = structureNbt
+    def resourcesRoot = project(':common').file('src/main/resources')
+    def out = downgradedStructures
+    inputs.files(sources)
+    outputs.dir(out)
+    doLast {
+        def target = out.get().asFile
+        target.deleteDir()
+        sources.each { File source ->
+            def rel = resourcesRoot.toPath().relativize(source.toPath()).toString()
+            BackportNbt.downgrade(source, new File(target, rel))
+        }
+    }
+}
+
 tasks.named('processResources', ProcessResources) {
     dependsOn(configurations.commonResources)
+    from(downgradeStructures)
     from(configurations.commonResources) {
+        exclude 'data/*/structure/**/*.nbt' // converted copies come from downgradeStructures
         exclude '.cache'
         // Each loader ships only its own access file: the access transformer on NeoForge, the class tweaker on Fabric
         exclude(project.name == 'fabric' ? 'META-INF/accesstransformer.cfg' : 'vineandbarrel.classtweaker')
@@ -55,6 +81,7 @@ tasks.withType(ProcessResources).configureEach {
             neo_version_range      : neo_version_range,
             loader_version_range   : loader_version_range,
             fabric_loader_version  : fabric_loader_version,
+            fabric_loader_min_version: fabric_loader_min_version,
             // Fabric API's own version without the "+26.3" build suffix, for fabric.mod.json's "depends"
             fabric_api_min_version : fabric_api_version.tokenize('+')[0],
             mod_id                 : mod_id,

@@ -1,26 +1,25 @@
 package jexxme.vineandbarrel.kettle.client;
 
 import jexxme.vineandbarrel.VineAndBarrel;
-import jexxme.vineandbarrel.kettle.BaseItems;
-import jexxme.vineandbarrel.kettle.BrewKettleMenu;
-import jexxme.vineandbarrel.kettle.BrewingRecipeDisplay;
-import jexxme.vineandbarrel.kettle.KettleRegistry;
+import jexxme.vineandbarrel.mixin.RecipeBookComponentAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.RecipeBookCategories;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.client.gui.screens.recipebook.GhostSlots;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
-import net.minecraft.client.gui.screens.recipebook.RecipeCollection;
+import net.minecraft.client.gui.screens.recipebook.RecipeBookTabButton;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.context.ContextMap;
-import net.minecraft.world.entity.player.StackedItemContents;
+import net.minecraft.world.inventory.RecipeBookMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.display.RecipeDisplay;
+import net.minecraft.world.item.crafting.RecipeHolder;
 
 import java.util.List;
-import java.util.Optional;
 
-/** The kettle's recipe book (K9), FD's {@code CookingPotRecipeBookComponent} (MIT) with our tabs and filter button. */
-public class BrewKettleRecipeBookComponent extends RecipeBookComponent<BrewKettleMenu>
+/**
+ * The kettle's recipe book (K9), FD's {@code CookingPotRecipeBookComponent} (MIT) with our tabs and filter button. The
+ * tabs are the book type's ({@link BrewingRecipeBookCategories}, registered by {@link KettleClient}); which slots are
+ * the grid is the menu's say ({@code BrewKettleMenu#getSize}).
+ */
+public class BrewKettleRecipeBookComponent extends RecipeBookComponent
 {
 	private static final WidgetSprites FILTER_BUTTON = new WidgetSprites(
 		VineAndBarrel.id("recipe_book/brew_kettle_enabled"),
@@ -28,32 +27,54 @@ public class BrewKettleRecipeBookComponent extends RecipeBookComponent<BrewKettl
 		VineAndBarrel.id("recipe_book/brew_kettle_enabled_highlighted"),
 		VineAndBarrel.id("recipe_book/brew_kettle_disabled_highlighted"));
 
-	public BrewKettleRecipeBookComponent(BrewKettleMenu menu) {
-		super(menu, tabs());
-	}
+	/** The book's own place on the screen (vanilla keeps these private), for {@link #showSearchTab}. */
+	private int screenWidth;
+	private int screenHeight;
+	private boolean narrow;
 
-	/** Built when the screen opens, never statically: the holders aren't bound before that. */
-	private static List<TabInfo> tabs() {
-		return List.of(
-			new TabInfo(Items.COMPASS.getDefaultInstance(), Optional.empty(), KettleClient.searchTab()),
-			new TabInfo(BaseItems.SWEET_BERRY_JUICE.get().getDefaultInstance(), Optional.empty(), KettleRegistry.BREWING_JUICES.get()),
-			new TabInfo(BaseItems.BARLEY_WORT_BOTTLE.get().getDefaultInstance(), Optional.empty(), KettleRegistry.BREWING_WORTS.get()),
-			new TabInfo(KettleRegistry.kettleItem().getDefaultInstance(), Optional.empty(), KettleRegistry.BREWING_MISC.get()));
+	@Override
+	public void init(int width, int height, Minecraft minecraft, boolean widthTooNarrow, RecipeBookMenu<?, ?> menu) {
+		this.screenWidth = width;
+		this.screenHeight = height;
+		this.narrow = widthTooNarrow;
+		super.init(width, height, minecraft, widthTooNarrow, menu);
 	}
 
 	@Override
-	protected WidgetSprites getFilterButtonTextures() {
-		return FILTER_BUTTON;
+	public void initVisuals() {
+		super.initVisuals();
+		showSearchTab();
 	}
 
 	@Override
-	protected boolean isCraftingSlot(Slot slot) {
-		return slot.index < BrewKettleMenu.INDEX_INVENTORY;
+	public void recipesUpdated() {
+		super.recipesUpdated();
+		showSearchTab();
+	}
+
+	/**
+	 * The search tab always shows, like the crafting table's and the furnace's. Vanilla only knows those two by name and
+	 * hides every other tab that has no recipe to show, so ours is put back and the tabs are stacked again (vanilla's
+	 * layout: 27 px each, from 3 px below the book's top, 30 px left of it).
+	 */
+	private void showSearchTab() {
+		RecipeBookCategories search = BrewingRecipeBookCategories.search();
+		int x = (this.screenWidth - IMAGE_WIDTH) / 2 - (this.narrow ? 0 : 86) - 30;
+		int y = (this.screenHeight - IMAGE_HEIGHT) / 2 + 3;
+		int row = 0;
+		for (RecipeBookTabButton tab : ((RecipeBookComponentAccessor) this).vineandbarrel$tabButtons()) {
+			if (tab.getCategory() == search) {
+				tab.visible = true;
+			}
+			if (tab.visible) {
+				tab.setPosition(x, y + 27 * row++);
+			}
+		}
 	}
 
 	@Override
-	protected void selectMatchingRecipes(RecipeCollection recipes, StackedItemContents contents) {
-		recipes.selectRecipes(contents, display -> display instanceof BrewingRecipeDisplay);
+	protected void initFilterButtonTextures() {
+		this.filterButton.initTextureValues(FILTER_BUTTON);
 	}
 
 	@Override
@@ -62,12 +83,9 @@ public class BrewKettleRecipeBookComponent extends RecipeBookComponent<BrewKettl
 	}
 
 	@Override
-	protected void fillGhostRecipe(GhostSlots ghostSlots, RecipeDisplay display, ContextMap context) {
+	public void setupGhostRecipe(RecipeHolder<?> recipe, List<Slot> slots) {
 		// Only the ingredients: the brew has no slot (the gauge shows it once it is brewed)
-		if (display instanceof BrewingRecipeDisplay brewing) {
-			for (int i = 0; i < brewing.ingredients().size(); ++i) {
-				ghostSlots.setInput(this.menu.getSlot(i), context, brewing.ingredients().get(i));
-			}
-		}
+		this.ghostRecipe.setRecipe(recipe);
+		this.placeRecipe(this.menu.getGridWidth(), this.menu.getGridHeight(), this.menu.getResultSlotIndex(), recipe, recipe.value().getIngredients().iterator(), 0);
 	}
 }

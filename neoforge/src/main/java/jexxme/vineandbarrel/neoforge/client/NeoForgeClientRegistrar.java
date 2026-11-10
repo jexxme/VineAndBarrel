@@ -1,11 +1,12 @@
 package jexxme.vineandbarrel.neoforge.client;
 
 import jexxme.vineandbarrel.platform.client.ClientRegistrar;
-import net.minecraft.world.item.crafting.ExtendedRecipeBookCategory;
-import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.RecipeBookCategories;
+import net.minecraft.client.color.block.BlockColor;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
@@ -13,14 +14,14 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
-import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.RecipeBookType;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import net.minecraft.world.item.crafting.RecipeBookCategory;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -29,15 +30,13 @@ import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactori
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
-import net.neoforged.neoforge.client.event.RegisterPictureInPictureRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
-import net.neoforged.neoforge.client.event.RegisterRecipeBookSearchCategoriesEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.RegisterRecipeBookCategoriesEvent;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * A {@link ClientRegistrar} for one NeoForge registration event: it passes on the registrations of that event's kind
@@ -46,14 +45,14 @@ import java.util.function.Supplier;
 final class NeoForgeClientRegistrar implements ClientRegistrar
 {
 	private @Nullable RegisterMenuScreensEvent screens;
-	private @Nullable RegisterRecipeBookSearchCategoriesEvent recipeBook;
+	private @Nullable RegisterRecipeBookCategoriesEvent recipeBook;
 	private @Nullable RegisterParticleProvidersEvent particles;
 	private @Nullable RegisterClientTooltipComponentFactoriesEvent tooltips;
-	private RegisterColorHandlersEvent.@Nullable BlockTintSources tints;
+	private RegisterColorHandlersEvent.@Nullable Block tints;
 	private EntityRenderersEvent.@Nullable RegisterRenderers renderers;
-	private @Nullable RegisterPictureInPictureRenderersEvent pictures;
+	private boolean renderLayers;
 	private @Nullable RegisterKeyMappingsEvent keys;
-	private @Nullable AddClientReloadListenersEvent reloads;
+	private @Nullable RegisterClientReloadListenersEvent reloads;
 
 	private NeoForgeClientRegistrar() {
 	}
@@ -64,7 +63,7 @@ final class NeoForgeClientRegistrar implements ClientRegistrar
 		return registrar;
 	}
 
-	static NeoForgeClientRegistrar recipeBook(RegisterRecipeBookSearchCategoriesEvent event) {
+	static NeoForgeClientRegistrar recipeBook(RegisterRecipeBookCategoriesEvent event) {
 		NeoForgeClientRegistrar registrar = new NeoForgeClientRegistrar();
 		registrar.recipeBook = event;
 		return registrar;
@@ -82,7 +81,7 @@ final class NeoForgeClientRegistrar implements ClientRegistrar
 		return registrar;
 	}
 
-	static NeoForgeClientRegistrar tints(RegisterColorHandlersEvent.BlockTintSources event) {
+	static NeoForgeClientRegistrar tints(RegisterColorHandlersEvent.Block event) {
 		NeoForgeClientRegistrar registrar = new NeoForgeClientRegistrar();
 		registrar.tints = event;
 		return registrar;
@@ -100,15 +99,16 @@ final class NeoForgeClientRegistrar implements ClientRegistrar
 		return registrar;
 	}
 
-	static NeoForgeClientRegistrar reloads(AddClientReloadListenersEvent event) {
+	static NeoForgeClientRegistrar reloads(RegisterClientReloadListenersEvent event) {
 		NeoForgeClientRegistrar registrar = new NeoForgeClientRegistrar();
 		registrar.reloads = event;
 		return registrar;
 	}
 
-	static NeoForgeClientRegistrar pictures(RegisterPictureInPictureRenderersEvent event) {
+	/** For client setup (no event object): the blocks' render layers. */
+	static NeoForgeClientRegistrar renderLayers() {
 		NeoForgeClientRegistrar registrar = new NeoForgeClientRegistrar();
-		registrar.pictures = event;
+		registrar.renderLayers = true;
 		return registrar;
 	}
 
@@ -134,14 +134,25 @@ final class NeoForgeClientRegistrar implements ClientRegistrar
 	}
 
 	@Override
-	public void blockTints(List<BlockTintSource> tintSources, Block... blocks) {
+	public void blockTints(BlockColor color, Block... blocks) {
 		if (tints != null) {
-			tints.register(tintSources, blocks);
+			tints.register(color, blocks);
+		}
+	}
+
+	/** NeoForge would rather read the layer from each model's JSON; the models are shared with Fabric, so it is set here. */
+	@Override
+	@SuppressWarnings("deprecation")
+	public void blockRenderLayer(RenderType layer, Block... blocks) {
+		if (renderLayers) {
+			for (Block block : blocks) {
+				ItemBlockRenderTypes.setRenderLayer(block, layer);
+			}
 		}
 	}
 
 	@Override
-	public <T extends BlockEntity, S extends BlockEntityRenderState> void blockEntityRenderer(BlockEntityType<? extends T> type, BlockEntityRendererProvider<T, S> provider) {
+	public <T extends BlockEntity> void blockEntityRenderer(BlockEntityType<? extends T> type, BlockEntityRendererProvider<T> provider) {
 		if (renderers != null) {
 			renderers.registerBlockEntityRenderer(type, provider);
 		}
@@ -155,24 +166,19 @@ final class NeoForgeClientRegistrar implements ClientRegistrar
 	}
 
 	@Override
-	public void reloadListener(Identifier id, PreparableReloadListener listener) {
+	public void reloadListener(ResourceLocation id, PreparableReloadListener listener) {
 		if (reloads != null) {
-			reloads.addListener(id, listener);
+			reloads.registerReloadListener(listener);
 		}
 	}
 
 	@Override
-	public <T extends PictureInPictureRenderState> void pictureInPicture(Class<T> state, Supplier<PictureInPictureRenderer<T>> renderer) {
-		if (pictures != null) {
-			pictures.register(state, renderer);
-		}
-	}
-
-	@Override
-	public ExtendedRecipeBookCategory recipeBookSearch(RecipeBookCategory search, RecipeBookCategory... included) {
+	public void recipeBook(RecipeBookType type, List<RecipeBookCategories> tabs, RecipeBookCategories searchTab, List<RecipeBookCategories> searched,
+		RecipeType<?> recipeType, Function<RecipeHolder<?>, RecipeBookCategories> tabOf) {
 		if (recipeBook != null) {
-			recipeBook.register(search, included);
+			recipeBook.registerBookCategories(type, tabs);
+			recipeBook.registerAggregateCategory(searchTab, searched);
+			recipeBook.registerRecipeCategoryFinder(recipeType, tabOf);
 		}
-		return search;
 	}
 }

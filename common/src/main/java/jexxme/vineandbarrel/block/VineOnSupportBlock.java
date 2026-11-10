@@ -14,7 +14,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.LevelEvent;
@@ -50,13 +49,13 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 {
 	public static final BooleanProperty BASE = BooleanProperty.create("base");
 	public static final EnumProperty<SupportLook> LOOK = EnumProperty.create("look", SupportLook.class);
-	private static final VoxelShape LEAVES_CROSS = Block.column(12.0, 0.0, 16.0);
+	private static final VoxelShape LEAVES_CROSS = Block.box(2.0, 0.0, 2.0, 14.0, 16.0, 14.0);
 	private static final VoxelShape LEAVES_THIN_X = Block.box(0.0, 0.0, 4.5, 16.0, 16.0, 11.5);
 	private static final VoxelShape LEAVES_THIN_Z = Block.box(4.5, 0.0, 0.0, 11.5, 16.0, 16.0);
 	private static final VoxelShape LEAVES_WIDE_X = Block.box(0.0, 0.0, 3.0, 16.0, 16.0, 13.0);
 	private static final VoxelShape LEAVES_WIDE_Z = Block.box(3.0, 0.0, 0.0, 13.0, 16.0, 16.0);
 	/** The root's young shoot (age 0), as small as the bush's sapling. */
-	private static final VoxelShape SHOOT = Block.column(10.0, 0.0, 8.0);
+	private static final VoxelShape SHOOT = Block.box(3.0, 0.0, 3.0, 13.0, 8.0, 13.0);
 
 	private final Supplier<? extends ClimbingBushBlock> bush;
 
@@ -69,6 +68,12 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 	@Override
 	public ClimbingBushBlock bushBlock() {
 		return bush.get();
+	}
+
+	/** Named like the vine of the same plant on a trellis. */
+	@Override
+	public String getDescriptionId() {
+		return trellisVine().getDescriptionId();
 	}
 
 	/**
@@ -139,8 +144,8 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 	}
 
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction directionToNeighbour,
-									 BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	protected BlockState updateShape(BlockState state, Direction directionToNeighbour, BlockState neighbourState, LevelAccessor level, BlockPos pos,
+									 BlockPos neighbourPos) {
 		BlockState updated = state;
 		if (directionToNeighbour == Direction.DOWN) {
 			updated = updated.setValue(BASE, !isPlant(neighbourState));
@@ -148,15 +153,15 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 			// The support keeps following its neighbours (a fence connects to a new fence beside it), as if it stood here alone.
 			// The server decides: the client's guess of a placement could be refused, and only block states roll back
 			BlockState support = entity.support();
-			BlockState followed = support.updateShape(level, ticks, pos, directionToNeighbour, neighbourPos,
-					VineSupports.appearance(level, neighbourPos, neighbourState), random);
+			BlockState followed = support.updateShape(directionToNeighbour, VineSupports.appearance(level, neighbourPos, neighbourState),
+					level, pos, neighbourPos);
 			if (followed != support && followed.is(support.getBlock())) {
 				entity.setSupport(followed);
 				updated = updated.setValue(LOOK, VineSupports.lookOf(followed));
 			}
 		}
 		if (!updated.canSurvive(level, pos)) {
-			ticks.scheduleTick(pos, this, 1); // like the vines on a rope or a trellis: the plant goes on the next tick, the support stays
+			level.scheduleTick(pos, this, 1); // like the vines on a rope or a trellis: the plant goes on the next tick, the support stays
 		}
 		return updated;
 	}
@@ -200,9 +205,10 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 
 	/** Puts the support back when the plant went by anything but a player (burnt, blown up, a command). */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
-		BlockState support = VineSupports.takeStash(level, pos);
+	protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		// read before super: it removes the block entity that holds the support
+		BlockState support = state.is(newState.getBlock()) || level.isClientSide() ? null : VineSupports.supportAt(level, pos);
+		super.onRemove(state, level, pos, newState, movedByPiston);
 		BlockState now = level.getBlockState(pos);
 		if (support != null && !movedByPiston && (now.isAir() || now.is(BlockTags.FIRE))) { // burnt away: the support puts the fire out
 			level.setBlock(pos, standing(support, level, pos), Block.UPDATE_ALL);

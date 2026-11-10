@@ -4,7 +4,7 @@ import jexxme.vineandbarrel.platform.Services;
 import jexxme.vineandbarrel.registry.VBBlocks;
 import jexxme.vineandbarrel.registry.VBCreativeTabs;
 import jexxme.vineandbarrel.registry.VBItems;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,8 +20,8 @@ public final class VineAndBarrel
 	private VineAndBarrel() {
 	}
 
-	public static Identifier id(String name) {
-		return Identifier.fromNamespaceAndPath(MODID, name);
+	public static ResourceLocation id(String name) {
+		return ResourceLocation.fromNamespaceAndPath(MODID, name);
 	}
 
 	/** Once the loader has registered everything (NeoForge: common setup; Fabric: right after registration). */
@@ -42,6 +42,7 @@ public final class VineAndBarrel
 		jexxme.vineandbarrel.compat.farmersdelight.FDCompat.register();
 		jexxme.vineandbarrel.compat.ModCompat.register();
 		jexxme.vineandbarrel.world.village.VillageStructures.register();
+		jexxme.vineandbarrel.world.village.VillageData.registerTrades();
 		jexxme.vineandbarrel.advancement.VBAdvancements.register();
 
 		// GameTests only in the dev environment (or with -Dvineandbarrel.gametests=true), not in the released jar.

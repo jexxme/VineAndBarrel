@@ -1,4 +1,4 @@
-// Shared by common, neoforge and fabric: Java 25, the compiler settings and the guards (Error Prone, forbidden patterns).
+// Shared by common, neoforge and fabric: Java 21, the compiler settings and the guards (Error Prone, forbidden patterns).
 plugins {
     id 'java-library'
     id 'idea'
@@ -11,7 +11,7 @@ ext.loaderModVersion = project.name == 'fabric' ? fabric_mod_version : mod_versi
 version = "${minecraft_version}-${loaderModVersion}"
 group = 'jexxme.vineandbarrel'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 repositories {
     mavenCentral()
@@ -39,6 +39,8 @@ repositories {
 }
 
 dependencies {
+    // @Nullable as on 26.3 (this Minecraft doesn't bring JSpecify itself); annotations only, nothing at runtime
+    compileOnly "org.jspecify:jspecify:1.0.0"
     errorprone "com.google.errorprone:error_prone_core:2.52.0"
 }
 
@@ -79,9 +81,6 @@ def forbiddenPatterns = [
     [rule: 'empty-identity',
      regex: ~/[=!]=\s*ItemStack\.EMPTY|ItemStack\.EMPTY\s*[=!]=/,
      why: 'Empty stacks are not always the ItemStack.EMPTY instance (copyWithCount(0), split, shrink). Use isEmpty().'],
-    [rule: 'removed-hook-onRemove',
-     regex: ~/\bvoid\s+onRemove\s*\(/,
-     why: 'Block#onRemove no longer exists in 26.x. Drop contents in BlockEntity#preRemoveSideEffects, update neighbours in Block#affectNeighborsAfterRemoval.'],
     [rule: 'vanilla-relativePos',
      regex: ~/\bhelper(\.|::)relativePos\b/,
      why: "Vanilla's GameTestHelper#relativePos turns by the wrong rotation (NeoForge patches it, Fabric does not). Use WorldGameTests.relativePos(helper, pos)."],

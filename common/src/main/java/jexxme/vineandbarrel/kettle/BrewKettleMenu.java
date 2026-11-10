@@ -2,11 +2,11 @@ package jexxme.vineandbarrel.kettle;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.recipebook.ServerPlaceRecipe;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.StackedItemContents;
+import net.minecraft.world.entity.player.StackedContents;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.RecipeBookMenu;
@@ -22,8 +22,6 @@ import jexxme.vineandbarrel.inventory.ItemSlots;
 import jexxme.vineandbarrel.platform.Services;
 import net.minecraft.core.BlockPos;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -31,7 +29,7 @@ import java.util.Objects;
  * book handling, the heat, the progress, and a gauge for the brew (its servings are synced as data). The brew itself is
  * never a slot: it is served by hand like a cauldron, or by hoppers.
  */
-public class BrewKettleMenu extends RecipeBookMenu
+public class BrewKettleMenu extends RecipeBookMenu<RecipeInput, BrewingRecipe>
 {
 	/** The menu's first player inventory slot: right after the ingredient grid. */
 	public static final int INDEX_INVENTORY = BrewKettleBlockEntity.INPUT_SLOTS;
@@ -170,54 +168,22 @@ public class BrewKettleMenu extends RecipeBookMenu
 	/**
 	 * FD's recipe book placement, on a scratch grid. Vanilla's placer grows {@code slot.getItem()} in place when one
 	 * inventory stack can't fill a slot, which the kettle's slots must hear about (and a NeoForge resource handler slot
-	 * would only hand out copies). So the placer works on plain container slots seeded from the kettle, and the grid is
-	 * written back after.
+	 * would only hand out copies). So the placer works on plain container slots seeded from the kettle
+	 * ({@link PlacementGrid}), and the grid is written back after.
 	 */
 	@Override
-	public RecipeBookMenu.PostPlaceAction handlePlacement(boolean useMaxItems, boolean allowDroppingItemsToClear, RecipeHolder<?> recipe, ServerLevel level, Inventory playerInventory) {
+	public void handlePlacement(boolean placeAll, RecipeHolder<?> recipe, ServerPlayer player) {
 		if (!(recipe.value() instanceof BrewingRecipe)) {
-			return RecipeBookMenu.PostPlaceAction.NOTHING;
+			return;
 		}
 		@SuppressWarnings("unchecked")
 		RecipeHolder<BrewingRecipe> brewing = (RecipeHolder<BrewingRecipe>) recipe;
 		SimpleContainer grid = new SimpleContainer(BrewKettleBlockEntity.INPUT_SLOTS);
-		List<Slot> gridSlots = new ArrayList<>(BrewKettleBlockEntity.INPUT_SLOTS);
 		for (int i = 0; i < BrewKettleBlockEntity.INPUT_SLOTS; i++) {
 			grid.setItem(i, blockEntity.stackIn(i));
-			gridSlots.add(new Slot(grid, i, 0, 0));
 		}
-		RecipeInput gridInput = new RecipeInput()
-		{
-			@Override
-			public ItemStack getItem(int index) {
-				return grid.getItem(index);
-			}
-
-			@Override
-			public int size() {
-				return BrewKettleBlockEntity.INPUT_SLOTS;
-			}
-		};
 		try {
-			return ServerPlaceRecipe.placeRecipe(new ServerPlaceRecipe.CraftingMenuAccess<BrewingRecipe>()
-			{
-				@Override
-				public void fillCraftSlotsStackedContents(StackedItemContents stackedContents) {
-					for (int i = 0; i < BrewKettleBlockEntity.INPUT_SLOTS; i++) {
-						stackedContents.accountSimpleStack(grid.getItem(i));
-					}
-				}
-
-				@Override
-				public void clearCraftingContent() {
-					grid.clearContent();
-				}
-
-				@Override
-				public boolean recipeMatches(RecipeHolder<BrewingRecipe> holder) {
-					return holder.value().matches(gridInput, level);
-				}
-			}, 3, 2, gridSlots, gridSlots, playerInventory, brewing, useMaxItems, allowDroppingItemsToClear);
+			new ServerPlaceRecipe<>(new PlacementGrid(grid, player.level())).recipeClicked(player, brewing, placeAll);
 		} finally {
 			for (int i = 0; i < BrewKettleBlockEntity.INPUT_SLOTS; i++) {
 				ItemStack placed = grid.getItem(i);
@@ -228,12 +194,149 @@ public class BrewKettleMenu extends RecipeBookMenu
 		}
 	}
 
+	/**
+	 * The scratch grid as the menu vanilla's placer works on (on this Minecraft it takes a whole {@link RecipeBookMenu}):
+	 * the six ingredient slots and nothing else. It is never opened or synced; the placer talks to the player's real
+	 * menu (this kettle's) by itself.
+	 */
+	private static final class PlacementGrid extends RecipeBookMenu<RecipeInput, BrewingRecipe>
+	{
+		private final SimpleContainer grid;
+		private final Level level;
+
+		PlacementGrid(SimpleContainer grid, Level level) {
+			super(null, 0);
+			this.grid = grid;
+			this.level = level;
+			for (int i = 0; i < BrewKettleBlockEntity.INPUT_SLOTS; i++) {
+				this.addSlot(new Slot(grid, i, 0, 0));
+			}
+		}
+
+		@Override
+		public void fillCraftSlotsStackedContents(StackedContents contents) {
+			for (int i = 0; i < BrewKettleBlockEntity.INPUT_SLOTS; i++) {
+				contents.accountSimpleStack(grid.getItem(i));
+			}
+		}
+
+		@Override
+		public void clearCraftingContent() {
+			grid.clearContent();
+		}
+
+		@Override
+		public boolean recipeMatches(RecipeHolder<BrewingRecipe> holder) {
+			return holder.value().matches(new RecipeInput()
+			{
+				@Override
+				public ItemStack getItem(int index) {
+					return grid.getItem(index);
+				}
+
+				@Override
+				public int size() {
+					return BrewKettleBlockEntity.INPUT_SLOTS;
+				}
+			}, level);
+		}
+
+		@Override
+		public int getResultSlotIndex() {
+			return RESULT_SLOT_INDEX;
+		}
+
+		@Override
+		public int getGridWidth() {
+			return GRID_WIDTH;
+		}
+
+		@Override
+		public int getGridHeight() {
+			return GRID_HEIGHT;
+		}
+
+		@Override
+		public int getSize() {
+			return BrewKettleBlockEntity.INPUT_SLOTS;
+		}
+
+		@Override
+		public RecipeBookType getRecipeBookType() {
+			return Services.PLATFORM.brewingRecipeBookType();
+		}
+
+		@Override
+		public boolean shouldMoveToInventory(int slot) {
+			return slot < BrewKettleBlockEntity.INPUT_SLOTS;
+		}
+
+		@Override
+		public ItemStack quickMoveStack(Player player, int index) {
+			return ItemStack.EMPTY;
+		}
+
+		@Override
+		public boolean stillValid(Player player) {
+			return true;
+		}
+	}
+
+	// ------------------------------------------------------------------ what the recipe book asks of the menu (the client's book, mostly)
+
+	/** The ingredient grid: 3 columns, 2 rows. */
+	private static final int GRID_WIDTH = 3;
+	private static final int GRID_HEIGHT = 2;
+	/**
+	 * The brew is never a slot. Vanilla's recipe book skips this index when it walks "the grid and the result", so it
+	 * is the first index after the grid: nothing of ours is skipped, and the walk never leaves the grid.
+	 */
+	private static final int RESULT_SLOT_INDEX = BrewKettleBlockEntity.INPUT_SLOTS;
+
 	@Override
-	public void fillCraftSlotsStackedContents(StackedItemContents contents) {
+	public void fillCraftSlotsStackedContents(StackedContents contents) {
 		// Only the ingredient slots: the brew, container and output are not recipe book ingredients
 		for (int i = 0; i < BrewKettleBlockEntity.INPUT_SLOTS; i++) {
 			contents.accountSimpleStack(inventory.copyStack(i));
 		}
+	}
+
+	@Override
+	public void clearCraftingContent() {
+		for (int i = 0; i < BrewKettleBlockEntity.INPUT_SLOTS; i++) {
+			slots.get(i).set(ItemStack.EMPTY);
+		}
+	}
+
+	@Override
+	public boolean recipeMatches(RecipeHolder<BrewingRecipe> holder) {
+		return holder.value().matches(new KettleRecipeInput(inventory), level);
+	}
+
+	@Override
+	public int getResultSlotIndex() {
+		return RESULT_SLOT_INDEX;
+	}
+
+	@Override
+	public int getGridWidth() {
+		return GRID_WIDTH;
+	}
+
+	@Override
+	public int getGridHeight() {
+		return GRID_HEIGHT;
+	}
+
+	/** The slots the recipe book watches (a click on one clears its ghost recipe): the ingredient grid. */
+	@Override
+	public int getSize() {
+		return INDEX_INVENTORY;
+	}
+
+	@Override
+	public boolean shouldMoveToInventory(int slot) {
+		return slot < INDEX_INVENTORY;
 	}
 
 	@Override

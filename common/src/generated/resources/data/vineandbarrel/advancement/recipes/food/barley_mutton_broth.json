@@ -21,7 +21,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipes": "vineandbarrel:cooking/barley_mutton_broth"
+        "recipe": "vineandbarrel:cooking/barley_mutton_broth"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

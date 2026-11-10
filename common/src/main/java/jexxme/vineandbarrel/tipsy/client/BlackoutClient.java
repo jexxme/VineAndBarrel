@@ -8,19 +8,18 @@ import jexxme.vineandbarrel.tipsy.TipsyRegistry;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.InBedChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.player.ClientInput;
+import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -34,8 +33,8 @@ import org.jspecify.annotations.Nullable;
  */
 public final class BlackoutClient
 {
-	/** The HUD layer of the closed eyes, by id (NeoForge GUI layers, Fabric HUD elements): above all others. */
-	public static final Identifier LAYER = VineAndBarrel.id("blackout");
+	/** The HUD layer of the closed eyes, by id (NeoForge GUI layers; Fabric draws it from its Gui mixin): above all others. */
+	public static final ResourceLocation LAYER = VineAndBarrel.id("blackout");
 	/** The head is about this high above the feet; the stars circle this far above it. */
 	private static final double HEAD = 1.6, STARS_ABOVE = 0.45;
 
@@ -133,7 +132,7 @@ public final class BlackoutClient
 	/** {@return how far the first-person camera goes down lying on the ground ({@link TipsyClient#cameraOffset})} */
 	public static double cameraDrop(Camera camera, float partial) {
 		Minecraft minecraft = Minecraft.getInstance();
-		if (camera.isDetached() || camera.entity() != minecraft.player || minecraft.player == null) {
+		if (camera.isDetached() || camera.getEntity() != minecraft.player || minecraft.player == null) {
 			return 0.0;
 		}
 		float lying = lying(minecraft.player, partial);
@@ -144,11 +143,22 @@ public final class BlackoutClient
 	 * Out cold, the keys do nothing (the server slows you to a stop as well; this keeps jumping out too). Right after the
 	 * player's input was read each tick.
 	 */
-	public static void onMovementInput(Player player, ClientInput input) {
+	public static void onMovementInput(Player player, Input input) {
 		if (Blackout.isOut(player)) {
-			input.keyPresses = Input.EMPTY;
-			input.moveVector = Vec2.ZERO;
+			holdStill(input);
 		}
+	}
+
+	/** No key pressed and no movement (1.21.1: the input's own fields; sprinting needs a forward impulse, so it ends too). */
+	static void holdStill(Input input) {
+		input.up = false;
+		input.down = false;
+		input.left = false;
+		input.right = false;
+		input.jumping = false;
+		input.shiftKeyDown = false;
+		input.leftImpulse = 0.0F;
+		input.forwardImpulse = 0.0F;
 	}
 
 	/** Vanilla turns by (s * 0.6 + 0.2)^3: this sensitivity makes it zero. */
@@ -177,7 +187,7 @@ public final class BlackoutClient
 	// ------------------------------------------------------------------ the eyes
 
 	/** The blackout layer, above all others: covers everything, the HUD included (and is not part of the optional vision effects). */
-	public static void renderBlackout(GuiGraphicsExtractor gui, DeltaTracker delta) {
+	public static void renderBlackout(GuiGraphics gui, DeltaTracker delta) {
 		LocalPlayer player = Minecraft.getInstance().player;
 		Integer left = player == null ? null : TipsyRegistry.BLACKOUT.getExisting(player);
 		if (left == null || left <= 0) {
@@ -189,16 +199,19 @@ public final class BlackoutClient
 		}
 	}
 
-	/** Two lids with a soft edge that meet in the middle; fully closed they cover the whole view (also the tipsy blinks). */
-	static void drawLids(GuiGraphicsExtractor gui, float closed) {
+	/**
+	 * Two lids with a soft edge that meet in the middle; fully closed they cover the whole view (also the tipsy blinks).
+	 * Drawn like vanilla's sleep overlay, over whatever was drawn before it (1.21.1's HUD layers lie at different depths).
+	 */
+	static void drawLids(GuiGraphics gui, float closed) {
 		int width = gui.guiWidth();
 		int height = gui.guiHeight();
 		int feather = Math.max(4, height / 8);
 		int lid = Math.round(closed * (height / 2.0F + feather));
-		gui.fill(0, 0, width, lid - feather, 0xFF000000);
-		gui.fillGradient(0, lid - feather, width, lid, 0xFF000000, 0x00000000);
-		gui.fillGradient(0, height - lid, width, height - lid + feather, 0x00000000, 0xFF000000);
-		gui.fill(0, height - lid + feather, width, height, 0xFF000000);
+		gui.fill(RenderType.guiOverlay(), 0, 0, width, lid - feather, 0xFF000000);
+		gui.fillGradient(RenderType.guiOverlay(), 0, lid - feather, width, lid, 0xFF000000, 0x00000000, 0);
+		gui.fillGradient(RenderType.guiOverlay(), 0, height - lid, width, height - lid + feather, 0x00000000, 0xFF000000, 0);
+		gui.fill(RenderType.guiOverlay(), 0, height - lid + feather, width, height, 0xFF000000);
 	}
 
 	/** Whether this client's own player is out cold. */

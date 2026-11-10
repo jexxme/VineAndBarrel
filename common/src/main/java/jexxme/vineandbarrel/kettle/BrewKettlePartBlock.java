@@ -4,15 +4,15 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.Mirror;
@@ -92,7 +92,7 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 	// ------------------------------------------------------------------ use: everything a single kettle does, for the whole kettle
 
 	@Override
-	protected InteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+	protected ItemInteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
 		return BrewKettleBlock.useKettle(held, state, level, pos, player, hand);
 	}
 
@@ -109,26 +109,39 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 			KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
 			BrewKettleBlockEntity controller = KettleMultiblock.controller(level, pos);
 			if (kettle != null && controller != null && KettleMultiblock.isIntact(level, kettle)) {
-				KettleMultiblock.split(server, kettle, controller, state.getBlock(), pos, !player.preventsBlockDrops());
+				KettleMultiblock.split(server, kettle, controller, state.getBlock(), pos, !player.hasInfiniteMaterials());
 			}
 		}
 		return super.playerWillDestroy(level, pos, state, player);
 	}
 
-	/** Anything else that removes a part (an explosion, a command): the rest falls apart, the brew stays with them. */
+	/**
+	 * Anything else that removes a part (an explosion, a command): the rest falls apart, the brew stays with them. The
+	 * controller's block entity sees to it itself ({@link BrewKettleBlockEntity#preRemoveSideEffects}, while it is still
+	 * there). Only a change of copper keeps the block entity (same part, another stage: vanilla's removal of it is
+	 * skipped); joining and splitting move the brew themselves.
+	 */
 	@Override
-	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
-		BlockState now = level.getBlockState(pos);
-		boolean sameplace = now.getBlock() instanceof BrewKettlePartBlock && now.getValue(PART).equals(state.getValue(PART));
+	protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		if (state.is(newState.getBlock())) {
+			return;
+		}
+		boolean keepsBlockEntity = newState.getBlock() instanceof BrewKettlePartBlock;
+		if (!keepsBlockEntity && level.getBlockEntity(pos) instanceof BrewKettleBlockEntity controller) {
+			controller.preRemoveSideEffects(pos, state);
+		}
+		boolean sameplace = keepsBlockEntity && newState.getValue(PART).equals(state.getValue(PART));
 		// (a change of copper on this block, e.g. vanilla's honeycomb or lightning: onPlace turns the whole kettle)
-		if (!KettleMultiblock.isConverting() && !sameplace && !part(state).isController()) {
+		if (level instanceof ServerLevel server && !KettleMultiblock.isConverting() && !sameplace && !part(state).isController()) {
 			KettleMultiblock.Kettle kettle = KettleMultiblock.kettleOf(state, pos);
 			if (kettle != null && KettleMultiblock.restIntact(level, kettle, pos)
 				&& level.getBlockEntity(kettle.controller()) instanceof BrewKettleBlockEntity controller) {
-				KettleMultiblock.split(level, kettle, controller, state.getBlock(), pos, false);
+				KettleMultiblock.split(server, kettle, controller, state.getBlock(), pos, false);
 			}
 		}
-		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+		if (!keepsBlockEntity) {
+			super.onRemove(state, level, pos, newState, movedByPiston);
+		}
 	}
 
 	/** A broken part drops as a plain kettle of its stage, carrying its share of the brew. */
@@ -146,7 +159,7 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 	}
 
 	@Override
-	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		return new ItemStack(KettleRegistry.singleOf(this).asItem());
 	}
 
@@ -165,16 +178,10 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 		}
 	}
 
-	/** Only a change of copper keeps the block entity (same part, another stage); joining and splitting move the brew themselves. */
-	@Override
-	protected boolean shouldChangedStateKeepBlockEntity(BlockState oldState) {
-		return oldState.getBlock() instanceof BrewKettlePartBlock;
-	}
-
 	// ------------------------------------------------------------------ shape, trays, turning
 
 	@Override
-	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+	protected BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
 		if (direction == Direction.DOWN && part(state).isBottom()) {
 			return state.setValue(TRAY, BrewKettleBlock.trayState(level, pos) == KettleSupport.TRAY);
 		}
@@ -238,7 +245,7 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 	}
 
 	@Override
-	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
+	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
 		BrewKettleBlockEntity kettle = KettleMultiblock.controller(level, pos);
 		return kettle != null ? kettle.comparatorSignal() : 0;
 	}

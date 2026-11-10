@@ -5,7 +5,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
@@ -42,8 +42,8 @@ public final class DrinkBuffs
 		).apply(inst, Buff::new));
 
 		Optional<Holder.Reference<MobEffect>> holder() {
-			Identifier id = Identifier.tryParse(effect);
-			return id == null ? Optional.empty() : BuiltInRegistries.MOB_EFFECT.get(id);
+			ResourceLocation id = ResourceLocation.tryParse(effect);
+			return id == null ? Optional.empty() : BuiltInRegistries.MOB_EFFECT.getHolder(id);
 		}
 
 		/** Whether {@code instance} is the one this drink gave. */

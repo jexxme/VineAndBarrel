@@ -3,6 +3,7 @@
   "package": "jexxme.vineandbarrel.smoke.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ChunkMapAccessor",
     "ForcedBlackoutEndingMixin"
   ],
   "client": [

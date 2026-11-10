@@ -3,6 +3,8 @@
   "package": "jexxme.vineandbarrel.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "StructureEntityTileMixin",
+    "VillagerWantsBarleyMixin",
     "BeeAccessor",
     "BeeGrowCropGoalMixin",
     "CampfireSignalSmokeMixin",
@@ -13,15 +15,20 @@
     "IronBarsBlockMixin",
     "LeadItemMixin",
     "LeashFenceKnotEntityMixin",
+    "SinglePoolElementAccessor",
     "SleepStatusMixin",
     "ValidateNearbyPoiMixin",
     "WallBlockMixin"
   ],
   "client": [
+    "BlockElementAngleMixin",
     "AbstractContainerScreenAccessor",
+    "ClientAdvancementsAccessor",
     "CameraMixin",
-    "GuiGraphicsExtractorAccessor",
-    "ParticleEngineAccessor"
+    "GameRendererMixin",
+    "ParticleEngineAccessor",
+    "RecipeBookComponentAccessor",
+    "SceneFigureDrinkMixin"
   ],
   "injectors": {
     "defaultRequire": 1

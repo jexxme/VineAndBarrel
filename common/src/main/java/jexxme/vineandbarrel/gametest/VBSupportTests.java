@@ -44,12 +44,21 @@ import static jexxme.vineandbarrel.gametest.VBGameTests.test;
 
 /**
  * Trellis 2.0: grapes and hops also climb fences, walls, upright chains and bars ({@code #vineandbarrel:makeshift_vine_supports}).
- * The vine keeps that exact block (a spruce fence, a waxed copper chain), its neighbours still see it, it comes back
+ * The vine keeps that exact block (a spruce fence, a chain), its neighbours still see it, it comes back
  * however the plant goes, and picking gives one fewer than on a trellis.
+ * <p>
+ * Minecraft 1.21.1 has one chain ({@code minecraft:chain}) and one kind of bars (iron), no copper ones, so every chain
+ * and every bars here is that one. The GameTest data makes that same chain the stand-in for FD's rope
+ * ({@code #farmersdelight:ropes}), so where a test needs a chain that is no rope it asks {@link #chainIsARope} first.
  */
 final class VBSupportTests
 {
 	private VBSupportTests() {
+	}
+
+	/** True in a run whose data puts the chain into {@code #farmersdelight:ropes} (the GameTest data's stand-in for FD's rope). */
+	private static boolean chainIsARope() {
+		return Blocks.CHAIN.defaultBlockState().is(jexxme.vineandbarrel.tag.VBTags.FD_ROPES);
 	}
 
 	static void registerAll() {
@@ -96,8 +105,13 @@ final class VBSupportTests
 		helper.useBlock(bush, player);
 		helper.assertBlockPresent(VBBlocks.GRAPE_BUSH.get(), bush);
 		int x = 1;
-		for (BlockState above : List.of(Blocks.OAK_FENCE.defaultBlockState(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState(),
-				Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState(), Blocks.IRON_BARS.defaultBlockState())) {
+		List<BlockState> aboves = new java.util.ArrayList<>(List.of(Blocks.OAK_FENCE.defaultBlockState(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState(),
+				Blocks.IRON_BARS.defaultBlockState()));
+		if (!chainIsARope()) {
+			// 26.x: a copper chain (the iron one is the test data's rope). 1.21.1's only chain is that rope: a bush climbs it
+			aboves.add(Blocks.CHAIN.defaultBlockState());
+		}
+		for (BlockState above : aboves) {
 			BlockPos under = new BlockPos(x, 2, 6);
 			x += 2;
 			ripeBush(helper, under, VBBlocks.GRAPE_BUSH.get());
@@ -207,7 +221,7 @@ final class VBSupportTests
 
 		helper.getLevel().destroyBlock(helper.absolutePos(root), false);
 		helper.succeedWhen(() -> {
-			helper.assertBlockState(root, rowFence);
+			VBGameTests.assertBlockState(helper, root, rowFence);
 			helper.assertBlockPresent(Blocks.OAK_FENCE, root.above());
 			helper.assertBlockPresent(Blocks.OAK_FENCE, root.above(2));
 			helper.assertItemEntityNotPresent(Items.OAK_FENCE, root.above(), 4.0);
@@ -216,8 +230,8 @@ final class VBSupportTests
 
 	/**
 	 * Hops grown in a mossy wall running north-south climb the wall above (spread wide across it); a hop bush under a wall
-	 * stays a bush. White grapes climb an upright copper chain above their bush (wound round it), red grapes copper bars
-	 * (spread thin), each on a random tick like on a trellis. (The iron chain is the test data's stand-in for FD's rope, so it
+	 * stays a bush. White grapes climb an upright chain above their bush (wound round it), red grapes iron bars
+	 * (spread thin), each on a random tick like on a trellis. (In a run whose data makes the chain the stand-in for FD's rope, it
 	 * grows a vine on a rope here; in play it holds a vine like any chain.)
 	 */
 	private static void wallsChainsAndBars(GameTestHelper helper) {
@@ -225,8 +239,8 @@ final class VBSupportTests
 		}
 		List<Column> columns = List.of(
 				new Column(VBBlocks.HOP_BUSH.get(), Blocks.MOSSY_COBBLESTONE_WALL.defaultBlockState(), true, SupportLook.WIDE_Z, true),
-				new Column(VBBlocks.WHITE_GRAPE_BUSH.get(), Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState(), false, SupportLook.CROSS, false),
-				new Column(VBBlocks.GRAPE_BUSH.get(), Blocks.COPPER_BARS.weathering().unaffected().defaultBlockState(), true, SupportLook.THIN_Z, false));
+				new Column(VBBlocks.WHITE_GRAPE_BUSH.get(), Blocks.CHAIN.defaultBlockState(), false, SupportLook.CROSS, false),
+				new Column(VBBlocks.GRAPE_BUSH.get(), Blocks.IRON_BARS.defaultBlockState(), true, SupportLook.THIN_Z, false));
 		int x = 2;
 		for (Column column : columns) {
 			BlockPos plant = new BlockPos(x, 1, 4);
@@ -272,13 +286,12 @@ final class VBSupportTests
 	private static void whatHoldsAVine(GameTestHelper helper) {
 		ClimbingCropBlock grapes = VBBlocks.GRAPE_BUSH.get();
 		for (BlockState holds : List.of(Blocks.SPRUCE_FENCE.defaultBlockState(), Blocks.NETHER_BRICK_FENCE.defaultBlockState(),
-				Blocks.STONE_BRICK_WALL.defaultBlockState(), Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState(),
-				Blocks.COPPER_CHAIN.waxed().oxidized().defaultBlockState(),
-				Blocks.IRON_BARS.defaultBlockState(), Blocks.COPPER_BARS.weathering().weathered().defaultBlockState())) {
+				Blocks.STONE_BRICK_WALL.defaultBlockState(), Blocks.CHAIN.defaultBlockState(),
+				Blocks.IRON_BARS.defaultBlockState())) {
 			helper.assertTrue(VineSupports.isMakeshift(holds), holds + " holds a vine");
 			helper.assertTrue(grapes.vineOn(holds) != null && grapes.vineOn(holds).is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), holds + " grows the vine on a support");
 		}
-		for (BlockState holdsNot : List.of(Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState().setValue(ChainBlock.AXIS, Direction.Axis.X),
+		for (BlockState holdsNot : List.of(Blocks.CHAIN.defaultBlockState().setValue(ChainBlock.AXIS, Direction.Axis.X),
 				Blocks.LADDER.defaultBlockState(), Blocks.GLASS_PANE.defaultBlockState(), Blocks.OAK_FENCE_GATE.defaultBlockState(),
 				Blocks.OAK_FENCE.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, true), Blocks.OAK_LOG.defaultBlockState())) {
 			helper.assertTrue(grapes.vineOn(holdsNot) == null, holdsNot + " grows no vine");
@@ -288,12 +301,12 @@ final class VBSupportTests
 		helper.assertValueEqual(VineSupports.lookOf(fence.setValue(CrossCollisionBlock.NORTH, true).setValue(CrossCollisionBlock.EAST, true)),
 				SupportLook.CROSS, "a fence corner");
 		helper.assertValueEqual(VineSupports.lookOf(fence.setValue(CrossCollisionBlock.WEST, true)), SupportLook.THIN_X, "a fence row's end");
-		helper.assertValueEqual(VineSupports.lookOf(Blocks.STONE_BRICK_WALL.defaultBlockState().setValue(WallBlock.EAST, WallSide.LOW)
-				.setValue(WallBlock.WEST, WallSide.TALL)), SupportLook.WIDE_X, "a wall running east-west");
+		helper.assertValueEqual(VineSupports.lookOf(Blocks.STONE_BRICK_WALL.defaultBlockState().setValue(WallBlock.EAST_WALL, WallSide.LOW)
+				.setValue(WallBlock.WEST_WALL, WallSide.TALL)), SupportLook.WIDE_X, "a wall running east-west");
 		helper.assertValueEqual(VineSupports.lookOf(Blocks.IRON_BARS.defaultBlockState().setValue(CrossCollisionBlock.NORTH, true)
 				.setValue(CrossCollisionBlock.SOUTH, true)), SupportLook.THIN_Z, "bars running north-south");
-		helper.assertValueEqual(VineSupports.lookOf(Blocks.IRON_CHAIN.defaultBlockState()), SupportLook.CROSS, "a chain");
-		helper.assertValueEqual(VBBlocks.GRAPE_VINE_ON_SUPPORT.get().defaultBlockState().getPistonPushReaction(), PushReaction.IMMOVEABLE,
+		helper.assertValueEqual(VineSupports.lookOf(Blocks.CHAIN.defaultBlockState()), SupportLook.CROSS, "a chain");
+		helper.assertValueEqual(VBBlocks.GRAPE_VINE_ON_SUPPORT.get().defaultBlockState().getPistonPushReaction(), PushReaction.BLOCK,
 				"pistons leave an overgrown support alone");
 		helper.succeed();
 	}
@@ -308,8 +321,8 @@ final class VBSupportTests
 	 */
 	private static void givesTheBlockBack(GameTestHelper helper) {
 		List<BlockState> supports = List.of(Blocks.SPRUCE_FENCE.defaultBlockState(), Blocks.MOSSY_STONE_BRICK_WALL.defaultBlockState(),
-				Blocks.COPPER_CHAIN.waxed().exposed().defaultBlockState(), Blocks.COPPER_BARS.weathering().unaffected().defaultBlockState(), Blocks.CRIMSON_FENCE.defaultBlockState());
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+				Blocks.CHAIN.defaultBlockState(), Blocks.IRON_BARS.defaultBlockState(), Blocks.CRIMSON_FENCE.defaultBlockState());
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		BlockState[] expected = new BlockState[supports.size()];
 		BlockPos[] at = new BlockPos[supports.size()];
@@ -330,18 +343,18 @@ final class VBSupportTests
 		}
 		// a player: the fence stays, the ripe grapes drop, no fence item
 		player.gameMode.destroyBlock(helper.absolutePos(at[0]));
-		helper.assertBlockState(at[0], expected[0]);
+		VBGameTests.assertBlockState(helper, at[0], expected[0]);
 		int picked = collect(helper, at[0], VBItems.RED_GRAPES.get());
 		helper.assertTrue(picked == 1 || picked == 2, "breaking a ripe vine on a fence drops 1-2 grapes (and no fence), dropped " + picked);
 		// an explosion
 		Vec3 boom = Vec3.atCenterOf(helper.absolutePos(at[1]));
 		helper.getLevel().explode(null, boom.x, boom.y, boom.z, 1.0F, net.minecraft.world.level.Level.ExplosionInteraction.TNT);
-		helper.assertBlockState(at[1], expected[1]);
+		VBGameTests.assertBlockState(helper, at[1], expected[1]);
 		// fire: burnt away (removed), and turned into fire
 		helper.getLevel().removeBlock(helper.absolutePos(at[2]), false);
-		helper.assertBlockState(at[2], expected[2]);
+		VBGameTests.assertBlockState(helper, at[2], expected[2]);
 		helper.getLevel().setBlockAndUpdate(helper.absolutePos(at[3]), Blocks.FIRE.defaultBlockState());
-		helper.assertBlockState(at[3], expected[3]);
+		VBGameTests.assertBlockState(helper, at[3], expected[3]);
 		// the soil goes under a root
 		BlockPos root = at[4].below();
 		helper.setBlock(root.below(), Blocks.GRASS_BLOCK);
@@ -352,8 +365,8 @@ final class VBSupportTests
 		helper.setBlock(root.below(), Blocks.STONE);
 		// no bush in this column any more, so nothing can grow back while the root and then its vine go
 		helper.succeedWhen(() -> {
-			helper.assertBlockState(root, rootFence);
-			helper.assertBlockState(at[4], expected[4]); // the vine above lost its root and went too
+			VBGameTests.assertBlockState(helper, root, rootFence);
+			VBGameTests.assertBlockState(helper, at[4], expected[4]); // the vine above lost its root and went too
 		});
 	}
 
@@ -430,8 +443,8 @@ final class VBSupportTests
 		ItemStack walls = new ItemStack(Items.COBBLESTONE_WALL, 4);
 		player.setItemInHand(InteractionHand.MAIN_HAND, walls);
 		helper.placeAt(player, walls, wall.east().below(), Direction.UP);
-		helper.assertTrue(state(helper, wall.east()).getValue(WallBlock.WEST) != WallSide.NONE, "a new wall connects to the overgrown wall");
-		helper.assertTrue(support(helper, wall).getValue(WallBlock.EAST) != WallSide.NONE, "the overgrown wall connects back");
+		helper.assertTrue(state(helper, wall.east()).getValue(WallBlock.WEST_WALL) != WallSide.NONE, "a new wall connects to the overgrown wall");
+		helper.assertTrue(support(helper, wall).getValue(WallBlock.EAST_WALL) != WallSide.NONE, "the overgrown wall connects back");
 		// a gate between two overgrown walls
 		BlockPos gate = new BlockPos(5, 2, 8);
 		for (BlockPos side : List.of(gate.west(), gate.east())) {
@@ -482,7 +495,7 @@ final class VBSupportTests
 		overgrow(helper, onStone, VBBlocks.HOP_VINE_ON_SUPPORT.get(), 0, true);
 		helper.assertFalse(state(helper, onStone).canSurvive(helper.getLevel(), helper.absolutePos(onStone)), "a root can't live on stone");
 		helper.setBlock(onStone.below(), Blocks.COBBLESTONE); // any update makes it notice
-		helper.succeedWhen(() -> helper.assertBlockState(onStone, stoneFence));
+		helper.succeedWhen(() -> VBGameTests.assertBlockState(helper, onStone, stoneFence));
 	}
 
 	// ------------------------------------------------------------------ planting, both ways round
@@ -547,7 +560,7 @@ final class VBSupportTests
 	 */
 	private static void frameSeesFdTomatoVines(GameTestHelper helper) {
 		java.util.Optional<Block> tomatoes = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getOptional(
-				net.minecraft.resources.Identifier.fromNamespaceAndPath("farmersdelight", "tomatoes_on_support"));
+				net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("farmersdelight", "tomatoes_on_support"));
 		if (tomatoes.isEmpty()) {
 			helper.succeed();
 			return;
@@ -563,7 +576,7 @@ final class VBSupportTests
 			try {
 				blockEntity.getClass().getMethod("setSupport", BlockState.class).invoke(blockEntity, trellis);
 			} catch (ReflectiveOperationException e) {
-				throw helper.assertionException("FD's tomato vine takes a support: " + e);
+				throw VBGameTests.assertionException(helper, "FD's tomato vine takes a support: " + e);
 			}
 			helper.assertValueEqual(TrellisFrame.heldByTomatoVine(helper.getLevel().getBlockEntity(helper.absolutePos(vine))), trellis, "the trellis the tomato vine holds");
 		}
@@ -634,7 +647,7 @@ final class VBSupportTests
 		helper.setBlock(pos.below(), Blocks.GRASS_BLOCK);
 		build(helper, pos, Blocks.OAK_FENCE.defaultBlockState());
 		overgrow(helper, pos, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), 1, true);
-		jexxme.vineandbarrel.block.VineSupportBlockEntity entity = (jexxme.vineandbarrel.block.VineSupportBlockEntity) helper.getBlockEntity(pos,
+		jexxme.vineandbarrel.block.VineSupportBlockEntity entity = VBGameTests.blockEntity(helper, pos,
 				jexxme.vineandbarrel.block.VineSupportBlockEntity.class);
 		entity.setSupport(VBBlocks.HOP_VINE_ON_SUPPORT.get().defaultBlockState());
 		helper.assertTrue(entity.support() == null, "a vine can't hold another vine on a support");
@@ -663,7 +676,7 @@ final class VBSupportTests
 		ripeBush(helper, onTrellis.below(), VBBlocks.GRAPE_BUSH.get());
 		helper.setBlock(onTrellis, VBBlocks.GRAPE_VINE_ON_TRELLIS.get().defaultBlockState().setValue(jexxme.vineandbarrel.block.TrellisBlock.AXIS, Direction.Axis.Z));
 		helper.getLevel().setBlockAndUpdate(helper.absolutePos(onTrellis), Blocks.FIRE.defaultBlockState());
-		helper.assertBlockState(onTrellis, trellis);
+		VBGameTests.assertBlockState(helper, onTrellis, trellis);
 		BlockPos onRope = new BlockPos(5, 2, 2);
 		ripeBush(helper, onRope.below(), VBBlocks.HOP_BUSH.get());
 		helper.setBlock(onRope, VBBlocks.HOP_VINE_ON_ROPE.get().defaultBlockState());
@@ -706,10 +719,13 @@ final class VBSupportTests
 		helper.setBlock(pos.above(), VBBlocks.TRELLIS.get().defaultBlockState());
 		AABB underTrellis = outline.apply(ripe);
 		helper.assertTrue(underTrellis.maxZ - underTrellis.minZ <= 6.0 / 16.0 + 1.0E-6, "a ripe bush under a trellis: its planes " + underTrellis);
-		helper.setBlock(pos.above(), Blocks.COPPER_CHAIN.weathering().unaffected().defaultBlockState());
-		helper.assertValueEqual(outline.apply(ripe), VineSupports.ENABLED ? new AABB(2.0 / 16.0, 0, 2.0 / 16.0, 14.0 / 16.0, 1, 14.0 / 16.0)
-				: new AABB(0, 0, 0, 1, 1, 1), "a ripe bush under a chain");
-		helper.setBlock(pos.above(), Blocks.AIR);
+		if (!chainIsARope()) {
+			// 26.x: a copper chain (the iron one is the test data's rope). 1.21.1's only chain is that rope
+			helper.setBlock(pos.above(), Blocks.CHAIN.defaultBlockState());
+			helper.assertValueEqual(outline.apply(ripe), VineSupports.ENABLED ? new AABB(2.0 / 16.0, 0, 2.0 / 16.0, 14.0 / 16.0, 1, 14.0 / 16.0)
+					: new AABB(0, 0, 0, 1, 1, 1), "a ripe bush under a chain");
+			helper.setBlock(pos.above(), Blocks.AIR);
+		}
 		if (!VineSupports.ENABLED) {
 			helper.succeed();
 			return;

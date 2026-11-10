@@ -1,9 +1,10 @@
 package jexxme.vineandbarrel.watch.client;
 
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
-import net.minecraft.world.level.CardinalLighting;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ColorResolver;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
@@ -11,6 +12,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LightChunk;
+import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
 import org.jspecify.annotations.Nullable;
@@ -31,6 +34,19 @@ public final class SceneWorld implements BlockAndTintGetter
 	private final Map<BlockPos, BlockState> blocks = new HashMap<>();
 	private final Map<BlockPos, BlockEntity> blockEntities = new HashMap<>();
 	private final @Nullable Holder<Biome> biome;
+	/** Never asked for light (everything here is in full light): an engine without light, only so there is one. */
+	private final LevelLightEngine noLight = new LevelLightEngine(new LightChunkGetter()
+	{
+		@Override
+		public @Nullable LightChunk getChunkForLighting(int chunkX, int chunkZ) {
+			return null;
+		}
+
+		@Override
+		public BlockGetter getLevel() {
+			return SceneWorld.this;
+		}
+	}, false, false);
 
 	SceneWorld(@Nullable Holder<Biome> biome) {
 		this.biome = biome;
@@ -92,14 +108,23 @@ public final class SceneWorld implements BlockAndTintGetter
 		return blockEntities.get(pos);
 	}
 
+	/** How bright a face is by the way it looks, as in the overworld: the top brightest, the bottom darkest. */
 	@Override
-	public CardinalLighting cardinalLighting() {
-		return CardinalLighting.DEFAULT;
+	public float getShade(Direction direction, boolean shade) {
+		if (!shade) {
+			return 1.0F;
+		}
+		return switch (direction) {
+			case DOWN -> 0.5F;
+			case UP -> 1.0F;
+			case NORTH, SOUTH -> 0.8F;
+			case WEST, EAST -> 0.6F;
+		};
 	}
 
 	@Override
 	public LevelLightEngine getLightEngine() {
-		return LevelLightEngine.EMPTY;
+		return noLight;
 	}
 
 	@Override
@@ -123,7 +148,7 @@ public final class SceneWorld implements BlockAndTintGetter
 	}
 
 	@Override
-	public int getMinY() {
+	public int getMinBuildHeight() {
 		return 0;
 	}
 }

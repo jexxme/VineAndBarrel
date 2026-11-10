@@ -22,7 +22,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipes": "vineandbarrel:cooking/wine_braised_beef"
+        "recipe": "vineandbarrel:cooking/wine_braised_beef"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -68,7 +68,7 @@ public final class NeoForgeGameTests
 			NeoForge.EVENT_BUS.unregister(deny);
 		}
 		helper.assertValueEqual(player.getMainHandItem().getCount(), 1, "the ale is refunded");
-		PlacedDrinksBlockEntity drinks = helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class);
+		PlacedDrinksBlockEntity drinks = VBGameTests.blockEntity(helper, spot, PlacedDrinksBlockEntity.class);
 		int held = 0;
 		for (int i = 0; i < 4; i++) {
 			held += drinks.getItem(i).isEmpty() ? 0 : 1;

@@ -1,6 +1,7 @@
 package jexxme.vineandbarrel.fabric;
 
 import jexxme.vineandbarrel.VineAndBarrel;
+import jexxme.vineandbarrel.barrel.AgingBarrelItem;
 import jexxme.vineandbarrel.barrel.AgingRecipes;
 import jexxme.vineandbarrel.barrel.BarrelDispenserBehaviors;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
@@ -20,10 +21,10 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
-import net.fabricmc.fabric.api.recipe.v1.sync.RecipeSynchronization;
+import net.fabricmc.fabric.api.registry.CompostingChanceRegistry;
+import net.fabricmc.fabric.api.registry.FuelRegistry;
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.fabricmc.fabric.api.registry.VillagerInteractionRegistries;
-import net.minecraft.core.cauldron.CauldronInteractions;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.ai.village.poi.PoiTypes;
@@ -47,30 +48,38 @@ public final class VineAndBarrelFabric implements ModInitializer
 		VineAndBarrel.init();
 		FabricConfig.load();
 		ServerConfigPayload.register();
+		ModPresence.register();
 		FabricRecipeBook.register();
 		FabricPlatform.registerAll();
 		VineAndBarrel.setup();
-		// Our bases in cauldrons, on both sides so the client predicts the click, and our dispatchers in vanilla's list of
-		// them, so other mods that reach every cauldron reach ours (NeoForge: its cauldron events)
+		// Our bases in cauldrons, on both sides so the client predicts the click. Each of our cauldrons put its own
+		// interaction map into vanilla's list of them when its block was made, so other mods that reach every cauldron
+		// reach ours
 		VBCauldrons.addInteractions();
-		VBCauldrons.registerDispatchers((id, dispatcher) -> CauldronInteractions.ID_MAPPER.put(id.toString(), dispatcher));
 		FabricItemAccess.register();
 		registerContent();
 		registerEvents();
+		// The GameTests (dev only), now that everything they name is registered
+		FabricGameTestRegistration.registerAll();
 	}
 
-	/** What NeoForge takes from data (data maps, biome modifiers, loot modifiers, recipe sync), from the same values. */
+	/** What NeoForge takes from data (data maps, biome modifiers, loot modifiers), from the same values. */
 	private static void registerContent() {
 		// Copper kettles weather and take wax (NeoForge: data/neoforge/data_maps/block/oxidizables.json and waxables.json)
 		WeatherState[] stages = WeatherState.values();
 		for (WeatherState stage : stages) {
-			OxidizableBlocksRegistry.registerWaxable(KettleRegistry.KETTLES.get(stage).get(), KettleRegistry.WAXED_KETTLES.get(stage).get());
-			OxidizableBlocksRegistry.registerWaxable(KettleRegistry.PARTS.get(stage).get(), KettleRegistry.WAXED_PARTS.get(stage).get());
+			OxidizableBlocksRegistry.registerWaxableBlockPair(KettleRegistry.KETTLES.get(stage).get(), KettleRegistry.WAXED_KETTLES.get(stage).get());
+			OxidizableBlocksRegistry.registerWaxableBlockPair(KettleRegistry.PARTS.get(stage).get(), KettleRegistry.WAXED_PARTS.get(stage).get());
 			if (stage.ordinal() + 1 < stages.length) {
-				OxidizableBlocksRegistry.registerNextStage(KettleRegistry.KETTLES.get(stage).get(), KettleRegistry.KETTLES.get(stages[stage.ordinal() + 1]).get());
-				OxidizableBlocksRegistry.registerNextStage(KettleRegistry.PARTS.get(stage).get(), KettleRegistry.PARTS.get(stages[stage.ordinal() + 1]).get());
+				OxidizableBlocksRegistry.registerOxidizableBlockPair(KettleRegistry.KETTLES.get(stage).get(), KettleRegistry.KETTLES.get(stages[stage.ordinal() + 1]).get());
+				OxidizableBlocksRegistry.registerOxidizableBlockPair(KettleRegistry.PARTS.get(stage).get(), KettleRegistry.PARTS.get(stages[stage.ordinal() + 1]).get());
 			}
 		}
+		// Composter chances and burn times (NeoForge: the compostables and furnace_fuels data maps); a barrel with a
+		// batch in it never burns (AbstractFurnaceBlockEntityMixin)
+		VBItems.COMPOSTABLES.forEach((item, chance) -> CompostingChanceRegistry.INSTANCE.add(item.get(), chance));
+		VBItems.FUELS.forEach((item, burnTime) -> FuelRegistry.INSTANCE.add(item.get(), burnTime));
+		FuelRegistry.INSTANCE.add(BarrelRegistry.AGING_BARREL_ITEM.get(), AgingBarrelItem.BURN_TIME);
 		// Farmers compost barley seeds (NeoForge: the villager_compostables data map)
 		VillagerInteractionRegistries.registerCompostable(VBItems.BARLEY_SEEDS.get());
 		// Wild crops: the same biome modifier files NeoForge reads, as the world's datapacks have them
@@ -82,14 +91,10 @@ public final class VineAndBarrelFabric implements ModInitializer
 				if (key.equals(type.vanillaHouseLoot())) {
 					// Our own table (loot_table/chests/village, VillageData.houseLoot) by reference, so a datapack's edit to it
 					// counts (as with NeoForge's loot modifier, which rolls that table)
-					table.withPool(LootPool.lootPool().add(NestedLootTable.lootTableReference(
-						registries.lookupOrThrow(Registries.LOOT_TABLE).getOrThrow(type.houseLoot()))));
+					table.withPool(LootPool.lootPool().add(NestedLootTable.lootTableReference(type.houseLoot())));
 				}
 			}
 		});
-		// Recipe viewers (JEI) need the brewing recipes on the client; the barrel needs the aging ones to claim the right clicks
-		RecipeSynchronization.synchronizeRecipeSerializer(KettleRegistry.BREWING_SERIALIZER.get());
-		RecipeSynchronization.synchronizeRecipeSerializer(BarrelRegistry.AGING_SERIALIZER.get());
 	}
 
 	private static void registerEvents() {
@@ -114,12 +119,13 @@ public final class VineAndBarrelFabric implements ModInitializer
 		});
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
 			FabricConfig.loadServer(server);
+			FabricGameTestRegistration.onServerStarting();
 			VillageStructures.onServerAboutToStart(server);
 			if (!leatherworkerStatesAdded) {
 				// A cauldron of a base stays a leatherworker's job site, like every vanilla cauldron: vanilla's own state
 				// map, once the point-of-interest types exist (NeoForge: ExtendPoiTypesEvent)
 				leatherworkerStatesAdded = true;
-				PoiTypes.registerBlockStates(BuiltInRegistries.POINT_OF_INTEREST_TYPE.getOrThrow(PoiTypes.LEATHERWORKER), VBCauldrons.states());
+				PoiTypes.registerBlockStates(BuiltInRegistries.POINT_OF_INTEREST_TYPE.getHolderOrThrow(PoiTypes.LEATHERWORKER), VBCauldrons.states());
 			}
 			if (!dispenserBehaviorsAdded) {
 				// After every mod's items exist (Fabric has no common setup event after all mods)

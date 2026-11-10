@@ -67,7 +67,7 @@ KNOWN_GAPS = [
 ]
 
 
-FOREIGN = "Farmer's Delight's own GameTests (FD Neoforged ships them; not ours)"
+FOREIGN = "Farmer's Delight's own GameTests (the mod ships them; not ours)"
 
 
 def area_of(test):

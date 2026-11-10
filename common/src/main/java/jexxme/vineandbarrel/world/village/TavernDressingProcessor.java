@@ -11,7 +11,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.WallBannerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import org.jspecify.annotations.Nullable;
 
@@ -43,7 +44,7 @@ import java.util.List;
  * comes out the same, and two taverns hardly ever do. Everything a GameTest checks stays true: casks keep their fill
  * gauge, every table keeps at least one drink and shows what it holds.
  */
-public final class TavernDressingProcessor implements StructureProcessor
+public final class TavernDressingProcessor extends StructureProcessor
 {
 	/** The batches a cask's template data offers: a list of {Batch, PausedAge}. */
 	public static final String CHOICES = "TavernChoices";
@@ -53,7 +54,7 @@ public final class TavernDressingProcessor implements StructureProcessor
 		BuiltInRegistries.BLOCK.byNameCodec().listOf().fieldOf("potted").forGetter(p -> p.potted),
 		DyeColor.CODEC.listOf().fieldOf("banner_colors").forGetter(p -> p.bannerColors),
 		DyeColor.CODEC.listOf().fieldOf("candle_colors").forGetter(p -> p.candleColors),
-		Identifier.CODEC.optionalFieldOf("cellar").forGetter(p -> p.cellar),
+		ResourceLocation.CODEC.optionalFieldOf("cellar").forGetter(p -> p.cellar),
 		BlockState.CODEC.optionalFieldOf("floor").forGetter(p -> p.floor)
 	).apply(i, TavernDressingProcessor::new));
 
@@ -64,11 +65,11 @@ public final class TavernDressingProcessor implements StructureProcessor
 	private final List<Block> potted;
 	private final List<DyeColor> bannerColors;
 	private final List<DyeColor> candleColors;
-	private final java.util.Optional<Identifier> cellar;
+	private final java.util.Optional<ResourceLocation> cellar;
 	private final java.util.Optional<BlockState> floor;
 
 	public TavernDressingProcessor(List<Block> flowers, List<Block> potted, List<DyeColor> bannerColors, List<DyeColor> candleColors,
-		java.util.Optional<Identifier> cellar, java.util.Optional<BlockState> floor) {
+		java.util.Optional<ResourceLocation> cellar, java.util.Optional<BlockState> floor) {
 		this.flowers = List.copyOf(flowers);
 		this.potted = List.copyOf(potted);
 		this.bannerColors = List.copyOf(bannerColors);
@@ -85,7 +86,7 @@ public final class TavernDressingProcessor implements StructureProcessor
 	 * The same dressing for this tavern layout, which lays its barrel cellar (a template of its own) under its floor,
 	 * or closes the stairwell with {@code floor} where the ground is too shallow for it.
 	 */
-	public TavernDressingProcessor withCellar(Identifier template, BlockState floor) {
+	public TavernDressingProcessor withCellar(ResourceLocation template, BlockState floor) {
 		return new TavernDressingProcessor(flowers, potted, bannerColors, candleColors, java.util.Optional.of(template), java.util.Optional.of(floor));
 	}
 
@@ -101,11 +102,11 @@ public final class TavernDressingProcessor implements StructureProcessor
 		List<StructureTemplate.StructureBlockInfo> original, List<StructureTemplate.StructureBlockInfo> processed, StructurePlaceSettings settings) {
 		if (cellar.isPresent()) {
 			BlockPos at = position.below(VillageStructures.CELLAR_HEIGHT);
-			if (at.getY() < level.getMinY() + 1) {
+			if (at.getY() < level.getMinBuildHeight() + 1) {
 				// too near the bottom of the world (a superflat world): no cellar, and the stairwell in the floor closed
 				return closeStairwell(original, processed);
 			}
-			var template = level.getLevel().getServer().getStructureTemplateManager().get(cellar.get());
+			var template = level.getLevel().getServer().getStructureManager().get(cellar.get());
 			if (template.isPresent()) {
 				StructurePlaceSettings below = new StructurePlaceSettings().setMirror(settings.getMirror()).setRotation(settings.getRotation())
 					.setRotationPivot(settings.getRotationPivot()).setBoundingBox(settings.getBoundingBox()).setRandom(RandomSource.create(Mth.getSeed(position)))
@@ -123,7 +124,7 @@ public final class TavernDressingProcessor implements StructureProcessor
 
 	@Override
 	public StructureTemplate.@Nullable StructureBlockInfo processBlock(LevelReader level, BlockPos targetPosition, BlockPos referencePos,
-		BlockPos templateRelativePos, StructureTemplate.StructureBlockInfo info, StructurePlaceSettings settings) {
+		StructureTemplate.StructureBlockInfo originalBlockInfo, StructureTemplate.StructureBlockInfo info, StructurePlaceSettings settings) {
 		BlockState state = info.state();
 		RandomSource here = RandomSource.create(Mth.getSeed(info.pos()) ^ BLOCK_SALT);
 		if (state.is(BarrelRegistry.AGING_BARREL.get())) {
@@ -141,13 +142,13 @@ public final class TavernDressingProcessor implements StructureProcessor
 		RandomSource tavern = RandomSource.create(Mth.getSeed(targetPosition) ^ TAVERN_SALT);
 		if (state.getBlock() instanceof WallBannerBlock && !bannerColors.isEmpty()) {
 			DyeColor color = bannerColors.get(tavern.nextInt(bannerColors.size()));
-			BlockState banner = Blocks.WALL_BANNER.pick(color).defaultBlockState().setValue(WallBannerBlock.FACING, state.getValue(WallBannerBlock.FACING));
+			BlockState banner = byColor(color, "wall_banner").defaultBlockState().setValue(WallBannerBlock.FACING, state.getValue(WallBannerBlock.FACING));
 			return new StructureTemplate.StructureBlockInfo(info.pos(), banner, info.nbt());
 		}
 		if (state.getBlock() instanceof CandleBlock && !candleColors.isEmpty()) {
 			tavern.nextInt(16); // not the banners' draw
 			DyeColor color = candleColors.get(tavern.nextInt(candleColors.size()));
-			BlockState candle = Blocks.DYED_CANDLE.pick(color).defaultBlockState().setValue(CandleBlock.CANDLES, 1 + here.nextInt(4))
+			BlockState candle = byColor(color, "candle").defaultBlockState().setValue(CandleBlock.CANDLES, 1 + here.nextInt(4))
 				.setValue(CandleBlock.LIT, true).setValue(CandleBlock.WATERLOGGED, state.getValue(CandleBlock.WATERLOGGED));
 			return new StructureTemplate.StructureBlockInfo(info.pos(), candle, null);
 		}
@@ -179,11 +180,11 @@ public final class TavernDressingProcessor implements StructureProcessor
 		if (nbt == null) {
 			return info;
 		}
-		ListTag choices = nbt.getListOrEmpty(CHOICES);
+		ListTag choices = nbt.getList(CHOICES, Tag.TAG_COMPOUND);
 		if (choices.isEmpty()) {
 			return info;
 		}
-		CompoundTag pick = choices.getCompoundOrEmpty(random.nextInt(choices.size()));
+		CompoundTag pick = choices.getCompound(random.nextInt(choices.size()));
 		CompoundTag out = nbt.copy();
 		out.remove(CHOICES);
 		Tag batch = pick.get("Batch");
@@ -206,8 +207,12 @@ public final class TavernDressingProcessor implements StructureProcessor
 			batchTag.putInt("servings", fill);
 		}
 		out.put("Batch", poured);
-		out.putLong("PausedAge", pick.getLongOr("PausedAge", nbt.getLongOr("PausedAge", -1L)));
+		out.putLong("PausedAge", longOr(pick, "PausedAge", longOr(nbt, "PausedAge", -1L)));
 		return new StructureTemplate.StructureBlockInfo(info.pos(), info.state().setValue(AgingBarrelBlock.FILL, fill), out);
+	}
+
+	private static long longOr(CompoundTag tag, String key, long fallback) {
+		return tag.contains(key, Tag.TAG_ANY_NUMERIC) ? tag.getLong(key) : fallback;
 	}
 
 	/** Some drinks gone, one maybe poured again, the rest swapped about; at least one stays, and the block shows them. */
@@ -217,11 +222,11 @@ public final class TavernDressingProcessor implements StructureProcessor
 			return info;
 		}
 		String[] ids = new String[PlacedDrinksBlock.SPOTS];
-		for (Tag t : nbt.getListOrEmpty("Items")) {
+		for (Tag t : nbt.getList("Items", Tag.TAG_COMPOUND)) {
 			if (t instanceof CompoundTag item) {
-				int slot = item.getByteOr("Slot", (byte) -1);
+				int slot = item.contains("Slot", Tag.TAG_ANY_NUMERIC) ? item.getByte("Slot") : -1;
 				if (slot >= 0 && slot < ids.length) {
-					ids[slot] = item.getStringOr("id", null);
+					ids[slot] = item.contains("id", Tag.TAG_STRING) ? item.getString("id") : null;
 				}
 			}
 		}
@@ -260,7 +265,7 @@ public final class TavernDressingProcessor implements StructureProcessor
 				item.putString("id", ids[i]);
 				item.putInt("count", 1);
 				items.add(item);
-				var item2 = BuiltInRegistries.ITEM.getOptional(Identifier.parse(ids[i]));
+				var item2 = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(ids[i]));
 				if (item2.isPresent()) {
 					PlacedDrink of = PlacedDrink.of(new ItemStack(item2.get()));
 					shown = of == null ? PlacedDrink.NONE : of;
@@ -272,8 +277,13 @@ public final class TavernDressingProcessor implements StructureProcessor
 		return new StructureTemplate.StructureBlockInfo(info.pos(), state, out);
 	}
 
+	/** This Minecraft has no colour sets of blocks: the vanilla block named {@code <colour>_<kind>}, e.g. red_wall_banner. */
+	private static net.minecraft.world.level.block.Block byColor(net.minecraft.world.item.DyeColor color, String kind) {
+		return net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(net.minecraft.resources.ResourceLocation.withDefaultNamespace(color.getName() + "_" + kind));
+	}
+
 	@Override
-	public MapCodec<? extends StructureProcessor> codec() {
-		return CODEC;
+	protected StructureProcessorType<?> getType() {
+		return VillageStructures.TAVERN_DRESSING_PROCESSOR.get();
 	}
 }

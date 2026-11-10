@@ -1,28 +1,22 @@
 package jexxme.vineandbarrel.neoforge.client;
 
 import jexxme.vineandbarrel.VineAndBarrel;
-import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.barrel.client.BarrelClient;
 import jexxme.vineandbarrel.cauldron.client.CauldronClient;
-import jexxme.vineandbarrel.compat.jei.JeiRecipeCache;
+import jexxme.vineandbarrel.client.VBRenderLayers;
 import jexxme.vineandbarrel.kettle.client.KettleClient;
 import jexxme.vineandbarrel.platform.client.ClientRegistrar;
 import jexxme.vineandbarrel.tipsy.TipsyWobble;
 import jexxme.vineandbarrel.tipsy.client.BlackoutClient;
 import jexxme.vineandbarrel.tipsy.client.TipsyClient;
 import jexxme.vineandbarrel.watch.client.WatchClient;
-import net.minecraft.client.entity.ClientAvatarEntity;
-import net.minecraft.client.renderer.entity.state.AvatarRenderState;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.world.entity.Avatar;
-import net.neoforged.neoforge.client.renderstate.AvatarRenderStateModifier;
-import net.minecraft.util.context.ContextKey;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.event.CalculatePlayerTurnEvent;
@@ -31,18 +25,16 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.GatherEffectScreenTooltipsEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
-import net.neoforged.neoforge.client.event.RecipesReceivedEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
-import net.neoforged.neoforge.client.event.RegisterPictureInPictureRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
-import net.neoforged.neoforge.client.event.RegisterRecipeBookSearchCategoriesEvent;
+import net.neoforged.neoforge.client.event.RegisterRecipeBookCategoriesEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
@@ -51,15 +43,17 @@ import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.client.extensions.common.IClientMobEffectExtensions;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
-import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 /** The client side on NeoForge: the common client classes' registrations and hooks, wired to NeoForge's client events. */
 public final class NeoForgeClient
 {
-	/** How a tipsy (or blacked-out) player's body is posed (TipsyClient#bodyPose), and whether that pose was pushed. */
-	private static final ContextKey<TipsyClient.BodyPose> BODY_POSE = new ContextKey<>(VineAndBarrel.id("tipsy_body_pose"));
-	private static final ContextKey<Boolean> SWAY_PUSHED = new ContextKey<>(VineAndBarrel.id("tipsy_sway_pushed"));
+	/**
+	 * Whether a tipsy (or blacked-out) body pose was pushed for the living entity being drawn right now
+	 * (TipsyClient#beforeRenderLiving), kept from the render's Pre event to its Post. A stack, in case a renderer draws
+	 * another living entity inside its own render.
+	 */
+	private static final java.util.ArrayDeque<Boolean> SWAY_PUSHED = new java.util.ArrayDeque<>();
 
 	private NeoForgeClient() {
 	}
@@ -69,32 +63,27 @@ public final class NeoForgeClient
 		container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
 		// Registrations: each event runs every class's register(...) and keeps its own kind (see NeoForgeClientRegistrar)
 		modBus.addListener(RegisterMenuScreensEvent.class, event -> registerAll(NeoForgeClientRegistrar.screens(event)));
-		modBus.addListener(RegisterRecipeBookSearchCategoriesEvent.class, event -> registerAll(NeoForgeClientRegistrar.recipeBook(event)));
+		modBus.addListener(RegisterRecipeBookCategoriesEvent.class, event -> registerAll(NeoForgeClientRegistrar.recipeBook(event)));
 		modBus.addListener(RegisterParticleProvidersEvent.class, event -> registerAll(NeoForgeClientRegistrar.particles(event)));
 		modBus.addListener(RegisterClientTooltipComponentFactoriesEvent.class, event -> registerAll(NeoForgeClientRegistrar.tooltips(event)));
-		modBus.addListener(RegisterColorHandlersEvent.BlockTintSources.class, event -> registerAll(NeoForgeClientRegistrar.tints(event)));
+		modBus.addListener(RegisterColorHandlersEvent.Block.class, event -> registerAll(NeoForgeClientRegistrar.tints(event)));
 		modBus.addListener(EntityRenderersEvent.RegisterRenderers.class, event -> registerAll(NeoForgeClientRegistrar.renderers(event)));
-		modBus.addListener(RegisterPictureInPictureRenderersEvent.class, event -> registerAll(NeoForgeClientRegistrar.pictures(event)));
 		modBus.addListener(RegisterKeyMappingsEvent.class, event -> registerAll(NeoForgeClientRegistrar.keys(event)));
-		modBus.addListener(AddClientReloadListenersEvent.class, event -> registerAll(NeoForgeClientRegistrar.reloads(event)));
+		modBus.addListener(RegisterClientReloadListenersEvent.class, event -> registerAll(NeoForgeClientRegistrar.reloads(event)));
+
+		// Cutout and translucent blocks (this Minecraft doesn't read that off the textures)
+		modBus.addListener(FMLClientSetupEvent.class, event -> event.enqueueWork(() -> VBRenderLayers.register(NeoForgeClientRegistrar.renderLayers())));
 
 		modBus.addListener(RegisterClientExtensionsEvent.class, NeoForgeClient::registerClientExtensions);
 		// Vines on fences, walls, chains and bars draw the block they hold under their leaves
 		modBus.addListener(ModelEvent.ModifyBakingResult.class, SupportedVineModel::wrap);
 		// Trellis rows draw their frame (end posts, top rail) from their neighbours
-		modBus.addListener(ModelEvent.RegisterStandalone.class, TrellisFrameModel::registerParts);
+		modBus.addListener(ModelEvent.RegisterAdditional.class, TrellisFrameModel::registerParts);
 		modBus.addListener(ModelEvent.ModifyBakingResult.class, TrellisFrameModel::wrap);
 		modBus.addListener(RegisterGuiLayersEvent.class, event -> {
 			event.registerAbove(VanillaGuiLayers.CAMERA_OVERLAYS, TipsyClient.VISION_LAYER, TipsyClient::renderVision);
 			event.registerAboveAll(BlackoutClient.LAYER, BlackoutClient::renderBlackout);
 		});
-		modBus.addListener(RegisterRenderStateModifiersEvent.class, event -> event.registerAvatarEntityModifier(new AvatarRenderStateModifier()
-		{
-			@Override
-			public <T extends Avatar & ClientAvatarEntity> void accept(T avatar, AvatarRenderState state) {
-				state.setRenderData(BODY_POSE, TipsyClient.bodyPose(avatar));
-			}
-		}));
 
 		IEventBus game = NeoForge.EVENT_BUS;
 		game.addListener(GatherEffectScreenTooltipsEvent.class, event -> TipsyClient.onEffectTooltip(event.getEffectInstance(), event.getTooltip()));
@@ -102,16 +91,18 @@ public final class NeoForgeClient
 			TipsyClient.onClientTick();
 			BlackoutClient.onClientTick();
 			WatchClient.onClientTick();
+			// A render that never reached its Post event (an exception in a renderer) must not leave its mark behind
+			SWAY_PUSHED.clear();
 		});
 		// "Watch it": the tooltip line, and the key over an item in a screen
 		game.addListener(ItemTooltipEvent.class, event -> WatchClient.onTooltip(event.getItemStack(), event.getToolTip()));
 		game.addListener(ScreenEvent.KeyPressed.Pre.class, event -> {
-			if (WatchClient.onScreenKey(event.getScreen(), event.getKeyEvent())) {
+			if (WatchClient.onScreenKey(event.getScreen(), event.getKeyCode(), event.getScanCode())) {
 				event.setCanceled(true);
 			}
 		});
 		game.addListener(ViewportEvent.ComputeCameraAngles.class, event -> {
-			TipsyWobble.Angles angles = TipsyClient.cameraAngles(event.getCamera().entity(), (float) event.getPartialTick());
+			TipsyWobble.Angles angles = TipsyClient.cameraAngles(event.getCamera().getEntity(), (float) event.getPartialTick());
 			if (!angles.isNone()) {
 				event.setRoll(event.getRoll() + angles.roll());
 				event.setPitch(event.getPitch() + angles.pitch());
@@ -143,23 +134,13 @@ public final class NeoForgeClient
 			if (event.isCanceled()) {
 				return;
 			}
-			LivingEntityRenderState state = event.getRenderState();
-			if (TipsyClient.beforeRenderLiving(state, state.getRenderData(BODY_POSE), event.getPoseStack())) {
-				state.setRenderData(SWAY_PUSHED, Boolean.TRUE);
-			}
+			SWAY_PUSHED.push(TipsyClient.beforeRenderLiving(event.getEntity(), event.getPartialTick(), event.getPoseStack()));
 		});
 		game.addListener(RenderLivingEvent.Post.class, event -> {
-			LivingEntityRenderState state = event.getRenderState();
-			boolean pushed = Boolean.TRUE.equals(state.getRenderData(SWAY_PUSHED));
-			state.setRenderData(SWAY_PUSHED, null);
+			boolean pushed = Boolean.TRUE.equals(SWAY_PUSHED.poll());
 			TipsyClient.afterRenderLiving(pushed, event.getPoseStack());
 		});
-		game.addListener(RecipesReceivedEvent.class, event -> {
-			JeiRecipeCache.onRecipesReceived(event.getRecipeMap());
-			if (event.getRecipeTypes().contains(BarrelRegistry.AGING.get())) {
-				BarrelClient.onRecipesReceived(event.getRecipeMap());
-			}
-		});
+		// (Recipes: this Minecraft sends them all to the client itself; JEI and the barrel read the client's recipe manager)
 		game.addListener(ClientPlayerNetworkEvent.LoggingOut.class, event -> BarrelClient.onLoggingOut());
 	}
 

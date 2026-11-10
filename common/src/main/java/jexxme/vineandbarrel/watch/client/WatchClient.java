@@ -2,6 +2,7 @@ package jexxme.vineandbarrel.watch.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import jexxme.vineandbarrel.mixin.AbstractContainerScreenAccessor;
+import jexxme.vineandbarrel.mixin.RecipeBookComponentAccessor;
 import jexxme.vineandbarrel.platform.client.ClientRegistrar;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
@@ -10,7 +11,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -23,14 +24,14 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 /**
- * Client side of the "Watch it" scenes: the renderer, the scene index, the key (G, rebindable) and where it opens a
+ * Client side of the "Watch it" scenes: the scene index, the key (G, rebindable) and where it opens a
  * scene: over an item (an inventory slot or JEI's lists, the tooltip says so) or at one of our blocks in the world, which
  * opens the scene at the step that block is on. Nothing opens by itself.
  */
 public final class WatchClient
 {
-	public static final KeyMapping KEY = new KeyMapping("key.vineandbarrel.watch", InputConstants.KEY_G,
-		KeyMapping.Category.INVENTORY);
+	public static final KeyMapping KEY = new KeyMapping("key.vineandbarrel.watch", InputConstants.Type.KEYSYM, InputConstants.KEY_G,
+		KeyMapping.CATEGORY_INVENTORY);
 
 	/** The item under the mouse in JEI's lists, when JEI is there (its plugin sets this). */
 	private static Supplier<ItemStack> jeiHovered = () -> ItemStack.EMPTY;
@@ -41,7 +42,6 @@ public final class WatchClient
 	}
 
 	public static void register(ClientRegistrar registrar) {
-		registrar.pictureInPicture(SceneRenderState.class, SceneRenderer::new);
 		registrar.keyMapping(KEY);
 		registrar.reloadListener(WatchIndex.ID, WatchIndex.INSTANCE);
 	}
@@ -54,7 +54,7 @@ public final class WatchClient
 	/** The tooltip's last line on an item that opens a scene: "Press [G] to watch". */
 	public static void onTooltip(ItemStack stack, List<Component> lines) {
 		if (KEY.isUnbound() || Minecraft.getInstance().level == null || WatchIndex.INSTANCE.forItem(stack).isEmpty()
-			|| Minecraft.getInstance().gui.screen() instanceof WatchScreen) {
+			|| Minecraft.getInstance().screen instanceof WatchScreen) {
 			return;
 		}
 		Component key = KEY.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.YELLOW);
@@ -62,8 +62,8 @@ public final class WatchClient
 	}
 
 	/** A key pressed in a screen: the watch key over an item opens its scene (and Escape comes back here). */
-	public static boolean onScreenKey(Screen screen, KeyEvent event) {
-		if (screen instanceof WatchScreen || !KEY.matches(event) || isTyping(screen)) {
+	public static boolean onScreenKey(Screen screen, int key, int scanCode) {
+		if (screen instanceof WatchScreen || !KEY.matches(key, scanCode) || isTyping(screen)) {
 			return false;
 		}
 		ItemStack hovered = jeiHovered.get();
@@ -73,7 +73,7 @@ public final class WatchClient
 				hovered = slot.getItem();
 			}
 		}
-		Optional<net.minecraft.resources.Identifier> scene = WatchIndex.INSTANCE.forItem(hovered);
+		Optional<net.minecraft.resources.ResourceLocation> scene = WatchIndex.INSTANCE.forItem(hovered);
 		return scene.isPresent() && WatchScreen.open(scene.get(), 0, null, screen);
 	}
 
@@ -83,8 +83,14 @@ public final class WatchClient
 			return true;
 		}
 		for (GuiEventListener child : screen.children()) {
-			if (child.capturesInput()) {
+			if (child instanceof EditBox box && box.isFocused()) {
 				return true;
+			}
+			if (child instanceof RecipeBookComponent book) {
+				EditBox search = ((RecipeBookComponentAccessor) book).vineandbarrel$searchBox();
+				if (search != null && search.isFocused() && search.isVisible()) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -97,7 +103,7 @@ public final class WatchClient
 	public static void onClientTick() {
 		Minecraft minecraft = Minecraft.getInstance();
 		while (KEY.consumeClick()) {
-			if (minecraft.gui.screen() != null || minecraft.level == null) {
+			if (minecraft.screen != null || minecraft.level == null) {
 				continue;
 			}
 			Optional<WatchIndex.BlockEntry> entry = Optional.empty();
@@ -108,7 +114,7 @@ public final class WatchClient
 			if (entry.isPresent()) {
 				WatchScreen.open(entry.get().scene(), entry.get().step(), entry.get().now().map(Component::translatable).orElse(null), null);
 			} else if (WatchPathScreen.available()) {
-				minecraft.gui.setScreen(new WatchPathScreen(null));
+				minecraft.setScreen(new WatchPathScreen(null));
 			}
 		}
 	}

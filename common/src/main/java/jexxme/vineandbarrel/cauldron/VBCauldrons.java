@@ -7,14 +7,11 @@ import jexxme.vineandbarrel.platform.registry.DeferredItem;
 import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.cauldron.CauldronInteraction;
-import net.minecraft.core.cauldron.CauldronInteractions;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -27,10 +24,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.Map;
 
 /**
- * Our bases in a cauldron, by water's rules (vanilla's {@code CauldronInteractions}):
+ * Our bases in a cauldron, by water's rules (vanilla's {@code CauldronInteraction}):
  * <ul>
  * <li>A bucket of a base fills any cauldron, whatever was in it, exactly as vanilla's buckets pour over water, lava and
  * powder snow (and theirs pour over ours). Only a cauldron of the same base takes nothing, so topping one up never
@@ -60,7 +57,8 @@ public final class VBCauldrons
 
 	private static DeferredBlock<BaseCauldronBlock> cauldron(String base, DeferredItem<Item> bottle, DeferredItem<Item> bucket) {
 		// Every property of the water cauldron (vanilla's ofLegacyCopy of the cauldron); the drop is the cauldron (loot table)
-		return BLOCKS.registerBlock(base + "_cauldron", p -> new BaseCauldronBlock(p, bottle, bucket),
+		String name = base + "_cauldron";
+		return BLOCKS.registerBlock(name, p -> new BaseCauldronBlock(p, VineAndBarrel.MODID + ":" + name, bottle, bucket),
 			() -> BlockBehaviour.Properties.ofLegacyCopy(Blocks.CAULDRON));
 	}
 
@@ -87,45 +85,35 @@ public final class VBCauldrons
 	}
 
 	/**
-	 * Hands our cauldrons' dispatchers to vanilla's list of them, by block id, so mods that add an interaction to every
-	 * cauldron reach ours too: NeoForge's {@code RegisterCauldronInteractionEvent.Dispatcher}, on Fabric the list itself.
-	 */
-	public static void registerDispatchers(BiConsumer<Identifier, CauldronInteraction.Dispatcher> registrar) {
-		for (BaseCauldronBlock cauldron : all()) {
-			registrar.accept(BuiltInRegistries.BLOCK.getKey(cauldron), cauldron.interactions());
-		}
-	}
-
-	/**
-	 * Adds every interaction, once, after registration (NeoForge: {@code RegisterCauldronInteractionEvent.Interaction};
-	 * Fabric: right after our registration, on both sides, so the client predicts the click as it does for water).
+	 * Adds every interaction, once, after registration (NeoForge: at common setup; Fabric: right after our registration),
+	 * on both sides, so the client predicts the click as it does for water.
 	 */
 	public static void addInteractions() {
-		List<CauldronInteraction.Dispatcher> vanilla = List.of(CauldronInteractions.EMPTY, CauldronInteractions.WATER, CauldronInteractions.LAVA,
-			CauldronInteractions.POWDER_SNOW);
+		List<Map<Item, CauldronInteraction>> vanilla = List.of(CauldronInteraction.EMPTY.map(), CauldronInteraction.WATER.map(), CauldronInteraction.LAVA.map(),
+			CauldronInteraction.POWDER_SNOW.map());
 		List<BaseCauldronBlock> ours = all();
 		for (BaseCauldronBlock target : ours) {
 			CauldronInteraction pourBucket = (state, level, pos, player, hand, held) -> state.is(target)
-				? InteractionResult.TRY_WITH_EMPTY_HAND
-				: CauldronInteractions.emptyBucket(level, pos, player, hand, held, target.defaultBlockState().setValue(BaseCauldronBlock.LEVEL,
+				? ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+				: CauldronInteraction.emptyBucket(level, pos, player, hand, held, target.defaultBlockState().setValue(BaseCauldronBlock.LEVEL,
 					BaseCauldronBlock.MAX_LEVEL), SoundEvents.BUCKET_EMPTY);
 			// Its bucket pours over anything, like vanilla's buckets
-			vanilla.forEach(dispatcher -> dispatcher.put(target.bucket(), pourBucket));
-			ours.forEach(other -> other.interactions().put(target.bucket(), pourBucket));
+			vanilla.forEach(interactions -> interactions.put(target.bucket(), pourBucket));
+			ours.forEach(other -> other.interactions().map().put(target.bucket(), pourBucket));
 			// Its bottles go into an empty cauldron or top it up
 			CauldronInteraction pourBottle = (state, level, pos, player, hand, held) -> pourBottle(target, state, level, pos, player, hand, held);
-			CauldronInteractions.EMPTY.put(target.bottle(), pourBottle);
-			target.interactions().put(target.bottle(), pourBottle);
+			CauldronInteraction.EMPTY.map().put(target.bottle(), pourBottle);
+			target.interactions().map().put(target.bottle(), pourBottle);
 			// Taken out with an empty bottle (a level) or an empty bucket (only when full)
-			target.interactions().put(Items.GLASS_BOTTLE, VBCauldrons::takeBottle);
-			target.interactions().put(Items.BUCKET, (state, level, pos, player, hand, held) -> CauldronInteractions.fillBucket(state, level, pos,
+			target.interactions().map().put(Items.GLASS_BOTTLE, VBCauldrons::takeBottle);
+			target.interactions().map().put(Items.BUCKET, (state, level, pos, player, hand, held) -> CauldronInteraction.fillBucket(state, level, pos,
 				player, hand, held, new ItemStack(target.bucket()), target::isFull, SoundEvents.BUCKET_FILL));
 			// Vanilla's buckets pour over ours, as over each other
-			CauldronInteractions.addDefaultInteractions(target.interactions());
+			CauldronInteraction.addDefaultInteractions(target.interactions().map());
 		}
 	}
 
-	private static InteractionResult pourBottle(BaseCauldronBlock target, BlockState state, Level level, BlockPos pos, Player player,
+	private static ItemInteractionResult pourBottle(BaseCauldronBlock target, BlockState state, Level level, BlockPos pos, Player player,
 			InteractionHand hand, ItemStack held) {
 		int next;
 		if (state.is(Blocks.CAULDRON)) {
@@ -133,7 +121,7 @@ public final class VBCauldrons
 		} else if (state.is(target) && !target.isFull(state)) {
 			next = state.getValue(BaseCauldronBlock.LEVEL) + 1;
 		} else {
-			return InteractionResult.TRY_WITH_EMPTY_HAND;
+			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 		}
 		if (!level.isClientSide()) {
 			Item used = held.getItem();
@@ -144,12 +132,12 @@ public final class VBCauldrons
 			level.playSound(null, pos, SoundEvents.BOTTLE_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
 			level.gameEvent(null, GameEvent.FLUID_PLACE, pos);
 		}
-		return InteractionResult.SUCCESS;
+		return ItemInteractionResult.sidedSuccess(level.isClientSide());
 	}
 
-	private static InteractionResult takeBottle(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, ItemStack held) {
+	private static ItemInteractionResult takeBottle(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, ItemStack held) {
 		if (!(state.getBlock() instanceof BaseCauldronBlock cauldron)) {
-			return InteractionResult.TRY_WITH_EMPTY_HAND;
+			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 		}
 		if (!level.isClientSide()) {
 			Item used = held.getItem();
@@ -160,6 +148,6 @@ public final class VBCauldrons
 			level.playSound(null, pos, SoundEvents.BOTTLE_FILL, SoundSource.BLOCKS, 1.0F, 1.0F);
 			level.gameEvent(null, GameEvent.FLUID_PICKUP, pos);
 		}
-		return InteractionResult.SUCCESS;
+		return ItemInteractionResult.sidedSuccess(level.isClientSide());
 	}
 }

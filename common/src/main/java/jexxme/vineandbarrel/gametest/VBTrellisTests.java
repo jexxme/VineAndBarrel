@@ -20,8 +20,8 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.entity.animal.bee.Bee;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BoneMealItem;
@@ -138,9 +138,10 @@ final class VBTrellisTests
 		helper.assertTrue(VineClimbing.canClimb(helper.getLevel(), helper.absolutePos(bush), (ClimbingCropBlock) VBBlocks.GRAPE_BUSH.get()),
 				"a dry trellis is climbed");
 
-		var fuel = new ItemStack(VBItems.TRELLIS.get()).get(net.minecraft.core.component.DataComponents.COOKING_FUEL);
-		helper.assertTrue(fuel != null, "the trellis is fuel");
-		helper.assertValueEqual(fuel, new ItemStack(Items.LADDER).get(net.minecraft.core.component.DataComponents.COOKING_FUEL), "burns like a ladder");
+		// 26.2: burn times from the loader (NeoForge: our furnace_fuels data map, Fabric: its fuel registry; 26.3: the cooking_fuel component)
+		int fuel = jexxme.vineandbarrel.platform.Services.PLATFORM.burnTime(new ItemStack(VBItems.TRELLIS.get()), helper.getLevel());
+		helper.assertTrue(fuel > 0, "the trellis is fuel");
+		helper.assertValueEqual(fuel, jexxme.vineandbarrel.platform.Services.PLATFORM.burnTime(new ItemStack(Items.LADDER), helper.getLevel()), "burns like a ladder");
 
 		BlockState underX = VBBlocks.GRAPE_BUSH.get().defaultBlockState().setValue(ClimbingBushBlock.SUPPORT, BushSupport.TRELLIS_X);
 		helper.assertValueEqual(underX.rotate(net.minecraft.world.level.block.Rotation.CLOCKWISE_90).getValue(ClimbingBushBlock.SUPPORT), BushSupport.TRELLIS_Z,
@@ -163,14 +164,14 @@ final class VBTrellisTests
 		player.setItemInHand(InteractionHand.MAIN_HAND, stack);
 		player.setYRot(0.0F); // looking south: the panel runs east-west
 		helper.placeAt(player, stack, ground, Direction.UP);
-		helper.assertBlockState(ground.above(), trellis(Direction.Axis.X));
+		VBGameTests.assertBlockState(helper, ground.above(), trellis(Direction.Axis.X));
 		player.setYRot(90.0F); // looking west, but stacked on a trellis it keeps the line
 		helper.placeAt(player, stack, ground.above(), Direction.UP);
-		helper.assertBlockState(ground.above(2), trellis(Direction.Axis.X));
+		VBGameTests.assertBlockState(helper, ground.above(2), trellis(Direction.Axis.X));
 		BlockPos other = new BlockPos(3, 1, 1);
 		helper.setBlock(other, Blocks.STONE);
 		helper.placeAt(player, stack, other, Direction.UP);
-		helper.assertBlockState(other.above(), trellis(Direction.Axis.Z));
+		VBGameTests.assertBlockState(helper, other.above(), trellis(Direction.Axis.Z));
 		helper.assertValueEqual(stack.getCount(), 5, "trellises left after placing three");
 
 		BlockState bare = trellis(Direction.Axis.X);
@@ -194,7 +195,7 @@ final class VBTrellisTests
 		CraftingInput lattice = CraftingInput.of(3, 3, grid);
 		RecipeHolder<CraftingRecipe> recipe = helper.getLevel().getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, lattice, helper.getLevel())
 				.orElseThrow(() -> new IllegalStateException("No recipe for five sticks in an X"));
-		ItemStack made = recipe.value().assemble(lattice);
+		ItemStack made = recipe.value().assemble(lattice, helper.getLevel().registryAccess());
 		helper.assertTrue(made.is(VBItems.TRELLIS.get()) && made.getCount() == 4, "Five sticks in an X should make 4 trellises, made " + made);
 
 		// mobs don't path through the panel; it burns like a fence; a rope, a Trellis or a fence grows a vine, a glass pane doesn't
@@ -216,7 +217,7 @@ final class VBTrellisTests
 		helper.setBlock(bush.above(), VBBlocks.GRAPE_VINE_ON_TRELLIS.get().defaultBlockState().setValue(VineOnTrellisBlock.AXIS, Direction.Axis.Z));
 		player.setYRot(0.0F); // looking south, which on the ground would give an east-west panel
 		helper.placeAt(player, stack, bush.above(), Direction.UP);
-		helper.assertBlockState(bush.above(2), trellis(Direction.Axis.Z));
+		VBGameTests.assertBlockState(helper, bush.above(2), trellis(Direction.Axis.Z));
 		helper.succeed();
 	}
 
@@ -265,7 +266,7 @@ final class VBTrellisTests
 	 * survive there either, drops its fruit and leaves the trellis.
 	 */
 	private static void pistonsAndHeightLimit(GameTestHelper helper) {
-		helper.assertValueEqual(VBBlocks.GRAPE_VINE_ON_TRELLIS.get().defaultBlockState().getPistonPushReaction(), PushReaction.PUSH_PULL, "push reaction");
+		helper.assertValueEqual(VBBlocks.GRAPE_VINE_ON_TRELLIS.get().defaultBlockState().getPistonPushReaction(), PushReaction.NORMAL, "push reaction");
 		Block vine = VBBlocks.GRAPE_VINE_ON_TRELLIS.get();
 		BlockState ripeVine = vine.defaultBlockState().setValue(ClimbingCropBlock.AGE, 3);
 		// off its plant: a column at x=2, pushed east from x=1
@@ -286,8 +287,8 @@ final class VBTrellisTests
 		helper.setBlock(lone.above().west().above(), Blocks.REDSTONE_BLOCK);
 		helper.setBlock(shortBush.above().west().above(), Blocks.REDSTONE_BLOCK);
 		helper.succeedWhen(() -> {
-			helper.assertBlockState(lone.above().east(), trellis(Direction.Axis.X));
-			helper.assertBlockState(tall.above(3), trellis(Direction.Axis.X));
+			VBGameTests.assertBlockState(helper, lone.above().east(), trellis(Direction.Axis.X));
+			VBGameTests.assertBlockState(helper, tall.above(3), trellis(Direction.Axis.X));
 			helper.assertTrue(state(helper, tall.above(2)).is(vine), "the full-grown plant keeps its own vines");
 			helper.assertValueEqual(VineClimbing.heightAt(helper.getLevel(), helper.absolutePos(tall.above(2)), VBBlocks.GRAPE_BUSH.get()),
 					VineClimbing.MAX_HEIGHT, "the plant's height");
@@ -304,7 +305,7 @@ final class VBTrellisTests
 		net.minecraft.world.phys.Vec3 at = net.minecraft.world.phys.Vec3.atCenterOf(helper.absolutePos(bush.above()));
 		helper.getLevel().explode(null, at.x, at.y, at.z, 1.0F, net.minecraft.world.level.Level.ExplosionInteraction.TNT);
 		// checked at once: given time, the ripe bush below (if the blast spared it) would climb the trellis again
-		helper.assertBlockState(bush.above(), trellis(Direction.Axis.Z));
+		VBGameTests.assertBlockState(helper, bush.above(), trellis(Direction.Axis.Z));
 		helper.succeed();
 	}
 
@@ -329,13 +330,13 @@ final class VBTrellisTests
 		ItemStack grapes = new ItemStack(VBItems.RED_GRAPES.get(), 4);
 		player.setItemInHand(InteractionHand.MAIN_HAND, grapes);
 		helper.useBlock(soil, player);
-		helper.assertBlockState(soil, bushIn(VBBlocks.GRAPE_BUSH.get(), 0, BushTrellis.Z));
+		VBGameTests.assertBlockState(helper, soil, bushIn(VBBlocks.GRAPE_BUSH.get(), 0, BushTrellis.Z));
 		helper.assertValueEqual(grapes.getCount(), 3, "grapes left after planting one into a trellis");
 		BlockPos stone = new BlockPos(3, 1, 1);
 		helper.setBlock(stone.below(), Blocks.STONE);
 		helper.setBlock(stone, trellis(Direction.Axis.X));
 		helper.useBlock(stone, player);
-		helper.assertBlockState(stone, trellis(Direction.Axis.X));
+		VBGameTests.assertBlockState(helper, stone, trellis(Direction.Axis.X));
 		BlockPos wet = new BlockPos(5, 1, 1);
 		helper.setBlock(wet.below(), Blocks.GRASS_BLOCK);
 		helper.setBlock(wet, trellis(Direction.Axis.X).setValue(TrellisBlock.WATERLOGGED, true));
@@ -351,12 +352,12 @@ final class VBTrellisTests
 		player.setItemInHand(InteractionHand.MAIN_HAND, trellises);
 		player.setYRot(0.0F); // looking south: the panel runs east-west
 		helper.useBlock(bush, player);
-		helper.assertBlockState(bush, bushIn(VBBlocks.HOP_BUSH.get(), 1, BushTrellis.X));
+		VBGameTests.assertBlockState(helper, bush, bushIn(VBBlocks.HOP_BUSH.get(), 1, BushTrellis.X));
 		helper.assertValueEqual(trellises.getCount(), 3, "trellises left after putting one into a bush");
 		// a trellis stacked on it keeps its line, whichever way the player looks
 		player.setYRot(90.0F);
 		helper.placeAt(player, trellises, bush, Direction.UP);
-		helper.assertBlockState(bush.above(), trellis(Direction.Axis.X));
+		VBGameTests.assertBlockState(helper, bush.above(), trellis(Direction.Axis.X));
 		helper.assertValueEqual(state(helper, bush).getValue(ClimbingBushBlock.SUPPORT), BushSupport.TRELLIS_X, "and the bush knows the trellis above");
 		// lined up with a trellis already above it
 		BlockPos under = new BlockPos(3, 1, 3);
@@ -400,10 +401,10 @@ final class VBTrellisTests
 			helper.setBlock(vine, state(helper, vine).setValue(ClimbingCropBlock.AGE, ClimbingCropBlock.PICKED_AGE));
 		}
 
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		player.gameMode.destroyBlock(helper.absolutePos(bush));
-		helper.assertBlockState(bush, trellis(Direction.Axis.Z));
+		VBGameTests.assertBlockState(helper, bush, trellis(Direction.Axis.Z));
 
 		BlockPos blown = new BlockPos(5, 1, 5);
 		helper.setBlock(blown.below(), Blocks.GRASS_BLOCK);
@@ -412,11 +413,11 @@ final class VBTrellisTests
 		helper.getLevel().explode(null, at.x, at.y + 0.5, at.z, 1.0F, net.minecraft.world.level.Level.ExplosionInteraction.TNT);
 
 		helper.runAfterDelay(5, () -> {
-			helper.assertBlockState(bush.above(), trellis(Direction.Axis.Z));
-			helper.assertBlockState(bush.above(2), trellis(Direction.Axis.Z));
+			VBGameTests.assertBlockState(helper, bush.above(), trellis(Direction.Axis.Z));
+			VBGameTests.assertBlockState(helper, bush.above(2), trellis(Direction.Axis.Z));
 			int grapes = collect(helper, bush, VBItems.RED_GRAPES.get());
 			helper.assertTrue(grapes >= 2, "breaking the ripe plant gives its fruit (and no trellis item), dropped " + grapes);
-			helper.assertBlockState(blown, trellis(Direction.Axis.X));
+			VBGameTests.assertBlockState(helper, blown, trellis(Direction.Axis.X));
 			helper.succeed();
 		});
 	}
@@ -434,11 +435,11 @@ final class VBTrellisTests
 			helper.setBlock(pos.below(), Blocks.GRASS_BLOCK);
 			helper.setBlock(pos, bushIn(VBBlocks.GRAPE_BUSH.get(), 2, BushTrellis.X));
 		}
-		helper.assertValueEqual(VBBlocks.GRAPE_BUSH.get().defaultBlockState().getPistonPushReaction(), PushReaction.PUSH_PULL, "bush push reaction");
+		helper.assertValueEqual(VBBlocks.GRAPE_BUSH.get().defaultBlockState().getPistonPushReaction(), PushReaction.NORMAL, "bush push reaction");
 		helper.setBlock(burnt, Blocks.FIRE);
-		helper.assertBlockState(burnt, trellis(Direction.Axis.X));
+		VBGameTests.assertBlockState(helper, burnt, trellis(Direction.Axis.X));
 		helper.setBlock(soaked, Blocks.WATER);
-		helper.assertBlockState(soaked, trellis(Direction.Axis.X).setValue(TrellisBlock.WATERLOGGED, true));
+		VBGameTests.assertBlockState(helper, soaked, trellis(Direction.Axis.X).setValue(TrellisBlock.WATERLOGGED, true));
 		helper.setBlock(washed, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 2));
 		helper.assertItemEntityPresent(VBItems.TRELLIS.get(), washed, 1.5);
 		// the water goes before it spreads (it would wash away the bushes the pistons push below)
@@ -469,12 +470,12 @@ final class VBTrellisTests
 			helper.setBlock(pos.west(2), Blocks.REDSTONE_BLOCK);
 		}
 		helper.succeedWhen(() -> {
-			helper.assertBlockState(dug, trellis(Direction.Axis.X));
+			VBGameTests.assertBlockState(helper, dug, trellis(Direction.Axis.X));
 			helper.assertItemEntityPresent(VBItems.RED_GRAPES.get(), dug, 1.5);
 			// the moved bush may have grown on the way: only that it lives on with its trellis matters
 			helper.assertTrue(state(helper, moved.east()).is(VBBlocks.HOP_BUSH.get())
 					&& state(helper, moved.east()).getValue(ClimbingBushBlock.TRELLIS) == BushTrellis.Z, "the bush pushed onto grass lives on with its trellis");
-			helper.assertBlockState(dropped.east(), trellis(Direction.Axis.Z));
+			VBGameTests.assertBlockState(helper, dropped.east(), trellis(Direction.Axis.Z));
 		});
 	}
 
@@ -497,23 +498,23 @@ final class VBTrellisTests
 		helper.assertTrue(state(helper, bushPos.above()).is(vine), "The ripe bush should climb the trellis above it");
 		helper.assertValueEqual(state(helper, bushPos.above()).getValue(ClimbingCropBlock.AGE), 0, "age of a fresh vine");
 		helper.assertValueEqual(state(helper, bushPos.above()).getValue(VineOnTrellisBlock.AXIS), Direction.Axis.Z, "the vine faces the trellis's way");
-		helper.assertBlockState(bushPos.above(2), trellis(Direction.Axis.Z));
+		VBGameTests.assertBlockState(helper, bushPos.above(2), trellis(Direction.Axis.Z));
 		for (int i = 0; i < 40; i++) {
 			boneMeal(helper, bushPos);
 		}
 		helper.assertTrue(state(helper, bushPos.above(2)).is(vine), "Bone meal should grow the vine two trellises high");
-		helper.assertBlockState(bushPos.above(3), trellis(Direction.Axis.Z));
+		VBGameTests.assertBlockState(helper, bushPos.above(3), trellis(Direction.Axis.Z));
 		helper.assertValueEqual(VineClimbing.heightAt(helper.getLevel(), helper.absolutePos(bushPos.above(2)), (ClimbingCropBlock) bush),
 				VineClimbing.MAX_HEIGHT, "plant height");
 		helper.assertFalse(boneMeal(helper, bushPos), "A fully grown " + VineClimbing.MAX_HEIGHT + "-tall plant is no bone meal target");
 		for (int i = 0; i < 300; i++) {
 			helper.randomTick(bushPos.above(2));
 		}
-		helper.assertBlockState(bushPos.above(3), trellis(Direction.Axis.Z));
+		VBGameTests.assertBlockState(helper, bushPos.above(3), trellis(Direction.Axis.Z));
 		helper.getLevel().destroyBlock(helper.absolutePos(bushPos), false);
 		helper.succeedWhen(() -> {
 			for (int y = 1; y <= 3; y++) {
-				helper.assertBlockState(bushPos.above(y), trellis(Direction.Axis.Z));
+				VBGameTests.assertBlockState(helper, bushPos.above(y), trellis(Direction.Axis.Z));
 			}
 			helper.assertItemEntityNotPresent(VBItems.TRELLIS.get(), bushPos.above(), 4.0);
 		});
@@ -544,7 +545,7 @@ final class VBTrellisTests
 		helper.setBlock(vine, grapeVine.defaultBlockState());
 		helper.assertTrue(boneMeal(helper, vine), "Bone meal grows a young vine");
 		helper.assertValueEqual(state(helper, vine).getValue(ClimbingCropBlock.AGE), 1, "vine age after bone meal");
-		Bee bee = helper.spawn(EntityTypes.BEE, vine.above());
+		Bee bee = helper.spawn(EntityType.BEE, vine.above());
 		helper.assertTrue(BeeGrowth.grow(bee) != null, "A bee grows the vine on a trellis");
 		helper.assertValueEqual(state(helper, vine).getValue(ClimbingCropBlock.AGE), 2, "vine age after a bee pass");
 		bee.discard();
@@ -595,14 +596,14 @@ final class VBTrellisTests
 		Block hopVine = VBBlocks.HOP_VINE_ON_TRELLIS.get();
 		helper.setBlock(bush.above(), hopVine.defaultBlockState().setValue(ClimbingCropBlock.AGE, 3).setValue(VineOnTrellisBlock.AXIS, Direction.Axis.Z));
 		helper.setBlock(bush.above(2), hopVine.defaultBlockState().setValue(ClimbingCropBlock.AGE, 1).setValue(VineOnTrellisBlock.AXIS, Direction.Axis.Z));
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
 		player.gameMode.destroyBlock(helper.absolutePos(bush.above()));
-		helper.assertBlockState(bush.above(), trellis(Direction.Axis.Z));
+		VBGameTests.assertBlockState(helper, bush.above(), trellis(Direction.Axis.Z));
 		// the vine above's tick, run now rather than a tick later: given time, the ripe bush could climb back in below it
 		BlockPos top = helper.absolutePos(bush.above(2));
 		helper.getLevel().getBlockState(top).tick(helper.getLevel(), top, helper.getLevel().getRandom());
-		helper.assertBlockState(bush.above(2), trellis(Direction.Axis.Z));
+		VBGameTests.assertBlockState(helper, bush.above(2), trellis(Direction.Axis.Z));
 		int hops = collect(helper, bush.above(), VBItems.HOPS.get());
 		helper.assertTrue(hops == 2 || hops == 3, "Breaking a ripe hop bine should drop 2-3 hops (and no trellis), dropped " + hops);
 		helper.assertBlockPresent(VBBlocks.HOP_BUSH.get(), bush);

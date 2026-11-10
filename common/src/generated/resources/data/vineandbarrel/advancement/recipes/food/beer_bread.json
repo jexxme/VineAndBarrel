@@ -24,7 +24,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipes": "vineandbarrel:beer_bread"
+        "recipe": "vineandbarrel:beer_bread"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

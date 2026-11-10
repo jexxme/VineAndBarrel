@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipes": "vineandbarrel:grape_crate"
+        "recipe": "vineandbarrel:grape_crate"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

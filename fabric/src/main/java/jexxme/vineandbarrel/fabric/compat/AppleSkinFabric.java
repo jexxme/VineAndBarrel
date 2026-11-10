@@ -3,7 +3,7 @@ package jexxme.vineandbarrel.fabric.compat;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.compat.appleskin.DrinkFood;
 import net.fabricmc.fabric.api.event.Event;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import squeek.appleskin.api.event.FoodValuesEvent;
 
 /**
@@ -18,7 +18,7 @@ public final class AppleSkinFabric
 	}
 
 	/** Our phase of AppleSkin's food event: before the default phase every other handler uses. */
-	private static final Identifier DRINK_FOOD = VineAndBarrel.id("drink_food");
+	private static final ResourceLocation DRINK_FOOD = VineAndBarrel.id("drink_food");
 
 	public static void register() {
 		FoodValuesEvent.EVENT.addPhaseOrdering(DRINK_FOOD, Event.DEFAULT_PHASE);

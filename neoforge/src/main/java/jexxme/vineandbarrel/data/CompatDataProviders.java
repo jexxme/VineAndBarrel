@@ -11,12 +11,13 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
+import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.data.ItemTagsProvider;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 import java.util.ArrayList;
@@ -27,15 +28,18 @@ import java.util.concurrent.CompletableFuture;
  * Writes the data files for the data-driven integrations ({@code ./gradlew runData}): what {@link CompatData} names,
  * from {@link Quench} and {@link Nutrient}. Shared by both loaders (common/src/generated).
  */
-@EventBusSubscriber(modid = VineAndBarrel.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = VineAndBarrel.MODID, bus = EventBusSubscriber.Bus.MOD)
 public final class CompatDataProviders
 {
 	private CompatDataProviders() {
 	}
 
 	@SubscribeEvent
-	public static void gatherData(GatherDataEvent.Client event) {
-		event.createProvider(CompatItemTags::new);
+	public static void gatherData(GatherDataEvent event) {
+		if (!event.includeServer()) {
+			return;
+		}
+		event.createProvider((output, lookup) -> new CompatItemTags(output, lookup, event.getExistingFileHelper()));
 		event.createProvider(HomeostaticDrinks::new);
 		event.createProvider(ThirstWasTakenDrinks::new);
 	}
@@ -47,8 +51,9 @@ public final class CompatDataProviders
 	// ------------------------------------------------------------------ tags
 	public static class CompatItemTags extends ItemTagsProvider
 	{
-		public CompatItemTags(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
-			super(output, lookupProvider, VineAndBarrel.MODID);
+		public CompatItemTags(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, ExistingFileHelper existingFileHelper) {
+			// no block tags to copy from
+			super(output, lookupProvider, CompletableFuture.completedFuture(TagsProvider.TagLookup.empty()), VineAndBarrel.MODID, existingFileHelper);
 		}
 
 		@Override
@@ -61,30 +66,30 @@ public final class CompatDataProviders
 			// Tough As Nails: one thirst tag and one hydration tag per drink; its #toughasnails:drinks holds all thirst tags
 			for (Item item : CompatData.quenching(Quench::tanDrink)) {
 				Quench quench = Quench.of(item).orElseThrow();
-				tag(CompatData.tanThirstTag(quench.tanThirst)).add(key(item));
-				tag(CompatData.tanHydrationTag(quench.tanHydration)).add(key(item));
+				tag(CompatData.tanThirstTag(quench.tanThirst)).add(item);
+				tag(CompatData.tanHydrationTag(quench.tanHydration)).add(item);
 			}
 
 			// Nutritional Balance
 			for (Nutrient nutrient : Nutrient.values()) {
-				nutrient.items().forEach(item -> tag(nutrient.tag).add(key(item)));
+				nutrient.items().forEach(item -> tag(nutrient.tag).add(item));
 			}
 
 			// NeoForge's conventions: juices are #c:drinks/juice (and so #c:drinks) and drink-containing bottles; wines,
 			// beers and ciders are plain #c:drinks; grapes are a fruit, the braised beef a stew, the battered fish food
 			for (Item juice : CompatData.quenching(quench -> quench == Quench.JUICE)) {
-				tag(Conventions.DRINKS_JUICE).add(key(juice));
-				tag(Conventions.DRINK_CONTAINING_BOTTLE).add(key(juice));
+				tag(Conventions.DRINKS_JUICE).add(juice);
+				tag(Conventions.DRINK_CONTAINING_BOTTLE).add(juice);
 			}
 			for (Item drink : Quench.items()) {
 				if (drink instanceof DrinkItem) {
-					tag(Conventions.DRINKS).add(key(drink));
+					tag(Conventions.DRINKS).add(drink);
 				}
 			}
-			CompatData.quenching(quench -> quench == Quench.FRUIT).forEach(fruit -> tag(Conventions.FOODS_FRUIT).add(key(fruit)));
-			CompatData.quenching(quench -> quench == Quench.STEW).forEach(stew -> tag(Conventions.FOODS_SOUP).add(key(stew)));
-			CompatData.quenching(quench -> quench == Quench.MEAL).forEach(meal -> tag(Conventions.FOODS).add(key(meal)));
-			tag(Conventions.FOODS_BREAD).add(key(jexxme.vineandbarrel.compat.farmersdelight.FDCompat.BEER_BREAD.get()));
+			CompatData.quenching(quench -> quench == Quench.FRUIT).forEach(fruit -> tag(Conventions.FOODS_FRUIT).add(fruit));
+			CompatData.quenching(quench -> quench == Quench.STEW).forEach(stew -> tag(Conventions.FOODS_SOUP).add(stew));
+			CompatData.quenching(quench -> quench == Quench.MEAL).forEach(meal -> tag(Conventions.FOODS).add(meal));
+			tag(Conventions.FOODS_BREAD).add(jexxme.vineandbarrel.compat.farmersdelight.FDCompat.BEER_BREAD.get());
 		}
 	}
 

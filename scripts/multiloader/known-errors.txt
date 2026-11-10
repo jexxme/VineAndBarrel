@@ -1,0 +1,6 @@
+# ERROR lines another mod logs about itself in a dev environment, which change nothing for our tests.
+# verify-all.sh and the CI / release workflows ignore lines matching one of these extended regexes (this file is on the older-Minecraft branches only).
+# Jade, in the Fabric compat run: a plugin it cannot load there
+\(Jade\) Error loading plugin at null
+# Tough As Nails' block entities have no data fixer in a dev environment (Fabric compat run)
+No data fixer registered for (temperature_gauge|thermoregulator|water_purifier)

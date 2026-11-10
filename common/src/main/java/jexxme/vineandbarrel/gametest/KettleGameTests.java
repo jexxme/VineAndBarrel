@@ -10,45 +10,40 @@ import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
 import jexxme.vineandbarrel.kettle.BrewKettleItem;
 import jexxme.vineandbarrel.kettle.BrewKettleMenu;
 import jexxme.vineandbarrel.kettle.BrewingRecipe;
+import jexxme.vineandbarrel.kettle.BrewingRecipeBookTab;
 import jexxme.vineandbarrel.kettle.KettleContents;
 import jexxme.vineandbarrel.kettle.KettleRecipeInput;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
 import jexxme.vineandbarrel.kettle.KettleSupport;
 import jexxme.vineandbarrel.kettle.KettleTags;
 import jexxme.vineandbarrel.advancement.VBAdvancementGenerator;
-import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.stats.RecipeBookSettings;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerSynchronizer;
-import net.minecraft.world.inventory.RemoteSlot;
 import net.minecraft.world.inventory.RecipeBookType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -63,12 +58,10 @@ import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import jexxme.vineandbarrel.platform.GameTestRegistrar;
-import jexxme.vineandbarrel.platform.registry.DeferredRegister;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -86,11 +79,12 @@ import java.util.function.Consumer;
  */
 public final class KettleGameTests
 {
-	private static final Identifier SMALL = VineAndBarrel.id("gametest/empty_5x5");
-	private static final DeferredRegister<java.util.function.Consumer<GameTestHelper>> FUNCTIONS = DeferredRegister.create(Registries.TEST_FUNCTION, VineAndBarrel.MODID);
-	private static final List<ResourceKey<Consumer<GameTestHelper>>> TESTS = new ArrayList<>();
-	private static final Map<ResourceKey<Consumer<GameTestHelper>>, Integer> TIMEOUTS = new HashMap<>();
-	private static final ResourceKey<Recipe<?>> SWEET_BERRY_JUICE_RECIPE = ResourceKey.create(Registries.RECIPE, VineAndBarrel.id("brewing/sweet_berry_juice"));
+	private static final ResourceLocation SMALL = VineAndBarrel.id("gametest/empty_5x5");
+	private static final List<Entry> TESTS = new ArrayList<>();
+	private static final ResourceLocation SWEET_BERRY_JUICE_RECIPE = VineAndBarrel.id("brewing/sweet_berry_juice");
+
+	private record Entry(String name, int timeout, Consumer<GameTestHelper> function) {
+	}
 
 	private static final BlockPos HEAT = new BlockPos(2, 1, 2);
 	private static final BlockPos KETTLE = HEAT.above();
@@ -170,21 +164,16 @@ public final class KettleGameTests
 	}
 
 	private static void test(String name, int timeout, Consumer<GameTestHelper> function) {
-		FUNCTIONS.register(name, () -> function);
-		ResourceKey<Consumer<GameTestHelper>> key = ResourceKey.create(Registries.TEST_FUNCTION, VineAndBarrel.id(name));
-		TESTS.add(key);
-		TIMEOUTS.put(key, timeout);
+		TESTS.add(new Entry(name, timeout, function));
 	}
 
 	public static void register() {
-		FUNCTIONS.register();
 		jexxme.vineandbarrel.platform.Services.PLATFORM.addGameTests(KettleGameTests::registerTests);
 	}
 
 	private static void registerTests(GameTestRegistrar event) {
-		Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(VineAndBarrel.id("kettle"));
-		for (ResourceKey<Consumer<GameTestHelper>> function : TESTS) {
-			event.registerTest(function.identifier(), new FunctionGameTestInstance(function, new TestData<>(environment, SMALL, TIMEOUTS.get(function), 0, true)));
+		for (Entry test : TESTS) {
+			VBGameTests.add(event, "kettle", test.name(), SMALL, test.timeout(), test.function());
 		}
 	}
 
@@ -195,7 +184,7 @@ public final class KettleGameTests
 	}
 
 	private static BrewKettleBlockEntity kettle(GameTestHelper helper, BlockPos pos) {
-		return helper.getBlockEntity(pos, BrewKettleBlockEntity.class);
+		return VBGameTests.blockEntity(helper, pos, BrewKettleBlockEntity.class);
 	}
 
 	/** Puts a heat source down and a kettle on it, with the support the kettle gets when placed there (K1). */
@@ -540,7 +529,7 @@ public final class KettleGameTests
 				// save and load into a fresh block entity
 				BrewKettleBlockEntity old = kettle(helper, KETTLE);
 				var tag = old.saveWithFullMetadata(helper.getLevel().registryAccess());
-				old.loadWithComponents(TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), tag));
+				old.loadWithComponents(tag, helper.getLevel().registryAccess());
 			}
 			Map<Item, Integer> inside = contents(kettle(helper, KETTLE));
 			for (Item poolItem : pool) {
@@ -603,12 +592,12 @@ public final class KettleGameTests
 		for (int i = 1; i < 4; i++) {
 			kettle.setStack(i, new ItemStack(Items.SWEET_BERRIES));
 		}
-		HopperBlockEntity top = helper.getBlockEntity(kettlePos.above(), HopperBlockEntity.class);
+		HopperBlockEntity top = VBGameTests.blockEntity(helper, kettlePos.above(), HopperBlockEntity.class);
 		top.setItem(0, new ItemStack(Items.SWEET_BERRIES));
 		top.setItem(1, new ItemStack(Items.SUGAR));
-		helper.getBlockEntity(kettlePos.east(), HopperBlockEntity.class).setItem(0, new ItemStack(Items.GLASS_BOTTLE, 4));
+		VBGameTests.blockEntity(helper, kettlePos.east(), HopperBlockEntity.class).setItem(0, new ItemStack(Items.GLASS_BOTTLE, 4));
 		helper.succeedWhen(() -> {
-			HopperBlockEntity bottom = helper.getBlockEntity(below, HopperBlockEntity.class);
+			HopperBlockEntity bottom = VBGameTests.blockEntity(helper, below, HopperBlockEntity.class);
 			int juice = 0;
 			for (int i = 0; i < bottom.getContainerSize(); i++) {
 				ItemStack stack = bottom.getItem(i);
@@ -672,7 +661,7 @@ public final class KettleGameTests
 		kettle.setStack(BrewKettleBlockEntity.CONTAINER_SLOT, new ItemStack(Items.GLASS_BOTTLE, 2));
 		kettle.setStack(BrewKettleBlockEntity.OUTPUT_SLOT, new ItemStack(BaseItems.SWEET_BERRY_JUICE.get(), 3));
 		helper.succeedWhen(() -> {
-			HopperBlockEntity hopper = helper.getBlockEntity(below, HopperBlockEntity.class);
+			HopperBlockEntity hopper = VBGameTests.blockEntity(helper, below, HopperBlockEntity.class);
 			int juice = 0;
 			for (int i = 0; i < hopper.getContainerSize(); i++) {
 				juice += hopper.getItem(i).is(BaseItems.SWEET_BERRY_JUICE.get()) ? hopper.getItem(i).getCount() : 0;
@@ -740,7 +729,7 @@ public final class KettleGameTests
 		var tag = kettle.saveWithFullMetadata(helper.getLevel().registryAccess());
 		helper.setBlock(KETTLE.east(), KettleRegistry.kettle());
 		BrewKettleBlockEntity copy = kettle(helper, KETTLE.east());
-		copy.loadWithComponents(TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), tag));
+		copy.loadWithComponents(tag, helper.getLevel().registryAccess());
 		helper.assertValueEqual(copy.getServings(), 5, "servings after load");
 		helper.assertTrue(copy.getBucketForm().is(BaseItems.SWEET_BERRY_JUICE_BUCKET.get()), "bucket form after load");
 		helper.assertValueEqual(copy.stackIn(1).getCount(), 12, "ingredients after load");
@@ -764,14 +753,14 @@ public final class KettleGameTests
 		}
 		helper.assertValueEqual(signal(helper), 10, "six full slots of nine");
 		helper.succeedWhen(() -> {
-			ComparatorBlockEntity be = helper.getBlockEntity(comparator, ComparatorBlockEntity.class);
+			ComparatorBlockEntity be = VBGameTests.blockEntity(helper, comparator, ComparatorBlockEntity.class);
 			helper.assertValueEqual(be.getOutputSignal(), 10, "a real comparator reads the kettle");
 		});
 	}
 
 	private static int signal(GameTestHelper helper) {
 		BlockPos absolute = helper.absolutePos(KETTLE);
-		return helper.getLevel().getBlockState(absolute).getAnalogOutputSignal(helper.getLevel(), absolute, Direction.NORTH);
+		return helper.getLevel().getBlockState(absolute).getAnalogOutputSignal(helper.getLevel(), absolute);
 	}
 
 	// ------------------------------------------------------------------ K1 support states, K2 lid
@@ -803,7 +792,7 @@ public final class KettleGameTests
 		helper.setBlock(KETTLE, KettleRegistry.kettle());
 		BrewKettleBlockEntity kettle = kettle(helper, KETTLE);
 		@SuppressWarnings("removal")
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		try {
 			// not the block's own path: the mock connection can't carry NeoForge's extra-data screen payload
 			Services.PLATFORM.openMenuForGameTest(player, kettle, kettle.getBlockPos());
@@ -829,9 +818,9 @@ public final class KettleGameTests
 		kettle.setStack(BrewKettleBlockEntity.OUTPUT_SLOT, new ItemStack(BaseItems.SWEET_BERRY_JUICE.get(), 3));
 		BlockPos absolute = helper.absolutePos(KETTLE);
 		@SuppressWarnings("removal")
-		ServerPlayer viewer = helper.makeMockServerPlayerInLevel();
+		ServerPlayer viewer = VBGameTests.mockServerPlayerInLevel(helper);
 		try {
-			viewer.snapTo(Vec3.atBottomCenterOf(absolute).add(1.5D, 0.0D, 0.0D));
+			viewer.moveTo(Vec3.atBottomCenterOf(absolute).add(1.5D, 0.0D, 0.0D));
 			Services.PLATFORM.openMenuForGameTest(viewer, kettle, kettle.getBlockPos());
 			helper.assertTrue(viewer.containerMenu instanceof BrewKettleMenu, "the kettle screen opens");
 			BrewKettleMenu menu = (BrewKettleMenu) viewer.containerMenu;
@@ -884,7 +873,7 @@ public final class KettleGameTests
 			Optional<BlockState> next = ((WeatheringCopper) state.getBlock()).getNext(state);
 			helper.assertTrue(next.isPresent(), order[i] + " has a next stage");
 			helper.getLevel().setBlockAndUpdate(helper.absolutePos(KETTLE), next.get());
-			helper.assertTrue(helper.getBlockEntity(KETTLE, BrewKettleBlockEntity.class) == kettle, "the same block entity stays");
+			helper.assertTrue(VBGameTests.blockEntity(helper, KETTLE, BrewKettleBlockEntity.class) == kettle, "the same block entity stays");
 		}
 		BlockState oxidized = helper.getBlockState(KETTLE);
 		helper.assertTrue(oxidized.is(KettleRegistry.KETTLES.get(WeatherState.OXIDIZED).get()), "fully oxidized");
@@ -928,10 +917,10 @@ public final class KettleGameTests
 	private static void lightningCleansCopper(GameTestHelper helper) {
 		BrewKettleBlockEntity kettle = kettleWithBrew(helper, KETTLE, 3);
 		helper.setBlock(KETTLE, KettleRegistry.KETTLES.get(WeatherState.OXIDIZED).get().withPropertiesOf(helper.getBlockState(KETTLE)));
-		LightningBolt bolt = net.minecraft.world.entity.EntityTypes.LIGHTNING_BOLT.create(helper.getLevel(), EntitySpawnReason.TRIGGERED);
+		LightningBolt bolt = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(helper.getLevel());
 		helper.assertTrue(bolt != null, "lightning bolt");
 		Vec3 at = Vec3.atBottomCenterOf(helper.absolutePos(KETTLE)).add(0.0D, 0.5D, 0.0D);
-		bolt.snapTo(at);
+		bolt.moveTo(at);
 		bolt.setVisualOnly(false);
 		helper.getLevel().addFreshEntity(bolt);
 		helper.succeedWhen(() -> {
@@ -943,15 +932,17 @@ public final class KettleGameTests
 	// ------------------------------------------------------------------ recipe, recipe book (K9), bases (D3, D4)
 
 	private static void recipeAndBook(GameTestHelper helper) {
-		Optional<RecipeHolder<?>> holder = helper.getLevel().recipeAccess().byKey(SWEET_BERRY_JUICE_RECIPE);
+		Optional<RecipeHolder<?>> holder = helper.getLevel().getRecipeManager().byKey(SWEET_BERRY_JUICE_RECIPE);
 		helper.assertTrue(holder.isPresent(), "the sweet berry juice recipe is loaded");
 		helper.assertTrue(holder.get().value() instanceof BrewingRecipe, "it is a brewing recipe");
 		BrewingRecipe recipe = (BrewingRecipe) holder.get().value();
 		helper.assertValueEqual(recipe.servings(), 4, "servings per batch");
 		helper.assertValueEqual(recipe.brewingTime(), 200, "brewing time");
 		helper.assertTrue(recipe.bucket().is(BaseItems.SWEET_BERRY_JUICE_BUCKET.get()), "bucket form");
-		helper.assertTrue(recipe.recipeBookCategory() == KettleRegistry.BREWING_JUICES.get(), "recipe book tab: juices");
-		helper.assertFalse(recipe.placementInfo().isImpossibleToPlace(), "the recipe book can place it");
+		helper.assertTrue(recipe.tab() == BrewingRecipeBookTab.JUICES, "recipe book tab: juices");
+		// what the recipe book needs to place it: ingredients that all name an item, and a grid they fit
+		helper.assertFalse(recipe.isIncomplete(), "the recipe book can place it");
+		helper.assertTrue(recipe.canCraftInDimensions(3, 2), "it fits the kettle's grid");
 		// The kettle's own book type, with its own settings that are saved and copied apart from the furnace's
 		RecipeBookType type = Services.PLATFORM.brewingRecipeBookType();
 		helper.assertValueEqual(type.name(), "VINEANDBARREL_BREWING", "the kettle's recipe book type");
@@ -962,10 +953,11 @@ public final class KettleGameTests
 		helper.assertFalse(settings.isOpen(RecipeBookType.FURNACE) || settings.isFiltering(RecipeBookType.FURNACE), "apart from the furnace book's");
 		RecipeBookSettings copy = settings.copy();
 		helper.assertTrue(copy.isOpen(type) && copy.isFiltering(type), "a copy keeps the kettle book's settings");
-		RecipeBookSettings loaded = RecipeBookSettings.MAP_CODEC.codec().parse(NbtOps.INSTANCE,
-				RecipeBookSettings.MAP_CODEC.codec().encodeStart(NbtOps.INSTANCE, settings).getOrThrow()).getOrThrow();
+		CompoundTag saved = new CompoundTag();
+		settings.write(saved);
+		RecipeBookSettings loaded = RecipeBookSettings.read(saved);
 		helper.assertTrue(loaded.isOpen(type) && loaded.isFiltering(type), "the kettle book's settings are saved with the player");
-		helper.assertTrue(helper.getLevel().recipeAccess().byKey(ResourceKey.create(Registries.RECIPE, VineAndBarrel.id("brew_kettle"))).isPresent(), "the kettle crafting recipe is loaded");
+		helper.assertTrue(helper.getLevel().getRecipeManager().byKey(VineAndBarrel.id("brew_kettle")).isPresent(), "the kettle crafting recipe is loaded");
 		helper.succeed();
 	}
 
@@ -973,10 +965,11 @@ public final class KettleGameTests
 	private static void juiceBottleDrinks(GameTestHelper helper) {
 		for (Item juice : List.of(BaseItems.SWEET_BERRY_JUICE.get(), BaseItems.GRAPE_JUICE.get())) {
 			ItemStack stack = new ItemStack(juice);
-			Consumable consumable = stack.get(DataComponents.CONSUMABLE);
-			helper.assertTrue(consumable != null, juice + " is drinkable");
-			helper.assertValueEqual(consumable.animation(), ItemUseAnimation.DRINK, "drink animation");
-			helper.assertTrue(consumable.sound().value() == SoundEvents.GENERIC_DRINK.value(), "vanilla drink sound");
+			// no Consumable component on this Minecraft: a drink is a food whose item drinks (animation and sounds)
+			helper.assertTrue(stack.has(DataComponents.FOOD), juice + " is drinkable");
+			helper.assertValueEqual(stack.getUseAnimation(), UseAnim.DRINK, "drink animation");
+			helper.assertTrue(juice.getDrinkingSound() == SoundEvents.GENERIC_DRINK, "vanilla drink sound");
+			helper.assertTrue(juice.getEatingSound() == SoundEvents.GENERIC_DRINK, "vanilla drink sound when finished");
 			helper.assertTrue(stack.get(DataComponents.FOOD) != null && stack.get(DataComponents.FOOD).canAlwaysEat(), "light food, always drinkable");
 			helper.assertValueEqual(stack.getMaxStackSize(), 16, "stack size");
 
@@ -988,7 +981,8 @@ public final class KettleGameTests
 			helper.assertValueEqual(player.getFoodData().getFoodLevel(), 12, "food after one juice");
 		}
 		for (Item wort : List.of(BaseItems.BARLEY_WORT_BOTTLE.get(), BaseItems.WHEAT_WORT_BOTTLE.get())) {
-			helper.assertTrue(new ItemStack(wort).get(DataComponents.CONSUMABLE) == null, wort + " is not drinkable (only juices are)");
+			helper.assertTrue(new ItemStack(wort).get(DataComponents.FOOD) == null && new ItemStack(wort).getUseAnimation() == UseAnim.NONE,
+				wort + " is not drinkable (only juices are)");
 		}
 		helper.succeed();
 	}
@@ -1011,7 +1005,7 @@ public final class KettleGameTests
 	}
 
 	private static void baseItemsAndTags(GameTestHelper helper) {
-		TagKey<Item> drinks = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("farmersdelight", "drinks"));
+		TagKey<Item> drinks = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("farmersdelight", "drinks"));
 		helper.assertTrue(new ItemStack(BaseItems.GRAPE_JUICE.get()).is(drinks), "grape juice is an FD drink");
 		helper.assertTrue(new ItemStack(BaseItems.SWEET_BERRY_JUICE.get()).is(drinks), "sweet berry juice is an FD drink");
 		helper.assertTrue(new ItemStack(BaseItems.WHITE_GRAPE_JUICE.get()).is(drinks), "white grape juice is an FD drink");
@@ -1023,7 +1017,7 @@ public final class KettleGameTests
 		for (Item bottle : List.of(BaseItems.GRAPE_JUICE.get(), BaseItems.SWEET_BERRY_JUICE.get(), BaseItems.BARLEY_WORT_BOTTLE.get(), BaseItems.WHEAT_WORT_BOTTLE.get(),
 				BaseItems.WHITE_GRAPE_JUICE.get(), BaseItems.APPLE_JUICE.get(), BaseItems.HONEY_MUST_BOTTLE.get())) {
 			ItemStack stack = new ItemStack(bottle);
-			helper.assertTrue(stack.getItem().getCraftingRemainder() != null && stack.getItem().getCraftingRemainder().item().value() == Items.GLASS_BOTTLE, bottle + " leaves a glass bottle");
+			helper.assertTrue(stack.getItem().getCraftingRemainingItem() == Items.GLASS_BOTTLE, bottle + " leaves a glass bottle");
 		}
 		for (Block block : KettleRegistry.allKettleBlocks()) {
 			helper.assertTrue(block.defaultBlockState().is(KettleTags.BREW_KETTLES), block + " is tagged as a kettle");
@@ -1051,19 +1045,22 @@ public final class KettleGameTests
 	private static void recipeBookConservesItems(GameTestHelper helper) {
 		helper.setBlock(KETTLE, KettleRegistry.kettle());
 		BrewKettleBlockEntity kettle = kettle(helper, KETTLE);
-		RecipeHolder<?> recipe = helper.getLevel().recipeAccess().byKey(SWEET_BERRY_JUICE_RECIPE).orElseThrow();
+		RecipeHolder<?> recipe = helper.getLevel().getRecipeManager().byKey(SWEET_BERRY_JUICE_RECIPE).orElseThrow();
 		@SuppressWarnings("removal")
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		try {
 			player.getInventory().clearContent();
 			player.getInventory().setItem(0, new ItemStack(Items.SWEET_BERRIES, 30));
 			player.getInventory().setItem(1, new ItemStack(Items.SWEET_BERRIES, 64));
 			player.getInventory().setItem(2, new ItemStack(Items.SUGAR, 64));
+			// the book only places a recipe its player knows (vanilla's placer checks; a client can only click those)
+			player.awardRecipes(List.of(recipe));
 			Services.PLATFORM.openMenuForGameTest(player, kettle, kettle.getBlockPos());
 			helper.assertTrue(player.containerMenu instanceof BrewKettleMenu, "the kettle screen opens");
 			BrewKettleMenu menu = (BrewKettleMenu) player.containerMenu;
 
-			menu.handlePlacement(true, false, recipe, helper.getLevel(), player.getInventory());
+			// the call a click in the book ends in (ServerGamePacketListenerImpl#handlePlaceRecipe)
+			menu.handlePlacement(true, recipe, player);
 			helper.assertValueEqual(countIn(player, kettle, Items.SWEET_BERRIES), 94, "berries after placing with max items");
 			helper.assertValueEqual(countIn(player, kettle, Items.SUGAR), 64, "sugar after placing with max items");
 			for (int i = 0; i < 4; i++) {
@@ -1072,17 +1069,17 @@ public final class KettleGameTests
 			}
 			helper.assertValueEqual(kettle.stackIn(4).getCount(), 23, "sugar placed");
 
-			menu.handlePlacement(true, false, recipe, helper.getLevel(), player.getInventory());
+			menu.handlePlacement(true, recipe, player);
 			helper.assertValueEqual(countIn(player, kettle, Items.SWEET_BERRIES), 94, "berries after placing again with max items");
 			helper.assertValueEqual(countIn(player, kettle, Items.SUGAR), 64, "sugar after placing again with max items");
 
 			// from a part-filled grid: one more batch at a time, then max again
 			for (int click = 0; click < 3; click++) {
-				menu.handlePlacement(false, false, recipe, helper.getLevel(), player.getInventory());
+				menu.handlePlacement(false, recipe, player);
 				helper.assertValueEqual(countIn(player, kettle, Items.SWEET_BERRIES), 94, "berries after a single placement " + click);
 				helper.assertValueEqual(countIn(player, kettle, Items.SUGAR), 64, "sugar after a single placement " + click);
 			}
-			menu.handlePlacement(true, false, recipe, helper.getLevel(), player.getInventory());
+			menu.handlePlacement(true, recipe, player);
 			helper.assertValueEqual(countIn(player, kettle, Items.SWEET_BERRIES), 94, "berries after the last placement");
 			helper.assertValueEqual(countIn(player, kettle, Items.SUGAR), 64, "sugar after the last placement");
 			player.closeContainer();
@@ -1096,7 +1093,7 @@ public final class KettleGameTests
 	private static void hopperFeedsFromScratch(GameTestHelper helper, List<ItemStack> feed, Item bottle) {
 		BrewKettleBlockEntity kettle = placeKettle(helper, KETTLE, litCampfire());
 		helper.setBlock(KETTLE.above(), Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.DOWN));
-		HopperBlockEntity hopper = helper.getBlockEntity(KETTLE.above(), HopperBlockEntity.class);
+		HopperBlockEntity hopper = VBGameTests.blockEntity(helper, KETTLE.above(), HopperBlockEntity.class);
 		for (int i = 0; i < feed.size(); i++) {
 			hopper.setItem(i, feed.get(i).copy());
 		}
@@ -1130,7 +1127,7 @@ public final class KettleGameTests
 	private static void pooledMatchingRules(GameTestHelper helper) {
 		helper.setBlock(KETTLE, KettleRegistry.kettle());
 		BrewKettleBlockEntity kettle = kettle(helper, KETTLE);
-		BrewingRecipe recipe = (BrewingRecipe) helper.getLevel().recipeAccess().byKey(SWEET_BERRY_JUICE_RECIPE).orElseThrow().value();
+		BrewingRecipe recipe = (BrewingRecipe) helper.getLevel().getRecipeManager().byKey(SWEET_BERRY_JUICE_RECIPE).orElseThrow().value();
 		ItemStack none = ItemStack.EMPTY;
 		List<PoolCase> cases = List.of(
 			// FD's layout, 3 batches: one item from every slot
@@ -1223,7 +1220,7 @@ public final class KettleGameTests
 		BrewKettleBlockEntity kettle = kettle(helper, KETTLE);
 		kettle.setStack(0, new ItemStack(Items.SUGAR, 5));
 		@SuppressWarnings("removal")
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		try {
 			player.getInventory().clearContent();
 			for (int i = 0; i < 36; i++) {
@@ -1235,13 +1232,13 @@ public final class KettleGameTests
 			BrewKettleMenu menu = (BrewKettleMenu) player.containerMenu;
 			helper.assertValueEqual(menu.slots.size(), BrewKettleBlockEntity.INPUT_SLOTS + 36, "the grid and the player's inventory, nothing else");
 
-			menu.clicked(0, 0, ContainerInput.QUICK_MOVE, player);
+			menu.clicked(0, 0, ClickType.QUICK_MOVE, player);
 			helper.assertValueEqual(countInInventory(player, Items.SUGAR), 64, "sugar that fit into the full inventory");
 			helper.assertValueEqual(kettle.stackIn(0).getCount(), 3, "sugar left in the grid");
 			helper.assertValueEqual(countInInventory(player, Items.STONE), 35 * 64, "stone untouched");
 
 			player.getInventory().setItem(20, ItemStack.EMPTY);
-			menu.clicked(0, 0, ContainerInput.QUICK_MOVE, player);
+			menu.clicked(0, 0, ClickType.QUICK_MOVE, player);
 			helper.assertValueEqual(countInInventory(player, Items.SUGAR), 67, "all sugar in the inventory");
 			helper.assertTrue(kettle.stackIn(0).isEmpty(), "grid slot emptied");
 
@@ -1252,7 +1249,7 @@ public final class KettleGameTests
 					sugarSlot = i;
 				}
 			}
-			menu.clicked(sugarSlot, 0, ContainerInput.QUICK_MOVE, player);
+			menu.clicked(sugarSlot, 0, ClickType.QUICK_MOVE, player);
 			int inGrid = 0;
 			for (int i = 0; i < BrewKettleBlockEntity.INPUT_SLOTS; i++) {
 				inGrid += kettle.stackIn(i).is(Items.SUGAR) ? kettle.stackIn(i).getCount() : 0;
@@ -1277,7 +1274,7 @@ public final class KettleGameTests
 	}
 
 	/** The block's own answer to a right-click with {@code held}, without opening anything. */
-	private static InteractionResult blockAnswer(GameTestHelper helper, ItemStack held) {
+	private static ItemInteractionResult blockAnswer(GameTestHelper helper, ItemStack held) {
 		Player player = playerHolding(helper, held);
 		BlockPos absolute = helper.absolutePos(KETTLE);
 		BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absolute), Direction.UP, absolute, false);
@@ -1286,9 +1283,9 @@ public final class KettleGameTests
 
 	@SuppressWarnings("removal")
 	private static ServerPlayer playerAtKettle(GameTestHelper helper, GameType type) {
-		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(type);
-		player.snapTo(Vec3.atBottomCenterOf(helper.absolutePos(KETTLE)).add(1.5D, 0.0D, 0.0D));
+		player.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(KETTLE)).add(1.5D, 0.0D, 0.0D));
 		player.getInventory().clearContent();
 		return player;
 	}
@@ -1325,7 +1322,7 @@ public final class KettleGameTests
 					helper.assertTrue(player.getMainHandItem().is(BaseItems.SWEET_BERRY_JUICE_BUCKET.get()), "the filled bucket is in the hand");
 
 					// three servings are not a bucket: the bucket is kept and the click passes on to the screen
-					helper.assertTrue(blockAnswer(helper, new ItemStack(Items.BUCKET)) instanceof InteractionResult.TryEmptyHandInteraction,
+					helper.assertTrue(blockAnswer(helper, new ItemStack(Items.BUCKET)) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION,
 						"a bucket with too little brew passes");
 					// (a plain player: the mock connection can't carry NeoForge's screen payload)
 					Player other = playerHolding(helper, new ItemStack(Items.BUCKET));
@@ -1367,14 +1364,14 @@ public final class KettleGameTests
 	/** No brew, or a container that doesn't take it: the block passes, so the empty-hand use opens the screen. */
 	private static void rightClickPasses(GameTestHelper helper) {
 		helper.setBlock(KETTLE, KettleRegistry.kettle());
-		helper.assertTrue(blockAnswer(helper, new ItemStack(Items.GLASS_BOTTLE)) instanceof InteractionResult.TryEmptyHandInteraction,
+		helper.assertTrue(blockAnswer(helper, new ItemStack(Items.GLASS_BOTTLE)) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION,
 			"a bottle on an empty kettle passes");
-		helper.assertTrue(blockAnswer(helper, new ItemStack(Items.BUCKET)) instanceof InteractionResult.TryEmptyHandInteraction,
+		helper.assertTrue(blockAnswer(helper, new ItemStack(Items.BUCKET)) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION,
 			"a bucket on an empty kettle passes");
 		kettleWithBrew(helper, KETTLE, 8);
-		helper.assertTrue(blockAnswer(helper, new ItemStack(Items.BOWL)) instanceof InteractionResult.TryEmptyHandInteraction,
+		helper.assertTrue(blockAnswer(helper, new ItemStack(Items.BOWL)) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION,
 			"a bowl passes");
-		helper.assertTrue(blockAnswer(helper, new ItemStack(Items.STICK)) instanceof InteractionResult.TryEmptyHandInteraction,
+		helper.assertTrue(blockAnswer(helper, new ItemStack(Items.STICK)) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION,
 			"any other item passes");
 		helper.assertValueEqual(kettle(helper, KETTLE).getServings(), 8, "nothing served");
 		Player player = playerHolding(helper, ItemStack.EMPTY);
@@ -1407,7 +1404,7 @@ public final class KettleGameTests
 		final int[] data = new int[BrewKettleBlockEntity.DATA_COUNT];
 
 		@Override
-		public void sendInitialData(AbstractContainerMenu menu, List<ItemStack> items, ItemStack carried, int[] dataSlots) {
+		public void sendInitialData(AbstractContainerMenu menu, NonNullList<ItemStack> items, ItemStack carried, int[] dataSlots) {
 			System.arraycopy(dataSlots, 0, data, 0, Math.min(dataSlots.length, data.length));
 		}
 
@@ -1423,16 +1420,11 @@ public final class KettleGameTests
 		public void sendDataChange(AbstractContainerMenu menu, int id, int value) {
 			data[id] = value;
 		}
-
-		@Override
-		public RemoteSlot createSlot() {
-			return RemoteSlot.PLACEHOLDER;
-		}
 	}
 
 	/**
 	 * A leftover that makes nothing (a single sugar after a batch, barley with hops) greys the screen's arrow, hot or cold;
-	 * an empty grid or one that brews doesn't. The flag reaches the client as menu data (the client has no recipes).
+	 * an empty grid or one that brews doesn't. The flag reaches the client as menu data (the server does the matching).
 	 */
 	private static void gridMakesNothing(GameTestHelper helper) {
 		BrewKettleBlockEntity kettle = placeKettle(helper, KETTLE, Blocks.STONE.defaultBlockState());
@@ -1476,12 +1468,12 @@ public final class KettleGameTests
 		int hotbar0 = BrewKettleMenu.INDEX_INVENTORY + 27;
 
 		// berries one by one into four slots (right-click places one), the sugar shift-clicked
-		menu.clicked(hotbar0, 0, ContainerInput.PICKUP, player);
+		menu.clicked(hotbar0, 0, ClickType.PICKUP, player);
 		for (int i = 0; i < 4; i++) {
-			menu.clicked(i, 1, ContainerInput.PICKUP, player);
+			menu.clicked(i, 1, ClickType.PICKUP, player);
 		}
 		helper.assertTrue(menu.getCarried().isEmpty(), "all four berries placed");
-		menu.clicked(hotbar0 + 1, 0, ContainerInput.QUICK_MOVE, player);
+		menu.clicked(hotbar0 + 1, 0, ClickType.QUICK_MOVE, player);
 		helper.assertValueEqual(countInInventory(player, Items.SUGAR), 0, "sugar shift-clicked into the grid");
 		helper.startSequence()
 			.thenWaitUntil(() -> helper.assertValueEqual(kettle.getServings(), 4, "the brew is done without any container"))

@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag named <minecraft_version>-<mod_version> (the NeoForge version, e.g. 26.3-0.9.0+neoforged.1) on the matching
+# Push a tag named <minecraft_version>-<mod_version> (the NeoForge version, e.g. 1.21.1-0.9.0+neoforged.1) on the matching
 # branch. gradle.properties also has fabric_mod_version (e.g. 0.9.0+fabric.1: the same version before the "+").
 # Publishes both jars to GitHub Releases always, and to Modrinth / CurseForge (the same projects, one file per loader;
 # both full releases) once these are set up in the repository settings:
@@ -8,8 +8,8 @@ name: Release
 #   Modrinth uploads also need the variable MODRINTH_LIVE=true: until Modrinth approves the project they are skipped
 #   (with a notice), and GitHub and CurseForge still get the release.
 #
-# Names, loader first and the same everywhere (RELEASING.md): "Vine & Barrel 0.9.0 · NeoForge · Minecraft 26.3" and
-# "Vine & Barrel 0.9.0 · Fabric · Minecraft 26.3". The GitHub release starts with a "Which file do I need?" table, and
+# Names, loader first and the same everywhere (RELEASING.md): "Vine & Barrel 0.9.0 · NeoForge · Minecraft 1.21.1" and
+# "Vine & Barrel 0.9.0 · Fabric · Minecraft 1.21.1". The GitHub release starts with a "Which file do I need?" table, and
 # each Modrinth / CurseForge changelog names its loader in its first line.
 on:
   push:
@@ -54,11 +54,12 @@ jobs:
             exit 1
           fi
           games_label=$(echo "${games}" | sed 's/,/, /g')
-          # the oldest NeoForge the jar accepts: the lower end of neo_version_range ("[26.1.0.19-beta,26.1.2)"), not
+          # the oldest NeoForge the jar accepts: the lower end of neo_version_range ("[21.1.200,)"), not
           # neo_version, which is only the one it builds against
           neo_min=$(prop neo_version_range | sed -E 's/^\[([^,]+),.*/\1/')
           neo_needs="NeoForge ${neo_min}+"
-          fabric_needs="Fabric Loader $(prop fabric_loader_version)+ and Fabric API $(prop fabric_api_version | cut -d+ -f1)+"
+          # Fabric Loader: the oldest the jar accepts (fabric_loader_min_version), not the one it builds against
+          fabric_needs="Fabric Loader $(prop fabric_loader_min_version)+ and Fabric API $(prop fabric_api_version | cut -d+ -f1)+"
           {
             echo "version=${expected}"
             echo "fabric_version=${mc}-${fabric}"
@@ -86,15 +87,16 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
+          java-version: 21
 
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build, check and test (both loaders, the same GameTest runs as CI)
         run: |
           set -o pipefail
-          ./gradlew build :neoforge:runGameTestServer :neoforge:runGameTestServerCompat :fabric:runGameTest :fabric:runGameTestFd :fabric:runGameTestCompat --console=plain 2>&1 | tee release.log
-          if grep -E "/ERROR\]" release.log; then
+          ./gradlew build :neoforge:runGameTestServer :neoforge:runGameTestServerFd :neoforge:runGameTestServerCompat :fabric:runGameTest :fabric:runGameTestFd :fabric:runGameTestCompat --console=plain 2>&1 | tee release.log
+          # This older-Minecraft branch: errors other mods log about themselves in a dev environment (scripts/multiloader/known-errors.txt)
+          if grep -E "/ERROR\]" release.log | grep -vEf <(grep -v '^#' scripts/multiloader/known-errors.txt | tr -d '\r'); then
             echo "::error::Errors were logged while the GameTests ran."
             exit 1
           fi
@@ -133,8 +135,8 @@ jobs:
           gh release edit "${GITHUB_REF_NAME}" --notes-file release-body.md
 
       # Optional dependencies per loader: only mods with a real build for this loader and Minecraft version
-      # (Nutritional Balance has no Fabric build; Farmer's Delight is Farmer's Delight Neoforged on NeoForge and
-      # Farmer's Delight Refabricated on Fabric).
+      # (Nutritional Balance and Spice of Life Onion have no Fabric build; Farmer's Delight is the original mod on NeoForge
+      # and Farmer's Delight Refabricated on Fabric).
       - name: Modrinth skipped (the project isn't approved yet)
         if: vars.MODRINTH_LIVE != 'true'
         run: |
@@ -155,7 +157,7 @@ jobs:
           game-versions: ${{ steps.info.outputs.games }}
           game-version-filter: none
           dependencies: |
-            farmers-delight-neoforged(optional){modrinth:8Vb5dzx9}{curseforge:1782500}
+            farmers-delight(optional){modrinth:R2OftAxM}{curseforge:398521}
             jei(optional){modrinth:u6dRKJwZ}{curseforge:238222}
             jade(optional){modrinth:nvQzSEkH}{curseforge:324717}
             appleskin(optional){modrinth:EsAfCjCV}{curseforge:248787}
@@ -164,7 +166,7 @@ jobs:
             thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
             nutritional-balance(optional){modrinth:OECzAr94}{curseforge:448222}
             spice-of-life-onion(optional){modrinth:eHGYGKJz}{curseforge:878047}
-          java: 25
+          java: 21
 
       - name: Modrinth (Fabric)
         if: vars.MODRINTH_PROJECT_ID != '' && vars.MODRINTH_LIVE == 'true'
@@ -189,8 +191,7 @@ jobs:
             tough-as-nails(optional){modrinth:ge1sOdFH}{curseforge:246391}
             homeostatic(optional){modrinth:oDobngty}{curseforge:634466}
             thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
-            spice-of-life-onion(optional){modrinth:eHGYGKJz}{curseforge:878047}
-          java: 25
+          java: 21
 
       - name: CurseForge (NeoForge)
         if: vars.CURSEFORGE_PROJECT_ID != ''
@@ -207,7 +208,7 @@ jobs:
           game-versions: ${{ steps.info.outputs.games }}
           game-version-filter: none
           dependencies: |
-            farmers-delight-neoforged(optional){modrinth:8Vb5dzx9}{curseforge:1782500}
+            farmers-delight(optional){modrinth:R2OftAxM}{curseforge:398521}
             jei(optional){modrinth:u6dRKJwZ}{curseforge:238222}
             jade(optional){modrinth:nvQzSEkH}{curseforge:324717}
             appleskin(optional){modrinth:EsAfCjCV}{curseforge:248787}
@@ -216,7 +217,7 @@ jobs:
             thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
             nutritional-balance(optional){modrinth:OECzAr94}{curseforge:448222}
             spice-of-life-onion(optional){modrinth:eHGYGKJz}{curseforge:878047}
-          java: 25
+          java: 21
 
       - name: CurseForge (Fabric)
         if: vars.CURSEFORGE_PROJECT_ID != ''
@@ -241,5 +242,4 @@ jobs:
             tough-as-nails(optional){modrinth:ge1sOdFH}{curseforge:246391}
             homeostatic(optional){modrinth:oDobngty}{curseforge:634466}
             thirst-was-taken-2(optional){modrinth:juge6qKH}{curseforge:1700787}
-            spice-of-life-onion(optional){modrinth:eHGYGKJz}{curseforge:878047}
-          java: 25
+          java: 21

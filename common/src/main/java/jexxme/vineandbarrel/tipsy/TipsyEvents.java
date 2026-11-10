@@ -8,10 +8,10 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.AbstractBedBlock;
+import net.minecraft.world.level.block.BedBlock;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -73,7 +73,7 @@ public final class TipsyEvents
 	 */
 	public static boolean keepsSleeping(Player player) {
 		return Blackout.isOut(player) && player.getSleepingPos()
-			.map(bed -> player.level().getBlockState(bed).getBlock() instanceof AbstractBedBlock).orElse(false);
+			.map(bed -> player.level().getBlockState(bed).getBlock() instanceof BedBlock).orElse(false);
 	}
 
 	/**

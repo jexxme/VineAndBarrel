@@ -22,8 +22,8 @@ public final class FabricCompatProbes implements CompatProbes
 {
 	@Override
 	public List<String> compatRunMods() {
-		return List.of(ModCompatGameTests.TOUGH_AS_NAILS, "glitchcore", ModCompatGameTests.HOMEOSTATIC, ModCompatGameTests.THIRST_WAS_TAKEN,
-			ModCompatGameTests.SPICE_OF_LIFE, "creativecore");
+		// Spice of Life Onion has no Fabric build for this Minecraft (see fabric/build.gradle)
+		return List.of(ModCompatGameTests.TOUGH_AS_NAILS, "glitchcore", ModCompatGameTests.HOMEOSTATIC, ModCompatGameTests.THIRST_WAS_TAKEN);
 	}
 
 	@Override
@@ -80,7 +80,7 @@ public final class FabricCompatProbes implements CompatProbes
 	private static final class AppleSkin
 	{
 		static FoodProperties[] foodValues(Player player, ItemStack stack) {
-			FoodProperties own = stack.getOrDefault(DataComponents.FOOD, new FoodProperties(0, 0.0F, false));
+			FoodProperties own = stack.getOrDefault(DataComponents.FOOD, new FoodProperties(0, 0.0F, false, 1.6F, java.util.Optional.empty(), List.of()));
 			squeek.appleskin.api.event.FoodValuesEvent event = new squeek.appleskin.api.event.FoodValuesEvent(player, stack, own, own);
 			squeek.appleskin.api.event.FoodValuesEvent.EVENT.invoker().interact(event);
 			return new FoodProperties[] {event.defaultFoodComponent, event.modifiedFoodComponent};

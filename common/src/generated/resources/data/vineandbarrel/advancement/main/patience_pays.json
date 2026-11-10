@@ -15,6 +15,7 @@
     },
     "frame": "goal",
     "icon": {
+      "count": 1,
       "id": "vineandbarrel:aged_red_wine"
     },
     "title": {

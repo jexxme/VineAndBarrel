@@ -22,7 +22,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipes": "vineandbarrel:cooking/beer_battered_fish"
+        "recipe": "vineandbarrel:cooking/beer_battered_fish"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -99,10 +99,10 @@ public final class Tipsy
 
 	/** Bits 0 and 1 are the ones saved before playtest 1, so old saves keep their meaning. */
 	static final List<SideEffect> SIDE_EFFECTS = List.of(
-			new SideEffect(MobEffects.SLOWNESS, 1, Level::slowness, STEADY_EFFECT_TICKS, false),
-			new SideEffect(MobEffects.MINING_FATIGUE, 1 << 1, Level::miningFatigue, STEADY_EFFECT_TICKS, false),
+			new SideEffect(MobEffects.MOVEMENT_SLOWDOWN, 1, Level::slowness, STEADY_EFFECT_TICKS, false),
+			new SideEffect(MobEffects.DIG_SLOWDOWN, 1 << 1, Level::miningFatigue, STEADY_EFFECT_TICKS, false),
 			new SideEffect(MobEffects.WEAKNESS, 1 << 2, level -> level.weakness() ? 0 : -1, STEADY_EFFECT_TICKS, false),
-			new SideEffect(MobEffects.NAUSEA, 1 << 3, level -> level.nausea() ? 0 : -1, NAUSEA_PULSE_TICKS, true));
+			new SideEffect(MobEffects.CONFUSION, 1 << 3, level -> level.nausea() ? 0 : -1, NAUSEA_PULSE_TICKS, true));
 	private static final SideEffect NAUSEA = SIDE_EFFECTS.get(3);
 
 	private Tipsy() {
