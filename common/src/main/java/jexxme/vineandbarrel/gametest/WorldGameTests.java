@@ -492,8 +492,9 @@ public final class WorldGameTests
 	 * About one village in three gets a tavern, in every village type: villages laid out the way the game lays them out
 	 * (as {@link #tavernTakesAVillagePlot}, on deep flat ground, at fixed places and seeds, so the same villages every
 	 * run) with the pools as they ship. Taverns fit flat ground more often than real terrain, where the weights aim for one
-	 * village in three, so between 25% and 65% of these have at least one tavern, and every layout turns up. Retune
-	 * {@link VillageStructures#TAVERNS} against real worlds when this fails.
+	 * village in three, so between 25% and 65% of these have a tavern, and every layout turns up. Retune
+	 * {@link VillageStructures#TAVERNS} against real worlds when this fails. No village has two taverns, however many of
+	 * its plots one would fit (see {@link VillageStructures#oneTavernPerVillage}).
 	 */
 	private static void taverns_oneVillageInThree(GameTestHelper helper) {
 		int villages = 120;
@@ -503,16 +504,17 @@ public final class WorldGameTests
 			Map<Identifier, Integer> byLayout = new HashMap<>();
 			for (int v = 0; v < villages; v++) {
 				var stub = layOutVillage(helper, type, new BlockPos(4096 + v * 304, 1, 4096), 7919L * v + type.ordinal());
-				boolean any = false;
+				int taverns = 0;
 				if (stub.isPresent()) {
 					for (var piece : stub.get().getPiecesBuilder().build().pieces()) {
 						if (piece instanceof PoolElementStructurePiece poolPiece && VillageStructures.isTavern(poolPiece.getElement(), type)) {
-							any = true;
+							taverns++;
 							byLayout.merge(((SinglePoolElement) poolPiece.getElement()).getTemplateLocation(), 1, Integer::sum);
 						}
 					}
 				}
-				with += any ? 1 : 0;
+				helper.assertTrue(taverns <= 1, "a " + type.id() + " village with " + taverns + " taverns (village " + v + ")");
+				with += taverns > 0 ? 1 : 0;
 			}
 			double share = with / (double) villages;
 			report.append(' ').append(type.id()).append(' ').append(Math.round(share * 100)).append("% ").append(byLayout.values());
