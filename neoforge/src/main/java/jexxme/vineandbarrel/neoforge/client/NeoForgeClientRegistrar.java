@@ -140,13 +140,19 @@ final class NeoForgeClientRegistrar implements ClientRegistrar
 		}
 	}
 
-	/** NeoForge would rather read the layer from each model's JSON; the models are shared with Fabric, so it is set here. */
+	/**
+	 * NeoForge would rather read the layer from each model's JSON; the models are shared with Fabric, so it is set here.
+	 * NeoForge keeps what is set here in a table of its own, which only its own drawing reads; vanilla's table gets the
+	 * layer too (access transformer), for what asks vanilla's {@code getMovingBlockRenderType}: our "Watch it" scenes,
+	 * which drew the plants on black without it.
+	 */
 	@Override
 	@SuppressWarnings("deprecation")
 	public void blockRenderLayer(RenderType layer, Block... blocks) {
 		if (renderLayers) {
 			for (Block block : blocks) {
 				ItemBlockRenderTypes.setRenderLayer(block, layer);
+				ItemBlockRenderTypes.TYPE_BY_BLOCK.put(block, layer);
 			}
 		}
 	}

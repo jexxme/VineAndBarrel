@@ -21,7 +21,6 @@ import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -76,7 +75,25 @@ public final class SceneRenderer
 	private static final SceneView.SceneCamera CAMERA = new SceneView.SceneCamera();
 	private static final Set<String> FAILED = new HashSet<>();
 
+	/**
+	 * Draws one block of a stage into its layer's buffer. Vanilla's block renderer does, by default; NeoForge's client
+	 * sets its own, which first asks the block's model what it wants to know about the spot (without that a trellis in
+	 * a scene had no frame there).
+	 */
+	@FunctionalInterface
+	public interface BlockDrawer
+	{
+		void draw(BlockState state, BlockPos pos, BlockAndTintGetter level, PoseStack pose, VertexConsumer buffer, RandomSource random);
+	}
+
+	private static BlockDrawer blockDrawer = (state, pos, level, pose, buffer, random) ->
+		Minecraft.getInstance().getBlockRenderer().renderBatched(state, pos, level, pose, buffer, true, random);
+
 	private SceneRenderer() {
+	}
+
+	public static void setBlockDrawer(BlockDrawer drawer) {
+		blockDrawer = drawer;
 	}
 
 	/** {@return whether this player is a scene's figure that is drinking now} (its main arm then goes to the mouth) */
@@ -222,7 +239,6 @@ public final class SceneRenderer
 
 	private static void drawBlocks(RenderType type, List<Map.Entry<BlockPos, BlockState>> blocks, SceneWorld world, Vec3 centre,
 								   Map<BlockPos, Float> drops, MultiBufferSource.BufferSource buffers) {
-		BlockRenderDispatcher renderer = Minecraft.getInstance().getBlockRenderer();
 		RandomSource random = RandomSource.create();
 		VertexConsumer buffer = buffers.getBuffer(type);
 		PoseStack pose = new PoseStack();
@@ -232,7 +248,7 @@ public final class SceneRenderer
 			pose.pushPose();
 			pose.translate(pos.getX() - centre.x, pos.getY() - centre.y + drop, pos.getZ() - centre.z);
 			try {
-				renderer.renderBatched(entry.getValue(), pos, new StageBlock(world, pos, entry.getValue(), drop > 0.0F, drops.keySet()), pose, buffer, true, random);
+				blockDrawer.draw(entry.getValue(), pos, new StageBlock(world, pos, entry.getValue(), drop > 0.0F, drops.keySet()), pose, buffer, random);
 			} catch (RuntimeException e) {
 				String block = String.valueOf(BuiltInRegistries.BLOCK.getKey(entry.getValue().getBlock()));
 				if (FAILED.add(block)) {

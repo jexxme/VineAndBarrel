@@ -9,7 +9,10 @@ import jexxme.vineandbarrel.platform.client.ClientRegistrar;
 import jexxme.vineandbarrel.tipsy.TipsyWobble;
 import jexxme.vineandbarrel.tipsy.client.BlackoutClient;
 import jexxme.vineandbarrel.tipsy.client.TipsyClient;
+import jexxme.vineandbarrel.watch.client.SceneRenderer;
 import jexxme.vineandbarrel.watch.client.WatchClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
@@ -43,6 +46,7 @@ import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.client.extensions.common.IClientMobEffectExtensions;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.common.NeoForge;
 
 /** The client side on NeoForge: the common client classes' registrations and hooks, wired to NeoForge's client events. */
@@ -80,6 +84,14 @@ public final class NeoForgeClient
 		// Trellis rows draw their frame (end posts, top rail) from their neighbours
 		modBus.addListener(ModelEvent.RegisterAdditional.class, TrellisFrameModel::registerParts);
 		modBus.addListener(ModelEvent.ModifyBakingResult.class, TrellisFrameModel::wrap);
+		// The blocks with glass draw each face in the layer of its own texture
+		modBus.addListener(ModelEvent.ModifyBakingResult.class, TextureLayeredModel::wrap);
+		// "Watch it" scenes draw their blocks with what each model wants to know about its spot (the trellis frame)
+		SceneRenderer.setBlockDrawer((state, pos, level, pose, buffer, random) -> {
+			BlockRenderDispatcher renderer = Minecraft.getInstance().getBlockRenderer();
+			ModelData data = renderer.getBlockModel(state).getModelData(level, pos, state, ModelData.EMPTY);
+			renderer.renderBatched(state, pos, level, pose, buffer, true, random, data, null);
+		});
 		modBus.addListener(RegisterGuiLayersEvent.class, event -> {
 			event.registerAbove(VanillaGuiLayers.CAMERA_OVERLAYS, TipsyClient.VISION_LAYER, TipsyClient::renderVision);
 			event.registerAboveAll(BlackoutClient.LAYER, BlackoutClient::renderBlackout);

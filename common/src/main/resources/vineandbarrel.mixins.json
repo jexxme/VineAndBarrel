@@ -28,7 +28,8 @@
     "GameRendererMixin",
     "ParticleEngineAccessor",
     "RecipeBookComponentAccessor",
-    "SceneFigureDrinkMixin"
+    "SceneFigureDrinkMixin",
+    "SpriteContentsAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

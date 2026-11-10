@@ -34,6 +34,8 @@ public final class VineAndBarrelFabricClient implements ClientModInitializer
 		SupportedVineModel.register();
 		// Trellis rows draw their frame (end posts, top rail) from their neighbours
 		TrellisFrameModel.register();
+		// The blocks with glass draw each face in the layer of its own texture
+		TextureLayeredModel.register();
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
 			TipsyClient.onClientTick();
