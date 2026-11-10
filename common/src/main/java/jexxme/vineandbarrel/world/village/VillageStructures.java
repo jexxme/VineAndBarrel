@@ -230,6 +230,36 @@ public final class VillageStructures
 			&& (type.taverns().contains(single.getTemplateLocation()) || type.legacyTavern().equals(single.getTemplateLocation()));
 	}
 
+	/** Whether this pool element is one of our taverns, of any village type, a 0.9.0 one included. */
+	public static boolean isTavern(StructurePoolElement element) {
+		if (element instanceof SinglePoolElement) {
+			for (VillageType type : VillageType.values()) {
+				if (isTavern(element, type)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * The houses a village plot chooses from, without the taverns once the village has one: one tavern per village,
+	 * however many of its plots one would fit. {@code pieces} is what the village has laid out so far.
+	 */
+	public static List<StructurePoolElement> oneTavernPerVillage(List<StructurePoolElement> houses, List<?> pieces) {
+		if (houses.stream().noneMatch(VillageStructures::isTavern)) {
+			return houses;
+		}
+		for (Object piece : pieces) {
+			if (piece instanceof net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece placed && isTavern(placed.getElement())) {
+				List<StructurePoolElement> rest = new ArrayList<>(houses);
+				rest.removeIf(VillageStructures::isTavern);
+				return rest;
+			}
+		}
+		return houses;
+	}
+
 	/**
 	 * A tavern piece's box with its cellar: the piece's own box stops at the tavern floor, the cellar its processor lays
 	 * under it reaches {@link #CELLAR_HEIGHT} further down.

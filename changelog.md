@@ -1,3 +1,7 @@
+## 1.1.1
+
+- A village has one tavern at most. Villages with many roomy plots, such as the towns of Epic Structures: Villages, could get several.
+
 ## 1.1.0
 
 - **Watch it:** press G over an item, a JEI recipe or a block, and a short scene shows how it's done: a brewer in your own skin grows grapes up a trellis, brews in the kettle, fills and taps an Aging Barrel and raises a round of Cheers. Numbered steps, captions tied to what they name, and what you need on the side. With nothing under the cursor, G opens the Brewer's path: the whole way from vine to glass, ticked off as you go.
