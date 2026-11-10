@@ -13,6 +13,7 @@
     "FenceGateBlockMixin",
     "HorseFoodMixin",
     "IronBarsBlockMixin",
+    "JigsawPlacerMixin",
     "LeadItemMixin",
     "LeashFenceKnotEntityMixin",
     "SinglePoolElementAccessor",
