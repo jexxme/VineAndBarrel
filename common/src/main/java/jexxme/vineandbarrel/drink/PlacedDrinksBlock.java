@@ -273,7 +273,8 @@ public class PlacedDrinksBlock extends Block implements EntityBlock, PlayerDestr
 		if (level.getBlockEntity(pos) instanceof PlacedDrinksBlockEntity drinks) {
 			for (int i = 0; i < SPOTS; i++) {
 				if (!drinks.getItem(i).isEmpty()) {
-					return drinks.getItem(i);
+					// a copy: pick block puts what it gets into the hotbar and, with Ctrl, writes the table's data into it
+					return drinks.getItem(i).copy();
 				}
 			}
 		}
