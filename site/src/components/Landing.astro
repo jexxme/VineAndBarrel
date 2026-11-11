@@ -71,7 +71,7 @@ const chapters = [
 		<span class="glow left" aria-hidden="true"></span>
 		<span class="glow right" aria-hidden="true"></span>
 		<div class="sign vb-board vb-hang">
-			<img class="logo" src={banner.src} alt="Vine &amp; Barrel" width={banner.width * 5} height={banner.height * 5} />
+			<img class="logo" src={banner.src} alt="Vine &amp; Barrel" width={banner.width * 3} height={banner.height * 3} />
 			<span class="splash" data-splashes={JSON.stringify(splashes)}>{splashes[0]}</span>
 		</div>
 		<nav class="menu vb-chalk" aria-label={t('Start', locale)}>
@@ -293,26 +293,22 @@ const chapters = [
 	.sign::after {
 		right: 28px;
 	}
-	/* The banner (93 x 44) at whole multiples only, so every pixel stays square: 5x, 4x, 3x, 2x */
+	/* The banner (161 x 51) at whole multiples, so every pixel stays square: 3x, 2x */
 	.logo {
 		display: block;
-		width: 465px;
+		width: 483px;
 		height: auto;
 		image-rendering: pixelated;
 	}
-	@media (max-width: 62rem) {
-		.logo {
-			width: 372px;
-		}
-	}
 	@media (max-width: 40rem) {
 		.logo {
-			width: 279px;
+			width: 322px;
 		}
 	}
+	/* Phones: 1.5x, which is still whole device pixels on a 2x screen */
 	@media (max-width: 26rem) {
 		.logo {
-			width: 186px;
+			width: 241.5px;
 		}
 	}
 	/* Placed like the game's title screen: on the wordmark's bottom right, just overlapping the last letters */
