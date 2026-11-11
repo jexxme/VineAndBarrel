@@ -11,20 +11,22 @@ export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
 
 Vine & Barrel a deux fichiers de configuration, tous deux sur [Pompette](/tipsy/). Tout le reste, des recettes à la durée de vieillissement d'un fût,
-fonctionne comme le mod le fournit et peut être modifié avec un datapack comme n'importe quelle recette.
+fonctionne comme le mod le fournit et peut être modifié avec un datapack comme n'importe quelle recette (sur Minecraft 1.21.1 et 1.20.1, tout sauf
+les échanges des villageois).
 
 En jeu, change-les dans l'écran des paramètres : **Mods**, Vine & Barrel, **Config** sur NeoForge ; sur Fabric, le même bouton
 apparaît avec [Mod Menu](https://modrinth.com/mod/modmenu) installé. Les changements s'appliquent tout de suite. Les options du serveur
-y apparaissent en solo (pas une fois le monde ouvert au LAN) ; sur un serveur, ce sont celles du serveur.
+y apparaissent en solo (pas une fois le monde ouvert au LAN) ; sur un serveur, ce sont celles du serveur. Forge (Minecraft
+1.20.1) n'a pas ce bouton : modifie les fichiers.
 
-Les fichiers eux-mêmes : sur NeoForge, ce sont des fichiers TOML avec les options sous <code>[{configFiles.server.section}]</code>. Sur
+Les fichiers eux-mêmes : sur NeoForge et Forge, ce sont des fichiers TOML avec les options sous <code>[{configFiles.server.section}]</code>. Sur
 Fabric, ce sont de simples fichiers <code>.properties</code> dans le dossier <code>config</code>, avec les mêmes options écrites
 <code>{configFiles.server.section}.option=valeur</code>. Sur Fabric, le fichier client est lu au lancement du jeu, donc
 redémarre après l'avoir modifié ; le fichier serveur est relu avec <code>/reload</code>.
 
 ## Options du serveur
 
-Dans <code>{configFiles.server.file}</code> sur NeoForge, <code>{configFiles.server.fabricFile}</code> sur Fabric. Les valeurs du serveur
+Dans <code>{configFiles.server.file}</code> sur NeoForge et Forge, <code>{configFiles.server.fabricFile}</code> sur Fabric. Les valeurs du serveur
 vont à chaque joueur qui se connecte, donc tout le monde joue avec les mêmes règles. Un monde peut avoir les siennes : mets le fichier dans le dossier
 <code>serverconfig</code> de ce monde, et il l'emporte sur celui de <code>config</code> tant que ce monde tourne.
 
@@ -48,7 +50,7 @@ Pratique pour un serveur familial, ou si tu n'aimes simplement pas le tangage.
 
 ## Options du client
 
-Dans <code>{configFiles.client.file}</code> sur NeoForge, <code>{configFiles.client.fabricFile}</code> sur Fabric. Chaque joueur
+Dans <code>{configFiles.client.file}</code> sur NeoForge et Forge, <code>{configFiles.client.fabricFile}</code> sur Fabric. Chaque joueur
 règle les siennes ; elles ne changent que ce que tu vois.
 
 <table>

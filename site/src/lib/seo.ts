@@ -2,7 +2,7 @@
 // the pictures at build time.
 //
 // - Titles and descriptions: the English pages get the ones search results show, written for what players look for
-//   ("minecraft beer mod", "wine", "brewing", "tavern", NeoForge, Fabric, the Minecraft version). The page's own title
+//   ("minecraft beer mod", "wine", "brewing", "tavern", the loaders, the Minecraft version). The page's own title
 //   (its signboard) and the text stay as they are. Translated pages keep the title and description of their file;
 //   their home pages set a search title in index.mdx.
 // - Pictures: what a link preview shows (Discord, Reddit, X, WhatsApp…), the same in every language: a shot from the
@@ -11,7 +11,7 @@
 //
 // The same rule as the rest of the wiki: no number from memory. Versions come from meta.json and releases.json.
 import { meta, itemList, iconOf, nameOf } from './data';
-import { span } from '../data/code/downloads';
+import { span, loaderNames } from '../data/code/downloads';
 
 export const SITE_NAME = 'Vine & Barrel';
 export const CURSEFORGE = 'https://www.curseforge.com/minecraft/mc-mods/vine-and-barrel';
@@ -33,12 +33,12 @@ type Page = { title: string; description?: string; picture: Picture };
 export const PAGES: Record<string, Page> = {
 	'': {
 		title: 'Vine & Barrel — Minecraft beer, wine & brewing mod',
-		description: `Brew beer, wine, cider and mead in Minecraft ${span} on NeoForge and Fabric: grow hops and grapes, brew in a copper kettle, age in oak barrels, open a tavern.`,
+		description: `Brew beer, wine, cider and mead in Minecraft ${span} on ${loaderNames}: grow hops and grapes, brew in a copper kettle, age in oak barrels, open a tavern.`,
 		picture: SITE_PICTURE,
 	},
 	'getting-started': {
 		title: 'Getting started: install the Minecraft brewing mod',
-		description: `Install Vine & Barrel for Minecraft ${span} on NeoForge or Fabric, see what the brewing mod adds and how the loop goes, and pick where to start.`,
+		description: `Install Vine & Barrel for Minecraft ${span} on ${loaderNames}, see what the brewing mod adds and how the loop goes, and pick where to start.`,
 		picture: { shot: 'hero', alt: 'A Vine & Barrel tavern at golden hour, with vineyard terraces on the hill behind it.' },
 	},
 	'guides/first-drink': {
@@ -103,7 +103,7 @@ export const PAGES: Record<string, Page> = {
 	},
 	'reference/config': {
 		title: 'Configuration: every option for servers and players',
-		description: 'Every Vine & Barrel option, for server owners and for each player, with its default and what it does, on NeoForge and Fabric.',
+		description: `Every Vine & Barrel option, for server owners and for each player, with its default and what it does, on ${loaderNames}.`,
 		picture: SITE_PICTURE,
 	},
 	'farmers-delight': {
@@ -112,13 +112,13 @@ export const PAGES: Record<string, Page> = {
 		picture: SITE_PICTURE,
 	},
 	compatibility: {
-		title: 'Mod compatibility on NeoForge and Fabric',
-		description: "Which mods Vine & Barrel works with on NeoForge and Fabric and what each one adds: Farmer's Delight, JEI, Jade, AppleSkin, Serene Seasons and more.",
+		title: `Mod compatibility on ${loaderNames}`,
+		description: `Which mods Vine & Barrel works with on ${loaderNames} and what each one adds: Farmer's Delight, JEI, Jade, AppleSkin, Serene Seasons and more.`,
 		picture: SITE_PICTURE,
 	},
 	changelog: {
-		title: 'Changelog: every version for NeoForge and Fabric',
-		description: 'What changed in each version of Vine & Barrel, the Minecraft brewing mod, on NeoForge and Fabric.',
+		title: `Changelog: every version for ${loaderNames}`,
+		description: `What changed in each version of Vine & Barrel, the Minecraft brewing mod, on ${loaderNames}.`,
 		picture: SITE_PICTURE,
 	},
 	items: {
@@ -176,7 +176,7 @@ export function softwareApplication(home: string, description: string, image: st
 		applicationSubCategory: 'Minecraft mod',
 		operatingSystem: 'Windows, macOS, Linux',
 		softwareVersion: meta.version,
-		softwareRequirements: `Minecraft: Java Edition ${span} with NeoForge or Fabric`,
+		softwareRequirements: `Minecraft: Java Edition ${span} with ${loaderNames.replace(/ and ([^,]+)$/, ' or $1')}`,
 		downloadUrl: `${CURSEFORGE}/files`,
 		license: 'https://opensource.org/licenses/MIT',
 		isAccessibleForFree: true,

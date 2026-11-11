@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/es';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -26,13 +26,12 @@ La paciencia tiene premio: la mejora de una bebida añeja es más fuerte y dura 
 Busca tu versión de Minecraft y tu cargador, y descarga desde esa celda:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -41,22 +40,37 @@ Busca tu versión de Minecraft y tu cargador, y descarga desde esa celda:
 Todos los archivos están también en {cell(stores)}. Cada uno necesita como mínimo:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 El nombre del archivo te dice cuál tienes: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> es NeoForge,
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> es Fabric. Ponlo en la carpeta `mods`, tanto en el cliente como en el servidor. No
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> es Fabric{forgeFiles.map((f) => <>, y en {f.minecraft} <code>{f.jar}</code> es Forge</>)}. Ponlo en la carpeta `mods`, tanto en el cliente como en el servidor. No
 necesita ningún otro mod. Todo con lo que funciona es opcional y se activa solo: mira [Compatibilidad](/compatibility/).
+
+### En Minecraft 1.21.1 y 1.20.1
+
+Los mismos cultivos, bebidas, marmita, barriles y tabernas, con algunas diferencias:
+
+- **Las tabernas no tienen estantes**, un bloque que estas versiones aún no tienen. En una pared encuentras en su lugar
+  una bebida en un marco, y delante de una ventana, una contraventana de madera cerrada.
+- **Farmer's Delight** es el Farmer's Delight original en NeoForge y Forge, y Farmer's Delight Refabricated en Fabric.
+  Farmer's Delight Neoforged es solo para Minecraft 26.x. Los tomates de FD no trepan por la espaldera; las uvas y el
+  lúpulo siguen trepando por las cuerdas de FD.
+- **Los intercambios de los aldeanos** no se pueden cambiar con un datapack.
+- **En 1.20.1**, la tapa de la marmita suena como una trampilla de hierro. En Forge no hay botón de Configuración en la
+  lista de mods: cambia los ajustes en los [archivos de configuración](/reference/config/). Las tuberías de otros mods se
+  conectan a una Marmita grande solo por un bloque: el de abajo a la derecha cuando miras al grifo. Las tolvas funcionan
+  en cualquier bloque.
+- **Fabric en 1.20.1 con Sodium:** las hileras de espalderas solo muestran sus postes y el riel con el complemento
+  Indium instalado.
 
 <Aside type="tip" title="¿Juegas con Farmer's Delight?">
 Vine & Barrel es un mod por derecho propio, pero encaja a la perfección: su marmita elabora sobre la parrilla de FD, las vides y el lúpulo trepan por las cuerdas de FD y

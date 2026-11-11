@@ -11,20 +11,21 @@ export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
 
 Vine & Barrel'ın iki yapılandırma dosyası var, ikisi de [Çakırkeyif](/tipsy/) ile ilgili. Tariflerden bir fıçının ne kadar
-sürdüğüne kadar geri kalan her şey mod nasıl geldiyse öyle çalışır ve her tarif gibi bir veri paketiyle değiştirilebilir.
+sürdüğüne kadar geri kalan her şey mod nasıl geldiyse öyle çalışır ve her tarif gibi bir veri paketiyle değiştirilebilir (Minecraft 1.21.1 ve 1.20.1'de köylü takasları hariç).
 
 Oyunda ayar ekranından değiştir: NeoForge'da **Modlar**, Vine & Barrel, **Yapılandırma**; Fabric'te [Mod Menu](https://modrinth.com/mod/modmenu)
 kuruluysa aynı düğme görünür. Orada yaptığın değişiklikler hemen geçerli olur. Sunucu seçenekleri tek kişilik oyunda orada
-görünür (dünya LAN'a açılınca görünmez); bir sunucuda ise sunucunun değerleridir.
+görünür (dünya LAN'a açılınca görünmez); bir sunucuda ise sunucunun değerleridir. Forge'da
+(Minecraft 1.20.1) böyle bir düğme yok: dosyaları düzenle.
 
-Dosyalar: NeoForge'da seçenekler <code>[{configFiles.server.section}]</code> altında olan TOML dosyalarıdır. Fabric'te
+Dosyalar: NeoForge ve Forge'da seçenekler <code>[{configFiles.server.section}]</code> altında olan TOML dosyalarıdır. Fabric'te
 <code>config</code> klasöründeki düz <code>.properties</code> dosyalarıdır ve aynı seçenekler
 <code>{configFiles.server.section}.option=value</code> olarak yazılır. Fabric'te istemci dosyası oyun açılırken okunur, bu yüzden
 düzenledikten sonra yeniden başlat; sunucu dosyası <code>/reload</code> ile yeniden okunur.
 
 ## Sunucu seçenekleri
 
-NeoForge'da <code>{configFiles.server.file}</code>, Fabric'te <code>{configFiles.server.fabricFile}</code>. Sunucunun
+NeoForge ve Forge'da <code>{configFiles.server.file}</code>, Fabric'te <code>{configFiles.server.fabricFile}</code>. Sunucunun
 değerleri katılan her oyuncuya gider, böylece herkes aynı kurallarla oynar. Bir dünyanın kendi kuralları olabilir: dosyayı o
 dünyanın <code>serverconfig</code> klasörüne koy; o dünya çalışırken <code>config</code> içindekinin yerine geçer.
 
@@ -48,7 +49,7 @@ Aile sunucusu için iyidir, ya da sallanmayı sevmiyorsan.
 
 ## İstemci seçenekleri
 
-NeoForge'da <code>{configFiles.client.file}</code>, Fabric'te <code>{configFiles.client.fabricFile}</code>. Her oyuncu bunları
+NeoForge ve Forge'da <code>{configFiles.client.file}</code>, Fabric'te <code>{configFiles.client.fabricFile}</code>. Her oyuncu bunları
 kendisi için ayarlar; yalnızca senin gördüğünü değiştirirler.
 
 <table>

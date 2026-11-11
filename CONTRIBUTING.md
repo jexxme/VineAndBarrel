@@ -43,7 +43,8 @@ push and pull request, and also fails on any `ERROR` in the test log.
 
 On Fabric the Farmer's Delight run uses Farmer's Delight Refabricated from Modrinth's Maven, nothing to build.
 
-The Farmer's Delight run needs a Farmer's Delight Neoforged jar **for the same Minecraft version**: build the matching
+On the 26.x branches the Farmer's Delight run needs a Farmer's Delight Neoforged jar **for the same Minecraft version**
+(`1.21.1` and `1.20.1` download the original Farmer's Delight themselves): build the matching
 branch of [Farmer's Delight Neoforged](https://github.com/jexxme/FarmersDelight-Neoforged) (`./gradlew jar`) and pass
 it with `-PfdJar=<path>` (or `FD_JAR`). Without it the build looks in `../Season4/farmersdelight-port/build/libs`,
 which only fits if that checkout is on the same Minecraft version.
@@ -52,20 +53,24 @@ which only fits if that checkout is on the same Minecraft version.
 
 Minecraft and NeoForge change too many APIs within 26.x for one jar, so each supported version has its own branch,
 the same way as Farmer's Delight Neoforged. Every branch has the same multiloader layout and builds both jars,
-NeoForge and Fabric.
+NeoForge and Fabric; `1.20.1` builds Forge and Fabric, with `forge/` in place of `neoforge/`.
 
-| Branch | Minecraft | NeoForge | Fabric API | Farmer's Delight Neoforged |
+| Branch | Minecraft | NeoForge / Forge | Fabric API | Farmer's Delight for the FD runs |
 |---|---|---|---|---|
-| `26.3` (default) | 26.3 | 26.3.0.101+ | 0.165.2+ | branch `26.3` |
-| `26.2` | 26.2 | 26.2.0.93+ | 0.161.0+ | branch `26.2` |
-| `26.1.2` | 26.1.2 | 26.1.2.126+ | 0.155.3+ | branch `26.1.2` |
-| `26.1` | 26.1, 26.1.1 | 26.1.0.19-beta to 26.1.1 | 0.145.4+ | branch `26.1` |
+| `26.3` (default) | 26.3 | NeoForge 26.3.0.101+ | 0.165.2+ | Farmer's Delight Neoforged, branch `26.3` |
+| `26.2` | 26.2 | NeoForge 26.2.0.93+ | 0.161.0+ | Farmer's Delight Neoforged, branch `26.2` |
+| `26.1.2` | 26.1.2 | NeoForge 26.1.2.126+ | 0.155.3+ | Farmer's Delight Neoforged, branch `26.1.2` |
+| `26.1` | 26.1, 26.1.1 | NeoForge 26.1.0.19-beta to 26.1.1 | 0.145.4+ | Farmer's Delight Neoforged, branch `26.1` |
+| `1.21.1` | 1.21.1 | NeoForge 21.1.205+ | 0.116.18+ | the original Farmer's Delight (downloaded, nothing to build) |
+| `1.20.1` | 1.20.1 | Forge 47.3+ | 0.92.12+ | the original Farmer's Delight (downloaded, nothing to build) |
 
-Every branch needs Fabric Loader 0.20.1+ for the Fabric jar.
+The 26.x branches need Fabric Loader 0.20.1+ for the Fabric jar, `1.21.1` and `1.20.1` Fabric Loader 0.16.10+.
 
-- Open pull requests against `26.3`. Fixes and features are then cherry-picked to each older branch (`26.2`, then
-  `26.1.2`, then `26.1`) with `git cherry-pick -x`, adapted where the API differs, and only merged there when that
+- Open pull requests against `26.3`. Fixes and features are then cherry-picked to each older 26.x branch (`26.2`,
+  then `26.1.2`, then `26.1`) with `git cherry-pick -x`, adapted where the API differs, and only merged there when that
   branch's tests are green. The layout is the same everywhere, so a cherry-pick applies straight down.
+- `1.21.1` and `1.20.1` differ too much to cherry-pick: each change is ported by hand, to `1.21.1` first and from there
+  to `1.20.1`.
 - Each older branch changes only what its Minecraft version needs. Keep those changes small and leave the code around
   them as on `26.3`, so the next cherry-pick applies cleanly.
 - After a cherry-pick that touches data generation, run `./gradlew runData` on that branch and commit the result:
@@ -78,10 +83,11 @@ Every branch needs Fabric Loader 0.20.1+ for the Fabric jar.
 ## Versions and releases
 
 The mod version (`1.0.2+neoforged.1`: content version plus build number, like FD Neoforged) is the same on every
-branch. The Fabric jar has its own `fabric_mod_version` (`1.0.2+fabric.1`), with the same version before the `+`. A
-release is tagged per branch as `<minecraft_version>-<mod_version>` (for example `26.3-1.0.2+neoforged.1`), which is
-also the version in the jar name, and `release_game_versions` in `gradle.properties` lists the Minecraft versions that
-branch's jars are published for (`26.1` branch: `26.1,26.1.1`). Pushing the tag runs the release workflow, which
+branch, with `+forge` in place of `+neoforged` on `1.20.1`. The Fabric jar has its own `fabric_mod_version` (`1.0.2+fabric.1`), with the same version before the `+`. A
+release is tagged per branch as `<minecraft_version>-<mod_version>` (for example `26.3-1.0.2+neoforged.1` or
+`1.21.1-1.1.1+neoforged.1`), which is also the version in the jar name. On `1.20.1` the mod version is the Forge one,
+`<version>+forge.<n>`, so its tags read `<minecraft_version>-<version>+forge.<n>` (`1.20.1-1.1.1+forge.1`).
+`release_game_versions` in `gradle.properties` lists the Minecraft versions that branch's jars are published for (`26.1` branch: `26.1,26.1.1`). Pushing the tag runs the release workflow, which
 builds and tests again and publishes both jars. Release titles name the loader first:
 `Vine & Barrel 1.0.2 · NeoForge · Minecraft 26.3`, `Vine & Barrel 1.0.2 · Fabric · Minecraft 26.3`. See `RELEASING.md`.
 

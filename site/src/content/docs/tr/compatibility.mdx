@@ -5,7 +5,7 @@ description: Vine & Barrel'ın hangi modlarla çalıştığı ve her birinin ne 
 import Item from '../../../components/mc/Item.astro';
 import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/tr';
 import compat from '../../../data/gen/compat.json';
-import { optional, downloads, gaps } from '../../../data/code/downloads';
+import { optional, downloads, gaps, neoforgeVersions, forgeVersions } from '../../../data/code/downloads';
 
 export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
 export const seasonRows = Object.entries(seasons);
@@ -22,11 +22,12 @@ export const rowLabel = (items) => {
 };
 export const groups = { fruits: 'Meyveler', carbs: 'Karbonhidratlar', proteins: 'Proteinler', vegetables: 'Sebzeler', sugars: 'Şekerler' };
 
-Vine & Barrel {meta.version}, **Minecraft {list(downloads.map((r) => r.minecraft))}** üzerinde **NeoForge** ya da
-**Fabric** ile çalışır. Her sürümün dosyası ve gerektirdiği yükleyici [Kurulum](/getting-started/#kurulum) bölümünde. Başka mod gerektirmez.
+Vine & Barrel {meta.version}, **Minecraft {list(neoforgeVersions)}** üzerinde **NeoForge** ya da **Fabric** ile,
+**Minecraft {list(forgeVersions)}** üzerinde **Forge** ya da **Fabric** ile çalışır. Her sürümün dosyası ve gerektirdiği yükleyici [Kurulum](/getting-started/#kurulum) bölümünde. Başka mod gerektirmez.
 Aşağıdakilerin hepsi isteğe bağlıdır ve diğer mod kurulunca kendiliğinden devreye girer:
 
 - **NeoForge:** {optional.neoforge.join(', ')}.
+- **Forge:** {optional.forge.join(', ')}.
 - **Fabric:** {optional.fabric.join(', ')}.
 
 Bazılarının her Minecraft sürümüne uygun bir sürümü yok. Çalıştıkları yerler:

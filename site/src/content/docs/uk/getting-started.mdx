@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/uk';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -26,13 +26,12 @@ Vine & Barrel дарує Minecraft виноградник, броварню й �
 Знайди свою версію Minecraft і свій завантажувач та завантаж файл із відповідної клітинки:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -41,22 +40,36 @@ Vine & Barrel дарує Minecraft виноградник, броварню й �
 Усі файли є також на {cell(stores)}. Кожному файлу потрібні щонайменше:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 Назва файлу підкаже, який у тебе: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> — це NeoForge,
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> — Fabric. Поклади його в папку `mods` і на клієнті, і на сервері. Інші
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> — Fabric{forgeFiles.map((f) => <>, а на {f.minecraft} <code>{f.jar}</code> — Forge</>)}. Поклади його в папку `mods` і на клієнті, і на сервері. Інші
 моди не потрібні. Усе, з чим він працює, необов'язкове й вмикається саме: див. [Сумісність](/compatibility/).
+
+### На Minecraft 1.21.1 і 1.20.1
+
+Ті самі культури, напої, казан, діжки й таверни, але з кількома відмінностями:
+
+- **У тавернах немає полиць**: у цих версіях такого блоку ще немає. На стіні замість полиці висить напій у рамці, перед
+  вікном — зачинена дерев'яна віконниця.
+- **Farmer's Delight** — це оригінальний Farmer's Delight на NeoForge і Forge та Farmer's Delight Refabricated на
+  Fabric. Farmer's Delight Neoforged — лише для Minecraft 26.x. Помідори FD не лізуть по шпалері; виноград і хміль і далі
+  лізуть по мотузках FD.
+- **Торгівлю з селянами** не можна змінити датапаком.
+- **На 1.20.1** кришка казана звучить як залізний люк. На Forge у списку модів немає кнопки «Конфіг»: змінюй
+  налаштування у [файлах конфігурації](/reference/config/). Труби з інших модів під'єднуються до Великого варильного
+  казана лише в одному блоці: нижньому праворуч, якщо дивитися на кран. Лійки працюють з кожним блоком.
+- **Fabric на 1.20.1 із Sodium:** ряди шпалер показують стовпи й перекладину, лише коли встановлено доповнення
+  Indium.
 
 <Aside type="tip" title="Граєш із Farmer's Delight?">
 Vine & Barrel — окремий мод, але він чудово вписується: його казан варить на плиті з FD, виноградні й хмелеві лози лізуть по мотузках FD,

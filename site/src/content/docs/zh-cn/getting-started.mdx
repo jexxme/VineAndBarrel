@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/zh-cn';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -25,13 +25,12 @@ Vine & Barrel 为 Minecraft 带来葡萄园、酿酒坊和酒窖。你种下葡�
 找到你的 Minecraft 版本和加载器，从对应的格子里下载：
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -40,22 +39,32 @@ Vine & Barrel 为 Minecraft 带来葡萄园、酿酒坊和酒窖。你种下葡�
 所有文件也都可以在 {cell(stores)} 下载。每个文件至少需要：
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 看文件名就知道你拿的是哪一个：<code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> 是 NeoForge 版，
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> 是 Fabric 版。客户端和服务器的 `mods` 文件夹里都要放。
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> 是 Fabric 版{forgeFiles.map((f) => <>；在 {f.minecraft} 上，<code>{f.jar}</code> 是 Forge 版</>)}。客户端和服务器的 `mods` 文件夹里都要放。
 它不需要任何其他模组。所有联动内容都是可选的，会自动启用：详见[兼容性](/compatibility/)。
+
+### 在 Minecraft 1.21.1 和 1.20.1 上
+
+作物、酒、酿造锅、木桶和酒馆都一样，只有几处不同：
+
+- **酒馆里没有架子**：这些版本还没有这种方块。墙上的架子换成了展示框里的一杯酒，窗前的则是一扇关着的木百叶窗。
+- **Farmer's Delight** 在 NeoForge 和 Forge 上是原版 Farmer's Delight，在 Fabric 上是 Farmer's Delight Refabricated。
+  Farmer's Delight Neoforged 只用于 Minecraft 26.x。FD 的番茄不会爬棚架；葡萄和啤酒花照样能爬 FD 的绳子。
+- **村民交易**无法用数据包修改。
+- **在 1.20.1 上**，酿造锅的盖子听起来像铁活板门。Forge 的模组列表里没有配置按钮：请在[配置文件](/reference/config/)里改设置。
+  其他模组的管道只能接到大酿造锅的一个方块上：面对龙头时右下方的那个。漏斗在每个方块上都能用。
+- **1.20.1 的 Fabric 配合 Sodium：** 只有装了附加模组 Indium，成排棚架的柱子和横杆才会显示。
 
 <Aside type="tip" title="在玩 Farmer's Delight？">
 Vine & Barrel 是独立的模组，但和它很合拍：酿造锅可以架在 FD 的炉灶上，葡萄藤和啤酒花藤可以顺着 FD 的绳子往上爬，

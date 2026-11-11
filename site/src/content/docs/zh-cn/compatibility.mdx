@@ -5,7 +5,7 @@ description: Vine & Barrel 能和哪些模组配合，以及每个模组带来�
 import Item from '../../../components/mc/Item.astro';
 import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/zh-cn';
 import compat from '../../../data/gen/compat.json';
-import { optional, downloads, gaps } from '../../../data/code/downloads';
+import { optional, downloads, gaps, neoforgeVersions, forgeVersions } from '../../../data/code/downloads';
 
 export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
 export const seasonRows = Object.entries(seasons);
@@ -23,9 +23,10 @@ export const rowLabel = (items) => {
 };
 export const groups = { fruits: '水果', carbs: '碳水化合物', proteins: '蛋白质', vegetables: '蔬菜', sugars: '糖类' };
 
-Vine & Barrel {meta.version} 运行在 **Minecraft {list(downloads.map((r) => r.minecraft))}** 上，搭配 **NeoForge** 或 **Fabric**。每个版本的文件和所需的加载器见[安装](/getting-started/#安装)。它不需要其他模组。下面的一切都是可选的，装上对应的模组就会自动启用：
+Vine & Barrel {meta.version} 运行在 **Minecraft {list(neoforgeVersions)}** 上搭配 **NeoForge** 或 **Fabric**，在 **Minecraft {list(forgeVersions)}** 上搭配 **Forge** 或 **Fabric**。每个版本的文件和所需的加载器见[安装](/getting-started/#安装)。它不需要其他模组。下面的一切都是可选的，装上对应的模组就会自动启用：
 
 - **NeoForge**：{optional.neoforge.join('、')}。
+- **Forge**：{optional.forge.join('、')}。
 - **Fabric**：{optional.fabric.join('、')}。
 
 其中几个模组并没有为每个 Minecraft 版本发布。可用的版本和加载器如下：

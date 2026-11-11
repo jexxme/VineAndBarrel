@@ -11,20 +11,22 @@ export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
 
 Vine & Barrel has two config files, both about [Tipsy](/tipsy/). Everything else, from recipes to how long a barrel
-takes, works the way the mod ships and can be changed with a datapack like any recipe.
+takes, works the way the mod ships and can be changed with a datapack like any recipe (on Minecraft 1.21.1 and 1.20.1, all but
+the villager trades).
 
 In game, change them on the settings screen: **Mods**, Vine & Barrel, **Config** on NeoForge; on Fabric the same button
 appears with [Mod Menu](https://modrinth.com/mod/modmenu) installed. Changes there apply at once. The server options
-show there in singleplayer (not once the world is open to LAN); on a server they are the server's.
+show there in singleplayer (not once the world is open to LAN); on a server they are the server's. Forge (Minecraft
+1.20.1) has no such button: edit the files.
 
-The files themselves: on NeoForge they are TOML files with the options under <code>[{configFiles.server.section}]</code>. On
+The files themselves: on NeoForge and Forge they are TOML files with the options under <code>[{configFiles.server.section}]</code>. On
 Fabric they are plain <code>.properties</code> files in the <code>config</code> folder, with the same options written as
 <code>{configFiles.server.section}.option=value</code>. On Fabric the client file is read when the game starts, so
 restart after editing it; the server file is read again on <code>/reload</code>.
 
 ## Server options
 
-In <code>{configFiles.server.file}</code> on NeoForge, <code>{configFiles.server.fabricFile}</code> on Fabric. The server's
+In <code>{configFiles.server.file}</code> on NeoForge and Forge, <code>{configFiles.server.fabricFile}</code> on Fabric. The server's
 values go to every player who joins, so everyone plays by the same rules. One world can have its own: put the file into
 that world's <code>serverconfig</code> folder, and it wins over the one in <code>config</code> while that world runs.
 
@@ -48,7 +50,7 @@ Good for a family server, or if you simply don't like the wobble.
 
 ## Client options
 
-In <code>{configFiles.client.file}</code> on NeoForge, <code>{configFiles.client.fabricFile}</code> on Fabric. Each player
+In <code>{configFiles.client.file}</code> on NeoForge and Forge, <code>{configFiles.client.fabricFile}</code> on Fabric. Each player
 sets these for themselves; they only change what you see.
 
 <table>

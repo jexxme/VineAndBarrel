@@ -39,27 +39,32 @@ Fabric, a short one: the built jar with Fabric API and Farmer's Delight Refabric
 ## 3. Every Minecraft branch
 
 - [ ] Every change on `26.3` since the last release is cherry-picked to `26.2`, `26.1.2` and `26.1` (see
-      CONTRIBUTING.md), and each branch's full verify is green. Every branch releases both jars, NeoForge and Fabric
+      CONTRIBUTING.md) and ported by hand to `1.21.1`, then from there to `1.20.1`: the ports differ too much to
+      cherry-pick. Each branch's full verify is green. Every branch releases both jars, NeoForge and Fabric (`1.20.1`:
+      Forge and Fabric)
 
 ## 4. Publish
 
 The release workflow (`.github/workflows/release.yml`) does the uploading. On each branch:
 
-- [ ] Bump `mod_version` in `gradle.properties` (`<version>+neoforged.<n>`, the same on every branch) and add the entry
-      at the top of `changelog.md`: that section becomes the release notes
+- [ ] Bump `mod_version` in `gradle.properties` (`<version>+neoforged.<n>`, the same on every branch; on `1.20.1`
+      `<version>+forge.<n>`) and add the entry at the top of `changelog.md`: that section becomes the release notes
 - [ ] Also bump `fabric_mod_version` (`<version>+fabric.<n>`): the same `<version>` before the `+` as
       `mod_version`
 - [ ] `release_game_versions` lists exactly the Minecraft versions this jar runs on
-- [ ] Tag and push: `git tag <minecraft_version>-<mod_version>` (e.g. `26.3-1.0.2+neoforged.1`), then
-      `git push origin <tag>`. The workflow refuses a tag that doesn't match `gradle.properties` (it checks both
+- [ ] Tag and push: `git tag <minecraft_version>-<mod_version>` (e.g. `26.3-1.0.2+neoforged.1`,
+      `1.21.1-1.1.1+neoforged.1`; Forge tags read `<minecraft_version>-<version>+forge.<n>`, e.g.
+      `1.20.1-1.1.1+forge.1`), then `git push origin <tag>`, one tag at a time. The workflow refuses a tag that doesn't match `gradle.properties` (it checks both
       versions), builds and tests again, then publishes to GitHub, Modrinth and CurseForge. That is two jars per
       branch, e.g. `neoforge/build/libs/VineAndBarrel-26.3-1.0.2+neoforged.1.jar` and
-      `fabric/build/libs/VineAndBarrel-26.3-1.0.2+fabric.1.jar`, full releases on the same projects
+      `fabric/build/libs/VineAndBarrel-26.3-1.0.2+fabric.1.jar` (on `1.20.1`
+      `forge/build/libs/VineAndBarrel-1.20.1-1.1.1+forge.1.jar` and the Fabric jar), full releases on the same projects
 
 Names, so loader and version can't be mixed up: every release, version and file title reads loader first, as
 `Vine & Barrel <version> · <Loader> · Minecraft <minecraft_version>`, e.g. `Vine & Barrel 1.0.2 · NeoForge · Minecraft 26.3`
 and `Vine & Barrel 1.0.2 · Fabric · Minecraft 26.3`. Releases from `26.2`, `26.1.2` and `26.1` follow it too
-(`Vine & Barrel 1.0.2 · NeoForge · Minecraft 26.2`, and `Minecraft 26.1, 26.1.1` for the `26.1` branch). The jar names
+(`Vine & Barrel 1.0.2 · NeoForge · Minecraft 26.2`, and `Minecraft 26.1, 26.1.1` for the `26.1` branch), and so do
+`1.21.1` and `1.20.1` (`Vine & Barrel 1.1.1 · NeoForge · Minecraft 1.21.1`, `Vine & Barrel 1.1.1 · Forge · Minecraft 1.20.1`). The jar names
 stay as they are (`VineAndBarrel-26.3-1.0.2+neoforged.1.jar`, `VineAndBarrel-26.3-1.0.2+fabric.1.jar`). The workflow generates the rest:
 the GitHub release body starts with a "Which file do I need?" table (Loader | Minecraft | File | Needs), and the first
 line of each Modrinth and CurseForge changelog names its loader.

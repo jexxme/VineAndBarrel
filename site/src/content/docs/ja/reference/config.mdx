@@ -11,20 +11,21 @@ export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
 
 Vine & Barrelの設定ファイルは2つあり、どちらも[ほろ酔い](/tipsy/)に関するものです。それ以外、レシピから樽の熟成にかかる時間まで、
-すべてMODの出荷時のまま動き、ほかのレシピと同じようにデータパックで変更できます。
+すべてMODの出荷時のまま動き、ほかのレシピと同じようにデータパックで変更できます（Minecraft 1.21.1 と 1.20.1 では、村人の取引だけは変更できません）。
 
 ゲーム内では設定画面で変更します。NeoForgeでは**Mod**、Vine & Barrel、**コンフィグ**の順に開きます。Fabricでは
 [Mod Menu](https://modrinth.com/mod/modmenu)を入れると同じボタンが出ます。ここでの変更はすぐに反映されます。サーバーのオプションは、
-シングルプレイでは(ワールドをLANに公開していなければ)ここに表示されます。サーバーでは、サーバー側の値が使われます。
+シングルプレイでは(ワールドをLANに公開していなければ)ここに表示されます。サーバーでは、サーバー側の値が使われます。Forge(Minecraft 1.20.1)にはこのボタンがないので、
+ファイルを直接編集してください。
 
-ファイルそのものについて: NeoForgeではTOMLファイルで、オプションは<code>[{configFiles.server.section}]</code>の下にあります。
+ファイルそのものについて: NeoForgeとForgeではTOMLファイルで、オプションは<code>[{configFiles.server.section}]</code>の下にあります。
 Fabricでは<code>config</code>フォルダにある普通の<code>.properties</code>ファイルで、同じオプションを
 <code>{configFiles.server.section}.option=value</code>の形で書きます。Fabricのクライアントファイルはゲームの起動時に読み込まれるので、
 編集したら再起動してください。サーバーファイルは<code>/reload</code>で読み込み直されます。
 
 ## サーバーオプション
 
-NeoForgeでは<code>{configFiles.server.file}</code>、Fabricでは<code>{configFiles.server.fabricFile}</code>にあります。サーバーの
+NeoForgeとForgeでは<code>{configFiles.server.file}</code>、Fabricでは<code>{configFiles.server.fabricFile}</code>にあります。サーバーの
 値は参加するすべてのプレイヤーに送られるので、全員が同じルールで遊びます。ワールドごとに別の値にもできます。そのワールドの
 <code>serverconfig</code>フォルダにファイルを入れると、そのワールドが動いているあいだは<code>config</code>にあるものより優先されます。
 
@@ -48,7 +49,7 @@ NeoForgeでは<code>{configFiles.server.file}</code>、Fabricでは<code>{config
 
 ## クライアントオプション
 
-NeoForgeでは<code>{configFiles.client.file}</code>、Fabricでは<code>{configFiles.client.fabricFile}</code>にあります。プレイヤーが
+NeoForgeとForgeでは<code>{configFiles.client.file}</code>、Fabricでは<code>{configFiles.client.fabricFile}</code>にあります。プレイヤーが
 各自で設定するもので、見え方だけが変わります。
 
 <table>

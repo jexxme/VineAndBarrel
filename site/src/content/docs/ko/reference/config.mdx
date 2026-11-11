@@ -11,20 +11,21 @@ export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
 
 Vine & Barrel에는 설정 파일이 두 개 있고, 둘 다 [알딸딸함](/tipsy/)에 관한 것이에요. 그 밖의 모든 것, 레시피부터 통이 걸리는 시간까지는
-모드가 배포된 그대로 작동하고, 다른 레시피처럼 데이터 팩으로 바꿀 수 있어요.
+모드가 배포된 그대로 작동하고, 다른 레시피처럼 데이터 팩으로 바꿀 수 있어요(Minecraft 1.21.1과 1.20.1에서는 주민 거래만 빼고요).
 
 게임 안에서는 설정 화면에서 바꿔요. NeoForge에서는 **Mods**, Vine & Barrel, **Config**예요. Fabric에서는
 [Mod Menu](https://modrinth.com/mod/modmenu)가 설치되어 있으면 같은 버튼이 나와요. 거기서 바꾸면 바로 적용돼요. 서버 옵션은
-싱글플레이어에서(월드를 LAN에 열기 전까지) 거기에 보이고, 서버에서는 서버의 설정이에요.
+싱글플레이어에서(월드를 LAN에 열기 전까지) 거기에 보이고, 서버에서는 서버의 설정이에요. Forge(Minecraft 1.20.1)에는 이 버튼이 없으니
+파일을 직접 고치세요.
 
-파일 자체는 NeoForge에서는 TOML 파일이고 옵션이 <code>[{configFiles.server.section}]</code> 아래에 있어요. Fabric에서는
+파일 자체는 NeoForge와 Forge에서는 TOML 파일이고 옵션이 <code>[{configFiles.server.section}]</code> 아래에 있어요. Fabric에서는
 <code>config</code> 폴더의 평범한 <code>.properties</code> 파일이고, 같은 옵션이
 <code>{configFiles.server.section}.option=value</code> 꼴로 적혀 있어요. Fabric에서는 클라이언트 파일을 게임을 시작할 때 읽으니까
 고친 뒤에는 다시 시작하세요. 서버 파일은 <code>/reload</code> 때 다시 읽어요.
 
 ## 서버 옵션
 
-NeoForge에서는 <code>{configFiles.server.file}</code>, Fabric에서는 <code>{configFiles.server.fabricFile}</code>에 있어요. 서버의
+NeoForge와 Forge에서는 <code>{configFiles.server.file}</code>, Fabric에서는 <code>{configFiles.server.fabricFile}</code>에 있어요. 서버의
 값은 들어오는 모든 플레이어에게 전달되니까 모두가 같은 규칙으로 플레이해요. 월드마다 따로 둘 수도 있어요. 그 월드의 <code>serverconfig</code> 폴더에
 파일을 넣으면, 그 월드가 돌아가는 동안은 <code>config</code>의 것보다 우선해요.
 
@@ -48,7 +49,7 @@ NeoForge에서는 <code>{configFiles.server.file}</code>, Fabric에서는 <code>
 
 ## 클라이언트 옵션
 
-NeoForge에서는 <code>{configFiles.client.file}</code>, Fabric에서는 <code>{configFiles.client.fabricFile}</code>에 있어요. 플레이어가
+NeoForge와 Forge에서는 <code>{configFiles.client.file}</code>, Fabric에서는 <code>{configFiles.client.fabricFile}</code>에 있어요. 플레이어가
 각자 자기 설정을 정하고, 자기 눈에 보이는 것만 바뀌어요.
 
 <table>

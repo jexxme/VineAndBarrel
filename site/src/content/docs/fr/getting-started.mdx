@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/fr';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -27,13 +27,12 @@ scintille dans le verre.
 Trouve ta version de Minecraft et ton chargeur de mods, puis télécharge depuis cette case :
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -42,22 +41,37 @@ Trouve ta version de Minecraft et ton chargeur de mods, puis télécharge depuis
 Tous les fichiers sont aussi sur {cell(stores)}. Chacun demande au moins :
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 Le nom du fichier t'indique lequel tu as : <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> est la version NeoForge,
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> la version Fabric. Mets-le dans le dossier `mods`, côté client comme côté serveur. Il
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> la version Fabric{forgeFiles.map((f) => <>, et sur {f.minecraft}, <code>{f.jar}</code> la version Forge</>)}. Mets-le dans le dossier `mods`, côté client comme côté serveur. Il
 n'a besoin d'aucun autre mod. Tout ce avec quoi il fonctionne est facultatif et s'active tout seul : voir [Compatibilité](/compatibility/).
+
+### Sur Minecraft 1.21.1 et 1.20.1
+
+Les mêmes cultures, boissons, cuve, fûts et tavernes, avec quelques différences :
+
+- **Les tavernes n'ont pas d'étagères**, un bloc que ces versions n'ont pas encore. Sur un mur, tu trouves à la place une
+  boisson dans un cadre, et devant une fenêtre, un volet en bois fermé.
+- **Farmer's Delight** est le Farmer's Delight d'origine sur NeoForge et Forge, et Farmer's Delight Refabricated sur
+  Fabric. Farmer's Delight Neoforged est réservé à Minecraft 26.x. Les tomates de FD ne grimpent pas sur le treillis ;
+  le raisin et le houblon grimpent toujours aux cordes de FD.
+- **Les échanges des villageois** ne se modifient pas avec un datapack.
+- **Sur 1.20.1**, le couvercle de la cuve sonne comme une trappe en fer. Sur Forge, la liste des mods n'a pas de bouton
+  Config : change les paramètres dans les [fichiers de config](/reference/config/). Les tuyaux d'autres mods ne se
+  branchent sur une Grande cuve de brassage que par un bloc : celui du bas, à droite quand tu fais face au robinet. Les
+  entonnoirs marchent sur chaque bloc.
+- **Fabric en 1.20.1 avec Sodium :** les rangs de treillis ne montrent leurs poteaux et leur traverse qu'avec
+  l'extension Indium installée.
 
 <Aside type="tip" title="Tu joues avec Farmer's Delight ?">
 Vine & Barrel est un mod à part entière, mais il s'y intègre à merveille : sa cuve brasse sur le four de FD, la vigne et le houblon grimpent sur les cordes de FD, et

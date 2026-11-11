@@ -11,20 +11,21 @@ export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
 
 У Vine & Barrel два файла настроек, оба про [«Навеселе»](/tipsy/). Всё остальное, от рецептов до времени выдержки в бочке,
-работает так, как поставляется в моде, и меняется датапаком, как любой рецепт.
+работает так, как поставляется в моде, и меняется датапаком, как любой рецепт (на Minecraft 1.21.1 и 1.20.1 всё, кроме торговли с жителями).
 
 В игре их можно менять на экране настроек: **Моды**, Vine & Barrel, **Настройки** на NeoForge; на Fabric та же кнопка
 появляется с установленным [Mod Menu](https://modrinth.com/mod/modmenu). Изменения там применяются сразу. Серверные параметры
-показываются там в одиночной игре (но не после открытия мира для LAN); на сервере они принадлежат серверу.
+показываются там в одиночной игре (но не после открытия мира для LAN); на сервере они принадлежат серверу. У Forge
+(Minecraft 1.20.1) такой кнопки нет: редактируй файлы.
 
-Сами файлы: на NeoForge это файлы TOML с параметрами в разделе <code>[{configFiles.server.section}]</code>. На
+Сами файлы: на NeoForge и Forge это файлы TOML с параметрами в разделе <code>[{configFiles.server.section}]</code>. На
 Fabric это обычные файлы <code>.properties</code> в папке <code>config</code>, те же параметры записаны как
 <code>{configFiles.server.section}.option=value</code>. На Fabric клиентский файл читается при запуске игры, так что
 после правки перезапусти её; серверный файл перечитывается по <code>/reload</code>.
 
 ## Серверные параметры
 
-В <code>{configFiles.server.file}</code> на NeoForge, в <code>{configFiles.server.fabricFile}</code> на Fabric. Значения сервера
+В <code>{configFiles.server.file}</code> на NeoForge и Forge, в <code>{configFiles.server.fabricFile}</code> на Fabric. Значения сервера
 передаются каждому, кто заходит, так что все играют по одним правилам. У одного мира могут быть свои: положи файл в папку
 <code>serverconfig</code> этого мира, и он перекроет файл из <code>config</code>, пока этот мир запущен.
 
@@ -48,7 +49,7 @@ Fabric это обычные файлы <code>.properties</code> в папке <
 
 ## Клиентские параметры
 
-В <code>{configFiles.client.file}</code> на NeoForge, в <code>{configFiles.client.fabricFile}</code> на Fabric. Каждый игрок
+В <code>{configFiles.client.file}</code> на NeoForge и Forge, в <code>{configFiles.client.fabricFile}</code> на Fabric. Каждый игрок
 настраивает их для себя; они меняют только то, что видишь ты.
 
 <table>

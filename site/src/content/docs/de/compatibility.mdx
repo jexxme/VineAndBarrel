@@ -5,7 +5,7 @@ description: Mit welchen Mods Vine & Barrel zusammenarbeitet und was jede davon 
 import Item from '../../../components/mc/Item.astro';
 import { meta, worldgen, seasons, drinks, nameOf, list } from '../../../lib/l10n/de';
 import compat from '../../../data/gen/compat.json';
-import { optional, downloads, gaps } from '../../../data/code/downloads';
+import { optional, downloads, gaps, neoforgeVersions, forgeVersions } from '../../../data/code/downloads';
 
 export const bop = worldgen.filter((w) => w.extra).map((w) => ({ crop: w.crop, biomes: w.optional.map((b) => b.name) }));
 export const seasonRows = Object.entries(seasons);
@@ -22,11 +22,12 @@ export const rowLabel = (items) => {
 };
 export const groups = { fruits: 'Obst', carbs: 'Kohlenhydrate', proteins: 'Proteine', vegetables: 'Gemüse', sugars: 'Zucker' };
 
-Vine & Barrel {meta.version} läuft auf **Minecraft {list(downloads.map((r) => r.minecraft))}**, mit **NeoForge** oder
-**Fabric**. Unter [Installieren](/getting-started/#installieren) findest du die Datei für jede Version und den Loader, den sie braucht. Es braucht keine anderen Mods.
+Vine & Barrel {meta.version} läuft auf **Minecraft {list(neoforgeVersions)}** mit **NeoForge** oder **Fabric** und auf
+**Minecraft {list(forgeVersions)}** mit **Forge** oder **Fabric**. Unter [Installieren](/getting-started/#installieren) findest du die Datei für jede Version und den Loader, den sie braucht. Es braucht keine anderen Mods.
 Alles Folgende ist optional und schaltet sich von selbst ein, wenn die andere Mod installiert ist:
 
 - **NeoForge:** {optional.neoforge.join(', ')}.
+- **Forge:** {optional.forge.join(', ')}.
 - **Fabric:** {optional.fabric.join(', ')}.
 
 Ein paar davon gibt es nicht für jede Minecraft-Version. Hier laufen sie:

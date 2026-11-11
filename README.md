@@ -11,23 +11,27 @@ How it plays, with every recipe and number, is on the [wiki](https://jexxme.gith
 
 Find your Minecraft version and your loader. Put the same file on the server and in every player's `mods` folder.
 
-| Minecraft | NeoForge | Fabric |
-|:--|:--|:--|
-| **26.3** | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.1.1%2Bneoforged.1/VineAndBarrel-26.3-1.1.1%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.1.1%2Bneoforged.1/VineAndBarrel-26.3-1.1.1%2Bfabric.1.jar) |
-| **26.2** | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.1.1%2Bneoforged.1/VineAndBarrel-26.2-1.1.1%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.1.1%2Bneoforged.1/VineAndBarrel-26.2-1.1.1%2Bfabric.1.jar) |
-| **26.1.2** | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.1.1%2Bneoforged.1/VineAndBarrel-26.1.2-1.1.1%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.1.1%2Bneoforged.1/VineAndBarrel-26.1.2-1.1.1%2Bfabric.1.jar) |
-| **26.1 / 26.1.1** | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.1.1%2Bneoforged.1/VineAndBarrel-26.1.1-1.1.1%2Bneoforged.1.jar) | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.1.1%2Bneoforged.1/VineAndBarrel-26.1.1-1.1.1%2Bfabric.1.jar) |
+| Minecraft | NeoForge | Forge | Fabric |
+|:--|:--|:--|:--|
+| **26.3** | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.1.1%2Bneoforged.1/VineAndBarrel-26.3-1.1.1%2Bneoforged.1.jar) | — | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.3-1.1.1%2Bneoforged.1/VineAndBarrel-26.3-1.1.1%2Bfabric.1.jar) |
+| **26.2** | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.1.1%2Bneoforged.1/VineAndBarrel-26.2-1.1.1%2Bneoforged.1.jar) | — | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.2-1.1.1%2Bneoforged.1/VineAndBarrel-26.2-1.1.1%2Bfabric.1.jar) |
+| **26.1.2** | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.1.1%2Bneoforged.1/VineAndBarrel-26.1.2-1.1.1%2Bneoforged.1.jar) | — | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.2-1.1.1%2Bneoforged.1/VineAndBarrel-26.1.2-1.1.1%2Bfabric.1.jar) |
+| **26.1 / 26.1.1** | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.1.1%2Bneoforged.1/VineAndBarrel-26.1.1-1.1.1%2Bneoforged.1.jar) | — | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/26.1.1-1.1.1%2Bneoforged.1/VineAndBarrel-26.1.1-1.1.1%2Bfabric.1.jar) |
+| **1.21.1** | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/1.21.1-1.1.1%2Bneoforged.1/VineAndBarrel-1.21.1-1.1.1%2Bneoforged.1.jar) | — | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/1.21.1-1.1.1%2Bneoforged.1/VineAndBarrel-1.21.1-1.1.1%2Bfabric.1.jar) |
+| **1.20.1** | — | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/1.20.1-1.1.1%2Bforge.1/VineAndBarrel-1.20.1-1.1.1%2Bforge.1.jar) | ✅ [Vine & Barrel 1.1.1](https://github.com/jexxme/VineAndBarrel/releases/download/1.20.1-1.1.1%2Bforge.1/VineAndBarrel-1.20.1-1.1.1%2Bfabric.1.jar) |
 
 Or pick from the full file list on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/vine-and-barrel/files).
 
 Each file needs at least:
 
-| Minecraft | NeoForge | Fabric Loader | [Fabric API](https://modrinth.com/mod/fabric-api) |
-|:--|:--|:--|:--|
-| 26.3 | 26.3.0.101 | 0.20.1 | 0.165.2 |
-| 26.2 | 26.2.0.93 | 0.20.1 | 0.161.0 |
-| 26.1.2 | 26.1.2.126 | 0.20.1 | 0.155.3 |
-| 26.1 / 26.1.1 | 26.1.0.19-beta | 0.20.1 | 0.145.4 |
+| Minecraft | NeoForge | Forge | Fabric Loader | [Fabric API](https://modrinth.com/mod/fabric-api) |
+|:--|:--|:--|:--|:--|
+| 26.3 | 26.3.0.101 | — | 0.20.1 | 0.165.2 |
+| 26.2 | 26.2.0.93 | — | 0.20.1 | 0.161.0 |
+| 26.1.2 | 26.1.2.126 | — | 0.20.1 | 0.155.3 |
+| 26.1 / 26.1.1 | 26.1.0.19-beta | — | 0.20.1 | 0.145.4 |
+| 1.21.1 | 21.1.205 | — | 0.16.10 | 0.116.18 |
+| 1.20.1 | — | 47.3 | 0.16.10 | 0.92.12 |
 
 ## Working on it
 
