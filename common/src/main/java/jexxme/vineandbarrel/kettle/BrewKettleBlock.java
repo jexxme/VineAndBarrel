@@ -317,6 +317,8 @@ public class BrewKettleBlock extends Block implements SimpleWaterloggedBlock, En
 	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
 		// Contents are dropped by BrewKettleBlockEntity#preRemoveSideEffects (26.x: the block entity is already gone here)
 		level.updateNeighbourForOutputSignal(pos, this);
+		// a chimney standing on it through a roof falls with it
+		KettleChimneyBlock.checkPiecesAbove(level, pos);
 		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
 	}
 
