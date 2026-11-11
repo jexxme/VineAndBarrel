@@ -187,6 +187,28 @@ public final class Tipsy
 		return below;
 	}
 
+	/**
+	 * A player object replaced by a new one without dying (home through the End's exit portal): on 1.20.1 vanilla
+	 * copies no effects then, so the player would arrive sober with the night's bookkeeping still saying otherwise.
+	 * Tipsy (every level with the time it has left) and the buffs our drinks gave come along; the side effects follow
+	 * from the level. Other effects are vanilla's business and stay lost, as 1.20.1 has it.
+	 */
+	public static void carryOver(LivingEntity from, LivingEntity to) {
+		if (to.level().isClientSide()) {
+			return;
+		}
+		MobEffectInstance tipsy = from.getEffect(TipsyRegistry.TIPSY.get());
+		if (tipsy != null && !to.hasEffect(TipsyRegistry.TIPSY.get())) {
+			// through its saved form: that keeps the levels underneath
+			MobEffectInstance copy = MobEffectInstance.load(tipsy.save(new net.minecraft.nbt.CompoundTag()));
+			if (copy != null) {
+				to.addEffect(copy);
+			}
+		}
+		DrinkBuffs.carryOver(from, to);
+		updateSideEffects(to);
+	}
+
 	/** Sober: the night's bookkeeping goes (the drink buffs stay, they just aren't tracked any more). */
 	private static void soberUp(LivingEntity entity) {
 		DrinkBuffs.forget(entity);

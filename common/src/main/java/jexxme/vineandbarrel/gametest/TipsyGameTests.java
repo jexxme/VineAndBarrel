@@ -124,6 +124,7 @@ public final class TipsyGameTests
 		legsTest("tipsy_trip_only_where_safe", TipsyGameTests::tripOnlyWhereSafe);
 		legsTest("tipsy_trip_never_sliding", TipsyGameTests::tripNeverSliding);
 		test("tipsy_drink_buffs_through_cheers_beacons_and_relogs", TipsyGameTests::drinkBuffsThroughCheersBeaconsAndRelogs);
+		test("tipsy_comes_home_from_the_end", TipsyGameTests::comesHomeFromTheEnd);
 	}
 
 	private TipsyGameTests() {
@@ -1185,6 +1186,43 @@ public final class TipsyGameTests
 		Tipsy.clear(third);
 		helper.assertTrue(DrinkBuffs.list(third).isEmpty(), "sober: the night's buffs are forgotten");
 		helper.assertTrue(third.hasEffect(MobEffects.DIG_SPEED), "but the buff itself stays");
+		helper.succeed();
+	}
+
+	/**
+	 * Home through the End's exit portal: the game makes a new player of the living one and, on 1.20.1, copies no
+	 * effects. Tipsy (with the levels underneath and their time), the drinks' buffs and the hearts left come along;
+	 * a potion's effect stays lost, as 1.20.1 has it.
+	 */
+	private static void comesHomeFromTheEnd(GameTestHelper helper) {
+		net.minecraft.server.level.ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
+		net.minecraft.server.players.PlayerList players = helper.getLevel().getServer().getPlayerList();
+		net.minecraft.server.level.ServerPlayer home = player;
+		try {
+			new ItemStack(DrinkItems.AGED_HARD_CIDER.get()).finishUsingItem(helper.getLevel(), player);
+			new ItemStack(DrinkItems.BARLEY_ALE.get()).finishUsingItem(helper.getLevel(), player);
+			assertValueEqual(helper, Tipsy.getLevel(player), 2, "level after two drinks");
+			player.setAbsorptionAmount(3.0F);
+			player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 2400, 0));
+			int tipsyLeft = player.getEffect(TipsyRegistry.TIPSY.get()).getDuration();
+			int hasteLeft = player.getEffect(MobEffects.DIG_SPEED).getDuration();
+
+			home = players.respawn(player, true);
+			helper.assertTrue(home != player, "the game made a new player");
+			assertValueEqual(helper, Tipsy.getLevel(home), 2, "level at home");
+			assertValueEqual(helper, home.getEffect(TipsyRegistry.TIPSY.get()).getDuration(), tipsyLeft, "Tipsy's time left");
+			MobEffectInstance haste = home.getEffect(MobEffects.DIG_SPEED);
+			helper.assertTrue(haste != null && haste.getDuration() == hasteLeft, "the ale's Haste with its time left: " + haste);
+			helper.assertTrue(home.getEffect(MobEffects.ABSORPTION) != null, "the cider's Absorption");
+			assertValueEqual(helper, home.getAbsorptionAmount(), 3.0F, "the hearts that were left, not fresh ones");
+			assertValueEqual(helper, DrinkBuffs.list(home).size(), 2, "both buffs still remembered as the drinks'");
+			helper.assertTrue(home.getEffect(MobEffects.NIGHT_VISION) == null, "a potion's effect is vanilla's business (lost on 1.20.1)");
+			// the levels underneath came along: one down leaves Tipsy I
+			helper.assertTrue(Tipsy.lowerLevel(home), "one level down");
+			assertValueEqual(helper, Tipsy.getLevel(home), 1, "level after sobering one down");
+		} finally {
+			players.remove(home);
+		}
 		helper.succeed();
 	}
 

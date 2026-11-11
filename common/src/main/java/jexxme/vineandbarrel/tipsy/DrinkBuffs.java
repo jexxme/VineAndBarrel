@@ -119,6 +119,30 @@ public final class DrinkBuffs
 		forget(entity);
 	}
 
+	/**
+	 * The buffs our drinks gave {@code from}, given to {@code to} with the time they have left ({@link Tipsy#carryOver}).
+	 * {@code to} already remembers them (the saved player data is copied by the loader). Absorption comes with the
+	 * hearts that were left, not with fresh ones.
+	 */
+	static void carryOver(LivingEntity from, LivingEntity to) {
+		for (Buff buff : list(to)) {
+			MobEffect effect = buff.type().orElse(null);
+			if (effect == null) {
+				continue;
+			}
+			for (MobEffectInstance instance : chain(from.getEffect(effect))) {
+				if (buff.matches(instance)) {
+					to.addEffect(new MobEffectInstance(effect, instance.getDuration(), instance.getAmplifier(), instance.isAmbient(),
+						instance.isVisible(), instance.showIcon()));
+					if (effect == MobEffects.ABSORPTION) {
+						to.setAbsorptionAmount(Math.min(from.getAbsorptionAmount(), 4.0F * (instance.getAmplifier() + 1)));
+					}
+					break;
+				}
+			}
+		}
+	}
+
 	private static void removeOurs(LivingEntity entity, MobEffect effect, List<Buff> buffs) {
 		List<MobEffectInstance> chain = chain(entity.getEffect(effect));
 		if (chain.isEmpty()) {

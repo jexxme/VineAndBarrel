@@ -204,6 +204,13 @@ public final class ForgeAttachments
 		return type;
 	}
 
+	/**
+	 * New players made of a living one (not a death): the one they were made of, by player UUID, until the respawn is
+	 * through. Not by the new player object: the game gives it the old one's entity id in between, and an entity's
+	 * equals and hash code go by that id.
+	 */
+	private static final java.util.Map<java.util.UUID, net.minecraft.world.entity.player.Player> NOT_DEAD = new java.util.HashMap<>();
+
 	static void init() {
 		SimpleChannel simple = NetworkRegistry.newSimpleChannel(KEY, () -> PROTOCOL, NetworkRegistry.acceptMissingOr(PROTOCOL), PROTOCOL::equals);
 		simple.registerMessage(0, Sync.class, Sync::write, Sync::read, ForgeAttachments::onSync, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
@@ -219,7 +226,12 @@ public final class ForgeAttachments
 				event.addCapability(KEY, holder);
 			}
 		});
-		game.addListener((PlayerEvent.Clone event) -> copy(event.getOriginal(), event.getEntity(), event.isWasDeath()));
+		game.addListener((PlayerEvent.Clone event) -> {
+			copy(event.getOriginal(), event.getEntity(), event.isWasDeath());
+			if (!event.isWasDeath()) {
+				NOT_DEAD.put(event.getEntity().getUUID(), event.getOriginal());
+			}
+		});
 		game.addListener((LivingConversionEvent.Post event) -> copy(event.getEntity(), event.getOutcome(), false));
 		// After the spawn packets of the tracked entity, so the client knows it when the values arrive
 		game.addListener((PlayerEvent.StartTracking event) -> {
@@ -228,7 +240,15 @@ public final class ForgeAttachments
 			}
 		});
 		game.addListener((PlayerEvent.PlayerLoggedInEvent event) -> sendOwn(event.getEntity()));
-		game.addListener((PlayerEvent.PlayerRespawnEvent event) -> sendOwn(event.getEntity()));
+		game.addListener((PlayerEvent.PlayerRespawnEvent event) -> {
+			// Home through the End's exit portal: 1.20.1 copies no effects to the new player. Done here, not in the
+			// clone event: by now the client knows the new player and takes the effects' packets
+			net.minecraft.world.entity.player.Player old = NOT_DEAD.remove(event.getEntity().getUUID());
+			if (old != null) {
+				jexxme.vineandbarrel.tipsy.Tipsy.carryOver(old, event.getEntity());
+			}
+			sendOwn(event.getEntity());
+		});
 		game.addListener((PlayerEvent.PlayerChangedDimensionEvent event) -> sendOwn(event.getEntity()));
 	}
 

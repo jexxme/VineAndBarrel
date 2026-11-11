@@ -95,7 +95,13 @@ public final class FabricAttachments
 	/** The player's own values: its client made a new player (join, respawn, another dimension). */
 	static void register() {
 		ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> sendAll(listener.player, listener.player));
-		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> sendAll(newPlayer, newPlayer));
+		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+			if (alive) {
+				// home through the End's exit portal: 1.20.1 copies no effects to the new player
+				jexxme.vineandbarrel.tipsy.Tipsy.carryOver(oldPlayer, newPlayer);
+			}
+			sendAll(newPlayer, newPlayer);
+		});
 		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> sendAll(player, player));
 	}
 
