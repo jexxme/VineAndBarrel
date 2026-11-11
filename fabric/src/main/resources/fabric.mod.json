@@ -49,6 +49,7 @@
     "jade": "<11.4.1"
   },
   "suggests": {
+    "indium": "*",
     "farmersdelight": "*",
     "modmenu": "*",
     "jei": "*",
