@@ -5,7 +5,17 @@ Grow the crops, boil them in a copper kettle, age them in oak barrels, and pour 
 
 <p align="center" style="text-align:center"><a href="https://www.curseforge.com/minecraft/mc-mods/vine-and-barrel"><img src="https://img.shields.io/badge/CurseForge-download-f16436?style=for-the-badge&logo=curseforge&logoColor=white" alt="Download on CurseForge"></a> <a href="https://jexxme.github.io/VineAndBarrel/"><img src="https://img.shields.io/badge/Wiki-12%20languages-c8913a?style=for-the-badge&logo=bookstack&logoColor=white" alt="The wiki, in 12 languages"></a></p>
 
-How it plays, with every recipe and number, is on the [wiki](https://jexxme.github.io/VineAndBarrel/). The tour with pictures is on the [CurseForge page](https://www.curseforge.com/minecraft/mc-mods/vine-and-barrel).
+## The wiki
+
+**[jexxme.github.io/VineAndBarrel](https://jexxme.github.io/VineAndBarrel/)** has everything about playing the mod, with every recipe and number, in 12 languages.
+
+- **[Getting started](https://jexxme.github.io/VineAndBarrel/getting-started/):** from the first vine to the first glass.
+- **[Crops](https://jexxme.github.io/VineAndBarrel/crops/)**, the **[Brew Kettle](https://jexxme.github.io/VineAndBarrel/brew-kettle/)** and the **[Aging Barrel](https://jexxme.github.io/VineAndBarrel/aging-barrel/):** growing, brewing and aging.
+- **[Drinks](https://jexxme.github.io/VineAndBarrel/drinks/)** and **[Tipsy](https://jexxme.github.io/VineAndBarrel/tipsy/):** what each drink gives you, and what one too many does.
+- **[Villages](https://jexxme.github.io/VineAndBarrel/villages/)** and **[Compatibility](https://jexxme.github.io/VineAndBarrel/compatibility/):** taverns, and the mods it works with.
+- **[All recipes](https://jexxme.github.io/VineAndBarrel/reference/recipes/)** and **[all items and blocks](https://jexxme.github.io/VineAndBarrel/items/)**.
+
+The tour with pictures is on the [CurseForge page](https://www.curseforge.com/minecraft/mc-mods/vine-and-barrel).
 
 ## Download
 
