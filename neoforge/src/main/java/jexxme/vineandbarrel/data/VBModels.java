@@ -21,6 +21,7 @@ import jexxme.vineandbarrel.registry.VBItems;
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
 import net.minecraft.client.data.models.ModelProvider;
+import net.minecraft.client.data.models.blockstates.MultiPartGenerator;
 import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
 import net.minecraft.client.data.models.blockstates.PropertyDispatch;
 import net.minecraft.client.data.models.model.ModelTemplate;
@@ -28,6 +29,7 @@ import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TextureMapping;
 import net.minecraft.client.data.models.model.TextureSlot;
 import net.minecraft.client.data.models.model.TexturedModel;
+import net.minecraft.client.renderer.block.dispatch.VariantMutator;
 import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -288,23 +290,46 @@ public class VBModels extends ModelProvider
 		return list;
 	}
 
-	/** A chimney's extension pieces: per kettle size a full piece and the top piece with the cap, turned by facing. */
+	/**
+	 * A chimney's extension pieces: per kettle size a full piece and the top piece with the cap (each also with the old
+	 * flashing plate), plus the pipe drawn down through the roof block under a piece ({@code through}) and up into the
+	 * lower block of a two-block roof ({@code rising}), turned by facing. A multipart, so the pipe parts add to any piece.
+	 */
 	private static void kettleChimney(BlockModelGenerators blockModels, WeatherState stage, Block chimney, Block waxed) {
 		Map<String, Identifier> models = new HashMap<>();
 		for (int size = 1; size <= 3; size++) {
+			List<String> suffixes = new ArrayList<>(List.of("_" + size + "_through", "_" + size + "_rising"));
 			for (String top : List.of("", "_top")) {
 				for (String flashing : List.of("", "_flashing")) {
-					String suffix = "_" + size + top + flashing;
-					ModelTemplate template = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_brew_kettle_chimney" + suffix)), Optional.of(suffix), KETTLE_SLOTS);
-					models.put(suffix, template.create(chimney, kettleTextures(stage, BREW_LIQUID), blockModels.modelOutput));
+					suffixes.add("_" + size + top + flashing);
 				}
 			}
+			for (String suffix : suffixes) {
+				ModelTemplate template = new ModelTemplate(Optional.of(VineAndBarrel.id("block/template_brew_kettle_chimney" + suffix)), Optional.of(suffix), KETTLE_SLOTS);
+				models.put(suffix, template.create(chimney, kettleTextures(stage, BREW_LIQUID), blockModels.modelOutput));
+			}
 		}
+		Map<Direction, VariantMutator> turns = Map.of(Direction.NORTH, BlockModelGenerators.NOP, Direction.EAST, BlockModelGenerators.Y_ROT_90,
+				Direction.SOUTH, BlockModelGenerators.Y_ROT_180, Direction.WEST, BlockModelGenerators.Y_ROT_270);
 		for (Block block : List.of(chimney, waxed)) {
-			blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(block)
-					.with(PropertyDispatch.initial(KettleChimneyBlock.SIZE, KettleChimneyBlock.TOP, KettleChimneyBlock.FLASHING)
-							.generate((size, top, flashing) -> plainVariant(models.get("_" + size + (top ? "_top" : "") + (flashing ? "_flashing" : "")))))
-					.with(BlockModelGenerators.ROTATION_HORIZONTAL_FACING));
+			MultiPartGenerator parts = MultiPartGenerator.multiPart(block);
+			for (Direction facing : List.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST)) {
+				VariantMutator turn = turns.get(facing);
+				for (int size = 1; size <= 3; size++) {
+					for (boolean top : List.of(false, true)) {
+						for (boolean flashing : List.of(false, true)) {
+							parts.with(BlockModelGenerators.condition().term(KettleChimneyBlock.FACING, facing).term(KettleChimneyBlock.SIZE, size)
+									.term(KettleChimneyBlock.TOP, top).term(KettleChimneyBlock.FLASHING, flashing),
+									plainVariant(models.get("_" + size + (top ? "_top" : "") + (flashing ? "_flashing" : ""))).with(turn));
+						}
+					}
+					parts.with(BlockModelGenerators.condition().term(KettleChimneyBlock.FACING, facing).term(KettleChimneyBlock.SIZE, size)
+							.term(KettleChimneyBlock.THROUGH, 1, 2), plainVariant(models.get("_" + size + "_through")).with(turn));
+					parts.with(BlockModelGenerators.condition().term(KettleChimneyBlock.FACING, facing).term(KettleChimneyBlock.SIZE, size)
+							.term(KettleChimneyBlock.RISING, true), plainVariant(models.get("_" + size + "_rising")).with(turn));
+				}
+			}
+			blockModels.blockStateOutput.accept(parts);
 		}
 	}
 
