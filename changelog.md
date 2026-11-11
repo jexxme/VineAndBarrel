@@ -1,5 +1,10 @@
 ## 1.1.1
 
+- The first Vine & Barrel for Minecraft 1.21.1, on NeoForge and Fabric, with everything from 1.1.1: Watch it, the Big Brew Kettle, framed trellis rows, taverns in villages. Farmer's Delight (1.3.4 or newer) is supported on NeoForge, Farmer's Delight Refabricated on Fabric.
+- Different on this version:
+  - Taverns have no shelves, as 1.21.1 has none: the mugs hang in item frames, and the bar windows close with trapdoor shutters.
+  - Tomatoes don't climb the trellis. That needs Farmer's Delight Neoforged, which is for 26.x.
+  - Villager trades can't be changed with datapacks.
 - A village has one tavern at most. Villages with many roomy plots, such as the towns of Epic Structures: Villages, could get several.
 
 ## 1.1.0
