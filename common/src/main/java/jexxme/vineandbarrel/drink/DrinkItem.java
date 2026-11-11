@@ -122,7 +122,10 @@ public class DrinkItem extends Item
 					entity.addEffect(kept);
 				}
 				DrinkBuffs.removeAll(entity);
-				entity.setAbsorptionAmount(absorption);
+				// What was left of the hearts stays, but never more than the Absorption that is still there gives: with
+				// ours taken away and no other, the hearts go with it (1.20.1 has no max-absorption attribute to cap it)
+				MobEffectInstance left = entity.getEffect(net.minecraft.world.effect.MobEffects.ABSORPTION);
+				entity.setAbsorptionAmount(Math.min(absorption, left == null ? 0.0F : 4.0F * (left.getAmplifier() + 1)));
 			} else {
 				DrinkBuffs.remember(entity, buff);
 			}

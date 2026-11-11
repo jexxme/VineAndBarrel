@@ -1135,6 +1135,16 @@ public final class TipsyGameTests
 		MobEffectInstance under = earlier.getEffect(MobEffects.ABSORPTION);
 		helper.assertTrue(under != null && under.getAmplifier() == 0, "the other Absorption stays: " + under);
 		assertValueEqual(helper, earlier.getAbsorptionAmount(), 1.0F, "no hearts back from taking the cider's away");
+
+		// Our cider's Absorption the only one, hearts left, then the drink too many: the effect goes and its hearts with it
+		TestPlayer only = player(helper);
+		drink(only, new ItemStack(DrinkItems.AGED_HARD_CIDER.get()));
+		helper.assertTrue(only.getAbsorptionAmount() > 0.0F, "the cider gives hearts: " + only.getAbsorptionAmount());
+		Tipsy.setLevel(only, 3);
+		drink(only, new ItemStack(DrinkItems.BARLEY_ALE.get()));
+		assertValueEqual(helper, Tipsy.getLevel(only), Tipsy.NO_BUFF_LEVEL, "level after the drink too many (cider only)");
+		helper.assertTrue(only.getEffect(MobEffects.ABSORPTION) == null, "the cider's Absorption is gone: " + only.getEffect(MobEffects.ABSORPTION));
+		assertValueEqual(helper, only.getAbsorptionAmount(), 0.0F, "and its hearts with it");
 		helper.succeed();
 	}
 
