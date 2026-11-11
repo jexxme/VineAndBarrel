@@ -10,8 +10,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -29,6 +31,7 @@ public class DeferredRegister<T>
 	private final ResourceKey<? extends Registry<T>> registryKey;
 	private final String namespace;
 	private final Map<ResourceLocation, Function<ResourceLocation, ? extends T>> entries = new LinkedHashMap<>();
+	private final List<DeferredHolder<T, ?>> holders = new ArrayList<>();
 	private boolean registered;
 
 	protected DeferredRegister(ResourceKey<? extends Registry<T>> registryKey, String namespace) {
@@ -60,7 +63,9 @@ public class DeferredRegister<T>
 		if (entries.putIfAbsent(id, Objects.requireNonNull(factory)) != null) {
 			throw new IllegalArgumentException("Duplicate registration " + id);
 		}
-		return createHolder(ResourceKey.create(registryKey, id));
+		DeferredHolder<T, I> holder = createHolder(ResourceKey.create(registryKey, id));
+		holders.add(holder);
+		return holder;
 	}
 
 	protected <I extends T> DeferredHolder<T, I> createHolder(ResourceKey<T> key) {
@@ -74,6 +79,18 @@ public class DeferredRegister<T>
 		}
 		registered = true;
 		Services.PLATFORM.register(this);
+	}
+
+	/**
+	 * Looks every entry up now, so each holder keeps its value from here on. For a loader whose registries can lose our
+	 * entries later: Forge 47 takes them out of a client's registries while it plays on a server without the mod, and
+	 * code that then asks a holder for the first time would find nothing. Call it once the entries are registered.
+	 */
+	public void resolve() {
+		for (DeferredHolder<T, ?> holder : holders) {
+			holder.get();
+			holder.asHolder();
+		}
 	}
 
 	public ResourceKey<? extends Registry<T>> getRegistryKey() {

@@ -17,7 +17,9 @@ import jexxme.vineandbarrel.kettle.KettleRegistry;
 import jexxme.vineandbarrel.kettle.KettleSupport;
 import jexxme.vineandbarrel.kettle.KettleTags;
 import jexxme.vineandbarrel.advancement.VBAdvancementGenerator;
+import io.netty.buffer.Unpooled;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.stats.RecipeBookSettings;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.core.BlockPos;
@@ -963,6 +965,33 @@ public final class KettleGameTests
 		settings.write(saved);
 		RecipeBookSettings loaded = RecipeBookSettings.read(saved);
 		helper.assertTrue(loaded.isOpen(type) && loaded.isFiltering(type), "the kettle book's settings are saved with the player");
+		// Vanilla's settings packet is what it is without the mod (a client with it joins servers without it): two flags
+		// for every other type, none for the kettle's, and reading it leaves a book's kettle settings alone
+		settings.setOpen(RecipeBookType.SMOKER, true);
+		FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+		settings.write(packet);
+		// (Other mods may keep their own types out of it too: Farmer's Delight Refabricated does. So two flags for each of
+		// vanilla's four at least, and for each other type at most)
+		int bytes = packet.readableBytes();
+		helper.assertTrue(bytes % 2 == 0 && bytes >= 8 && bytes <= 2 * (RecipeBookType.values().length - 1), "two flags per type but the kettle's: " + bytes + " bytes");
+		RecipeBookSettings kettleClosed = settings.copy();
+		kettleClosed.setOpen(type, false);
+		kettleClosed.setFiltering(type, false);
+		FriendlyByteBuf closedPacket = new FriendlyByteBuf(Unpooled.buffer());
+		kettleClosed.write(closedPacket);
+		helper.assertTrue(closedPacket.equals(packet), "the packet is the same with the kettle book open or closed");
+		closedPacket.release();
+		RecipeBookSettings received = RecipeBookSettings.read(packet);
+		VBGameTests.assertValueEqual(helper, packet.readableBytes(), 0, "bytes left after reading the settings packet");
+		helper.assertTrue(received.isOpen(RecipeBookType.SMOKER) && !received.isFiltering(RecipeBookType.SMOKER) && !received.isOpen(RecipeBookType.CRAFTING),
+			"the packet carries the other books' settings");
+		helper.assertFalse(received.isOpen(type) || received.isFiltering(type), "and not the kettle book's");
+		RecipeBookSettings clientBook = settings.copy();
+		clientBook.setOpen(RecipeBookType.SMOKER, false);
+		clientBook.replaceFrom(received);
+		helper.assertTrue(clientBook.isOpen(RecipeBookType.SMOKER), "a book takes the other settings from the packet");
+		helper.assertTrue(clientBook.isOpen(type) && clientBook.isFiltering(type), "and keeps the kettle book's settings");
+		packet.release();
 		helper.assertTrue(helper.getLevel().getRecipeManager().byKey(VineAndBarrel.id("brew_kettle")).isPresent(), "the kettle crafting recipe is loaded");
 		helper.succeed();
 	}

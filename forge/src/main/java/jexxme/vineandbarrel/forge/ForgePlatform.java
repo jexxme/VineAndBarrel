@@ -69,9 +69,9 @@ public final class ForgePlatform implements Platform
 	 * The Brew Kettle's recipe book type. Forge 47 extends the enum in code ({@code IExtensibleEnum}), once, here: this
 	 * class loads while the mod is constructed, on the client and the server, before any menu or player exists. The
 	 * constant's {@code init} tells {@code RecipeBookSettings} its save keys, so the book's open and filter state is
-	 * saved and sent like a vanilla book's.
+	 * saved like a vanilla book's. It is sent our own way: see {@link ForgeRecipeBook}.
 	 */
-	private static final RecipeBookType BREWING_BOOK = RecipeBookType.create("VINEANDBARREL_BREWING");
+	private static final RecipeBookType BREWING_BOOK = RecipeBookType.create(ForgeRecipeBook.BREWING);
 
 	/** The mod's event bus, set by {@link VineAndBarrelForge} before anything registers. */
 	private static @Nullable IEventBus modBus;
@@ -86,6 +86,7 @@ public final class ForgePlatform implements Platform
 	static void init(IEventBus bus) {
 		modBus = bus;
 		ForgeAttachments.init();
+		ForgeRecipeBook.init();
 		// The GameTest server asks for tests right before it collects them; a dev client's own server never does, so there
 		// they are added when a server starts (for /test)
 		bus.addListener((RegisterGameTestsEvent event) -> registerGameTests());
@@ -119,6 +120,10 @@ public final class ForgePlatform implements Platform
 		GAME_TESTS.forEach(tests -> tests.accept(registrar));
 	}
 
+	static RecipeBookType brewingBook() {
+		return BREWING_BOOK;
+	}
+
 	private static IEventBus modBus() {
 		return Objects.requireNonNull(modBus, "Vine & Barrel's Forge entry point has not run yet");
 	}
@@ -148,8 +153,12 @@ public final class ForgePlatform implements Platform
 
 	@Override
 	public <T> void register(DeferredRegister<T> register) {
-		modBus().addListener((RegisterEvent event) -> event.register(register.getRegistryKey(), helper ->
-			register.getEntries().forEach((id, factory) -> helper.register(id, factory.apply(id)))));
+		modBus().addListener((RegisterEvent event) -> event.register(register.getRegistryKey(), helper -> {
+			register.getEntries().forEach((id, factory) -> helper.register(id, factory.apply(id)));
+			// On a server without Vine & Barrel, Forge takes our entries out of the client's registries for as long as it
+			// plays there: the holders keep what they hold, so nothing of ours fails when it asks for its own item or effect
+			register.resolve();
+		}));
 	}
 
 	/**

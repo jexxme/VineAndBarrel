@@ -7,8 +7,10 @@
     "HoneycombItemMixin",
     "LightningBoltMixin",
     "LivingEntityMixin",
+    "RecipeBookSettingsMixin",
     "ServerLevelMixin",
     "ServerPlayerGameModeMixin",
+    "ServerboundRecipeBookChangeSettingsPacketMixin",
     "VanillaInventoryCodeHooksMixin"
   ],
   "client": [
