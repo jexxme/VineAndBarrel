@@ -14,6 +14,8 @@ fs.mkdirSync(OUT, { recursive: true });
 // The logo (branding/*.png): the banner at 1x, trimmed (the home page shows it at whole multiples only),
 // the one-line header lockup at 1x (shown at 2x), and the 16 px mark as the favicon at exactly 4x
 await sharp(path.join(REPO, 'common/src/main/resources/banner.png')).trim({ threshold: 0 }).png().toFile(path.join(OUT, 'banner.png'));
+// the same banner with the animated logo, in the same 163 x 51 box (the start page's sign; a GIF, copied as it is)
+fs.copyFileSync(path.join(REPO, 'branding/logo-animated-1x.gif'), path.join(OUT, 'banner-animated.gif'));
 await sharp(path.join(REPO, 'branding/header.png')).png().toFile(path.join(OUT, 'header.png'));
 await sharp(path.join(REPO, 'branding/mark.png')).resize(64, 64, { kernel: 'nearest' }).png().toFile(path.join(SITE, 'public/favicon.png'));
 
