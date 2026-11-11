@@ -7,6 +7,7 @@ import { Picture } from 'astro:assets';
 import Slot from './mc/Slot.astro';
 import hero from '../assets/shots/hero.jpg';
 import banner from '../assets/ui/banner.png';
+import bannerAnimated from '../assets/ui/banner-animated.gif';
 import fdnShot from '../assets/fdn/kitchen.jpg';
 import fdnLogo from '../assets/fdn/banner.png';
 import { meta, FDN_WIKI, url, pageUrl, itemList, CATEGORIES, iconOf, rules, roman, duration } from '../lib/data';
@@ -71,7 +72,11 @@ const chapters = [
 		<span class="glow left" aria-hidden="true"></span>
 		<span class="glow right" aria-hidden="true"></span>
 		<div class="sign vb-board vb-hang">
-			<img class="logo" src={banner.src} alt="Vine &amp; Barrel" width={banner.width * 3} height={banner.height * 3} />
+			{/* the animated logo; the still one for visitors who asked for less motion (both are 163 x 51) */}
+			<picture>
+				<source srcset={banner.src} media="(prefers-reduced-motion: reduce)" />
+				<img class="logo" src={bannerAnimated.src} alt="Vine &amp; Barrel" width={banner.width * 3} height={banner.height * 3} />
+			</picture>
 			<span class="splash" data-splashes={JSON.stringify(splashes)}>{splashes[0]}</span>
 		</div>
 		<nav class="menu vb-chalk" aria-label={t('Start', locale)}>
@@ -293,16 +298,16 @@ const chapters = [
 	.sign::after {
 		right: 28px;
 	}
-	/* The banner (161 x 51) at whole multiples, so every pixel stays square: 3x, 2x */
+	/* The banner (163 x 51) at whole multiples, so every pixel stays square: 3x, 2x */
 	.logo {
 		display: block;
-		width: 483px;
+		width: 489px;
 		height: auto;
 		image-rendering: pixelated;
 	}
 	@media (max-width: 40rem) {
 		.logo {
-			width: 322px;
+			width: 326px;
 		}
 	}
 	/* Phones: 1.5x, which is still whole device pixels on a 2x screen */

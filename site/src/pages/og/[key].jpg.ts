@@ -75,7 +75,7 @@ async function draw(p: Picture): Promise<sharp.Sharp> {
 	}
 	// The brand sign over the panorama, dimmed so the sign reads
 	const panorama = await sharp(file('src/assets/shots/hero.jpg')).resize(width, height, { fit: 'cover' }).modulate({ brightness: 0.62 }).blur(1.5).png().toBuffer();
-	const sign = await sharp(file('../branding/store/hero.png')).resize({ height: height - 50, kernel: 'lanczos3' }).png().toBuffer();
+	const sign = await sharp(file('../branding/store/hero.png')).resize({ width: width - 200, height: height - 110, fit: 'inside', kernel: 'lanczos3' }).png().toBuffer();
 	const { width: sw = 0, height: sh = 0 } = await sharp(sign).metadata();
 	return sharp(panorama).composite([{ input: sign, left: round((width - sw) / 2), top: round((height - sh) / 2) }]);
 }
