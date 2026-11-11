@@ -92,7 +92,7 @@ public class DrinkItem extends Item
 		MobEffectInstance kept = before == null ? null : new MobEffectInstance(before);
 		// Re-adding Absorption tops its hearts back up (AbsorptionMobEffect.onEffectStarted): keep what was left
 		float absorption = entity.getAbsorptionAmount();
-		// 1.21.1's Player#eat puts the vessel into the inventory and forgets it if there is no room: drop it then (26.x does)
+		// 1.21.1's Player#eat puts the vessel into the inventory and, on Fabric, forgets it if there is no room: drop it then (26.x does)
 		Remainder vessel = Remainder.before(stack, entity);
 		ItemStack result = vessel.after(super.finishUsingItem(stack, level, entity), level, entity);
 		if (!level.isClientSide()) {
@@ -122,8 +122,9 @@ public class DrinkItem extends Item
 	/**
 	 * What a food leaves behind once eaten or drunk (its {@code using_converts_to}: the vessel, a bowl), given back the
 	 * way 26.x's use remainder is. 1.21.1's {@code Player#eat} puts it into the inventory and forgets it if there is no
-	 * room, and gives nothing to anyone who is not a player; here it drops at the player's feet then, and a mob (a fox)
-	 * that finished its last one is left holding it.
+	 * room (vanilla and Fabric; NeoForge's drops it itself, {@code Platform#dropsFoodRemainder}), and gives nothing to
+	 * anyone who is not a player; here it drops at the player's feet then, exactly once on either loader, and a mob
+	 * (a fox) that finished its last one is left holding it.
 	 *
 	 * @param left   the remainder (empty if the food has none)
 	 * @param noRoom whether vanilla is about to lose it: a player (not in creative) finishing one of several, with no
@@ -135,7 +136,7 @@ public class DrinkItem extends Item
 		public static Remainder before(ItemStack stack, LivingEntity entity) {
 			FoodProperties food = stack.get(DataComponents.FOOD);
 			ItemStack left = food == null ? ItemStack.EMPTY : food.usingConvertsTo().map(ItemStack::copy).orElse(ItemStack.EMPTY);
-			boolean noRoom = !left.isEmpty() && entity instanceof Player player && !player.hasInfiniteMaterials() && stack.getCount() > 1
+			boolean noRoom = !left.isEmpty() && !jexxme.vineandbarrel.platform.Services.PLATFORM.dropsFoodRemainder() && entity instanceof Player player && !player.hasInfiniteMaterials() && stack.getCount() > 1
 				&& player.getInventory().getSlotWithRemainingSpace(left) == -1 && player.getInventory().getFreeSlot() == -1;
 			return new Remainder(left, noRoom);
 		}

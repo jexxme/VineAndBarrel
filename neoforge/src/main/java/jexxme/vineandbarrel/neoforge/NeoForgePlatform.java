@@ -296,4 +296,9 @@ public final class NeoForgePlatform implements Platform
 	public void prepareMockConnection(net.minecraft.network.Connection connection) {
 		net.neoforged.neoforge.network.registration.NetworkRegistry.configureMockConnection(connection);
 	}
+
+	@Override
+	public boolean dropsFoodRemainder() {
+		return true;
+	}
 }

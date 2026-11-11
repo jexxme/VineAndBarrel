@@ -169,4 +169,10 @@ public interface Platform
 	 * {@code NetworkRegistry.configureMockConnection}. Fabric: nothing to do.
 	 */
 	void prepareMockConnection(net.minecraft.network.Connection connection);
+
+	/**
+	 * {@return whether the loader's {@code Player#eat} drops what a food leaves behind when the inventory has no room}
+	 * NeoForge's does; vanilla's (Fabric) forgets it, and {@code DrinkItem.Remainder} drops it then.
+	 */
+	boolean dropsFoodRemainder();
 }

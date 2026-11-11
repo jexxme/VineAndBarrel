@@ -161,6 +161,7 @@ public final class BarrelGameTests
 		test("drinks_placing_respects_entities_and_passes", 100, BarrelGameTests::placingRespectsEntities);
 		test("barrel_batch_survives_missing_base", 100, BarrelGameTests::survivesMissingBase);
 		testLarge("drinks_tipsy_from_drinking", 100, BarrelGameTests::tipsyFromDrinking);
+		testLarge("drinks_full_inventory_one_vessel_back", 100, BarrelGameTests::fullInventoryOneVessel);
 		testLarge("drinks_cheers_window", 300, BarrelGameTests::cheersWindow);
 		testLarge("drinks_cheers_too_drunk_no_buff", 100, BarrelGameTests::cheersTooDrunk);
 		testLarge("drinks_cheers_extends_aged_level_two", 100, BarrelGameTests::cheersAgedLevelTwo);
@@ -1833,6 +1834,36 @@ public final class BarrelGameTests
 			if (entity.getItem().is(DrinkItems.RED_WINE.get())) wines += entity.getItem().getCount();
 		}
 		helper.assertValueEqual(wines, 1, "the wine drops at the player");
+		helper.succeed();
+	}
+
+	/**
+	 * Drinking or eating one of several with a full inventory: the vessel drops at the player's feet, exactly one
+	 * (the loaders differ in who drops it: {@code DrinkItem.Remainder}). For a drink, a juice and a pick-block copy.
+	 */
+	private static void fullInventoryOneVessel(GameTestHelper helper) {
+		record Case(ItemStack drink, net.minecraft.world.item.Item vessel, Vec3 at) {
+		}
+		List<Case> cases = List.of(
+			new Case(new ItemStack(DrinkItems.RED_WINE.get(), 16), DrinkItems.WINE_GLASS.get(), new Vec3(4.5, 1.0, 4.5)),
+			new Case(new ItemStack(BaseItems.GRAPE_JUICE.get(), 16), Items.GLASS_BOTTLE, new Vec3(20.5, 1.0, 4.5)));
+		for (Case one : cases) {
+			TestPlayer player = drinker(helper, one.at());
+			for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+				player.getInventory().setItem(i, new ItemStack(Items.STONE, 64));
+			}
+			String name = one.drink().getItem().toString();
+			player.drink(one.drink().copy());
+			helper.assertValueEqual(player.getMainHandItem().getCount(), 15, name + ": one drunk");
+			int vessels = 0;
+			for (ItemEntity entity : helper.getLevel().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(3.0D))) {
+				if (entity.getItem().is(one.vessel())) {
+					vessels += entity.getItem().getCount();
+				}
+			}
+			helper.assertValueEqual(vessels, 1, name + ": one " + one.vessel() + " at the player's feet");
+			helper.assertValueEqual(player.getInventory().countItem(one.vessel()), 0, name + ": none in the full inventory");
+		}
 		helper.succeed();
 	}
 

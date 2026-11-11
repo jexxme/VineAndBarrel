@@ -312,4 +312,9 @@ public final class FabricPlatform implements Platform
 	@Override
 	public void prepareMockConnection(net.minecraft.network.Connection connection) {
 	}
+
+	@Override
+	public boolean dropsFoodRemainder() {
+		return false;
+	}
 }
