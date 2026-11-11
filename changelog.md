@@ -1,5 +1,12 @@
 ## 1.1.1
 
+- The first Vine & Barrel for Minecraft 1.20.1, on Forge and Fabric, with everything from 1.1.1: Watch it, the Big Brew Kettle, framed trellis rows, taverns in villages. Farmer's Delight (1.3.4 or newer) is supported on Forge, Farmer's Delight Refabricated on Fabric.
+- Different on this version:
+  - Taverns have no shelves, as 1.20.1 has none: the mugs hang in item frames, and the bar windows close with trapdoor shutters.
+  - Tomatoes don't climb the trellis, and villager trades can't be changed with datapacks.
+  - The Brew Kettle's lid sounds like an iron trapdoor (1.20.1 has no copper one).
+  - Fabric with Sodium: install Indium too, or trellis rows lose their posts and top rail and vines grown into fences or walls hide the block they hold.
+  - Forge: the settings are the two Tipsy config files; there is no Config button in the mod list.
 - A village has one tavern at most. Villages with many roomy plots, such as the towns of Epic Structures: Villages, could get several.
 
 ## 1.1.0
