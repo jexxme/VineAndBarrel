@@ -92,7 +92,7 @@ public final class NeoForgeClient
 		{
 			@Override
 			public <T extends Avatar & ClientAvatarEntity> void accept(T avatar, AvatarRenderState state) {
-				state.setRenderData(BODY_POSE, TipsyClient.bodyPose(avatar));
+				state.setRenderData(BODY_POSE, TipsyClient.bodyPose(avatar, state));
 			}
 		}));
 

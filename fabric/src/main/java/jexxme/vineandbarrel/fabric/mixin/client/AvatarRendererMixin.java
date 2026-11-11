@@ -16,6 +16,6 @@ abstract class AvatarRendererMixin
 {
 	@Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("TAIL"))
 	private void vineandbarrel$swayLevel(Avatar avatar, AvatarRenderState state, float partialTicks, CallbackInfo callback) {
-		state.setData(TipsySway.POSE, TipsyClient.bodyPose(avatar));
+		state.setData(TipsySway.POSE, TipsyClient.bodyPose(avatar, state));
 	}
 }

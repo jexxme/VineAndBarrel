@@ -4,7 +4,9 @@ import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.tipsy.Blackout;
 import jexxme.vineandbarrel.tipsy.BlackoutEnding;
 import jexxme.vineandbarrel.tipsy.BlackoutPose;
+import jexxme.vineandbarrel.tipsy.TipsyConfig;
 import jexxme.vineandbarrel.tipsy.TipsyRegistry;
+import jexxme.vineandbarrel.tipsy.TipsyWobble;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -24,20 +26,25 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * The blackout on the client: the stars above the head of everyone who is out, and for the player themselves the
- * tipped, lowered camera while lying on the ground, keys and mouse held still, no hand, and no vanilla bed screen
- * (there is nothing to leave: the blackout gets you up), and the closing and opening eyes ({@link #renderBlackout}). The
- * body that tips over is drawn by {@link TipsyClient#beforeRenderLiving}, with the other poses; the math is
- * {@link BlackoutPose}. Each loader calls these hooks from its own client events (NeoForge:
+ * camera in the head as they fall on the face, lie there and get up again, keys and mouse held still, no hand, and no
+ * vanilla bed screen (there is nothing to leave: the blackout gets you up), and the closing and opening eyes
+ * ({@link #renderBlackout}). The body is drawn by {@link TipsyClient#beforeRenderLiving}, with the other poses; the math
+ * is {@link BlackoutPose}. Each loader calls these hooks from its own client events (NeoForge:
  * {@code NeoForgeClient}; Fabric: Fabric API callbacks and our client mixins), at the same spots.
  */
 public final class BlackoutClient
 {
 	/** The HUD layer of the closed eyes, by id (NeoForge GUI layers, Fabric HUD elements): above all others. */
 	public static final Identifier LAYER = VineAndBarrel.id("blackout");
-	/** The head is about this high above the feet; the stars circle this far above it. */
-	private static final double HEAD = 1.6, STARS_ABOVE = 0.45;
+	/** The stars circle this far above the middle of the head. */
+	private static final double STARS_ABOVE = 0.45;
+	/** Where stars circle this tick (one per player who is out), so the stars of one who gets up fade at once. */
+	private static final List<Vec3> STARS = new ArrayList<>();
 
 	private BlackoutClient() {
 	}
@@ -53,13 +60,36 @@ public final class BlackoutClient
 		return left <= 0 ? 0.0F : Math.max(0.0F, left - partial);
 	}
 
-	/** {@return how far this player lies tipped over on the ground (0 when not out, in bed or in a boat)} */
-	public static float lying(Player player, float partial) {
+	/**
+	 * {@return this player out on the ground right now, falling on the face, lying there or getting up
+	 * ({@link BlackoutPose#body}), or null (not out, or in a bed or a boat)}
+	 */
+	public static BlackoutPose.@Nullable Body body(Player player, float partial) {
 		float left = left(player, partial);
-		if (left <= 0.0F || player.isSleeping() || player.isPassenger() || Blackout.pose(player) != BlackoutEnding.Pose.GROUND) {
-			return 0.0F;
+		if (left <= 0.0F || !onTheGround(player)) {
+			return null;
 		}
-		return BlackoutPose.lying(left);
+		return BlackoutPose.body(left, BlackoutPose.side(player.getId()), turn(player), player.getXRot(partial));
+	}
+
+	/**
+	 * {@return how far (degrees of yaw) this player's body turns as it falls: to the way the server chose as they blacked
+	 * out, where it has room to lie on the face ({@link TipsyRegistry#BLACKOUT_YAW}), the same on every client} Once the
+	 * server has turned the player that way too (while the screen is black) it comes to 0, smoothly as the turn arrives.
+	 */
+	static float turn(Player player) {
+		Float yaw = TipsyRegistry.BLACKOUT_YAW.getExisting(player);
+		return yaw == null ? 0.0F : Mth.wrapDegrees(yaw - player.getYHeadRot());
+	}
+
+	/**
+	 * Whether this blacked-out player lies on the ground (not in a bed or a boat). Not while gliding with an elytra,
+	 * swimming or crawling either: those have the game's own pose (the body is already flat), which the fall's would only
+	 * be piled onto.
+	 */
+	private static boolean onTheGround(Player player) {
+		return !player.isSleeping() && !player.isPassenger() && !player.isFallFlying() && !player.isVisuallySwimming()
+			&& Blackout.pose(player) == BlackoutEnding.Pose.GROUND;
 	}
 
 	// ------------------------------------------------------------------ the stars
@@ -79,6 +109,13 @@ public final class BlackoutClient
 				player.yBodyRotO = player.yBodyRot;
 			}
 		}
+		STARS.clear();
+		for (AbstractClientPlayer player : level.players()) {
+			Vec3 stars = starCenter(player);
+			if (stars != null) {
+				STARS.add(stars);
+			}
+		}
 		if (level.getGameTime() % DizzyStarParticle.SPAWN_EVERY != 0) {
 			return;
 		}
@@ -94,50 +131,89 @@ public final class BlackoutClient
 		}
 	}
 
+	/** {@return whether stars still circle around {@code center}: someone there is still out (not getting up yet)} */
+	static boolean starsCircle(double x, double y, double z) {
+		for (Vec3 stars : STARS) {
+			if (stars.distanceToSqr(x, y, z) < 0.5) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/** {@return the middle of the stars' circle above this player's head while they are out, or null} */
 	static @Nullable Vec3 starCenter(Player player) {
 		int left = Blackout.ticksLeft(player);
 		if (left < Blackout.GET_UP) {
+			// Out of the bed or the boat: gone. Off the ground they go as the get-up starts (lyingStill)
 			return null;
 		}
 		if (player.isSleeping()) {
 			return player.position().add(0.0, STARS_ABOVE + 0.2, 0.0);
 		}
-		if (player.isPassenger()) {
+		if (player.isPassenger() || player.isFallFlying() || player.isVisuallySwimming()) {
+			// Sitting, gliding or crawling in the game's own pose: above the eyes
 			return player.getEyePosition().add(0.0, STARS_ABOVE + 0.15, 0.0);
 		}
 		if (Blackout.pose(player) != BlackoutEnding.Pose.GROUND || !BlackoutPose.lyingStill(left)) {
 			return null;
 		}
+		// Above the head lying on the ground, ahead of the feet
 		float scale = player.getScale();
-		Vec3 head = BlackoutPose.tipped(player.getYHeadRot(), BlackoutPose.bodyAngle(1.0F, BlackoutPose.side(player.getId())), 1.0F, HEAD * scale);
+		Vec3 head = BlackoutPose.toWorld(player.getYHeadRot() + turn(player), BlackoutPose.lyingHead()).scale(scale);
 		return player.position().add(head).add(0.0, STARS_ABOVE * scale, 0.0);
 	}
 
 	// ------------------------------------------------------------------ the player's own view
 
 	/**
-	 * Lying on the ground, the view rolls onto its side (first person only; the third-person view shows the body). The
-	 * degrees to add to the camera's roll for this camera entity, before Distortion Effects ({@link TipsyClient#cameraAngles}).
+	 * Out on the ground, the eyes go where the head goes ({@link BlackoutPose.Body#viewPitch}, the view's yaw and roll):
+	 * down into the ground as the body falls, sideways along it with the cheek on the ground, up again with the head.
+	 * {@return the roll (the cheek on the ground, a tilt of the head; {@link TipsyClient#cameraAngles} scales it by
+	 * Distortion Effects), and the pitch and the yaw to add (a pose: always), for this camera entity}
 	 */
-	public static float cameraRoll(@Nullable Entity cameraEntity, float partial) {
-		Minecraft minecraft = Minecraft.getInstance();
-		LocalPlayer player = minecraft.player;
-		if (player == null || cameraEntity != player || !minecraft.options.getCameraType().isFirstPerson()) {
-			return 0.0F;
+	public static TipsyWobble.Angles cameraTurn(@Nullable Entity cameraEntity, float partial) {
+		LocalPlayer player = firstPerson(cameraEntity);
+		BlackoutPose.Body body = player == null ? null : body(player, partial);
+		if (body == null) {
+			return TipsyWobble.Angles.NONE;
 		}
-		float lying = lying(player, partial);
-		return lying > 0.0F ? BlackoutPose.side(player.getId()) * BlackoutPose.CAMERA_ROLL * lying : 0.0F;
+		float roll = body.viewRoll();
+		if (TipsyConfig.wobbleIntensity() <= 0.0 && left(player, partial) < Blackout.GROUND_GET_UP - BlackoutPose.LOOK) {
+			// Up off the cheek, the head's tilt is a sway: none with the wobble off
+			roll = 0.0F;
+		}
+		return new TipsyWobble.Angles(roll, body.viewPitch() - player.getViewXRot(partial),
+			Mth.wrapDegrees(player.getYHeadRot() + body.turn() + body.viewYaw() - player.getViewYRot(partial)));
 	}
 
-	/** {@return how far the first-person camera goes down lying on the ground ({@link TipsyClient#cameraOffset})} */
-	public static double cameraDrop(Camera camera, float partial) {
+	/**
+	 * {@return where the first-person camera moves from the eyes ({@link TipsyClient#cameraOffset}): into the head, as it
+	 * falls to the ground, lies there and comes up again}
+	 */
+	public static Vec3 cameraShift(Camera camera, float partial) {
 		Minecraft minecraft = Minecraft.getInstance();
-		if (camera.isDetached() || camera.entity() != minecraft.player || minecraft.player == null) {
-			return 0.0;
+		LocalPlayer player = minecraft.player;
+		if (camera.isDetached() || camera.entity() != player || player == null) {
+			return Vec3.ZERO;
 		}
-		float lying = lying(minecraft.player, partial);
-		return lying <= 0.0F ? 0.0 : (minecraft.player.getEyeHeight() - BlackoutPose.LYING_EYES) * lying;
+		BlackoutPose.Body body = body(player, partial);
+		if (body == null) {
+			return Vec3.ZERO;
+		}
+		// The pose starts and ends with the eyes where a standing player has them: the player's own eye height (crouched
+		// under a low ceiling, say) counts as much as the game's pose does, so neither end jumps
+		float scale = player.getScale();
+		Vec3 eye = BlackoutPose.toWorld(player.getYHeadRot() + body.turn(), body.eye()).scale(scale);
+		double standing = BlackoutPose.STANDING_EYES * scale;
+		return eye.subtract(0.0, standing + (player.getEyeHeight() - standing) * (1.0F - body.vanilla()), 0.0);
+	}
+
+	/** {@return this client's own player when {@code cameraEntity} is them, seen in first person, or null} */
+	private static @Nullable LocalPlayer firstPerson(@Nullable Entity cameraEntity) {
+		Minecraft minecraft = Minecraft.getInstance();
+		LocalPlayer player = minecraft.player;
+		return player != null && cameraEntity == player && minecraft.options.getCameraType().isFirstPerson() ? player : null;
 	}
 
 	/**

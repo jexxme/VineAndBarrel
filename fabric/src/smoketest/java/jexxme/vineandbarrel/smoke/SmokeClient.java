@@ -18,7 +18,6 @@ import jexxme.vineandbarrel.barrel.BarrelStage;
 import jexxme.vineandbarrel.drink.DrinkItems;
 import jexxme.vineandbarrel.tipsy.Blackout;
 import jexxme.vineandbarrel.tipsy.client.BlackoutClient;
-import jexxme.vineandbarrel.tipsy.client.TipsyClient;
 import jexxme.vineandbarrel.watch.client.ScenePlayer;
 import jexxme.vineandbarrel.watch.client.WatchClient;
 import jexxme.vineandbarrel.watch.client.WatchIndex;
@@ -135,6 +134,8 @@ public final class SmokeClient implements ClientModInitializer
 	private enum Phase { TITLE, LOADING, SETTLING, STEPS, HOSTING, DONE }
 
 	private final Path out = FabricLoader.getInstance().getGameDir().resolve("smoke");
+	/** The furthest the arms were seen swung forward (radians) while getting up off the ground. */
+	private static float getUpArms;
 	private final List<Step> steps = new ArrayList<>();
 	private final JsonArray results = new JsonArray();
 	private Phase phase = Phase.TITLE;
@@ -477,7 +478,7 @@ public final class SmokeClient implements ClientModInitializer
 			if (left == null || left <= 0) {
 				return "no blackout on the client (" + left + ")";
 			}
-			if (BlackoutClient.lying(mc.player, 0.0F) <= 0.0F || TipsyClient.blackoutLying(mc.player) == null) {
+			if (BlackoutClient.body(mc.player, 0.0F) == null) {
 				return "not lying on the ground (" + left + " ticks left, pose " + Blackout.pose(mc.player) + ")";
 			}
 			return BlackoutClient.hidesHands() ? null : "the hand still shows";
@@ -505,8 +506,28 @@ public final class SmokeClient implements ClientModInitializer
 			Integer level = TipsyRegistry.SYNCED_LEVEL.getExisting(mc.player);
 			return level != null && level == 1 ? null : "Tipsy " + level + " after waking up instead of 1";
 		}, "after_blackout", true).polled());
-		steps.add(new Step("sober_again", 40, mc -> command(mc, "vbsmoke sober"),
-			mc -> mc.player.hasEffect(TipsyRegistry.TIPSY) ? "still tipsy" : null, null, true).polled());
+		// Getting up off the ground moves the limbs, not only the body: on Fabric too (the common HumanoidModelMixin, fed
+		// through AvatarRendererMixin); seen from the front in third person, the arms swing in under the body as they push
+		steps.add(new Step("getting_up_moves_the_limbs", 60, mc -> {
+			mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);
+			getUpArms = 0.0F;
+			command(mc, "vbsmoke blackout getup");
+		}, mc -> {
+			// The player model as last drawn: vanilla leaves a still player's arms hanging
+			if (BlackoutClient.body(mc.player, 0.0F) != null
+				&& mc.getEntityRenderDispatcher().getRenderer(mc.player) instanceof net.minecraft.client.renderer.entity.player.AvatarRenderer<?> renderer) {
+				var model = renderer.getModel();
+				getUpArms = Math.max(getUpArms, Math.max(-model.rightArm.xRot, -model.leftArm.xRot));
+			}
+			return getUpArms > 1.0F ? null : "the arms don't swing in under the body (" + getUpArms + " rad forward at most; " + Blackout.ticksLeft(mc.player)
+				+ " ticks left, pose " + Blackout.pose(mc.player) + ")";
+		}, "blackout_getting_up", true).polled());
+		steps.add(new Step("up_off_the_ground", 60, mc -> {
+		}, mc -> Blackout.isOut(mc.player) ? "still out (" + Blackout.ticksLeft(mc.player) + " ticks left)" : null, null, true).polled());
+		steps.add(new Step("sober_again", 40, mc -> {
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+			command(mc, "vbsmoke sober");
+		}, mc -> mc.player.hasEffect(TipsyRegistry.TIPSY) ? "still tipsy" : null, null, true).polled());
 		// "Watch it": the tooltip offers the scene; at the scene's barrel in the world the key opens it where that barrel is
 		steps.add(new Step("watch_it_on_the_tooltip", 1, mc -> {
 		}, mc -> {

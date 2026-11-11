@@ -29,6 +29,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.boat.Boat;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -42,11 +45,13 @@ import java.util.function.Function;
 /**
  * One drink too many at the top Tipsy level: the player blacks out, and wakes up somewhere ({@link BlackoutEnding}).
  * <p>
- * About 8.5 seconds ({@link #TICKS}): the eyes fall shut and the body tips over (others see stars circling above the
- * head); a few seconds of black in which nobody can hurt the player (no mob, no player, no fall: {@link
- * TipsyEvents#cancelsIncomingDamage}) and Tipsy pauses; at {@link #WAKE_AT} the ending is drawn and
- * the player is put there, in its pose, with a souvenir in the pockets (and now and then a pumpkin on the head); the eyes
- * open slowly; at {@link #GET_UP} they get up (out of the bed, or off the ground), and at the end the ending's line shows.
+ * About 8.5 seconds ({@link #TICKS}): the eyes fall shut and the body falls on its face, the way it has room to
+ * ({@link BlackoutSpots#fallYaw}; others see stars circling above the head); a few seconds of black in which nobody
+ * can hurt the player (no mob, no player, no fall: {@link TipsyEvents#cancelsIncomingDamage}) and Tipsy pauses; at
+ * {@link #WAKE_AT} the ending is drawn and the player is put there, in its pose, with a souvenir in the pockets (and
+ * now and then a pumpkin on the head); the eyes open slowly; at {@link #GET_UP} they get out of the bed (off the ground
+ * from {@link #GROUND_GET_UP}, slowly, up onto hands and toes and from there onto the feet), and at the end the
+ * ending's line shows.
  * They wake hungry and shaky, back at Tipsy I. Nothing is lost, no spot is unsafe, there is no time skip (a bed is lain
  * in for less than vanilla's 100 ticks of deep sleep) and other players aren't affected. It can be switched off.
  * <p>
@@ -58,7 +63,7 @@ public final class Blackout
 {
 	/** The whole blackout. */
 	public static final int TICKS = 170;
-	/** The eyes fall shut over this long; the body tips over in the first {@link #TIP} ticks of it. */
+	/** The eyes fall shut over this long; the body falls on its face in the first {@link #TIP} ticks of it (then the thud). */
 	public static final int FADE_OUT = 25;
 	public static final int TIP = 10;
 	/** At this many ticks left, while the screen is black, the ending is drawn and the player wakes up there. */
@@ -66,8 +71,14 @@ public final class Blackout
 	/** The eyes start to open here and are fully open here. */
 	public static final int EYES_OPEN = 70;
 	public static final int EYES_UP = 40;
-	/** Getting up takes this long at the end: out of the bed right away, off the ground slowly. */
+	/** Getting up out of the bed (or a boat) takes this long at the end. */
 	public static final int GET_UP = 10;
+	/**
+	 * Getting up off the ground takes longer, from here to the end: the head comes up, the arms push the body off the
+	 * ground onto all fours, the legs straighten, and up with a rock onto the heels ({@link BlackoutPose#body}). The eyes
+	 * are fully open by then ({@link #EYES_UP}).
+	 */
+	public static final int GROUND_GET_UP = 38;
 	/** The villager whose bed it was shakes its head here (vanilla's head shake lasts 40 ticks). */
 	public static final int HEAD_SHAKE_AT = 50;
 
@@ -76,8 +87,13 @@ public final class Blackout
 	public static final int PUMPKIN_ONE_IN = 6;
 	public static final int HUNGER_LOST = 6;
 	public static final int SHAKY_TICKS = 15 * 20;
-	/** Lying, the eyes look straight ahead along the ground (the camera is tipped on its side). */
+	/** Lying, the player's own look is level (the head's pose has the view); they stand up looking ahead. */
 	static final float LIE_PITCH = 0.0F;
+	/**
+	 * A player who blacks out on the move slides on about this many times the last tick's movement before stopping (the
+	 * ground's friction leaves a little under half of it each tick), with some to spare.
+	 */
+	static final double SLIDE = 2.5;
 
 	private Blackout() {
 	}
@@ -147,6 +163,25 @@ public final class Blackout
 		return BlackoutEnding.Pose.byId(pose == null ? 0 : pose);
 	}
 
+	/**
+	 * {@return the way this blacked-out player's body lies on the face ({@link TipsyRegistry#BLACKOUT_YAW}, chosen as they
+	 * blacked out); for one who is not out, the way they would fall right now}
+	 */
+	public static float fallYaw(ServerPlayer player) {
+		Float yaw = isOut(player) ? TipsyRegistry.BLACKOUT_YAW.getExisting(player) : null;
+		return yaw != null ? yaw : BlackoutSpots.fallYaw(player.level(), player.position(), player.getYRot());
+	}
+
+	/** {@return where {@code at} comes down on the floor below it (a player in the air lands there), or itself} */
+	private static Vec3 floorUnder(ServerPlayer player, Vec3 at) {
+		if (player.onGround() && at.distanceToSqr(player.position()) < 1.0E-6) {
+			return at;
+		}
+		BlockHitResult hit = player.level().clip(new ClipContext(at.add(0.0, 0.5, 0.0), at.subtract(0.0, 6.0, 0.0), ClipContext.Block.COLLIDER,
+			ClipContext.Fluid.NONE, player));
+		return hit.getType() == HitResult.Type.MISS ? at : hit.getLocation();
+	}
+
 	/** {@return whether one more drink now makes this player black out} */
 	public static boolean wouldBlackOut(ServerPlayer player) {
 		return TipsyConfig.enabled() && TipsyConfig.blackout() && !isOut(player) && !player.isSpectator()
@@ -156,6 +191,11 @@ public final class Blackout
 	public static void start(ServerPlayer player) {
 		TipsyRegistry.BLACKOUT.set(player, TICKS);
 		TipsyRegistry.BLACKOUT_POSE.set(player, BlackoutEnding.Pose.GROUND.ordinal());
+		// The way the body goes down, chosen once for everyone: where it has room, from where it is and from where a run
+		// carries it before it stops
+		Vec3 feet = floorUnder(player, player.position());
+		Vec3 stop = floorUnder(player, player.position().add(player.getKnownMovement().multiply(SLIDE, 0.0, SLIDE)));
+		TipsyRegistry.BLACKOUT_YAW.set(player, BlackoutSpots.fallYaw(player.level(), feet, stop, player.getYRot()));
 		TipsyRegistry.BLACKOUT_SCENE.remove(player);
 		// Can't walk or jump (the client also holds the keys and the mouse still)
 		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, TICKS, 9, false, false, false));
@@ -164,7 +204,6 @@ public final class Blackout
 		if (TipsyRegistry.HICCUPS.has(player)) {
 			TipsyRegistry.HICCUPS.remove(player);
 		}
-		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_BIG_FALL, SoundSource.PLAYERS, 1.0F, 0.8F);
 	}
 
 	/** Once a tick on the server, for a blacked-out player. */
@@ -174,6 +213,10 @@ public final class Blackout
 			return;
 		}
 		int next = left - 1;
+		if (next == TICKS - TIP) {
+			// The body hits the ground
+			player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_BIG_FALL, SoundSource.PLAYERS, 1.0F, 0.8F);
+		}
 		if (next == WAKE_AT) {
 			RandomSource random = player.getRandom();
 			wakeUp(player, choose(player, random), random);
@@ -187,12 +230,22 @@ public final class Blackout
 			Entity friend = scene == null ? null : scene.friend().map(player.level()::getEntity).orElse(null);
 			TipsySounds.wakeUp(player, ending, friend, TipsyLegs.ground(player));
 		}
+		BlackoutEnding.Pose pose = pose(player);
 		if (next == GET_UP) {
-			BlackoutEnding.Pose pose = pose(player);
 			if (player.isSleeping()) {
 				player.stopSleepInBed(true, true);
 			}
-			TipsySounds.getUp(player, pose, TipsyLegs.ground(player));
+			if (pose != BlackoutEnding.Pose.GROUND) {
+				TipsySounds.getUp(player, pose, TipsyLegs.ground(player));
+			}
+		}
+		if (pose == BlackoutEnding.Pose.GROUND) {
+			// Off the ground: the hands press into it as the push starts, the toes come down after the rock onto the heels
+			if (next == BlackoutPose.PUSH_AT) {
+				TipsySounds.getUp(player, pose, TipsyLegs.ground(player));
+			} else if (next == BlackoutPose.STEP_AT) {
+				TipsySounds.catchStep(player, TipsyLegs.ground(player));
+			}
 		}
 		if (next <= 0) {
 			TipsyRegistry.BLACKOUT.remove(player);
@@ -311,10 +364,9 @@ public final class Blackout
 	private static BlackoutSpots.Wake place(ServerPlayer player, BlackoutSpots.Wake wake) {
 		ServerLevel level = player.level();
 		Vec3 spot = wake.spot();
-		BlackoutSpots.Wake here = new BlackoutSpots.Wake(BlackoutEnding.RIGHT_HERE, player.position(), player.getYRot(), null, null);
+		BlackoutSpots.Wake here = new BlackoutSpots.Wake(BlackoutEnding.RIGHT_HERE, player.position(), fallYaw(player), null, null);
 		if (wake.ending() == BlackoutEnding.RIGHT_HERE) {
-			TipsyRegistry.BLACKOUT_POSE.set(player, BlackoutEnding.Pose.GROUND.ordinal());
-			return wake;
+			return stay(player, wake);
 		}
 		Vec3 from = player.position();
 		float yaw = player.getYRot(), pitch = player.getXRot();
@@ -355,13 +407,25 @@ public final class Blackout
 			case GROUND -> {
 				player.stopRiding();
 				player.teleportTo(level, spot.x, spot.y, spot.z, Set.of(), wake.yaw(), LIE_PITCH, true);
+				TipsyRegistry.BLACKOUT_YAW.set(player, wake.yaw());
 			}
 		}
 		TipsyRegistry.BLACKOUT_POSE.set(player, pose.ordinal());
 		return wake;
 	}
 
+	/**
+	 * Stays where the body fell: it went down the way it had room to ({@link #fallYaw}, the way every client draws it),
+	 * and now the player faces that way as well, while the screen is black: getting up ends facing where the body lies.
+	 * Only turned, never moved (a player still sitting in a boat or on a horse stays sitting); not at all in a vehicle or
+	 * a bed, where nobody lies on the ground.
+	 */
 	private static BlackoutSpots.Wake stay(ServerPlayer player, BlackoutSpots.Wake here) {
+		if (!player.isPassenger() && !player.isSleeping()
+			&& (Math.abs(net.minecraft.util.Mth.wrapDegrees(here.yaw() - player.getYRot())) > 1.0E-3F || player.getXRot() != LIE_PITCH)) {
+			player.forceSetRotation(here.yaw(), false, LIE_PITCH, false);
+		}
+		TipsyRegistry.BLACKOUT_YAW.set(player, here.yaw());
 		TipsyRegistry.BLACKOUT_POSE.set(player, BlackoutEnding.Pose.GROUND.ordinal());
 		return here;
 	}
@@ -384,6 +448,7 @@ public final class Blackout
 		Scene scene = TipsyRegistry.BLACKOUT_SCENE.getExisting(player);
 		TipsyRegistry.BLACKOUT_SCENE.remove(player);
 		TipsyRegistry.BLACKOUT_POSE.remove(player);
+		TipsyRegistry.BLACKOUT_YAW.remove(player);
 		if (player.isSleeping()) {
 			player.stopSleepInBed(true, true);
 		}

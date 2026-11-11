@@ -24,7 +24,11 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
@@ -292,8 +296,9 @@ public final class TipsyClient
 			angles = angles.plus(BlackoutPose.side(player.getId()) * TipsyMotion.TRIP_TILT * fallen,
 				(TipsyMotion.TRIP_LOOK - player.getXRot()) * fallen, 0.0F);
 		}
-		// Lying on the ground after a blackout, the view rolls onto its side too
-		return angles.plus(BlackoutClient.cameraRoll(cameraEntity, partial) * distortion(minecraft), 0.0F, 0.0F);
+		// Out on the ground after a blackout the eyes go where the head goes (a pose: always), its roll scaled like the rest
+		TipsyWobble.Angles head = BlackoutClient.cameraTurn(cameraEntity, partial);
+		return angles.plus(head.roll() * distortion(minecraft), head.pitch(), head.yaw());
 	}
 
 	/** {@return what the field of view is multiplied by this frame: the breathing at V (FOV Effects scales it)} */
@@ -309,8 +314,9 @@ public final class TipsyClient
 	}
 
 	/**
-	 * {@return where {@code jexxme.vineandbarrel.mixin.CameraMixin} moves the first-person camera: down to the ground
-	 * after a blackout, and down and forward to where the face lies after a trip}
+	 * {@return where {@code jexxme.vineandbarrel.mixin.CameraMixin} moves the first-person camera: into the head of a
+	 * blacked-out player, as it falls to the ground and comes up again, and down and forward to where the face lies after a
+	 * trip}
 	 */
 	public static Vec3 cameraOffset(Camera camera, float partial) {
 		Minecraft minecraft = Minecraft.getInstance();
@@ -318,13 +324,14 @@ public final class TipsyClient
 		if (camera.isDetached() || camera.entity() != player || player == null) {
 			return Vec3.ZERO;
 		}
-		double blackout = BlackoutClient.cameraDrop(camera, partial);
+		Vec3 blackout = BlackoutClient.cameraShift(camera, partial);
 		float fallen = tripFallen(player, partial);
 		if (fallen <= 0.0F) {
-			return blackout > 0.0 ? new Vec3(0.0, -blackout, 0.0) : Vec3.ZERO;
+			// Into the head, wherever it is (a wall stays out of the view)
+			return blackout == Vec3.ZERO ? blackout : clamped(camera, blackout);
 		}
 		Vec3 forward = Vec3.directionFromRotation(0.0F, player.getYRot()).scale(TipsyMotion.TRIP_FORWARD * fallen);
-		double drop = Math.max(blackout, (player.getEyeHeight() - TipsyMotion.TRIP_EYES) * fallen);
+		double drop = Math.max(-blackout.y, (player.getEyeHeight() - TipsyMotion.TRIP_EYES) * fallen);
 		return clamped(camera, new Vec3(forward.x, -drop, forward.z));
 	}
 
@@ -431,44 +438,60 @@ public final class TipsyClient
 	// ------------------------------------------------------------------ T1: how others see you
 
 	/**
-	 * What a player's render state carries for {@link #beforeRenderLiving}: the sway level (0 = none), how far a
-	 * blacked-out player lies tipped over, a hiccup's jolt, a stumble's lurch (-1 right to 1 left) and how far a trip has
-	 * them down on the face.
+	 * What a player's render state carries for {@link #beforeRenderLiving}: the sway level (0 = none), a blacked-out
+	 * player on the ground (falling on the face, lying, getting up; null if not), a hiccup's jolt, a stumble's lurch (-1
+	 * right to 1 left) and how far a trip has them down on the face.
 	 */
-	public record BodyPose(int swayLevel, float lying, float jolt, float lurch, float fallen)
+	public record BodyPose(int swayLevel, BlackoutPose.@Nullable Body blackout, float jolt, float lurch, float fallen)
 	{
 	}
 
-	/** {@return the body pose of this player for its render state, or null if it stands as vanilla draws it} */
-	public static @Nullable BodyPose bodyPose(Entity avatar) {
+	/**
+	 * The player render state's part of a blackout on the ground ({@link BlackoutPose#body}), for {@link #poseBlackout}:
+	 * the model poses head and limbs from it ({@code jexxme.vineandbarrel.mixin.AvatarRenderStateMixin} gives every player
+	 * render state one).
+	 */
+	public interface BlackoutCarrier
+	{
+		BlackoutPose.@Nullable Body vineandbarrel$blackout();
+
+		void vineandbarrel$setBlackout(BlackoutPose.@Nullable Body body);
+	}
+
+	/**
+	 * {@return the body pose of this player for its render state, or null if it stands as vanilla draws it} Also hands
+	 * {@code state} the head and limbs of a blackout on the ground, while they are out there.
+	 */
+	public static @Nullable BodyPose bodyPose(Entity avatar, AvatarRenderState state) {
+		BodyPose pose = bodyPose(avatar);
+		if (state instanceof BlackoutCarrier carrier) {
+			carrier.vineandbarrel$setBlackout(pose == null ? null : pose.blackout());
+		}
+		return pose;
+	}
+
+	private static @Nullable BodyPose bodyPose(Entity avatar) {
 		if (!(avatar instanceof Player player)) {
 			return null;
 		}
 		float partial = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
 		Integer level = TipsyRegistry.SYNCED_LEVEL.getExisting(avatar);
 		int sway = level != null && level > 0 ? level : 0;
-		float lying = BlackoutClient.lying(player, partial);
+		BlackoutPose.Body blackout = BlackoutClient.body(player, partial);
 		float jolt = hiccupJolt(player, partial);
 		float lurch = stumbleLurch(player, partial);
 		float fallen = tripFallen(player, partial);
-		if (sway == 0 && lying <= 0.0F && jolt <= 0.0F && lurch == 0.0F && fallen <= 0.0F) {
+		if (sway == 0 && blackout == null && jolt <= 0.0F && lurch == 0.0F && fallen <= 0.0F) {
 			return null;
 		}
-		return new BodyPose(sway, lying, jolt, lurch, fallen);
-	}
-
-	/** How far a blacked-out player lies tipped over on the ground (0 to 1) for its render state, or null if not at all. */
-	public static @Nullable Float blackoutLying(Entity avatar) {
-		float lying = avatar instanceof Player player
-			? BlackoutClient.lying(player, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false)) : 0.0F;
-		return lying > 0.0F ? lying : null;
+		return new BodyPose(sway, blackout, jolt, lurch, fallen);
 	}
 
 	/**
-	 * Before a living entity is drawn (as late as possible, after other mods): tips a blacked-out player over, lays a
-	 * tripped one on the face, or leans a tipsy one (with a hiccup's bob and a stumble's lurch). {@code pose} is the
-	 * {@link #bodyPose} its render state carries. Returns true if a pose was pushed, which {@link #afterRenderLiving}
-	 * must then pop.
+	 * Before a living entity is drawn (as late as possible, after other mods): lays a blacked-out player on the ground
+	 * (and gets them up again), lays a tripped one on the face, or leans a tipsy one (with a hiccup's bob and a stumble's
+	 * lurch). {@code pose} is the {@link #bodyPose} its render state carries. Returns true if a pose was pushed, which
+	 * {@link #afterRenderLiving} must then pop.
 	 */
 	public static boolean beforeRenderLiving(LivingEntityRenderState state, @Nullable BodyPose pose, PoseStack stack) {
 		if (pose == null || state.hasPose(Pose.SLEEPING)) {
@@ -476,13 +499,15 @@ public final class TipsyClient
 		}
 		int entityId = state instanceof AvatarRenderState avatar ? avatar.id : 0;
 		float facing = 180.0F - state.bodyRot;
-		if (pose.lying() > 0.0F) {
-			// A blacked-out player falls over sideways around the feet, lifted a little so the body rests on the ground
-			// (always shown: it is the blackout's show)
+		BlackoutPose.Body blackout = pose.blackout();
+		if (blackout != null) {
+			// Out on the ground: the whole body turns around its hip, wherever the hip is now, turned the way it fell (head
+			// and limbs are posed on the model: poseBlackout); always shown, it is the blackout's show
 			stack.pushPose();
-			stack.translate(0.0F, BlackoutPose.LIFT * pose.lying() * state.scale, 0.0F);
-			stack.rotateDegrees(Axis.YP, facing);
-			stack.rotateDegrees(Axis.ZP, BlackoutPose.bodyAngle(pose.lying(), BlackoutPose.side(entityId)));
+			stack.rotateDegrees(Axis.YP, facing - blackout.turn());
+			stack.translate(blackout.hip().x * state.scale, blackout.hip().y * state.scale, blackout.hip().z * state.scale);
+			stack.rotateDegrees(Axis.XP, -blackout.lean());
+			stack.translate(0.0, -BlackoutPose.HIP * state.scale, 0.0);
 			stack.rotateDegrees(Axis.YP, -facing);
 			return true;
 		}
@@ -507,6 +532,58 @@ public final class TipsyClient
 		stack.rotateDegrees(Axis.ZP, sway);
 		stack.rotateDegrees(Axis.YP, -facing);
 		return true;
+	}
+
+	/**
+	 * At the end of a humanoid model's posing (the player's, and the armour's and the cape's drawn with it): a blacked-out
+	 * player on the ground has head and limbs where the fall, lying and getting up put them, with only as much of the
+	 * game's own posing (looking around, the arms' idle sway, a held item's arm) as {@link BlackoutPose.Body#vanilla} lets
+	 * through (none while down, all of it standing); the sleeves, trousers and hat, the armour and what the hands hold
+	 * come along. Called by {@code jexxme.vineandbarrel.mixin.HumanoidModelMixin}.
+	 */
+	public static void poseBlackout(HumanoidModel<?> model, HumanoidRenderState state) {
+		if (!(state instanceof BlackoutCarrier carrier)) {
+			return;
+		}
+		BlackoutPose.Body body = carrier.vineandbarrel$blackout();
+		if (body == null) {
+			return;
+		}
+		float vanilla = body.vanilla();
+		pose(model.head, body.head(), vanilla);
+		pose(model.rightArm, body.rightArm(), vanilla);
+		pose(model.leftArm, body.leftArm(), vanilla);
+		pose(model.rightLeg, body.rightLeg(), vanilla);
+		pose(model.leftLeg, body.leftLeg(), vanilla);
+	}
+
+	private static void pose(ModelPart part, BlackoutPose.Limb limb, float vanilla) {
+		part.xRot = limb.xRot() + vanilla * part.xRot;
+		part.yRot = limb.yRot() + vanilla * part.yRot;
+		part.zRot = limb.zRot() + vanilla * part.zRot;
+		part.x += limb.x();
+		part.y += limb.y();
+		part.z += limb.z();
+	}
+
+	/**
+	 * Once the game has worked out an entity's round shadow: a blacked-out player's shrinks away as the body goes down on
+	 * the face (it lies ahead of the feet, where the shadow is) and grows back as the hip comes up again. Called by
+	 * {@code jexxme.vineandbarrel.mixin.EntityRendererMixin}.
+	 */
+	public static void blackoutShadow(Entity entity, EntityRenderState state) {
+		if (!(entity instanceof Player player) || state.shadowPieces.isEmpty()) {
+			return;
+		}
+		BlackoutPose.Body body = BlackoutClient.body(player, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false));
+		if (body == null) {
+			return;
+		}
+		float up = Mth.clamp((float) (body.hip().y / BlackoutPose.HIP), 0.0F, 1.0F);
+		state.shadowRadius *= up * up;
+		if (up * up < 0.05F) {
+			state.shadowPieces.clear();
+		}
 	}
 
 	/** After a living entity was drawn: undoes {@link #beforeRenderLiving}'s pose if it pushed one. */
