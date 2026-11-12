@@ -623,8 +623,8 @@ public final class SmokeClient implements ClientModInitializer
 				return "the screen is " + mc.gui.screen();
 			}
 			ScenePlayer player = screen.player();
-			if (player.scene().steps().size() != 5) {
-				return "the barrel scene has " + player.scene().steps().size() + " steps instead of 5";
+			if (player.scene().steps().size() != 6) {
+				return "the barrel scene has " + player.scene().steps().size() + " steps instead of 6";
 			}
 			return player.step() == 1 && player.tick() > 30 ? null : "the scene is at step " + player.step() + ", tick " + player.tick();
 		}, "watch_barrel", false));
