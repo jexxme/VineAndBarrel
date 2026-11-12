@@ -1,0 +1,6 @@
+{
+  "parent": "vineandbarrel:block/template_vine_particle",
+  "textures": {
+    "vine": "vineandbarrel:block/hop_vine_on_trellis_stage2"
+  }
+}

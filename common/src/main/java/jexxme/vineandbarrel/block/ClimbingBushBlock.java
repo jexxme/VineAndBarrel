@@ -64,6 +64,8 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 	private static final VoxelShape FOOT_PLANES_X = Block.box(0.0, 0.0, 5.0, 16.0, 16.0, 11.0);
 	private static final VoxelShape FOOT_PLANES_Z = Block.box(5.0, 0.0, 0.0, 11.0, 16.0, 16.0);
 	private static final VoxelShape FOOT_WOUND = Block.column(12.0, 0.0, 16.0);
+	/** The foot of a vine crossed through a chain: two crossed planes. */
+	private static final VoxelShape FOOT_CROSS = Shapes.or(Block.box(0.0, 0.0, 7.0, 16.0, 16.0, 9.0), Block.box(7.0, 0.0, 0.0, 9.0, 16.0, 16.0));
 
 	private final Supplier<? extends Block> ropeVine;
 	private final Supplier<? extends Block> trellisVine;
@@ -258,6 +260,8 @@ public class ClimbingBushBlock extends ClimbingCropBlock implements PlayerDestro
 			bush = planes == Direction.Axis.X ? (age == 0 ? FOOT_SHOOT_X : FOOT_PLANES_X) : (age == 0 ? FOOT_SHOOT_Z : FOOT_PLANES_Z);
 		} else if (state.getValue(SUPPORT) == BushSupport.ROPE) {
 			bush = age == 0 ? SHAPE_SAPLING : FOOT_WOUND;
+		} else if (state.getValue(SUPPORT) == BushSupport.CROSS) {
+			bush = age == 0 ? SHAPE_SAPLING : FOOT_CROSS;
 		} else {
 			bush = switch (age) {
 				case 0 -> SHAPE_SAPLING;

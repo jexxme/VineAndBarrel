@@ -50,11 +50,8 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 {
 	public static final BooleanProperty BASE = BooleanProperty.create("base");
 	public static final EnumProperty<SupportLook> LOOK = EnumProperty.create("look", SupportLook.class);
-	private static final VoxelShape LEAVES_CROSS = Block.column(12.0, 0.0, 16.0);
-	private static final VoxelShape LEAVES_THIN_X = Block.box(0.0, 0.0, 4.5, 16.0, 16.0, 11.5);
-	private static final VoxelShape LEAVES_THIN_Z = Block.box(4.5, 0.0, 0.0, 11.5, 16.0, 16.0);
-	private static final VoxelShape LEAVES_WIDE_X = Block.box(0.0, 0.0, 3.0, 16.0, 16.0, 13.0);
-	private static final VoxelShape LEAVES_WIDE_Z = Block.box(3.0, 0.0, 0.0, 13.0, 16.0, 16.0);
+	/** Two crossed planes through a chain. */
+	private static final VoxelShape LEAVES_CROSS = Shapes.or(Block.box(0.0, 0.0, 7.0, 16.0, 16.0, 9.0), Block.box(7.0, 0.0, 0.0, 9.0, 16.0, 16.0));
 	/** The root's young shoot (age 0), as small as the bush's sapling. */
 	private static final VoxelShape SHOOT = Block.column(10.0, 0.0, 8.0);
 
@@ -99,21 +96,21 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 		return new VineSupportBlockEntity(pos, state);
 	}
 
-	private static VoxelShape leaves(SupportLook look) {
-		return switch (look) {
-			case CROSS -> LEAVES_CROSS;
-			case THIN_X -> LEAVES_THIN_X;
-			case THIN_Z -> LEAVES_THIN_Z;
-			case WIDE_X -> LEAVES_WIDE_X;
-			case WIDE_Z -> LEAVES_WIDE_Z;
-		};
-	}
-
+	/**
+	 * The outline follows what is drawn ({@link SupportLeaves}): on a fence, wall or bars the leaves sit close on the
+	 * block's own faces, so it is the block's own outline; through a chain, the crossed planes; a young root, its shoot.
+	 */
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		BlockState support = VineSupports.supportAt(level, pos);
-		VoxelShape leaves = state.getValue(BASE) && state.getValue(AGE) == 0 ? SHOOT : leaves(state.getValue(LOOK));
-		return support == null ? leaves : Shapes.or(support.getShape(level, pos, context), leaves);
+		if (state.getValue(BASE) && state.getValue(AGE) == 0) {
+			return support == null ? SHOOT : Shapes.or(support.getShape(level, pos, context), SHOOT);
+		}
+		if (support == null) {
+			return LEAVES_CROSS;
+		}
+		VoxelShape own = support.getShape(level, pos, context);
+		return SupportLeaves.crossed(support) ? Shapes.or(own, LEAVES_CROSS) : own;
 	}
 
 	/** The support is still there: you bump into the fence or wall as before, the leaves let you through. */

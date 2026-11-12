@@ -1,5 +1,15 @@
 {
   "variants": {
+    "age=0,support=cross,trellis=none": {
+      "model": "vineandbarrel:block/grape_bush_cross_stage0"
+    },
+    "age=0,support=cross,trellis=x": {
+      "model": "vineandbarrel:block/grape_bush_in_trellis_stage0"
+    },
+    "age=0,support=cross,trellis=z": {
+      "model": "vineandbarrel:block/grape_bush_in_trellis_stage0",
+      "y": 90
+    },
     "age=0,support=faces_x,trellis=none": {
       "model": "vineandbarrel:block/grape_bush_on_trellis_stage0"
     },
@@ -60,6 +70,16 @@
     },
     "age=0,support=trellis_z,trellis=z": {
       "model": "vineandbarrel:block/grape_bush_in_trellis_stage0",
+      "y": 90
+    },
+    "age=1,support=cross,trellis=none": {
+      "model": "vineandbarrel:block/grape_bush_cross_stage1"
+    },
+    "age=1,support=cross,trellis=x": {
+      "model": "vineandbarrel:block/grape_bush_in_trellis_stage1"
+    },
+    "age=1,support=cross,trellis=z": {
+      "model": "vineandbarrel:block/grape_bush_in_trellis_stage1",
       "y": 90
     },
     "age=1,support=faces_x,trellis=none": {
@@ -124,6 +144,16 @@
       "model": "vineandbarrel:block/grape_bush_in_trellis_stage1",
       "y": 90
     },
+    "age=2,support=cross,trellis=none": {
+      "model": "vineandbarrel:block/grape_bush_cross_stage2"
+    },
+    "age=2,support=cross,trellis=x": {
+      "model": "vineandbarrel:block/grape_bush_in_trellis_stage2"
+    },
+    "age=2,support=cross,trellis=z": {
+      "model": "vineandbarrel:block/grape_bush_in_trellis_stage2",
+      "y": 90
+    },
     "age=2,support=faces_x,trellis=none": {
       "model": "vineandbarrel:block/grape_bush_on_trellis_stage2"
     },
@@ -184,6 +214,16 @@
     },
     "age=2,support=trellis_z,trellis=z": {
       "model": "vineandbarrel:block/grape_bush_in_trellis_stage2",
+      "y": 90
+    },
+    "age=3,support=cross,trellis=none": {
+      "model": "vineandbarrel:block/grape_bush_cross_stage3"
+    },
+    "age=3,support=cross,trellis=x": {
+      "model": "vineandbarrel:block/grape_bush_in_trellis_stage3"
+    },
+    "age=3,support=cross,trellis=z": {
+      "model": "vineandbarrel:block/grape_bush_in_trellis_stage3",
       "y": 90
     },
     "age=3,support=faces_x,trellis=none": {
