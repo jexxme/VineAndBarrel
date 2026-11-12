@@ -255,10 +255,18 @@ loom {
             programArgs '--width', '854', '--height', '480', '--username', 'SmokeRefused', '--quickPlayMultiplayer', "127.0.0.1:${smokePort - 5}"
         }
 
-        configureEach {
+        configureEach { run ->
             // OSHI's Windows process query through the registry fails on non-English Windows and logs an ERROR while
             // Minecraft writes its system report; the PDH query it falls back to works everywhere
             property 'oshi.os.windows.hkeyperfdata', 'false'
+            // LWJGL unpacks its native libraries into one temporary folder that every game on the machine shares, and
+            // writes them again when they are not there yet. Two clients that start at the same moment on a fresh
+            // machine (a LAN host and the client that joins it, on a CI runner) then write and load the same files at
+            // once, and one of them crashes (SIGBUS in dlopen, or "no OpenGL context management API"). So every smoke
+            // client unpacks them into its own run folder (its prepare task makes the folder; the servers have none).
+            if (run.name.startsWith('smoke') && !run.name.startsWith('smokeDedicatedServer')) {
+                property 'org.lwjgl.system.SharedLibraryExtractPath', project.file("${run.runDir}/natives").absolutePath
+            }
         }
     }
 }
@@ -351,6 +359,9 @@ smokeDirs.each { name ->
             def mods = new File(dir, 'mods')
             mods.deleteDir()
             mods.mkdirs()
+            // The folder of the property org.lwjgl.system.SharedLibraryExtractPath (see the runs): an older LWJGL does
+            // not make it, logs an exception and falls back to the shared temporary folder
+            new File(dir, 'natives').mkdirs()
             new File(dir, 'options.txt').text = [
                 'pauseOnLostFocus:false', 'soundCategory_master:0.0', 'renderDistance:6', 'simulationDistance:6',
                 'onboardAccessibility:false', 'skipMultiplayerWarning:true', 'tutorialStep:none', 'joinedFirstServer:true',
