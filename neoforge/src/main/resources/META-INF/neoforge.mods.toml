@@ -45,7 +45,8 @@ config = "${mod_id}.mixins.json"
 [[dependencies.${mod_id}]]
     modId = "jei"
     type = "optional"
-    versionRange = "*"
+    # The kettle's and barrel's recipe pages and their Watch it buttons: everything they use is in JEI's first 26.3 build
+    versionRange = "[31.0.0.3,)"
     ordering = "NONE"
     side = "BOTH"
 
