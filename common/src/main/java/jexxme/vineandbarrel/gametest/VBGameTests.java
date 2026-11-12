@@ -49,8 +49,9 @@ import java.util.function.Consumer;
  * has setup code. A test that needs such a world state sets it at its own start (and undoes it when it ends):
  * vanilla's before/after-batch consumers in {@code GameTestRegistry} are private maps that only its
  * {@code @BeforeBatch} / {@code @AfterBatch} annotation scan fills, so they are not used here.</li>
- * <li><b>{@code -Dvineandbarrel.tests=<prefix>}</b>: only tests whose name starts with the prefix are added (the
- * compat run sets {@code compat_}; 26.x did this with vanilla's {@code --tests} selector).</li>
+ * <li><b>{@code -Dvineandbarrel.tests=<pattern>}</b>: only tests whose name matches are added, a pattern with
+ * {@code *} as on 26.x's {@code --tests} selector or a prefix (the compat run sets {@code compat_}); {@code -Ptests}
+ * sets it for the GameTest runs.</li>
  * </ul>
  *
  * <p>Helpers for what 26.x's {@code GameTestHelper} had and this Minecraft's lacks (use these in every test class, so
@@ -63,7 +64,7 @@ public final class VBGameTests
 {
 	static final ResourceLocation SMALL = VineAndBarrel.id("gametest/empty_5x5");
 	static final ResourceLocation LARGE = VineAndBarrel.id("gametest/empty_32x6x32");
-	/** Only tests whose name starts with this are added; not set or empty: all of them. */
+	/** Only tests whose name matches this (a pattern with {@code *}, else a prefix) are added; not set or empty: all of them. */
 	public static final String TESTS_PROPERTY = "vineandbarrel.tests";
 	private static final List<Entry> TESTS = new ArrayList<>();
 	/** The names of every test added through {@link #add} (the report gives these their {@code vineandbarrel:} id). */
@@ -161,10 +162,23 @@ public final class VBGameTests
 		}
 	}
 
-	/** Whether {@code -Dvineandbarrel.tests} lets this test run (no property: every test). */
+	/**
+	 * Whether {@code -Dvineandbarrel.tests} lets this test run (no property: every test). With a {@code *} it is a
+	 * pattern like 26.x's {@code --tests} selector ({@code kettle_*}, {@code *_juice}; {@code ./gradlew
+	 * runGameTestServer -Ptests='kettle_*'} passes it), without one a prefix (the compat run's {@code compat_}).
+	 */
 	static boolean selected(String name) {
-		String prefix = System.getProperty(TESTS_PROPERTY);
-		return prefix == null || prefix.isEmpty() || name.startsWith(prefix);
+		String pattern = System.getProperty(TESTS_PROPERTY);
+		if (pattern == null || pattern.isEmpty()) {
+			return true;
+		}
+		if (pattern.indexOf('*') < 0) {
+			return name.startsWith(pattern);
+		}
+		// every * stands for any characters, everything else for itself
+		String regex = java.util.Arrays.stream(pattern.split("\\*", -1)).map(java.util.regex.Pattern::quote)
+			.collect(java.util.stream.Collectors.joining(".*"));
+		return name.matches(regex);
 	}
 
 	/** Whether a test of this name was added through {@link #add} (so it is ours, not another mod's). */

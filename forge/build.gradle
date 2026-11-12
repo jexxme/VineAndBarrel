@@ -38,6 +38,26 @@ def hasAccessEntries = accessTransformerFile.isFile() && accessTransformerFile.r
 def mixinConfigs = ["${mod_id}.mixins.json".toString(), "${mod_id}.forge.mixins.json".toString()]
 def mixinRefmap = "${mod_id}.refmap.json".toString()
 
+// Which of this mod's GameTests the GameTest runs take: all of them, or with -Ptests=<pattern> only those whose name
+// matches, for a quick look at one area while working on it (./gradlew :forge:runGameTestServer -Ptests='kettle_*'; a
+// pattern without * is a prefix). VBGameTests reads it. The compat run always takes its own tests. verify-all.sh never passes it.
+def gameTests = providers.gradleProperty('tests').getOrElse('')
+// A -Ptests pattern that matches none of the tests: this game's GameTest server then refuses to start ("No test functions
+// were given!") or runs nothing ("All 0 required tests passed"), and exits normally, so the run would pass. As on 26.x it
+// fails instead: a report without a test is no pass.
+if (gameTests) {
+    [runGameTestServer: 'gametest.xml', runGameTestServerFd: 'gametest-fd.xml'].each { name, report ->
+        def reportFile = file("build/test-reports/${report}")
+        def pattern = gameTests
+        tasks.matching { it.name == name }.configureEach {
+            doFirst { reportFile.delete() }
+            doLast {
+                if (!reportFile.isFile() || !reportFile.text.contains('<testcase')) throw new GradleException("-Ptests='${pattern}' matched none of this mod's GameTests, or the server did not start (see the log above)")
+            }
+        }
+    }
+}
+
 legacyForge {
     version = "${minecraft_version}-${forge_version}"
     if (hasAccessEntries) {
@@ -80,6 +100,7 @@ legacyForge {
             type = "gameTestServer"
             // Only this mod's GameTests: another mod's jar in the run can carry its own
             systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'vineandbarrel.tests', gameTests // -Ptests
             systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest.xml').absolutePath // for the parity checklist
         }
 
@@ -94,6 +115,7 @@ legacyForge {
             // Only this mod's GameTests: Farmer's Delight's jar carries its own
             systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
             systemProperty 'vineandbarrel.expectFd', 'true' // fd_run_has_the_right_mods fails if FD did not load
+            systemProperty 'vineandbarrel.tests', gameTests // -Ptests
             systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest-fd.xml').absolutePath
         }
 

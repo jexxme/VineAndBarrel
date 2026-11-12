@@ -110,6 +110,25 @@ def smokePort = 25599
 // The smoke server's Tipsy decay speed (the default is 90): the joined client must show it, not its own file's value
 def SMOKE_SERVER_SETTING = 'tipsy.secondsPerLevel=97'
 
+// Which of this mod's GameTests the GameTest runs take: all of them, or with -Ptests=<pattern> only those whose name
+// matches (see forge/build.gradle)
+def gameTests = providers.gradleProperty('tests').getOrElse('')
+// A -Ptests pattern that matches none of the tests: this game's GameTest server then refuses to start ("No test functions
+// were given!") or runs nothing ("All 0 required tests passed"), and exits normally, so the run would pass. As on 26.x it
+// fails instead: a report without a test is no pass.
+if (gameTests) {
+    [runGameTest: 'gametest.xml', runGameTestFd: 'gametest-fd.xml'].each { name, report ->
+        def reportFile = new File(buildDir, "test-reports/${report}")
+        def pattern = gameTests
+        tasks.matching { it.name == name }.configureEach {
+            doFirst { reportFile.delete() }
+            doLast {
+                if (!reportFile.isFile() || !reportFile.text.contains('<testcase')) throw new GradleException("-Ptests='${pattern}' matched none of this mod's GameTests, or the server did not start (see the log above)")
+            }
+        }
+    }
+}
+
 loom {
     accessWidenerPath = project(':common').file('src/main/resources/vineandbarrel.classtweaker')
 
@@ -144,6 +163,7 @@ loom {
             source sourceSets.gametest
             runDir 'run/gametest'
             property 'fabric-api.gametest'
+            property 'vineandbarrel.tests', gameTests // -Ptests
             property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest.xml" // for the parity checklist
         }
         // The same with Farmer's Delight Refabricated on the classpath: ./gradlew :fabric:runGameTestFd
@@ -152,6 +172,7 @@ loom {
             source sourceSets.gametestFd
             runDir 'run-fd'
             property 'fabric-api.gametest'
+            property 'vineandbarrel.tests', gameTests // -Ptests
             property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest-fd.xml"
             property 'vineandbarrel.expectFd', 'true'
         }
