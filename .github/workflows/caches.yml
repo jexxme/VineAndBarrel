@@ -1,0 +1,83 @@
+name: Caches
+
+# One Gradle cache per Minecraft version (Gradle's downloads: Minecraft set up for both loaders, the libraries, the
+# clients' assets, the mods of the test runs), which .github/actions/setup restores in every workflow.
+# It is written here and nowhere else, on the default branch: a cache saved from the default branch can be read from
+# every branch, tag and pull request, one saved from another branch only from that branch. So this workflow checks out
+# the version branch it is asked for, runs what a verify runs, and saves the cache under that Minecraft version.
+# CI starts it by itself when a version branch's build files changed (ci.yml); by hand: Actions, Caches, Run workflow
+# (on the default branch), with the branch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: The version branch to build the cache for (26.3, 1.21.1, ...)
+        required: true
+
+permissions:
+  contents: read
+  actions: write # deletes this Minecraft version's older caches
+
+concurrency:
+  group: caches-${{ inputs.branch }}
+  cancel-in-progress: false
+
+jobs:
+  cache:
+    name: ${{ inputs.branch }}
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # The hidden smoke client (see verify.yml)
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      GALLIUM_DRIVER: llvmpipe
+      SDL_VIDEO_FORCE_EGL: '1'
+      ALSOFT_DRIVERS: 'null'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      # Only asks whether the cache is there: this one is built from nothing, so it never carries an older one's files
+      - uses: ./.github/actions/setup
+        id: setup
+        with:
+          cache: lookup
+          display: true
+          fd: true
+
+      - name: The build (a cache of a build that does not work is not saved)
+        if: steps.setup.outputs.cache-hit != 'true'
+        run: ./gradlew build --console=plain
+
+      - name: Everything a verify downloads and sets up (every GameTest run, a smoke client)
+        if: steps.setup.outputs.cache-hit != 'true'
+        run: |
+          # A failing test does not matter here: the downloads do
+          bash scripts/multiloader/verify-all.sh --full --no-smoke || true
+          xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' bash scripts/multiloader/verify-all.sh --quick --part=smoke-client || true
+          ./gradlew --stop
+          # With Gradle's build cache (build-cache-1): the compiled build scripts come from there in every later run
+          rm -f ~/.gradle/caches/*/*.lock ~/.gradle/caches/journal-1/*.lock
+          du -sh ~/.gradle/caches ~/.gradle/wrapper
+
+      - name: Save it as ${{ steps.setup.outputs.cache-key }}
+        if: steps.setup.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ steps.setup.outputs.cache-key }}
+
+      - name: Delete this Minecraft version's older caches
+        if: steps.setup.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh cache list -R "$GITHUB_REPOSITORY" --key 'gradle-${{ steps.setup.outputs.minecraft }}-' --limit 100 --json id,key \
+            --jq '.[] | select(.key != "${{ steps.setup.outputs.cache-key }}") | .id' | while read -r id; do
+              gh cache delete "$id" -R "$GITHUB_REPOSITORY" || true
+          done
