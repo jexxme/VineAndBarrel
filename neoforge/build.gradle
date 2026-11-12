@@ -17,6 +17,11 @@ sourceSets {
 def commonResourcesDir = project(':common').file('src/main/resources')
 def generatedResourcesDir = project(':common').file('src/generated/resources')
 
+// Which of this mod's GameTests the GameTest runs take: all of them, or with -Ptests=<pattern> only those whose name
+// matches, for a quick look at one area while working on it (./gradlew :neoforge:runGameTestServer -Ptests='blackout_*').
+// The compat run always takes its own tests. verify-all.sh never passes it.
+def gameTests = providers.gradleProperty('tests').getOrElse('*')
+
 neoForge {
     version = project.neo_version
     accessTransformers.from(commonResourcesDir.toPath().resolve('META-INF/accesstransformer.cfg').toFile().absolutePath)
@@ -51,7 +56,7 @@ neoForge {
             type = "gameTestServer"
             // Only this mod's GameTests (vanilla's --tests selector): another mod's jar in the run can carry its own, and
             // neoforge.enabledGameTestNamespaces no longer filters anything since the 26.x GameTest registry.
-            programArguments.addAll '--tests', "${project.mod_id}:*"
+            programArguments.addAll '--tests', "${project.mod_id}:${gameTests}"
             systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest.xml').absolutePath // for the parity checklist
         }
 
@@ -63,7 +68,7 @@ neoForge {
             gameDirectory = project.file('run-fd')
             // 26.1.x: only our tests. FD Neoforged's own GameTests come with its jar, and on 26.1.x its port audit
             // (village_farms_grow_fd_crops) generates thousands of chunks: minutes, and out of memory on CI runners.
-            programArguments.addAll '--tests', "${project.mod_id}:*"
+            programArguments.addAll '--tests', "${project.mod_id}:${gameTests}"
             systemProperty 'vineandbarrel.expectFd', 'true' // fd_run_has_the_right_mods fails if FD did not load
             systemProperty 'vineandbarrel.testReport', file('build/test-reports/gametest-fd.xml').absolutePath
         }
