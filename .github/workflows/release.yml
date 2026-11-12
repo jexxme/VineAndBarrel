@@ -83,12 +83,7 @@ jobs:
           newest=$(git show FETCH_HEAD:gradle.properties | grep -E '^minecraft_version=' | cut -d= -f2- | tr -d '\r')
           if [ "${mc}" = "${newest}" ]; then echo "latest=true" >> "$GITHUB_OUTPUT"; else echo "latest=false" >> "$GITHUB_OUTPUT"; fi
 
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 25
-
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: ./.github/actions/setup
 
       - name: Build, check and test (both loaders, the same GameTest runs as CI)
         run: |
