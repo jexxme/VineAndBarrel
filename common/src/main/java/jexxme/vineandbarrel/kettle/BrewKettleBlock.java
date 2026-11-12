@@ -247,6 +247,8 @@ public class BrewKettleBlock extends Block implements SimpleWaterloggedBlock, En
 			kettle.preRemoveSideEffects(pos, state);
 		}
 		level.updateNeighbourForOutputSignal(pos, this);
+		// a chimney standing on it through a roof falls with it
+		KettleChimneyBlock.checkPiecesAbove(level, pos);
 		if (!keepsBlockEntity) {
 			super.onRemove(state, level, pos, newState, movedByPiston);
 		}

@@ -28,6 +28,8 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 
 /**
@@ -35,6 +37,10 @@ import java.util.List;
  * up to {@link #MAX}). A technical block like a piston head: no item, not in the creative tab; it drops the copper ingot
  * it was made from and takes the kettle's copper stage. It stands on the kettle's chimney or on another chimney block;
  * without that it breaks (and everything above it, like sugar cane).
+ * <p>
+ * A roof in the way stays whole: the next piece goes on top of it and the pipe is drawn through the roof blocks, up to
+ * {@link #MAX_THROUGH} of them ({@link #THROUGH}, {@link #RISING}). Such a piece stands on the piece (or kettle) under
+ * the roof, whatever the roof blocks between are.
  * <p>
  * {@link #SIZE} is the kettle's size (the pipe is 4, 5 or 6 px wide); a Big Kettle's chimney stands on a block corner,
  * so its pieces are drawn off-centre, turned by {@link #FACING} like the kettle.
@@ -46,8 +52,17 @@ public class KettleChimneyBlock extends Block
 	public static final IntegerProperty SIZE = IntegerProperty.create("size", 1, 3);
 	/** The top piece: half a pipe and the cap. */
 	public static final BooleanProperty TOP = BooleanProperty.create("top");
-	/** The piece goes through a roof: a copper flashing plate lies on the roof around it and seals the hole. */
+	/**
+	 * The piece stands in a hole in a flat roof: a copper flashing plate lies on the roof around it and seals the hole.
+	 * (Chimneys from before the roof stayed whole broke the roof block and got it; new pieces only get it in a hole.)
+	 */
 	public static final BooleanProperty FLASHING = BooleanProperty.create("flashing");
+	/** The most roof blocks the pipe goes through between two pieces. */
+	public static final int MAX_THROUGH = 2;
+	/** How many roof blocks right under this piece its pipe goes through (it draws the pipe in the one just below). */
+	public static final IntegerProperty THROUGH = IntegerProperty.create("through", 0, MAX_THROUGH);
+	/** The piece above goes through two roof blocks: this one draws its pipe on up into the lower of them. */
+	public static final BooleanProperty RISING = BooleanProperty.create("rising");
 
 	private final WeatherState weatherState;
 	private final boolean waxed;
@@ -56,7 +71,8 @@ public class KettleChimneyBlock extends Block
 		super(properties);
 		this.weatherState = weatherState;
 		this.waxed = waxed;
-		registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(SIZE, 1).setValue(TOP, true).setValue(FLASHING, false));
+		registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(SIZE, 1).setValue(TOP, true).setValue(FLASHING, false)
+			.setValue(THROUGH, 0).setValue(RISING, false));
 	}
 
 	public WeatherState getWeatherState() {
@@ -69,7 +85,7 @@ public class KettleChimneyBlock extends Block
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-		builder.add(FACING, SIZE, TOP, FLASHING);
+		builder.add(FACING, SIZE, TOP, FLASHING, THROUGH, RISING);
 	}
 
 	@Override
@@ -96,11 +112,7 @@ public class KettleChimneyBlock extends Block
 		if (!held.is(Items.COPPER_INGOT)) {
 			return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 		}
-		BlockPos below = pos.below();
-		for (int i = 0; i < MAX && level.getBlockState(below).getBlock() instanceof KettleChimneyBlock; i++) {
-			below = below.below();
-		}
-		KettleMultiblock.Kettle kettle = KettleMultiblock.kettleAt(level, below);
+		KettleMultiblock.Kettle kettle = KettleMultiblock.kettleAt(level, kettleUnder(level, pos));
 		if (kettle == null || !KettleMultiblock.extendChimney(level, kettle, player)) {
 			return net.minecraft.world.ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
 		}
@@ -112,13 +124,67 @@ public class KettleChimneyBlock extends Block
 
 	// ------------------------------------------------------------------ standing on the kettle
 
+	/** What this piece stands on: the piece or kettle block right under it, or under the roof blocks it goes through. */
+	public static BlockPos foot(BlockState state, BlockPos pos) {
+		return pos.below(state.getValue(THROUGH) + 1);
+	}
+
+	/** Whether a piece can stand on {@code foot}: a piece of its size and facing, or the extended chimney of its kettle size. */
+	private static boolean standsOn(BlockState state, BlockState foot) {
+		if (foot.getBlock() instanceof KettleChimneyBlock) {
+			return foot.getValue(SIZE).equals(state.getValue(SIZE)) && foot.getValue(FACING) == state.getValue(FACING);
+		}
+		return KettleMultiblock.chimneyOf(foot) == state.getValue(SIZE) && KettleMultiblock.isExtended(foot);
+	}
+
+	/** The piece standing on the piece or kettle block at {@code foot} (right on it or through a roof), or null. */
+	public static @Nullable BlockPos pieceOn(BlockGetter level, BlockPos foot) {
+		BlockState footState = level.getBlockState(foot);
+		for (int through = 0; through <= MAX_THROUGH; through++) {
+			BlockPos at = foot.above(through + 1);
+			BlockState state = level.getBlockState(at);
+			if (state.getBlock() instanceof KettleChimneyBlock && state.getValue(THROUGH) == through && standsOn(state, footState)) {
+				return at;
+			}
+		}
+		return null;
+	}
+
+	/** The kettle block under a chimney piece, walking down the chimney (for anything else: {@code pos} itself). */
+	public static BlockPos kettleUnder(BlockGetter level, BlockPos pos) {
+		BlockPos at = pos;
+		BlockState state = level.getBlockState(at);
+		for (int i = 0; i <= MAX && state.getBlock() instanceof KettleChimneyBlock; i++) {
+			at = foot(state, at);
+			state = level.getBlockState(at);
+		}
+		return at;
+	}
+
+	/** A piece's state with its cap and its pipe up into the roof as the piece standing on it needs them. */
+	public static BlockState linked(BlockGetter level, BlockPos pos, BlockState state) {
+		BlockPos above = pieceOn(level, pos);
+		boolean rising = above != null && level.getBlockState(above).getValue(THROUGH) == MAX_THROUGH;
+		return state.setValue(TOP, above == null).setValue(RISING, rising);
+	}
+
+	/**
+	 * The piece or kettle block at {@code pos} went or changed: pieces standing on it through a roof check their footing
+	 * next tick (the game only tells the block right above).
+	 */
+	public static void checkPiecesAbove(Level level, BlockPos pos) {
+		for (int through = 1; through <= MAX_THROUGH; through++) {
+			BlockPos at = pos.above(through + 1);
+			BlockState state = level.getBlockState(at);
+			if (state.getBlock() instanceof KettleChimneyBlock && state.getValue(THROUGH) == through) {
+				level.scheduleTick(at, state.getBlock(), 1);
+			}
+		}
+	}
+
 	@Override
 	protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-		BlockState below = level.getBlockState(pos.below());
-		if (below.getBlock() instanceof KettleChimneyBlock) {
-			return below.getValue(SIZE).equals(state.getValue(SIZE)) && below.getValue(FACING) == state.getValue(FACING);
-		}
-		return KettleMultiblock.chimneyOf(below) == state.getValue(SIZE) && KettleMultiblock.isExtended(below);
+		return standsOn(state, level.getBlockState(foot(state, pos)));
 	}
 
 	/** Lost its footing (the kettle or the piece below went): breaks on the next tick, dropping its ingot. */
@@ -129,10 +195,7 @@ public class KettleChimneyBlock extends Block
 		}
 		if (direction == Direction.UP) {
 			// the top piece carries the cap: the piece under a removed top becomes the new top
-			boolean top = !(neighbourState.getBlock() instanceof KettleChimneyBlock);
-			if (state.getValue(TOP) != top) {
-				return state.setValue(TOP, top);
-			}
+			return linked(level, pos, state);
 		}
 		return state;
 	}
@@ -144,16 +207,30 @@ public class KettleChimneyBlock extends Block
 		}
 	}
 
-	/** The last piece taken off: the kettle's chimney gets its own cap back. */
+	/**
+	 * A piece taken off: the piece under it (under the roof, too) gets the cap back, or the kettle's chimney its own if it
+	 * was the last; pieces standing on it through a roof fall like the rest.
+	 */
 	@Override
 	protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		if (state.is(newState.getBlock())) {
+			// only a change of cap or pipe: the piece is still there
+			super.onRemove(state, level, pos, newState, movedByPiston);
+			return;
+		}
 		if (!KettleMultiblock.isConverting()) {
-			BlockPos below = pos.below();
-			BlockState kettle = level.getBlockState(below);
-			if (KettleMultiblock.isExtended(kettle) && !(newState.getBlock() instanceof KettleChimneyBlock)) {
-				level.setBlock(below, KettleMultiblock.withExtended(kettle, false), Block.UPDATE_ALL);
+			BlockPos foot = foot(state, pos);
+			BlockState below = level.getBlockState(foot);
+			if (below.getBlock() instanceof KettleChimneyBlock) {
+				BlockState linked = linked(level, foot, below);
+				if (linked != below) {
+					level.setBlock(foot, linked, Block.UPDATE_ALL);
+				}
+			} else if (KettleMultiblock.isExtended(below) && pieceOn(level, foot) == null) {
+				level.setBlock(foot, KettleMultiblock.withExtended(below, false), Block.UPDATE_ALL);
 			}
 		}
+		checkPiecesAbove(level, pos);
 		super.onRemove(state, level, pos, newState, movedByPiston);
 	}
 

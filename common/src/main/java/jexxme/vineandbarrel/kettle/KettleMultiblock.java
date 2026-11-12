@@ -83,21 +83,15 @@ public final class KettleMultiblock
 
 		/** How many extension blocks stand on the chimney (0 to {@link KettleChimneyBlock#MAX}). */
 		public int extension(BlockGetter level) {
-			int n = 0;
-			BlockPos pos = chimney().above();
-			while (n < KettleChimneyBlock.MAX && level.getBlockState(pos).getBlock() instanceof KettleChimneyBlock) {
-				n++;
-				pos = pos.above();
-			}
-			return n;
+			return column(level, this).pieces().size();
 		}
 
 		/** The top of the chimney (its cap), where its steam comes out, in world coordinates. */
 		public Vec3 chimneyTop(BlockGetter level) {
 			Vec3 centre = centre();
-			int extension = extension(level);
-			double y = extension == 0 ? controller.getY() + KettleGeometry.chimneyTop(shape) / 16.0D
-				: chimney().getY() + extension + KettleGeometry.PIECE_TOP / 16.0D;
+			List<BlockPos> pieces = column(level, this).pieces();
+			double y = pieces.isEmpty() ? controller.getY() + KettleGeometry.chimneyTop(shape) / 16.0D
+				: pieces.getLast().getY() + KettleGeometry.PIECE_TOP / 16.0D;
 			return new Vec3(centre.x, y, centre.z);
 		}
 
@@ -151,10 +145,50 @@ public final class KettleMultiblock
 	}
 
 	/**
+	 * A kettle's chimney as it stands: its pieces from the bottom up (each on the one before, right on it or through up to
+	 * {@link KettleChimneyBlock#MAX_THROUGH} roof blocks), and where the next piece goes with how many roof blocks it
+	 * passes on the way ({@code next} is null when it can't grow: eight pieces, a third roof block, a block that holds
+	 * things, another chimney or the top of the world).
+	 */
+	public record Column(List<BlockPos> pieces, @Nullable BlockPos next, int through)
+	{
+	}
+
+	public static Column column(BlockGetter level, Kettle kettle) {
+		List<BlockPos> pieces = new ArrayList<>();
+		BlockPos foot = kettle.chimney();
+		for (BlockPos on; pieces.size() < KettleChimneyBlock.MAX && (on = KettleChimneyBlock.pieceOn(level, foot)) != null; foot = on) {
+			pieces.add(on);
+		}
+		if (pieces.size() < KettleChimneyBlock.MAX) {
+			for (int through = 0; through <= KettleChimneyBlock.MAX_THROUGH; through++) {
+				BlockPos at = foot.above(through + 1);
+				if (level.isOutsideBuildHeight(at)) {
+					break;
+				}
+				BlockState there = level.getBlockState(at);
+				if (there.canBeReplaced()) {
+					return new Column(pieces, at, through);
+				}
+				if (!isRoof(there)) {
+					break;
+				}
+			}
+		}
+		return new Column(pieces, null, 0);
+	}
+
+	/** A block the pipe goes through and leaves as it is: anything solid that holds nothing and isn't a kettle or chimney. */
+	private static boolean isRoof(BlockState state) {
+		return !state.canBeReplaced() && !state.hasBlockEntity() && !(state.getBlock() instanceof KettleChimneyBlock)
+			&& !(state.getBlock() instanceof BrewKettleBlock) && !(state.getBlock() instanceof BrewKettlePartBlock);
+	}
+
+	/**
 	 * A copper ingot on a kettle or its chimney: the chimney grows one block, up to {@link KettleChimneyBlock#MAX}. A roof
-	 * block in the way is broken through (it drops as if mined) and the piece in it gets a copper flashing that seals the
-	 * hole; unbreakable blocks and blocks that hold things (chests, kettles) stop it. Hanging kettles have no room for a
-	 * chimney. Returns whether it grew; the new piece shows a glint and makes the copper sound.
+	 * in the way stays whole: the piece goes on top of it and its pipe is drawn through (up to two roof blocks); blocks
+	 * that hold things (chests, kettles) and thicker roofs stop it. Hanging kettles have no room for a chimney. Returns
+	 * whether it grew; the new piece shows a glint and makes the copper sound.
 	 */
 	public static boolean extendChimney(Level level, Kettle kettle, net.minecraft.world.entity.player.@Nullable Player player) {
 		BlockPos base = kettle.chimney();
@@ -163,46 +197,27 @@ public final class KettleMultiblock
 		if (size == 0) {
 			return false;
 		}
-		int extension = kettle.extension(level);
-		if (extension >= KettleChimneyBlock.MAX) {
-			return false;
-		}
-		BlockPos at = base.above(extension + 1);
-		BlockState there = level.getBlockState(at);
-		boolean through = !there.canBeReplaced();
-		if (!level.isInWorldBounds(at) || through && (there.hasBlockEntity() || there.getDestroySpeed(level, at) < 0.0F
-			|| there.getDestroySpeed(level, at) > ROOF_HARDNESS || there.getBlock() instanceof KettleChimneyBlock
-			|| player == null || !player.mayBuild() || !level.mayInteract(player, at))) {
+		Column column = column(level, kettle);
+		BlockPos at = column.next();
+		if (at == null || !level.isInWorldBounds(at) || player != null && (!player.mayBuild() || !level.mayInteract(player, at))) {
 			return false;
 		}
 		if (!level.isClientSide()) {
-			// a roof block in the way is broken as the player would break it (protection, claims and break events apply)
-			if (through) {
-				// the ingot in hand is no pickaxe: the roof block drops all the same, as mined with the right tool
-				boolean creative = player instanceof net.minecraft.server.level.ServerPlayer mining ? mining.gameMode.isCreative() : player.isCreative();
-				boolean addDrops = !creative && !player.hasCorrectToolForDrops(there);
-				if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer && serverPlayer.gameMode.destroyBlock(at))) {
-					return false;
-				}
-				if (addDrops) {
-					Block.dropResources(there, level, at);
-				}
-				// a block that leaves something behind when broken (a vine its trellis or rope) stops the chimney there
-				if (!level.getBlockState(at).canBeReplaced()) {
-					return false;
-				}
-			}
 			Block piece = KettleRegistry.chimneyOf(KettleRegistry.singleOf(baseState.getBlock()));
+			// (the flashing only for a piece in a hole in a flat roof: one going through a roof leaves the roof as it is)
 			BlockState state = piece.defaultBlockState().setValue(KettleChimneyBlock.FACING, kettle.facing())
 				.setValue(KettleChimneyBlock.SIZE, size).setValue(KettleChimneyBlock.TOP, true)
-				.setValue(KettleChimneyBlock.FLASHING, through || KettleChimneyBlock.inRoof(level, at));
-			if (extension == 0) {
+				.setValue(KettleChimneyBlock.THROUGH, column.through())
+				.setValue(KettleChimneyBlock.FLASHING, column.through() == 0 && KettleChimneyBlock.inRoof(level, at));
+			level.setBlock(at, state, Block.UPDATE_ALL);
+			if (column.pieces().isEmpty()) {
 				level.setBlock(base, withExtended(baseState, true), Block.UPDATE_ALL);
 			} else {
-				BlockPos below = at.below();
-				level.setBlock(below, level.getBlockState(below).setValue(KettleChimneyBlock.TOP, false), Block.UPDATE_ALL);
+				// the piece under it gives up its cap (and draws its pipe on up into a two-block roof)
+				BlockPos below = column.pieces().getLast();
+				BlockState belowState = level.getBlockState(below);
+				level.setBlock(below, KettleChimneyBlock.linked(level, below, belowState), Block.UPDATE_ALL);
 			}
-			level.setBlock(at, state, Block.UPDATE_ALL);
 			if (level instanceof ServerLevel server) {
 				// a copper glint where the new piece stands
 				server.sendParticles(new net.minecraft.core.particles.DustParticleOptions(Vec3.fromRGB24(0xE3826C).toVector3f(), 0.8F), at.getX() + 0.5D, at.getY() + 0.5D, at.getZ() + 0.5D, 10, 0.25D, 0.4D, 0.25D, 0.0D);
@@ -211,9 +226,6 @@ public final class KettleMultiblock
 		}
 		return true;
 	}
-
-	/** The hardest block a chimney breaks through: roofs (planks, tiles, slabs, stone, bricks, deepslate), not obsidian. */
-	private static final float ROOF_HARDNESS = 3.0F;
 
 	/** Whether every block of {@code kettle} is still the right part (false once it was split or broken). */
 	public static boolean isIntact(BlockGetter level, Kettle kettle) {
@@ -444,11 +456,7 @@ public final class KettleMultiblock
 	 * The kettle behind a part block, a chimney piece (walking down the chimney) or a kettle: its controller, or null.
 	 */
 	public static @Nullable BrewKettleBlockEntity controllerUnder(Level level, BlockPos pos) {
-		BlockPos at = pos;
-		for (int i = 0; i <= KettleChimneyBlock.MAX && level.getBlockState(at).getBlock() instanceof KettleChimneyBlock; i++) {
-			at = at.below();
-		}
-		return controller(level, at);
+		return controller(level, KettleChimneyBlock.kettleUnder(level, pos));
 	}
 
 	/** The share of the brew a broken part block drops with, once (see {@link #split}). */
@@ -487,6 +495,8 @@ public final class KettleMultiblock
 	public static void restage(Level level, Kettle kettle, Block single) {
 		Block part = KettleRegistry.partOf(single);
 		Block chimney = KettleRegistry.chimneyOf(single);
+		// (found before the kettle changes: the pieces stand on its chimney block)
+		List<BlockPos> pieces = column(level, kettle).pieces();
 		converting = true;
 		try {
 			for (BlockPos pos : kettle.positions()) {
@@ -496,13 +506,9 @@ public final class KettleMultiblock
 					level.setBlock(pos, target.withPropertiesOf(state), Block.UPDATE_ALL_IMMEDIATE);
 				}
 			}
-			// the chimney's extension weathers with the kettle
-			BlockPos pos = kettle.chimney().above();
-			for (int i = 0; i < KettleChimneyBlock.MAX; i++, pos = pos.above()) {
+			// the chimney's extension weathers with the kettle, above a roof too
+			for (BlockPos pos : pieces) {
 				BlockState state = level.getBlockState(pos);
-				if (!(state.getBlock() instanceof KettleChimneyBlock)) {
-					break;
-				}
 				if (state.getBlock() != chimney) {
 					level.setBlock(pos, chimney.withPropertiesOf(state), Block.UPDATE_ALL_IMMEDIATE);
 				}
