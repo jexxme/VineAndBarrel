@@ -74,7 +74,8 @@ public final class WatchClient
 			}
 		}
 		Optional<net.minecraft.resources.Identifier> scene = WatchIndex.INSTANCE.forItem(hovered);
-		return scene.isPresent() && WatchScreen.open(scene.get(), 0, null, screen);
+		// a wort bucket opens the barrel scene for that wort, a mug for a drink served in one
+		return scene.isPresent() && WatchScreen.open(scene.get(), 0, null, screen, WatchIndex.INSTANCE.recipeFor(scene.get(), hovered));
 	}
 
 	/** Whether a key now types into a text field (a search box, a sign, the anvil's name): then it isn't the watch key. */
@@ -106,7 +107,7 @@ public final class WatchClient
 				entry = WatchIndex.INSTANCE.forBlock(minecraft.level, pos, minecraft.level.getBlockState(pos));
 			}
 			if (entry.isPresent()) {
-				WatchScreen.open(entry.get().scene(), entry.get().step(), entry.get().now().map(Component::translatable).orElse(null), null);
+				WatchScreen.open(entry.get().scene(), entry.get().step(), entry.get().now().map(Component::translatable).orElse(null), null, entry.get().recipe());
 			} else if (WatchPathScreen.available()) {
 				minecraft.gui.setScreen(new WatchPathScreen(null));
 			}
