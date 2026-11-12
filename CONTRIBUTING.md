@@ -13,6 +13,8 @@ Both jars contain the common code.
 ./gradlew runData                        # regenerate common/src/generated/resources (commit the result)
 ./gradlew :neoforge:runGameTestServer    # in-world tests on NeoForge, headless
 ./gradlew :fabric:runGameTest            # the same tests on Fabric
+./gradlew :neoforge:runGameTestServer -Ptests='kettle_*'   # only the tests whose name matches, while working on one area
+./gradlew :fabric:runGameTest -Pwith=<modrinth project>:<version>   # the same tests with another mod installed (see below)
 ./gradlew gameTestsAll                   # NeoForge without and with Farmer's Delight and the compat run, Fabric without and with FD Refabricated
 bash scripts/multiloader/verify-all.sh          # quick: after each round of changes
 bash scripts/multiloader/verify-all.sh --full   # everything: before merging and before tagging
@@ -50,6 +52,15 @@ it, on the default branch, so every branch, tag and pull request can read it; CI
 a version branch's build files changed.
 
 On Fabric the Farmer's Delight run uses Farmer's Delight Refabricated from Modrinth's Maven, nothing to build.
+
+To check the mod next to another one, `-Pwith=<mod>,<mod>...` puts those mods into the GameTest runs (with and without
+Farmer's Delight) and the first Fabric smoke client: `<project>:<version>` from Modrinth's Maven (the version number or
+its id, as on the mod's Modrinth page), or any `group:name:version`. The jars go into the run's mods folder the way a
+player installs them, so the libraries nested in them load too (as a dev dependency they would not); the next run without
+`-Pwith` takes them out again. Name the other mod's own dependencies as well, for example
+`-Pwith=kaleidoscope-tavern-refabricated:1.2.0.14-fabric+mc26.3,forge-config-api-port:26.3.1`. `-Pwith.java=21` runs
+those games on another Java, for a mod built for a newer Java than the branch's Minecraft. Forge 1.20.1 runs on other
+names than the published jars, so there they are remapped onto the run's classpath instead. The merge gate never uses it.
 
 On the 26.x branches the Farmer's Delight run needs a Farmer's Delight Neoforged jar **for the same Minecraft version**
 (`1.21.1` and `1.20.1` download the original Farmer's Delight themselves): build the matching
