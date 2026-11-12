@@ -2,10 +2,10 @@
   "type": "vineandbarrel:brewing",
   "recipe_book_tab": "juices",
   "ingredients": [
-    "vineandbarrel:white_grapes",
-    "vineandbarrel:white_grapes",
-    "vineandbarrel:white_grapes",
-    "vineandbarrel:white_grapes",
+    "#vineandbarrel:grapes/white",
+    "#vineandbarrel:grapes/white",
+    "#vineandbarrel:grapes/white",
+    "#vineandbarrel:grapes/white",
     "minecraft:sugar"
   ],
   "result": {

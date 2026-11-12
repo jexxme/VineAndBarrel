@@ -6,7 +6,7 @@
       "conditions": {
         "items": [
           {
-            "items": "vineandbarrel:red_grapes"
+            "items": "#vineandbarrel:grapes/red"
           }
         ]
       }
