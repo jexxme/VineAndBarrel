@@ -6,7 +6,7 @@
       "conditions": {
         "items": [
           {
-            "items": ["vineandbarrel:white_grapes"]
+            "tag": "vineandbarrel:grapes/white"
           }
         ]
       }
