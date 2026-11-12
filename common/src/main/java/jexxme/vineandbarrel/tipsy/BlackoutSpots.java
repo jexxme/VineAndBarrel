@@ -24,6 +24,7 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.vehicle.DismountHelper;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.attribute.BedRule;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.attribute.EnvironmentAttributes;
@@ -77,6 +78,11 @@ public final class BlackoutSpots
 	/** How far around a roof the fall is checked. */
 	static final int ROOF_EDGE = 8;
 	public static final int BOAT_RANGE = 48;
+	/**
+	 * The farmyard's feet are this many blocks from the animal (or one more), and the tavern's from the barrel: the body
+	 * lying toward it ends a block or two short of it.
+	 */
+	public static final int FARMYARD_FROM = 3, TAVERN_FROM = 3;
 	/** No monster this close to a wake-up spot. */
 	public static final int MONSTER_FREE = 8;
 
@@ -109,7 +115,7 @@ public final class BlackoutSpots
 			case SOMEONE_ELSES_BED -> someoneElsesBed(level, player, VILLAGER_RANGE, random);
 			case ON_THE_ROOF -> onTheRoof(level, from, ROOF_RANGE, random);
 			case IN_A_BOAT -> inABoat(level, from, BOAT_RANGE, random);
-			case RIGHT_HERE -> new Wake(ending, player.position(), player.getYRot(), null, null);
+			case RIGHT_HERE -> new Wake(ending, player.position(), Blackout.fallYaw(player), null, null);
 		};
 	}
 
@@ -193,6 +199,105 @@ public final class BlackoutSpots
 		return VillageStructures.villageAt(level, pos).isValid();
 	}
 
+	// ------------------------------------------------------------------ room to lie on the face
+
+	/**
+	 * A body lying on its face reaches this far ahead of its feet (blocks, to the top of the head); the body (torso, head,
+	 * legs) is this wide either side of the middle, and the arms reach this far out by the shoulders and hips.
+	 */
+	static final double LIE_LENGTH = 2.05, BODY_HALF = 0.22, ARM_REACH = 0.6;
+	/** The arms lie out to the sides between these distances ahead of the feet, and rise this high getting up (blocks). */
+	private static final double ARMS_FROM = 0.75, ARMS_TO = 1.5, ARMS_HIGH = 0.6;
+	/** The ways round tried for a body that has no room ahead (degrees from where it faces): the nearest first. */
+	private static final float[] LIE_TURNS = {0.0F, 22.5F, -22.5F, 45.0F, -45.0F, 67.5F, -67.5F, 90.0F, -90.0F, 112.5F, -112.5F, 135.0F, -135.0F,
+		157.5F, -157.5F, 180.0F};
+	/**
+	 * On a small pile of hay, the body only needs hay under the hips, belly and chest (this far ahead of the feet, blocks):
+	 * the legs and the head may stick out over the edge of the pile. Hay piles are small humps of bales at two heights.
+	 */
+	private static final double HAY_FROM = 1.0, HAY_TO = 1.8;
+
+	/**
+	 * {@return whether a player with the feet at {@code feet} has room to fall on the face facing {@code yaw}, lie there and
+	 * get up again} Under the body (torso, head, legs) the floor goes on level for its whole length, no edge to hang
+	 * over and no step up into, and nothing is in its way as it goes down (the quarter circle the head sweeps); out to
+	 * the sides the arms only need nothing to be inside (one may hang over the edge of a haystack or a roof). A sixteenth
+	 * of a block either way is the same floor (a carpet, a path). Both sides use it, the server for where a player falls
+	 * and for the wake-up spots, so it only reads blocks.
+	 */
+	public static boolean lieRoom(CollisionGetter level, Vec3 feet, float yaw) {
+		return lieRoom(level, feet, yaw, 0.0, LIE_LENGTH);
+	}
+
+	/** {@link #lieRoom} with the level floor needed under the body only from {@code from} to {@code to} blocks ahead of the feet. */
+	private static boolean lieRoom(CollisionGetter level, Vec3 feet, float yaw, double from, double to) {
+		Vec3 ahead = Vec3.directionFromRotation(0.0F, yaw);
+		Vec3 across = new Vec3(-ahead.z, 0.0, ahead.x);
+		for (double d = 0.25; d <= LIE_LENGTH + 1.0E-6; d += 0.25) {
+			double high = Math.min(1.9, Math.sqrt(Math.max(0.0, (LIE_LENGTH + 0.1) * (LIE_LENGTH + 0.1) - d * d)) + 0.1);
+			for (double side : new double[]{-BODY_HALF, 0.0, BODY_HALF}) {
+				Vec3 at = feet.add(ahead.scale(d)).add(across.scale(side));
+				if (!level.noCollision(new AABB(at.x - 0.08, feet.y + 0.07, at.z - 0.08, at.x + 0.08, feet.y + high, at.z + 0.08))
+					|| d >= from - 1.0E-6 && d <= to + 1.0E-6
+					&& level.noCollision(new AABB(at.x - 0.05, feet.y - 0.07, at.z - 0.05, at.x + 0.05, feet.y - 0.01, at.z + 0.05))) {
+					return false;
+				}
+			}
+			if (d >= ARMS_FROM - 1.0E-6 && d <= ARMS_TO + 1.0E-6) {
+				for (double side : new double[]{-ARM_REACH, ARM_REACH}) {
+					Vec3 at = feet.add(ahead.scale(d)).add(across.scale(side));
+					if (!level.noCollision(new AABB(at.x - 0.1, feet.y + 0.07, at.z - 0.1, at.x + 0.1, feet.y + ARMS_HIGH, at.z + 0.1))) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * {@return the way a player at {@code feet} facing {@code yaw} falls on the face: that way if there is room
+	 * ({@link #lieRoom}), else the nearest way round that has room, else null}
+	 */
+	public static @Nullable Float lieYaw(CollisionGetter level, Vec3 feet, float yaw) {
+		return lieYaw(level, feet, yaw, 0.0, LIE_LENGTH);
+	}
+
+	private static @Nullable Float lieYaw(CollisionGetter level, Vec3 feet, float yaw, double from, double to) {
+		for (float turn : LIE_TURNS) {
+			if (lieRoom(level, feet, yaw + turn, from, to)) {
+				return Mth.wrapDegrees(yaw + turn);
+			}
+		}
+		return null;
+	}
+
+	/** {@return the way a player at {@code feet} facing {@code yaw} falls on the face ({@link #lieYaw}), or {@code yaw} itself where nothing has room} */
+	public static float fallYaw(CollisionGetter level, Vec3 feet, float yaw) {
+		Float lie = lieYaw(level, feet, yaw);
+		return lie == null ? yaw : lie;
+	}
+
+	/**
+	 * {@return the way a player at {@code feet}, who may slide on to {@code stop} before the body is down, falls on the
+	 * face: the nearest way round with room from both; else with room from where they stop, else from where they are;
+	 * else {@code yaw} itself}
+	 */
+	public static float fallYaw(CollisionGetter level, Vec3 feet, Vec3 stop, float yaw) {
+		if (feet.distanceToSqr(stop) > 0.01) {
+			for (float turn : LIE_TURNS) {
+				if (lieRoom(level, feet, yaw + turn) && lieRoom(level, stop, yaw + turn)) {
+					return Mth.wrapDegrees(yaw + turn);
+				}
+			}
+			Float lie = lieYaw(level, stop, yaw);
+			if (lie != null) {
+				return lie;
+			}
+		}
+		return fallYaw(level, feet, yaw);
+	}
+
 	/** {@return a yaw that looks from {@code from} toward {@code to}} */
 	static float yawTo(Vec3 from, Vec3 to) {
 		return (float) (Mth.atan2(to.z - from.z, to.x - from.x) * Mth.RAD_TO_DEG) - 90.0F;
@@ -205,10 +310,6 @@ public final class BlackoutSpots
 	/** {@return the first free block above the surface of this column (the chunk must be loaded)} */
 	private static int surface(ServerLevel level, Heightmap.Types type, int x, int z) {
 		return level.getHeight(type, x, z);
-	}
-
-	private static <T> @Nullable T pick(List<T> list, RandomSource random) {
-		return list.isEmpty() ? null : list.get(random.nextInt(list.size()));
 	}
 
 	// ------------------------------------------------------------------ beds
@@ -314,7 +415,7 @@ public final class BlackoutSpots
 
 	// ------------------------------------------------------------------ on the ground
 
-	/** In the open: a safe spot on the surface 20-60 blocks away, under the open sky. */
+	/** In the open: a safe spot on the surface 20-60 blocks away, under the open sky, with room to lie on the face. */
 	public static @Nullable Wake inTheOpen(ServerLevel level, BlockPos from, RandomSource random) {
 		if (!hasSky(level)) {
 			return null;
@@ -328,16 +429,18 @@ public final class BlackoutSpots
 				continue;
 			}
 			Vec3 spot = standAt(level, new BlockPos(x, surface(level, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z));
-			if (spot != null && underOpenSky(level, spot)) {
-				return Wake.at(BlackoutEnding.IN_THE_OPEN, spot, random.nextFloat() * 360.0F);
+			Float yaw = spot != null && underOpenSky(level, spot) ? lieYaw(level, spot, random.nextFloat() * 360.0F) : null;
+			if (yaw != null) {
+				return Wake.at(BlackoutEnding.IN_THE_OPEN, spot, yaw);
 			}
 		}
 		return null;
 	}
 
 	/**
-	 * Farmyard: right next to an animal on land, facing it (it will stare back), under the open sky (a pasture, not a
-	 * barn). Animals that might bite or sting back (wolves, bees, polar bears; anything hostile) don't count.
+	 * Farmyard: lying on the face in front of an animal on land, the head a block or two short of it, facing it (it will
+	 * stare back), under the open sky (a pasture, not a barn). Animals that might bite or sting back (wolves, bees, polar
+	 * bears; anything hostile) don't count.
 	 */
 	public static @Nullable Wake farmyard(ServerLevel level, Vec3 from, int range, RandomSource random) {
 		if (!hasSky(level)) {
@@ -351,12 +454,15 @@ public final class BlackoutSpots
 			List<Direction> sides = new ArrayList<>(Direction.Plane.HORIZONTAL.stream().toList());
 			shuffle(sides, random);
 			for (Direction side : sides) {
-				for (int dy : new int[]{0, 1, -1}) {
-					BlockPos feet = at.relative(side, 2).above(dy);
-					Vec3 spot = standAt(level, feet);
-					if (spot != null && underOpenSky(level, spot) && sees(level, spot, animal)
-						&& !animal.getBoundingBox().intersects(EntityType.PLAYER.getDimensions().makeBoundingBox(spot))) {
-						return new Wake(BlackoutEnding.FARMYARD, spot, yawTo(spot, animal.position()), null, animal);
+				for (int out = FARMYARD_FROM; out <= FARMYARD_FROM + 1; out++) {
+					for (int dy : new int[]{0, 1, -1}) {
+						BlockPos feet = at.relative(side, out).above(dy);
+						Vec3 spot = standAt(level, feet);
+						if (spot != null && underOpenSky(level, spot) && sees(level, spot, animal)
+							&& !animal.getBoundingBox().intersects(EntityType.PLAYER.getDimensions().makeBoundingBox(spot))
+							&& lieRoom(level, spot, yawTo(spot, animal.position()))) {
+							return new Wake(BlackoutEnding.FARMYARD, spot, yawTo(spot, animal.position()), null, animal);
+						}
 					}
 				}
 			}
@@ -370,12 +476,16 @@ public final class BlackoutSpots
 		return level.clip(new ClipContext(eyes, entity.getEyePosition(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity)).getType() == HitResult.Type.MISS;
 	}
 
-	/** In the hay: on top of a bale ({@code #vineandbarrel:hay_bales}) under the open sky (a haystack, not a barn). */
+	/**
+	 * In the hay: on top of a pile of bales ({@code #vineandbarrel:hay_bales}) under the open sky (a haystack, not a barn), lying on
+	 * the face: on hay all along where there is a stack big enough, else across a small pile (the hips, belly and chest on
+	 * the hay, the legs and the head over its edge); never on a single bale.
+	 */
 	public static @Nullable Wake inTheHay(ServerLevel level, BlockPos from, int range, RandomSource random) {
 		if (!hasSky(level)) {
 			return null;
 		}
-		List<Vec3> spots = new ArrayList<>();
+		List<BlockPos> tops = new ArrayList<>();
 		BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 		for (int x = from.getX() - range; x <= from.getX() + range; x++) {
 			for (int z = from.getZ() - range; z <= from.getZ() + range; z++) {
@@ -387,28 +497,55 @@ public final class BlackoutSpots
 				for (int y = top + 1; y >= top - 2 && y > level.getMinY(); y--) {
 					cursor.set(x, y, z);
 					if (level.getBlockState(cursor).is(VBTags.HAY_BALES)) {
-						Vec3 spot = standAt(level, cursor.above());
-						if (spot != null && underOpenSky(level, spot)) {
-							spots.add(spot);
-						}
+						tops.add(cursor.above());
 					}
 				}
 			}
 		}
-		Vec3 spot = pick(spots, random);
-		return spot == null ? null : Wake.at(BlackoutEnding.IN_THE_HAY, spot, random.nextFloat() * 360.0F);
+		// Any of them, tried in a random order until one has hay enough to lie on whole; else, on a small pile, the first with
+		// hay under the middle of the body (the legs and the head over its edge)
+		shuffle(tops, random);
+		List<Vec3> spots = new ArrayList<>();
+		for (BlockPos feet : tops) {
+			Vec3 spot = standAt(level, feet);
+			if (spot == null || !underOpenSky(level, spot)) {
+				continue;
+			}
+			Float yaw = lieYaw(level, spot, random.nextFloat() * 360.0F);
+			if (yaw != null) {
+				return Wake.at(BlackoutEnding.IN_THE_HAY, spot, yaw);
+			}
+			spots.add(spot);
+		}
+		for (Vec3 spot : spots) {
+			Float yaw = lieYaw(level, spot, random.nextFloat() * 360.0F, HAY_FROM, HAY_TO);
+			if (yaw != null) {
+				return Wake.at(BlackoutEnding.IN_THE_HAY, spot, yaw);
+			}
+		}
+		return null;
 	}
 
-	/** Tavern: in front of one of the barrels of a tavern of ours nearby, looking at it. */
+	/**
+	 * Tavern: lying on the face in front of one of the barrels of a tavern of ours nearby, toward it; where the floor in
+	 * front of it has no room for that, lying along the row of barrels two blocks in front of them.
+	 */
 	public static @Nullable Wake tavern(ServerLevel level, BlockPos from, int range, RandomSource random) {
 		List<BlockPos> barrels = tavernBarrels(level, from, range);
 		shuffle(barrels, random);
 		for (BlockPos barrel : barrels) {
 			Direction front = level.getBlockState(barrel).getValue(AgingBarrelBlock.FACING);
-			for (int out = 1; out <= 2; out++) {
-				Vec3 spot = standAt(level, barrel.relative(front, out));
-				if (spot != null) {
-					return Wake.at(BlackoutEnding.TAVERN, spot, front.getOpposite().toYRot());
+			for (int out = TAVERN_FROM; out <= TAVERN_FROM + 1; out++) {
+				Vec3 toward = standAt(level, barrel.relative(front, out));
+				if (toward != null && lieRoom(level, toward, front.getOpposite().toYRot())) {
+					return Wake.at(BlackoutEnding.TAVERN, toward, front.getOpposite().toYRot());
+				}
+			}
+			// Else along the row of barrels, two blocks out (right in front of them an arm would lie in them)
+			Vec3 spot = standAt(level, barrel.relative(front, 2));
+			for (Direction along : new Direction[]{front.getClockWise(), front.getCounterClockWise()}) {
+				if (spot != null && lieRoom(level, spot, along.toYRot())) {
+					return Wake.at(BlackoutEnding.TAVERN, spot, along.toYRot());
 				}
 			}
 		}
@@ -445,14 +582,13 @@ public final class BlackoutSpots
 	/**
 	 * On the roof: the highest spot nearby that stands 4 to 8 blocks above the ground around it (measured as the middle of
 	 * eight columns 5 blocks out), with no lower ground than that anywhere within 8 blocks (so no cliff edge), under the
-	 * open sky. A house roof, a tower, a tall rock.
+	 * open sky, flat enough to lie on the face there. A house roof, a tower, a tall rock.
 	 */
 	public static @Nullable Wake onTheRoof(ServerLevel level, BlockPos from, int range, RandomSource random) {
 		if (!hasSky(level)) {
 			return null;
 		}
-		List<Vec3> best = new ArrayList<>();
-		double bestY = Double.NEGATIVE_INFINITY;
+		List<BlockPos> roofs = new ArrayList<>();
 		int[][] ring = {{ROOF_RING, 0}, {-ROOF_RING, 0}, {0, ROOF_RING}, {0, -ROOF_RING}, {ROOF_RING, ROOF_RING}, {-ROOF_RING, ROOF_RING},
 			{ROOF_RING, -ROOF_RING}, {-ROOF_RING, -ROOF_RING}};
 		int[] around = new int[ring.length];
@@ -462,9 +598,6 @@ public final class BlackoutSpots
 					continue;
 				}
 				int top = surface(level, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-				if (top + 1 < bestY) {
-					continue;
-				}
 				boolean ringLoaded = true;
 				for (int i = 0; i < ring.length && ringLoaded; i++) {
 					int rx = x + ring[i][0], rz = z + ring[i][1];
@@ -476,25 +609,26 @@ public final class BlackoutSpots
 				}
 				Arrays.sort(around);
 				int ground = (around[3] + around[4]) / 2;
-				if (top - ground < ROOF_MIN_HEIGHT || top - ground > ROOF_MAX_HEIGHT) {
-					continue;
-				}
-				BlockPos feet = new BlockPos(x, top, z);
-				Vec3 spot = standAt(level, feet);
-				if (spot == null || !underOpenSky(level, spot) || !gentleFall(level, x, z, top)) {
-					continue;
-				}
-				if (spot.y > bestY + 1.0E-4) {
-					best.clear();
-					bestY = spot.y;
-				}
-				if (Math.abs(spot.y - bestY) < 1.0E-4) {
-					best.add(spot);
+				if (top - ground >= ROOF_MIN_HEIGHT && top - ground <= ROOF_MAX_HEIGHT) {
+					roofs.add(new BlockPos(x, top, z));
 				}
 			}
 		}
-		Vec3 spot = pick(best, random);
-		return spot == null ? null : Wake.at(BlackoutEnding.ON_THE_ROOF, spot, random.nextFloat() * 360.0F);
+		// The highest first (a ridge, a tower's top), in a random order among the same height, until one is safe and has
+		// room to lie on the face
+		shuffle(roofs, random);
+		roofs.sort(Comparator.comparingInt((BlockPos pos) -> pos.getY()).reversed());
+		for (BlockPos feet : roofs) {
+			Vec3 spot = standAt(level, feet);
+			if (spot == null || !underOpenSky(level, spot) || !gentleFall(level, feet.getX(), feet.getZ(), feet.getY())) {
+				continue;
+			}
+			Float yaw = lieYaw(level, spot, random.nextFloat() * 360.0F);
+			if (yaw != null) {
+				return Wake.at(BlackoutEnding.ON_THE_ROOF, spot, yaw);
+			}
+		}
+		return null;
 	}
 
 	/** {@return whether walking off this roof (feet at {@code top}) in any direction lands at most the cap lower} */
