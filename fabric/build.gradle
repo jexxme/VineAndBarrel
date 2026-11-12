@@ -379,6 +379,21 @@ def withoutFdJeiPage = { List<String> lines ->
     lines.eachWithIndex { line, i -> if (!(i in skip)) kept << line }
     return kept
 }
+// A game that another one was connected to can log the other's leaving as an error: when the leaving game's process ends
+// while the host or server still writes to it, this Minecraft logs "Exception occurred in netty pipeline" with a
+// ClosedChannelException (seen once on a LAN host, 2026-11-12). Those two lines are taken out; the same first line with
+// any other exception stays an error.
+def withoutClosedConnection = { List<String> lines ->
+    def skip = [] as Set
+    lines.eachWithIndex { line, i ->
+        if (line.endsWith('Exception occurred in netty pipeline') && i + 1 < lines.size() && lines[i + 1].startsWith('java.nio.channels.ClosedChannelException')) {
+            skip << i << (i + 1)
+        }
+    }
+    def kept = []
+    lines.eachWithIndex { line, i -> if (!(i in skip)) kept << line }
+    return kept
+}
 
 // Each smoke client's folder: a muted options.txt that never pauses when unfocused (the window is hidden), and only
 // an empty mods folder (FD Refabricated is on the classpath of the -fd runs).
@@ -420,7 +435,7 @@ smokeDirs.each { name ->
             // also asks for the profile's chat key pair, which fails the same way (26.1.x prints its 401 on a line of its own),
             // and 1.20.1 calls the failed profile request "Failed to verify authentication".
             def devAccount = ~/Failed to verify authentication|Failed to retrieve profile key pair|authlib\.exceptions\.MinecraftClientHttpException: Status: 401$|Failed to fetch user properties|Couldn't look up profile properties|sessionserver.mojang.com|Failed to fetch Realms feature flags|Couldn't connect to realms|InvalidCredentialsException|RealmsServiceException/
-            def errors = log.isFile() ? withoutFdJeiPage(log.readLines('UTF-8')).findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ devAccount) && !(it =~ mojangServices) && !it.endsWith(FD_OWN_ERROR) } : ['no log']
+            def errors = log.isFile() ? withoutClosedConnection(withoutFdJeiPage(log.readLines('UTF-8'))).findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ devAccount) && !(it =~ mojangServices) && !it.endsWith(FD_OWN_ERROR) } : ['no log']
             println "${name}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; screenshots in ${dir}/smoke"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
             errors.take(20).each { println "  LOG ${it}" }
@@ -552,7 +567,7 @@ The folder is gitignored: never commit that file. Then run the test again.""")
             def report = new groovy.json.JsonSlurper().parse(results)
             def failed = report.checks.findAll { !it.ok }
             // The server's whole output, not only latest.log: a crash before logging starts shows only there
-            def errors = serverLog.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !it.endsWith(FD_OWN_ERROR) && !(it =~ mojangServices) }
+            def errors = withoutClosedConnection(serverLog.readLines('UTF-8')).findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !it.endsWith(FD_OWN_ERROR) && !(it =~ mojangServices) }
             println "server-smoke${folder}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; output in ${serverLog}"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
             errors.take(20).each { println "  LOG ${it}" }
@@ -621,7 +636,7 @@ crossRuns.each { run ->
             }
             def report = new groovy.json.JsonSlurper().parse(results)
             def failed = report.checks.findAll { !it.ok }
-            def errors = serverLog.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ mojangServices) }
+            def errors = withoutClosedConnection(serverLog.readLines('UTF-8')).findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ mojangServices) }
             println "server-${run.out}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; output in ${serverLog}"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
             errors.take(20).each { println "  LOG ${it}" }
