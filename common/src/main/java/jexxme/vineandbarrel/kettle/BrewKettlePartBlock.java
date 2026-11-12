@@ -132,6 +132,10 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 				KettleMultiblock.split(server, kettle, controller, state.getBlock(), pos, false);
 			}
 		}
+		if (part(state).isChimney()) {
+			// a chimney standing on it through a roof falls with it
+			KettleChimneyBlock.checkPiecesAbove(level, pos);
+		}
 		if (!keepsBlockEntity) {
 			super.onRemove(state, level, pos, newState, movedByPiston);
 		}

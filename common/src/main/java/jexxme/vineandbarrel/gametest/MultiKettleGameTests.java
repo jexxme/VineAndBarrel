@@ -31,9 +31,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.HopperBlock;
+import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
@@ -76,14 +78,25 @@ public final class MultiKettleGameTests
 		test("kettle_chimney_falls_and_drops_ingots", 100, MultiKettleGameTests::chimneyFallsAndDropsIngots);
 		test("kettle_chimney_weathers_with_the_kettle", 100, MultiKettleGameTests::chimneyWeathersWithKettle);
 		test("kettle_chimney_on_big_kettle", 100, MultiKettleGameTests::chimneyOnBigKettle);
-		test("kettle_chimney_breaks_through_the_roof", 100, MultiKettleGameTests::chimneyBreaksThroughRoof);
+		test("kettle_chimney_goes_through_the_roof", 100, MultiKettleGameTests::chimneyGoesThroughRoof);
+		test("kettle_chimney_through_a_stair_roof", 100, MultiKettleGameTests::chimneyThroughStairRoof);
+		test("kettle_chimney_through_a_two_block_roof", 100, MultiKettleGameTests::chimneyThroughTwoBlockRoof);
+		test("kettle_chimney_stops_at_three_roof_blocks", 100, MultiKettleGameTests::chimneyStopsAtThreeRoofBlocks);
+		test("kettle_chimney_stops_at_a_chest", 100, MultiKettleGameTests::chimneyStopsAtChest);
+		test("kettle_chimney_on_big_kettle_through_stairs", 100, MultiKettleGameTests::chimneyOnBigKettleThroughStairs);
+		test("kettle_chimney_over_the_roof_falls_with_the_kettle", 100, MultiKettleGameTests::chimneyOverRoofFallsWithKettle);
+		test("kettle_chimney_over_the_roof_falls_with_the_piece_below", 100, MultiKettleGameTests::chimneyOverRoofFallsWithPieceBelow);
+		test("kettle_chimney_cap_comes_back_under_the_roof", 100, MultiKettleGameTests::chimneyCapComesBackUnderRoof);
+		test("kettle_chimney_steam_over_the_roof", 100, MultiKettleGameTests::chimneySteamOverRoof);
+		test("kettle_chimney_over_the_roof_weathers", 100, MultiKettleGameTests::chimneyOverRoofWeathers);
+		test("kettle_chimney_old_flashing_piece_stays", 100, MultiKettleGameTests::chimneyOldFlashingPieceStays);
+		test("kettle_chimney_in_a_hole_gets_flashing", 100, MultiKettleGameTests::chimneyInHoleGetsFlashing);
 		test("multikettle_breaking_the_controller_splits", 100, MultiKettleGameTests::breakingTheControllerSplits);
 		test("multikettle_removed_controller_keeps_the_brew", 100, MultiKettleGameTests::removedControllerKeepsTheBrew);
 		test("multikettle_copper_change_on_one_part_turns_all", 100, MultiKettleGameTests::copperChangeOnOnePartTurnsAll);
-		test("kettle_chimney_stops_at_obsidian", 100, MultiKettleGameTests::chimneyStopsAtObsidian);
-		test("kettle_chimney_keeps_a_trellis", 100, MultiKettleGameTests::chimneyKeepsTrellis);
+		test("kettle_chimney_through_obsidian", 100, MultiKettleGameTests::chimneyThroughObsidian);
+		test("kettle_chimney_leaves_a_vine", 100, MultiKettleGameTests::chimneyLeavesVine);
 		test("kettle_chimney_through_a_roof_in_one_click", 100, MultiKettleGameTests::chimneyThroughRoofInOneClick);
-		test("kettle_chimney_through_stone_drops_it", 100, MultiKettleGameTests::chimneyThroughStoneDrops);
 		test("multikettle_removed_full_kettle_never_overfills", 100, MultiKettleGameTests::removedFullKettleNeverOverfills);
 		test("kettle_chimney_grows_from_the_chimney", 100, MultiKettleGameTests::chimneyGrowsFromChimney);
 		test("kettle_sight_glass_shows_the_brew", 100, MultiKettleGameTests::smallSightGlass);
@@ -564,35 +577,6 @@ public final class MultiKettleGameTests
 		});
 	}
 
-	private static void chimneyBreaksThroughRoof(GameTestHelper helper) {
-		fires(helper, 1, 1);
-		place(helper, BASE, false);
-		// a plank roof two blocks up
-		for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) helper.setBlock(BASE.offset(x, 3, z), Blocks.OAK_PLANKS);
-		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
-		player.setGameMode(GameType.SURVIVAL);
-		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.COPPER_INGOT, 4));
-		for (int i = 0; i < 4; i++) helper.useBlock(BASE, player);
-		BlockState inRoof = helper.getBlockState(BASE.above(3));
-		helper.assertTrue(inRoof.getBlock() instanceof KettleChimneyBlock, "the chimney went through the roof");
-		helper.assertTrue(inRoof.getValue(KettleChimneyBlock.FLASHING), "with copper flashing where it goes through");
-		helper.assertTrue(!helper.getBlockState(BASE.above(2)).getValue(KettleChimneyBlock.FLASHING), "no flashing under the roof");
-		helper.assertTrue(helper.getBlockState(BASE.above(4)).getBlock() instanceof KettleChimneyBlock, "and on above it");
-		helper.succeedWhen(() -> VBGameTests.assertValueEqual(helper, dropped(helper, Items.OAK_PLANKS), 1, "the roof block it broke drops"));
-	}
-
-	private static void chimneyStopsAtObsidian(GameTestHelper helper) {
-		place(helper, BASE, false);
-		helper.setBlock(BASE.above(2), Blocks.OBSIDIAN);
-		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
-		player.setGameMode(GameType.SURVIVAL);
-		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.COPPER_INGOT, 4));
-		for (int i = 0; i < 4; i++) helper.useBlock(BASE, player);
-		helper.assertTrue(helper.getBlockState(BASE.above(2)).is(Blocks.OBSIDIAN), "obsidian stays");
-		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 3, "only one ingot used");
-		helper.succeed();
-	}
-
 	private static ServerPlayer survivorWithIngots(GameTestHelper helper) {
 		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
 		player.setGameMode(GameType.SURVIVAL);
@@ -600,41 +584,276 @@ public final class MultiKettleGameTests
 		return player;
 	}
 
-	/** A vine on a trellis over the kettle: breaking the vine leaves its trellis, which stops the chimney (and stays). */
-	private static void chimneyKeepsTrellis(GameTestHelper helper) {
+	/** A 3x3 roof of {@code roof} over the kettle at {@code y} blocks above it. */
+	private static void roof(GameTestHelper helper, int y, BlockState roof) {
+		for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) helper.setBlock(BASE.offset(x, y, z), roof);
+	}
+
+	private static BlockState stairs(Block block, Direction facing, boolean upsideDown) {
+		return block.defaultBlockState().setValue(StairBlock.FACING, facing).setValue(StairBlock.HALF, upsideDown ? Half.TOP : Half.BOTTOM);
+	}
+
+	private static void assertPiece(GameTestHelper helper, BlockPos pos, int through, boolean top, String what) {
+		BlockState piece = helper.getBlockState(pos);
+		helper.assertTrue(piece.getBlock() instanceof KettleChimneyBlock, "a chimney piece " + what);
+		VBGameTests.assertValueEqual(helper, piece.getValue(KettleChimneyBlock.THROUGH), through, "roof blocks its pipe goes through, " + what);
+		VBGameTests.assertValueEqual(helper, piece.getValue(KettleChimneyBlock.TOP), top, "the cap, " + what);
+		helper.assertTrue(!piece.getValue(KettleChimneyBlock.FLASHING), "no flashing plate " + what);
+	}
+
+	/** A plank roof three blocks up stays whole: the chimney goes on above it, its pipe drawn through the planks. */
+	private static void chimneyGoesThroughRoof(GameTestHelper helper) {
+		fires(helper, 1, 1);
+		place(helper, BASE, false);
+		roof(helper, 3, Blocks.OAK_PLANKS.defaultBlockState());
+		ServerPlayer player = survivorWithIngots(helper);
+		for (int i = 0; i < 4; i++) helper.useBlock(BASE, player);
+		helper.assertTrue(helper.getBlockState(BASE.above(3)).is(Blocks.OAK_PLANKS), "the roof stays whole");
+		assertPiece(helper, BASE.above(2), 0, false, "under the roof");
+		helper.assertTrue(!helper.getBlockState(BASE.above(2)).getValue(KettleChimneyBlock.RISING), "a one-block roof is drawn by the piece above");
+		assertPiece(helper, BASE.above(4), 1, false, "on the roof");
+		assertPiece(helper, BASE.above(5), 0, true, "on top");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 0, "four ingots, four pieces");
+		VBGameTests.assertValueEqual(helper, KettleMultiblock.kettleAt(helper.getLevel(), helper.absolutePos(BASE)).extension(helper.getLevel()), 4, "four pieces counted");
+		helper.succeedWhen(() -> VBGameTests.assertValueEqual(helper, dropped(helper, Items.OAK_PLANKS), 0, "nothing broken, nothing dropped"));
+	}
+
+	/** A spruce stair roof over the kettle stays whole, and the piece above it draws the pipe through the stair. */
+	private static void chimneyThroughStairRoof(GameTestHelper helper) {
+		place(helper, BASE, false);
+		roof(helper, 2, stairs(Blocks.SPRUCE_STAIRS, Direction.NORTH, false));
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		helper.useBlock(BASE, player);
+		helper.assertTrue(helper.getBlockState(BASE.above(2)).is(Blocks.SPRUCE_STAIRS), "the stair stays");
+		assertPiece(helper, BASE.above(1), 0, false, "under the stairs");
+		assertPiece(helper, BASE.above(3), 1, true, "over the stairs");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 2, "two ingots used");
+		helper.succeed();
+	}
+
+	/**
+	 * A stair roof lined with upside-down stairs (two blocks thick): the piece on it goes through both, the one under
+	 * the roof draws its pipe on up into the lower block.
+	 */
+	private static void chimneyThroughTwoBlockRoof(GameTestHelper helper) {
+		place(helper, BASE, false);
+		roof(helper, 2, stairs(Blocks.DARK_OAK_STAIRS, Direction.SOUTH, true));
+		roof(helper, 3, stairs(Blocks.SPRUCE_STAIRS, Direction.NORTH, false));
+		ServerPlayer player = survivorWithIngots(helper);
+		for (int i = 0; i < 3; i++) helper.useBlock(BASE, player);
+		helper.assertTrue(helper.getBlockState(BASE.above(2)).is(Blocks.DARK_OAK_STAIRS) && helper.getBlockState(BASE.above(3)).is(Blocks.SPRUCE_STAIRS), "both roof layers stay");
+		assertPiece(helper, BASE.above(1), 0, false, "under the roof");
+		helper.assertTrue(helper.getBlockState(BASE.above(1)).getValue(KettleChimneyBlock.RISING), "the piece under the roof draws the pipe into the lining");
+		assertPiece(helper, BASE.above(4), 2, false, "on the roof");
+		assertPiece(helper, BASE.above(5), 0, true, "on top");
+		helper.succeed();
+	}
+
+	/** Three roof blocks in a row are too thick: the chimney stops under them and the ingot stays in hand. */
+	private static void chimneyStopsAtThreeRoofBlocks(GameTestHelper helper) {
+		place(helper, BASE, false);
+		for (int y = 2; y <= 4; y++) helper.setBlock(BASE.above(y), Blocks.STONE_BRICKS);
+		ServerPlayer player = survivorWithIngots(helper);
+		for (int i = 0; i < 4; i++) helper.useBlock(BASE, player);
+		assertPiece(helper, BASE.above(1), 0, true, "under the thick roof");
+		helper.assertTrue(helper.getBlockState(BASE.above(5)).isAir(), "nothing over it");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 3, "only one ingot used");
+		helper.succeed();
+	}
+
+	/** A block that holds things (a chest) stops the chimney; it stays as it is. */
+	private static void chimneyStopsAtChest(GameTestHelper helper) {
+		place(helper, BASE, false);
+		helper.setBlock(BASE.above(2), Blocks.CHEST);
+		ServerPlayer player = survivorWithIngots(helper);
+		for (int i = 0; i < 4; i++) helper.useBlock(BASE, player);
+		helper.assertTrue(helper.getBlockState(BASE.above(2)).is(Blocks.CHEST), "the chest stays");
+		helper.assertTrue(helper.getBlockState(BASE.above(3)).isAir(), "no piece over the chest");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 3, "only one ingot used");
+		helper.succeed();
+	}
+
+	/** The Big Brew Kettle's chimney (on a block corner) goes through a stair roof too. */
+	private static void chimneyOnBigKettleThroughStairs(GameTestHelper helper) {
+		bigKettle(helper, KettleShape.BIG, 4);
+		KettleMultiblock.Kettle kettle = KettleMultiblock.kettleAt(helper.getLevel(), helper.absolutePos(BASE));
+		BlockPos chimney = WorldGameTests.relativePos(helper, kettle.chimney());
+		for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) helper.setBlock(chimney.offset(x, 1, z), stairs(Blocks.SPRUCE_STAIRS, Direction.NORTH, false));
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE.offset(1, 0, 1), player);
+		helper.assertTrue(helper.getBlockState(chimney.above()).is(Blocks.SPRUCE_STAIRS), "the stair over the kettle stays");
+		assertPiece(helper, chimney.above(2), 1, true, "over the stairs");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(chimney.above(2)).getValue(KettleChimneyBlock.SIZE), 2, "sized for the Big Kettle");
+		helper.assertTrue(helper.getBlockState(chimney).getValue(BrewKettlePartBlock.EXTENDED), "the kettle's chimney carries on into the roof");
+		VBGameTests.assertValueEqual(helper, kettle.extension(helper.getLevel()), 1, "one piece");
+		// it falls with the kettle, though the roof is between
+		helper.setBlock(BASE.offset(1, 1, 1), Blocks.AIR);
+		helper.succeedWhen(() -> {
+			helper.assertTrue(helper.getBlockState(chimney.above(2)).isAir(), "the chimney over the roof fell with the kettle");
+			VBGameTests.assertValueEqual(helper, dropped(helper, Items.COPPER_INGOT), 1, "its ingot back");
+		});
+	}
+
+	/** A chimney over a roof right on the kettle: the kettle taken away, the pieces over the roof fall with it. */
+	private static void chimneyOverRoofFallsWithKettle(GameTestHelper helper) {
+		place(helper, BASE, false);
+		roof(helper, 1, Blocks.OAK_PLANKS.defaultBlockState());
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		helper.useBlock(BASE, player);
+		assertPiece(helper, BASE.above(2), 1, false, "on the roof");
+		helper.setBlock(BASE, Blocks.AIR);
+		helper.succeedWhen(() -> {
+			helper.assertTrue(helper.getBlockState(BASE.above(2)).isAir() && helper.getBlockState(BASE.above(3)).isAir(), "the pieces over the roof fell");
+			helper.assertTrue(helper.getBlockState(BASE.above()).is(Blocks.OAK_PLANKS), "the roof stays");
+			VBGameTests.assertValueEqual(helper, dropped(helper, Items.COPPER_INGOT), 2, "both ingots back");
+		});
+	}
+
+	/** Breaking the piece under a roof takes down the pieces over it. */
+	private static void chimneyOverRoofFallsWithPieceBelow(GameTestHelper helper) {
+		place(helper, BASE, false);
+		roof(helper, 2, Blocks.OAK_PLANKS.defaultBlockState());
+		ServerPlayer player = survivorWithIngots(helper);
+		for (int i = 0; i < 3; i++) helper.useBlock(BASE, player);
+		assertPiece(helper, BASE.above(3), 1, false, "on the roof");
+		helper.getLevel().destroyBlock(helper.absolutePos(BASE.above(1)), true);
+		helper.succeedWhen(() -> {
+			helper.assertTrue(helper.getBlockState(BASE.above(3)).isAir() && helper.getBlockState(BASE.above(4)).isAir(), "the pieces over the roof fell");
+			VBGameTests.assertValueEqual(helper, dropped(helper, Items.COPPER_INGOT), 3, "three ingots back");
+			helper.assertTrue(!helper.getBlockState(BASE).getValue(BrewKettleBlock.EXTENDED), "the kettle has its own cap again");
+		});
+	}
+
+	/**
+	 * Taking off the piece over a roof gives the piece under it its cap back (and stops its pipe going into the roof);
+	 * the one over a roof right on the kettle gives the kettle its own cap back.
+	 */
+	private static void chimneyCapComesBackUnderRoof(GameTestHelper helper) {
+		place(helper, BASE, false);
+		roof(helper, 2, stairs(Blocks.DARK_OAK_STAIRS, Direction.SOUTH, true));
+		roof(helper, 3, stairs(Blocks.SPRUCE_STAIRS, Direction.NORTH, false));
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		helper.useBlock(BASE, player);
+		assertPiece(helper, BASE.above(4), 2, true, "on the roof");
+		helper.getLevel().destroyBlock(helper.absolutePos(BASE.above(4)), true);
+		assertPiece(helper, BASE.above(1), 0, true, "under the roof, after");
+		helper.assertTrue(!helper.getBlockState(BASE.above(1)).getValue(KettleChimneyBlock.RISING), "its pipe no longer goes into the roof");
+		// a second kettle under a roof right on it
+		BlockPos other = BASE.east(4);
+		place(helper, other, false);
+		helper.setBlock(other.above(), Blocks.OAK_PLANKS);
+		helper.useBlock(other, player);
+		assertPiece(helper, other.above(2), 1, true, "on the roof over the second kettle");
+		helper.assertTrue(helper.getBlockState(other).getValue(BrewKettleBlock.EXTENDED), "the second kettle's chimney carries on into the roof");
+		helper.getLevel().destroyBlock(helper.absolutePos(other.above(2)), true);
+		helper.assertTrue(!helper.getBlockState(other).getValue(BrewKettleBlock.EXTENDED), "the second kettle has its own cap again");
+		helper.succeed();
+	}
+
+	/** The steam comes out of the cap of the top piece, over the roof. */
+	private static void chimneySteamOverRoof(GameTestHelper helper) {
+		place(helper, BASE, false);
+		roof(helper, 2, Blocks.OAK_PLANKS.defaultBlockState());
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		helper.useBlock(BASE, player);
+		KettleMultiblock.Kettle kettle = KettleMultiblock.kettleAt(helper.getLevel(), helper.absolutePos(BASE));
+		double expected = helper.absolutePos(BASE.above(3)).getY() + jexxme.vineandbarrel.kettle.KettleGeometry.PIECE_TOP / 16.0D;
+		helper.assertTrue(Math.abs(kettle.chimneyTop(helper.getLevel()).y - expected) < 1.0E-6, "the steam comes out over the roof");
+		helper.succeed();
+	}
+
+	/** Waxing the kettle waxes the pieces over the roof too. */
+	private static void chimneyOverRoofWeathers(GameTestHelper helper) {
+		place(helper, BASE, false);
+		roof(helper, 2, Blocks.OAK_PLANKS.defaultBlockState());
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		helper.useBlock(BASE, player);
+		helper.useBlock(BASE, playerHolding(helper, new ItemStack(Items.HONEYCOMB)));
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(BASE.above(3)).getBlock(), KettleRegistry.WAXED_CHIMNEYS.get(WeatherState.UNAFFECTED).get(), "the piece over the roof is waxed");
+		VBGameTests.assertValueEqual(helper, helper.getBlockState(BASE.above(3)).getValue(KettleChimneyBlock.THROUGH), 1, "and still goes through the roof");
+		helper.succeed();
+	}
+
+	/** A piece saved with the old flashing plate (it broke the roof block) loads, stands and grows on as before. */
+	private static void chimneyOldFlashingPieceStays(GameTestHelper helper) {
+		place(helper, BASE, false);
+		// the flat roof it broke through, with the piece in its hole
+		roof(helper, 1, Blocks.OAK_PLANKS.defaultBlockState());
+		helper.setBlock(BASE, helper.getBlockState(BASE).setValue(BrewKettleBlock.EXTENDED, true));
+		BlockState old;
+		try {
+			old = net.minecraft.commands.arguments.blocks.BlockStateParser.parseForBlock(helper.getLevel().holderLookup(Registries.BLOCK),
+				"vineandbarrel:brew_kettle_chimney[facing=north,size=1,top=true,flashing=true]", false).blockState();
+		} catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
+			throw new IllegalStateException(e);
+		}
+		helper.setBlock(BASE.above(), old);
+		helper.runAfterDelay(5, () -> {
+			BlockState piece = helper.getBlockState(BASE.above());
+			helper.assertTrue(piece.getBlock() instanceof KettleChimneyBlock && piece.getValue(KettleChimneyBlock.FLASHING), "the old piece stays, flashed");
+			VBGameTests.assertValueEqual(helper, piece.getValue(KettleChimneyBlock.THROUGH), 0, "going through nothing");
+			helper.useBlock(BASE, survivorWithIngots(helper));
+			assertPiece(helper, BASE.above(2), 0, true, "on the old piece");
+			helper.assertTrue(helper.getBlockState(BASE.above()).getValue(KettleChimneyBlock.FLASHING), "the old piece keeps its plate");
+			helper.succeed();
+		});
+	}
+
+	/** A piece put into a hole the player left in a flat roof gets the flashing plate that closes the hole. */
+	private static void chimneyInHoleGetsFlashing(GameTestHelper helper) {
+		place(helper, BASE, false);
+		roof(helper, 1, Blocks.OAK_PLANKS.defaultBlockState());
+		helper.setBlock(BASE.above(), Blocks.AIR);
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		BlockState piece = helper.getBlockState(BASE.above());
+		helper.assertTrue(piece.getBlock() instanceof KettleChimneyBlock && piece.getValue(KettleChimneyBlock.FLASHING), "the piece in the hole, flashed");
+		VBGameTests.assertValueEqual(helper, piece.getValue(KettleChimneyBlock.THROUGH), 0, "going through nothing");
+		helper.succeed();
+	}
+
+	/** Obsidian is no stop any more: nothing is broken, the chimney goes on above it. */
+	private static void chimneyThroughObsidian(GameTestHelper helper) {
+		place(helper, BASE, false);
+		helper.setBlock(BASE.above(2), Blocks.OBSIDIAN);
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		helper.useBlock(BASE, player);
+		helper.assertTrue(helper.getBlockState(BASE.above(2)).is(Blocks.OBSIDIAN), "obsidian stays");
+		assertPiece(helper, BASE.above(3), 1, true, "over the obsidian");
+		helper.succeed();
+	}
+
+	/** A vine on a trellis over the kettle stays as it grows: the chimney goes on above it. */
+	private static void chimneyLeavesVine(GameTestHelper helper) {
 		place(helper, BASE, false);
 		helper.runAfterDelay(2, () -> {
 			BlockPos above = helper.absolutePos(BASE.above());
 			helper.getLevel().setBlock(above, VBBlocks.GRAPE_VINE_ON_TRELLIS.get().defaultBlockState(), Block.UPDATE_CLIENTS);
 			helper.assertTrue(helper.getBlockState(BASE.above()).is(VBBlocks.GRAPE_VINE_ON_TRELLIS.get()), "a vine on a trellis over the kettle");
 			helper.useBlock(BASE, survivorWithIngots(helper));
-			helper.assertTrue(helper.getBlockState(BASE.above()).is(VBBlocks.TRELLIS.get()), "the trellis stays");
-			helper.assertTrue(!helper.getBlockState(BASE).getValue(BrewKettleBlock.EXTENDED), "the chimney didn't grow");
+			helper.assertTrue(helper.getBlockState(BASE.above()).is(VBBlocks.GRAPE_VINE_ON_TRELLIS.get()), "the vine stays");
+			assertPiece(helper, BASE.above(2), 1, true, "over the vine");
 			helper.succeed();
 		});
 	}
 
-	/** A roof right on the kettle: one click breaks it and puts the piece in its place, for one ingot. */
+	/** A roof right on the kettle: one click puts the piece on it, the roof stays, for one ingot. */
 	private static void chimneyThroughRoofInOneClick(GameTestHelper helper) {
 		place(helper, BASE, false);
-		for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) helper.setBlock(BASE.offset(x, 1, z), Blocks.OAK_PLANKS);
+		roof(helper, 1, Blocks.OAK_PLANKS.defaultBlockState());
 		ServerPlayer player = survivorWithIngots(helper);
 		helper.useBlock(BASE, player);
-		BlockState piece = helper.getBlockState(BASE.above());
-		helper.assertTrue(piece.getBlock() instanceof KettleChimneyBlock, "the chimney piece stands where the roof block was");
-		helper.assertTrue(piece.getValue(KettleChimneyBlock.TOP) && piece.getValue(KettleChimneyBlock.FLASHING), "the top piece, flashed into the roof");
-		helper.assertTrue(helper.getBlockState(BASE).getValue(BrewKettleBlock.EXTENDED), "the kettle's chimney carries on into it");
+		helper.assertTrue(helper.getBlockState(BASE.above()).is(Blocks.OAK_PLANKS), "the roof block stays");
+		assertPiece(helper, BASE.above(2), 1, true, "on the roof");
+		helper.assertTrue(helper.getBlockState(BASE).getValue(BrewKettleBlock.EXTENDED), "the kettle's chimney carries on into the roof");
 		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 3, "one ingot used");
-		helper.succeedWhen(() -> VBGameTests.assertValueEqual(helper, dropped(helper, Items.OAK_PLANKS), 1, "the roof block drops"));
-	}
-
-	/** A copper ingot is no pickaxe, but the stone the chimney goes through drops all the same. */
-	private static void chimneyThroughStoneDrops(GameTestHelper helper) {
-		place(helper, BASE, false);
-		helper.setBlock(BASE.above(), Blocks.STONE);
-		helper.useBlock(BASE, survivorWithIngots(helper));
-		helper.assertTrue(helper.getBlockState(BASE.above()).getBlock() instanceof KettleChimneyBlock, "the chimney went through the stone");
-		helper.succeedWhen(() -> VBGameTests.assertValueEqual(helper, dropped(helper, Items.COBBLESTONE), 1, "the stone drops as mined"));
+		helper.succeedWhen(() -> VBGameTests.assertValueEqual(helper, dropped(helper, Items.OAK_PLANKS), 0, "nothing drops"));
 	}
 
 	/** A full Big Kettle loses a block without a drop: no single kettle holds more than 64, the rest drops. */

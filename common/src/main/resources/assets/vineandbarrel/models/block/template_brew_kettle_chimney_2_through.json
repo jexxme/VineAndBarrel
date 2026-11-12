@@ -1,0 +1,59 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "#plate"
+	},
+	"elements": [
+		{
+			"from": [
+				13.5,
+				-16,
+				13.5
+			],
+			"to": [
+				18.5,
+				0,
+				18.5
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"south": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"east": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						16
+					],
+					"texture": "#pipe"
+				},
+				"west": {
+					"uv": [
+						5.5,
+						0,
+						10.5,
+						16
+					],
+					"texture": "#pipe"
+				}
+			},
+			"name": "chimney_through"
+		}
+	]
+}
