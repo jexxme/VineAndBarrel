@@ -79,7 +79,8 @@ public final class NeoForgeClient
 		modBus.addListener(AddClientReloadListenersEvent.class, event -> registerAll(NeoForgeClientRegistrar.reloads(event)));
 
 		modBus.addListener(RegisterClientExtensionsEvent.class, NeoForgeClient::registerClientExtensions);
-		// Vines on fences, walls, chains and bars draw the block they hold under their leaves
+		// Vines on fences, walls, chains and bars draw the block they hold, and leaves that follow its shape
+		modBus.addListener(ModelEvent.RegisterStandalone.class, SupportedVineModel::registerPieces);
 		modBus.addListener(ModelEvent.ModifyBakingResult.class, SupportedVineModel::wrap);
 		// Trellis rows draw their frame (end posts, top rail) from their neighbours
 		modBus.addListener(ModelEvent.RegisterStandalone.class, TrellisFrameModel::registerParts);
