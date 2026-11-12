@@ -113,7 +113,7 @@ function bigKettle(size, [ox, oy, oz], { level = 0, chimney = 0, tint } = {}) {
 		parts.push(...place('vineandbarrel:brew_kettle_part', state, [ox + x, oy + y + 1, oz + z], tint ? [tint] : undefined));
 	}
 	for (let x = 0; x < size; x++) for (let z = 0; z < size; z++) parts.push(...place('minecraft:campfire', { lit: 'true', facing: 'north' }, [ox + x, oy, oz + z]));
-	for (let i = 1; i <= chimney; i++) parts.push(...place('vineandbarrel:brew_kettle_chimney', { facing: 'north', size: String(size), top: String(i === chimney), flashing: 'false' }, [ox + c, oy + size + i, oz + c]));
+	for (let i = 1; i <= chimney; i++) parts.push(...place('vineandbarrel:brew_kettle_chimney', { facing: 'north', size: String(size), top: String(i === chimney), flashing: 'false', through: '0', rising: 'false' }, [ox + c, oy + size + i, oz + c]));
 	return parts;
 }
 
@@ -131,8 +131,9 @@ const scenes = {
 	'kettle-family': [...bigKettle(2, [0, 0, 0], { level: 3, tint: liquid('vineandbarrel:barley_wort_bottle') }),
 		...place('minecraft:campfire', { lit: 'true', facing: 'north' }, [2.75, 0, 0]), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', fill: '2' }, [2.75, 1, 0], [liquid('vineandbarrel:barley_wort_bottle')])],
 	'kettle-chimney': [...place('minecraft:campfire', { lit: 'true', facing: 'north' }), ...place('vineandbarrel:brew_kettle', { ...KETTLE, support: 'tray', extended: 'true' }, [0, 1, 0]),
-		...[2, 3, 4].flatMap((y) => place('vineandbarrel:brew_kettle_chimney', { facing: 'north', size: '1', top: String(y === 4), flashing: String(y === 3) }, [0, y, 0])),
-		...[[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].flatMap(([x, z]) => place('minecraft:spruce_planks', {}, [x, 3, z]))],
+		// the roof stays whole: the piece on top draws its pipe through the plank under it
+		...[2, 4].flatMap((y) => place('vineandbarrel:brew_kettle_chimney', { facing: 'north', size: '1', top: String(y === 4), flashing: 'false', through: String(y === 4 ? 1 : 0), rising: 'false' }, [0, y, 0])),
+		...[-1, 0, 1].flatMap((x) => [-1, 0, 1].flatMap((z) => place('minecraft:spruce_planks', {}, [x, 3, z])))],
 	'barrel-rack': rack(0, false),
 	'barrel-cellar': [...rack(0, false), ...rack(1, true)],
 	'placed-drinks': [...place('minecraft:oak_planks'), ...table(['mug_full', 'glass_full', 'glass', 'mug_full'], ['barley_ale', 'red_wine', null, 'wheat_beer'], [0, 1, 0])],

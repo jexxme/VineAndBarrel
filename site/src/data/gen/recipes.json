@@ -672,24 +672,32 @@
 		"fdOnly": false,
 		"ingredients": [
 			{
+				"tag": "vineandbarrel:grapes/red",
 				"items": [
 					"vineandbarrel:red_grapes"
-				]
+				],
+				"label": "Any red grapes"
 			},
 			{
+				"tag": "vineandbarrel:grapes/red",
 				"items": [
 					"vineandbarrel:red_grapes"
-				]
+				],
+				"label": "Any red grapes"
 			},
 			{
+				"tag": "vineandbarrel:grapes/red",
 				"items": [
 					"vineandbarrel:red_grapes"
-				]
+				],
+				"label": "Any red grapes"
 			},
 			{
+				"tag": "vineandbarrel:grapes/red",
 				"items": [
 					"vineandbarrel:red_grapes"
-				]
+				],
+				"label": "Any red grapes"
 			},
 			{
 				"items": [
@@ -833,24 +841,32 @@
 		"fdOnly": false,
 		"ingredients": [
 			{
+				"tag": "vineandbarrel:grapes/white",
 				"items": [
 					"vineandbarrel:white_grapes"
-				]
+				],
+				"label": "Any white grapes"
 			},
 			{
+				"tag": "vineandbarrel:grapes/white",
 				"items": [
 					"vineandbarrel:white_grapes"
-				]
+				],
+				"label": "Any white grapes"
 			},
 			{
+				"tag": "vineandbarrel:grapes/white",
 				"items": [
 					"vineandbarrel:white_grapes"
-				]
+				],
+				"label": "Any white grapes"
 			},
 			{
+				"tag": "vineandbarrel:grapes/white",
 				"items": [
 					"vineandbarrel:white_grapes"
-				]
+				],
+				"label": "Any white grapes"
 			},
 			{
 				"items": [
@@ -1487,6 +1503,20 @@
 			"id": "vineandbarrel:mug",
 			"count": 3
 		}
+	},
+	{
+		"id": "vineandbarrel:pressing_tub/red_grapes",
+		"type": "kaleidoscope_tavern:pressing_tub",
+		"loaded": false,
+		"fdOnly": false,
+		"special": true
+	},
+	{
+		"id": "vineandbarrel:pressing_tub/white_grapes",
+		"type": "kaleidoscope_tavern:pressing_tub",
+		"loaded": false,
+		"fdOnly": false,
+		"special": true
 	},
 	{
 		"id": "vineandbarrel:red_grapes_from_crate",

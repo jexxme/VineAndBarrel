@@ -35,7 +35,8 @@
         "c:foods/fruit",
         "c:nutrients/fruits",
         "minecraft:fox_food",
-        "sereneseasons:autumn_crops"
+        "sereneseasons:autumn_crops",
+        "vineandbarrel:grapes/red"
       ]
     },
     "vineandbarrel:white_grapes": {
@@ -73,7 +74,8 @@
         "c:foods/fruit",
         "c:nutrients/fruits",
         "minecraft:fox_food",
-        "sereneseasons:autumn_crops"
+        "sereneseasons:autumn_crops",
+        "vineandbarrel:grapes/white"
       ]
     },
     "vineandbarrel:hops": {
@@ -3067,10 +3069,19 @@
           "true",
           "false"
         ],
+        "rising": [
+          "true",
+          "false"
+        ],
         "size": [
           "1",
           "2",
           "3"
+        ],
+        "through": [
+          "0",
+          "1",
+          "2"
         ],
         "top": [
           "true",
@@ -3080,7 +3091,9 @@
       "defaultState": {
         "facing": "north",
         "flashing": "false",
+        "rising": "false",
         "size": "1",
+        "through": "0",
         "top": "true"
       },
       "tags": [
@@ -3104,10 +3117,19 @@
           "true",
           "false"
         ],
+        "rising": [
+          "true",
+          "false"
+        ],
         "size": [
           "1",
           "2",
           "3"
+        ],
+        "through": [
+          "0",
+          "1",
+          "2"
         ],
         "top": [
           "true",
@@ -3117,7 +3139,9 @@
       "defaultState": {
         "facing": "north",
         "flashing": "false",
+        "rising": "false",
         "size": "1",
+        "through": "0",
         "top": "true"
       },
       "tags": [
@@ -3435,10 +3459,19 @@
           "true",
           "false"
         ],
+        "rising": [
+          "true",
+          "false"
+        ],
         "size": [
           "1",
           "2",
           "3"
+        ],
+        "through": [
+          "0",
+          "1",
+          "2"
         ],
         "top": [
           "true",
@@ -3448,7 +3481,9 @@
       "defaultState": {
         "facing": "north",
         "flashing": "false",
+        "rising": "false",
         "size": "1",
+        "through": "0",
         "top": "true"
       },
       "tags": [
@@ -3472,10 +3507,19 @@
           "true",
           "false"
         ],
+        "rising": [
+          "true",
+          "false"
+        ],
         "size": [
           "1",
           "2",
           "3"
+        ],
+        "through": [
+          "0",
+          "1",
+          "2"
         ],
         "top": [
           "true",
@@ -3485,7 +3529,9 @@
       "defaultState": {
         "facing": "north",
         "flashing": "false",
+        "rising": "false",
         "size": "1",
+        "through": "0",
         "top": "true"
       },
       "tags": [
@@ -3803,10 +3849,19 @@
           "true",
           "false"
         ],
+        "rising": [
+          "true",
+          "false"
+        ],
         "size": [
           "1",
           "2",
           "3"
+        ],
+        "through": [
+          "0",
+          "1",
+          "2"
         ],
         "top": [
           "true",
@@ -3816,7 +3871,9 @@
       "defaultState": {
         "facing": "north",
         "flashing": "false",
+        "rising": "false",
         "size": "1",
+        "through": "0",
         "top": "true"
       },
       "tags": [
@@ -3840,10 +3897,19 @@
           "true",
           "false"
         ],
+        "rising": [
+          "true",
+          "false"
+        ],
         "size": [
           "1",
           "2",
           "3"
+        ],
+        "through": [
+          "0",
+          "1",
+          "2"
         ],
         "top": [
           "true",
@@ -3853,7 +3919,9 @@
       "defaultState": {
         "facing": "north",
         "flashing": "false",
+        "rising": "false",
         "size": "1",
+        "through": "0",
         "top": "true"
       },
       "tags": [
@@ -4171,10 +4239,19 @@
           "true",
           "false"
         ],
+        "rising": [
+          "true",
+          "false"
+        ],
         "size": [
           "1",
           "2",
           "3"
+        ],
+        "through": [
+          "0",
+          "1",
+          "2"
         ],
         "top": [
           "true",
@@ -4184,7 +4261,9 @@
       "defaultState": {
         "facing": "north",
         "flashing": "false",
+        "rising": "false",
         "size": "1",
+        "through": "0",
         "top": "true"
       },
       "tags": [
@@ -4208,10 +4287,19 @@
           "true",
           "false"
         ],
+        "rising": [
+          "true",
+          "false"
+        ],
         "size": [
           "1",
           "2",
           "3"
+        ],
+        "through": [
+          "0",
+          "1",
+          "2"
         ],
         "top": [
           "true",
@@ -4221,7 +4309,9 @@
       "defaultState": {
         "facing": "north",
         "flashing": "false",
+        "rising": "false",
         "size": "1",
+        "through": "0",
         "top": "true"
       },
       "tags": [
@@ -4775,10 +4865,10 @@
     {
       "id": "vineandbarrel:brewing/grape_juice",
       "ingredients": [
-        "vineandbarrel:red_grapes",
-        "vineandbarrel:red_grapes",
-        "vineandbarrel:red_grapes",
-        "vineandbarrel:red_grapes",
+        "#vineandbarrel:grapes/red",
+        "#vineandbarrel:grapes/red",
+        "#vineandbarrel:grapes/red",
+        "#vineandbarrel:grapes/red",
         "minecraft:sugar"
       ],
       "result": "vineandbarrel:grape_juice",
@@ -4832,10 +4922,10 @@
     {
       "id": "vineandbarrel:brewing/white_grape_juice",
       "ingredients": [
-        "vineandbarrel:white_grapes",
-        "vineandbarrel:white_grapes",
-        "vineandbarrel:white_grapes",
-        "vineandbarrel:white_grapes",
+        "#vineandbarrel:grapes/white",
+        "#vineandbarrel:grapes/white",
+        "#vineandbarrel:grapes/white",
+        "#vineandbarrel:grapes/white",
         "minecraft:sugar"
       ],
       "result": "vineandbarrel:white_grape_juice",
@@ -11896,6 +11986,12 @@
       "vineandbarrel:drink_vessels": [
         "vineandbarrel:mug",
         "vineandbarrel:wine_glass"
+      ],
+      "vineandbarrel:grapes/red": [
+        "vineandbarrel:red_grapes"
+      ],
+      "vineandbarrel:grapes/white": [
+        "vineandbarrel:white_grapes"
       ],
       "vineandbarrel:kettle_containers": [
         "minecraft:bucket",

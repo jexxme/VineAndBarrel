@@ -40,7 +40,7 @@ const isFd = (id) => id?.startsWith('farmersdelight:');
 // ------------------------------------------------------------------ ingredients
 const itemTags = runtime.tags.item;
 const referenced = new Set(); // every item id that needs an icon and a name
-const TAG_LABELS = { 'c:crops/onion': 'Any onion', 'c:crops/carrot': 'Any carrot', 'c:foods/raw_beef': 'Any raw beef', 'c:foods/raw_fish': 'Any raw fish', 'c:crops/wheat': 'Any wheat' };
+const TAG_LABELS = { 'c:crops/onion': 'Any onion', 'c:crops/carrot': 'Any carrot', 'c:foods/raw_beef': 'Any raw beef', 'c:foods/raw_fish': 'Any raw fish', 'c:crops/wheat': 'Any wheat', 'vineandbarrel:grapes/red': 'Any red grapes', 'vineandbarrel:grapes/white': 'Any white grapes' };
 function ingredient(raw) {
 	if (raw == null) return null;
 	if (typeof raw === 'string') {

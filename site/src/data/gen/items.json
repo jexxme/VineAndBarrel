@@ -27,7 +27,8 @@
 			"c:foods/fruit",
 			"c:nutrients/fruits",
 			"minecraft:fox_food",
-			"sereneseasons:autumn_crops"
+			"sereneseasons:autumn_crops",
+			"vineandbarrel:grapes/red"
 		]
 	},
 	"vineandbarrel:white_grapes": {
@@ -58,7 +59,8 @@
 			"c:foods/fruit",
 			"c:nutrients/fruits",
 			"minecraft:fox_food",
-			"sereneseasons:autumn_crops"
+			"sereneseasons:autumn_crops",
+			"vineandbarrel:grapes/white"
 		]
 	},
 	"vineandbarrel:hops": {
