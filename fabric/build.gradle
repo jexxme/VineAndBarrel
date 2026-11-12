@@ -310,6 +310,12 @@ tasks.register('gameTestsAll') {
 
 //////////////// Client smoke tests
 
+// Mojang's account services (profile and public keys, Realms), asked by every game at its start. A dev game has no
+// account, so they refuse it; and when many runners ask at once they answer with a timeout, "too many requests" (429)
+// or an error page instead, or cannot be reached at all. None of that says anything about the mod, so these lines are
+// never counted as errors, neither in a client's log nor in a server's output.
+def mojangServices = ~/com\.mojang\.authlib\.exceptions\.|Failed to request yggdrasil public key/
+
 // Each smoke client's folder: a muted options.txt that never pauses when unfocused (the window is hidden), and only
 // the mods it should have (FD Refabricated in the -fd folders, none elsewhere).
 def smokeDirs = ['smoke-client', 'smoke-client-fd', 'smoke-host', 'smoke-join', 'smoke-host-fd', 'smoke-join-fd', 'smoke-join-server', 'smoke-join-server-fd',
@@ -352,7 +358,7 @@ smokeDirs.each { name ->
             // A dev client has no Microsoft account, so Minecraft's own profile and Realms requests fail; those lines
             // (and their exceptions) are the only ones allowed, everything else fails the test
             def devAccount = ~/Failed to fetch user properties|Couldn't look up profile properties|sessionserver.mojang.com|Failed to fetch Realms feature flags|Couldn't connect to realms|InvalidCredentialsException|RealmsServiceException/
-            def errors = log.isFile() ? log.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ devAccount) } : ['no log']
+            def errors = log.isFile() ? log.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ devAccount) && !(it =~ mojangServices) } : ['no log']
             println "${name}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; screenshots in ${dir}/smoke"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
             errors.take(20).each { println "  LOG ${it}" }
@@ -484,7 +490,7 @@ The folder is gitignored: never commit that file. Then run the test again.""")
             def report = new groovy.json.JsonSlurper().parse(results)
             def failed = report.checks.findAll { !it.ok }
             // The server's whole output, not only latest.log: a crash before logging starts shows only there
-            def errors = serverLog.readLines('UTF-8').findAll { it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/ }
+            def errors = serverLog.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ mojangServices) }
             println "server-smoke${folder}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; output in ${serverLog}"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
             errors.take(20).each { println "  LOG ${it}" }
@@ -554,7 +560,7 @@ crossRuns.each { run ->
             }
             def report = new groovy.json.JsonSlurper().parse(results)
             def failed = report.checks.findAll { !it.ok }
-            def errors = serverLog.readLines('UTF-8').findAll { it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/ }
+            def errors = serverLog.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ mojangServices) }
             println "server-${run.out}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; output in ${serverLog}"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
             errors.take(20).each { println "  LOG ${it}" }
