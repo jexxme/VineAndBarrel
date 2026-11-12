@@ -1,6 +1,0 @@
-{
-  "parent": "vineandbarrel:block/template_vine_on_wide_support",
-  "textures": {
-    "vine": "vineandbarrel:block/white_grape_vine_on_trellis_stage3"
-  }
-}

@@ -1,0 +1,74 @@
+{
+	"ambientocclusion": false,
+	"textures": {
+		"particle": "#vine"
+	},
+	"elements": [
+		{
+			"from": [
+				0,
+				5,
+				6.75
+			],
+			"to": [
+				6,
+				16,
+				6.75
+			],
+			"shade_direction_override": "up",
+			"faces": {
+				"north": {
+					"uv": [
+						10,
+						0,
+						16,
+						11
+					],
+					"texture": "#vine"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						6,
+						11
+					],
+					"texture": "#vine"
+				}
+			}
+		},
+		{
+			"from": [
+				0,
+				5,
+				9.25
+			],
+			"to": [
+				6,
+				16,
+				9.25
+			],
+			"shade_direction_override": "up",
+			"faces": {
+				"north": {
+					"uv": [
+						10,
+						0,
+						16,
+						11
+					],
+					"texture": "#vine"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						6,
+						11
+					],
+					"texture": "#vine"
+				}
+			}
+		}
+	]
+}

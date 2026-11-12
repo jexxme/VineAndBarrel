@@ -41,7 +41,7 @@ public final class VineSupports
 	 * here stays, dormant, and {@code true} brings it all back. While off nothing is a makeshift support
 	 * ({@link #isMakeshift}), so no plant goes into one, climbs one or is drawn as the foot of one.
 	 */
-	public static final boolean ENABLED = false;
+	public static final boolean ENABLED = true;
 
 	private VineSupports() {
 	}
