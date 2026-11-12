@@ -355,6 +355,12 @@ tasks.register('gameTestsAll') {
 
 //////////////// Client smoke tests
 
+// Mojang's account services (profile and public keys, Realms), asked by every game at its start. A dev game has no
+// account, so they refuse it; and when many runners ask at once they answer with a timeout, "too many requests" (429)
+// or an error page instead, or cannot be reached at all. None of that says anything about the mod, so these lines are
+// never counted as errors, neither in a client's log nor in a server's output.
+def mojangServices = ~/com\.mojang\.authlib\.exceptions\.|Failed to request yggdrasil public key/
+
 // Farmer's Delight Refabricated registers its rotten tomato entity under a name, and this Minecraft logs an ERROR for
 // every named entity type that has no data fixer (any mod's): the one line of FD's own the FD runs' log checks allow.
 def FD_OWN_ERROR = 'No data fixer registered for rotten_tomato'
@@ -414,7 +420,7 @@ smokeDirs.each { name ->
             // also asks for the profile's chat key pair, which fails the same way (26.1.x prints its 401 on a line of its own),
             // and 1.20.1 calls the failed profile request "Failed to verify authentication".
             def devAccount = ~/Failed to verify authentication|Failed to retrieve profile key pair|authlib\.exceptions\.MinecraftClientHttpException: Status: 401$|Failed to fetch user properties|Couldn't look up profile properties|sessionserver.mojang.com|Failed to fetch Realms feature flags|Couldn't connect to realms|InvalidCredentialsException|RealmsServiceException/
-            def errors = log.isFile() ? withoutFdJeiPage(log.readLines('UTF-8')).findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ devAccount) && !it.endsWith(FD_OWN_ERROR) } : ['no log']
+            def errors = log.isFile() ? withoutFdJeiPage(log.readLines('UTF-8')).findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ devAccount) && !(it =~ mojangServices) && !it.endsWith(FD_OWN_ERROR) } : ['no log']
             println "${name}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; screenshots in ${dir}/smoke"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
             errors.take(20).each { println "  LOG ${it}" }
@@ -546,7 +552,7 @@ The folder is gitignored: never commit that file. Then run the test again.""")
             def report = new groovy.json.JsonSlurper().parse(results)
             def failed = report.checks.findAll { !it.ok }
             // The server's whole output, not only latest.log: a crash before logging starts shows only there
-            def errors = serverLog.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !it.endsWith(FD_OWN_ERROR) }
+            def errors = serverLog.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !it.endsWith(FD_OWN_ERROR) && !(it =~ mojangServices) }
             println "server-smoke${folder}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; output in ${serverLog}"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
             errors.take(20).each { println "  LOG ${it}" }
@@ -615,7 +621,7 @@ crossRuns.each { run ->
             }
             def report = new groovy.json.JsonSlurper().parse(results)
             def failed = report.checks.findAll { !it.ok }
-            def errors = serverLog.readLines('UTF-8').findAll { it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/ }
+            def errors = serverLog.readLines('UTF-8').findAll { (it.contains('/ERROR]') || it ==~ /^(\S+\.)?\S*(Exception|Error)(: .*)?$/) && !(it =~ mojangServices) }
             println "server-${run.out}: ${report.checks.size()} checks, ${failed.size()} failed, ${errors.size()} error lines; output in ${serverLog}"
             failed.each { println "  FAILED ${it.check}: ${it.problem}" }
             errors.take(20).each { println "  LOG ${it}" }
