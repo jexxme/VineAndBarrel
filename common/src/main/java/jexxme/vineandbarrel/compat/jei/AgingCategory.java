@@ -31,7 +31,6 @@ public class AgingCategory implements IRecipeCategory<RecipeHolder<AgingRecipe>>
 {
 	public static final int WIDTH = 120;
 	public static final int HEIGHT = 58;
-	private static final int DAY = 24000;
 	private static final int BASE_X = 1, YOUNG_X = 51, AGED_X = 101, SLOT_Y = 5, VESSEL_Y = 28;
 	private static final int ARROW_1_X = 22, ARROW_2_X = 72, ARROW_Y = 5;
 	/** The day labels get their own row under the vessel slots, so a long one ("+3 days") never runs into a slot. */
@@ -125,10 +124,6 @@ public class AgingCategory implements IRecipeCategory<RecipeHolder<AgingRecipe>>
 
 	/** In-game days: "1 day", "3 days", "1.5 days". */
 	static Component days(int ticks) {
-		if (ticks == DAY) {
-			return Component.translatable("jei.vineandbarrel.aging.one_day");
-		}
-		String amount = ticks % DAY == 0 ? Integer.toString(ticks / DAY) : String.format(java.util.Locale.ROOT, "%.1f", ticks / (double) DAY);
-		return Component.translatable("jei.vineandbarrel.aging.days", amount);
+		return jexxme.vineandbarrel.barrel.BarrelStatus.days(ticks);
 	}
 }
