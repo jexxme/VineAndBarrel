@@ -9,7 +9,7 @@
     "blocks": [
       { "block": "vineandbarrel:aging_barrel", "when": { "fill": "0" }, "step": 1, "now": "watch.vineandbarrel.aging_barrel.now.empty" },
       { "block": "vineandbarrel:aging_barrel", "when": { "bung": "airlock" }, "step": 2, "now": "watch.vineandbarrel.aging_barrel.now.fermenting" },
-      { "block": "vineandbarrel:aging_barrel", "when": { "bung": "wax" }, "step": 4, "now": "watch.vineandbarrel.aging_barrel.now.aged" },
+      { "block": "vineandbarrel:aging_barrel", "when": { "bung": "wax" }, "step": 6, "now": "watch.vineandbarrel.aging_barrel.now.aged" },
       { "block": "vineandbarrel:aging_barrel", "step": 4, "now": "watch.vineandbarrel.aging_barrel.now.ready" }
     ],
     "jei": ["vineandbarrel:aging"]
@@ -63,9 +63,10 @@
     },
     {
       "caption": "watch.vineandbarrel.aging_barrel.3",
+      "with": [{ "recipe": "vineandbarrel:aging/red_wine", "part": "fermenting_time" }],
       "ticks": 130,
       "actions": [
-        { "type": "timelapse", "ticks": 110, "days": 1 },
+        { "type": "timelapse", "ticks": 110, "days_of": { "recipe": "vineandbarrel:aging/red_wine", "part": "fermenting_time" } },
         { "type": "particles", "ticks": 60, "particle": { "type": "vineandbarrel:ferment_bubble" },
           "pos": [1.5, 2.14, 1.5], "spread": [0.02, 0.0, 0.02], "velocity": [0.0, 0.02, 0.0], "rate": 0.3 },
         { "type": "particles", "at": 60, "ticks": 50, "particle": { "type": "vineandbarrel:ferment_bubble" },
@@ -100,14 +101,34 @@
     },
     {
       "caption": "watch.vineandbarrel.aging_barrel.5",
+      "with": [{ "recipe": "vineandbarrel:aging/red_wine", "part": "aging_time" }],
       "ticks": 150,
       "actions": [
         { "type": "hold", "at": 4, "item": "minecraft:air" },
         { "type": "look", "at": 6, "pos": [1.5, 2.2, 1.5] },
-        { "type": "timelapse", "ticks": 120, "days": 3 },
+        { "type": "timelapse", "ticks": 120, "days_of": { "recipe": "vineandbarrel:aging/red_wine", "part": "aging_time" } },
         { "type": "barrel", "at": 122, "pos": [1, 1, 1], "recipe": "vineandbarrel:aging/red_wine", "servings": 3, "stage": "aged" },
         { "type": "sound", "at": 122, "sound": "vineandbarrel:block.aging_barrel.aged" },
         { "type": "pointer", "at": 122, "ticks": 28, "pos": [1.5, 2.45, 1.5] }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.aging_barrel.6",
+      "anchor": [1.5, 1.3, 1.97],
+      "ticks": 110,
+      "actions": [
+        { "type": "hold", "at": 2, "item": { "recipe": "vineandbarrel:aging/red_wine", "part": "vessel" } },
+        { "type": "look", "at": 4, "pos": [1.5, 1.25, 2.05] },
+        { "type": "swing", "at": 22 },
+        { "type": "set_properties", "at": 24, "pos": [1, 1, 1], "properties": { "tapping": "true" } },
+        { "type": "sound", "at": 24, "sound": "vineandbarrel:block.aging_barrel.tap" },
+        { "type": "particles", "at": 24, "ticks": 10, "particle": { "type": "vineandbarrel:tap_drip", "color": -7464402 },
+          "pos": [1.5, 1.24, 2.04], "spread": [0.01, 0.0, 0.01], "velocity": [0.0, -0.06, 0.0], "rate": 1.5,
+          "color_of": { "recipe": "vineandbarrel:aging/red_wine", "part": "aged" } },
+        { "type": "barrel", "at": 30, "pos": [1, 1, 1], "recipe": "vineandbarrel:aging/red_wine", "servings": 2, "stage": "aged" },
+        { "type": "hold", "at": 30, "item": { "recipe": "vineandbarrel:aging/red_wine", "part": "aged" } },
+        { "type": "set_properties", "at": 42, "pos": [1, 1, 1], "properties": { "tapping": "false" } },
+        { "type": "look", "at": 50, "pos": [3.4, 2.4, 3.4] }
       ]
     }
   ]
