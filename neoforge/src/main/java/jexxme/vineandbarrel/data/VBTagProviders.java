@@ -47,6 +47,10 @@ public final class VBTagProviders
 		return TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", path));
 	}
 
+	private static ResourceKey<Item> kaleidoscopeItem(String path) {
+		return ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(VBTags.KALEIDOSCOPE_TAVERN, path));
+	}
+
 	private static ResourceKey<Block> fdBlock(String path) {
 		return ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(VBTags.FARMERS_DELIGHT, path));
 	}
@@ -142,6 +146,13 @@ public final class VBTagProviders
 			add(tag(ItemTags.VILLAGER_PICKS_UP), VBItems.BARLEY);
 			// C5: foxes love grapes (and can be bred with them, like sweet berries)
 			add(tag(ItemTags.FOX_FOOD), VBItems.RED_GRAPES, VBItems.WHITE_GRAPES);
+
+			// The grape juices are brewed from these two tags, so Kaleidoscope Tavern's grapes brew like ours (without that
+			// mod each tag holds our grape alone). The other way round is data/vineandbarrel/recipe/pressing_tub
+			add(tag(VBTags.RED_GRAPES), VBItems.RED_GRAPES);
+			tag(VBTags.RED_GRAPES).add(net.minecraft.tags.TagEntry.optionalElement(kaleidoscopeItem("grape").identifier()));
+			add(tag(VBTags.WHITE_GRAPES), VBItems.WHITE_GRAPES);
+			tag(VBTags.WHITE_GRAPES).add(net.minecraft.tags.TagEntry.optionalElement(kaleidoscopeItem("green_grape").identifier()));
 
 			add(tag(VBTags.WILD_CROPS_ITEM), VBItems.WILD_GRAPES, VBItems.WILD_WHITE_GRAPES, VBItems.WILD_HOPS, VBItems.WILD_BARLEY);
 			add(tag(VBTags.FD_WILD_CROPS_ITEM), VBItems.WILD_GRAPES, VBItems.WILD_WHITE_GRAPES, VBItems.WILD_HOPS, VBItems.WILD_BARLEY);
