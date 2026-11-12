@@ -107,3 +107,58 @@ tasks.withType(JavaExec).configureEach { task ->
         task.usesService(gameSlots)
     }
 }
+
+// Another mod next to this one, for a one-off "does it still work with mod X installed" check:
+//   ./gradlew :fabric:runGameTest -Pwith=kaleidoscope-tavern-refabricated:<version>,forge-config-api-port:<version>
+// A mod is a Modrinth project and version (<project>:<version number or id>, from Modrinth's Maven) or any
+// group:name:version. The GameTest runs (with and without Farmer's Delight) and the first smoke client get the jars as a
+// player installs them: in the run's mods folder, nested libraries and all (as a dev dependency those are missing). The
+// next run without -Pwith takes them out again. Forge 1.20.1 runs on other names than the jars: there they are
+// remapped onto the run's classpath instead. -Pwith.java=<version> runs these games on another Java (a mod built for a
+// newer Java than this Minecraft's). Never in a jar, a compile classpath or the merge gate.
+def withMods = providers.gradleProperty('with').map { String list -> list.split(',')*.trim().findAll { it } }.getOrElse([])
+def withJava = providers.gradleProperty('with.java').orNull
+def withRuns = ['runGameTestServer', 'runGameTestServerFd', 'runGameTest', 'runGameTestFd', 'runSmokeClient']
+def withConfiguration = configurations.create('withMods') {
+    canBeConsumed = false
+    transitive = false
+    description = 'The mods -Pwith puts next to this one in the GameTest runs and the first smoke client.'
+}
+def withCoordinates = withMods.collect { String mod -> mod.count(':') >= 2 ? mod : "maven.modrinth:${mod}" }
+def forgeNames = project.name == 'forge'
+if (!forgeNames) {
+    withCoordinates.each { dependencies.add('withMods', it) }
+} else if (withMods) {
+    // the remapping configuration (modWithMods) takes the published jars and hands withMods their remapped copies
+    pluginManager.withPlugin('net.neoforged.moddev.legacyforge') {
+        obfuscation.createRemappingConfiguration(configurations.withMods)
+        withCoordinates.each { dependencies.add('modWithMods', it) }
+        configurations.named('runtimeClasspath') { extendsFrom(configurations.withMods) }
+    }
+}
+def withJars = withConfiguration
+tasks.withType(JavaExec).matching { it.name in withRuns }.configureEach { JavaExec run ->
+    if (withJava) run.javaLauncher = project.javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(withJava as int) }
+    def jars = forgeNames ? files() : withJars
+    def names = withMods
+    // The run's game folder (Loom sets the task's working folder only as the game starts)
+    def runName = run.name.substring(3, 4).toLowerCase() + run.name.substring(4)
+    def loomRun = project.extensions.findByName('loom')?.runConfigs?.findByName(runName)
+    def mdgRun = project.extensions.findByName('neoForge')?.runs?.findByName(runName)
+    def gameDir = loomRun != null ? project.file(loomRun.runDir) : mdgRun != null ? mdgRun.gameDirectory.get().asFile : run.workingDir
+    doFirst { JavaExec task ->
+        def mods = new File(gameDir, 'mods')
+        def marker = new File(mods, 'with-mods.txt')
+        if (marker.isFile()) {
+            marker.readLines().findAll { it }.each { new File(mods, it).delete() }
+            marker.delete()
+        }
+        def added = jars.files
+        if (added) {
+            mods.mkdirs()
+            added.each { java.nio.file.Files.copy(it.toPath(), new File(mods, it.name).toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+            marker.text = added*.name.join('\n') + '\n'
+        }
+        if (names) task.logger.lifecycle("With: ${names.join(', ')} ${added ? "in ${mods}" : '(on the classpath, remapped)'}")
+    }
+}
