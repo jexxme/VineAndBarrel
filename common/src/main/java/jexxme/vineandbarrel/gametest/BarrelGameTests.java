@@ -1346,15 +1346,14 @@ public final class BarrelGameTests
 		player.drink(new ItemStack(BaseItems.GRAPE_JUICE.get()));
 		helper.assertValueEqual(Tipsy.getLevel(player), 2, "grape juice lowers it");
 		// non-alcoholic mode: buffs stay, Tipsy doesn't come
-		boolean was = TipsyConfig.ENABLED.get();
 		TestPlayer sober = drinker(helper, new Vec3(28.5, 1.0, 4.5));
 		try {
-			TipsyConfig.ENABLED.set(false);
+			TipsyConfig.ENABLED.setForTest(false);
 			sober.drink(new ItemStack(DrinkItems.AGED_HARD_CIDER.get()));
 			helper.assertValueEqual(Tipsy.getLevel(sober), 0, "non-alcoholic mode");
 			helper.assertTrue(sober.getEffect(MobEffects.ABSORPTION) != null, "the buff still comes");
 		} finally {
-			TipsyConfig.ENABLED.set(was);
+			TipsyConfig.ENABLED.setForTest(null);
 		}
 		helper.succeed();
 	}

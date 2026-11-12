@@ -227,14 +227,16 @@ public final class TipsyGameTests
 		return player;
 	}
 
-	/** Runs {@code body} with a config value temporarily set, restoring it even when an assertion fails. */
+	/**
+	 * Runs {@code body} with a config value temporarily at {@code setting}, also when an assertion fails. In memory
+	 * only ({@link ConfigValue#setForTest}): the config file is never written.
+	 */
 	private static <T> void with(ConfigValue<T> value, T setting, Runnable body) {
-		T before = value.get();
-		value.set(setting);
+		value.setForTest(setting);
 		try {
 			body.run();
 		} finally {
-			value.set(before);
+			value.setForTest(null);
 		}
 	}
 
