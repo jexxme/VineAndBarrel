@@ -58,6 +58,9 @@ dependencies {
 }
 
 def buildDir = project.layout.buildDirectory.get().asFile
+// Which of this mod's GameTests the GameTest runs take: all of them, or with -Ptests=<pattern> only those whose name
+// matches (see neoforge/build.gradle)
+def gameTests = providers.gradleProperty('tests').getOrElse('*')
 def smokePort = 25599
 
 // The smoke server's Tipsy decay speed (the default is 90): the joined client must show it, not its own file's value
@@ -97,7 +100,7 @@ loom {
             source sourceSets.gametest
             runDir 'run/gametest'
             property 'fabric-api.gametest'
-            property 'fabric-api.gametest.filter', "${mod_id}:*" // only this mod's GameTests, never another mod's in the run
+            property 'fabric-api.gametest.filter', "${mod_id}:${gameTests}" // only this mod's GameTests, never another mod's in the run
             property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest.xml" // for the parity checklist
         }
         // The same with Farmer's Delight Refabricated in run-fd/mods: ./gradlew :fabric:runGameTestFd
@@ -106,7 +109,7 @@ loom {
             source sourceSets.gametest
             runDir 'run-fd'
             property 'fabric-api.gametest'
-            property 'fabric-api.gametest.filter', "${mod_id}:*" // only this mod's GameTests, never another mod's in the run
+            property 'fabric-api.gametest.filter', "${mod_id}:${gameTests}" // only this mod's GameTests, never another mod's in the run
             property 'vineandbarrel.testReport', "${buildDir}/test-reports/gametest-fd.xml"
             property 'vineandbarrel.expectFd', 'true'
         }
