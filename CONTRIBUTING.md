@@ -31,12 +31,15 @@ bash scripts/multiloader/verify-all.sh --full   # everything: before merging and
 
 Both run at most two games at once (the machine's memory is shared), and both print the time of each step. `--fd`
 adds the Farmer's Delight GameTests and smoke test to the quick tier; `--no-smoke` leaves out every smoke test (no
-game client), which a release can't use.
+game client), which a release can't use. `--part=<name>` runs one part of a tier alone (`static`, `gametests`,
+`gametests-fd`, `smoke-client`, `smoke-lan`, `smoke-server`, `smoke-cross`, ...; `--help` lists them).
 
 The same script runs on GitHub's runners, smoke clients included: the Verify workflow (`.github/workflows/verify.yml`).
 Push a branch named `ci/quick/<name>` or `ci/full/<name>` and it runs that tier on it, or start it by hand (Actions,
-Verify, Run workflow) with a ref and the tier. Its summary, logs, smoke screenshots and PARITY.md are the run's
-artifact. That is the merge gate: a green `ci/full/...` run on the commit being merged.
+Verify, Run workflow) with a ref and the tier. There the parts of the tier run as jobs side by side, so a full verify
+takes about as long as its slowest part, and a part that failed can be run again alone (Re-run failed jobs). The
+`result` job puts the parts together: its summary, logs, smoke screenshots and PARITY.md are the run's artifact. That
+is the merge gate: a green `ci/full/...` run on the commit being merged.
 
 CI runs `verify-all.sh --full --no-smoke` on every push and pull request: `build`, the datagen check and every
 GameTest run of both loaders, failing on any `ERROR` in a test log. A commit whose full Verify run is already green

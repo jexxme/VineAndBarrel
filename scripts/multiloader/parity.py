@@ -92,6 +92,14 @@ def read_gametests(path):
     return results
 
 
+def slowest_gametests(path, count=5):
+    """The tests of one run that took longest, as (seconds, name): where a GameTest run's time goes."""
+    if not path.is_file():
+        return []
+    times = [(float(case.get('time') or 0), case.get('name').split(':', 1)[-1]) for case in ET.parse(path).getroot().iter('testcase')]
+    return sorted(times, reverse=True)[:count]
+
+
 def read_smoke(path):
     if not path.is_file():
         return None
@@ -189,6 +197,10 @@ def main(argv):
 
     out.write_text('\n'.join(lines), encoding='utf-8', newline='\n')
     print(f'wrote {out}: {len(all_problems)} failures, {len(missing)} runs missing')
+    label, path = GAMETEST_RUNS[0]
+    slowest = slowest_gametests(path)
+    if slowest:
+        print(f'slowest GameTests ({label}): ' + ', '.join(f'{name} {seconds:.1f}s' for seconds, name in slowest))
     for p in all_problems:
         print('  FAILED ' + p)
     for m in missing:
