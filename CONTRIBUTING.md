@@ -13,6 +13,7 @@ Both jars contain the common code.
 ./gradlew runData                        # regenerate common/src/generated/resources (commit the result)
 ./gradlew :neoforge:runGameTestServer    # in-world tests on NeoForge, headless
 ./gradlew :fabric:runGameTest            # the same tests on Fabric
+./gradlew :neoforge:runGameTestServer -Ptests='kettle_*'   # only the tests whose name matches, while working on one area
 ./gradlew gameTestsAll                   # NeoForge without and with Farmer's Delight and the compat run, Fabric without and with FD Refabricated
 bash scripts/multiloader/verify-all.sh          # quick: after each round of changes
 bash scripts/multiloader/verify-all.sh --full   # everything: before merging and before tagging
