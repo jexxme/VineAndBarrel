@@ -1,0 +1,70 @@
+name: Set up the build
+description: >
+  Java, and Gradle's downloads from this Minecraft version's cache (one cache per Minecraft version, written by the
+  Caches workflow on the default branch, so every branch, tag and pull request can read it). Optionally a display for
+  hidden game clients. Run it after actions/checkout.
+
+inputs:
+  cache:
+    description: "'restore' (the default) to restore the cache, 'lookup' to only ask whether exactly that cache is there"
+    default: restore
+  display:
+    description: "'true' to install Xvfb and Mesa for hidden game clients"
+    default: 'false'
+  fd:
+    description: "Nothing on this Minecraft version (the workflows are the same on every version branch): the FD runs take Farmer's Delight from Gradle"
+    default: 'false'
+
+outputs:
+  minecraft:
+    description: The Minecraft version of this checkout (gradle.properties)
+    value: ${{ steps.key.outputs.minecraft }}
+  cache-key:
+    description: The key of the Gradle cache this checkout wants
+    value: ${{ steps.key.outputs.key }}
+  cache-hit:
+    description: "'true' if exactly that cache was there (an older one of the same Minecraft version is used otherwise)"
+    value: ${{ steps.cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 17
+
+    - name: The Gradle cache this checkout wants
+      id: key
+      shell: bash
+      run: |
+        mc=$(sed -n 's/^minecraft_version=//p' gradle.properties | tr -d '\r')
+        # Everything that decides what Gradle downloads and sets up: the versions in gradle.properties (not the mod's
+        # own version), the wrapper, every build script
+        hash=$({
+          grep -vE '^[a-z_]*mod_version=' gradle.properties
+          cat gradle/wrapper/gradle-wrapper.properties
+          find . \( -name '*.gradle' -o -path './build-logic/src/*' \) -type f \
+            -not -path './dev/*' -not -path '*/build/*' -not -path './.gradle/*' -not -path './site/*' | LC_ALL=C sort | xargs cat
+        } | tr -d '\r' | sha256sum | cut -c1-16)
+        echo "minecraft=$mc" >> "$GITHUB_OUTPUT"
+        echo "key=gradle-$mc-$hash" >> "$GITHUB_OUTPUT"
+
+    - name: Gradle's downloads, from the cache
+      id: cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ steps.key.outputs.key }}
+        lookup-only: ${{ inputs.cache == 'lookup' }}
+        restore-keys: |
+          gradle-${{ steps.key.outputs.minecraft }}-
+
+    - name: Xvfb and Mesa for the hidden clients, flite for the narrator (without it Minecraft logs an ERROR)
+      if: inputs.display == 'true'
+      shell: bash
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -yq --no-install-recommends xvfb xauth libgl1-mesa-dri libglx-mesa0 libegl-mesa0 libegl1 libflite1

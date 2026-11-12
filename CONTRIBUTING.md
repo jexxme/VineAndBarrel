@@ -38,8 +38,13 @@ Push a branch named `ci/quick/<name>` or `ci/full/<name>` and it runs that tier 
 Verify, Run workflow) with a ref and the tier. Its summary, logs, smoke screenshots and PARITY.md are the run's
 artifact. That is the merge gate: a green `ci/full/...` run on the commit being merged.
 
-CI runs `build`, `runData` (it fails if `common/src/generated` changes) and the GameTests of both loaders on every
-push and pull request, and also fails on any `ERROR` in the test log.
+CI runs `verify-all.sh --full --no-smoke` on every push and pull request: `build`, the datagen check and every
+GameTest run of both loaders, failing on any `ERROR` in a test log. A commit whose full Verify run is already green
+is only built there. Pushes that change only the wiki (`site/`) or Markdown files start no CI run.
+
+Gradle's downloads come from one cache per Minecraft version (`.github/actions/setup`). The Caches workflow writes
+it, on the default branch, so every branch, tag and pull request can read it; CI starts that workflow by itself when
+a version branch's build files changed.
 
 On Fabric the Farmer's Delight run uses Farmer's Delight Refabricated from Modrinth's Maven, nothing to build.
 
