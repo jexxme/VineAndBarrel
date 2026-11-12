@@ -93,7 +93,10 @@ public class VBJeiPlugin implements IModPlugin
 			@Override
 			public <T> @org.jspecify.annotations.Nullable IIconButtonController createButtonController(IRecipeLayoutDrawable<T> layout) {
 				Identifier category = layout.getRecipeCategory().getRecipeType().getUid();
-				return WatchIndex.INSTANCE.forJeiCategory(category).map(scene -> new WatchButton(scene, icon)).orElse(null);
+				// an aging recipe's button plays the barrel scene for that recipe (its base, its vessel, its days)
+				java.util.Optional<Identifier> recipe = layout.getRecipe() instanceof net.minecraft.world.item.crafting.RecipeHolder<?> holder
+					&& holder.value() instanceof jexxme.vineandbarrel.barrel.AgingRecipe ? java.util.Optional.of(holder.id().identifier()) : java.util.Optional.empty();
+				return WatchIndex.INSTANCE.forJeiCategory(category).map(scene -> new WatchButton(scene, recipe, icon)).orElse(null);
 			}
 		});
 	}
@@ -101,7 +104,7 @@ public class VBJeiPlugin implements IModPlugin
 	private static final Identifier WATCH_ICON = VineAndBarrel.id("textures/gui/watch_jei.png");
 
 	/** Opens the category's scene; Escape comes back to this JEI page. */
-	private record WatchButton(Identifier scene, IDrawableStatic icon) implements IIconButtonController
+	private record WatchButton(Identifier scene, java.util.Optional<Identifier> recipe, IDrawableStatic icon) implements IIconButtonController
 	{
 		@Override
 		public void initState(IButtonState state) {
@@ -117,7 +120,7 @@ public class VBJeiPlugin implements IModPlugin
 		public boolean onPress(IJeiUserInput input) {
 			if (!input.isSimulate()) {
 				net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-				WatchScreen.open(scene, 0, null, minecraft.screen);
+				WatchScreen.open(scene, 0, null, minecraft.screen, recipe);
 			}
 			return true;
 		}
