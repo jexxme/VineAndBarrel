@@ -55,6 +55,13 @@ public final class TipsyRegistry
 	public static final EntityAttachment<Integer> BLACKOUT_POSE = Services.PLATFORM.attachment(VineAndBarrel.id("blackout_pose"),
 			EntityAttachment.Spec.builder(() -> 0).serialize(Codec.INT.fieldOf("pose")).sync(ByteBufCodecs.VAR_INT).build());
 
+	/**
+	 * The way a blacked-out player's body lies on the face (yaw, degrees): chosen once by the server as they black out
+	 * (where it has room, {@link Blackout#start}) and then where they wake up; synced so every client draws the same fall.
+	 */
+	public static final EntityAttachment<Float> BLACKOUT_YAW = Services.PLATFORM.attachment(VineAndBarrel.id("blackout_yaw"),
+			EntityAttachment.Spec.builder(() -> 0.0F).serialize(Codec.FLOAT.fieldOf("yaw")).sync(ByteBufCodecs.FLOAT).build());
+
 	/** The ending of the blackout in progress, once the player woke up ({@link Blackout.Scene}); saved, server only. */
 	public static final EntityAttachment<Blackout.Scene> BLACKOUT_SCENE = Services.PLATFORM.attachment(VineAndBarrel.id("blackout_scene"),
 			EntityAttachment.Spec.<Blackout.Scene>builder(() -> new Blackout.Scene("right_here", "", java.util.Optional.empty(), java.util.Optional.empty()))

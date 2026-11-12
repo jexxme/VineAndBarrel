@@ -20,9 +20,12 @@
   ],
   "client": [
     "AbstractContainerScreenAccessor",
+    "AvatarRenderStateMixin",
     "ClientAdvancementsAccessor",
     "CameraMixin",
+    "EntityRendererMixin",
     "GuiGraphicsExtractorAccessor",
+    "HumanoidModelMixin",
     "ParticleEngineAccessor",
     "RecipeBookComponentAccessor",
     "SceneParticleTargetMixin"

@@ -119,8 +119,11 @@ public final class BlackoutGameTests
 		test("blackout_lines_never_repeat", LARGE, 100, BlackoutGameTests::linesNeverRepeat);
 		test("blackout_lines_translated", LARGE, 100, BlackoutGameTests::linesTranslated);
 		test("blackout_pose_math", LARGE, 100, BlackoutGameTests::poseMath);
+		test("blackout_on_the_ground_math", LARGE, 100, BlackoutGameTests::groundMath);
 		test("blackout_sounds_fit_the_place", LARGE, 100, BlackoutGameTests::soundsFitThePlace);
 		test("blackout_spot_safety", LARGE, 100, BlackoutGameTests::spotSafety);
+		test("blackout_lie_room", LARGE, 100, BlackoutGameTests::lieRoom);
+		test("blackout_seated_stays_seated", LARGE, 100, BlackoutGameTests::seatedStaysSeated);
 		test("blackout_ending_home", LARGE, 100, BlackoutGameTests::home);
 		test("blackout_bed_under_deep_sleep", LARGE, 300, BlackoutGameTests::bedUnderDeepSleep);
 		test("blackout_ending_in_the_open", LARGE, 100, BlackoutGameTests::inTheOpen);
@@ -390,7 +393,7 @@ public final class BlackoutGameTests
 		helper.succeed();
 	}
 
-	/** The client's timeline: lids fall, stay shut until the eyes open, the body tips over, lies, and gets up. */
+	/** The client's timeline: lids fall, stay shut until the eyes open, the body falls on its face, lies, and gets up. */
 	private static void poseMath(GameTestHelper helper) {
 		helper.assertValueEqual(BlackoutPose.eyesClosed(Blackout.TICKS), 0.0F, "eyes open at the last drink");
 		helper.assertValueEqual(BlackoutPose.eyesClosed(Blackout.TICKS - Blackout.FADE_OUT), 1.0F, "shut after the fade");
@@ -400,20 +403,269 @@ public final class BlackoutGameTests
 		float peek = BlackoutPose.eyesClosed(Blackout.EYES_OPEN - 0.45F * (Blackout.EYES_OPEN - Blackout.EYES_UP));
 		float droop = BlackoutPose.eyesClosed(Blackout.EYES_OPEN - 0.6F * (Blackout.EYES_OPEN - Blackout.EYES_UP));
 		helper.assertTrue(peek < droop && droop < 1.0F, "they peek, droop and open: " + peek + " " + droop);
-		helper.assertValueEqual(BlackoutPose.lying(Blackout.TICKS), 0.0F, "standing at the last drink");
-		helper.assertValueEqual(BlackoutPose.lying(Blackout.TICKS - Blackout.TIP), 1.0F, "down after the tip");
-		helper.assertValueEqual(BlackoutPose.lying(Blackout.WAKE_AT), 1.0F, "lying");
-		helper.assertValueEqual(BlackoutPose.lying(Blackout.GET_UP), 1.0F, "lying until getting up");
-		helper.assertValueEqual(BlackoutPose.lying(0.0F), 0.0F, "up at the end");
-		helper.assertTrue(BlackoutPose.lying(Blackout.GET_UP / 2.0F) > 0.0F && BlackoutPose.lying(Blackout.GET_UP / 2.0F) < 1.0F, "getting up slowly");
-		// The head ends up a body's length to the side, near the ground
-		Vec3 head = BlackoutPose.tipped(0.0F, 90.0F, 1.0F, 1.6);
-		helper.assertTrue(Math.abs(head.y - BlackoutPose.LIFT) < 1.0E-4 && Math.abs(Math.hypot(head.x, head.z) - 1.6) < 1.0E-4, "head lying " + head);
-		helper.assertTrue(BlackoutPose.side(1) != BlackoutPose.side(2), "players fall to both sides");
+		helper.assertTrue(Blackout.GROUND_GET_UP > Blackout.GET_UP && Blackout.GROUND_GET_UP <= Blackout.EYES_UP,
+			"off the ground takes longer than out of bed, and starts with the eyes open");
+		helper.assertTrue(!BlackoutPose.lyingStill(Blackout.TICKS - Blackout.TIP) && BlackoutPose.lyingStill(Blackout.WAKE_AT)
+			&& BlackoutPose.lyingStill(Blackout.GROUND_GET_UP) && !BlackoutPose.lyingStill(Blackout.GROUND_GET_UP - 0.5F),
+			"the stars circle once the body lies still, and stop as the get-up starts");
+		helper.assertTrue(BlackoutPose.side(1) != BlackoutPose.side(2), "heads turn to both sides");
 		helper.succeed();
 	}
 
+	/**
+	 * Out on the ground, as the clients draw it: standing exactly as the game draws a player at the first moment and at
+	 * the last, on both sides; falling forward onto the face; lying a body's length ahead of the feet with the cheek on
+	 * the ground; and in between nothing jumps from one small step to the next, nothing is ever below the ground, the
+	 * feet never slide or float (the toes or the heels stay where they are on the ground) and the hands stay where they
+	 * lie while they carry the body; the eyes never look straight down (the view's angles would flip there); the two
+	 * sides are mirror images.
+	 */
+	private static void groundMath(GameTestHelper helper) {
+		double px = BlackoutPose.PX, rest = BlackoutPose.REST * px;
+		helper.assertTrue(BlackoutPose.body(0.0F, 1, 0.0F, 0.0F) == null && BlackoutPose.body(Blackout.TICKS + 0.5F, 1, 0.0F, 0.0F) == null,
+			"only while out");
+		for (int side : new int[]{1, -1}) {
+			// The first moment and the last: the game's own standing player, looking where the game has them look
+			for (float left : new float[]{Blackout.TICKS, 1.0E-4F}) {
+				BlackoutPose.Body body = BlackoutPose.body(left, side, 30.0F, 12.0F);
+				String at = " (" + left + " ticks left, side " + side + ")";
+				helper.assertTrue(body.hip().distanceTo(new Vec3(0.0, BlackoutPose.HIP, 0.0)) < 1.0E-3 && Math.abs(body.lean()) < 0.05F,
+					"standing" + at + ": " + body);
+				helper.assertTrue(still(body) && body.vanilla() > 0.999F, "the game's own pose" + at + ": " + body);
+				helper.assertTrue(body.eye().distanceTo(new Vec3(0.0, 1.62, 0.0)) < 1.0E-3 && Math.abs(body.viewPitch() - 12.0F) < 0.05F
+					&& Math.abs(body.viewYaw()) < 0.05F && Math.abs(body.viewRoll()) < 0.05F, "looking as the game has it" + at + ": " + body.eye() + " "
+					+ body.viewPitch());
+			}
+			helper.assertTrue(BlackoutPose.body(Blackout.TICKS, side, 30.0F, 0.0F).turn() == 0.0F
+				&& BlackoutPose.body(Blackout.WAKE_AT, side, 30.0F, 0.0F).turn() == 30.0F, "turns the way it has room to lie as it falls");
+			// Lying: on the face, a body's length ahead of the feet, the cheek on the ground, the eyes along the ground
+			BlackoutPose.Body lying = BlackoutPose.body(Blackout.WAKE_AT, side, 0.0F, 0.0F);
+			helper.assertTrue(Math.abs(lying.lean() - 90.0F) < 1.0E-3 && lying.hip().z < -0.75 && Math.abs(lying.hip().x) < 1.0E-6,
+				"on the face, ahead of the feet: " + lying.hip());
+			Vec3 head = BlackoutPose.lyingHead();
+			helper.assertTrue(head.z < -1.5 && head.z > -2.0 && head.y < 0.3, "the head ahead of the feet, on the ground: " + head);
+			helper.assertTrue(Math.signum(lying.head().yRot()) == side && Math.abs(lying.head().yRot()) > 1.3F, "the head turned to its side: "
+				+ lying.head());
+			helper.assertTrue(lying.eye().y < 0.35 && Math.abs(lying.viewYaw() - side * 90.0F) < 15.0F && Math.abs(lying.viewRoll() - side * 90.0F) < 15.0F,
+				"the cheek on the ground, the eyes along it: " + lying.eye() + " " + lying.viewYaw() + " " + lying.viewRoll());
+			for (Vec3[] box : BlackoutPose.boxes(lying)) {
+				helper.assertTrue(Math.abs(lowest(box) - rest) < 1.0E-3 || lowest(box) > rest, "lying, each part rests on the ground or above it: "
+					+ lowest(box) / px + " pixels");
+			}
+			// Falling: forward (the head goes ahead of the feet), the eyes down toward the ground before the head turns aside
+			float deepest = 0.0F;
+			for (float e = 0.0F; e <= Blackout.TIP; e += 0.25F) {
+				BlackoutPose.Body falling = BlackoutPose.body(Blackout.TICKS - e, side, 0.0F, 0.0F);
+				helper.assertTrue(falling.eye().z <= 1.0E-6 && Math.abs(falling.eye().x) < 0.1, "falls forward: the eyes at " + falling.eye());
+				deepest = Math.max(deepest, falling.viewPitch());
+			}
+			helper.assertTrue(deepest > 40.0F, "the view pitches into the ground as the body falls: " + deepest);
+
+			// The whole way down, lying and up again
+			float step = 0.02F;
+			BlackoutPose.Body before = BlackoutPose.body(Blackout.TICKS, side, 0.0F, 0.0F);
+			Vec3[] hand = null, palm = null;
+			for (float left = Blackout.TICKS - step; left > 0.0F; left -= step) {
+				BlackoutPose.Body now = BlackoutPose.body(left, side, 0.0F, 0.0F);
+				String at = " at " + left + " ticks left (side " + side + ")";
+				// (the fall ends fast: up to a block a tick)
+				helper.assertTrue(now.hip().distanceTo(before.hip()) < 0.02, "the body jumps" + at + ": " + before.hip() + " -> " + now.hip());
+				helper.assertTrue(now.eye().distanceTo(before.eye()) < 0.02, "the eyes jump" + at);
+				helper.assertTrue(Math.abs(now.lean() - before.lean()) < 1.0F, "the torso jumps" + at);
+				// (the view turns as fast as the head whips aside at the end of the fall: up to about 75 degrees a tick)
+				Vec3[] seen = view(before), sees = view(now);
+				helper.assertTrue(angle(seen[0], sees[0]) < 1.5 && angle(seen[1], sees[1]) < 1.5, "the view jumps" + at + ": " + before.viewYaw() + " "
+					+ before.viewPitch() + " " + before.viewRoll() + " -> " + now.viewYaw() + " " + now.viewPitch() + " " + now.viewRoll());
+				helper.assertTrue(Math.abs(now.viewPitch()) < 85.0F, "the eyes look straight down" + at + ": " + now.viewPitch());
+				BlackoutPose.Limb[] a = limbs(before), b = limbs(now);
+				for (int i = 0; i < a.length; i++) {
+					// The part's turn as the model makes it (its angles can race near a turn of 90 degrees, its look can't)
+					helper.assertTrue(turned(a[i], 0.0, 1.0, 0.0).distanceTo(turned(b[i], 0.0, 1.0, 0.0)) < 0.06
+						&& turned(a[i], 1.0, 0.0, 0.0).distanceTo(turned(b[i], 1.0, 0.0, 0.0)) < 0.06
+						&& Math.abs(a[i].x() - b[i].x()) < 0.1F && Math.abs(a[i].y() - b[i].y()) < 0.1F && Math.abs(a[i].z() - b[i].z()) < 0.1F,
+						"part " + i + " jumps" + at + ": " + a[i] + " -> " + b[i]);
+				}
+				List<Vec3[]> boxes = BlackoutPose.boxes(now);
+				for (Vec3[] box : boxes) {
+					helper.assertTrue(lowest(box) > -1.0E-6, "below the ground" + at + ": " + lowest(box) / px + " pixels");
+				}
+				// The feet: whatever corner of them is on the ground stays where it is, under the toes' or the heels' edge, and
+				// one always is (no sliding, no floating)
+				// (lying, the legs part a little and close again before the get-up: a few hundredths of a block)
+				float u = Blackout.GROUND_GET_UP - left;
+				double slide = u >= BlackoutPose.LOOK ? 2.0E-3 : 0.01;
+				boolean planted = false;
+				for (int leg = 4; leg <= 5; leg++) {
+					for (int corner : new int[]{0, 1, 4, 5}) {
+						Vec3 c = boxes.get(leg)[corner];
+						if (c.y < rest + 1.0E-3) {
+							planted = true;
+							double edge = (corner & 1) == 0 ? -2.0 * px : 2.0 * px;
+							double across = ((leg == 4 ? 1.9 : -1.9) + ((corner & 4) == 0 ? -2.0 : 2.0)) * px;
+							helper.assertTrue(Math.abs(c.z - edge) < slide && Math.abs(c.x - across) < 0.06, "a foot slides" + at + ": " + c);
+						}
+					}
+				}
+				helper.assertTrue(planted, "the feet float" + at);
+				// The hands, from the moment the push starts until they let go: the inner edge of each hand's end stays where
+				// the hand lay (the front corner, then the back one as the arm passes straight down)
+				if (u >= BlackoutPose.LOOK && u <= BlackoutPose.BENT) {
+					Vec3[] corners = {boxes.get(2)[0], boxes.get(2)[1]};
+					if (hand == null) {
+						hand = corners;
+					}
+					helper.assertTrue(Math.min(corners[0].y, corners[1].y) < rest + 1.0E-3, "the hand leaves the ground" + at);
+					for (int i = 0; i < 2; i++) {
+						if (corners[i].y < rest + 1.0E-3) {
+							if (palm == null && i == 1) {
+								palm = corners;
+							}
+							Vec3 was = i == 0 ? hand[0] : palm[1];
+							helper.assertTrue(Math.abs(corners[i].x - was.x) < 2.0E-3 && Math.abs(corners[i].z - was.z) < 2.0E-3, "a hand slides" + at + ": "
+								+ was + " -> " + corners[i]);
+						}
+					}
+				}
+				before = now;
+			}
+			helper.assertTrue(palm != null, "the hand rocks over onto its heel before it lets go");
+		}
+		// The two sides are mirror images
+		for (float left = Blackout.TICKS; left > 0.0F; left -= 0.5F) {
+			BlackoutPose.Body a = BlackoutPose.body(left, 1, 0.0F, 0.0F), b = BlackoutPose.body(left, -1, 0.0F, 0.0F);
+			helper.assertTrue(Math.abs(a.hip().x + b.hip().x) < 1.0E-6 && Math.abs(a.hip().y - b.hip().y) < 1.0E-6 && near(a.lean(), b.lean())
+				&& near(a.rightLeg().xRot(), b.leftLeg().xRot()) && near(a.rightArm().zRot(), -b.leftArm().zRot()) && near(a.head().yRot(), -b.head().yRot())
+				&& near(a.viewYaw(), -b.viewYaw()) && near(a.viewRoll(), -b.viewRoll()), "mirrored at " + left);
+		}
+		// The sounds come at their moments: the body hits the ground, the hands press into it, the toes come down
+		helper.assertTrue(Blackout.GROUND_GET_UP > BlackoutPose.PUSH_AT && BlackoutPose.PUSH_AT > BlackoutPose.STEP_AT && BlackoutPose.STEP_AT > 0,
+			"the get-up's sounds in order: " + BlackoutPose.PUSH_AT + " " + BlackoutPose.STEP_AT);
+		helper.succeed();
+	}
+
+	/** {@return where the eyes look and which way is up for them, from the body's view angles (the body's own frame)} */
+	private static Vec3[] view(BlackoutPose.Body body) {
+		double yaw = Math.toRadians(body.viewYaw()), pitch = Math.toRadians(body.viewPitch()), roll = Math.toRadians(body.viewRoll());
+		Vec3 ahead = new Vec3(Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+		Vec3 right = new Vec3(Math.cos(yaw), 0.0, Math.sin(yaw));
+		Vec3 level = right.cross(ahead);
+		return new Vec3[]{ahead, level.scale(Math.cos(roll)).subtract(right.scale(Math.sin(roll)))};
+	}
+
+	/** {@return the angle between two directions, in degrees} */
+	private static double angle(Vec3 a, Vec3 b) {
+		return Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, a.normalize().dot(b.normalize())))));
+	}
+
+	private static double lowest(Vec3[] box) {
+		double lowest = Double.MAX_VALUE;
+		for (Vec3 corner : box) {
+			lowest = Math.min(lowest, corner.y);
+		}
+		return lowest;
+	}
+
+	private static boolean near(float a, float b) {
+		return Math.abs(a - b) < 1.0E-4F;
+	}
+
+	/** {@return the vector (x, y, z) turned the way the model turns a part by this limb's angles (Z, then Y, then X)} */
+	private static Vec3 turned(BlackoutPose.Limb limb, double x, double y, double z) {
+		// Vec3 turns x and z the other way round than the model does, y the same way
+		return new Vec3(x, y, z).xRot(-limb.xRot()).yRot(limb.yRot()).zRot(-limb.zRot());
+	}
+
+	private static BlackoutPose.Limb[] limbs(BlackoutPose.Body body) {
+		return new BlackoutPose.Limb[]{body.head(), body.rightArm(), body.leftArm(), body.rightLeg(), body.leftLeg()};
+	}
+
+	/** {@return whether no part is moved from where the game puts it} */
+	private static boolean still(BlackoutPose.Body body) {
+		for (BlackoutPose.Limb limb : limbs(body)) {
+			if (Math.abs(limb.xRot()) > 1.0E-3F || Math.abs(limb.yRot()) > 1.0E-3F || Math.abs(limb.zRot()) > 1.0E-3F || Math.abs(limb.x()) > 1.0E-3F
+				|| Math.abs(limb.y()) > 1.0E-3F || Math.abs(limb.z()) > 1.0E-3F) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	// ------------------------------------------------------------------ safety
+
+	/**
+	 * A player who blacks out sitting in a boat and wakes up right there stays sitting in it (they are turned, never
+	 * moved); so does one whose boat ending fails and who falls back to right here.
+	 */
+	private static void seatedStaysSeated(GameTestHelper helper) {
+		floor(helper, 32);
+		ServerPlayer player = player(helper);
+		Boat boat = helper.spawn(EntityType.OAK_BOAT, MIDDLE);
+		helper.assertTrue(player.startRiding(boat, true, true), "sits in the boat");
+		Blackout.start(player);
+		TipsyRegistry.BLACKOUT.set(player, Blackout.WAKE_AT);
+		Blackout.wakeUp(player, BlackoutSpots.find(BlackoutEnding.RIGHT_HERE, player, RandomSource.create(3L)), RandomSource.create(3L));
+		helper.assertTrue(player.getVehicle() == boat, "right here: still in the boat");
+		// A boat ending whose water is no good (a spot inside the stone floor): back to right here, still sitting
+		Vec3 stone = helper.absoluteVec(new Vec3(4.5, 0.2, 4.5));
+		helper.assertFalse(BlackoutSpots.boatSafe(helper.getLevel(), stone), "not a place for a boat");
+		Blackout.start(player);
+		TipsyRegistry.BLACKOUT.set(player, Blackout.WAKE_AT);
+		Blackout.wakeUp(player, new BlackoutSpots.Wake(BlackoutEnding.IN_A_BOAT, stone, 90.0F, null, null), RandomSource.create(5L));
+		helper.assertTrue(player.getVehicle() == boat, "the boat ending failed: still in the old boat");
+		helper.assertValueEqual(TipsyRegistry.BLACKOUT_SCENE.get(player).ending(), BlackoutEnding.RIGHT_HERE.id(), "woke up right here");
+		player.stopRiding();
+		done(helper, player);
+		helper.succeed();
+	}
+
+	/**
+	 * {@return whether the floor ahead of {@code spot} the way {@code yaw} faces is free to lie on for two blocks: the
+	 * block the body lies in empty, the one under it solid (checked block by block, not with the finders' own rule)}
+	 */
+	private static boolean floorAhead(ServerLevel level, Vec3 spot, float yaw) {
+		Vec3 ahead = Vec3.directionFromRotation(0.0F, yaw);
+		for (double d = 0.5; d <= 2.0; d += 0.5) {
+			BlockPos at = BlockPos.containing(spot.add(ahead.scale(d)).add(0.0, 0.1, 0.0));
+			if (!level.getBlockState(at).getCollisionShape(level, at).isEmpty() || level.getBlockState(at.below()).getCollisionShape(level, at.below()).isEmpty()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Room to fall on the face: two blocks of free, level floor ahead; not into a wall, a table or a fence, not over an
+	 * edge or up a step; where there is no room ahead the body goes down the nearest way round that has it, and boxed in
+	 * it falls the way it faces.
+	 */
+	private static void lieRoom(GameTestHelper helper) {
+		floor(helper, 32);
+		ServerLevel level = helper.getLevel();
+		Vec3 feet = helper.absoluteVec(Vec3.atBottomCenterOf(MIDDLE));
+		float south = 0.0F;
+		helper.assertTrue(BlackoutSpots.lieRoom(level, feet, south) && BlackoutSpots.fallYaw(level, feet, south) == south, "open floor: straight ahead");
+		helper.setBlock(MIDDLE.south(2), Blocks.OAK_FENCE);
+		helper.assertTrue(!BlackoutSpots.lieRoom(level, feet, south), "a fence two blocks ahead is in the way");
+		Float turned = BlackoutSpots.lieYaw(level, feet, south);
+		float round = turned == null ? 0.0F : Math.abs(net.minecraft.util.Mth.wrapDegrees(turned - south));
+		helper.assertTrue(round > 0.0F && round <= 45.0F, "the nearest way round: " + turned);
+		helper.setBlock(MIDDLE.south(2), Blocks.AIR);
+		helper.setBlock(MIDDLE.south(2).below(), Blocks.AIR);
+		helper.assertTrue(!BlackoutSpots.lieRoom(level, feet, south), "a hole in the floor where the head would lie");
+		helper.setBlock(MIDDLE.south(2).below(), Blocks.STONE);
+		helper.setBlock(MIDDLE.south(1), Blocks.OAK_SLAB);
+		helper.assertTrue(!BlackoutSpots.lieRoom(level, feet, south), "a step up");
+		helper.setBlock(MIDDLE.south(1), Blocks.MOSS_CARPET);
+		helper.assertTrue(BlackoutSpots.lieRoom(level, feet, south), "a carpet is floor");
+		for (BlockPos around : BlockPos.betweenClosed(MIDDLE.offset(-1, 0, -1), MIDDLE.offset(1, 1, 1))) {
+			if (!around.equals(MIDDLE) && !around.equals(MIDDLE.above())) {
+				helper.setBlock(around, Blocks.STONE);
+			}
+		}
+		helper.assertTrue(BlackoutSpots.lieYaw(level, feet, south) == null && BlackoutSpots.fallYaw(level, feet, south) == south,
+			"boxed in: the way it faces");
+		helper.succeed();
+	}
 
 	/** A spot is safe on solid ground with room to stand; not on water, next to lava or fire, on a cactus or near a monster. */
 	private static void spotSafety(GameTestHelper helper) {
@@ -561,8 +813,8 @@ public final class BlackoutGameTests
 	}
 
 	/**
-	 * Farmyard: next to an animal, facing it; the animal then stares at the player. A wolf (it might bite) or an animal
-	 * in water doesn't count. The line names the animal.
+	 * Farmyard: lying on the face toward an animal, the head a block or two short of it; the animal then stares at the
+	 * player. A wolf (it might bite) or an animal in water doesn't count. The line names the animal.
 	 */
 	private static void farmyard(GameTestHelper helper) {
 		floor(helper, 32);
@@ -577,10 +829,12 @@ public final class BlackoutGameTests
 			helper.assertTrue(wake != null && wake.friend() == cow, "next to the cow: " + wake);
 			assertSafe(helper, wake, "farmyard");
 			double distance = wake.spot().distanceTo(cow.position());
-			helper.assertTrue(distance > 1.2 && distance < 3.2, "right next to it: " + distance);
+			helper.assertTrue(distance > BlackoutSpots.FARMYARD_FROM - 0.6 && distance < BlackoutSpots.FARMYARD_FROM + 1.6,
+				"a body's length from it: " + distance);
 			Vec3 look = Vec3.directionFromRotation(0.0F, wake.yaw());
 			Vec3 toCow = cow.position().subtract(wake.spot()).multiply(1, 0, 1).normalize();
 			helper.assertTrue(look.dot(toCow) > 0.95, "facing the cow");
+			helper.assertTrue(floorAhead(level, wake.spot(), wake.yaw()), "free floor to lie on toward it");
 			ServerPlayer player = player(helper);
 			blackOutTo(player, wake, random);
 			helper.assertValueEqual(Blackout.pose(player), BlackoutEnding.Pose.GROUND, "lying on the ground");
@@ -600,7 +854,10 @@ public final class BlackoutGameTests
 		});
 	}
 
-	/** In the hay: on top of a hay or barley bale under the open sky; never on plain ground, never in a barn. */
+	/**
+	 * In the hay: on top of a stack of hay or barley bales under the open sky, lying on the face along it; never on
+	 * plain ground, never on a single bale (the body would hang over), never in a barn.
+	 */
 	private static void inTheHay(GameTestHelper helper) {
 		floor(helper, 32);
 		ServerLevel level = helper.getLevel();
@@ -608,19 +865,24 @@ public final class BlackoutGameTests
 		RandomSource random = RandomSource.create(11L);
 		helper.assertTrue(BlackoutSpots.inTheHay(level, from, NEAR, random) == null, "no bale, no hay");
 		helper.setBlock(new BlockPos(10, 1, 10), VBBlocks.BARLEY_BALE.get());
+		helper.assertTrue(BlackoutSpots.inTheHay(level, from, NEAR, random) == null, "one bale is too small to lie on");
+		for (int x = 9; x <= 11; x++) {
+			for (int z = 9; z <= 11; z++) {
+				helper.setBlock(new BlockPos(x, 1, z), VBBlocks.BARLEY_BALE.get());
+			}
+		}
 		BlackoutSpots.Wake wake = BlackoutSpots.inTheHay(level, from, NEAR, random);
-		BlockPos bale = helper.absolutePos(new BlockPos(10, 1, 10));
-		helper.assertTrue(wake != null && BlockPos.containing(wake.spot()).below().equals(bale), "on the barley bale: " + wake + " (state "
-			+ level.getBlockState(bale) + ", tagged " + level.getBlockState(bale).is(jexxme.vineandbarrel.tag.VBTags.HAY_BALES) + ", stand "
-			+ BlackoutSpots.standAt(level, bale.above()) + ", surface " + level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bale.getX(), bale.getZ()) + ")");
+		BlockPos bale = wake == null ? null : BlockPos.containing(wake.spot()).below();
+		helper.assertTrue(bale != null && level.getBlockState(bale).is(VBBlocks.BARLEY_BALE.get()), "on the stack of barley bales: " + wake);
 		assertSafe(helper, wake, "in the hay");
 		helper.assertTrue(BlackoutSpots.underOpenSky(level, wake.spot()), "under the open sky");
-		// A hay bale in a barn (under a roof) is someone's build: it doesn't count
-		helper.setBlock(new BlockPos(10, 1, 10), Blocks.STONE);
-		helper.setBlock(new BlockPos(20, 1, 20), Blocks.HAY_BLOCK);
-		for (int x = 19; x <= 21; x++) {
-			for (int z = 19; z <= 21; z++) {
-				helper.setBlock(new BlockPos(x, 5, z), Blocks.OAK_PLANKS);
+		helper.assertTrue(floorAhead(level, wake.spot(), wake.yaw()), "hay to lie on ahead: " + wake);
+		// A haystack in a barn (under a roof) is someone's build: it doesn't count
+		for (int x = 9; x <= 11; x++) {
+			for (int z = 9; z <= 11; z++) {
+				helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+				helper.setBlock(new BlockPos(x + 10, 1, z + 10), Blocks.HAY_BLOCK);
+				helper.setBlock(new BlockPos(x + 10, 5, z + 10), Blocks.OAK_PLANKS);
 			}
 		}
 		helper.assertTrue(BlackoutSpots.inTheHay(level, from, NEAR, random) == null, "never on the hay in a barn");
@@ -628,8 +890,9 @@ public final class BlackoutGameTests
 	}
 
 	/**
-	 * Tavern: in front of the barrels of one of our taverns, facing them. A real tavern is placed and registered as a
-	 * piece of a village (tests can't generate one); barrels that aren't in a tavern don't count.
+	 * Tavern: lying on the face in front of the barrels of one of our taverns, toward them (or along them, right in front,
+	 * where the floor has no room for that). A real tavern is placed and registered as a piece of a village (tests can't
+	 * generate one); barrels that aren't in a tavern don't count.
 	 */
 	private static void tavern(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
@@ -657,10 +920,18 @@ public final class BlackoutGameTests
 			BlockPos feet = BlockPos.containing(wake.spot());
 			boolean inFront = barrels.stream().anyMatch(barrel -> {
 				Direction front = level.getBlockState(barrel).getValue(AgingBarrelBlock.FACING);
-				return feet.equals(barrel.relative(front)) || feet.equals(barrel.relative(front, 2))
-					? Math.abs(net.minecraft.util.Mth.wrapDegrees(wake.yaw() - front.getOpposite().toYRot())) < 1.0F : false;
+				for (int out = 1; out <= BlackoutSpots.TAVERN_FROM + 1; out++) {
+					if (feet.equals(barrel.relative(front, out))) {
+						float toward = out >= BlackoutSpots.TAVERN_FROM ? front.getOpposite().toYRot() : wake.yaw();
+						float along = Math.abs(net.minecraft.util.Mth.wrapDegrees(wake.yaw() - front.toYRot()));
+						return Math.abs(net.minecraft.util.Mth.wrapDegrees(wake.yaw() - toward)) < 1.0F && (out >= BlackoutSpots.TAVERN_FROM
+							|| Math.abs(along - 90.0F) < 1.0F);
+					}
+				}
+				return false;
 			});
-			helper.assertTrue(inFront, "in front of a barrel, facing it: " + wake);
+			helper.assertTrue(inFront, "in front of a barrel, lying toward it (or along the barrels right in front): " + wake);
+			helper.assertTrue(floorAhead(level, wake.spot(), wake.yaw()), "free floor to lie on there");
 		});
 		helper.succeed();
 	}
@@ -838,15 +1109,40 @@ public final class BlackoutGameTests
 		});
 	}
 
-	/** Right here: nothing else possible, you wake where you fell (not moved at all), with a souvenir from any pool. */
+	/**
+	 * Right here: nothing else possible, you wake where you fell (not moved at all), with a souvenir from any pool. Facing a
+	 * wall, the body went down the way it had room to, and the player faces that way once out.
+	 */
 	private static void rightHere(GameTestHelper helper) {
 		floor(helper, 32);
 		ServerPlayer player = player(helper);
 		Vec3 before = player.position();
+		float facing = player.getYRot();
+		// A wall right in front (the player faces south)
+		for (int x = 14; x <= 18; x++) {
+			for (int y = 1; y <= 3; y++) {
+				helper.setBlock(new BlockPos(x, y, MIDDLE.getZ() + 1), Blocks.STONE_BRICKS);
+			}
+		}
+		// The way down is chosen once, as they black out, and kept for everyone (synced)
+		Blackout.start(player);
+		Float chosen = TipsyRegistry.BLACKOUT_YAW.getExisting(player);
+		helper.assertTrue(chosen != null && Math.abs(net.minecraft.util.Mth.wrapDegrees(chosen - facing)) > 40.0F
+			&& floorAhead(helper.getLevel(), before, chosen), "not into the wall: " + chosen);
+		// The wall goes while they are out: the wake-up still uses the way the body went down
+		for (int x = 14; x <= 18; x++) {
+			for (int y = 1; y <= 3; y++) {
+				helper.setBlock(new BlockPos(x, y, MIDDLE.getZ() + 1), Blocks.AIR);
+			}
+		}
 		BlackoutSpots.Wake wake = BlackoutSpots.find(BlackoutEnding.RIGHT_HERE, player, RandomSource.create(29L));
 		helper.assertTrue(wake != null && wake.ending() == BlackoutEnding.RIGHT_HERE, "always possible");
-		blackOutTo(player, wake, RandomSource.create(29L));
+		helper.assertValueEqual(wake.yaw(), chosen, "the wake-up uses the chosen way");
+		TipsyRegistry.BLACKOUT.set(player, Blackout.WAKE_AT);
+		Blackout.wakeUp(player, wake, RandomSource.create(29L));
 		helper.assertTrue(player.position().distanceTo(before) < 1.0E-6, "not moved");
+		helper.assertTrue(Math.abs(net.minecraft.util.Mth.wrapDegrees(player.getYRot() - chosen)) < 1.0E-3F, "facing the way the body lies");
+		helper.assertValueEqual(TipsyRegistry.BLACKOUT_YAW.getExisting(player), chosen, "still the way the body lies");
 		helper.runAfterDelay(Blackout.WAKE_AT + 3, () -> {
 			helper.assertFalse(Blackout.isOut(player), "awake");
 			helper.assertValueEqual(Blackout.memory(player).last(), "right_here", "remembered as the last");
@@ -874,8 +1170,8 @@ public final class BlackoutGameTests
 		for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
 			before.add(player.getInventory().getItem(slot).copy());
 		}
-		// Woken up on a bale a few blocks away: moved, and still nothing lost
-		helper.setBlock(new BlockPos(10, 1, 10), Blocks.HAY_BLOCK);
+		// Woken up on a haystack a few blocks away: moved, and still nothing lost
+		haystack(helper, new BlockPos(10, 1, 10));
 		RandomSource random = RandomSource.create(37L);
 		blackOutTo(player, BlackoutSpots.inTheHay(helper.getLevel(), helper.absolutePos(MIDDLE), NEAR, random), random);
 		helper.assertTrue(player.position().distanceTo(helper.absoluteVec(Vec3.atBottomCenterOf(MIDDLE))) > 3.0, "moved to the bale");
@@ -1023,17 +1319,17 @@ public final class BlackoutGameTests
 		RandomSource random = RandomSource.create(43L);
 		// A closed hut: walls and a roof all round, a bale and a cow inside
 		box(helper, new BlockPos(6, 1, 6), new BlockPos(12, 5, 12), Blocks.STONE_BRICKS);
-		helper.setBlock(new BlockPos(9, 1, 9), Blocks.HAY_BLOCK);
-		Cow cow = helper.spawn(EntityType.COW, new BlockPos(8, 1, 10));
+		haystack(helper, new BlockPos(9, 1, 9));
+		Cow cow = helper.spawn(EntityType.COW, new BlockPos(7, 1, 11));
 		cow.setNoAi(true);
-		// A glass dome over another bale
+		// A glass dome over another haystack
 		box(helper, new BlockPos(18, 1, 18), new BlockPos(22, 4, 22), Blocks.GLASS);
-		helper.setBlock(new BlockPos(20, 1, 20), Blocks.HAY_BLOCK);
+		haystack(helper, new BlockPos(20, 1, 20));
 		helper.runAfterDelay(2, () -> {
 			helper.assertTrue(BlackoutSpots.inTheHay(level, from, NEAR, random) == null, "no bale in a hut or under glass");
 			helper.assertTrue(BlackoutSpots.farmyard(level, Vec3.atCenterOf(from), NEAR, random) == null, "no cow in a closed hut");
 			// Out in the open they count
-			helper.setBlock(new BlockPos(26, 1, 26), Blocks.HAY_BLOCK);
+			haystack(helper, new BlockPos(26, 1, 26));
 			BlackoutSpots.Wake hay = BlackoutSpots.inTheHay(level, from, NEAR, random);
 			helper.assertTrue(hay != null && BlackoutSpots.underOpenSky(level, hay.spot()), "the bale out in the open");
 			cow.snapTo(helper.absoluteVec(new Vec3(16.5, 1.0, 24.5)));
@@ -1041,6 +1337,13 @@ public final class BlackoutGameTests
 			helper.assertTrue(yard != null && BlackoutSpots.underOpenSky(level, yard.spot()), "the cow out in the open");
 			helper.succeed();
 		});
+	}
+
+	/** A 3x3 stack of hay blocks around {@code middle} (relative): enough hay to lie on the face. */
+	private static void haystack(GameTestHelper helper, BlockPos middle) {
+		for (BlockPos pos : BlockPos.betweenClosed(middle.offset(-1, 0, -1), middle.offset(1, 0, 1))) {
+			helper.setBlock(pos, Blocks.HAY_BLOCK);
+		}
 	}
 
 	/** Walls, floor and roof of a hollow box between the corners (relative positions). */

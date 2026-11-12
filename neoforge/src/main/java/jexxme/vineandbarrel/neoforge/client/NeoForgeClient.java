@@ -174,7 +174,7 @@ public final class NeoForgeClient
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	private static void registerAvatarModifier(RegisterRenderStateModifiersEvent event) {
 		event.<Avatar, AvatarRenderState>registerEntityModifier((Class) AvatarRenderer.class,
-			(avatar, state) -> state.setRenderData(BODY_POSE, TipsyClient.bodyPose(avatar)));
+			(avatar, state) -> state.setRenderData(BODY_POSE, TipsyClient.bodyPose(avatar, state)));
 	}
 
 	private static void registerClientExtensions(RegisterClientExtensionsEvent event) {
