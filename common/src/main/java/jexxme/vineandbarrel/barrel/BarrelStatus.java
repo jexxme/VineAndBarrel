@@ -20,6 +20,15 @@ public final class BarrelStatus
 	private BarrelStatus() {
 	}
 
+	/** In-game days, as a recipe's times read (JEI's aging page, the "Watch it" scenes): "1 day", "3 days", "1.5 days". */
+	public static Component days(int ticks) {
+		if (ticks == DAY) {
+			return Component.translatable("jei.vineandbarrel.aging.one_day");
+		}
+		String amount = ticks % DAY == 0 ? Integer.toString(ticks / DAY) : String.format(java.util.Locale.ROOT, "%.1f", ticks / (double) DAY);
+		return Component.translatable("jei.vineandbarrel.aging.days", amount);
+	}
+
 	public static Component of(AgingBarrelBlockEntity barrel) {
 		Component name = barrel.getCustomName();
 		if (barrel.stage() == BarrelStage.EMPTY) {
