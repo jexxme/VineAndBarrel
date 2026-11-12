@@ -1,15 +1,23 @@
 name: CI
 
+# Every push to a branch and every pull request from a fork: build, static checks, datagen, and every GameTest run on
+# both loaders (scripts/multiloader/verify-all.sh --full --no-smoke, the same script as the merge gate, so the two can
+# never check different things). A commit whose full Verify run already passed (the merge gate, see verify.yml) is
+# only built here: the gate ran all of this and the smoke clients on exactly that commit.
+
 on:
   push:
     # Branches only: a release tag is built and tested by release.yml
     # Not the ci/** branches: those only exist for verify.yml (gh-verify.sh pushes them and deletes them again)
     branches: ['**', '!ci/**']
+    # Nothing here builds from these: the wiki has its own workflow (docs.yml)
+    paths-ignore: ['site/**', '**.md', '.github/workflows/docs.yml']
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: write # reads the commit's Verify runs, and starts the Caches workflow
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -24,47 +32,62 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: ./.github/actions/setup
+        id: setup
         with:
-          distribution: temurin
-          java-version: 21
+          fd: true
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Has the merge gate already passed on this commit?
+        id: gate
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A green full Verify run on exactly this commit (gh-verify.sh pushes it as ci/full/<name>-<sha>)
+          runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/verify.yml/runs?head_sha=$GITHUB_SHA&status=success&per_page=50" \
+            --jq '[.workflow_runs[] | select(.event == "push" and (.head_branch | startswith("ci/full/")))] | length' || echo 0)
+          if [ "${runs:-0}" -gt 0 ]; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::The full Verify run of ${GITHUB_SHA:0:7} passed: built here, not tested again."
+          fi
 
-      - name: Build and static checks (Error Prone MissingOverride, forbidden patterns)
+      - name: Build only (the merge gate has tested this commit)
+        if: steps.gate.outputs.passed == 'true'
         run: ./gradlew build --console=plain
 
-      - name: Datagen is up to date
-        run: |
-          ./gradlew runData --console=plain
-          if [ -n "$(git status --porcelain -- common/src/generated)" ]; then
-            echo "::error::common/src/generated is out of date. Run ./gradlew runData and commit the result."
-            git status --porcelain -- common/src/generated | head -50
-            git diff --stat -- common/src/generated | tail -20
-            exit 1
-          fi
-
-      - name: GameTests, headless (gameplay, edge cases, item conservation), on NeoForge and on Fabric (also with Farmer's Delight, and with the compat mods)
-        # The NeoForge FD run uses the original Farmer's Delight from Modrinth's Maven (nothing to download by hand)
-        run: |
-          set -o pipefail
-          ./gradlew :neoforge:runGameTestServer :neoforge:runGameTestServerFd :neoforge:runGameTestServerCompat :fabric:runGameTest :fabric:runGameTestFd :fabric:runGameTestCompat --console=plain 2>&1 | tee gametest.log
-
-      - name: No errors in the GameTest server log
-        run: |
-          # A clean run logs no ERROR lines at all. Any ERROR (data that failed to load, a swallowed exception,
-          # a broken recipe) fails the build, even when every test passed. Except the ones other mods log about
-          # themselves in a dev environment (scripts/multiloader/known-errors.txt).
-          if grep -E "/ERROR\]" gametest.log | grep -vEf <(grep -v '^#' scripts/multiloader/known-errors.txt | tr -d '\r'); then
-            echo "::error::Errors were logged while the GameTests ran (see above)."
-            exit 1
-          fi
+      - name: Build, static checks, datagen and the GameTests on both loaders (verify-all.sh --full --no-smoke)
+        if: steps.gate.outputs.passed != 'true'
+        run: bash scripts/multiloader/verify-all.sh --full --no-smoke
 
       - name: Upload jars
         uses: actions/upload-artifact@v4
         with:
           name: VineAndBarrel
           path: |
-            neoforge/build/libs/*.jar
+            *forge/build/libs/*.jar
             fabric/build/libs/*.jar
           if-no-files-found: error
+
+      - name: Upload the logs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: |
+            build/verify-all/
+            */run*/logs/latest.log
+            */run*/crash-reports/
+            fabric/run/*/logs/latest.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: A version branch whose Gradle cache is out of date has the Caches workflow rebuild it
+        # Only the default branch can write a cache that every branch, tag and pull request reads (see caches.yml)
+        if: always() && github.event_name == 'push' && steps.setup.outputs.cache-key != '' && steps.setup.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The version branches are named like Minecraft versions (26.3, 1.21.1)
+          [[ "$GITHUB_REF_NAME" =~ ^[0-9]+(\.[0-9]+)+$ ]] || exit 0
+          gh workflow run caches.yml -R "$GITHUB_REPOSITORY" --ref '${{ github.event.repository.default_branch }}' -f "branch=$GITHUB_REF_NAME" \
+            || echo "::warning::Could not start the Caches workflow for $GITHUB_REF_NAME; start it by hand (Actions, Caches, Run workflow)."
