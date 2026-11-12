@@ -105,6 +105,7 @@ public final class NeoForgeClient
 			WatchClient.onClientTick();
 			// A render that never reached its Post event (an exception in a renderer) must not leave its mark behind
 			SWAY_PUSHED.clear();
+			TipsyClient.endRenderPoses();
 		});
 		// "Watch it": the tooltip line, and the key over an item in a screen
 		game.addListener(ItemTooltipEvent.class, event -> WatchClient.onTooltip(event.getItemStack(), event.getToolTip()));

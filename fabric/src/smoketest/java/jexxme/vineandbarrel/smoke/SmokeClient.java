@@ -17,7 +17,6 @@ import jexxme.vineandbarrel.barrel.BarrelStage;
 import jexxme.vineandbarrel.drink.DrinkItems;
 import jexxme.vineandbarrel.tipsy.Blackout;
 import jexxme.vineandbarrel.tipsy.client.BlackoutClient;
-import jexxme.vineandbarrel.tipsy.client.TipsyClient;
 import jexxme.vineandbarrel.watch.client.ScenePlayer;
 import jexxme.vineandbarrel.watch.client.WatchClient;
 import jexxme.vineandbarrel.watch.client.WatchIndex;
@@ -135,6 +134,10 @@ public final class SmokeClient implements ClientModInitializer
 	private enum Phase { TITLE, LOADING, SETTLING, STEPS, HOSTING, QUIETING, DONE }
 
 	private final Path out = FabricLoader.getInstance().getGameDir().resolve("smoke");
+	/** The furthest the arms were seen swung forward (radians) while getting up off the ground. */
+	private static float getUpArms;
+	/** The smallest shadow (radius) the renderer gave the player while out on the ground. */
+	private static float getUpShadow;
 	private final List<Step> steps = new ArrayList<>();
 	private final JsonArray results = new JsonArray();
 	private Phase phase = Phase.TITLE;
@@ -482,7 +485,7 @@ public final class SmokeClient implements ClientModInitializer
 			if (left == null || left <= 0) {
 				return "no blackout on the client (" + left + ")";
 			}
-			if (BlackoutClient.lying(mc.player, 0.0F) <= 0.0F || TipsyClient.blackoutLying(mc.player) == null) {
+			if (BlackoutClient.body(mc.player, 0.0F) == null) {
 				return "not lying on the ground (" + left + " ticks left, pose " + Blackout.pose(mc.player) + ")";
 			}
 			return BlackoutClient.hidesHands() ? null : "the hand still shows";
@@ -510,8 +513,34 @@ public final class SmokeClient implements ClientModInitializer
 			Integer level = TipsyRegistry.SYNCED_LEVEL.getExisting(mc.player);
 			return level != null && level == 1 ? null : "Tipsy " + level + " after waking up instead of 1";
 		}, "after_blackout", true).polled());
-		steps.add(new Step("sober_again", 40, mc -> command(mc, "vbsmoke sober"),
-			mc -> mc.player.hasEffect(TipsyRegistry.TIPSY) ? "still tipsy" : null, null, true).polled());
+		// Getting up off the ground moves the limbs, not only the body: on Fabric too (the common HumanoidModelMixin, fed
+		// through LivingEntityRendererMixin); seen from the front in third person, the arms swing in under the body as they
+		// push. And the shadow at the feet is gone while the body lies ahead of them (the common EntityRendererMixin)
+		steps.add(new Step("getting_up_moves_the_limbs", 60, mc -> {
+			mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);
+			getUpArms = 0.0F;
+			getUpShadow = Float.MAX_VALUE;
+			command(mc, "vbsmoke blackout getup");
+		}, mc -> {
+			// The player model as last drawn: vanilla leaves a still player's arms hanging
+			if (BlackoutClient.body(mc.player, 0.0F) != null
+				&& mc.getEntityRenderDispatcher().getRenderer(mc.player) instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer renderer) {
+				var model = renderer.getModel();
+				getUpArms = Math.max(getUpArms, Math.max(-model.rightArm.xRot, -model.leftArm.xRot));
+				getUpShadow = Math.min(getUpShadow, shadowRadius(renderer, mc.player));
+			}
+			if (getUpShadow > 0.01F) {
+				return "the shadow stays at the feet while lying (" + getUpShadow + " at the least; " + Blackout.ticksLeft(mc.player) + " ticks left)";
+			}
+			return getUpArms > 1.0F ? null : "the arms don't swing in under the body (" + getUpArms + " rad forward at most; " + Blackout.ticksLeft(mc.player)
+				+ " ticks left, pose " + Blackout.pose(mc.player) + ")";
+		}, "blackout_getting_up", true).polled());
+		steps.add(new Step("up_off_the_ground", 60, mc -> {
+		}, mc -> Blackout.isOut(mc.player) ? "still out (" + Blackout.ticksLeft(mc.player) + " ticks left)" : null, null, true).polled());
+		steps.add(new Step("sober_again", 40, mc -> {
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+			command(mc, "vbsmoke sober");
+		}, mc -> mc.player.hasEffect(TipsyRegistry.TIPSY) ? "still tipsy" : null, null, true).polled());
 		// "Watch it": the tooltip offers the scene; at the scene's barrel in the world the key opens it where that barrel is
 		steps.add(new Step("watch_it_on_the_tooltip", 1, mc -> {
 		}, mc -> {
@@ -891,6 +920,21 @@ public final class SmokeClient implements ClientModInitializer
 			for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
 				Files.delete(path);
 			}
+		}
+	}
+
+	/**
+	 * {@return the radius of the round shadow the game would draw under this player now} The renderer's own method (dev
+	 * names, so no remapping): it is where the blackout takes the shadow away.
+	 */
+	private static float shadowRadius(net.minecraft.client.renderer.entity.EntityRenderer<?> renderer, net.minecraft.world.entity.Entity entity) {
+		try {
+			java.lang.reflect.Method radius = net.minecraft.client.renderer.entity.EntityRenderer.class.getDeclaredMethod("getShadowRadius",
+				net.minecraft.world.entity.Entity.class);
+			radius.setAccessible(true);
+			return (float) radius.invoke(renderer, entity);
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("No shadow radius on " + renderer, e);
 		}
 	}
 }

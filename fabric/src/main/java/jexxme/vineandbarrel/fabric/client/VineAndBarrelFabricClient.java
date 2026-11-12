@@ -41,6 +41,8 @@ public final class VineAndBarrelFabricClient implements ClientModInitializer
 			TipsyClient.onClientTick();
 			BlackoutClient.onClientTick();
 			WatchClient.onClientTick();
+			// A render that never reached its end must not leave the blackout's pose behind
+			TipsyClient.endRenderPoses();
 		});
 		// "Watch it": the tooltip line, and the key over an item in a screen
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> WatchClient.onTooltip(stack, lines));
