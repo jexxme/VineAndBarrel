@@ -1,8 +1,12 @@
 name: Verify
 
-# The merge gate: scripts/multiloader/verify-all.sh on a GitHub runner, smoke clients included (hidden, under Xvfb).
+# The merge gate: scripts/multiloader/verify-all.sh on GitHub's runners, smoke clients included (hidden, under Xvfb).
+# The parts of the tier (verify-all.sh --part=...) run as jobs side by side, each on its own runner; a last job
+# collects their results, builds the parity checklist and says green or failed for the whole run. So a verify takes
+# as long as its slowest part instead of the sum of them. A failed part can be run again on its own (Re-run failed
+# jobs); the result job then runs again too.
 # Started by pushing a branch ci/quick/<name> or ci/full/<name> (what gh-verify.sh does), or by hand: Actions, Verify,
-# Run workflow, with a ref and the tier. Quick after each round of changes, full before merging into 26.3 (the newest branch) and before
+# Run workflow, with a ref and the tier. Quick after each round of changes, full before merging into 26.3 and before
 # tagging (see CONTRIBUTING.md).
 
 on:
@@ -27,11 +31,20 @@ concurrency:
   group: verify-${{ github.ref }}-${{ inputs.ref || '' }}-${{ inputs.tier || '' }}
   cancel-in-progress: true
 
+env:
+  TIER: ${{ (inputs.tier == 'full' || (github.event_name == 'push' && startsWith(github.ref_name, 'ci/full/'))) && 'full' || 'quick' }}
+
 jobs:
-  verify:
+  part:
+    name: ${{ matrix.part }}
     runs-on: ubuntu-latest
-    # A full verify takes about 15 minutes here, quick about 4; the rest is headroom for a slow runner
-    timeout-minutes: 90
+    # A part takes about 4 minutes; the rest is headroom for a slow runner and a cold cache
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        # The parts of the tier, as verify-all.sh --parts and --full --parts print them
+        part: ${{ fromJSON((inputs.tier == 'full' || (github.event_name == 'push' && startsWith(github.ref_name, 'ci/full/'))) && '["static","gametests","gametests-fd","smoke-client","smoke-client-fd","smoke-lan","smoke-lan-fd","smoke-server","smoke-server-fd","smoke-cross"]' || '["static","gametests","smoke-client"]') }}
     env:
       # The hidden smoke clients: software OpenGL on Xvfb, SDL3 over EGL (its GLX path finds no visual on Xvfb, and
       # Minecraft then falls back to Vulkan and logs an ERROR), OpenAL without a sound device
@@ -44,69 +57,104 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
 
-      - name: Tier
-        id: tier
-        run: |
-          tier='${{ inputs.tier }}'
-          if [ -z "$tier" ]; then
-            case '${{ github.ref_name }}' in ci/full/*) tier=full ;; *) tier=quick ;; esac
-          fi
-          echo "tier=$tier" >> "$GITHUB_OUTPUT"
-          echo "Verify $(git rev-parse --short HEAD), $tier tier"
-
-      - name: Xvfb and Mesa for the hidden clients, flite for the narrator (without it Minecraft logs an ERROR)
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -yq --no-install-recommends xvfb xauth libgl1-mesa-dri libglx-mesa0 libegl-mesa0 libegl1 libflite1
-
-      - uses: actions/setup-java@v4
+      - uses: ./.github/actions/setup
         with:
-          distribution: temurin
-          java-version: 21
-
-      - uses: gradle/actions/setup-gradle@v4
+          display: ${{ startsWith(matrix.part, 'smoke-') }}
+          fd: ${{ matrix.part == 'gametests-fd' }}
 
       - name: The Minecraft EULA for the smoke-test server
         # Jexxme accepts the EULA for local dev/test servers; the folder is gitignored, nothing is committed
+        if: startsWith(matrix.part, 'smoke-server') || matrix.part == 'smoke-cross'
         run: mkdir -p fabric/run/server-smoke && printf 'eula=true\n' > fabric/run/server-smoke/eula.txt
 
-      - name: verify-all.sh --${{ steps.tier.outputs.tier }}
+      - name: verify-all.sh --${{ env.TIER }} --part=${{ matrix.part }}
         run: |
           set -o pipefail
           mkdir -p build/verify-all
-          # An older commit (a ref by hand) whose verify-all.sh has no tiers yet: that one always runs everything
-          tier=--${{ steps.tier.outputs.tier }}
-          grep -q -- '--quick' scripts/multiloader/verify-all.sh || tier=
-          xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' \
-            bash scripts/multiloader/verify-all.sh $tier 2>&1 | tee build/verify-all/output.log
+          echo "Verify $(git rev-parse --short HEAD), $TIER tier, the part ${{ matrix.part }}"
+          run=(bash scripts/multiloader/verify-all.sh "--$TIER" "--part=${{ matrix.part }}")
+          case '${{ matrix.part }}' in
+            smoke-*) run=(xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' "${run[@]}") ;;
+          esac
+          "${run[@]}" 2>&1 | tee "build/verify-all/output-${{ matrix.part }}.log"
+
+      # The static part's datagen writes the first loader's run/logs/latest.log, which is the gametests part's file: it
+      # is left out there (datagen's own Gradle output, build/verify-all/datagen.log, has everything that game logged)
+      - name: Upload this part's results (logs, test reports, smoke screenshots)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.part }}
+          path: |
+            build/verify-all/
+            */build/test-reports/
+            */run*/logs/latest.log
+            */run*/crash-reports/
+            */run*/hs_err_pid*.log
+            fabric/run/*/logs/latest.log
+            fabric/run/*/crash-reports/
+            fabric/run/*/hs_err_pid*.log
+            fabric/run/*/smoke/
+            fabric/run/server-smoke/smoke*/
+            fabric/build/*.out
+            ${{ matrix.part == 'static' && '!*/run*/logs/latest.log' || '' }}
+          if-no-files-found: warn
+          retention-days: 3
+          overwrite: true # a part that is run again (Re-run failed jobs) replaces its first results
+
+  result:
+    name: result
+    needs: part
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: The results of all the parts, into this checkout
+        uses: actions/download-artifact@v4
+        with:
+          pattern: part-*
+          merge-multiple: true
+
+      - name: verify-all.sh --${{ env.TIER }} --collect
+        run: |
+          set -o pipefail
+          mkdir -p build/verify-all
+          echo "Verify $(git rev-parse --short HEAD), $TIER tier"
+          bash scripts/multiloader/verify-all.sh "--$TIER" --collect 2>&1 | tee build/verify-all/output.log
 
       - name: Summary
         if: always()
         run: |
           {
-            echo "## Verify, ${{ steps.tier.outputs.tier }} tier, $(git rev-parse --short HEAD)"
+            echo "## Verify, $TIER tier, $(git rev-parse --short HEAD)"
             echo '```'
             sed -n '/^Times (games/,$p' build/verify-all/output.log 2>/dev/null || echo "no output"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
           sed -n '/^Times (games/,$p' build/verify-all/output.log > build/verify-all/summary.txt 2>/dev/null || true
 
-      - name: Upload the results (summary, logs, smoke screenshots, PARITY.md)
+      - name: Upload the results (summary, logs, test reports, smoke screenshots, PARITY.md)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-${{ steps.tier.outputs.tier }}
+          name: verify-${{ env.TIER }}
           path: |
             build/verify-all/
             PARITY.md
-            neoforge/run*/logs/latest.log
-            neoforge/run*/crash-reports/
-            fabric/run*/logs/latest.log
-            fabric/run*/crash-reports/
+            */build/test-reports/
+            */run*/logs/latest.log
+            */run*/crash-reports/
             fabric/run/*/logs/latest.log
             fabric/run/*/crash-reports/
+            */run*/hs_err_pid*.log
+            fabric/run/*/hs_err_pid*.log
             fabric/run/*/smoke/
             fabric/run/server-smoke/smoke*/
             fabric/build/*.out
           if-no-files-found: warn
           retention-days: 14
+          overwrite: true

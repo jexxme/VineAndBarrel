@@ -29,22 +29,56 @@
 #   --no-smoke  no smoke tests (no game client); with --full the parity checklist is left out too, and the run is not
 #               enough for a release
 #
+#   --part=<name>  only one part of the tier, for GitHub's runners, where the parts of one verify run as jobs side by
+#                   side (.github/workflows/verify.yml), or to run just that part here. The parts: static (build and
+#                   datagen), gametests, gametests-fd, smoke-client, smoke-client-fd, smoke-lan, smoke-lan-fd,
+#                   smoke-server, smoke-server-fd, smoke-cross (the cross-version tests); quick has static, gametests
+#                   and smoke-client. A part writes its result to build/verify-all/part-<name>.result.
+#   --parts         prints the parts of the tier as a JSON list and stops
+#   --collect       runs no game: reads the results of all the parts of the tier (each must be there and green), prints
+#                   them as one, and with --full builds the parity checklist from their reports
+#
 # At most two games run at once (GameTest servers and smoke clients; see vb-loader.gradle): the machine's memory is
 # shared. Exit code 0 only if everything that was asked for passed.
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 
-full=false fd=false smoke=true
+full=false fd=false smoke=true part='' collect=false list_parts=false
 for arg in "$@"; do
     case "$arg" in
         --quick) full=false ;;
         --full) full=true ;;
         --fd) fd=true ;;
         --no-smoke) smoke=false ;;
+        --part=*) part=${arg#--part=} ;;
+        --parts) list_parts=true ;;
+        --collect) collect=true ;;
         -h|--help) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit 0 ;;
         *) echo "Unknown option: $arg (see --help)" >&2; exit 2 ;;
     esac
 done
+
+# The parts of this tier, in the order they run here
+tier_parts=(static gametests)
+{ $full || $fd; } && tier_parts+=(gametests-fd)
+if $smoke; then
+    tier_parts+=(smoke-client)
+    { $full || $fd; } && tier_parts+=(smoke-client-fd)
+    $full && tier_parts+=(smoke-lan smoke-lan-fd smoke-server smoke-server-fd smoke-cross)
+fi
+if $list_parts; then
+    printf '["%s"' "${tier_parts[0]}"; printf ',"%s"' "${tier_parts[@]:1}"; printf ']\n'
+    exit 0
+fi
+if [ -n "$part" ] && [[ " ${tier_parts[*]} " != *" $part "* ]]; then
+    echo "No part '$part' in this tier (its parts: ${tier_parts[*]})" >&2
+    exit 2
+fi
+# Whether this run does that part: all of the tier's parts, or only the one asked for; none when collecting
+does() {
+    $collect && return 1
+    [[ " ${tier_parts[*]} " == *" $1 "* ]] && { [ -z "$part" ] || [ "$part" = "$1" ]; }
+}
 
 state=build/verify-all # the fingerprints of the last green runs, and each Gradle invocation's output
 mkdir -p "$state"
@@ -164,84 +198,124 @@ run_games() {
 }
 
 tier=$($full && echo full || echo quick)
+tier_name=$tier # the name of the tier's own Gradle invocation and of its log
 $fd && ! $full && tier+=", with FD"
 $smoke || tier+=", no smoke"
-if $full; then echo "verify-all: $tier"; else echo "verify-all: $tier (--full for everything)"; fi
+if $collect; then echo "verify-all: $tier, the results of its parts"
+elif [ -n "$part" ]; then echo "verify-all: $tier, only the part $part"
+elif $full; then echo "verify-all: $tier"; else echo "verify-all: $tier (--full for everything)"; fi
 
 # Datagen first: its run writes neoforge/run/logs/latest.log, which the NeoForge GameTest run then replaces
-step "datagen is up to date"
-data_imports=$(grep -rhoE '^import jexxme\.vineandbarrel\.[A-Za-z0-9_.]+' neoforge/src/main/java/jexxme/vineandbarrel/data \
-    | sed 's/^import //; s/\./\//g' | sort -u)
-data_inputs=(neoforge/src/main/java/jexxme/vineandbarrel/data common/src/generated neoforge/build.gradle gradle.properties)
-for class in $data_imports; do
-    # A nested class (Outer.Inner) lives in Outer.java
-    for file in "$class.java" "$(dirname "$class").java"; do
-        for root in common/src/main/java neoforge/src/main/java; do
-            [ -f "$root/$file" ] && data_inputs+=("$root/$file")
+if does static; then
+    step "datagen is up to date"
+    data_imports=$(grep -rhoE '^import jexxme\.vineandbarrel\.[A-Za-z0-9_.]+' neoforge/src/main/java/jexxme/vineandbarrel/data \
+        | sed 's/^import //; s/\./\//g' | sort -u)
+    data_inputs=(neoforge/src/main/java/jexxme/vineandbarrel/data common/src/generated neoforge/build.gradle gradle.properties)
+    for class in $data_imports; do
+        # A nested class (Outer.Inner) lives in Outer.java
+        for file in "$class.java" "$(dirname "$class").java"; do
+            for root in common/src/main/java neoforge/src/main/java; do
+                [ -f "$root/$file" ] && data_inputs+=("$root/$file")
+            done
         done
     done
-done
-if ! $full && [ -f "$state/datagen.green" ] && [ "$(cat "$state/datagen.green")" = "$(fingerprint "${data_inputs[@]}")" ]; then
-    echo "The data generators and common/src/generated are unchanged since the last green datagen check: skipped"
-    took "datagen (skipped, unchanged)" 0
-elif gradle datagen runData; then
-    if [ -n "$(git status --porcelain -- common/src/generated)" ]; then
-        git status --porcelain -- common/src/generated | head -20
-        failed+=("datagen: common/src/generated is out of date (commit the runData output)")
+    if ! $full && [ -f "$state/datagen.green" ] && [ "$(cat "$state/datagen.green")" = "$(fingerprint "${data_inputs[@]}")" ]; then
+        echo "The data generators and common/src/generated are unchanged since the last green datagen check: skipped"
+        took "datagen (skipped, unchanged)" 0
+    elif gradle datagen runData; then
+        if [ -n "$(git status --porcelain -- common/src/generated)" ]; then
+            git status --porcelain -- common/src/generated | head -20
+            failed+=("datagen: common/src/generated is out of date (commit the runData output)")
+        else
+            fingerprint "${data_inputs[@]}" > "$state/datagen.green"
+        fi
     else
-        fingerprint "${data_inputs[@]}" > "$state/datagen.green"
+        failed+=("runData")
     fi
-else
-    failed+=("runData")
 fi
 
-if ! $full; then
-    runs=(neoforge fabric)
-    $fd && runs+=(neoforge-fd fabric-fd)
-    $smoke && runs+=(smoke-client)
-    $smoke && $fd && runs+=(smoke-client-fd)
-    step "build, ${runs[*]} (at most two games at once)"
-    run_games quick true "${runs[@]}"
-else
-    runs=(neoforge neoforge-fd neoforge-compat fabric fabric-fd fabric-compat)
-    $smoke && runs+=(smoke-client smoke-client-fd)
-    step "build, the six GameTest runs$($smoke && echo ' and the singleplayer smoke tests') (at most two games at once)"
-    run_games full true "${runs[@]}"
+# The build (the static part) and the games that run alone: the GameTest runs and the singleplayer smoke tests
+with_build=false
+does static && with_build=true
+runs=()
+does gametests && runs+=(neoforge)
+does gametests-fd && runs+=(neoforge-fd)
+$full && does gametests && runs+=(neoforge-compat)
+does gametests && runs+=(fabric)
+does gametests-fd && runs+=(fabric-fd)
+$full && does gametests && runs+=(fabric-compat)
+does smoke-client && runs+=(smoke-client)
+does smoke-client-fd && runs+=(smoke-client-fd)
+if $with_build || [ ${#runs[@]} -gt 0 ]; then
+    step "$($with_build && echo 'build, ')${runs[*]} (at most two games at once)"
+    run_games "${part:-$tier_name}" $with_build "${runs[@]}"
 fi
 
-if $full && $smoke; then
-    step "the networked smoke tests: LAN and dedicated server, without and with FD Refabricated (one pair at a time)"
-    networked=(:fabric:runSmokeLan :fabric:runSmokeLanFd)
+# The networked smoke tests: LAN and dedicated server, without and with FD Refabricated, then the cross-version tests
+networked=() networked_logs=()
+does smoke-lan && { networked+=(:fabric:runSmokeLan); networked_logs+=(smoke-host smoke-join); }
+does smoke-lan-fd && { networked+=(:fabric:runSmokeLanFd); networked_logs+=(smoke-host-fd smoke-join-fd); }
+if does smoke-server || does smoke-server-fd || does smoke-cross; then
     # eula=true as Minecraft reads it (java.util.Properties): blanks before the key and around the separator, any case
     # of true and a CRLF line end are fine; trailing blanks are not (Properties keeps them, and "true " is not true)
-    eula=false
     if grep -qE $'^[ \t\f]*eula[ \t\f]*[=:][ \t\f]*[Tt][Rr][Uu][Ee]\r?$' fabric/run/server-smoke/eula.txt 2>/dev/null; then
-        eula=true
-        networked+=(:fabric:runSmokeServer :fabric:runSmokeServerFd :fabric:runSmokeForeign :fabric:runSmokeRefusal)
-    fi
-    if gradle networked "${networked[@]}"; then :; else failed+=("networked smoke tests (see $state/networked.log)"); fi
-    for log in smoke-host smoke-join smoke-host-fd smoke-join-fd; do
-        took "$log" "$(log_seconds "fabric/run/$log/logs/latest.log")"
-    done
-    if $eula; then
-        for log in smoke-join-server smoke-join-server-fd smoke-visit bare-refused; do
-            took "$log" "$(log_seconds "fabric/run/$log/logs/latest.log")"
-        done
+        does smoke-server && { networked+=(:fabric:runSmokeServer); networked_logs+=(smoke-join-server); }
+        does smoke-server-fd && { networked+=(:fabric:runSmokeServerFd); networked_logs+=(smoke-join-server-fd); }
+        does smoke-cross && { networked+=(:fabric:runSmokeForeign :fabric:runSmokeRefusal); networked_logs+=(smoke-visit bare-refused); }
     else
         failed+=("dedicated-server smoke test not run: the Minecraft EULA is not accepted for the local test server (the player's call: put eula=true in fabric/run/server-smoke/eula.txt, never commit it)")
     fi
+fi
+if [ ${#networked[@]} -gt 0 ]; then
+    step "the networked smoke tests: ${networked[*]} (one pair at a time)"
+    invocation=${part:-networked}
+    if gradle "$invocation" "${networked[@]}"; then :; else failed+=("networked smoke tests (see $state/$invocation.log)"); fi
+    for log in "${networked_logs[@]}"; do
+        took "$log" "$(log_seconds "fabric/run/$log/logs/latest.log")"
+    done
+fi
 
+# Collecting: every part of the tier must have reported, and be green
+if $collect; then
+    for name in "${tier_parts[@]}"; do
+        result=$state/part-$name.result
+        if [ ! -f "$result" ]; then
+            failed+=("$name: this part did not report (its job failed before the checks, or never ran)")
+            continue
+        fi
+        problems=${#failed[@]}
+        while IFS=$'\t' read -r kind text; do
+            case $kind in
+                time) timings+=("$text") ;;
+                fail) failed+=("$text") ;;
+            esac
+        done < <(tail -n +2 "$result" | tr -d '\r')
+        [ "$(head -n 1 "$result" | tr -d '\r')" = green ] || [ ${#failed[@]} -gt "$problems" ] || failed+=("$name: failed")
+    done
+fi
+
+if $full && $smoke && [ -z "$part" ]; then
     step "parity checklist"
     "$py" scripts/multiloader/parity.py --check || failed+=("parity checklist has failures or missing runs")
-elif $full; then
+elif $full && [ -z "$part" ]; then
     echo "--no-smoke: no smoke tests and no parity checklist; this run is not enough for a release"
 fi
 
-took "total" $((SECONDS - started))
+if [ -n "$part" ]; then
+    took "total of $part" $((SECONDS - started))
+    # For --collect, in another job on GitHub: green or failed, then this part's times and what failed
+    {
+        [ ${#failed[@]} -eq 0 ] && echo green || echo failed
+        printf 'time\t%s\n' "${timings[@]}"
+        [ ${#failed[@]} -eq 0 ] || printf 'fail\t%s\n' "${failed[@]}"
+    } > "$state/part-$part.result"
+elif ! $collect; then
+    took "total" $((SECONDS - started))
+fi
 printf '\nTimes (games: from their own logs):\n'
 printf '  %s\n' "${timings[@]}"
 if [ ${#failed[@]} -eq 0 ]; then
-    printf '\nALL GREEN (%s)\n' "$tier"
+    if [ -n "$part" ]; then printf '\nGREEN, the part %s only (%s)\n' "$part" "$tier"; else printf '\nALL GREEN (%s)\n' "$tier"; fi
     exit 0
 fi
 printf '\nFAILED:\n'
