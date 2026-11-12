@@ -227,8 +227,8 @@ loom {
             // writes them again when they are not there yet. Two clients that start at the same moment on a fresh
             // machine (a LAN host and the client that joins it, on a CI runner) then write and load the same files at
             // once, and one of them crashes (SIGBUS in dlopen, or "no OpenGL context management API"). So every smoke
-            // client unpacks them into its own run folder.
-            if (run.name.startsWith('smoke') || run.name.startsWith('bare')) {
+            // client unpacks them into its own run folder (its prepare task makes the folder; the servers have none).
+            if (run.name.startsWith('smoke') && run.name != 'smokeDedicatedServer') {
                 property 'org.lwjgl.system.SharedLibraryExtractPath', project.file("${run.runDir}/natives").absolutePath
             }
         }
@@ -326,6 +326,9 @@ smokeDirs.each { name ->
             def mods = new File(dir, 'mods')
             mods.deleteDir()
             mods.mkdirs()
+            // The folder of the property org.lwjgl.system.SharedLibraryExtractPath (see the runs): an older LWJGL does
+            // not make it, logs an exception and falls back to the shared temporary folder
+            new File(dir, 'natives').mkdirs()
             fdJars.files.each { jar -> java.nio.file.Files.copy(jar.toPath(), new File(mods, jar.name).toPath()) }
             new File(dir, 'options.txt').text = [
                 'pauseOnLostFocus:false', 'soundCategory_master:0.0', 'renderDistance:6', 'simulationDistance:6',
