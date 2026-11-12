@@ -1,0 +1,6 @@
+{
+  "parent": "vineandbarrel:block/template_bush_cross",
+  "textures": {
+    "vine": "vineandbarrel:block/grape_bush_on_trellis_stage3"
+  }
+}
