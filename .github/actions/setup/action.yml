@@ -40,8 +40,10 @@ runs:
       run: |
         mc=$(sed -n 's/^minecraft_version=//p' gradle.properties | tr -d '\r')
         # Everything that decides what Gradle downloads and sets up: the versions in gradle.properties (not the mod's
-        # own version), the wrapper, every build script
+        # own version), the wrapper, every build script. And what the Caches workflow puts into a cache: count the
+        # number up when that changes (caches.yml), on every version branch alike.
         hash=$({
+          echo 'cache contents: 2'
           grep -vE '^[a-z_]*mod_version=' gradle.properties
           cat gradle/wrapper/gradle-wrapper.properties
           find . \( -name '*.gradle' -o -path './build-logic/src/*' \) -type f \

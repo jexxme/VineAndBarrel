@@ -61,7 +61,11 @@ jobs:
           ./gradlew --stop
           # With Gradle's build cache (build-cache-1): the compiled build scripts come from there in every later run
           rm -f ~/.gradle/caches/*/*.lock ~/.gradle/caches/journal-1/*.lock
-          du -sh ~/.gradle/caches ~/.gradle/wrapper
+          # Without the first loader's copy of the game's assets (sounds and textures, half a gigabyte): only datagen
+          # reads it, it downloads in under 20 seconds, and in the cache every job would wait 10 seconds for it. The
+          # Fabric copy stays: seven of the ten parts of a full verify start a Fabric client.
+          rm -rf ~/.gradle/caches/neoformruntime/assets
+          du -sh ~/.gradle/caches/* ~/.gradle/wrapper | sort -h
 
       - name: Save it as ${{ steps.setup.outputs.cache-key }}
         if: steps.setup.outputs.cache-hit != 'true'
