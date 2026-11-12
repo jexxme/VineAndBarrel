@@ -17,7 +17,6 @@ import jexxme.vineandbarrel.barrel.BarrelStage;
 import jexxme.vineandbarrel.drink.DrinkItems;
 import jexxme.vineandbarrel.tipsy.Blackout;
 import jexxme.vineandbarrel.tipsy.client.BlackoutClient;
-import jexxme.vineandbarrel.tipsy.client.TipsyClient;
 import jexxme.vineandbarrel.watch.client.ScenePlayer;
 import jexxme.vineandbarrel.watch.client.WatchClient;
 import jexxme.vineandbarrel.watch.client.WatchIndex;
@@ -135,6 +134,13 @@ public final class SmokeClient implements ClientModInitializer
 	private enum Phase { TITLE, LOADING, SETTLING, STEPS, HOSTING, QUIETING, DONE }
 
 	private final Path out = FabricLoader.getInstance().getGameDir().resolve("smoke");
+	/** The furthest the arms were seen swung forward (radians) while getting up off the ground. */
+	private static float getUpArms;
+	/**
+	 * The smallest round shadow (radius, 0 for none) drawn under the player in a frame while they were out on the ground,
+	 * and the largest once they were up again ({@code mixin/DrawnShadowMixin}); the one of the render in progress.
+	 */
+	private static float getUpShadow, upShadow, renderShadow;
 	private final List<Step> steps = new ArrayList<>();
 	private final JsonArray results = new JsonArray();
 	private Phase phase = Phase.TITLE;
@@ -168,6 +174,29 @@ public final class SmokeClient implements ClientModInitializer
 
 	public static void effectTooltip(List<Component> tooltip) {
 		effectTooltip = List.copyOf(tooltip);
+	}
+
+	/** The game starts drawing this client's own player (DrawnShadowMixin). */
+	public static void playerRenderStarts() {
+		renderShadow = 0.0F;
+	}
+
+	/** It draws the player's round shadow, this big. */
+	public static void shadowDrawn(float radius) {
+		renderShadow = radius;
+	}
+
+	/** It has drawn the player: the shadow it drew (or none) counts lying or standing. */
+	public static void playerRenderEnds() {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.player == null) {
+			return;
+		}
+		if (BlackoutClient.body(mc.player, mc.getFrameTime()) != null) {
+			getUpShadow = Math.min(getUpShadow, renderShadow);
+		} else if (!Blackout.isOut(mc.player)) {
+			upShadow = Math.max(upShadow, renderShadow);
+		}
 	}
 
 	public static void drawnTooltip(int lines) {
@@ -482,7 +511,7 @@ public final class SmokeClient implements ClientModInitializer
 			if (left == null || left <= 0) {
 				return "no blackout on the client (" + left + ")";
 			}
-			if (BlackoutClient.lying(mc.player, 0.0F) <= 0.0F || TipsyClient.blackoutLying(mc.player) == null) {
+			if (BlackoutClient.body(mc.player, 0.0F) == null) {
 				return "not lying on the ground (" + left + " ticks left, pose " + Blackout.pose(mc.player) + ")";
 			}
 			return BlackoutClient.hidesHands() ? null : "the hand still shows";
@@ -510,8 +539,38 @@ public final class SmokeClient implements ClientModInitializer
 			Integer level = TipsyRegistry.SYNCED_LEVEL.getExisting(mc.player);
 			return level != null && level == 1 ? null : "Tipsy " + level + " after waking up instead of 1";
 		}, "after_blackout", true).polled());
-		steps.add(new Step("sober_again", 40, mc -> command(mc, "vbsmoke sober"),
-			mc -> mc.player.hasEffect(TipsyRegistry.TIPSY.get()) ? "still tipsy" : null, null, true).polled());
+		// Getting up off the ground moves the limbs, not only the body: on Fabric too (the common HumanoidModelMixin, fed
+		// through LivingEntityRendererMixin); seen from the front in third person, the arms swing in under the body as they
+		// push. And the shadow at the feet is not drawn while the body lies ahead of them (the common
+		// EntityRenderDispatcherMixin), as seen where the game draws it (DrawnShadowMixin)
+		steps.add(new Step("getting_up_moves_the_limbs", 60, mc -> {
+			mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);
+			getUpArms = 0.0F;
+			getUpShadow = Float.MAX_VALUE;
+			upShadow = 0.0F;
+			command(mc, "vbsmoke blackout getup");
+		}, mc -> {
+			// The player model as last drawn: vanilla leaves a still player's arms hanging
+			if (BlackoutClient.body(mc.player, 0.0F) != null
+				&& mc.getEntityRenderDispatcher().getRenderer(mc.player) instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer renderer) {
+				var model = renderer.getModel();
+				getUpArms = Math.max(getUpArms, Math.max(-model.rightArm.xRot, -model.leftArm.xRot));
+			}
+			if (getUpShadow > 0.01F) {
+				return "the shadow stays at the feet while lying (" + (getUpShadow == Float.MAX_VALUE ? "no frame seen" : getUpShadow + " at the least") + "; "
+					+ Blackout.ticksLeft(mc.player) + " ticks left)";
+			}
+			return getUpArms > 1.0F ? null : "the arms don't swing in under the body (" + getUpArms + " rad forward at most; " + Blackout.ticksLeft(mc.player)
+				+ " ticks left, pose " + Blackout.pose(mc.player) + ")";
+		}, "blackout_getting_up", true).polled());
+		// Up again, the shadow is back at the feet
+		steps.add(new Step("up_off_the_ground", 60, mc -> {
+		}, mc -> Blackout.isOut(mc.player) ? "still out (" + Blackout.ticksLeft(mc.player) + " ticks left)"
+			: upShadow > 0.1F ? null : "no shadow at the feet once up (" + upShadow + ")", null, true).polled());
+		steps.add(new Step("sober_again", 40, mc -> {
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+			command(mc, "vbsmoke sober");
+		}, mc -> mc.player.hasEffect(TipsyRegistry.TIPSY.get()) ? "still tipsy" : null, null, true).polled());
 		// "Watch it": the tooltip offers the scene; at the scene's barrel in the world the key opens it where that barrel is
 		steps.add(new Step("watch_it_on_the_tooltip", 1, mc -> {
 		}, mc -> {

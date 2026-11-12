@@ -41,7 +41,7 @@ public enum BlackoutEnding
 	/** How the player lies while waking up; synced to every client in {@link TipsyRegistry#BLACKOUT_POSE}. */
 	public enum Pose
 	{
-		/** On the ground: the camera tipped for the player, the body lying on its side for the others. */
+		/** On the ground: lying on the face, the camera in the head for the player ({@link BlackoutPose#body}). */
 		GROUND,
 		/** In a bed, in vanilla's sleeping pose. */
 		BED,

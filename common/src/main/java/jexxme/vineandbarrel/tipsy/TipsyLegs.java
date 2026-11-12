@@ -298,9 +298,17 @@ public final class TipsyLegs
 		KNOWN_MOVEMENT.put(player, movement);
 	}
 
+	/**
+	 * {@return how far this player moved with its last movement packet (what 1.21.1's {@code ServerPlayer#getKnownMovement}
+	 * returns), or nothing if its client reported none yet}
+	 */
+	public static Vec3 knownMovement(ServerPlayer player) {
+		return KNOWN_MOVEMENT.getOrDefault(player, Vec3.ZERO);
+	}
+
 	/** Players move on their client, so the server's view of their speed is the last movement the client reported. */
 	private static Vec3 currentMotion(LivingEntity entity) {
-		return entity instanceof ServerPlayer player ? KNOWN_MOVEMENT.getOrDefault(player, Vec3.ZERO) : entity.getDeltaMovement();
+		return entity instanceof ServerPlayer player ? knownMovement(player) : entity.getDeltaMovement();
 	}
 
 	private static void setMotion(LivingEntity entity, Vec3 motion) {

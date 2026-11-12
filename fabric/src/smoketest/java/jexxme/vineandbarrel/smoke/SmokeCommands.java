@@ -104,7 +104,8 @@ public final class SmokeCommands implements ModInitializer
 				ServerPlayer player = context.getSource().getPlayerOrException();
 				Blackout.start(player);
 				return reply(context, "blackout");
-			}).then(Commands.literal("home").executes(SmokeCommands::blackoutHome)))
+			}).then(Commands.literal("home").executes(SmokeCommands::blackoutHome))
+				.then(Commands.literal("getup").executes(SmokeCommands::blackoutGetUp)))
 			.then(Commands.literal("village").executes(SmokeCommands::village))
 			.then(Commands.literal("sober").executes(context -> {
 				ServerPlayer player = context.getSource().getPlayerOrException();
@@ -299,7 +300,7 @@ public final class SmokeCommands implements ModInitializer
 
 	/**
 	 * A blackout that ends in the player's own bed: a bed in the scene becomes the player's spawn point, and the draw
-	 * gives the home ending. The timeline is the mod's own: tip over, wake up in bed, get up.
+	 * gives the home ending. The timeline is the mod's own: fall on the face, wake up in bed, get up.
 	 */
 	private static int blackoutHome(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		ServerPlayer player = context.getSource().getPlayerOrException();
@@ -313,6 +314,19 @@ public final class SmokeCommands implements ModInitializer
 		forcedEnding = BlackoutEnding.HOME;
 		Blackout.start(player);
 		return reply(context, "blackout, ending in the bed at " + head);
+	}
+
+	/**
+	 * A blackout on the ground right here, about to get up: the client poses the limbs from here to the end.
+	 */
+	private static int blackoutGetUp(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Blackout.start(player);
+		jexxme.vineandbarrel.tipsy.TipsyRegistry.BLACKOUT.set(player, Blackout.WAKE_AT);
+		Blackout.wakeUp(player, new jexxme.vineandbarrel.tipsy.BlackoutSpots.Wake(BlackoutEnding.RIGHT_HERE, player.position(), player.getYRot(), null, null),
+			player.getRandom());
+		jexxme.vineandbarrel.tipsy.TipsyRegistry.BLACKOUT.set(player, Blackout.GROUND_GET_UP + 2);
+		return reply(context, "blackout, getting up off the ground");
 	}
 
 	/**

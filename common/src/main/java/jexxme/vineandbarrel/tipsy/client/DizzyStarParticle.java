@@ -70,6 +70,10 @@ public class DizzyStarParticle extends TextureSheetParticle
 			this.remove();
 			return;
 		}
+		if (this.lifetime > this.age + FADE && !BlackoutClient.starsCircle(cx, cy, cz)) {
+			// Whoever they circled is getting up (or came to): they fade out now instead of finishing the round
+			this.lifetime = this.age + FADE;
+		}
 		place();
 		this.setSprite(this.sprites.get(((this.age + twinkleOffset) / TWINKLE) % 2, 1));
 		int left = this.lifetime - this.age;
