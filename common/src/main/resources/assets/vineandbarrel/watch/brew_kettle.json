@@ -215,7 +215,6 @@
     "vineandbarrel:farmers_delight"
   ],
   "needs": [
-    "minecraft:campfire",
     "vineandbarrel:brew_kettle",
     {
       "recipe": "vineandbarrel:brewing/grape_juice",
@@ -223,7 +222,12 @@
     },
     "minecraft:sugar",
     "minecraft:glass_bottle",
-    "minecraft:bucket"
+    "minecraft:bucket",
+    {
+      "recipe": "vineandbarrel:brewing/barley_wort",
+      "part": "ingredient"
+    },
+    "vineandbarrel:hops"
   ],
   "steps": [
     {
@@ -458,29 +462,33 @@
         },
         {
           "type": "swing",
-          "at": 22
+          "at": 20
         },
         {
           "type": "swing",
-          "at": 34
+          "at": 30
         },
         {
           "type": "hold",
-          "at": 46,
+          "at": 40,
           "item": "minecraft:sugar"
         },
         {
           "type": "swing",
-          "at": 58
+          "at": 50
+        },
+        {
+          "type": "swing",
+          "at": 60
         },
         {
           "type": "hold",
-          "at": 70,
+          "at": 72,
           "item": "minecraft:air"
         },
         {
           "type": "set_properties",
-          "at": 80,
+          "at": 82,
           "pos": [
             1,
             2,
@@ -492,7 +500,7 @@
         },
         {
           "type": "sound",
-          "at": 80,
+          "at": 82,
           "sound": "vineandbarrel:block.brew_kettle.close"
         }
       ]
@@ -594,11 +602,11 @@
         2.14,
         1.93
       ],
-      "ticks": 110,
+      "ticks": 140,
       "actions": [
         {
           "type": "particles",
-          "ticks": 110,
+          "ticks": 60,
           "particle": {
             "type": "minecraft:dripping_water"
           },
@@ -625,16 +633,16 @@
         },
         {
           "type": "swing",
-          "at": 20
+          "at": 18
         },
         {
           "type": "sound",
-          "at": 22,
+          "at": 20,
           "sound": "minecraft:item.bottle.fill"
         },
         {
           "type": "kettle",
-          "at": 22,
+          "at": 20,
           "pos": [
             1,
             2,
@@ -645,40 +653,100 @@
         },
         {
           "type": "hold",
-          "at": 22,
+          "at": 20,
           "item": {
             "recipe": "vineandbarrel:brewing/grape_juice",
             "part": "result"
           }
         },
         {
-          "type": "hold",
-          "at": 50,
-          "item": "minecraft:bucket"
-        },
-        {
           "type": "swing",
-          "at": 64
+          "at": 32
         },
         {
           "type": "sound",
-          "at": 66,
-          "sound": "minecraft:item.bucket.fill"
+          "at": 34,
+          "sound": "minecraft:item.bottle.fill"
         },
         {
           "type": "kettle",
-          "at": 66,
+          "at": 34,
           "pos": [
             1,
             2,
             1
           ],
           "recipe": "vineandbarrel:brewing/grape_juice",
-          "servings": 3
+          "servings": 6
+        },
+        {
+          "type": "swing",
+          "at": 46
+        },
+        {
+          "type": "sound",
+          "at": 48,
+          "sound": "minecraft:item.bottle.fill"
+        },
+        {
+          "type": "kettle",
+          "at": 48,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "recipe": "vineandbarrel:brewing/grape_juice",
+          "servings": 5
+        },
+        {
+          "type": "swing",
+          "at": 60
+        },
+        {
+          "type": "sound",
+          "at": 62,
+          "sound": "minecraft:item.bottle.fill"
+        },
+        {
+          "type": "kettle",
+          "at": 62,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "recipe": "vineandbarrel:brewing/grape_juice",
+          "servings": 4
         },
         {
           "type": "hold",
-          "at": 66,
+          "at": 76,
+          "item": "minecraft:bucket"
+        },
+        {
+          "type": "swing",
+          "at": 90
+        },
+        {
+          "type": "sound",
+          "at": 92,
+          "sound": "minecraft:item.bucket.fill"
+        },
+        {
+          "type": "kettle",
+          "at": 92,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "recipe": "vineandbarrel:brewing/grape_juice",
+          "servings": 0
+        },
+        {
+          "type": "hold",
+          "at": 92,
           "item": {
             "recipe": "vineandbarrel:brewing/grape_juice",
             "part": "bucket"
@@ -686,7 +754,242 @@
         },
         {
           "type": "look",
-          "at": 86,
+          "at": 112,
+          "pos": [
+            3.4,
+            2.4,
+            3.4
+          ]
+        }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.brew_kettle.more",
+      "ticks": 100,
+      "actions": [
+        {
+          "type": "look",
+          "at": 2,
+          "pos": [
+            3.4,
+            2.4,
+            3.4
+          ]
+        },
+        {
+          "type": "hold",
+          "at": 4,
+          "item": {
+            "recipe": "vineandbarrel:brewing/apple_juice",
+            "part": "ingredient"
+          }
+        },
+        {
+          "type": "hold",
+          "at": 34,
+          "item": {
+            "recipe": "vineandbarrel:brewing/sweet_berry_juice",
+            "part": "ingredient"
+          }
+        },
+        {
+          "type": "hold",
+          "at": 64,
+          "item": {
+            "recipe": "vineandbarrel:brewing/honey_must",
+            "part": "ingredient"
+          }
+        },
+        {
+          "type": "hold",
+          "at": 96,
+          "item": "minecraft:air"
+        }
+      ]
+    },
+    {
+      "caption": "watch.vineandbarrel.brew_kettle.wort",
+      "anchor": [
+        1.5,
+        2.6,
+        1.5
+      ],
+      "ticks": 200,
+      "actions": [
+        {
+          "type": "look",
+          "at": 2,
+          "pos": [
+            1.5,
+            2.7,
+            1.5
+          ]
+        },
+        {
+          "type": "set_properties",
+          "at": 6,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "properties": {
+            "open": "true"
+          }
+        },
+        {
+          "type": "sound",
+          "at": 6,
+          "sound": "vineandbarrel:block.brew_kettle.open"
+        },
+        {
+          "type": "hold",
+          "at": 8,
+          "item": {
+            "recipe": "vineandbarrel:brewing/barley_wort",
+            "part": "ingredient"
+          }
+        },
+        {
+          "type": "swing",
+          "at": 20
+        },
+        {
+          "type": "swing",
+          "at": 30
+        },
+        {
+          "type": "hold",
+          "at": 40,
+          "item": "vineandbarrel:hops"
+        },
+        {
+          "type": "swing",
+          "at": 50
+        },
+        {
+          "type": "hold",
+          "at": 62,
+          "item": "minecraft:air"
+        },
+        {
+          "type": "set_properties",
+          "at": 70,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "properties": {
+            "open": "false"
+          }
+        },
+        {
+          "type": "sound",
+          "at": 70,
+          "sound": "vineandbarrel:block.brew_kettle.close"
+        },
+        {
+          "type": "particles",
+          "at": 72,
+          "ticks": 80,
+          "particle": {
+            "type": "vineandbarrel:steam"
+          },
+          "pos": [
+            1.5,
+            3.61,
+            1.5
+          ],
+          "spread": [
+            0.08,
+            0.0,
+            0.08
+          ],
+          "velocity": [
+            0.0,
+            0.016,
+            0.0
+          ],
+          "rate": 0.3
+        },
+        {
+          "type": "particles",
+          "at": 72,
+          "ticks": 80,
+          "particle": {
+            "type": "minecraft:bubble_pop"
+          },
+          "pos": [
+            1.5,
+            2.58,
+            1.5
+          ],
+          "spread": [
+            0.34,
+            0.0,
+            0.34
+          ],
+          "rate": 0.2
+        },
+        {
+          "type": "sound",
+          "at": 76,
+          "sound": "vineandbarrel:block.brew_kettle.boil",
+          "volume": 0.6
+        },
+        {
+          "type": "kettle",
+          "at": 150,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "recipe": "vineandbarrel:brewing/barley_wort",
+          "servings": 4
+        },
+        {
+          "type": "sound",
+          "at": 150,
+          "sound": "vineandbarrel:block.brew_kettle.finish"
+        },
+        {
+          "type": "hold",
+          "at": 158,
+          "item": "minecraft:bucket"
+        },
+        {
+          "type": "swing",
+          "at": 172
+        },
+        {
+          "type": "sound",
+          "at": 174,
+          "sound": "minecraft:item.bucket.fill"
+        },
+        {
+          "type": "kettle",
+          "at": 174,
+          "pos": [
+            1,
+            2,
+            1
+          ],
+          "recipe": "vineandbarrel:brewing/barley_wort",
+          "servings": 0
+        },
+        {
+          "type": "hold",
+          "at": 174,
+          "item": {
+            "recipe": "vineandbarrel:brewing/barley_wort",
+            "part": "bucket"
+          }
+        },
+        {
+          "type": "look",
+          "at": 188,
           "pos": [
             3.4,
             2.4,
