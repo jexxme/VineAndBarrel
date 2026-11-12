@@ -44,7 +44,8 @@
     "java": ">=25"
   },
   "breaks": {
-    "farmersdelight": "<26.2-3.6.6"
+    "farmersdelight": "<26.2-3.6.6",
+    "jei": "<30.0.0.1"
   },
   "suggests": {
     "farmersdelight": "*",
