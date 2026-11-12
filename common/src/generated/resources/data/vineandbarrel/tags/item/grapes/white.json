@@ -1,0 +1,9 @@
+{
+  "values": [
+    "vineandbarrel:white_grapes",
+    {
+      "id": "kaleidoscope_tavern:green_grape",
+      "required": false
+    }
+  ]
+}

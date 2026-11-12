@@ -152,6 +152,13 @@ public final class VBTagProviders
 			add(tag(VBTags.COOKING_RED_WINE), DrinkItems.RED_WINE, DrinkItems.AGED_RED_WINE);
 			add(tag(VBTags.COOKING_HARD_CIDER), DrinkItems.HARD_CIDER, DrinkItems.AGED_HARD_CIDER);
 			add(tag(VBTags.COOKING_WHITE_WINE), DrinkItems.WHITE_WINE, DrinkItems.AGED_WHITE_WINE);
+			// The grape juices are brewed from these two tags, so Kaleidoscope Tavern's grapes brew like ours (without that
+			// mod each tag holds our grape alone). The other way round is data/vineandbarrel/recipe/pressing_tub
+			add(tag(VBTags.RED_GRAPES), VBItems.RED_GRAPES);
+			tag(VBTags.RED_GRAPES).addOptional(ResourceLocation.fromNamespaceAndPath(VBTags.KALEIDOSCOPE_TAVERN, "grape"));
+			add(tag(VBTags.WHITE_GRAPES), VBItems.WHITE_GRAPES);
+			tag(VBTags.WHITE_GRAPES).addOptional(ResourceLocation.fromNamespaceAndPath(VBTags.KALEIDOSCOPE_TAVERN, "green_grape"));
+
 			add(tag(VBTags.WILD_CROPS_ITEM), VBItems.WILD_GRAPES, VBItems.WILD_WHITE_GRAPES, VBItems.WILD_HOPS, VBItems.WILD_BARLEY);
 			add(tag(VBTags.FD_WILD_CROPS_ITEM), VBItems.WILD_GRAPES, VBItems.WILD_WHITE_GRAPES, VBItems.WILD_HOPS, VBItems.WILD_BARLEY);
 			// FD's knife cuts straw from ripe barley as from ripe wheat (the barley loot table); both tags are empty without FD

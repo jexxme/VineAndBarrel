@@ -35,6 +35,12 @@ public final class VBTags
 	 * (see {@code VineSupports}).
 	 */
 	public static final TagKey<Block> MAKESHIFT_VINE_SUPPORTS = block(VineAndBarrel.MODID, "makeshift_vine_supports");
+	/**
+	 * The grapes the kettle's two grape juices are brewed from: ours, and as optional entries the grapes of Kaleidoscope
+	 * Tavern (its Grape counts as red, its Green Grape as white). A pack puts another mod's grapes in here.
+	 */
+	public static final TagKey<Item> RED_GRAPES = item(VineAndBarrel.MODID, "grapes/red");
+	public static final TagKey<Item> WHITE_GRAPES = item(VineAndBarrel.MODID, "grapes/white");
 	public static final TagKey<Item> WILD_CROPS_ITEM = item(VineAndBarrel.MODID, "wild_crops");
 	/** FD's straw (empty without FD), and the tools that cut it from ripe barley: FD's straw harvesters, its knives. */
 	/**
@@ -78,6 +84,10 @@ public final class VBTags
 	public static final TagKey<Item> FD_FEASTS_ITEM = item(FARMERS_DELIGHT, "feasts");
 	/** FD's own rope block: put back when a vine on a rope is removed (FD's "rope permanence"). */
 	public static final ResourceLocation FD_ROPE = ResourceLocation.fromNamespaceAndPath(FARMERS_DELIGHT, "rope");
+
+	// ------------------------------------------------------------------ Kaleidoscope Tavern (optional)
+	/** The mod id of Kaleidoscope Tavern and of its Fabric port, Kaleidoscope Tavern Refabricated. */
+	public static final String KALEIDOSCOPE_TAVERN = "kaleidoscope_tavern";
 
 	// ------------------------------------------------------------------ Serene Seasons (optional)
 	public static final String SERENE_SEASONS = "sereneseasons";
