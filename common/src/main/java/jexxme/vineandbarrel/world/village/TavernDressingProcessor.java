@@ -3,6 +3,7 @@ package jexxme.vineandbarrel.world.village;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import jexxme.vineandbarrel.barrel.AgingBarrelBlock;
+import jexxme.vineandbarrel.barrel.AgingBarrelBlockEntity;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
 import jexxme.vineandbarrel.drink.PlacedDrink;
 import jexxme.vineandbarrel.drink.PlacedDrinksBlock;
@@ -219,18 +220,16 @@ public final class TavernDressingProcessor extends StructureProcessor
 		return out;
 	}
 
-	/** One of the cask's batches, its fill gauge to match. */
+	/** One of the cask's batches, its fill gauge to match; marked as the tavern's own cask, which its keeper restocks. */
 	private static StructureTemplate.StructureBlockInfo cask(StructureTemplate.StructureBlockInfo info, RandomSource random) {
-		CompoundTag nbt = info.nbt();
-		if (nbt == null) {
-			return info;
-		}
+		CompoundTag nbt = info.nbt() == null ? new CompoundTag() : info.nbt();
+		CompoundTag out = nbt.copy();
+		out.putBoolean(AgingBarrelBlockEntity.TAVERN_CASK, true);
 		ListTag choices = nbt.getListOrEmpty(CHOICES);
 		if (choices.isEmpty()) {
-			return info;
+			return new StructureTemplate.StructureBlockInfo(info.pos(), info.state(), out);
 		}
 		CompoundTag pick = choices.getCompoundOrEmpty(random.nextInt(choices.size()));
-		CompoundTag out = nbt.copy();
 		out.remove(CHOICES);
 		Tag batch = pick.get("Batch");
 		if (batch == null) {

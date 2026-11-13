@@ -1144,7 +1144,8 @@ public final class WorldGameTests
 
 	/**
 	 * The keeper's daily restock picks an empty cask of his own tavern that he can walk to, never a player's cask beside
-	 * the tavern, and fills it as the tavern's stock (not home-brewed).
+	 * the tavern or in it (audit 1.2: one a player put in the tavern was filled too), and fills it as the tavern's stock
+	 * (not home-brewed).
 	 */
 	private static void keeperRestocks(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
@@ -1154,14 +1155,23 @@ public final class WorldGameTests
 		BlockPos kettle = t.find(s -> s.getBlock() instanceof BrewKettleBlock).getFirst();
 		net.minecraft.world.entity.npc.villager.Villager keeper = level.getEntitiesOfClass(net.minecraft.world.entity.npc.villager.Villager.class,
 			net.minecraft.world.phys.AABB.of(t.box()).inflate(1), jexxme.vineandbarrel.world.village.TavernKeeper::isKeeper).getFirst();
-		// every cask of the tavern full but one in the cellar, drunk dry; a player's empty cask outside the tavern
+		// every cask of the tavern full but one in the cellar, drunk dry; one nearer the kettle a player's (taken out and
+		// put back: a player's cask in the tavern), empty; and a player's empty cask outside the tavern
 		List<BlockPos> casks = t.find(s -> s.is(BarrelRegistry.AGING_BARREL.get()));
+		for (BlockPos pos : casks) {
+			helper.assertTrue(((AgingBarrelBlockEntity) level.getBlockEntity(pos)).isTavernCask(), "placed with the tavern: its own cask at " + pos.subtract(t.origin()));
+		}
 		BlockPos dry = casks.stream().filter(pos -> pos.getY() == t.origin().getY() - 4).findFirst().orElseThrow();
+		BlockPos mine = casks.stream().filter(pos -> !pos.equals(dry)).min(java.util.Comparator.comparingDouble(pos -> pos.distSqr(kettle))).orElseThrow();
+		helper.assertTrue(mine.distSqr(kettle) < dry.distSqr(kettle), "the player's cask in the tavern lies nearer the kettle");
 		for (BlockPos pos : casks) {
 			BlockState state = level.getBlockState(pos);
 			level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
 			level.setBlockAndUpdate(pos, state.setValue(AgingBarrelBlock.FILL, 0));
-			if (!pos.equals(dry)) {
+			if (!pos.equals(mine)) {
+				((AgingBarrelBlockEntity) level.getBlockEntity(pos)).setTavernCask(true);
+			}
+			if (!pos.equals(dry) && !pos.equals(mine)) {
 				jexxme.vineandbarrel.world.village.TavernKeeper.fill(level, pos, DrinkItems.BARLEY_ALE.get());
 			}
 		}
@@ -1181,6 +1191,8 @@ public final class WorldGameTests
 			AgingBarrelBlockEntity barrel = (AgingBarrelBlockEntity) level.getBlockEntity(cask);
 			helper.assertFalse(barrel.isHomeBrewed(), "the tavern's stock, not home-brewed");
 			helper.assertTrue(((AgingBarrelBlockEntity) level.getBlockEntity(players)).contents().isEmpty(), "the player's cask left alone");
+			helper.assertTrue(jexxme.vineandbarrel.tipsy.BlackoutSpots.inTavern(level, mine), "the player's cask in the tavern is in the tavern");
+			helper.assertTrue(((AgingBarrelBlockEntity) level.getBlockEntity(mine)).contents().isEmpty(), "and left alone too");
 		});
 		helper.succeed();
 	}
