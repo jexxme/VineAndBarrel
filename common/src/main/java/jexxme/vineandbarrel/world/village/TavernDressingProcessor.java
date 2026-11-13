@@ -48,6 +48,8 @@ public final class TavernDressingProcessor extends StructureProcessor
 {
 	/** The batches a cask's template data offers: a list of {Batch, PausedAge}. */
 	public static final String CHOICES = "TavernChoices";
+	/** A young cask the template keeps full: never drunk dry by the dressing (1.2: fewer casks, as much drink). */
+	public static final String FULL = "TavernFull";
 
 	public static final Codec<TavernDressingProcessor> CODEC = RecordCodecBuilder.create(i -> i.group(
 		BuiltInRegistries.BLOCK.byNameCodec().listOf().fieldOf("flowers").forGetter(p -> p.flowers),
@@ -124,8 +126,51 @@ public final class TavernDressingProcessor extends StructureProcessor
 				template.get().placeInWorld(level, at, at, below, RandomSource.create(Mth.getSeed(at)),
 					net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE);
 			}
+			spawnKeeper(level, processed, settings);
 		}
 		return processed;
+	}
+
+	/**
+	 * The tavern's keeper (1.2), standing behind the bar beside his kettle, like a vanilla house brings its villagers:
+	 * on the floor next to the kettle's fire, on the side with room, in the chunk being placed only (a tavern is placed
+	 * chunk by chunk, so he comes exactly once).
+	 */
+	private static void spawnKeeper(net.minecraft.world.level.ServerLevelAccessor level, List<StructureTemplate.StructureBlockInfo> processed,
+		StructurePlaceSettings settings) {
+		java.util.Map<BlockPos, BlockState> blocks = new java.util.HashMap<>();
+		BlockPos kettle = null;
+		var kettles = TavernKeeper.kettleStates();
+		for (StructureTemplate.StructureBlockInfo info : processed) {
+			blocks.put(info.pos(), info.state());
+			if (kettles.contains(info.state())) {
+				kettle = info.pos();
+			}
+		}
+		if (kettle == null) {
+			return;
+		}
+		BlockPos fire = kettle.below();
+		for (net.minecraft.core.Direction side : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+			BlockPos feet = fire.relative(side);
+			BlockState at = blocks.get(feet), head = blocks.get(feet.above()), floor = blocks.get(feet.below());
+			if (at == null || head == null || floor == null || !at.isAir() || !head.isAir() || !floor.isSolid()) {
+				continue;
+			}
+			if (settings.getBoundingBox() != null && !settings.getBoundingBox().isInside(feet)) {
+				return;
+			}
+			var keeper = new net.minecraft.world.entity.npc.Villager(net.minecraft.world.entity.EntityType.VILLAGER, level.getLevel());
+			keeper.moveTo(feet.getX() + 0.5, feet.getY(), feet.getZ() + 0.5, side.getOpposite().toYRot(), 0.0F);
+			keeper.finalizeSpawn(level, level.getCurrentDifficultyAt(feet), net.minecraft.world.entity.MobSpawnType.STRUCTURE, null, null);
+			keeper.setVillagerData(keeper.getVillagerData().setProfession(TavernKeeper.TAVERN_KEEPER.get()));
+			// a little experience: the tavern's own keeper keeps his trade while he walks to his kettle (a villager with
+			// none and no job site yet goes back to having no job)
+			keeper.setVillagerXp(1);
+			keeper.setPersistenceRequired();
+			level.addFreshEntityWithPassengers(keeper);
+			return;
+		}
 	}
 
 	@Override
@@ -198,9 +243,12 @@ public final class TavernDressingProcessor extends StructureProcessor
 			return new StructureTemplate.StructureBlockInfo(info.pos(), info.state(), out);
 		}
 		// a tavern that has been serving: aged casks (wax bung) hold one or two servings; of the young ones half are drunk
-		// dry and the rest hold one or two, so a tavern holds some fifteen to twenty servings
+		// dry and the rest hold one or two (those the template keeps full always hold one or two), so a tavern holds some
+		// fifteen to twenty servings
 		boolean aged = info.state().getValue(AgingBarrelBlock.BUNG) == jexxme.vineandbarrel.barrel.BungState.WAX;
-		if (!aged && random.nextFloat() < 0.5F) {
+		boolean full = out.getBoolean(FULL);
+		out.remove(FULL);
+		if (!aged && !full && random.nextFloat() < 0.5F) {
 			out.remove("Batch");
 			out.remove("PausedAge");
 			BlockState empty = info.state().setValue(AgingBarrelBlock.FILL, 0)

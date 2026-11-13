@@ -7,7 +7,12 @@ import jexxme.vineandbarrel.registry.VBItems;
 import net.minecraft.data.loot.LootTableSubProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
+import jexxme.vineandbarrel.barrel.AgingBarrelItem;
+import jexxme.vineandbarrel.barrel.BarrelRegistry;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.npc.VillagerDataHolder;
+import net.minecraft.world.entity.npc.VillagerType;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.npc.VillagerTrades;
 import net.minecraft.world.item.Item;
@@ -22,7 +27,9 @@ import net.minecraft.world.level.storage.loot.entries.LootPoolEntryContainer;
 import net.minecraft.world.level.storage.loot.entries.LootPoolSingletonContainer;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
+import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -88,9 +95,12 @@ public final class VillageData
 	 * trader draw from at random, next to the vanilla trades and other mods'.
 	 */
 	public static void registerTrades() {
-		Services.PLATFORM.addVillagerTrades(VillagerProfession.FARMER, 1, List.copyOf(FARMER_LEVEL_1));
-		Services.PLATFORM.addVillagerTrades(VillagerProfession.FARMER, 2, List.copyOf(FARMER_LEVEL_2));
+		Services.PLATFORM.addVillagerTrades(() -> VillagerProfession.FARMER, 1, List.copyOf(FARMER_LEVEL_1));
+		Services.PLATFORM.addVillagerTrades(() -> VillagerProfession.FARMER, 2, List.copyOf(FARMER_LEVEL_2));
 		Services.PLATFORM.addWanderingTraderTrades(List.copyOf(WANDERING_TRADER_COMMON));
+		for (int level = 1; level <= 5; level++) {
+			Services.PLATFORM.addVillagerTrades(TavernKeeper.TAVERN_KEEPER, level, List.of(new KeeperDraw(level, 0), new KeeperDraw(level, 1)));
+		}
 	}
 
 	private static Trade buys(String path, Supplier<? extends ItemLike> item, int count, int maxUses, int xp) {
@@ -99,6 +109,130 @@ public final class VillageData
 
 	private static Trade sells(String path, Supplier<? extends ItemLike> item, int count, int maxUses, int xp) {
 		return new Trade(VineAndBarrel.id(path), false, item, count, maxUses, xp, 0.05F);
+	}
+
+	// ------------------------------------------------------------------ the tavern keeper's trades (1.2)
+
+	/**
+	 * One tavern keeper trade: {@code wantsCount} of {@code wants} for {@code givesCount} of {@code gives}. With village
+	 * types, only a keeper of one of them offers it (26.x: the trade's {@code merchant_predicate}); his level draws two
+	 * that he offers, like vanilla's. A {@code sealed} trade gives an Aging Barrel holding that aged drink
+	 * ({@link TavernKeeper#sealedCask}). The id is the one its 26.x data file has.
+	 */
+	public record KeeperTrade(ResourceLocation id, Supplier<? extends ItemLike> wants, int wantsCount, Supplier<? extends ItemLike> gives, int givesCount,
+		int maxUses, int xp, List<VillagerType> types, @Nullable Supplier<? extends Item> sealed) implements VillagerTrades.ItemListing
+	{
+		@Override
+		public @Nullable MerchantOffer getOffer(Entity trader, RandomSource random) {
+			if (!offeredBy(trader)) {
+				return null;
+			}
+			ItemStack result = sealed != null && trader.level() instanceof ServerLevel level
+				? TavernKeeper.sealedCask(level, sealed.get(), TavernKeeper.SEALED_SERVINGS)
+				: new ItemStack(gives.get(), givesCount);
+			return new MerchantOffer(new ItemStack(wants.get(), wantsCount), result, maxUses, xp, 0.05F);
+		}
+
+		/** Whether a trader of this village type offers it. */
+		public boolean offeredBy(Entity trader) {
+			return types.isEmpty() || (trader instanceof VillagerDataHolder villager && types.contains(villager.getVillagerData().getType()));
+		}
+	}
+
+	/**
+	 * One of the two offers a keeper's level draws. This Minecraft draws two different entries of a level's pool and keeps
+	 * whatever they offer, so a trade for another village type (no offer) would leave him one short; his pool is these two
+	 * draws instead, which pick two different trades among those his village type offers (26.x and 1.21.1 draw two from
+	 * the whole pool, passing over the ones he doesn't offer). Both draws of a villager's level see the same order.
+	 */
+	public record KeeperDraw(int level, int slot) implements VillagerTrades.ItemListing
+	{
+		@Override
+		public @Nullable MerchantOffer getOffer(Entity trader, RandomSource random) {
+			List<KeeperTrade> offered = new ArrayList<>(keeperTrades(level).stream().filter(trade -> trade.offeredBy(trader)).toList());
+			java.util.Collections.shuffle(offered, new java.util.Random(trader.getUUID().getLeastSignificantBits() * 31L + level));
+			return slot < offered.size() ? offered.get(slot).getOffer(trader, random) : null;
+		}
+	}
+
+	private static KeeperTrade keeper(int level, String name, Supplier<? extends ItemLike> wants, int wantsCount, Supplier<? extends ItemLike> gives,
+		int givesCount, int maxUses, int xp, List<VillagerType> types) {
+		return new KeeperTrade(VineAndBarrel.id(TavernKeeper.NAME + "/" + level + "/" + name), wants, wantsCount, gives, givesCount, maxUses, xp, types, null);
+	}
+
+	/** Buys {@code count} of {@code item} for an emerald. */
+	private static KeeperTrade keeperBuys(int level, String name, Supplier<? extends ItemLike> item, int count, int maxUses, int xp, List<VillagerType> types) {
+		return keeper(level, name, item, count, () -> Items.EMERALD, 1, maxUses, xp, types);
+	}
+
+	/** Sells {@code count} of {@code item} for an emerald. */
+	private static KeeperTrade keeperSells(int level, String name, Supplier<? extends ItemLike> item, int count, int maxUses, int xp) {
+		return keeper(level, name, () -> Items.EMERALD, 1, item, count, maxUses, xp, List.of());
+	}
+
+	/** Sells one {@code item} for {@code emeralds}. */
+	private static KeeperTrade keeperSellsFor(int level, String name, Supplier<? extends ItemLike> item, int emeralds, int maxUses, int xp,
+		List<VillagerType> types) {
+		return keeper(level, name, () -> Items.EMERALD, emeralds, item, 1, maxUses, xp, types);
+	}
+
+	/** A drink a keeper of these village types offers. */
+	private record Offer(String name, Supplier<? extends Item> item, List<VillagerType> types) {
+	}
+
+	private static Offer offer(String name, Supplier<? extends Item> item, List<VillagerType> types) {
+		return new Offer(name, item, types);
+	}
+
+	/** Every keeper trade of a level (1 novice to 5 master); a trade with village types is only offered by a keeper of one of them. */
+	public static List<KeeperTrade> keeperTrades(int level) {
+		return KEEPER_TRADES.stream().filter(trade -> trade.id().getPath().startsWith(TavernKeeper.NAME + "/" + level + "/")).toList();
+	}
+
+	/** Every keeper trade, by level. */
+	public static final List<KeeperTrade> KEEPER_TRADES = keeperTrades();
+
+	private static List<KeeperTrade> keeperTrades() {
+		VillagerType P = VillagerType.PLAINS, D = VillagerType.DESERT, V = VillagerType.SAVANNA, N = VillagerType.SNOW, T = VillagerType.TAIGA,
+			J = VillagerType.JUNGLE, W = VillagerType.SWAMP;
+		List<KeeperTrade> trades = new ArrayList<>();
+		// Novice: buys the brewer's crops, sells vessels
+		trades.add(keeperBuys(1, "barley", VBItems.BARLEY, 20, 16, 2, List.of()));
+		trades.add(keeperBuys(1, "hops", VBItems.HOPS, 16, 16, 2, List.of()));
+		trades.add(keeperSells(1, "mugs", DrinkItems.MUG, 3, 12, 1));
+		trades.add(keeperSells(1, "wine_glasses", DrinkItems.WINE_GLASS, 2, 12, 1));
+		// Apprentice: grapes, and a young beer
+		trades.add(keeperBuys(2, "red_grapes", VBItems.RED_GRAPES, 20, 16, 10, List.of()));
+		trades.add(keeperBuys(2, "white_grapes", VBItems.WHITE_GRAPES, 20, 16, 10, List.of()));
+		trades.add(keeperSellsFor(2, "barley_ale", DrinkItems.BARLEY_ALE, 1, 12, 5, List.of()));
+		trades.add(keeperSellsFor(2, "wheat_beer", DrinkItems.WHEAT_BEER, 1, 12, 5, List.of()));
+		// Journeyman: his region's drinks, and what they are made of
+		for (Offer drink : List.of(offer("red_wine", DrinkItems.RED_WINE, List.of(D, V, J)), offer("white_wine", DrinkItems.WHITE_WINE, List.of(P, T)),
+			offer("mead", DrinkItems.MEAD, List.of(N, T)), offer("sweet_berry_wine", DrinkItems.SWEET_BERRY_WINE, List.of(T, N)),
+			offer("melon_wine", DrinkItems.MELON_WINE, List.of(V, J, D)), offer("hard_cider", DrinkItems.HARD_CIDER, List.of(P, W)))) {
+			trades.add(keeperSellsFor(3, drink.name(), drink.item(), 2, 12, 10, drink.types()));
+		}
+		trades.add(keeperBuys(3, "honey_bottle", () -> Items.HONEY_BOTTLE, 4, 16, 20, List.of()));
+		trades.add(keeperBuys(3, "sweet_berries", () -> Items.SWEET_BERRIES, 16, 16, 20, List.of(T, N)));
+		trades.add(keeperBuys(3, "apples", () -> Items.APPLE, 10, 16, 20, List.of(P, W)));
+		trades.add(keeperBuys(3, "melon_slices", () -> Items.MELON_SLICE, 16, 16, 20, List.of(D, V, J)));
+		// Expert: aged drinks of his region
+		for (Offer drink : List.of(offer("aged_red_wine", DrinkItems.AGED_RED_WINE, List.of(D, V, J)),
+			offer("aged_white_wine", DrinkItems.AGED_WHITE_WINE, List.of(P, T)), offer("aged_mead", DrinkItems.AGED_MEAD, List.of(N, T)),
+			offer("aged_sweet_berry_wine", DrinkItems.AGED_SWEET_BERRY_WINE, List.of(T, N)), offer("aged_melon_wine", DrinkItems.AGED_MELON_WINE, List.of(V, J, D)),
+			offer("aged_hard_cider", DrinkItems.AGED_HARD_CIDER, List.of(P, W)), offer("aged_wheat_beer", DrinkItems.AGED_WHEAT_BEER, List.of(P, N, T)))) {
+			trades.add(keeperSellsFor(4, drink.name(), drink.item(), 5, 6, 15, drink.types()));
+		}
+		trades.add(keeperSellsFor(4, "aged_barley_ale", DrinkItems.AGED_BARLEY_ALE, 5, 6, 15, List.of()));
+		// Master: a sealed cask of the house's aged best (four servings, it places full), and an aged white wine
+		for (Offer cask : List.of(offer("sealed_cask_barley_ale", DrinkItems.AGED_BARLEY_ALE, List.of(P)), offer("sealed_cask_red_wine", DrinkItems.AGED_RED_WINE, List.of(D)),
+			offer("sealed_cask_melon_wine", DrinkItems.AGED_MELON_WINE, List.of(V, J)), offer("sealed_cask_mead", DrinkItems.AGED_MEAD, List.of(N)),
+			offer("sealed_cask_sweet_berry_wine", DrinkItems.AGED_SWEET_BERRY_WINE, List.of(T)), offer("sealed_cask_hard_cider", DrinkItems.AGED_HARD_CIDER, List.of(W)))) {
+			trades.add(new KeeperTrade(VineAndBarrel.id(TavernKeeper.NAME + "/5/" + cask.name()), () -> Items.EMERALD, 20, BarrelRegistry.AGING_BARREL_ITEM, 1, 3, 30,
+				cask.types(), cask.item()));
+		}
+		trades.add(keeperSellsFor(5, "aged_white_wine", DrinkItems.AGED_WHITE_WINE, 6, 6, 30, List.of()));
+		return List.copyOf(trades);
 	}
 
 	// ------------------------------------------------------------------ chest loot (DESIGN 3 and 8)
@@ -154,24 +288,49 @@ public final class VillageData
 		};
 	}
 
-	/** The tavern chest (DESIGN 8): seeds, mugs and glasses, and a few drinks of the region, ready to start brewing. */
-	static LootTable.Builder tavernLoot(VillageType type) {
+	/**
+	 * The drinks of a tavern's region (DESIGN 8): its young drinks at weight 3, its aged one at {@code agedWeight}.
+	 */
+	private static List<Entry> tavernDrinks(VillageType type, int agedWeight) {
 		Entry ale = e(DrinkItems.BARLEY_ALE, 3, 1, 2);
 		Entry wheatBeer = e(DrinkItems.WHEAT_BEER, 3, 1, 2);
 		Entry redWine = e(DrinkItems.RED_WINE, 3, 1, 1);
 		Entry berryWine = e(DrinkItems.SWEET_BERRY_WINE, 3, 1, 1);
-		List<Entry> drinks = switch (type) {
-			case PLAINS -> List.of(ale, wheatBeer, redWine, e(DrinkItems.SWEET_BERRY_WINE, 1, 1, 1), e(DrinkItems.AGED_BARLEY_ALE, 1, 1, 1));
-			case DESERT -> List.of(redWine, wheatBeer, ale, e(DrinkItems.AGED_RED_WINE, 1, 1, 1));
-			case SAVANNA -> List.of(redWine, ale, berryWine, e(DrinkItems.AGED_RED_WINE, 1, 1, 1));
-			case SNOWY -> List.of(ale, wheatBeer, berryWine, e(DrinkItems.AGED_BARLEY_ALE, 1, 1, 1));
-			case TAIGA -> List.of(berryWine, ale, wheatBeer, e(DrinkItems.AGED_SWEET_BERRY_WINE, 1, 1, 1));
+		return switch (type) {
+			case PLAINS -> List.of(ale, wheatBeer, redWine, e(DrinkItems.SWEET_BERRY_WINE, 1, 1, 1), e(DrinkItems.AGED_BARLEY_ALE, agedWeight, 1, 1));
+			case DESERT -> List.of(redWine, wheatBeer, ale, e(DrinkItems.AGED_RED_WINE, agedWeight, 1, 1));
+			case SAVANNA -> List.of(redWine, ale, berryWine, e(DrinkItems.AGED_RED_WINE, agedWeight, 1, 1));
+			case SNOWY -> List.of(ale, wheatBeer, berryWine, e(DrinkItems.AGED_BARLEY_ALE, agedWeight, 1, 1));
+			case TAIGA -> List.of(berryWine, ale, wheatBeer, e(DrinkItems.AGED_SWEET_BERRY_WINE, agedWeight, 1, 1));
 		};
+	}
+
+	/** Seeds and harvest to start brewing with. */
+	private static Entry[] tavernCrops() {
+		return new Entry[] {e(VBItems.BARLEY_SEEDS, 3, 2, 6), e(VBItems.RED_GRAPES, 2, 2, 4), e(VBItems.WHITE_GRAPES, 1, 2, 4), e(VBItems.HOPS, 2, 2, 4),
+			e(VBItems.BARLEY, 2, 2, 5)};
+	}
+
+	/**
+	 * The chest by the bar (DESIGN 8, 1.2): what an ordinary house chest of the village holds (vanilla's own table, one
+	 * draw), then a roll of seeds, mugs and glasses, and a drink of the region. Until 1.1 it held two or three rolls of
+	 * seeds and one to three drinks; what the vanilla draw adds, the seeds give up, and the rest of the drinks went
+	 * into the cellar's chest ({@link #tavernCellarLoot}).
+	 */
+	static LootTable.Builder tavernLoot(VillageType type) {
 		return LootTable.lootTable()
-			.withPool(pool(2, 3, e(VBItems.BARLEY_SEEDS, 3, 2, 6), e(VBItems.RED_GRAPES, 2, 2, 4), e(VBItems.WHITE_GRAPES, 1, 2, 4), e(VBItems.HOPS, 2, 2, 4),
-				e(VBItems.BARLEY, 2, 2, 5)))
+			.withPool(LootPool.lootPool().setRolls(net.minecraft.world.level.storage.loot.providers.number.ConstantValue.exactly(1))
+				.add(net.minecraft.world.level.storage.loot.entries.LootTableReference.lootTableReference(type.vanillaHouseLoot())))
+			.withPool(pool(1, 1, tavernCrops()))
 			.withPool(pool(1, 2, e(DrinkItems.MUG, 3, 1, 3), e(DrinkItems.WINE_GLASS, 2, 1, 2)))
-			.withPool(pool(1, 3, drinks.toArray(Entry[]::new)));
+			.withPool(pool(1, 1, tavernDrinks(type, 1).toArray(Entry[]::new)));
+	}
+
+	/** The chest hidden in the cellar (1.2): a roll or two of seeds and harvest, and a drink, more often an aged one. */
+	static LootTable.Builder tavernCellarLoot(VillageType type) {
+		return LootTable.lootTable()
+			.withPool(pool(1, 2, tavernCrops()))
+			.withPool(pool(1, 1, tavernDrinks(type, 4).toArray(Entry[]::new)));
 	}
 
 	public static class ChestLoot implements LootTableSubProvider
@@ -183,6 +342,7 @@ public final class VillageData
 			}
 			for (VillageType type : VillageStructures.TAVERN_TYPES) {
 				output.accept(type.tavernLoot(), tavernLoot(type));
+				output.accept(type.tavernCellarLoot(), tavernCellarLoot(type));
 			}
 		}
 	}

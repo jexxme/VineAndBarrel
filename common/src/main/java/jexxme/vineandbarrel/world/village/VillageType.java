@@ -63,6 +63,11 @@ public enum VillageType
 		return VineAndBarrel.id("chests/village/tavern_" + name);
 	}
 
+	/** The chest hidden in the tavern's cellar (1.2): {@code vineandbarrel:chests/village/tavern_cellar_<type>}. */
+	public ResourceLocation tavernCellarLoot() {
+		return VineAndBarrel.id("chests/village/tavern_cellar_" + name);
+	}
+
 	/** The first tavern layout's template. */
 	public ResourceLocation tavern() {
 		return taverns().get(0);

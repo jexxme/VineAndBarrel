@@ -83,6 +83,7 @@ public final class VBGameTests
 		VBTrellisTests.registerAll();
 		WatchGameTests.registerAll();
 		VBSupportTests.registerAll();
+		KeeperGameTests.registerAll();
 	}
 
 	private VBGameTests() {

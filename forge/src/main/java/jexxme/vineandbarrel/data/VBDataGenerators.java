@@ -62,7 +62,7 @@ public final class VBDataGenerators
 		DataGenerator generator = event.getGenerator();
 		PackOutput output = generator.getPackOutput();
 		CompletableFuture<HolderLookup.Provider> registries = event.getLookupProvider();
-		generator.addProvider(true, new LootTableProvider(output, Set.of(), List.of(
+		generator.addProvider(true, new LootTables(output, List.of(
 				new LootTableProvider.SubProviderEntry(VBBlockLoot::new, LootContextParamSets.BLOCK),
 				// 1.20.1 has no block_interact parameter set: ClimbingCropBlock#pick rolls the harvest tables with the block one
 				new LootTableProvider.SubProviderEntry(VBHarvestLoot::new, LootContextParamSets.BLOCK),
@@ -75,5 +75,41 @@ public final class VBDataGenerators
 		generator.addProvider(true, new VBTagProviders.Biomes(output, registries, files));
 		generator.addProvider(true, new VBLootModifiers(output));
 		generator.addProvider(true, new FdRecipes(output));
+	}
+
+	/**
+	 * Our loot tables. The tavern chest draws once from vanilla's village house chest (1.2), a table this provider doesn't
+	 * hold on this Minecraft (26.x resolves it): that one reference is left to the GameTests (world_tavern_chest_loot),
+	 * everything else is checked as usual.
+	 */
+	private static final class LootTables extends LootTableProvider
+	{
+		LootTables(PackOutput output, List<LootTableProvider.SubProviderEntry> tables) {
+			super(output, Set.of(), tables);
+		}
+
+		@Override
+		protected void validate(java.util.Map<net.minecraft.resources.ResourceLocation, net.minecraft.world.level.storage.loot.LootTable> map,
+				net.minecraft.world.level.storage.loot.ValidationContext context) {
+			net.minecraft.world.level.storage.loot.ValidationContext own = new net.minecraft.world.level.storage.loot.ValidationContext(LootContextParamSets.ALL_PARAMS,
+				new Tables(map));
+			super.validate(map, own);
+			own.getProblems().forEach((where, problem) -> {
+				if (!problem.startsWith("Unknown loot table called minecraft:chests/village/")) {
+					context.forChild(where).reportProblem(problem);
+				}
+			});
+		}
+	}
+
+	/** Resolves references to the tables being generated, as vanilla's provider does. */
+	private record Tables(java.util.Map<net.minecraft.resources.ResourceLocation, net.minecraft.world.level.storage.loot.LootTable> map)
+		implements net.minecraft.world.level.storage.loot.LootDataResolver
+	{
+		@Override
+		@SuppressWarnings("unchecked")
+		public <T> T getElement(net.minecraft.world.level.storage.loot.LootDataId<T> id) {
+			return id.type() == net.minecraft.world.level.storage.loot.LootDataType.TABLE ? (T) map.get(id.location()) : null;
+		}
 	}
 }

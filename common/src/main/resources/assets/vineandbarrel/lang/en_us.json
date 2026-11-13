@@ -368,5 +368,7 @@
   "watch.vineandbarrel.path.wiki": "Wiki",
   "watch.vineandbarrel.path.wiki_page": "Wiki page ›",
   "watch.vineandbarrel.path.chapter": "(Brewer's path, %s of %s)",
-  "watch.vineandbarrel.farmers_delight.note": "A stove for heat, rope to climb"
+  "watch.vineandbarrel.farmers_delight.note": "A stove for heat, rope to climb",
+  "entity.minecraft.villager.vineandbarrel.tavern_keeper": "Tavern Keeper",
+  "entity.minecraft.villager.tavern_keeper": "Tavern Keeper"
 }

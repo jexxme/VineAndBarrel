@@ -92,6 +92,11 @@ public final class Cheers
 		}
 		recent.addLast(sip);
 		if (partners.isEmpty()) {
+			// Alone, but in front of a tavern keeper: he raises his mug to it (the bonus, not the advancement)
+			if (jexxme.vineandbarrel.world.village.TavernKeeper.cheers(level, player, sip.mug)) {
+				extend(player, sip);
+				sip.cheered = true;
+			}
 			return;
 		}
 

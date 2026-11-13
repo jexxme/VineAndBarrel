@@ -101,6 +101,8 @@ public final class FabricPlatform implements Platform
 			}
 		}
 		REGISTERS.clear();
+		PENDING_TRADES.forEach(Runnable::run);
+		PENDING_TRADES.clear();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -258,11 +260,16 @@ public final class FabricPlatform implements Platform
 
 	// ------------------------------------------------------------------ villager trades
 
+	/** Trades handed over before the registries are filled, added to the pools once they are ({@link #registerAll}). */
+	private static final List<Runnable> PENDING_TRADES = new java.util.ArrayList<>();
+
 	@Override
-	public void addVillagerTrades(VillagerProfession profession, int level, List<VillagerTrades.ItemListing> trades) {
+	public void addVillagerTrades(java.util.function.Supplier<? extends VillagerProfession> profession, int level, List<VillagerTrades.ItemListing> trades) {
 		// Straight into vanilla's own pools, as on the newer versions (there Fabric API's TradeOfferHelper would also fill
-		// the "trade rebalance" experiment's map; this Minecraft has no such experiment)
-		append(VillagerTrades.TRADES.computeIfAbsent(profession, key -> new it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap<>()), level, trades);
+		// the "trade rebalance" experiment's map; this Minecraft has no such experiment). Our own profession (the tavern
+		// keeper) exists once the registries are filled.
+		PENDING_TRADES.add(() -> append(VillagerTrades.TRADES.computeIfAbsent(profession.get(), key -> new it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap<>()),
+			level, trades));
 	}
 
 	@Override

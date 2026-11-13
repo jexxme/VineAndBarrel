@@ -7,8 +7,8 @@ class BackportNbt
 
     /**
      * Writes {@code source} to {@code target} with each palette's block states renamed from {id, properties} to
-     * {Name, Properties}, sign text as JSON strings, shelves as item frames or shutters and item stacks in this
-     * Minecraft's own form.
+     * {Name, Properties}, sign text as JSON strings, decorated pot sherds as a list, shelves as item frames or shutters
+     * and item stacks in this Minecraft's own form.
      */
     static void downgrade(File source, File target) {
         def tag = read(source)
@@ -27,13 +27,20 @@ class BackportNbt
             (root.get('blocks').value as TagList).items.each { CompoundView block ->
                 if (!block.containsKey('nbt')) return
                 def nbt = block.get('nbt').value as CompoundView
+                // Decorated pot sherds: 26.3 saves {back: {id}, left: {id}, ...}, this Minecraft a list of four item ids
+                if (nbt.containsKey('sherds') && nbt.get('sherds').type == 10) {
+                    def sherds = nbt.get('sherds').value as CompoundView
+                    nbt.put('sherds', new Tag(9, new TagList(8, ['back', 'left', 'right', 'front'].collect { face ->
+                        (sherds.containsKey(face) ? ((sherds.get(face).value as CompoundView).get('id').value) : 'minecraft:brick') as Object
+                    })))
+                }
                 ['front_text', 'back_text'].each { side ->
                     if (!nbt.containsKey(side)) return
                     def text = nbt.get(side).value as CompoundView
                     if (!text.containsKey('messages')) return
                     def messages = text.get('messages').value as TagList
                     if (messages.elementType == 10) {
-                        messages.items = messages.items.collect { groovy.json.JsonOutput.toJson(plain(it)) }
+                        messages.items = messages.items.collect { groovy.json.JsonOutput.toJson(component(plain(it))) }
                         messages.elementType = 8
                     }
                 }
@@ -175,6 +182,20 @@ class BackportNbt
         } else if (value instanceof TagList) {
             (value as TagList).items.each { oldItemStacks(it) }
         }
+    }
+
+    /**
+     * A text component from 26.3's NBT form in this Minecraft's JSON form: 26.3 saves plain text as {"": text} (since the
+     * 1.2 templates), which this Minecraft doesn't read, so the sign would lose every line; it reads {"text": text}.
+     */
+    private static Object component(Object value) {
+        if (value instanceof Map) {
+            def map = new LinkedHashMap<String, Object>()
+            (value as Map<String, Object>).each { String name, Object child -> map.put(name == '' ? 'text' : name, component(child)) }
+            return map
+        }
+        if (value instanceof List) return (value as List).collect { component(it) }
+        return value
     }
 
     /** A tag's value as plain maps, lists and values (for JSON). */
