@@ -11,6 +11,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -178,15 +179,46 @@ public abstract class ClimbingCropBlock extends VegetationBlock implements Bonem
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
 		if (canPick(state)) {
 			if (level instanceof ServerLevel serverLevel) {
-				// on the side the player picked from, just outside the block: the middle of a fence, wall, bars or
-				// trellis is inside its collision, which would shove the fruit out and fling it away
-				Direction side = hitResult.getDirection().getAxis().isHorizontal() ? hitResult.getDirection()
-						: Direction.getApproximateNearest(player.getX() - (pos.getX() + 0.5), 0.0, player.getZ() - (pos.getZ() + 0.5));
-				pick(serverLevel, pos, state, player, stack -> Block.popResourceFromFace(serverLevel, pos, side, stack));
+				pick(serverLevel, pos, state, player, stack -> dropToward(serverLevel, pos, player, hitResult.getDirection(), stack));
 			}
 			return InteractionResult.SUCCESS;
 		}
 		return super.useWithoutItem(state, level, pos, player, hitResult);
+	}
+
+	/**
+	 * Drops picked fruit just outside the block, on an open side: the middle of a fence, wall, bars or trellis is inside
+	 * its collision, which would shove the fruit out and fling it away. The side picked from if it is open, otherwise the
+	 * open side nearest the player; with every side closed (picked from above, in a row between other plants) at the
+	 * player's feet.
+	 */
+	private static void dropToward(ServerLevel level, BlockPos pos, Player player, Direction picked, ItemStack stack) {
+		Direction side = null;
+		if (picked.getAxis().isHorizontal() && open(level, pos.relative(picked))) {
+			side = picked;
+		} else {
+			double best = Double.MAX_VALUE;
+			for (Direction direction : Direction.Plane.HORIZONTAL) {
+				BlockPos next = pos.relative(direction);
+				double distance = player.distanceToSqr(next.getX() + 0.5, player.getY(), next.getZ() + 0.5);
+				if (distance < best && open(level, next)) {
+					best = distance;
+					side = direction;
+				}
+			}
+		}
+		if (side != null) {
+			Block.popResourceFromFace(level, pos, side, stack);
+		} else {
+			ItemEntity item = new ItemEntity(level, player.getX(), player.getY() + 0.25, player.getZ(), stack, 0.0, 0.1, 0.0);
+			item.setDefaultPickUpDelay();
+			level.addFreshEntity(item);
+		}
+	}
+
+	/** Nothing there to bump into: a dropped item can lie there. */
+	private static boolean open(Level level, BlockPos pos) {
+		return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
 	}
 
 	/**

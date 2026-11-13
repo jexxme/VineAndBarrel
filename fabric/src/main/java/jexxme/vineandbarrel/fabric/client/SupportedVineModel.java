@@ -1,5 +1,6 @@
 package jexxme.vineandbarrel.fabric.client;
 
+import com.mojang.logging.LogUtils;
 import com.mojang.math.OctahedralGroup;
 import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.block.SupportLeaves;
@@ -23,10 +24,13 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 /**
@@ -39,12 +43,22 @@ final class SupportedVineModel implements BlockStateModel
 	private static final OctahedralGroup[] TURNS = {OctahedralGroup.IDENTITY, OctahedralGroup.BLOCK_ROT_Y_90, OctahedralGroup.BLOCK_ROT_Y_180,
 			OctahedralGroup.BLOCK_ROT_Y_270};
 	private static final Map<String, ExtraModelKey<BlockStateModel>> PIECES = new HashMap<>();
+	private static final Logger LOGGER = LogUtils.getLogger();
+	/** Missing pieces already reported (each once: this runs every time a vine is drawn). */
+	private static final Set<String> MISSING = ConcurrentHashMap.newKeySet();
 
 	/** The block state's own model: no leaves, its particle. */
 	private final BlockStateModel leaves;
 
 	private SupportedVineModel(BlockStateModel leaves) {
 		this.leaves = leaves;
+	}
+
+	/** A leaf piece that has no model: a datagen or registration gap, reported loudly once instead of drawn as nothing. */
+	private static void missing(String name) {
+		if (MISSING.add(name)) {
+			LOGGER.error("Vine on a support: no model for leaf piece {} (run datagen; every piece SupportLeaves picks must be registered)", name);
+		}
 	}
 
 	/** Every leaf piece (per vine block, age and root, in each of its quarter turns) and the wrapper, once at client start. */
@@ -86,11 +100,14 @@ final class SupportedVineModel implements BlockStateModel
 		boolean base = state.getValue(VineOnSupportBlock.BASE);
 		int age = state.getValue(ClimbingCropBlock.AGE);
 		for (SupportLeaves.Placed placed : SupportLeaves.of(support)) {
-			ExtraModelKey<BlockStateModel> key = PIECES.get(SupportLeaves.model(state.getBlock(), placed.piece(), base, age) + "#" + placed.turn());
+			String name = SupportLeaves.model(state.getBlock(), placed.piece(), base, age) + "#" + placed.turn();
+			ExtraModelKey<BlockStateModel> key = PIECES.get(name);
 			BlockStateModel piece = key == null ? null : Minecraft.getInstance().getModelManager().getModel(key);
-			if (piece != null) {
-				piece.emitQuads(emitter, level, pos, state, random, cullTest);
+			if (piece == null) {
+				missing(name);
+				continue;
 			}
+			piece.emitQuads(emitter, level, pos, state, random, cullTest);
 		}
 		BlockStateModel model = supportModel(support);
 		if (model != null) {
