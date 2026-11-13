@@ -11,20 +11,22 @@ export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
 
 Vine & Barrel hat zwei Konfigurationsdateien, beide rund um [Schwips](/tipsy/). Alles andere, von Rezepten bis zur Dauer im Fass,
-funktioniert so, wie die Mod ausgeliefert wird, und lässt sich wie jedes Rezept mit einem Datapack ändern.
+funktioniert so, wie die Mod ausgeliefert wird, und lässt sich wie jedes Rezept mit einem Datapack ändern (auf Minecraft 1.21.1 und 1.20.1 alles außer dem Handel der
+Dorfbewohner).
 
 Im Spiel änderst du sie auf dem Einstellungsbildschirm: **Mods**, Vine & Barrel, **Config** bei NeoForge; bei Fabric erscheint derselbe Knopf,
 wenn [Mod Menu](https://modrinth.com/mod/modmenu) installiert ist. Änderungen dort gelten sofort. Die Serveroptionen
-zeigen sich dort im Einzelspieler (nicht mehr, sobald die Welt für LAN geöffnet ist); auf einem Server gehören sie dem Server.
+zeigen sich dort im Einzelspieler (nicht mehr, sobald die Welt für LAN geöffnet ist); auf einem Server gehören sie dem Server. Forge (Minecraft
+1.20.1) hat keinen solchen Knopf: Bearbeite die Dateien.
 
-Die Dateien selbst: Bei NeoForge sind es TOML-Dateien mit den Optionen unter <code>[{configFiles.server.section}]</code>. Bei
+Die Dateien selbst: Bei NeoForge und Forge sind es TOML-Dateien mit den Optionen unter <code>[{configFiles.server.section}]</code>. Bei
 Fabric sind es einfache <code>.properties</code>-Dateien im Ordner <code>config</code>, mit denselben Optionen als
 <code>{configFiles.server.section}.option=wert</code>. Bei Fabric wird die Client-Datei beim Spielstart gelesen, starte also
 nach dem Bearbeiten neu; die Server-Datei wird bei <code>/reload</code> erneut gelesen.
 
 ## Serveroptionen
 
-In <code>{configFiles.server.file}</code> bei NeoForge, <code>{configFiles.server.fabricFile}</code> bei Fabric. Die Werte des Servers
+In <code>{configFiles.server.file}</code> bei NeoForge und Forge, <code>{configFiles.server.fabricFile}</code> bei Fabric. Die Werte des Servers
 gehen an jeden Spieler, der beitritt, alle spielen also nach denselben Regeln. Eine Welt kann eigene haben: Leg die Datei in den Ordner
 <code>serverconfig</code> dieser Welt, dann gilt sie statt der in <code>config</code>, solange diese Welt läuft.
 
@@ -48,7 +50,7 @@ Gut für einen Familienserver oder wenn dir das Schwanken einfach nicht gefällt
 
 ## Client-Optionen
 
-In <code>{configFiles.client.file}</code> bei NeoForge, <code>{configFiles.client.fabricFile}</code> bei Fabric. Jeder Spieler
+In <code>{configFiles.client.file}</code> bei NeoForge und Forge, <code>{configFiles.client.fabricFile}</code> bei Fabric. Jeder Spieler
 stellt sie für sich ein; sie ändern nur, was du siehst.
 
 <table>
@@ -65,7 +67,7 @@ stellt sie für sich ein; sie ändern nur, was du siehst.
 </table>
 
 <Aside type="tip" title="Bewegungskrankheit?">
-Setze `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` bei Fabric). Schwips bewegt deinen Bildschirm dann nicht mehr, egal was der Server sagt: kein Schwanken, keine Rucke, keine Übelkeitsphasen. Auch die Vanilla-Regler Verzerrungseffekte und Sichtfeldeffekte schwächen es ab. Dass du nach einem Stolpern auf dem Gesicht liegst, siehst du weiterhin, das ist kein Bildschirmeffekt; alles andere an Schwips bleibt.
+Setze „Schwankende Sicht“ auf 0 % (`drunkScreen = 0`, `tipsy.drunkScreen=0` bei Fabric). Schwips bewegt deinen Bildschirm nie von selbst, und bei 0 bewegt ihn auch kein Schluckauf, kein Torkeln und kein Stolpern, egal was der Server sagt. Auch der Vanilla-Regler Verzerrungseffekte schwächt es ab, und sein Regler Pulsierende Dunkelheit schwächt die sinkenden Lider beim Einnicken ab. Dass du nach einem Stolpern auf dem Gesicht liegst, siehst du weiterhin, das ist kein Bildschirmeffekt. Wenn dich das Doppeltsehen stört, schalte „Doppelt sehen“ aus (`doubleVision = false`); alles andere an Schwips bleibt.
 </Aside>
 
 <style>{`

@@ -1,7 +1,6 @@
 package jexxme.vineandbarrel.tipsy;
 
 import jexxme.vineandbarrel.advancement.VBAdvancements;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
@@ -15,7 +14,7 @@ import net.minecraft.world.level.block.BedBlock;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Server-side Tipsy hooks: the side effects and sync, the cures, and slurred chat. Each loader calls these from its own
+ * Server-side Tipsy hooks: the level tick and sync, the cures, and slurred chat. Each loader calls these from its own
  * events (NeoForge: {@code NeoForgeEvents}; Fabric: Fabric API callbacks and our Fabric mixins).
  */
 public final class TipsyEvents
@@ -34,6 +33,9 @@ public final class TipsyEvents
 		if (entity instanceof ServerPlayer player && TipsyRegistry.BLACKOUT.has(player)) {
 			Blackout.tick(player);
 		}
+		if (entity instanceof ServerPlayer player && TipsyRegistry.GOING_UNDER.has(player)) {
+			GoingUnder.tick(player);
+		}
 		boolean tipsy = entity.hasEffect(TipsyRegistry.TIPSY.get());
 		if (tipsy && !TipsyConfig.enabled()) {
 			// Non-alcoholic mode switched on mid-game (or the effect came from a command): nobody stays tipsy
@@ -51,6 +53,7 @@ public final class TipsyEvents
 	public static void onFinishUsingItem(LivingEntity entity, ItemStack item) {
 		if (Tipsy.isSoberingDrink(item)) {
 			Tipsy.lowerLevel(entity);
+			Hangover.onSoberingDrink(entity);
 		}
 	}
 
@@ -61,10 +64,13 @@ public final class TipsyEvents
 	public static void onWakeUp(Player player, boolean wakeImmediately, boolean updateLevel) {
 		// A blackout's bed isn't a night's sleep, even when the others skip the night meanwhile
 		if (!wakeImmediately && !updateLevel && !Blackout.isOut(player)) {
-			if (Tipsy.getLevel(player) > 0) {
+			int level = Tipsy.getLevel(player);
+			if (level > 0) {
 				VBAdvancements.award(VBAdvancements.SLEPT_IT_OFF, player);
 			}
 			Tipsy.clear(player);
+			// a night's sleep at IV or V: the morning after
+			Hangover.start(player, Hangover.afterSleep(level));
 		}
 	}
 
@@ -104,12 +110,5 @@ public final class TipsyEvents
 			return InteractionResult.SUCCESS;
 		}
 		return null;
-	}
-
-	/** The chat message a player's text becomes (slurred), or null to leave it as it is. */
-	public static @Nullable Component onChat(ServerPlayer player, String raw) {
-		long seed = player.level().getGameTime() ^ player.getUUID().getLeastSignificantBits();
-		String slurred = Tipsy.slurChat(player, raw, seed);
-		return slurred.equals(raw) ? null : Component.literal(slurred);
 	}
 }

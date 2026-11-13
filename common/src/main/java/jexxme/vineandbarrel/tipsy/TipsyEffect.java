@@ -25,15 +25,17 @@ public class TipsyEffect extends MobEffect
 	public static final int COLOR = 0xE8A23C;
 
 	private static final UUID COURAGE_KNOCKBACK = modifierId(VineAndBarrel.id("tipsy_courage_knockback"));
+	private static final UUID HEAVY_LEGS = modifierId(VineAndBarrel.id("tipsy_heavy_legs"));
 
 	public TipsyEffect() {
 		super(MobEffectCategory.NEUTRAL, COLOR);
-		// Vanilla re-applies this whenever the level changes, also when a level decays down the hidden-effect chain.
-		// Registered so vanilla knows it (adding, removal); the amount per level comes from getAttributeModifierValue
-		// below, since vanilla's own template only scales linearly with the level.
+		// Vanilla re-applies these whenever the level changes, also when a level decays down the hidden-effect chain.
+		// Registered so vanilla knows them (adding, removal); the amounts per level come from getAttributeModifierValue
+		// below, since vanilla's own templates only scale linearly with the level.
 		// The courage's other half, less fall damage, has no attribute on 1.20.1: fallDamageFactor below, which
 		// mixin/TipsyFallDamageMixin puts into vanilla's fall damage.
 		addAttributeModifier(Attributes.KNOCKBACK_RESISTANCE, COURAGE_KNOCKBACK.toString(), 0.0, AttributeModifier.Operation.ADDITION);
+		addAttributeModifier(Attributes.MOVEMENT_SPEED, HEAVY_LEGS.toString(), 0.0, AttributeModifier.Operation.MULTIPLY_TOTAL);
 	}
 
 	/**
@@ -47,8 +49,13 @@ public class TipsyEffect extends MobEffect
 
 	@Override
 	public double getAttributeModifierValue(int amplifier, AttributeModifier modifier) {
+		TipsyLevels.Level level = TipsyLevels.at(amplifier + 1);
+		if (HEAVY_LEGS.equals(modifier.getId())) {
+			// Heavy legs at IV and V: slower, sprinting too (never no sprinting)
+			return -level.legs().slower();
+		}
 		// "Liquid courage" (TipsyLevels): from I to III a little knockback resistance, none from IV
-		return TipsyLevels.at(amplifier + 1).knockbackResistance();
+		return level.courage().knockbackResistance();
 	}
 
 	/**
@@ -57,7 +64,7 @@ public class TipsyEffect extends MobEffect
 	 * horses and their kin); this is that attribute's value over its {@code base}.
 	 */
 	public static float fallDamageFactor(LivingEntity entity, double base) {
-		double reduction = TipsyLevels.at(Tipsy.getLevel(entity)).fallDamageReduction();
+		double reduction = TipsyLevels.at(Tipsy.getLevel(entity)).courage().fallDamageReduction();
 		return reduction > 0.0 ? (float) (Math.max(0.0, base - reduction) / base) : 1.0F;
 	}
 }

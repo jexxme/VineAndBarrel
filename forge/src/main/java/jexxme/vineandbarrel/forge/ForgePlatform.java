@@ -17,7 +17,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTestServer;
 import net.minecraft.gametest.framework.GameTestRegistry;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -273,16 +272,6 @@ public final class ForgePlatform implements Platform
 	@Override
 	public float compostChance(net.minecraft.world.item.Item item) {
 		return Math.max(0.0F, ComposterBlock.COMPOSTABLES.getFloat(item));
-	}
-
-	/**
-	 * Forge 47's chat decorator is its {@code ServerChatEvent} (posted off the server thread for real chat); here the
-	 * event is posted directly. A listener that cancels the message leaves nothing to show: the text as it came.
-	 */
-	@Override
-	public Component decorateChat(ServerPlayer player, Component message) {
-		Component decorated = ForgeHooks.onServerChatSubmittedEvent(player, message.getString(), message);
-		return decorated == null ? message : decorated;
 	}
 
 	@Override

@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/ja';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -26,13 +26,12 @@ Vine & Barrel は、ブドウ園と醸造所とワインセラーをMinecraftに
 Minecraft のバージョンとローダーを選んで、そのセルからダウンロードします。
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -41,22 +40,35 @@ Minecraft のバージョンとローダーを選んで、そのセルからダ�
 どのファイルも {cell(stores)} にもあります。それぞれ、少なくとも次のバージョンが必要です。
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 ファイル名でどちらか分かります。<code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> は NeoForge、
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> は Fabric です。クライアントにもサーバーにも `mods` フォルダーに入れてください。
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> は Fabric です。{forgeFiles.map((f) => <>{f.minecraft} では <code>{f.jar}</code> が Forge です。</>)}クライアントにもサーバーにも `mods` フォルダーに入れてください。
 ほかの Mod は必要ありません。連携する Mod はすべて任意で、自動的に有効になります。詳しくは[互換性](/compatibility/)をご覧ください。
+
+### Minecraft 1.21.1 と 1.20.1 では
+
+作物、飲み物、醸造釜、樽、酒場は同じですが、いくつか違いがあります。
+
+- **酒場に棚がありません。** これらのバージョンにはまだそのブロックがないためです。壁には代わりに額縁に入った飲み物が、
+  窓の前には閉じた木の雨戸があります。
+- **Farmer's Delight** は、NeoForge と Forge ではオリジナルの Farmer's Delight、Fabric では Farmer's Delight
+  Refabricated です。Farmer's Delight Neoforged は Minecraft 26.x 専用です。FD のトマトはトレリスを登りません。
+  ブドウとホップはこれまでどおり FD のロープを登ります。
+- **村人の取引**はデータパックで変更できません。
+- **1.20.1 では**、醸造釜のふたの音が鉄のトラップドアの音になります。Forge では Mod 一覧にコンフィグボタンがありません。
+  設定は[コンフィグファイル](/reference/config/)で変更してください。ほかの Mod のパイプは大きな醸造釜の 1 ブロックにしか
+  つながりません。蛇口に向かって右下のブロックです。ホッパーはどのブロックでも使えます。
+- **1.20.1 の Fabric で Sodium を使う場合：** トレリスの列の柱と横木は、アドオンの Indium を入れたときだけ表示されます。
 
 <Aside type="tip" title="Farmer's Delight と一緒に遊びますか?">
 Vine & Barrel は独立した Mod ですが、Farmer's Delight とよくなじみます。醸造釜は FD のコンロで醸造でき、ブドウとホップのつるは FD のロープを登り、
@@ -90,7 +102,7 @@ Vine & Barrel は独立した Mod ですが、Farmer's Delight とよくなじ�
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> ほろ酔い</dt>
-		<dd>飲み物を飲むたびに[ほろ酔い](/tipsy/)が1レベル増えます。最初はふらつき、しゃっくり、ちょっとした勇気。やがてまぶたも足も重くなります。引き際が肝心です。</dd>
+		<dd>飲み物を飲むたびに[ほろ酔い](/tipsy/)が1レベル増えます。最初はふらつく足、しゃっくり、ちょっとした勇気。やがて物が二重に見え、よろめき、翌朝には二日酔いが待っています。引き際が肝心です。</dd>
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> 酒場</dt>

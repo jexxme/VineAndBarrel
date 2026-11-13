@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/ru';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -26,13 +26,12 @@ Vine & Barrel приносит в Minecraft виноградник, пивова
 Найди свою версию Minecraft и свой загрузчик и скачай файл из нужной ячейки:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -41,22 +40,36 @@ Vine & Barrel приносит в Minecraft виноградник, пивова
 Все файлы есть и на {cell(stores)}. Каждому файлу нужны как минимум:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 По имени файла видно, какой он: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> — для NeoForge,
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> — для Fabric. Положи его в папку `mods` и на клиенте, и на сервере.
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> — для Fabric{forgeFiles.map((f) => <>, а на {f.minecraft} <code>{f.jar}</code> — для Forge</>)}. Положи его в папку `mods` и на клиенте, и на сервере.
 Других модов ему не нужно. Всё, с чем он умеет работать, необязательно и включается само: смотри [Совместимость](/compatibility/).
+
+### На Minecraft 1.21.1 и 1.20.1
+
+Те же культуры, напитки, котёл, бочки и таверны, но с несколькими отличиями:
+
+- **В тавернах нет полок**: этого блока в этих версиях ещё нет. На стене вместо полки висит напиток в рамке, а перед
+  окном стоит закрытая деревянная ставня.
+- **Farmer's Delight** здесь — оригинальный Farmer's Delight на NeoForge и Forge и Farmer's Delight Refabricated на
+  Fabric. Farmer's Delight Neoforged — только для Minecraft 26.x. Томаты FD не лезут по шпалере; виноград и хмель
+  по-прежнему лезут по верёвкам FD.
+- **Торговлю жителей** нельзя изменить датапаком.
+- **На 1.20.1** крышка котла звучит как железный люк. На Forge в списке модов нет кнопки «Настройки»: меняй параметры
+  в [файлах настроек](/reference/config/). Трубы из других модов подключаются к Большому варочному котлу только в одном
+  блоке: в нижнем справа, если стоять лицом к крану. Воронки работают у любого блока.
+- **Fabric на 1.20.1 с Sodium:** ряды шпалер показывают столбы и перекладину, только если установлено дополнение
+  Indium.
 
 <Aside type="tip" title="Играешь с Farmer's Delight?">
 Vine & Barrel — самостоятельный мод, но с Farmer's Delight они отлично ладят: котёл варит на его плите, виноградные и хмелевые лозы
@@ -90,7 +103,7 @@ Vine & Barrel — самостоятельный мод, но с Farmer's Deligh
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> Навеселе</dt>
-		<dd>Каждый напиток добавляет уровень [«Навеселе»](/tipsy/): сначала лёгкое покачивание, икота и капелька храбрости, потом тяжёлые глаза и тяжёлые ноги. Знай меру.</dd>
+		<dd>Каждый напиток добавляет уровень [«Навеселе»](/tipsy/): сначала шаткая походка, икота и капелька храбрости, потом двоение в глазах, спотыкания и похмелье. Знай меру.</dd>
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> Таверны</dt>

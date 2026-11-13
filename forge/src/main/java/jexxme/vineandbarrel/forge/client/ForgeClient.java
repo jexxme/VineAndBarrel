@@ -142,6 +142,8 @@ public final class ForgeClient
 		});
 		// The drift at V; out cold or down after a trip: keys and mouse held still (the mouse: MouseHandlerMixin), no hand.
 		// And in a blackout's bed no darkening sleep overlay and no "Leave Bed"
+		// Drunk chat: the own message slurred before it is signed and sent
+		jexxme.vineandbarrel.forge.ForgeChat.register(game, TipsyClient::ownChat);
 		game.addListener((MovementInputUpdateEvent event) -> TipsyClient.onMovementInput(event.getEntity(), event.getInput()));
 		game.addListener((RenderHandEvent event) -> {
 			if (TipsyClient.hidesHands()) {

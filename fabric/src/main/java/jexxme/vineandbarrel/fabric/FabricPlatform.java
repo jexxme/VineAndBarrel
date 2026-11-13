@@ -234,12 +234,6 @@ public final class FabricPlatform implements Platform
 	}
 
 	@Override
-	public Component decorateChat(ServerPlayer player, Component message) {
-		// On this Minecraft a decorator answers with a future (vanilla's and Fabric API's are done at once)
-		return player.level().getServer().getChatDecorator().decorate(player, FabricChat.slur(player, message)).join();
-	}
-
-	@Override
 	public @Nullable ItemStack craftingRemainder(ItemStack stack) {
 		// Fabric's per-stack remainder (FabricItem#getRecipeRemainder; vanilla's item remainder by default)
 		ItemStack remainder = stack.getRecipeRemainder();

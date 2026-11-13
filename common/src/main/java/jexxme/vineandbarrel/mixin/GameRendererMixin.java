@@ -1,8 +1,8 @@
 package jexxme.vineandbarrel.mixin;
 
 import jexxme.vineandbarrel.tipsy.client.BlackoutClient;
+import jexxme.vineandbarrel.tipsy.client.DrunkEyes;
 import jexxme.vineandbarrel.tipsy.client.TipsyClient;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -13,16 +13,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * The FOV breathing at Tipsy V ({@link TipsyClient#fovFactor}), on both loaders: at the end of vanilla's field of view,
- * after its own effects (dying, under water) and the loader's event, for the world and the hand alike. Not in panorama
- * mode, which returns its fixed 90 degrees earlier. (The camera's own moves are in {@link CameraMixin}.)
- * <p>
- * And Tipsy's screen with the HUD hidden: 1.20.1 doesn't draw the HUD at all then (F1, no screen open), so the
- * loaders' HUD hooks never run; the tunnel vision, the blinks and the blackout's closed eyes are drawn from here
- * instead, where the HUD would have been.
+ * Tipsy's screen with the HUD hidden, on both loaders: 1.20.1 doesn't draw the HUD at all then (F1, no screen open), so
+ * the loaders' HUD hooks never run; what the eyes do ({@link TipsyClient#renderVision}) and the blackout's closed eyes
+ * are drawn from here instead, where the HUD would have been. And the drunk eyes over the world, right after it is drawn
+ * ({@link DrunkEyes#render}; newer versions: the player's own list of screen effects).
  */
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin
@@ -35,14 +31,6 @@ public abstract class GameRendererMixin
 	@Final
 	private RenderBuffers renderBuffers;
 
-	@Inject(at = @At("TAIL"), method = "getFov", cancellable = true)
-	private void vineandbarrel$breathe(Camera camera, float partialTicks, boolean useFovSetting, CallbackInfoReturnable<Double> cir) {
-		float factor = TipsyClient.fovFactor(camera.getEntity(), partialTicks);
-		if (factor != 1.0F) {
-			cir.setReturnValue(cir.getReturnValueD() * factor);
-		}
-	}
-
 	@Inject(method = "render(FJZ)V", at = @At(value = "INVOKE", ordinal = 0,
 		target = "Lnet/minecraft/client/Minecraft;getOverlay()Lnet/minecraft/client/gui/screens/Overlay;"))
 	private void vineandbarrel$hudHidden(float partialTicks, long nanoTime, boolean renderLevel, CallbackInfo ci) {
@@ -53,5 +41,11 @@ public abstract class GameRendererMixin
 			BlackoutClient.renderBlackout(gui, partialTicks);
 			gui.flush();
 		}
+	}
+
+	@Inject(method = "render(FJZ)V", at = @At(value = "INVOKE", ordinal = 0, shift = At.Shift.AFTER,
+		target = "Lnet/minecraft/client/renderer/LevelRenderer;doEntityOutline()V"))
+	private void vineandbarrel$drunkEyes(float partialTicks, long nanoTime, boolean renderLevel, CallbackInfo ci) {
+		DrunkEyes.render(partialTicks);
 	}
 }

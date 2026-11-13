@@ -82,6 +82,7 @@ public interface EntityAttachment<T>
 	record SyncCodec<T>(FriendlyByteBuf.Writer<T> writer, FriendlyByteBuf.Reader<T> reader)
 	{
 		public static final SyncCodec<Integer> VAR_INT = new SyncCodec<>(FriendlyByteBuf::writeVarInt, FriendlyByteBuf::readVarInt);
+		public static final SyncCodec<Long> VAR_LONG = new SyncCodec<>(FriendlyByteBuf::writeVarLong, FriendlyByteBuf::readVarLong);
 		public static final SyncCodec<Float> FLOAT = new SyncCodec<>(FriendlyByteBuf::writeFloat, FriendlyByteBuf::readFloat);
 	}
 }

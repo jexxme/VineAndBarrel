@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/de';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -26,13 +26,12 @@ Geduld lohnt sich: Der Bonus eines gereiften Getränks ist stärker, hält läng
 Such dir deine Minecraft-Version und deinen Loader aus und lade aus dieser Zelle herunter:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -41,22 +40,36 @@ Such dir deine Minecraft-Version und deinen Loader aus und lade aus dieser Zelle
 Alle Dateien gibt es auch auf {cell(stores)}. Jede braucht mindestens:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 Am Dateinamen erkennst du, welche du hast: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> ist NeoForge,
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> ist Fabric. Leg sie in den Ordner `mods`, auf Client und Server. Sie
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> ist Fabric{forgeFiles.map((f) => <>, und auf {f.minecraft} ist <code>{f.jar}</code> Forge</>)}. Leg sie in den Ordner `mods`, auf Client und Server. Sie
 braucht keine andere Mod. Alles, womit sie zusammenarbeitet, ist optional und schaltet sich von selbst zu: siehe [Kompatibilität](/compatibility/).
+
+### Auf Minecraft 1.21.1 und 1.20.1
+
+Dieselben Pflanzen, Getränke, Kessel, Fässer und Tavernen, mit ein paar Unterschieden:
+
+- **Tavernen haben keine Regale**, einen Block, den es in diesen Versionen noch nicht gibt. An einer Wand findest du
+  stattdessen ein Getränk im Rahmen, vor einem Fenster einen geschlossenen Holzladen.
+- **Farmer's Delight** ist auf NeoForge und Forge das originale Farmer's Delight, auf Fabric Farmer's Delight
+  Refabricated. Farmer's Delight Neoforged gibt es nur für Minecraft 26.x. FDs Tomaten ranken nicht am Rankgitter hoch;
+  Trauben und Hopfen klettern weiter an FDs Seilen.
+- **Den Handel der Dorfbewohner** kann kein Datapack ändern.
+- **Auf 1.20.1** klingt der Kesseldeckel wie eine Eisenfalltür. Auf Forge gibt es in der Modliste keinen Config-Knopf:
+  Ändere die Einstellungen in den [Config-Dateien](/reference/config/). Rohre anderer Mods docken an einen Großen
+  Braukessel nur an einem Block an: dem unteren rechts, wenn du auf den Hahn schaust. Trichter funktionieren an jedem Block.
+- **Fabric auf 1.20.1 mit Sodium:** Rankgitter-Reihen zeigen ihre Pfosten und die Schiene nur, wenn das Add-on Indium
+  installiert ist.
 
 <Aside type="tip" title="Du spielst mit Farmer's Delight?">
 Vine & Barrel ist eine eigene Mod, passt aber wunderbar dazu: Der Kessel braut auf dem Herd von FD, Wein- und Hopfenranken klettern an den Seilen von FD,
@@ -90,7 +103,7 @@ Jedes Getränk geht denselben Weg, vom Feld ins Glas. Klick auf einen Schritt f�
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> Schwips</dt>
-		<dd>Jedes Getränk gibt dir eine Stufe [Schwips](/tipsy/): erst ein Schwanken, Schluckauf und ein bisschen Mut, später schwere Augen und schwere Beine. Hör rechtzeitig auf.</dd>
+		<dd>Jedes Getränk gibt dir eine Stufe [Schwips](/tipsy/): erst wacklige Beine, Schluckauf und ein bisschen Mut, später Doppeltsehen, Torkeln und ein Kater. Hör rechtzeitig auf.</dd>
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> Tavernen</dt>

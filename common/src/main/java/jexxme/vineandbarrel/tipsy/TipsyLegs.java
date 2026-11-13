@@ -23,21 +23,23 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * Unsteady legs at Tipsy V (Jexxme: "I can barely walk"). While walking, now and then one roll: most of the time a
- * <b>stumble</b> (a lurch to the side, the foot scuffs, a catch step), and about one in twenty (more when sprinting)
- * the stumble that isn't caught: a <b>trip</b>, forward onto the face, a moment on the ground, and up again. Neither
- * ever hurts or moves you anywhere you didn't walk: a trip only happens on flat solid ground with room ahead and no
- * monster near (otherwise it stays a stumble), never sneaking, swimming, riding or flying, and not twice in a row.
- * Both are switched off with the server's {@code stumbling} setting. The client draws them ({@link TipsyMotion}).
+ * Unsteady legs from Tipsy IV (Jexxme: "I can barely walk"). While walking, now and then one roll: most of the time a
+ * <b>stumble</b> (a lurch to the side, the foot scuffs, a catch step), and one in fifteen (more when sprinting) the
+ * stumble that isn't caught: a <b>trip</b>, forward onto the face, a moment on the ground, and up again; never two within
+ * the level's {@link TipsyLevels.Legs#tripCooldown}. Neither ever hurts or moves you anywhere you didn't walk: a trip
+ * only happens on flat solid ground with room ahead and no monster near (otherwise it stays a stumble), never sneaking,
+ * swimming, riding or flying. The drunk walk's weave ({@link TipsyGait}) asks {@link #safeToWeave} before it pulls.
+ * All of it is switched off with the server's {@code stumbling} setting. The client draws them ({@link TipsyMotion}).
  */
 public final class TipsyLegs
 {
-	/** Sideways speed of a stumble: about a step to the side. */
-	public static final double STUMBLE_NUDGE = 0.34;
+	/**
+	 * Sideways speed of a stumble: a small give to the side. The misstep itself is the stumbler's own legs stepping out
+	 * that way (on their client, with the arms out for balance): a hard push looked like being shoved.
+	 */
+	public static final double STUMBLE_NUDGE = 0.08;
 	/** Horizontal speed (blocks/tick) above which an entity counts as walking. Sneaking is slower and never stumbles. */
 	private static final double WALKING_SPEED = 0.06;
-	/** After a trip, none for this long (30 s). */
-	public static final int TRIP_COOLDOWN = 30 * 20;
 	/** No trip with a monster this close. */
 	public static final double MONSTER_FREE = 10.0;
 	/** A trip needs flat ground and free room this far ahead: where the body lands. */
@@ -82,14 +84,14 @@ public final class TipsyLegs
 
 	/** The level's unsteady-legs roll, while walking. Called from {@link Tipsy#tick} unless paused or down. */
 	static void tick(LivingEntity entity, Level at, RandomSource random) {
-		if (!at.unsteadyLegs() || !TipsyConfig.stumbling() || random.nextInt(at.legsOneIn()) != 0) {
+		if (!at.legs().unsteady() || !TipsyConfig.stumbling() || random.nextInt(at.legs().legsOneIn()) != 0) {
 			return;
 		}
 		Vec3 walking = walkingMotion(entity);
 		if (walking.lengthSqr() < 1.0E-6) {
 			return;
 		}
-		int tripOneIn = entity.isSprinting() ? TipsyLevels.SPRINT_TRIP_ONE_IN : at.tripOneIn();
+		int tripOneIn = entity.isSprinting() ? TipsyLevels.SPRINT_TRIP_ONE_IN : at.legs().tripOneIn();
 		if (tripOneIn > 0 && random.nextInt(tripOneIn) == 0 && trip(entity)) {
 			return;
 		}
@@ -139,12 +141,13 @@ public final class TipsyLegs
 	 * @return whether the entity stumbled
 	 */
 	public static boolean stumble(LivingEntity entity, Vec3 walking, RandomSource random) {
-		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(entity)).unsteadyLegs() || walking.lengthSqr() < 1.0E-6
+		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(entity)).legs().unsteady() || walking.lengthSqr() < 1.0E-6
 			|| isDown(entity)) {
 			return false;
 		}
 		boolean left = random.nextBoolean();
-		Vec3 across = new Vec3(-walking.z, 0.0, walking.x).normalize();
+		// the walker's left (the side the client's misstep and lean go to when "left")
+		Vec3 across = new Vec3(walking.z, 0.0, -walking.x).normalize();
 		// The lurch only goes where a step is safe (no edge, no lava, fire or cactus); with neither side safe the legs
 		// still give (the scuff, the dip) but the body stays put
 		if (!safeStep(entity, across.scale(left ? 1.0 : -1.0))) {
@@ -169,11 +172,11 @@ public final class TipsyLegs
 	 * @return whether the entity tripped (else the caller lets it stumble)
 	 */
 	public static boolean trip(LivingEntity entity) {
-		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(entity)).unsteadyLegs() || !canTrip(entity)) {
+		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(entity)).legs().unsteady() || !canTrip(entity)) {
 			return false;
 		}
 		TipsySounds.stumble(entity, ground(entity));
-		set(entity, new Legs(0, TRIP_COOLDOWN, 0));
+		set(entity, new Legs(0, TipsyLevels.at(Tipsy.getLevel(entity)).legs().tripCooldown(), 0));
 		TipsyMotion.trip(entity);
 		return true;
 	}
@@ -233,11 +236,37 @@ public final class TipsyLegs
 
 	// ------------------------------------------------------------------ helpers
 
+	/**
+	 * Whether the drunk walk's weave may pull this entity toward {@code side} (a horizontal direction, any length): a body
+	 * width that way, and that much further along {@code ahead} (where it is walking), is safe ground at the same height
+	 * with room to stand ({@link #safeStep}). Anything it can't be sure of says no: a block in a chunk that isn't loaded
+	 * (at a chunk border, or still loading) has no safe floor. Only the player's own keys take them over an edge.
+	 */
+	public static boolean safeToWeave(LivingEntity entity, Vec3 side, Vec3 ahead) {
+		Vec3 out = side.horizontalDistanceSqr() < 1.0E-8 ? Vec3.ZERO : side.normalize().scale(WEAVE_CHECK);
+		Vec3 on = ahead.horizontalDistanceSqr() < 1.0E-8 ? Vec3.ZERO : ahead.normalize().scale(WEAVE_CHECK);
+		return out != Vec3.ZERO && safeStep(entity, out) && safeStep(entity, out.add(on));
+	}
+
+	/**
+	 * {@return whether a step about a body width {@code toward} lands on safe, loaded ground at the same height with room
+	 * to stand} What late legs carry on with only goes where this says yes ({@link DrunkWalk}).
+	 */
+	public static boolean safeToMove(LivingEntity entity, Vec3 toward) {
+		return toward.horizontalDistanceSqr() >= 1.0E-8 && safeStep(entity, toward.normalize().scale(WEAVE_CHECK));
+	}
+
+	/** How far to the side, and ahead, the weave looks before it pulls (blocks): a body width and a bit. */
+	private static final double WEAVE_CHECK = 0.8;
+
 	/** Whether a step about a block to {@code side} lands on safe ground at the same height, with room to stand. */
 	private static boolean safeStep(LivingEntity entity, Vec3 side) {
 		net.minecraft.world.level.Level level = entity.level();
 		BlockPos to = BlockPos.containing(entity.position().add(side));
 		BlockPos under = to.below();
+		if (!level.hasChunkAt(to) || !level.hasChunkAt(under)) {
+			return false;
+		}
 		if (to.getY() != entity.blockPosition().getY() || !safeFloor(level, under)) {
 			return false;
 		}
@@ -309,6 +338,14 @@ public final class TipsyLegs
 	/** Players move on their client, so the server's view of their speed is the last movement the client reported. */
 	private static Vec3 currentMotion(LivingEntity entity) {
 		return entity instanceof ServerPlayer player ? knownMovement(player) : entity.getDeltaMovement();
+	}
+
+	/**
+	 * Adds {@code push} to how the entity moves now, synced to its own client too (a Rowdy swing's step forward);
+	 * {@code onTop} adds it to a push already given this tick (a stumble's), not to the movement before it.
+	 */
+	static void push(LivingEntity entity, Vec3 push, boolean onTop) {
+		setMotion(entity, (onTop ? entity.getDeltaMovement() : currentMotion(entity)).add(push));
 	}
 
 	private static void setMotion(LivingEntity entity, Vec3 motion) {

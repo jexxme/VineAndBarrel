@@ -5,18 +5,20 @@ description: "한 잔 너무 많이 마셨을 때: 필름이 끊기면 생기는
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
-import { rules, roman, seconds, gameText } from '../../../lib/l10n/ko';
+import { rules, roman, seconds, duration, gameText } from '../../../lib/l10n/ko';
 
 export const t = rules.tipsy;
 export const b = t.blackout;
 export const count = b.endings.filter((e) => e.collectable).length;
+export const under = t.goingUnder;
+export const h = t.hangover;
 
 <Aside type="caution" title="스포일러">
 이 페이지는 밤이 끝나는 모든 방식을 알려 줘요. 직접 알아내고 싶다면 여기서 멈추세요.
 [알딸딸함](/tipsy/#한-잔-너무-많이) 페이지는 살짝 귀띔만 해요.
 </Aside>
 
-이미 알딸딸함 {roman(t.maxLevel - 1)}인데 계속 마신다고요? 한 잔만 더 마시면 **필름이 끊겨요**. 해롭지 않아요. 가진 건 하나도 사라지지 않고,
+이미 알딸딸함 {roman(t.maxLevel - 1)}인데 계속 마신다고요? 한 잔만 더 마시면 조금 뒤에 **필름이 끊겨요**. 해롭지 않아요. 가진 건 하나도 사라지지 않고,
 위험한 곳에서 깨어나지도 않고, 시간도 흐르지 않고, 다른 사람은 영향을 받지 않아요. 서버 관리자는 `blackout` 옵션으로 끌 수 있어요
 ([설정](/reference/config/) 참고).
 
@@ -24,23 +26,29 @@ export const count = b.endings.filter((e) => e.collectable).length;
 
 <Steps>
 
-1. **쓰러져요.** 눈이 감기고 몸이 기울어요. 주변 모두가 네가 누워 있는 모습과 머리 위로 도는 별을 봐요.
-2. **캄캄해요.** 몇 초 동안 움직일 수 없고, 알딸딸함도 가만히 있어요. 흔들림도, 딸꾹질도, 소용돌이도 없어요. 아무도 널 해칠
+1. **취기가 덮쳐 와요.** 너무 많이 마신 그 한 잔은 {Math.round(under.soonestTicks / 20)}초에서 {Math.round(under.latestTicks / 20)}초 뒤에,
+   그때 뭘 하고 있든 덮쳐 와요. 마지막 {Math.round(under.ticks / 20)}초 동안은 정신이 가라앉는 게 느껴져요. 눈꺼풀이 무거워지고,
+   고개가 처지고, 세상이 먹먹하게 멀어지고, 다리가 풀리고, 몸이 크게 흔들려요. 친구들도 그게 오는 걸 봐요. 덮쳐 오기 전에 술을
+   깨면(우유 양동이, 하룻밤 잠) 필름이 끊기지 않아요. 한 잔 더 마신다고 미뤄지지는 않아요.
+2. **쓰러져요.** 눈이 감기고 몸이 기울어요. 주변 모두가 네가 누워 있는 모습과 머리 위로 도는 별을 봐요.
+3. **캄캄해요.** 몇 초 동안 움직일 수 없고, 알딸딸함도 가만히 있어요. 휘청거리는 다리도, 딸꾹질도 없어요. 아무도 널 해칠
    수 없고, 몬스터도 플레이어도, 쓰러지는 것 자체도 마찬가지예요. 거기 누워 있는 누구든 다치게 하는 것, 예를 들어 용암이나 공허만
    여전히 해로워요. 그러니 어디서 쓰러지는지는 중요하지만, *깨어나는* 곳은 늘 안전해요.
-3. **어딘가에서 깨어나요.** 화면이 아직 캄캄한 동안 게임이 밤이 끝난 곳을 고르고(아래 참고) 널 그곳에 데려다 놔요. 땅에 누워
+4. **어딘가에서 깨어나요.** 화면이 아직 캄캄한 동안 게임이 밤이 끝난 곳을 고르고(아래 참고) 널 그곳에 데려다 놔요. 땅에 누워
    있거나, 침대에 있거나, 보트에 앉아 있어요. 눈이 천천히 떠지고, 그러면 일어나요.
-4. **화면에 한 줄**이 어떻게 됐는지 알려 줘요. *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* 같은 줄이거나, 그 밖의 수많은 것 중 하나예요.
+5. **화면에 한 줄**이 어떻게 됐는지 알려 줘요. *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* 같은 줄이거나, 그 밖의 수많은 것 중 하나예요.
 
 </Steps>
 
-전부 합쳐 약 {seconds(b.ticks)} 걸려요. 깨어나면 이런 상태예요.
+쓰러져서 깨어날 때까지 약 {seconds(b.ticks)} 걸려요. 깨어나면 이런 상태예요.
 
-- **알딸딸함 1단계로 돌아가고,** 술로 얻은 버프는 없어요.
-- **배가 고파요.** 허기 게이지 {b.hungerLost / 2}칸이 줄고, 포화도는 하나도 없어요.
-- **몸이 떨려요.** {seconds(b.shakyTicks)} 동안 조금 어지럽고 느려요.
+- **술은 깼지만 숙취가** {duration(h.afterBlackoutTicks)} 동안 가요(햇빛이 눈부시고 큰 소리에 움찔해요.
+  [다음 날 아침](/tipsy/#다음-날-아침) 참고). 술로 얻은 버프도 없어요.
+- **배가 고파요.** 허기 게이지는 {h.hungryFood / 2}칸까지만 남고, 포화도는 하나도 없어요.
 - **기념품**이 주머니에 있어요. 깨어난 곳에 어울리는 물건이에요(주머니가 가득 찼으면 발치에 있어요).
 - 그리고 {b.pumpkinOneIn}번에 한 번은 헬멧을 안 쓰고 있었다면 **머리에 조각된 호박이 씌워져 있어요**.
+
+서버의 `hangover` 옵션이 꺼져 있으면, 대신 알딸딸함 1단계로 깨어나고 허기 게이지가 {b.hungerLost / 2}칸 줄어 있어요.
 
 ## 깨어나는 곳
 

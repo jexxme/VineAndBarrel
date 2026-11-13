@@ -37,13 +37,87 @@ public final class ForgeGameTests
 		"drinks_cancelled_place_keeps_no_duplicate", ForgeGameTests::cancelledPlaceNoDuplicate,
 		"fd_optional_dependency", ForgeGameTests::optionalDependency,
 		"compat_optional_dependencies", ForgeGameTests::compatOptionalDependencies,
-		"drinks_cheers_reaches_the_neoforge_bus", ForgeGameTests::cheersOnTheBus);
+		"drinks_cheers_reaches_the_neoforge_bus", ForgeGameTests::cheersOnTheBus,
+		"tipsy_config_carry_over", ForgeGameTests::tipsyConfigCarryOver,
+		"tipsy_chat_on_the_neoforge_bus", ForgeGameTests::tipsyChatOnTheBus);
 
 	private ForgeGameTests() {
 	}
 
 	public static @Nullable Consumer<GameTestHelper> get(String name) {
 		return TESTS.get(name);
+	}
+
+	/**
+	 * An old client settings file (as 1.1.1 wrote it) on Forge, read from a real file the way the client reads it before
+	 * Forge loads it: wobbleIntensity and visionEffects under [tipsy] carry over as drunkScreen and doubleVision; a file
+	 * that already has the new key, a key in another section and a missing file carry nothing. Then the whole carry-over on
+	 * that file (set and saved through a client spec of its own, never the game's settings).
+	 */
+	static void tipsyConfigCarryOver(GameTestHelper helper) {
+		try {
+			java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("vineandbarrel-config");
+			java.nio.file.Path old = dir.resolve("old.toml");
+			java.nio.file.Files.writeString(old, String.join("\n", "#Tipsy visuals on this client", "[tipsy]",
+				"\t#How much Tipsy moves your screen", "\t#Range: 0.0 ~ 2.0", "\twobbleIntensity = 0.4",
+				"\t#Show tipsy players swaying", "\totherPlayersSway = true", "\t#Darker screen edges and slow, heavy-eyed blinks",
+				"\tvisionEffects = false", "\t#Range: 0.0 ~ 1.0", "\theartbeatVolume = 1.0", ""));
+			var carried = jexxme.vineandbarrel.forge.ForgeConfig.carriedOver(old);
+			VBGameTests.assertValueEqual(helper, carried.get(jexxme.vineandbarrel.tipsy.TipsyConfig.DRUNK_SCREEN), "40", "wobbleIntensity 0.4 carries over as 40 %");
+			VBGameTests.assertValueEqual(helper, carried.get(jexxme.vineandbarrel.tipsy.TipsyConfig.DOUBLE_VISION), "false", "visionEffects false carries over");
+			VBGameTests.assertValueEqual(helper, carried.size(), 2, "nothing else carries over: " + carried);
+			java.nio.file.Path both = dir.resolve("both.toml");
+			java.nio.file.Files.writeString(both, "[tipsy]\n\tdrunkScreen = 70\n\twobbleIntensity = 0.0\n");
+			helper.assertTrue(jexxme.vineandbarrel.forge.ForgeConfig.carriedOver(both).isEmpty(), "the new key is there: nothing carries over");
+			java.nio.file.Path other = dir.resolve("other.toml");
+			java.nio.file.Files.writeString(other, "[somethingElse]\n\twobbleIntensity = 0.0\n");
+			helper.assertTrue(jexxme.vineandbarrel.forge.ForgeConfig.carriedOver(other).isEmpty(), "only the [tipsy] section counts");
+			helper.assertTrue(jexxme.vineandbarrel.forge.ForgeConfig.carriedOver(dir.resolve("missing.toml")).isEmpty(), "no file: nothing");
+			// The whole carry-over, as the client does it once the file is loaded: a client spec of its own, given the old file
+			// the way Forge's own config loading opens it and hands it to the spec (Forge 47 has one config tracker, the
+			// game's, so the file is opened here as it does), the carried values set and saved, and the file then has the new
+			// keys with the old values
+			var detached = jexxme.vineandbarrel.forge.ForgeConfig.detached(jexxme.vineandbarrel.platform.ConfigValue.Side.CLIENT,
+				jexxme.vineandbarrel.tipsy.TipsyConfig.CLIENT_COMMENT);
+			com.electronwill.nightconfig.core.file.CommentedFileConfig file = com.electronwill.nightconfig.core.file.CommentedFileConfig.builder(old)
+				.sync().preserveInsertionOrder().writingMode(com.electronwill.nightconfig.core.io.WritingMode.REPLACE).build();
+			file.load();
+			detached.spec().setConfig(file);
+			helper.assertTrue(detached.spec().isLoaded(), "the old file is loaded");
+			jexxme.vineandbarrel.forge.ForgeConfig.carryOver(carried, detached.values(), detached.spec());
+			file.close();
+			String saved = java.nio.file.Files.readString(old);
+			helper.assertTrue(saved.contains("drunkScreen = 40"), "saved as drunkScreen = 40: " + saved);
+			helper.assertTrue(saved.contains("doubleVision = false"), "saved as doubleVision = false");
+			helper.assertTrue(jexxme.vineandbarrel.forge.ForgeConfig.carriedOver(old).isEmpty(), "and next time nothing carries over");
+		} catch (java.io.IOException e) {
+			throw new RuntimeException(e);
+		}
+		helper.succeed();
+	}
+
+	/**
+	 * Drunk chat through Forge's real client chat event, wired the way the client wires it ({@code ForgeChat}): at Tipsy V
+	 * a message goes out slurred, a command as typed; sober, as typed.
+	 */
+	static void tipsyChatOnTheBus(GameTestHelper helper) {
+		Player player = VBGameTests.makeMockPlayer(helper, GameType.SURVIVAL);
+		net.minecraftforge.eventbus.api.IEventBus bus = net.minecraftforge.eventbus.api.BusBuilder.builder().build();
+		jexxme.vineandbarrel.forge.ForgeChat.register(bus, line -> jexxme.vineandbarrel.tipsy.Tipsy.ownChat(player, line, 9L));
+		jexxme.vineandbarrel.tipsy.Tipsy.setLevel(player, 5);
+		VBGameTests.assertValueEqual(helper, said(bus, "where is my horse"), jexxme.vineandbarrel.tipsy.TipsySlur.slur("where is my horse", 9L, 4),
+			"at V the message goes out slurred");
+		VBGameTests.assertValueEqual(helper, said(bus, "/home"), "/home", "a command as typed");
+		jexxme.vineandbarrel.tipsy.Tipsy.clear(player);
+		VBGameTests.assertValueEqual(helper, said(bus, "hello"), "hello", "sober as typed");
+		helper.succeed();
+	}
+
+	/** {@return what a chat line goes out as, once the client chat event on {@code bus} has had it} */
+	private static String said(net.minecraftforge.eventbus.api.IEventBus bus, String line) {
+		net.minecraftforge.client.event.ClientChatEvent event = new net.minecraftforge.client.event.ClientChatEvent(line);
+		bus.post(event);
+		return event.getMessage();
 	}
 
 	/** A protection mod cancelling the place event: the item comes back and the table has no copy of it. */

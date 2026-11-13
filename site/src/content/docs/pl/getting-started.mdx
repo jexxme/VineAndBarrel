@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/pl';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -26,13 +26,12 @@ Cierpliwość popłaca: bonus z leżakowanego napoju jest mocniejszy i trwa dłu
 Znajdź swoją wersję Minecrafta i swój loader, a plik pobierzesz z odpowiedniej komórki:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -41,22 +40,35 @@ Znajdź swoją wersję Minecrafta i swój loader, a plik pobierzesz z odpowiedni
 Wszystkie pliki są też na {cell(stores)}. Każdy wymaga co najmniej:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 Nazwa pliku mówi, który masz: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> to NeoForge,
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> to Fabric. Wrzuć go do folderu `mods` zarówno u klienta, jak i na serwerze. Nie
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> to Fabric{forgeFiles.map((f) => <>, a na {f.minecraft} <code>{f.jar}</code> to Forge</>)}. Wrzuć go do folderu `mods` zarówno u klienta, jak i na serwerze. Nie
 potrzebuje żadnego innego moda. Wszystko, z czym współpracuje, jest opcjonalne i włącza się samo: zobacz [Kompatybilność](/compatibility/).
+
+### Na Minecrafcie 1.21.1 i 1.20.1
+
+Te same uprawy, napoje, kocioł, beczki i karczmy, z kilkoma różnicami:
+
+- **Karczmy nie mają półek**, bo w tych wersjach nie ma jeszcze tego bloku. Na ścianie znajdziesz zamiast nich napój w
+  ramce, przed oknem zamkniętą drewnianą okiennicę.
+- **Farmer's Delight** to oryginalny Farmer's Delight w NeoForge i Forge oraz Farmer's Delight Refabricated w Fabricu.
+  Farmer's Delight Neoforged jest tylko dla Minecrafta 26.x. Pomidory z FD nie pną się po kratce ogrodowej; winorośl i
+  chmiel dalej pną się po linach z FD.
+- **Handlu z osadnikami** nie da się zmienić datapackiem.
+- **Na 1.20.1** pokrywa kotła brzmi jak żelazna klapa. W Forge na liście modów nie ma przycisku Konfiguracja: zmieniaj
+  ustawienia w [plikach konfiguracji](/reference/config/). Rury z innych modów łączą się z Dużym kotłem warzelnym tylko w
+  jednym bloku: dolnym po prawej, gdy stoisz przodem do kranu. Leje działają przy każdym bloku.
+- **Fabric na 1.20.1 z Sodium:** rzędy kratek pokazują słupki i poprzeczkę tylko z zainstalowanym dodatkiem Indium.
 
 <Aside type="tip" title="Grasz z Farmer's Delight?">
 Vine & Barrel to osobny mod, ale świetnie z nim współgra: kocioł warzy na kuchence z FD, winorośl i chmiel pną się po linach z FD,
@@ -90,7 +102,7 @@ Każdy napój przechodzi tę samą drogę, od pola do szklanki. Kliknij etap, ż
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> Rauszyk</dt>
-		<dd>Każdy napój dodaje poziom [Rauszyka](/tipsy/): na początku chwianie, czkawka i odrobina odwagi, później ciężkie oczy i ciężkie nogi. Wiedz, kiedy przestać.</dd>
+		<dd>Każdy napój dodaje poziom [Rauszyka](/tipsy/): na początku chwiejne nogi, czkawka i odrobina odwagi, później podwójne widzenie, zataczanie się i kac. Wiedz, kiedy przestać.</dd>
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> Karczmy</dt>

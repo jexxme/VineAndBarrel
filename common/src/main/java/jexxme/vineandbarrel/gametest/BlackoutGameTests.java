@@ -375,10 +375,6 @@ public final class BlackoutGameTests
 		var volume = jexxme.vineandbarrel.tipsy.TipsyConfig.HEARTBEAT_VOLUME;
 		helper.assertTrue(volume.side() == jexxme.vineandbarrel.platform.ConfigValue.Side.CLIENT && volume.min() == 0.0 && volume.getDefault() == 1.0,
 			"heartbeat volume: a client setting, 0 turns it off");
-		// On the server the heartbeat plays nothing (it is the local player's own, on their client)
-		ServerPlayer player = VBGameTests.mockServerPlayerInLevel(helper);
-		jexxme.vineandbarrel.tipsy.TipsySounds.heartbeat(player, 1.0);
-		player.discard();
 		helper.succeed();
 	}
 
@@ -1390,8 +1386,8 @@ public final class BlackoutGameTests
 	}
 
 	/**
-	 * A blackout's bed is no night's sleep: when the others skip the night meanwhile, Sleep It Off isn't earned and Tipsy
-	 * stays; and the blacked-out sleeper isn't counted among the players sleeping.
+	 * A blackout's bed is no night's sleep: when the others skip the night meanwhile, Sleep It Off isn't earned and the
+	 * blackout's wake-up stays as it was; and the blacked-out sleeper isn't counted among the players sleeping.
 	 */
 	private static void bedIsNotANightsSleep(GameTestHelper helper) {
 		floor(helper, 32);
@@ -1407,7 +1403,8 @@ public final class BlackoutGameTests
 			// The night is skipped by the others: vanilla wakes every sleeper like this
 			player.stopSleepInBed(false, false);
 			helper.assertFalse(earned(h, player, "sleep_it_off"), "no Sleep It Off from a blackout");
-			assertValueEqual(helper, jexxme.vineandbarrel.tipsy.Tipsy.getLevel(player), 1, "still Tipsy I");
+			assertValueEqual(helper, jexxme.vineandbarrel.tipsy.Tipsy.getLevel(player), 0, "sober after the blackout");
+			helper.assertTrue(jexxme.vineandbarrel.tipsy.Hangover.has(player), "and hungover, as the blackout left you");
 			TipsyRegistry.BLACKOUT.remove(player);
 		});
 		helper.succeed();

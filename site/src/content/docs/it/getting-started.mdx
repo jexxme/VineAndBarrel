@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/it';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -26,13 +26,12 @@ pazienza premia: il bonus di una bevanda invecchiata è più forte, dura di più
 Trova la tua versione di Minecraft e il tuo loader, e scarica da quella cella:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -41,22 +40,36 @@ Trova la tua versione di Minecraft e il tuo loader, e scarica da quella cella:
 Tutti i file sono anche su {cell(stores)}. Ognuno richiede almeno:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 Il nome del file ti dice quale hai: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> è per NeoForge,
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> è per Fabric. Mettilo nella cartella `mods`, sia sul client che sul server. Non
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> è per Fabric{forgeFiles.map((f) => <>, e su {f.minecraft} <code>{f.jar}</code> è per Forge</>)}. Mettilo nella cartella `mods`, sia sul client che sul server. Non
 richiede nessun altro mod. Tutto ciò con cui funziona è facoltativo e si attiva da solo: vedi [Compatibilità](/compatibility/).
+
+### Su Minecraft 1.21.1 e 1.20.1
+
+Le stesse colture, bevande, bollitore, botti e taverne, con qualche differenza:
+
+- **Le taverne non hanno mensole**, un blocco che queste versioni non hanno ancora. Su una parete trovi invece una
+  bevanda in una cornice, davanti a una finestra un'anta di legno chiusa.
+- **Farmer's Delight** è il Farmer's Delight originale su NeoForge e Forge, e Farmer's Delight Refabricated su Fabric.
+  Farmer's Delight Neoforged è solo per Minecraft 26.x. I pomodori di FD non si arrampicano sul graticcio; uva e luppolo
+  si arrampicano ancora sulle corde di FD.
+- **Gli scambi dei villici** non si possono cambiare con un datapack.
+- **Su 1.20.1** il coperchio del bollitore suona come una botola di ferro. Su Forge non c'è il pulsante Config
+  nell'elenco delle mod: cambia le impostazioni nei [file di config](/reference/config/). I tubi di altre mod si
+  collegano a un Bollitore grande solo da un blocco: quello in basso a destra quando guardi il rubinetto. Le tramogge
+  funzionano su ogni blocco.
+- **Fabric su 1.20.1 con Sodium:** le file di graticci mostrano pali e traversa solo con l'add-on Indium installato.
 
 <Aside type="tip" title="Giochi con Farmer's Delight?">
 Vine & Barrel è un mod a sé, ma si integra a meraviglia: il suo bollitore prepara sui fornelli di FD, viti e luppolo si
@@ -90,7 +103,7 @@ Ogni bevanda fa lo stesso percorso, dal campo al bicchiere. Clicca su un passagg
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> Brillo</dt>
-		<dd>Ogni bevanda aggiunge un livello di [Brillo](/tipsy/): all'inizio un barcollare, singhiozzi e un po' di coraggio, più avanti occhi pesanti e gambe pesanti. Sappi quando fermarti.</dd>
+		<dd>Ogni bevanda aggiunge un livello di [Brillo](/tipsy/): all'inizio gambe malferme, singhiozzi e un po' di coraggio, più avanti vista doppia, inciampi e i postumi. Sappi quando fermarti.</dd>
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> Taverne</dt>

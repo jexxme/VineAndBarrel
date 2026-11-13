@@ -36,14 +36,18 @@
   "client": [
     "BlockElementAngleMixin",
     "AbstractContainerScreenAccessor",
+    "ChannelMixin",
     "ClientAdvancementsAccessor",
     "CameraMixin",
     "EntityRenderDispatcherMixin",
     "GameRendererMixin",
+    "ItemInHandRendererMixin",
     "HumanoidModelMixin",
     "ParticleEngineAccessor",
+    "PostChainAccessor",
     "RecipeBookComponentAccessor",
     "SceneFigureDrinkMixin",
+    "SignRendererMixin",
     "SpriteContentsAccessor"
   ],
   "injectors": {

@@ -5,18 +5,20 @@ description: "Un verre de trop : ce qui se passe quand tu fais un trou noir, tou
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
-import { rules, roman, seconds, gameText } from '../../../lib/l10n/fr';
+import { rules, roman, seconds, duration, gameText } from '../../../lib/l10n/fr';
 
 export const t = rules.tipsy;
 export const b = t.blackout;
 export const count = b.endings.filter((e) => e.collectable).length;
+export const under = t.goingUnder;
+export const h = t.hangover;
 
 <Aside type="caution" title="Spoilers">
 Cette page te dit toutes les façons dont une soirée peut finir. Si tu préfères le découvrir par toi-même, arrête-toi ici : la page
 [Pompette](/tipsy/#un-verre-de-trop) ne fait que le laisser entendre.
 </Aside>
 
-Déjà à Pompette {roman(t.maxLevel - 1)} et tu bois encore ? Un de plus et tu fais un **trou noir**. C'est sans danger : tu ne perds
+Déjà à Pompette {roman(t.maxLevel - 1)} et tu bois encore ? Un de plus et, un peu plus tard, tu fais un **trou noir**. C'est sans danger : tu ne perds
 jamais rien de ce que tu avais, tu ne te réveilles jamais dans un endroit dangereux, aucun temps ne passe, et personne d'autre n'est touché. Les
 propriétaires de serveur peuvent le désactiver avec l'option `blackout` (voir [Configuration](/reference/config/)).
 
@@ -24,24 +26,30 @@ propriétaires de serveur peuvent le désactiver avec l'option `blackout` (voir 
 
 <Steps>
 
-1. **Tu t'écroules.** Tes yeux se ferment et tu bascules. Tous ceux qui sont autour te voient allongé là, des étoiles
+1. **Ça te rattrape.** Le verre de trop met {Math.round(under.soonestTicks / 20)} à {Math.round(under.latestTicks / 20)} secondes
+   à frapper, quoi que tu sois en train de faire. Pendant les {Math.round(under.ticks / 20)} dernières secondes, tu te sens sombrer :
+   paupières lourdes, la tête qui tombe, le monde étouffé et lointain, les jambes qui lâchent, le corps qui tangue fort. Tes amis le voient
+   venir. Dessaoule avant que ça frappe (un seau de lait, une nuit de sommeil) et tu t'en sors ; un autre verre ne le repousse jamais.
+2. **Tu t'écroules.** Tes yeux se ferment et tu bascules. Tous ceux qui sont autour te voient allongé là, des étoiles
    tournant autour de ta tête.
-2. **Noir.** Pendant quelques secondes, tu ne peux pas bouger, et Pompette te laisse tranquille : pas de balancement, pas de hoquets, pas de tourbillon. Personne ne peut
+3. **Noir.** Pendant quelques secondes, tu ne peux pas bouger, et Pompette te laisse tranquille : pas de jambes flageolantes, pas de hoquets. Personne ne peut
    te blesser non plus, ni mob ni joueur, et tomber non plus. Seul ce qui blesserait n'importe qui allongé là compte encore,
    comme la lave ou le vide, alors l'endroit où tu fais ton trou noir compte ; l'endroit où tu *te réveilles* est toujours sûr.
-3. **Tu te réveilles quelque part.** Pendant que l'écran est encore noir, le jeu choisit où ta soirée s'est terminée (voir plus bas) et
+4. **Tu te réveilles quelque part.** Pendant que l'écran est encore noir, le jeu choisit où ta soirée s'est terminée (voir plus bas) et
    t'y installe : allongé par terre, dans un lit, ou assis dans un bateau. Tes yeux s'ouvrent lentement, puis tu te lèves.
-4. **Une ligne à l'écran** dit comment ça s'est passé, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* ou l'une de beaucoup d'autres.
+5. **Une ligne à l'écran** dit comment ça s'est passé, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* ou l'une de beaucoup d'autres.
 
 </Steps>
 
-Le tout dure environ {seconds(b.ticks)}. Tu te réveilles :
+De l'écroulement au réveil, il faut environ {seconds(b.ticks)}. Tu te réveilles :
 
-- **de retour à Pompette I**, et sans les bonus que tes boissons t'avaient donnés,
-- **affamé :** {b.hungerLost / 2} cuisses de viande en moins, et rien dans ta saturation,
-- **tremblant** pendant {seconds(b.shakyTicks)} : un peu étourdi et lent,
+- **sobre mais avec la gueule de bois** pendant {duration(h.afterBlackoutTicks)} (la lumière du jour éblouit, les bruits forts te font
+  grimacer ; voir [Le lendemain matin](/tipsy/#le-lendemain-matin)), et sans les bonus que tes boissons t'avaient donnés,
+- **affamé :** pas plus de {h.hungryFood / 2} cuisses de viande, et rien dans ta saturation,
 - **avec un souvenir** dans les poches, quelque chose qui colle à l'endroit où tu t'es réveillé (à tes pieds si tes poches sont pleines),
 - et, une fois sur {b.pumpkinOneIn}, **avec une citrouille sculptée sur la tête**, si tu ne portais pas de casque.
+
+Si l'option `hangover` du serveur est désactivée, tu te réveilles plutôt à Pompette I, avec {b.hungerLost / 2} cuisses de viande en moins.
 
 ## Où tu te réveilles
 
