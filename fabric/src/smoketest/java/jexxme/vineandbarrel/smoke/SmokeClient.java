@@ -576,6 +576,34 @@ public final class SmokeClient implements ClientModInitializer
 				mc.screen.onClose();
 			}
 		}, mc -> mc.screen instanceof InventoryScreen ? null : "after Escape the screen is " + mc.screen, null, false));
+		// A wort bucket asks for its own brew: the barrel scene pours that wort and taps it into a mug
+		steps.add(new Step("watch_it_hover_a_wort_bucket", 10, mc -> {
+			command(mc, "item replace entity @s hotbar.8 with vineandbarrel:barley_wort_bucket");
+			mc.setScreen(new InventoryScreen(mc.player));
+		}, null, null, false));
+		steps.add(new Step("watch_it_point_at_the_wort", 10, mc -> {
+			if (mc.screen instanceof InventoryScreen screen) {
+				AbstractContainerScreenAccessor panel = (AbstractContainerScreenAccessor) screen;
+				Slot slot = screen.getMenu().slots.stream().filter(s -> s.container == mc.player.getInventory() && s.getContainerSlot() == 8).findFirst().orElseThrow();
+				MouseHandlerAccessor mouse = (MouseHandlerAccessor) mc.mouseHandler;
+				double x = panel.vineandbarrel_smoke$leftPos() + slot.x + 8, y = panel.vineandbarrel_smoke$topPos() + slot.y + 8;
+				mouse.vineandbarrel_smoke$setXpos(x * mc.getWindow().getScreenWidth() / mc.getWindow().getGuiScaledWidth());
+				mouse.vineandbarrel_smoke$setYpos(y * mc.getWindow().getScreenHeight() / mc.getWindow().getGuiScaledHeight());
+			}
+		}, null, null, false));
+		steps.add(new Step("watch_it_opens_for_the_wort", 20, mc ->
+			mc.keyboardHandler.keyPress(mc.getWindow().getWindow(), InputConstants.KEY_G, 0, InputConstants.PRESS, 0), mc -> {
+			if (!(mc.screen instanceof WatchScreen screen)) {
+				return "G over the wort bucket: the screen is " + mc.screen;
+			}
+			ScenePlayer player = screen.player();
+			if (!player.askedRecipe().equals(java.util.Optional.of(VineAndBarrel.id("aging/barley_ale")))) {
+				return "the wort bucket opened the barrel scene for " + player.askedRecipe();
+			}
+			String caption = player.caption(0).getString();
+			String wort = Component.translatable("watch.vineandbarrel.aging_barrel.1.wort").getString();
+			return caption.equals(wort) ? null : "the wort's first step says \"" + caption + "\" instead of \"" + wort + "\"";
+		}, "watch_wort", false));
 		steps.add(new Step("watch_it_done", 2, mc -> {
 			mc.setScreen(null);
 			command(mc, "gamemode creative");

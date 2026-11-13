@@ -39,7 +39,7 @@
     },
     {
       "caption": "watch.vineandbarrel.trellis.2",
-      "anchor": [1.5, 2.5, 1.5],
+      "anchor": [1.5, 1.4, 1.5],
       "ticks": 110,
       "actions": [
         { "type": "hold", "at": 4, "item": "vineandbarrel:trellis" },

@@ -15,6 +15,7 @@ import jexxme.vineandbarrel.kettle.BrewKettleBlockEntity;
 import jexxme.vineandbarrel.kettle.BrewingRecipe;
 import jexxme.vineandbarrel.kettle.KettleContents;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
+import jexxme.vineandbarrel.watch.WatchParts;
 import jexxme.vineandbarrel.watch.WatchScene;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -27,7 +28,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -57,7 +58,22 @@ public final class ScenePlayer
 	 */
 	static final Vec3 PARTICLE_ORIGIN = new Vec3(20_000_000.0, 0.0, 20_000_000.0);
 
+	/** The recipes the client has (synced from the server), for the parts of recipes a scene names. */
+	static final WatchParts.Recipes CLIENT_RECIPES = new WatchParts.Recipes()
+	{
+		@Override
+		public @Nullable AgingRecipe aging(net.minecraft.resources.ResourceLocation id) {
+			return agingRecipe(id, false);
+		}
+
+		@Override
+		public @Nullable BrewingRecipe brewing(net.minecraft.resources.ResourceLocation id) {
+			return brewingRecipe(id, false);
+		}
+	};
+
 	private final WatchScene scene;
+	private final WatchParts parts;
 	private final SceneWorld world;
 	private final SceneParticles particles = new SceneParticles();
 	private final ClientLevel level;
@@ -70,7 +86,13 @@ public final class ScenePlayer
 	private int age;
 
 	public ScenePlayer(WatchScene scene, ClientLevel level) {
+		this(scene, level, Optional.empty());
+	}
+
+	/** A scene played for an aging recipe other than the one it is written for (a wort bucket asked for, say). */
+	public ScenePlayer(WatchScene scene, ClientLevel level, Optional<net.minecraft.resources.ResourceLocation> recipe) {
 		this.scene = scene;
+		this.parts = WatchParts.of(scene, CLIENT_RECIPES, recipe);
 		this.level = level;
 		this.world = new SceneWorld(level.registryAccess().lookupOrThrow(Registries.BIOME).get(Biomes.PLAINS).orElse(null));
 		jumpTo(0);
@@ -78,6 +100,25 @@ public final class ScenePlayer
 
 	public WatchScene scene() {
 		return scene;
+	}
+
+	/** {@return what the scene's items and lines are, for the recipe it plays} */
+	public WatchParts parts() {
+		return parts;
+	}
+
+	/** {@return the recipe it plays, if it was asked for another than the one it is written for} */
+	public Optional<net.minecraft.resources.ResourceLocation> askedRecipe() {
+		return parts.asked();
+	}
+
+	/** {@return a step's caption line, for the recipe the scene plays} */
+	public Component caption(int index) {
+		return parts.caption(scene.steps().get(index));
+	}
+
+	public Component caption() {
+		return caption(step);
 	}
 
 	SceneWorld world() {
@@ -124,9 +165,36 @@ public final class ScenePlayer
 	 * player's language (a second, then about 15 characters a second), so a long translation isn't cut off
 	 */
 	public int stepTicks() {
+		int characters = caption().getString().length();
+		return Math.max(currentStep().ticks(), captionAt() + 20 + characters * 4 / 3);
+	}
+
+	/**
+	 * {@return ticks into the current step before its caption shows}: a caption about a block that the step itself puts
+	 * on the stage waits until it stands there (the barrel set down before "Pour in the juice." points at it); else 0
+	 */
+	public int captionAt() {
 		WatchScene.Step current = currentStep();
-		int characters = Language.getInstance().getOrDefault(current.caption()).length();
-		return Math.max(current.ticks(), 20 + characters * 4 / 3);
+		if (current.anchor().flatMap(WatchScene.Anchor::figure).isPresent()) {
+			return 0;
+		}
+		Optional<Vec3> point = current.anchor().flatMap(WatchScene.Anchor::pos).or(() -> current.actions().stream()
+			.filter(WatchScene.Pointer.class::isInstance).map(action -> ((WatchScene.Pointer) action).pos()).findFirst());
+		if (point.isEmpty()) {
+			return 0;
+		}
+		BlockPos at = BlockPos.containing(point.get());
+		for (int i = 0; i < 2; i++, at = at.below()) {
+			for (WatchScene.Action action : current.actions()) {
+				if (action instanceof WatchScene.Place place && place.pos().equals(at) && place.at() > 0) {
+					return place.end();
+				}
+			}
+			if (at.getY() == 0 && scene.floor().isPresent()) {
+				break;
+			}
+		}
+		return 0;
 	}
 
 	/** {@return how far through the current step it is, 0 to 1} */
@@ -228,7 +296,7 @@ public final class ScenePlayer
 					existing.teleport(figure.pos(), figure.yaw());
 				}
 			}
-			case WatchScene.Hold hold -> figure(hold.id()).ifPresent(f -> f.hold(SceneItems.resolve(hold.item())));
+			case WatchScene.Hold hold -> figure(hold.id()).ifPresent(f -> f.hold(parts.item(hold.item())));
 			case WatchScene.Look look -> figure(look.id()).ifPresent(f -> f.lookAt(look.pos(), !live));
 			default -> {
 			}
@@ -246,7 +314,7 @@ public final class ScenePlayer
 
 	/** A barrel's contents from the real aging recipe, at the asked stage; the bung and fill follow, as in the world. */
 	private void fillBarrel(WatchScene.Barrel barrel) {
-		AgingRecipe recipe = agingRecipe(barrel);
+		AgingRecipe recipe = agingRecipe(parts.recipe(barrel.recipe()));
 		if (recipe == null) {
 			return;
 		}
@@ -273,7 +341,7 @@ public final class ScenePlayer
 
 	/** A kettle's brew from the real brewing recipe; its fill follows, as in the world. */
 	private void fillKettle(WatchScene.Kettle kettle) {
-		BrewingRecipe recipe = brewingRecipe(kettle.recipe());
+		BrewingRecipe recipe = brewingRecipe(parts.recipe(kettle.recipe()));
 		if (recipe == null) {
 			return;
 		}
@@ -304,11 +372,11 @@ public final class ScenePlayer
 		return null;
 	}
 
-	private @Nullable AgingRecipe agingRecipe(WatchScene.Barrel barrel) {
-		return agingRecipe(barrel.recipe());
+	static @Nullable AgingRecipe agingRecipe(net.minecraft.resources.ResourceLocation id) {
+		return agingRecipe(id, true);
 	}
 
-	static @Nullable AgingRecipe agingRecipe(net.minecraft.resources.ResourceLocation id) {
+	static @Nullable AgingRecipe agingRecipe(net.minecraft.resources.ResourceLocation id, boolean warn) {
 		ClientLevel level = Minecraft.getInstance().level;
 		if (level == null) {
 			return null;
@@ -318,7 +386,9 @@ public final class ScenePlayer
 				return holder.value();
 			}
 		}
-		VineAndBarrel.LOGGER.warn("Watch it: no aging recipe {} on this server", id);
+		if (warn) {
+			VineAndBarrel.LOGGER.warn("Watch it: no aging recipe {} on this server", id);
+		}
 		return null;
 	}
 
@@ -343,9 +413,9 @@ public final class ScenePlayer
 	}
 
 	/** A coloured particle in the colour of the item it names (a drink's liquid colour), else as written. */
-	private static ParticleOptions coloured(WatchScene.Particles emitter) {
+	private ParticleOptions coloured(WatchScene.Particles emitter) {
 		if (emitter.particle() instanceof ColorParticleOption option && emitter.colorOf().isPresent()) {
-			ItemStack stack = SceneItems.resolve(emitter.colorOf().get());
+			ItemStack stack = parts.item(emitter.colorOf().get());
 			if (!stack.isEmpty()) {
 				@SuppressWarnings("unchecked")
 				ParticleType<ColorParticleOption> type = (ParticleType<ColorParticleOption>) option.getType();
@@ -416,7 +486,7 @@ public final class ScenePlayer
 		float now = tick + (paused || finished ? 0.0F : partialTick);
 		for (WatchScene.Action action : currentStep().actions()) {
 			if (action instanceof WatchScene.Timelapse lapse && now >= lapse.at() && now <= lapse.end()) {
-				return Optional.of(new Lapse(lapse.days(), Mth.clamp((now - lapse.at()) / lapse.ticks(), 0.0F, 1.0F)));
+				return Optional.of(new Lapse(parts.days(lapse), Mth.clamp((now - lapse.at()) / lapse.ticks(), 0.0F, 1.0F)));
 			}
 		}
 		return Optional.empty();

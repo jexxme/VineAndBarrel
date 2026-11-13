@@ -44,9 +44,12 @@ import java.util.Optional;
  * @param also    the scenes offered at its end ("Also watch")
  * @param steps   the steps, played one after the other
  * @param needs   what the scene uses, for the "What you need" rail (items or parts of real recipes)
+ * @param recipe  the aging recipe the scene is written for, if it is about one: asked for another base, vessel or barrel,
+ *                the scene plays that recipe instead (every part of this one it names becomes that one's)
  */
 public record WatchScene(String title, Holder<Item> icon, int width, int depth, Optional<BlockState> floor, List<Placed> blocks, View view,
-						 Opens opens, List<ResourceLocation> also, List<Step> steps, List<Either<Holder<Item>, RecipePart>> needs)
+						 Opens opens, List<ResourceLocation> also, List<Step> steps, List<Either<Holder<Item>, RecipePart>> needs,
+						 Optional<ResourceLocation> recipe)
 {
 	/** A block state as a string, the way commands write it: {@code vineandbarrel:aging_barrel[facing=south,fill=4]}. */
 	public static final Codec<BlockState> BLOCK_STATE = Codec.STRING.comapFlatMap(WatchScene::parseState, WatchScene::writeState);
@@ -65,7 +68,8 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 		Opens.CODEC.optionalFieldOf("opens", Opens.NONE).forGetter(WatchScene::opens),
 		ResourceLocation.CODEC.listOf().optionalFieldOf("also", List.of()).forGetter(WatchScene::also),
 		Step.CODEC.listOf().fieldOf("steps").forGetter(WatchScene::steps),
-		ITEM_REF.listOf().optionalFieldOf("needs", List.of()).forGetter(WatchScene::needs)
+		ITEM_REF.listOf().optionalFieldOf("needs", List.of()).forGetter(WatchScene::needs),
+		ResourceLocation.CODEC.optionalFieldOf("recipe").forGetter(WatchScene::recipe)
 	).apply(inst, WatchScene::new));
 
 	private static DataResult<BlockState> parseState(String text) {
@@ -178,18 +182,61 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 	/**
 	 * One step: what the caption says and what happens, for {@code ticks} ticks.
 	 *
-	 * @param caption lang key of the one caption line
-	 * @param ticks   how long the step plays
-	 * @param actions what happens, each at its tick into the step
+	 * @param caption  lang key of the one caption line
+	 * @param ticks    how long the step plays
+	 * @param actions  what happens, each at its tick into the step
+	 * @param with     what the caption's {@code %s} stand for, in order: an item or a recipe's part (its name), or an aging
+	 *                 recipe's {@code fermenting_time} or {@code aging_time} (in days)
+	 * @param variants other lines for the same step, for what the scene is played for: the first whose item fits wins
 	 */
-	public record Step(String caption, int ticks, List<Action> actions, Optional<Anchor> anchor)
+	public record Step(String caption, int ticks, List<Action> actions, Optional<Anchor> anchor,
+					   List<Either<Holder<Item>, RecipePart>> with, List<CaptionVariant> variants)
 	{
 		public static final Codec<Step> CODEC = RecordCodecBuilder.create(inst -> inst.group(
 			Codec.STRING.fieldOf("caption").forGetter(Step::caption),
 			ExtraCodecs.intRange(1, 20 * 60).fieldOf("ticks").forGetter(Step::ticks),
 			Action.CODEC.listOf().optionalFieldOf("actions", List.of()).forGetter(Step::actions),
-			Anchor.CODEC.optionalFieldOf("anchor").forGetter(Step::anchor)
+			Anchor.CODEC.optionalFieldOf("anchor").forGetter(Step::anchor),
+			ITEM_REF.listOf().optionalFieldOf("with", List.of()).forGetter(Step::with),
+			CaptionVariant.CODEC.listOf().optionalFieldOf("variants", List.of()).forGetter(Step::variants)
 		).apply(inst, Step::new));
+
+		/** {@return every lang key this step may show} */
+		public List<String> captions() {
+			List<String> keys = new java.util.ArrayList<>();
+			keys.add(caption);
+			variants.forEach(variant -> keys.add(variant.caption()));
+			return keys;
+		}
+	}
+
+	/**
+	 * Another line for a step: when the item {@code of} names (an item, or a part of the recipe the scene plays, such as
+	 * its {@code base} or {@code vessel}) is one of {@code items} (ids or {@code #tags}), the step says {@code caption}.
+	 * So a barrel scene played for a wort says "Pour in the wort." and one for a beer says to tap a mug.
+	 */
+	public record CaptionVariant(Either<Holder<Item>, RecipePart> of, List<String> items, String caption)
+	{
+		public static final Codec<CaptionVariant> CODEC = RecordCodecBuilder.create(inst -> inst.group(
+			ITEM_REF.fieldOf("of").forGetter(CaptionVariant::of),
+			Codec.STRING.listOf().fieldOf("items").forGetter(CaptionVariant::items),
+			Codec.STRING.fieldOf("caption").forGetter(CaptionVariant::caption)
+		).apply(inst, CaptionVariant::new));
+
+		/** {@return whether this item is one of the variant's} */
+		public boolean fits(net.minecraft.world.item.ItemStack stack) {
+			for (String selector : items) {
+				if (selector.startsWith("#")) {
+					ResourceLocation tag = ResourceLocation.tryParse(selector.substring(1));
+					if (tag != null && stack.is(net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM, tag))) {
+						return true;
+					}
+				} else if (BuiltInRegistries.ITEM.getKey(stack.getItem()).toString().equals(selector)) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	/**
@@ -336,8 +383,10 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 
 	/**
 	 * One of a real recipe's items. An aging recipe: its {@code base}, the base's {@code bucket}, the {@code young} or the
-	 * {@code aged} drink. A brewing recipe: its {@code result} (a bottle of it), its {@code bucket}, or an
-	 * {@code ingredient} (the first item of its first ingredient).
+	 * {@code aged} drink, or the {@code vessel} its drinks are tapped into (a mug or a wine glass). A brewing recipe: its
+	 * {@code result} (a bottle of it), its {@code bucket}, or an {@code ingredient} (the first item of its first
+	 * ingredient). For a caption's {@code with} and a time-lapse's {@code days_of} only: an aging recipe's
+	 * {@code fermenting_time} or {@code aging_time}.
 	 */
 	public record RecipePart(ResourceLocation recipe, String part)
 	{
@@ -414,13 +463,18 @@ public record WatchScene(String title, Holder<Item> icon, int width, int depth, 
 		}
 	}
 
-	/** The signature: game days pass in the window's sky while the stage waits, {@code days} of them in {@code ticks}. */
-	public record Timelapse(int at, int ticks, float days) implements Action
+	/**
+	 * The signature: game days pass in the window's sky while the stage waits, {@code days} of them in {@code ticks}; or
+	 * as many as a real recipe's time takes ({@code days_of}: an aging recipe's {@code fermenting_time} or
+	 * {@code aging_time}), so the sky counts the days the drink really needs.
+	 */
+	public record Timelapse(int at, int ticks, float days, Optional<RecipePart> daysOf) implements Action
 	{
 		static final MapCodec<Timelapse> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
 			atField(),
 			ExtraCodecs.POSITIVE_INT.fieldOf("ticks").forGetter(Timelapse::ticks),
-			Codec.floatRange(0.25F, 30.0F).fieldOf("days").forGetter(Timelapse::days)
+			Codec.floatRange(0.25F, 30.0F).optionalFieldOf("days", 1.0F).forGetter(Timelapse::days),
+			RecipePart.CODEC.optionalFieldOf("days_of").forGetter(Timelapse::daysOf)
 		).apply(inst, Timelapse::new));
 
 		@Override
