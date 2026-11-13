@@ -1,6 +1,7 @@
 package jexxme.vineandbarrel.drink;
 
 import jexxme.vineandbarrel.tipsy.Blackout;
+import jexxme.vineandbarrel.tipsy.GoingUnder;
 import jexxme.vineandbarrel.tipsy.Tipsy;
 import jexxme.vineandbarrel.tipsy.TipsyConfig;
 import jexxme.vineandbarrel.tipsy.DrinkBuffs;
@@ -113,7 +114,8 @@ public class DrinkItem extends Item
 			Tipsy.addLevel(entity);
 			Cheers.onDrink(entity, this, !tooDrunk);
 			if (blackout) {
-				Blackout.start((ServerPlayer) entity);
+				// it catches up with you a little later (GoingUnder)
+				GoingUnder.drankOneTooMany((ServerPlayer) entity, entity.getRandom());
 			}
 		}
 		return result;

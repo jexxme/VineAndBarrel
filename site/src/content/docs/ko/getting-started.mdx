@@ -8,7 +8,7 @@ import Recipe from '../../../components/recipes/Recipe.astro';
 import Shot from '../../../components/mc/Shot.astro';
 import Loop from '../../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list, nameOf } from '../../../lib/l10n/ko';
-import { downloads, stores } from '../../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -26,13 +26,12 @@ Vine & Barrel은 포도밭과 양조장, 그리고 저장고를 Minecraft에 가
 Minecraft 버전과 로더를 찾아서, 해당 칸에서 내려받으세요.
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -41,22 +40,35 @@ Minecraft 버전과 로더를 찾아서, 해당 칸에서 내려받으세요.
 모든 파일은 {cell(stores)}에도 있어요. 파일마다 필요한 최소 버전은 다음과 같아요.
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 파일 이름을 보면 어느 쪽인지 알 수 있어요. <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code>은 NeoForge용,
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code>은 Fabric용입니다. 클라이언트와 서버 모두 `mods` 폴더에 넣으세요. 다른 모드는
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code>은 Fabric용입니다.{forgeFiles.map((f) => <> {f.minecraft}에서는 <code>{f.jar}</code>이 Forge용입니다.</>)} 클라이언트와 서버 모두 `mods` 폴더에 넣으세요. 다른 모드는
 필요 없어요. 함께 쓸 수 있는 모드는 전부 선택 사항이고 알아서 켜집니다. [호환성](/compatibility/)을 참고하세요.
+
+### Minecraft 1.21.1과 1.20.1에서는
+
+작물, 술, 솥, 통, 선술집은 같지만 몇 가지가 달라요.
+
+- **선술집에 선반이 없어요.** 이 버전에는 아직 그 블록이 없거든요. 벽에는 대신 액자에 든 술이, 창문 앞에는 닫힌
+  나무 덧문이 있어요.
+- **Farmer's Delight**는 NeoForge와 Forge에서는 원래의 Farmer's Delight, Fabric에서는 Farmer's Delight
+  Refabricated예요. Farmer's Delight Neoforged는 Minecraft 26.x 전용이에요. FD의 토마토는 격자 지지대를 타고 오르지
+  않아요. 포도와 홉은 여전히 FD의 밧줄을 타고 올라요.
+- **주민 거래**는 데이터 팩으로 바꿀 수 없어요.
+- **1.20.1에서는** 솥 뚜껑 소리가 철 다락문 소리예요. Forge에서는 모드 목록에 Config 버튼이 없어요.
+  [설정 파일](/reference/config/)에서 설정을 바꾸세요. 다른 모드의 파이프는 큰 양조 솥의 한 블록에만 연결돼요. 꼭지를
+  바라볼 때 오른쪽 아래 블록이에요. 호퍼는 모든 블록에서 작동해요.
+- **1.20.1 Fabric에서 Sodium을 쓴다면:** 격자 지지대 줄의 기둥과 가로대는 애드온 Indium을 설치해야만 보여요.
 
 <Aside type="tip" title="Farmer's Delight와 함께 하나요?">
 Vine & Barrel은 독립된 모드지만 FD와 잘 어울려요. 솥은 FD의 난로 위에서도 양조하고, 포도와 홉 덩굴은 FD의 밧줄을 타고 올라가고,
@@ -90,7 +102,7 @@ Vine & Barrel은 독립된 모드지만 FD와 잘 어울려요. 솥은 FD의 난
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> 알딸딸함</dt>
-		<dd>술을 마실 때마다 [알딸딸함](/tipsy/)이 한 단계씩 올라가요. 처음에는 몸이 흔들리고, 딸꾹질이 나고, 용기가 조금 생기다가, 나중에는 눈꺼풀도 다리도 무거워져요. 멈출 때를 알아야 해요.</dd>
+		<dd>술을 마실 때마다 [알딸딸함](/tipsy/)이 한 단계씩 올라가요. 처음에는 다리가 휘청거리고, 딸꾹질이 나고, 용기가 조금 생기다가, 나중에는 겹쳐 보이고, 비틀거리고, 숙취까지 와요. 멈출 때를 알아야 해요.</dd>
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> 선술집</dt>

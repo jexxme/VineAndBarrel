@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Tipsy's two HUD layers (NeoForge: {@code RegisterGuiLayersEvent}; Fabric API has no HUD layers on this Minecraft, its
- * {@code HudRenderCallback} only draws last): tunnel vision above the camera overlays and under the rest of the HUD, the
+ * {@code HudRenderCallback} only draws last): what the eyes do above the camera overlays and under the rest of the HUD, the
  * blackout above everything. Both stay with the HUD hidden (F1), as on NeoForge: vanilla skips the camera overlays then
  * but still draws the sleep overlay, so with F1 on the vision is drawn right after it instead. And in a blackout's bed
  * the eyes are opening: no darkening sleep overlay (NeoForge: the layer's Pre event).

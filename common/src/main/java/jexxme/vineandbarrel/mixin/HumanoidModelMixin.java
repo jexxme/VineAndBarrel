@@ -11,7 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * A player out on the ground after a blackout moves head and limbs, not only the whole body: at the end of the humanoid
- * model's posing, over what the game (and other mods) did ({@link TipsyClient#poseBlackout}). The player model copies
+ * model's posing, over what the game (and other mods) did ({@link TipsyClient#poseBlackout}); and a tipsy one's chin
+ * sinks as they nod off, the arms go out for balance in a stumble and back for a Rowdy swing. The player model copies
  * the limbs to the sleeves, trousers and jacket right after, the armour copies them from the player model, and the held
  * items and the hat follow the arms and the head. Not required: if another mod takes this method over, the body still
  * falls and gets up as a whole.

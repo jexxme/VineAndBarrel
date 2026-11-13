@@ -40,11 +40,11 @@ public final class TipsyMotion
 	// ------------------------------------------------------------------ the stumble: a lurch to the side and a catch step
 
 	/** A stumble lurches over this many ticks and steadies over the next {@link #STUMBLE_SETTLE}. */
-	public static final float STUMBLE_RISE = 2.0F, STUMBLE_SETTLE = 8.0F;
+	public static final float STUMBLE_RISE = 5.0F, STUMBLE_SETTLE = 14.0F;
 	/** The own view dips this far down and rolls this far toward the lurch; the body others see leans this far. */
-	public static final float STUMBLE_DIP = 3.0F, STUMBLE_ROLL = 4.0F, STUMBLE_LEAN = 9.0F;
+	public static final float STUMBLE_DIP = 2.5F, STUMBLE_ROLL = 3.0F, STUMBLE_LEAN = 6.0F;
 	/** The catch step's scuff comes this many ticks after the stumble's (the foot finding the ground again). */
-	public static final int CATCH_STEP_AFTER = 5;
+	public static final int CATCH_STEP_AFTER = 8;
 
 	// ------------------------------------------------------------------ the trip: down on the face, and up again
 

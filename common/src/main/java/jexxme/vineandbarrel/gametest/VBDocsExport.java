@@ -20,9 +20,12 @@ import jexxme.vineandbarrel.kettle.BrewingRecipe;
 import jexxme.vineandbarrel.tipsy.Blackout;
 import jexxme.vineandbarrel.tipsy.BlackoutEnding;
 import jexxme.vineandbarrel.tipsy.BlackoutSpots;
+import jexxme.vineandbarrel.tipsy.GoingUnder;
+import jexxme.vineandbarrel.tipsy.Hangover;
 import jexxme.vineandbarrel.tipsy.Rowdy;
 import jexxme.vineandbarrel.tipsy.Tipsy;
 import jexxme.vineandbarrel.tipsy.TipsyConfig;
+import jexxme.vineandbarrel.tipsy.TipsyEyes;
 import jexxme.vineandbarrel.tipsy.TipsyInfo;
 import jexxme.vineandbarrel.tipsy.TipsyLegs;
 import jexxme.vineandbarrel.tipsy.TipsyLevels;
@@ -271,51 +274,60 @@ public final class VBDocsExport
 		tipsy.addProperty("maxLevel", Tipsy.ABSOLUTE_MAX_LEVEL);
 		tipsy.addProperty("hiccupLevel", Tipsy.HICCUP_LEVEL);
 		tipsy.addProperty("slurLevel", Tipsy.SLUR_LEVEL);
-		tipsy.addProperty("blinkLevel", Tipsy.BLINK_LEVEL);
-		tipsy.addProperty("longBlinkLevel", TipsyLevels.first(level -> level.longBlinkOneIn() > 0));
-		tipsy.addProperty("nauseaLevel", Tipsy.NAUSEA_LEVEL);
-		tipsy.addProperty("nauseaPulseTicks", Tipsy.NAUSEA_PULSE_TICKS);
-		tipsy.addProperty("weaknessLevel", Tipsy.WEAKNESS_LEVEL);
 		tipsy.addProperty("noBuffLevel", Tipsy.NO_BUFF_LEVEL);
-		tipsy.addProperty("slownessLevel", Tipsy.SLOWNESS_LEVEL);
-		tipsy.addProperty("miningFatigueLevel", Tipsy.MINING_FATIGUE_LEVEL);
 		tipsy.addProperty("stumbleLevel", Tipsy.STUMBLE_LEVEL);
+		tipsy.addProperty("heartbeatLevel", jexxme.vineandbarrel.tipsy.TipsySounds.HEARTBEAT_LEVEL);
 		tipsy.addProperty("cutOffLevel", Rowdy.CUT_OFF_LEVEL);
 		tipsy.addProperty("hiccupGapTicks", Tipsy.HICCUP_GAP_MIN + "-" + Tipsy.HICCUP_GAP_MAX);
-		tipsy.addProperty("tripCooldownTicks", TipsyLegs.TRIP_COOLDOWN);
+		tipsy.addProperty("tripCooldownTicks", TipsyLevels.at(Tipsy.ABSOLUTE_MAX_LEVEL).legs().tripCooldown());
 		tipsy.addProperty("tripTicks", TipsyMotion.TRIP_TICKS);
 		tipsy.addProperty("tripDownTicks", TipsyMotion.TRIP_DOWN);
 		tipsy.addProperty("tripMonsterFree", TipsyLegs.MONSTER_FREE);
 		tipsy.addProperty("sprintTripOneIn", TipsyLevels.SPRINT_TRIP_ONE_IN);
+		// The first level of each part of being drunk (0 = none): the drunk walk, heavy legs, the hic in chat, the drunk
+		// eyes' double vision and blurred signs, the woolly sound, nodding off
+		tipsy.addProperty("drunkWalkLevel", TipsyLevels.first(level -> level.legs().drunkWalk()));
+		tipsy.addProperty("slowerLevel", TipsyLevels.first(level -> level.legs().slower() > 0.0F));
+		tipsy.addProperty("hicChatLevel", TipsyLevels.first(level -> level.chat().stage() >= 1));
+		tipsy.addProperty("softEdgesLevel", TipsyLevels.first(level -> level.eyes().softEdges() > 0.0F));
+		tipsy.addProperty("doubleVisionLevel", TipsyLevels.first(level -> level.eyes().doubleVision() > 0.0F));
+		tipsy.addProperty("signBlurLevel", TipsyLevels.first(level -> level.eyes().signBlur() > 0.0F));
+		tipsy.addProperty("woollyLevel", TipsyLevels.first(level -> level.ears().muffle() > 0.0F));
+		tipsy.addProperty("nodLevel", TipsyLevels.first(level -> level.nod().any()));
+		// Rowdy: how long you are spoiling for a fight, and the arm drawn back before the swing
+		tipsy.addProperty("rowdyItchTicks", Rowdy.ITCH);
+		tipsy.addProperty("rowdyWindupTicks", Rowdy.WINDUP);
+		// Going under: the drink one too many catches up with you this long after, the last ticks you feel it coming
+		JsonObject goingUnder = new JsonObject();
+		goingUnder.addProperty("soonestTicks", GoingUnder.SOONEST);
+		goingUnder.addProperty("latestTicks", GoingUnder.LATEST);
+		goingUnder.addProperty("ticks", GoingUnder.TICKS);
+		tipsy.add("goingUnder", goingUnder);
+		// The morning after: how long, how hungry, how much a sobering drink leaves, how long the fresh glare indoors lasts
+		JsonObject hangover = new JsonObject();
+		hangover.addProperty("afterBlackoutTicks", Hangover.AFTER_BLACKOUT);
+		JsonObject afterSleep = new JsonObject();
+		for (TipsyLevels.Level at : TipsyLevels.LEVELS) {
+			if (Hangover.afterSleep(at.level()) > 0) {
+				afterSleep.addProperty(Integer.toString(at.level()), Hangover.afterSleep(at.level()));
+			}
+		}
+		hangover.add("afterSleepTicks", afterSleep);
+		hangover.addProperty("sleepLevel", TipsyLevels.first(level -> Hangover.afterSleep(level.level()) > 0));
+		hangover.addProperty("hungryFood", Hangover.HUNGRY_FOOD);
+		hangover.addProperty("drinkLeaves", Hangover.DRINK_LEAVES);
+		hangover.addProperty("freshGlareTicks", TipsyEyes.FRESH_TICKS);
+		tipsy.add("hangover", hangover);
+		// Every level: its row of each section of the table (courage, hiccups, legs, eyes, ears, nod, chat, rules), as
+		// the record's fields, and the effect tooltip's lines with the default settings
+		com.google.gson.Gson gson = new com.google.gson.Gson();
 		JsonArray levels = new JsonArray();
-		JsonArray vignette = new JsonArray();
-		vignette.add(0.0F);
 		for (TipsyLevels.Level at : TipsyLevels.LEVELS) {
 			JsonObject entry = new JsonObject();
 			entry.addProperty("level", at.level());
-			entry.addProperty("roll", at.rollDegrees());
-			entry.addProperty("vignette", at.vignette());
-			vignette.add(at.vignette());
-			entry.addProperty("blinkEveryTicks", at.blinkEvery());
-			entry.addProperty("longBlinkOneIn", at.longBlinkOneIn());
-			entry.addProperty("knockbackResistance", at.knockbackResistance());
-			entry.addProperty("fallDamageReduction", at.fallDamageReduction());
-			entry.addProperty("hiccupBoutOneIn", at.hiccupBoutOneIn());
-			entry.addProperty("hiccupsPerBoutMin", at.hiccupsPerBout()[0]);
-			entry.addProperty("hiccupsPerBoutMax", at.hiccupsPerBout()[1]);
-			entry.addProperty("slurs", at.slurs());
-			entry.addProperty("nauseaOneIn", at.nauseaOneIn());
-			entry.addProperty("weakness", at.weakness());
-			entry.addProperty("slowness", at.slowness());
-			entry.addProperty("miningFatigue", at.miningFatigue());
-			entry.addProperty("buffs", at.buffs());
-			entry.addProperty("rowdySwingOneIn", at.rowdySwingOneIn());
-			entry.addProperty("cutOff", at.cutOff());
-			entry.addProperty("legsOneIn", at.legsOneIn());
-			entry.addProperty("tripOneIn", at.tripOneIn());
-			entry.addProperty("drift", at.drift());
-			entry.addProperty("fovBreathing", at.fovBreathing());
-			// The effect tooltip's lines with the default settings: blue the courage, red the drawbacks
+			for (TipsyLevels.Section section : TipsyLevels.sections()) {
+				entry.add(section.name(), gson.toJsonTree(section.of().apply(at)));
+			}
 			JsonArray good = new JsonArray();
 			TipsyInfo.good(at.level()).forEach(line -> good.add(line.getString()));
 			entry.add("tooltipGood", good);
@@ -325,10 +337,8 @@ public final class VBDocsExport
 			levels.add(entry);
 		}
 		tipsy.add("levels", levels);
-		tipsy.add("vignette", vignette);
 		JsonObject blackout = new JsonObject();
 		blackout.addProperty("ticks", Blackout.TICKS);
-		blackout.addProperty("shakyTicks", Blackout.SHAKY_TICKS);
 		blackout.addProperty("wakeAt", Blackout.WAKE_AT);
 		blackout.addProperty("unseenBonus", Blackout.UNSEEN_BONUS);
 		blackout.addProperty("pumpkinOneIn", Blackout.PUMPKIN_ONE_IN);
@@ -379,8 +389,11 @@ public final class VBDocsExport
 		config.addProperty("rowdy", TipsyConfig.ROWDY.getDefault());
 		config.addProperty("rowdyPunches", TipsyConfig.ROWDY_PUNCHES.getDefault());
 		config.addProperty("cutOff", TipsyConfig.CUT_OFF.getDefault());
-		config.addProperty("visionEffects", TipsyConfig.VISION_EFFECTS.getDefault());
-		config.addProperty("wobbleIntensity", TipsyConfig.WOBBLE_INTENSITY.getDefault());
+		config.addProperty("noddingOff", TipsyConfig.NODDING_OFF.getDefault());
+		config.addProperty("hangover", TipsyConfig.HANGOVER.getDefault());
+		config.addProperty("drunkScreen", TipsyConfig.DRUNK_SCREEN.getDefault());
+		config.addProperty("doubleVision", TipsyConfig.DOUBLE_VISION.getDefault());
+		config.addProperty("woollySound", TipsyConfig.WOOLLY_SOUND.getDefault());
 		config.addProperty("otherPlayersSway", TipsyConfig.OTHER_PLAYERS_SWAY.getDefault());
 		config.addProperty("heartbeatVolume", TipsyConfig.HEARTBEAT_VOLUME.getDefault());
 		tipsy.add("config", config);

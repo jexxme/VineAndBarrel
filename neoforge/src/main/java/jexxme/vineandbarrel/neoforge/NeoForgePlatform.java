@@ -13,7 +13,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTestRegistry;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -254,11 +253,6 @@ public final class NeoForgePlatform implements Platform
 	public float compostChance(net.minecraft.world.item.Item item) {
 		var compostable = item.builtInRegistryHolder().getData(net.neoforged.neoforge.registries.datamaps.builtin.NeoForgeDataMaps.COMPOSTABLES);
 		return compostable == null ? 0.0F : compostable.chance();
-	}
-
-	@Override
-	public Component decorateChat(ServerPlayer player, Component message) {
-		return CommonHooks.getServerChatSubmittedDecorator().decorate(player, message);
 	}
 
 	@Override

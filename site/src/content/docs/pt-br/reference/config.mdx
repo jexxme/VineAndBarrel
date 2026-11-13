@@ -11,20 +11,22 @@ export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
 
 Vine & Barrel tem dois arquivos de configuração, os dois sobre o [Alegrinho](/tipsy/). Todo o resto, das receitas ao tempo que um barril
-leva, funciona do jeito que o mod vem e pode ser mudado com um datapack, como qualquer receita.
+leva, funciona do jeito que o mod vem e pode ser mudado com um datapack, como qualquer receita (no Minecraft 1.21.1 e 1.20.1, tudo menos as
+trocas dos aldeões).
 
 No jogo, mude pela tela de configurações: **Mods**, Vine & Barrel, **Config** no NeoForge; no Fabric o mesmo botão
 aparece com o [Mod Menu](https://modrinth.com/mod/modmenu) instalado. As mudanças ali valem na hora. As opções do servidor
-aparecem ali no modo um jogador (não depois que o mundo é aberto para LAN); em um servidor, elas são do servidor.
+aparecem ali no modo um jogador (não depois que o mundo é aberto para LAN); em um servidor, elas são do servidor. O Forge
+(Minecraft 1.20.1) não tem esse botão: edite os arquivos.
 
-Os arquivos em si: no NeoForge são arquivos TOML com as opções em <code>[{configFiles.server.section}]</code>. No
+Os arquivos em si: no NeoForge e no Forge são arquivos TOML com as opções em <code>[{configFiles.server.section}]</code>. No
 Fabric são arquivos <code>.properties</code> simples na pasta <code>config</code>, com as mesmas opções escritas como
 <code>{configFiles.server.section}.option=value</code>. No Fabric o arquivo do cliente é lido quando o jogo inicia, então
 reinicie depois de editar; o arquivo do servidor é lido de novo com <code>/reload</code>.
 
 ## Opções do servidor
 
-Em <code>{configFiles.server.file}</code> no NeoForge, <code>{configFiles.server.fabricFile}</code> no Fabric. Os valores do servidor
+Em <code>{configFiles.server.file}</code> no NeoForge e no Forge, <code>{configFiles.server.fabricFile}</code> no Fabric. Os valores do servidor
 vão para todo jogador que entra, então todos jogam pelas mesmas regras. Um mundo pode ter as suas: coloque o arquivo na pasta
 <code>serverconfig</code> do mundo, e ele vale mais que o da pasta <code>config</code> enquanto aquele mundo roda.
 
@@ -48,7 +50,7 @@ Bom para um servidor família, ou se você simplesmente não curte o balanço.
 
 ## Opções do cliente
 
-Em <code>{configFiles.client.file}</code> no NeoForge, <code>{configFiles.client.fabricFile}</code> no Fabric. Cada jogador
+Em <code>{configFiles.client.file}</code> no NeoForge e no Forge, <code>{configFiles.client.fabricFile}</code> no Fabric. Cada jogador
 define as suas; elas só mudam o que você vê.
 
 <table>
@@ -65,7 +67,7 @@ define as suas; elas só mudam o que você vê.
 </table>
 
 <Aside type="tip" title="Enjoo de movimento?">
-Defina `wobbleIntensity = 0` (`tipsy.wobbleIntensity=0` no Fabric). O Alegrinho para de mexer na sua tela, não importa o que o servidor diga: sem balanço, sem solavancos, sem crises de Náusea. Os controles Efeitos de Distorção e Efeitos de FOV do Minecraft também ajudam a reduzir. Ficar de cara no chão depois de um tombo continua aparecendo, não é um efeito de tela; todo o resto do Alegrinho continua.
+Coloque "Tela alegrinha" em 0% (`drunkScreen = 0`, `tipsy.drunkScreen=0` no Fabric). O Alegrinho nunca mexe na sua tela sozinho, e em 0 nem um soluço, um tropeço ou um tombo mexem nela, não importa o que o servidor diga. O controle Efeitos de Distorção do Minecraft também ajuda a reduzir, e o controle Escuridão pulsante suaviza as pálpebras pesando quando você cochila em pé. Ficar de cara no chão depois de um tombo continua aparecendo, não é um efeito de tela. Se a visão dupla te incomoda, desligue "Visão dupla" (`doubleVision = false`); todo o resto do Alegrinho continua.
 </Aside>
 
 <style>{`

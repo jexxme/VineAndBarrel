@@ -15,6 +15,7 @@ import jexxme.vineandbarrel.fabric.FabricConfig;
 import jexxme.vineandbarrel.fabric.FabricRecipeBook;
 import jexxme.vineandbarrel.fabric.ServerConfigPayload;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 
@@ -44,11 +45,13 @@ public final class VineAndBarrelFabricClient implements ClientModInitializer
 			// A render that never reached its end must not leave the blackout's pose behind
 			TipsyClient.endRenderPoses();
 		});
+		// Drunk chat: the own message slurred before it is signed and sent (commands aren't chat here)
+		ClientSendMessageEvents.MODIFY_CHAT.register(TipsyClient::ownChat);
 		// "Watch it": the tooltip line, and the key over an item in a screen
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> WatchClient.onTooltip(stack, lines));
 		ScreenEvents.AFTER_INIT.register((minecraft, screen, width, height) ->
 			ScreenKeyboardEvents.allowKeyPress(screen).register((s, key, scanCode, modifiers) -> !WatchClient.onScreenKey(s, key, scanCode)));
-		// Tunnel vision above the camera overlays and under the rest of the HUD, the blackout above everything, and no
+		// What the eyes do (TipsyClient.renderVision) above the camera overlays and under the rest of the HUD, the blackout above everything, and no
 		// sleep overlay in a blackout's bed: Fabric API has no HUD layers on this Minecraft, see the mixin (HudMixin).
 		// Recipes: this Minecraft sends every recipe to the client by itself, nothing to synchronise.
 

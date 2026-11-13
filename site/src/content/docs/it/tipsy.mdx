@@ -1,54 +1,117 @@
 ---
 title: Brillo
-description: Cosa fa Brillo a ogni livello, cosa succede dopo un bicchiere di troppo, come smaltire la sbornia e come attenuarlo o disattivarlo.
+description: Cosa fa Brillo a ogni livello, come un bicchiere di troppo ti raggiunge, la mattina dopo, come smaltire la sbornia e come attenuarlo o disattivarlo.
 ---
 import { Aside } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import TipsyLevels from '../../../components/data/TipsyLevels.astro';
 import EffectBadge from '../../../components/data/EffectBadge.astro';
-import { rules, nameOf, roman } from '../../../lib/l10n/it';
+import { rules, nameOf, roman, pct, duration } from '../../../lib/l10n/it';
 
 export const t = rules.tipsy;
 export const cfg = t.config;
+export const h = t.hangover;
+export const under = t.goingUnder;
 export const rowdyLevel = t.rowdyLevel;
 export const punchHearts = t.rowdyPunchDamage / 2;
+export const slower = (level) => t.levels[level - 1].legs.slower;
+export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.level ?? t.maxLevel;
 
-Ogni vino, birra, sidro e idromele ti dà il suo bonus **e un livello di <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. All'inizio
-è divertente: un'ondeggiata, il singhiozzo, un po' di coraggio liquido, e a Brillo {roman(t.slurLevel - 1)} sei al tuo meglio (la tua
-chat un po' meno), anche se gli occhi iniziano a farsi pesanti. Se continui, inizia a costarti caro: giramenti di testa, braccia deboli e, in cima, gambe
-che a stento ti riportano a casa. Si ferma al livello {t.maxLevel}.
+Ogni vino, birra, sidro e idromele ti dà il suo bonus **e un livello di <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**.
+L'ubriachezza si vede nel corpo, non sullo schermo: le gambe fanno di testa loro, gli occhi vedono doppio, il mondo diventa ovattato.
+All'inizio è divertente: gambe malferme, il singhiozzo, un po' di coraggio liquido, e a Brillo {roman(t.slurLevel - 1)} sei al tuo meglio
+(la tua chat un po' meno). Se continui, inizia a costarti caro: niente più bonus, voglia di attaccar briga, colpi di sonno in piedi e, in
+cima, gambe che a stento ti riportano a casa. Si ferma al livello {t.maxLevel}.
 
 ## Livelli
 
 <TipsyLevels />
 
-Anche gli altri giocatori ti vedono ondeggiare, singhiozzare, barcollare e inciampare. Passa il mouse sull'effetto Brillo
-nel tuo inventario per vedere cosa fa il tuo livello attuale.
+Passa il mouse sull'effetto Brillo nel tuo inventario per vedere cosa fa il tuo livello attuale.
 
-## Un goccetto di troppo
+## Gambe brille
 
-Sei già al livello {t.maxLevel} e continui a bere? Hai un **vuoto di memoria**. Gli occhi si chiudono e crolli a terra, con le
-stelline che ti girano attorno alla testa per tutti. Per quei pochi secondi nessuno può farti del male, né mob né giocatori,
-e nemmeno la caduta; il resto del mondo però conta, quindi non svenire nella lava. Poi ti svegli. Dove? Dipende dalla
-serata, e i modi per svegliarsi sono più di quanti pensi…
+Da Brillo {roman(t.drunkWalkLevel - 1)} le gambe fanno di testa loro. Quello che comandi arriva con un attimo di ritardo, quindi parti in
+ritardo e non riesci a fermarti sul posto. Il passo devia dalla rotta e poi ci ritorna, e continui a correggere. Il corpo dondola da un
+piede all'altro e i passi vengono irregolari. La tua visuale si inclina solo un po' con il corpo; gli altri giocatori vedono tutto il
+barcollare, e la strada che fai davvero.
 
-Avrai fame e ti sentirai tremante per un po', di nuovo a Brillo I, e nelle tasche potresti trovare qualcosa che non ricordi
-di aver preso. Non perdi mai niente di ciò che avevi.
+Da Brillo {roman(t.stumbleLevel - 1)} **inciampi**: un passo falso di lato, le braccia larghe per tenerti in equilibrio. Ogni tanto non ti
+riprendi e fai un **capitombolo**, lungo disteso a faccia in giù, e ti rialzi un attimo dopo. Anche le gambe si fanno pesanti: sei più lento
+del {pct(slower(t.slowerLevel))} a Brillo {roman(t.slowerLevel - 1)} e del {pct(slower(t.maxLevel))} a Brillo {roman(t.maxLevel - 1)}.
+Puoi comunque scattare.
+
+La camminata da brillo non ti porta mai oltre un bordo né dentro qualcosa che fa male. **Accovacciati** e cammini dritto. Nuotare,
+cavalcare, volare e arrampicarsi restano sobri.
+
+## Occhi e orecchie
+
+Da Brillo {roman(t.softEdgesLevel - 1)} i bordi dello schermo diventano sfumati e un po' caldi. Da Brillo {roman(t.doubleVisionLevel - 1)}
+**vedi doppio**: una seconda immagine si separa e poi torna, più lontano a ogni livello. **Tieni premuto accovacciati per strizzare gli
+occhi** e le due si avvicinano, anche se aiuta meno quanto più sei ubriaco. La scritta sui cartelli sbiadisce nel legno da
+Brillo {roman(t.signBlurLevel - 1)}, finché a Brillo {roman(t.maxLevel - 1)} riesci a leggerla a stento; anche lì strizzare gli occhi aiuta.
+
+Da Brillo {roman(t.woollyLevel - 1)} il mondo suona **ovattato**, attutito come attraverso una coperta, di più a ogni livello. Musica e
+menu restano chiari. A Brillo {roman(t.heartbeatLevel - 1)} senti il tuo cuore battere, e lo senti solo tu.
+
+## Colpi di sonno
+
+Da Brillo {roman(t.nodLevel - 1)}, non restare fermo troppo a lungo. Stai immobile per un po' e le palpebre calano, la testa ciondola, e poi
+ti risvegli di soprassalto con una russata. Resta lì fermo e ricomincia. Qualsiasi cosa tu faccia ti sveglia: un passo, un'occhiata
+intorno, usare qualcosa. Tutti intorno a te vedono il mento calare e sentono la russata.
+
+## Chat brilla
+
+La chat esce come la diresti tu. A Brillo {roman(t.hicChatLevel - 1)} scappa qualche \*hic\*, a Brillo {roman(chatAt(2) - 1)} è impastata
+ma si legge bene, a Brillo {roman(chatAt(3) - 1)} diventa difficile da leggere, e a Brillo {roman(chatAt(4) - 1)} è un farfuglio
+incomprensibile. Link, @menzioni e comandi partono sempre come li hai scritti.
 
 ## Attaccabrighe
 
-Da Brillo {roman(rowdyLevel - 1)} diventi attaccabrighe. Ogni tanto il braccio parte da solo e tira un vero pugno a
-ciò che hai proprio davanti: {punchHearts === 0.5 ? 'mezzo cuore' : `${punchHearts} cuori`} di danno
-e una spinta, qualunque cosa tu stia tenendo in mano. Non colpisce mai animali addomesticati, golem di ferro o supporti per armature, e colpisce altri
-giocatori solo dove il PvP è attivo. I villici e i passanti, invece, sono bersagli validi, e se lo ricordano.
+Da Brillo {roman(rowdyLevel - 1)} diventi attaccabrighe. Ogni tanto hai voglia di menare le mani, fino a {Math.round(t.rowdyItchTicks / 20)}
+secondi di fila, e il primo che ti capita davanti se le prende, anche se gli lanci solo un'occhiata. Il braccio si carica per un attimo,
+così tutti lo vedono arrivare, poi tiri un vero pugno: {punchHearts === 0.5 ? 'mezzo cuore' : `${punchHearts} cuori`} di danno
+e una spinta, qualunque cosa tu stia tenendo in mano. Lo slancio ti porta un passo avanti; se si è scansato, vai a vuoto e inciampi. Non
+colpisce mai animali addomesticati, golem di ferro o supporti per armature, e colpisce altri giocatori solo dove il PvP è attivo. I villici
+e i passanti, invece, sono bersagli validi, e se lo ricordano.
 
 Inoltre **non ti servono più da bere**: da Brillo {roman(t.cutOffLevel - 1)}, villici e mercanti ambulanti scuotono la testa e non
 commerciano con te finché non ti sei ripreso. Fai i tuoi scambi prima del {t.cutOffLevel === 4 ? 'quarto' : `${t.cutOffLevel}°`} bicchiere.
 
+## Un goccetto di troppo
+
+Sei già a Brillo {roman(t.maxLevel - 1)} e continui a bere? Quel bicchiere non ti stende subito. Ti **raggiunge** da
+{Math.round(under.soonestTicks / 20)} a {Math.round(under.latestTicks / 20)} secondi dopo, qualunque cosa tu stia facendo in quel momento.
+Negli ultimi {Math.round(under.ticks / 20)} secondi ti senti andare giù: le palpebre si fanno pesanti, la testa cala, il mondo diventa
+ovattato e lontano, le gambe cedono e ondeggi forte. Anche i tuoi amici lo vedono arrivare.
+
+Poi hai un **vuoto di memoria**. Gli occhi si chiudono e crolli a terra, con le stelline che ti girano attorno alla testa per tutti. Per
+quei pochi secondi nessuno può farti del male, né mob né giocatori, e nemmeno la caduta; il resto del mondo però conta, quindi non svenire
+nella lava. Poi ti svegli. Dove? Dipende dalla serata, e i modi per svegliarsi sono più di quanti pensi…
+
+Ti svegli sobrio ma con i [postumi](#la-mattina-dopo), e nelle tasche potresti trovare qualcosa che non ricordi di aver preso. Non perdi mai
+niente di ciò che avevi. Se torni sobrio prima che arrivi (un secchio di latte, una notte di sonno), te la scampi; un altro bicchiere non
+lo rimanda mai.
+
+## La mattina dopo
+
+Dopo un vuoto di memoria, o una notte di sonno da Brillo {roman(h.sleepLevel - 1)} in su, ti svegli sobrio ma con i
+<EffectBadge id="vineandbarrel:hangover" name="Postumi" />. E hai pure fame: non più di {h.hungryFood / 2} cosce nella barra della fame, e
+niente nella saturazione.
+
+- **La luce del giorno abbaglia.** Sotto il cielo aperto la luce del giorno fa male e strizzi gli occhi. Appena sveglio ti colpisce perfino
+  al chiuso, e si attenua in circa {Math.round(h.freshGlareTicks / 20)} secondi. Tenere premuto accovacciati per strizzare gli occhi aiuta.
+- **I rumori forti** vicini ti fanno sussultare.
+- Niente ti muove la visuale e niente ti dà la nausea.
+
+Durano {duration(h.afterBlackoutTicks)} dopo un vuoto di memoria, {duration(h.afterSleepTicks[h.sleepLevel])} dopo aver dormito a
+Brillo {roman(h.sleepLevel - 1)} e {duration(h.afterSleepTicks[t.maxLevel])} a Brillo {roman(t.maxLevel - 1)}. **Un'ampolla d'acqua o un
+succo qualsiasi** toglie il {pct(1 - h.drinkLeaves)} di quello che resta.
+
 ## Smaltire la sbornia
 
 - **Aspetta:** ogni livello passa dopo **{cfg.secondsPerLevel} secondi**, un livello alla volta. Una nuova bevanda fa ripartire il tempo di
-  ogni livello, quindi a Brillo {roman(t.maxLevel - 1)} sei di nuovo sobrio dopo circa {Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10} minuti
+  ogni livello, quindi a Brillo {roman(t.maxLevel - 1)} sei di nuovo sobrio dopo circa {String(Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10).replace('.', ',')} minuti
   senza un altro goccio.
 - **Il latte** lo toglie del tutto, come qualsiasi effetto. Toglie anche i bonus delle bevande.
 - **Un'ampolla d'acqua o un succo qualsiasi** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
@@ -56,27 +119,26 @@ commerciano con te finché non ti sei ripreso. Fai i tuoi scambi prima del {t.cu
 - **Con Farmer's Delight**, anche <Item id="farmersdelight:milk_bottle" />, <Item id="farmersdelight:melon_juice" /> e
   <Item id="farmersdelight:apple_cider" /> lo abbassano di un livello. Una bottiglia di latte toglie un livello; un secchio di latte
   lo toglie del tutto.
-- **Smaltiscila dormendo:** vai a letto e dormi fino al mattino. Deve essere una notte saltata davvero: se ti alzi presto, o resti
-  sveglio mentre gli altri sul server restano in piedi, ti svegli brillo come quando sei andato a letto.
+- **Smaltiscila dormendo:** vai a letto e dormi fino al mattino. Ti svegli sobrio, ma da Brillo {roman(h.sleepLevel - 1)} con i
+  [postumi](#la-mattina-dopo). Deve essere una notte saltata davvero: se ti alzi presto, o resti sveglio mentre gli altri sul server
+  restano in piedi, ti svegli brillo come quando sei andato a letto.
 
 ## Da sapere
 
-- **Accovacciati** a Brillo {roman(t.stumbleLevel - 1)} e le gambe reggono: niente deriva, niente inciampi, niente capitomboli. Anche
-  nuotare, cavalcare e volare sono sicuri.
 - **Un capitombolo non fa mai male** e non ti porta mai dove non sei andato a piedi. Cadi solo su terreno piano e aperto, senza
   mostri vicini, e non due volte entro {Math.round(t.tripCooldownTicks / 20)} secondi; altrove resta un semplice inciampo.
 - **L'acqua ti toglie in fretta dai livelli peggiori,** ma i livelli sotto mantengono il loro tempo, quindi non ti rende
   sobrio prima, nel complesso.
-- Brillo si occupa solo dei propri effetti collaterali: Lentezza o Nausea di una pozione o di un comando non vengono toccate.
-- Link, comandi e @menzioni in chat non vengono mai impastati.
-- Gli altri giocatori ti vedono ondeggiare, sentono i tuoi singhiozzi e vedono inciampi, capitomboli e pugni, ma non i bordi
-  scuri dello schermo né i tuoi battiti di ciglia.
+- Gli altri giocatori ti vedono barcollare, inciampare, fare capitomboli e appisolarti, vedono arrivare i tuoi pugni da attaccabrighe e
+  sentono i tuoi singhiozzi.
 - **Vuoi la storia completa di un vuoto di memoria?** Ogni posto in cui puoi svegliarti, le probabilità e i souvenir sono
   su [Vuoti di memoria](/blackouts/). Spoiler, ovviamente.
 
 ## Impostazioni
 
-I proprietari del server possono disattivare del tutto Brillo (la modalità analcolica) oppure spegnere uno per uno la chat impastata,
-gli inciampi (con capitomboli e deriva), i vuoti di memoria, i pugni da attaccabrighe e il rifiuto di servirti. Ogni giocatore può ridurre quanto
-Brillo muove lo schermo, fino a zero, e disattivare gli effetti visivi; contano anche i cursori Effetti di distorsione,
-Effetti sul campo visivo e Pulsazione oscurità di vanilla. Tutte le opzioni e i valori predefiniti sono su [Configurazione](/reference/config/).
+I proprietari del server possono disattivare del tutto Brillo (la modalità analcolica) oppure spegnere uno per uno la chat impastata, le
+gambe brille (con inciampi e capitomboli), i colpi di sonno, i postumi, i vuoti di memoria, i pugni da attaccabrighe e il rifiuto di
+servirti. Brillo non muove mai lo schermo da solo; ogni giocatore può ridurre quanto lo muovono un singhiozzo, un inciampo o un capitombolo,
+fino a zero, e conta anche il cursore Effetti di distorsione di vanilla. Ogni giocatore può anche disattivare gli occhi brilli (bordi
+sfumati, vista doppia, cartelli che sbiadiscono e il bagliore dei postumi) e le orecchie ovattate. Tutte le opzioni e i valori predefiniti
+sono su [Configurazione](/reference/config/).

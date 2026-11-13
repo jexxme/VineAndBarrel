@@ -28,6 +28,7 @@ public class TipsyEffect extends MobEffect
 
 	private static final ResourceLocation COURAGE_KNOCKBACK = VineAndBarrel.id("tipsy_courage_knockback");
 	private static final ResourceLocation COURAGE_FALL = VineAndBarrel.id("tipsy_courage_fall");
+	private static final ResourceLocation HEAVY_LEGS = VineAndBarrel.id("tipsy_heavy_legs");
 
 	public TipsyEffect() {
 		super(MobEffectCategory.NEUTRAL, COLOR);
@@ -36,14 +37,17 @@ public class TipsyEffect extends MobEffect
 		// since vanilla's own templates only scale linearly with the level.
 		addAttributeModifier(Attributes.KNOCKBACK_RESISTANCE, COURAGE_KNOCKBACK, 0.0, AttributeModifier.Operation.ADD_VALUE);
 		addAttributeModifier(Attributes.FALL_DAMAGE_MULTIPLIER, COURAGE_FALL, 0.0, AttributeModifier.Operation.ADD_VALUE);
+		addAttributeModifier(Attributes.MOVEMENT_SPEED, HEAVY_LEGS, 0.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
 	}
 
 	@Override
 	public void createModifiers(int amplifier, BiConsumer<Holder<Attribute>, AttributeModifier> consumer) {
 		// "Liquid courage" (TipsyLevels): from I to III a little knockback resistance and less fall damage, none from IV
 		TipsyLevels.Level level = TipsyLevels.at(amplifier + 1);
-		consumer.accept(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(COURAGE_KNOCKBACK, level.knockbackResistance(), AttributeModifier.Operation.ADD_VALUE));
-		consumer.accept(Attributes.FALL_DAMAGE_MULTIPLIER, new AttributeModifier(COURAGE_FALL, -level.fallDamageReduction(), AttributeModifier.Operation.ADD_VALUE));
+		consumer.accept(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(COURAGE_KNOCKBACK, level.courage().knockbackResistance(), AttributeModifier.Operation.ADD_VALUE));
+		consumer.accept(Attributes.FALL_DAMAGE_MULTIPLIER, new AttributeModifier(COURAGE_FALL, -level.courage().fallDamageReduction(), AttributeModifier.Operation.ADD_VALUE));
+		// Heavy legs at IV and V: slower, sprinting too (never no sprinting)
+		consumer.accept(Attributes.MOVEMENT_SPEED, new AttributeModifier(HEAVY_LEGS, -level.legs().slower(), AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
 	}
 
 	@Override

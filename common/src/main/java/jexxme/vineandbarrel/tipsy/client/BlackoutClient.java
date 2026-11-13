@@ -132,6 +132,9 @@ public final class BlackoutClient
 		for (AbstractClientPlayer player : level.players()) {
 			stepClock(player);
 		}
+		if (minecraft.player != null) {
+			watchGoingUnder(minecraft.player);
+		}
 		for (AbstractClientPlayer player : level.players()) {
 			// A fallen body lies the way its head looks: the body's own turn lags behind it (up to 50 degrees) and would
 			// make it fall a little differently on every client
@@ -210,8 +213,8 @@ public final class BlackoutClient
 			return TipsyWobble.Angles.NONE;
 		}
 		float roll = body.viewRoll();
-		if (TipsyConfig.wobbleIntensity() <= 0.0 && left(player, partial) < Blackout.GROUND_GET_UP - BlackoutPose.LOOK) {
-			// Up off the cheek, the head's tilt is a sway: none with the wobble off
+		if (TipsyConfig.drunkScreen() <= 0.0 && left(player, partial) < Blackout.GROUND_GET_UP - BlackoutPose.LOOK) {
+			// Up off the cheek, the head's tilt is a sway: none with "drunk screen" at 0
 			roll = 0.0F;
 		}
 		return new TipsyWobble.Angles(roll, body.viewPitch() - player.getViewXRot(partial),
@@ -301,15 +304,41 @@ public final class BlackoutClient
 		if (left <= 0.0F) {
 			return;
 		}
-		float closed = BlackoutPose.eyesClosed(left);
+		// Gone under first: the lids are already heavy, and close from there
+		float closed = Math.max(BlackoutPose.eyesClosed(left), carriedLids(player, left));
 		if (closed > 0.0F) {
 			drawLids(gui, Mth.clamp(closed, 0.0F, 1.0F));
 		}
 	}
 
 	/**
-	 * Two lids with a soft edge that meet in the middle; fully closed they cover the whole view (also the tipsy blinks).
-	 * Drawn like vanilla's sleep overlay, over whatever was drawn before it (1.21.1's HUD layers lie at different depths).
+	 * {@return how far the lids are still shut from going under, just as the blackout begins} Going under ends with the
+	 * lids heavy ({@link jexxme.vineandbarrel.tipsy.TipsyNod#UNDER}); the blackout's own lids start open and close over {@link Blackout#FADE_OUT}, so
+	 * until they catch up the heavy lids stay.
+	 */
+	private static float carriedLids(Player player, float left) {
+		float since = Blackout.TICKS - left;
+		if (since < 0.0F || since > Blackout.FADE_OUT || !wentUnder) {
+			return 0.0F;
+		}
+		return jexxme.vineandbarrel.tipsy.TipsyNod.LIDS * jexxme.vineandbarrel.tipsy.TipsyNod.UNDER * Minecraft.getInstance().options.darknessEffectScale().get().floatValue();
+	}
+
+	/** Whether the local player went under before this blackout (set each tick while going under, cleared when awake). */
+	private static boolean wentUnder;
+
+	/** Once a client tick, for the local player: remembers a going under for the blackout that follows it. */
+	static void watchGoingUnder(LocalPlayer player) {
+		if (jexxme.vineandbarrel.tipsy.GoingUnder.under(player, 0.0F) > 0.5F) {
+			wentUnder = true;
+		} else if (!Blackout.isOut(player)) {
+			wentUnder = false;
+		}
+	}
+
+	/**
+	 * Two lids with a soft edge that meet in the middle; fully closed they cover the whole view. Drawn like vanilla's sleep
+	 * overlay, over whatever was drawn before it (1.21.1's HUD layers lie at different depths).
 	 */
 	static void drawLids(GuiGraphics gui, float closed) {
 		int width = gui.guiWidth();

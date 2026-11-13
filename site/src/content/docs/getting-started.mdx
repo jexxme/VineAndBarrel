@@ -8,7 +8,7 @@ import Recipe from '../../components/recipes/Recipe.astro';
 import Shot from '../../components/mc/Shot.astro';
 import Loop from '../../components/brewing/Loop.astro';
 import { meta, rules, drinks, iconOf, roman, list } from '../../lib/data';
-import { downloads, stores } from '../../data/code/downloads';
+import { downloads, stores, loaders, needColumns, LOADER, forgeFiles } from '../../data/code/downloads';
 
 export const cell = (c) => (typeof c === 'string' ? c : c.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>));
 
@@ -26,13 +26,12 @@ aged drink's buff is stronger and lasts longer, and it shimmers in the glass.
 Find your Minecraft version and your loader, and download from that cell:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{loaders.map((l) => <th>{LOADER[l]}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{cell(r.neoforge)}</td>
-				<td>{cell(r.fabric)}</td>
+				{loaders.map((l) => <td>{cell(r.files[l])}</td>)}
 			</tr>
 		))}
 	</tbody>
@@ -41,22 +40,35 @@ Find your Minecraft version and your loader, and download from that cell:
 Every file is also on {cell(stores)}. Each one needs at least:
 
 <table>
-	<thead><tr><th>Minecraft</th><th>NeoForge</th><th>Fabric Loader</th><th>Fabric API</th></tr></thead>
+	<thead><tr><th>Minecraft</th>{needColumns.map((c) => <th>{c.label}</th>)}</tr></thead>
 	<tbody>
 		{downloads.map((r) => (
 			<tr>
 				<td>{r.minecraft}</td>
-				<td>{r.needs.neoforge}</td>
-				<td>{r.needs.fabricLoader}</td>
-				<td>{r.needs.fabricApi}</td>
+				{needColumns.map((c) => <td>{r.needs[c.key]}</td>)}
 			</tr>
 		))}
 	</tbody>
 </table>
 
 The file name says which one you have: <code>VineAndBarrel-{meta.minecraft}-{meta.modVersion}.jar</code> is NeoForge,
-<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> is Fabric. Put it in the `mods` folder on both the client and the server. It
+<code>VineAndBarrel-{meta.minecraft}-{meta.fabricModVersion}.jar</code> is Fabric{forgeFiles.map((f) => <>, and on {f.minecraft} <code>{f.jar}</code> is Forge</>)}. Put it in the `mods` folder on both the client and the server. It
 needs no other mod. Everything it works with is optional and switches on by itself: see [Compatibility](/compatibility/).
+
+### On Minecraft 1.21.1 and 1.20.1
+
+The same crops, drinks, kettle, barrels and taverns, with a few differences:
+
+- **Taverns have no shelves**, a block these versions don't have yet. On a wall you find a framed drink instead, in front
+  of a window a closed wooden shutter.
+- **Farmer's Delight** is the original Farmer's Delight on NeoForge and Forge, and Farmer's Delight Refabricated on
+  Fabric. Farmer's Delight Neoforged is for Minecraft 26.x only. FD's tomatoes don't climb the trellis; grapes and hops
+  still climb FD's ropes.
+- **Villager trades** can't be changed with a datapack.
+- **On 1.20.1**, the kettle's lid sounds like an iron trapdoor. On Forge there is no Config button in the mod list:
+  change the settings in the [config files](/reference/config/). Pipes from other mods connect to a Big Brew Kettle only
+  at one block: the bottom one on the right as you face the tap. Hoppers work at every block.
+- **Fabric on 1.20.1 with Sodium:** trellis rows show their posts and rail only with the Indium add-on installed.
 
 <Aside type="tip" title="Playing with Farmer's Delight?">
 Vine & Barrel is a mod of its own, but it fits right in: its kettle brews on FD's stove, grape and hop vines climb FD's
@@ -90,7 +102,7 @@ Every drink goes the same way, from the field to the glass. Click a step for the
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:mug')?.src} alt="" width="32" height="32" /> Tipsy</dt>
-		<dd>Every drink adds a level of [Tipsy](/tipsy/): a sway, hiccups and a little courage at first, heavy eyes and heavy legs later. Know when to stop.</dd>
+		<dd>Every drink adds a level of [Tipsy](/tipsy/): wobbly legs, hiccups and a little courage at first, double vision, stumbles and a hangover later. Know when to stop.</dd>
 	</div>
 	<div>
 		<dt><img class="pixel" src={iconOf('vineandbarrel:grape_crate')?.src} alt="" width="32" height="32" /> Taverns</dt>

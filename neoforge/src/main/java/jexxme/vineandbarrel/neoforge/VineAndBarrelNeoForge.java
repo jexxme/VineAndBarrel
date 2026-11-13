@@ -15,7 +15,6 @@ import jexxme.vineandbarrel.tipsy.TipsyEvents;
 import jexxme.vineandbarrel.tipsy.TipsyRegistry;
 import jexxme.vineandbarrel.world.village.VillageStructures;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.village.poi.PoiTypes;
 import net.minecraft.world.InteractionResult;
@@ -30,7 +29,6 @@ import net.neoforged.neoforge.common.EffectCures;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.common.world.poi.ExtendPoiTypesEvent;
-import net.neoforged.neoforge.event.ServerChatEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -105,12 +103,6 @@ public final class VineAndBarrelNeoForge
 			if (EffectCures.MILK.equals(event.getCure()) && event.getEffect().value() == TipsyRegistry.TIPSY.value()
 				&& BuiltInRegistries.ITEM.getKey(event.getEntity().getUseItem().getItem()).equals(FD_MILK_BOTTLE)) {
 				event.setCanceled(true);
-			}
-		});
-		game.addListener(ServerChatEvent.class, event -> {
-			Component slurred = TipsyEvents.onChat(event.getPlayer(), event.getRawText());
-			if (slurred != null) {
-				event.setMessage(slurred);
 			}
 		});
 		// Foxes learn to pick grapes

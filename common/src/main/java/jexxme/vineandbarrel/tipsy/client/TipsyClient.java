@@ -1,6 +1,5 @@
 package jexxme.vineandbarrel.tipsy.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import jexxme.vineandbarrel.VineAndBarrel;
@@ -8,14 +7,16 @@ import jexxme.vineandbarrel.tipsy.Blackout;
 import jexxme.vineandbarrel.tipsy.BlackoutPose;
 import jexxme.vineandbarrel.tipsy.Tipsy;
 import jexxme.vineandbarrel.tipsy.TipsyConfig;
+import jexxme.vineandbarrel.tipsy.TipsyGait;
 import jexxme.vineandbarrel.tipsy.TipsySounds;
 import jexxme.vineandbarrel.tipsy.TipsyInfo;
 import jexxme.vineandbarrel.tipsy.TipsyLevels;
 import jexxme.vineandbarrel.tipsy.TipsyMotion;
+import jexxme.vineandbarrel.tipsy.TipsyNod;
 import jexxme.vineandbarrel.tipsy.TipsyRegistry;
-import jexxme.vineandbarrel.tipsy.TipsyVision;
 import jexxme.vineandbarrel.tipsy.TipsyWobble;
 import jexxme.vineandbarrel.platform.client.ClientRegistrar;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -27,9 +28,12 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -41,7 +45,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -51,31 +54,25 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * Client side of Tipsy: what this player sees (the sway, the hiccup's flick, a stumble's dip, a trip face down, the FOV
- * breathing, the dark edges and the blinks), what they feel in their keys (the drift at V, held still while down after a
- * trip) and how every tipsy player looks to the others (the sway, the jolts, the trip). The math lives in
- * {@link TipsyWobble}, {@link TipsyMotion} and {@link TipsyVision} so it is tested headless. Each loader calls these from
+ * Client side of Tipsy: what this player sees (the hiccup's flick, a stumble's dip, a trip face down), what they feel
+ * in their keys (the drunk walk, held still while down after a trip) and how every tipsy player looks to the others
+ * (the sway, the jolts, the trip). Tipsy never moves the own view on its own: only with the body. The math lives in
+ * {@link TipsyWobble}, {@link TipsyGait} and {@link TipsyMotion} so it is tested headless. Each loader calls these from
  * its own client events (NeoForge: {@code NeoForgeClient}; Fabric: Fabric API callbacks and our client mixins).
  * <p>
- * What moves the screen follows the player's own settings: {@code wobbleIntensity} (0 = never), vanilla's Distortion
- * Effects (the camera, squared like vanilla's Nausea) and FOV Effects (the breathing). Poses (lying down after a trip)
- * are not distortions and always show.
+ * What moves the own view follows the player's settings: "drunk screen" ({@link TipsyConfig#drunkScreen}, 0 = never)
+ * and vanilla's Distortion Effects (squared like vanilla's Nausea). Poses (lying down after a trip) are not distortions
+ * and always show.
  */
 public final class TipsyClient
 {
-	/** The HUD layer for tunnel vision and blinks, by id (NeoForge GUI layers; Fabric draws it from its Gui mixin). */
+	/** The HUD layer for what the eyes do, by id (NeoForge GUI layers; Fabric draws it from its Gui mixin); see {@link #renderVision}. */
 	public static final ResourceLocation VISION_LAYER = VineAndBarrel.id("tipsy_vision");
-	/** Per tick, how far the shown wobble eases toward the real level (about 1.5 s to settle). */
-	private static final float EASE = 0.05F;
 	/** Per tick, how fast Tipsy's screen effects fade out when a blackout starts, and back in after. */
 	private static final float PAUSE_EASE = 0.15F;
 	/** How far the moved camera stays from a block in its way. */
 	private static final double CAMERA_MARGIN = 0.2;
-	/** At V, walking drifts this far to the side at most (a share of a full sideways step). */
-	private static final float DRIFT = 0.3F;
 
-	private static float wobbleLevel;
-	private static float wobbleLevelO;
 	/** 1 normally, 0 while blacked out: Tipsy pauses then (the blackout has the screen). */
 	private static float awake = 1.0F;
 	private static float awakeO = 1.0F;
@@ -93,6 +90,15 @@ public final class TipsyClient
 
 	/** Hovering Tipsy in the inventory's effect list says what this level does. */
 	public static void onEffectTooltip(MobEffectInstance effect, List<Component> tooltip) {
+		if (effect.is(TipsyRegistry.HANGOVER)) {
+			if (tooltip.isEmpty()) {
+				tooltip.add(effect.getEffect().value().getDisplayName());
+			}
+			for (String line : List.of("glare", "wince", "hunger")) {
+				tooltip.add(Component.translatable("effect.vineandbarrel.hangover.info." + line).withStyle(ChatFormatting.RED));
+			}
+			return;
+		}
 		if (!effect.is(TipsyRegistry.TIPSY)) {
 			return;
 		}
@@ -105,16 +111,16 @@ public final class TipsyClient
 	}
 
 	/**
-	 * Tipsy's side effects (and the blackout's) come without an icon, but the inventory lists every effect anyway. For
-	 * these vanilla effects (Slowness, Mining Fatigue, Weakness, Nausea) the inventory shows an instance only when it
-	 * has its icon, so a potion's or a command's still shows exactly as in vanilla.
+	 * The blackout's Slowness comes without an icon, but the inventory lists every effect anyway. For the vanilla effects
+	 * in {@link #SIDE_EFFECTS} the inventory shows an instance only when it has its icon, so a potion's or a command's
+	 * still shows exactly as in vanilla.
 	 */
 	public static boolean isVisibleInInventory(MobEffectInstance instance) {
 		return instance.showIcon();
 	}
 
-	/** The vanilla effects {@link #isVisibleInInventory} is for. */
-	public static final List<Holder<MobEffect>> SIDE_EFFECTS = List.of(MobEffects.MOVEMENT_SLOWDOWN, MobEffects.DIG_SLOWDOWN, MobEffects.WEAKNESS, MobEffects.CONFUSION);
+	/** The vanilla effects {@link #isVisibleInInventory} is for: the blackout's Slowness (it holds the body still). */
+	public static final List<Holder<MobEffect>> SIDE_EFFECTS = List.of(MobEffects.MOVEMENT_SLOWDOWN);
 
 	// ------------------------------------------------------------------ the tick
 
@@ -122,58 +128,56 @@ public final class TipsyClient
 	public static void onClientTick() {
 		Minecraft minecraft = Minecraft.getInstance();
 		LocalPlayer player = minecraft.player;
-		float target = player == null ? 0.0F : Tipsy.getLevel(player);
-		wobbleLevelO = wobbleLevel;
-		wobbleLevel += (target - wobbleLevel) * EASE;
-		if (Math.abs(target - wobbleLevel) < 0.01F) {
-			wobbleLevel = target;
-		}
 		awakeO = awake;
 		awake = Mth.approach(awake, player != null && Blackout.isOut(player) ? 0.0F : 1.0F, PAUSE_EASE);
 		ClientLevel level = minecraft.level;
-		if (level == null) {
+		if (level != seenLevel) {
+			// a new world, or none (disconnected): nothing carries over from the last one
+			seenLevel = level;
 			MOVES.clear();
+			DrunkLegs.reset();
+			DrunkEyes.reset();
+			DrunkEars.reset();
+			HangoverClient.reset();
+		}
+		if (level == null) {
 			return;
 		}
 		for (AbstractClientPlayer other : level.players()) {
 			track(other);
 		}
-		if (player != null && TipsyConfig.wobbleIntensity() <= 0.0) {
-			stillScreen(player);
-		}
 		if (player != null) {
 			heartbeat(player);
+			DrunkLegs.tick(player);
+			DrunkEyes.tick(player);
+			DrunkEars.tick(player);
+			HangoverClient.tick(player);
 		}
 	}
+
+	/** The world this client was in last tick. */
+	private static @Nullable ClientLevel seenLevel;
 
 	/** Ticks until the next heartbeat. */
 	private static int heartbeatIn;
 
 	/**
-	 * Tipsy V: this player hears their own heart (nobody else does), unless blacked out or with the volume at 0. The
-	 * first beat comes right away, then one about every {@link TipsySounds#HEARTBEAT_GAP} ticks.
+	 * From {@link TipsySounds#HEARTBEAT_LEVEL} this player hears their own heart (nobody else does), as loud as the level
+	 * says ({@link TipsyLevels.Ears#heartbeat}), unless blacked out or with the volume at 0. The first beat comes right
+	 * away, then one about every {@link TipsySounds#HEARTBEAT_GAP} ticks.
 	 */
 	private static void heartbeat(LocalPlayer player) {
-		double volume = TipsyConfig.heartbeatVolume();
-		if (Tipsy.getLevel(player) < TipsySounds.HEARTBEAT_LEVEL || Blackout.isOut(player) || volume <= 0.0) {
+		double volume = TipsyConfig.heartbeatVolume() * TipsyLevels.at(Tipsy.getLevel(player)).ears().heartbeat();
+		if (Blackout.isOut(player) || volume <= 0.0) {
 			heartbeatIn = 0;
 			return;
 		}
 		if (--heartbeatIn <= 0) {
-			TipsySounds.heartbeat(player, volume);
+			// in your own head: not placed in the world, so the woolly ears (DrunkEars) leave it clear
+			Minecraft.getInstance().getSoundManager().play(new SimpleSoundInstance(TipsyRegistry.HEARTBEAT_SOUND.value().getLocation(),
+				SoundSource.PLAYERS, (float) (TipsySounds.HEARTBEAT_VOLUME * volume), 0.95F + player.getRandom().nextFloat() * 0.1F,
+				SoundInstance.createUnseededRandom(), false, 0, SoundInstance.Attenuation.NONE, 0.0, 0.0, 0.0, true));
 			heartbeatIn = TipsySounds.HEARTBEAT_GAP - 1 + player.getRandom().nextInt(3);
-		}
-	}
-
-	/**
-	 * Wobble off means Tipsy never moves this player's screen, its Nausea spells included: Tipsy's own Nausea (and the
-	 * blackout's shakes) come without an icon, so an icon-less Nausea is dropped here, on this client only. The server
-	 * keeps it, nobody else sees a difference, and a potion's Nausea (with its icon) stays.
-	 */
-	private static void stillScreen(LocalPlayer player) {
-		MobEffectInstance nausea = player.getEffect(MobEffects.CONFUSION);
-		if (nausea != null && !nausea.showIcon()) {
-			player.removeEffect(MobEffects.CONFUSION);
 		}
 	}
 
@@ -187,6 +191,8 @@ public final class TipsyClient
 		float stumbleAt = -1000.0F;
 		boolean left;
 		float tripAt = -1000.0F;
+		/** The body's lean into the curve it walks (degrees, positive to its left), this tick and last, and where it walked a tick ago. */
+		float lean, leanO, headingO;
 
 		Moves(TipsyMotion.Counts seen) {
 			this.seen = seen;
@@ -216,6 +222,31 @@ public final class TipsyClient
 			moves.tripAt = now;
 		}
 		moves.seen = counts;
+		// The body leans into the curve it walks, as every client sees it move (nothing extra on the wire)
+		moves.leanO = moves.lean;
+		float heading = TipsyGait.heading(player.getX() - player.xo, player.getZ() - player.zo, moves.headingO);
+		float turning = TipsyGait.turning(moves.headingO, heading);
+		moves.headingO = heading;
+		Integer level = TipsyRegistry.SYNCED_LEVEL.getExisting(player);
+		float most = level == null ? 0.0F : TipsyLevels.at(level).legs().swayDegrees() * BODY_CURVE_LEAN;
+		float target = most <= 0.0F || !player.onGround() ? 0.0F : TipsyGait.leanTarget(turning, most);
+		moves.lean = TipsyGait.ease(moves.lean, target);
+	}
+
+	/** Of the level's sway, how far the body others see leans into a curve it walks. */
+	private static final float BODY_CURVE_LEAN = 0.7F;
+
+	/** {@return how far this player's body leans this frame (degrees, positive to its left): into its curve, and its standing sway} */
+	public static float bodyLean(Player player, float partial) {
+		Integer level = TipsyRegistry.SYNCED_LEVEL.getExisting(player);
+		float most = level == null ? 0.0F : TipsyLevels.at(level).legs().swayDegrees();
+		Moves moves = moves(player);
+		float moving = moves == null ? 0.0F : Mth.lerp(partial, moves.leanO, moves.lean);
+		// Walking, the steps carry the sway: the slow loop of standing fades to a little
+		float standing = 1.0F - 0.7F * Mth.clamp(player.walkAnimation.speed(partial) * 1.5F, 0.0F, 1.0F);
+		// going under, the body sways hard, standing or not
+		standing = Math.max(standing, 2.5F * jexxme.vineandbarrel.tipsy.GoingUnder.under(player, partial));
+		return moving + standing * TipsyGait.standingSway(most, player.tickCount + partial, TipsyGait.phase(player.getId()));
 	}
 
 	private static @Nullable Moves moves(Player player) {
@@ -258,13 +289,18 @@ public final class TipsyClient
 		return scale * scale;
 	}
 
+	/** The camera's roll for a lean to the left (Minecraft's roll turns the picture the other way round). */
+	private static final float LEAN_ROLL = -1.0F;
+
+	/** {@return how much Tipsy may move this player's own view: their "drunk screen" setting, 0 to 1} */
 	private static float intensity() {
-		return (float) Math.max(0.0, TipsyConfig.wobbleIntensity());
+		return (float) Math.clamp(TipsyConfig.drunkScreen(), 0.0, 1.0);
 	}
 
 	/**
-	 * What to add to the camera's angles this frame ({@link TipsyWobble.Angles#NONE} for nothing): the sway, a hiccup's
-	 * flick, a stumble's dip, a trip's look at the ground, and the blackout's roll. The one camera hook both loaders call.
+	 * What to add to the camera's angles this frame ({@link TipsyWobble.Angles#NONE} for nothing): only what the body
+	 * does (the lean of the drunk walk, a hiccup's flick, a stumble's dip, a trip's shake and its look at the ground) and
+	 * the blackout's roll; Tipsy never turns the view on its own. The one camera hook both loaders call.
 	 */
 	public static TipsyWobble.Angles cameraAngles(@Nullable Entity cameraEntity, float partial) {
 		Minecraft minecraft = Minecraft.getInstance();
@@ -272,21 +308,22 @@ public final class TipsyClient
 		if (player == null || cameraEntity != player) {
 			return TipsyWobble.Angles.NONE;
 		}
-		float intensity = intensity();
-		float time = player.tickCount + partial;
-		float paused = Mth.lerp(partial, awakeO, awake);
-		float level = Mth.lerp(partial, wobbleLevelO, wobbleLevel);
-		TipsyWobble.Angles angles = TipsyWobble.camera(level, time, intensity).scaled(paused);
+		float intensity = intensity() * Mth.lerp(partial, awakeO, awake);
 		float jolt = hiccupJolt(player, partial);
 		float lurch = stumbleLurch(player, partial);
 		float trip = tripElapsed(player, partial);
 		float shake = TipsyMotion.tripShake(trip) * TipsyMotion.TRIP_SHAKE;
-		angles = angles.plus(
-			(Math.signum(lurch) * TipsyMotion.STUMBLE_ROLL * Math.abs(lurch) + shake * Mth.sin(trip * 2.7F)) * intensity,
+		TipsyWobble.Angles angles = TipsyWobble.Angles.NONE.plus(
+			(LEAN_ROLL * DrunkLegs.lean(player, partial) + Math.signum(lurch) * TipsyMotion.STUMBLE_ROLL * Math.abs(lurch) + shake * Mth.sin(trip * 2.7F)) * intensity,
 			(TipsyMotion.STUMBLE_DIP * Math.abs(lurch) - TipsyMotion.HICCUP_FLICK * jolt + shake * 0.6F * Mth.cos(trip * 3.1F)) * intensity,
 			0.0F);
-		angles = angles.scaled(distortion(minecraft));
 		boolean firstPerson = minecraft.options.getCameraType().isFirstPerson();
+		if (firstPerson) {
+			// Nodding off: the head goes down, and comes up with a jerk
+			float nod = TipsyNod.nod(player, partial);
+			angles = angles.plus(0.0F, (nod >= 0.0F ? TipsyNod.HEAD_DROP * nod : TipsyNod.JERK * nod) * intensity, 0.0F);
+		}
+		angles = angles.scaled(distortion(minecraft));
 		float fallen = tripFallen(player, partial);
 		if (fallen > 0.0F && firstPerson) {
 			// A pose, not a distortion: face down, you look at the ground, whatever the settings
@@ -296,18 +333,6 @@ public final class TipsyClient
 		// Out on the ground after a blackout the eyes go where the head goes (a pose: always), its roll scaled like the rest
 		TipsyWobble.Angles head = BlackoutClient.cameraTurn(cameraEntity, partial);
 		return angles.plus(head.roll() * distortion(minecraft), head.pitch(), head.yaw());
-	}
-
-	/** {@return what the field of view is multiplied by this frame: the breathing at V (FOV Effects scales it)} */
-	public static float fovFactor(@Nullable Entity cameraEntity, float partial) {
-		Minecraft minecraft = Minecraft.getInstance();
-		LocalPlayer player = minecraft.player;
-		if (player == null || cameraEntity != player) {
-			return 1.0F;
-		}
-		float effects = minecraft.options.fovEffectScale().get().floatValue();
-		float level = Mth.lerp(partial, wobbleLevelO, wobbleLevel) * Mth.lerp(partial, awakeO, awake);
-		return TipsyWobble.fov(level, player.tickCount + partial, intensity() * effects);
 	}
 
 	/**
@@ -350,8 +375,8 @@ public final class TipsyClient
 	// ------------------------------------------------------------------ own keys and mouse
 
 	/**
-	 * Right after the player's input was read each tick: out cold or down after a trip, the keys do nothing; at V,
-	 * walking forward drifts slowly to one side and then the other, and you keep correcting.
+	 * Right after the player's input was read each tick: out cold or down after a trip, the keys do nothing; otherwise the
+	 * drunk walk ({@link DrunkLegs}): the legs answer late and weave, and you keep correcting.
 	 */
 	public static void onMovementInput(Player player, Input input) {
 		BlackoutClient.onMovementInput(player, input);
@@ -359,33 +384,17 @@ public final class TipsyClient
 			BlackoutClient.holdStill(input);
 			return;
 		}
-		float drift = drift(player);
-		if (drift != 0.0F && input.forwardImpulse > 0.0F) {
-			// 1.21.1 hands the impulses over already slowed (crawling) and not yet shortened to one step: the drift is
-			// added to the full step, as in later versions, and the slowing put back on
-			float slowed = input.forwardImpulse;
-			Vec2 step = new Vec2(input.leftImpulse / slowed, 1.0F);
-			if (step.lengthSquared() > 1.0F) {
-				step = step.normalized();
-			}
-			Vec2 moved = new Vec2(step.x + drift, step.y);
-			if (moved.lengthSquared() > 1.0F) {
-				moved = moved.normalized();
-			}
-			input.leftImpulse = moved.x * slowed;
-			input.forwardImpulse = moved.y * slowed;
-		}
+		DrunkLegs.onMovementInput(player, input);
 	}
 
-	/** {@return how far the legs pull to the side right now (0 = not at all)} */
-	private static float drift(Player player) {
-		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(player)).drift() || !player.onGround() || player.isShiftKeyDown()
-			|| player.isPassenger() || player.isInWater() || Blackout.isOut(player)) {
-			return 0.0F;
-		}
-		float time = player.tickCount;
-		float phase = (player.getId() * 0.618034F) % 1.0F * Mth.TWO_PI;
-		return DRIFT * (0.75F * Mth.sin(time * 0.021F + phase) + 0.25F * Mth.sin(time * 0.053F + phase * 1.7F));
+	/**
+	 * {@return a chat message as this player says it, right before it is sent (and signed: secure chat stays valid)}
+	 * Worse with each level ({@link Tipsy#slurChat}), when the server allows it; commands are sent as typed, and links
+	 * and mentions in a message stay as typed. Other players' messages arrive as they said them.
+	 */
+	public static String ownChat(String message) {
+		LocalPlayer player = Minecraft.getInstance().player;
+		return player == null ? message : Tipsy.ownChat(player, message, player.getRandom().nextLong());
 	}
 
 	/** The sensitivity the mouse turns the view with: out cold or down after a trip, it doesn't turn. */
@@ -403,50 +412,26 @@ public final class TipsyClient
 		return BlackoutClient.hidesHands() || player != null && tripFallen(player, 0.0F) > 0.0F;
 	}
 
-	// ------------------------------------------------------------------ tunnel vision and heavy-eyed blinks
-
-	private static final ResourceLocation VIGNETTE = VineAndBarrel.id("textures/gui/tipsy_vignette.png");
-	private static final int VIGNETTE_SIZE = 128;
+	// ------------------------------------------------------------------ the eyes
 
 	/**
-	 * Tunnel vision and blinks: above the vanilla camera overlays (pumpkin, powder snow), under the crosshair and the HUD, which
-	 * stay readable. Both scale with vanilla's Darkness Pulsing slider, as the wobble does with Distortion Effects.
+	 * The layer for what the eyes do, above the vanilla camera overlays (pumpkin, powder snow), under the crosshair and the
+	 * HUD: the lids sinking as you nod off ({@link TipsyNod}). Vanilla's Darkness Pulsing slider scales them.
 	 */
 	public static void renderVision(GuiGraphics gui, DeltaTracker delta) {
 		Minecraft minecraft = Minecraft.getInstance();
 		LocalPlayer player = minecraft.player;
-		if (player == null || !TipsyConfig.visionEffects()) {
+		if (player == null || Blackout.isOut(player)) {
 			return;
 		}
 		float partial = delta.getGameTimeDeltaPartialTick(false);
-		float paused = Mth.lerp(partial, awakeO, awake);
-		if (paused <= 0.0F) {
-			// Out cold: the blackout's own lids have the screen
-			return;
-		}
+		float nod = TipsyNod.nod(player, partial);
 		float darkness = minecraft.options.darknessEffectScale().get().floatValue();
-		if (darkness <= 0.0F) {
-			return;
+		if (nod > 0.0F && darkness > 0.0F) {
+			BlackoutClient.drawLids(gui, TipsyNod.LIDS * nod * darkness);
 		}
-		int width = gui.guiWidth();
-		int height = gui.guiHeight();
-		float vignette = TipsyVision.vignette(Mth.lerp(partial, wobbleLevelO, wobbleLevel)) * paused * darkness;
-		if (vignette > 0.0F) {
-			// The whole texture over the whole view, see-through by its strength (as vanilla draws the pumpkin's)
-			RenderSystem.disableDepthTest();
-			RenderSystem.depthMask(false);
-			RenderSystem.enableBlend();
-			gui.setColor(1.0F, 1.0F, 1.0F, Math.round(vignette * 255.0F) / 255.0F);
-			gui.blit(VIGNETTE, 0, 0, width, height, 0.0F, 0.0F, VIGNETTE_SIZE, VIGNETTE_SIZE, VIGNETTE_SIZE, VIGNETTE_SIZE);
-			RenderSystem.disableBlend();
-			RenderSystem.depthMask(true);
-			RenderSystem.enableDepthTest();
-			gui.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-		}
-		float closed = TipsyVision.eyelids(Tipsy.getLevel(player), player.tickCount + partial, player.getId()) * paused * darkness;
-		if (closed > 0.0F) {
-			BlackoutClient.drawLids(gui, closed);
-		}
+		// the morning after: a wince at a loud noise
+		HangoverClient.render(gui, partial, darkness);
 	}
 
 	// ------------------------------------------------------------------ T1: how others see you
@@ -454,26 +439,30 @@ public final class TipsyClient
 	/**
 	 * How a player's body is posed for {@link #beforeRenderLiving}: the sway level (0 = none), a blacked-out player on
 	 * the ground (falling on the face, lying, getting up; null if not), a hiccup's jolt, a stumble's lurch (-1 right to 1
-	 * left) and how far a trip has them down on the face.
+	 * left), how far a trip has them down on the face, the body's lean (degrees, positive to its left) and its slow sway
+	 * back and forth (degrees, positive forward), and how far into nodding off it is.
 	 */
-	public record BodyPose(int swayLevel, BlackoutPose.@Nullable Body blackout, float jolt, float lurch, float fallen)
+	public record BodyPose(int swayLevel, BlackoutPose.@Nullable Body blackout, float jolt, float lurch, float fallen, float lean, float forward, float nod)
 	{
 	}
 
 	/**
-	 * The player being drawn right now and their blackout on the ground ({@link BlackoutPose#body}), from
-	 * {@link #beforeRenderLiving} to {@link #afterRenderLiving}: the model poses head and limbs from it
-	 * ({@link #poseBlackout}), at the same moment as the body (1.21.1 has no render states to carry it).
+	 * The player being drawn right now and how the model poses head and limbs for them ({@link #poseBlackout}), from
+	 * {@link #beforeRenderLiving} to {@link #afterRenderLiving}, at the same moment as the body (1.21.1 has no render
+	 * states to carry it): their blackout on the ground ({@link BlackoutPose#body}), how far the arms are out for balance
+	 * in a stumble (-1 lurching right to 1 left), how far a Rowdy swing's arm is drawn back (0 to 1), and how far into
+	 * nodding off they are.
 	 */
-	private static @Nullable LivingEntity posing;
-	private static BlackoutPose.@Nullable Body posingBody;
+	private static @Nullable Posing posing;
 	/**
 	 * What was posing before each render still in progress: an entity drawn inside another one's render (by another
 	 * mod, between its Pre and its model's posing) hands the outer one's back when it is done.
 	 */
 	private static final ArrayDeque<Posing> POSING_BEFORE = new ArrayDeque<>();
+	/** What {@link #POSING_BEFORE} holds for "nothing was posing" (the deque takes no nulls). */
+	private static final Posing NOBODY = new Posing(null, null, 0.0F, 0.0F, 0.0F);
 
-	private record Posing(@Nullable LivingEntity entity, BlackoutPose.@Nullable Body body)
+	private record Posing(@Nullable LivingEntity entity, BlackoutPose.@Nullable Body body, float balance, float windup, float nod)
 	{
 	}
 
@@ -491,30 +480,39 @@ public final class TipsyClient
 		if (sway == 0 && blackout == null && jolt <= 0.0F && lurch == 0.0F && fallen <= 0.0F) {
 			return null;
 		}
-		return new BodyPose(sway, blackout, jolt, lurch, fallen);
+		float forward = sway > 0 ? TipsyGait.standingSwayForward(TipsyLevels.at(sway).legs().swayDegrees(), player.tickCount + partial,
+			TipsyGait.phase(player.getId())) : 0.0F;
+		return new BodyPose(sway, blackout, jolt, lurch, fallen, sway > 0 ? bodyLean(player, partial) : 0.0F, forward, TipsyNod.nod(player, partial));
 	}
+
+	/** The model's sideways rotation for a lean to the body's left (as a stumble's lurch to the left: positive). */
+	private static final float BODY_LEAN_ROLL = 1.0F;
 
 	/**
 	 * Before a living entity is drawn (as late as possible, after other mods): lays a blacked-out player on the ground
 	 * (and gets them up again), lays a tripped one on the face, or leans a tipsy one (with a hiccup's bob and a stumble's
-	 * lurch), by its {@link #bodyPose} at this partial tick (1.21.1 has no render states: the entity is asked right here).
-	 * Returns true if a pose was pushed, which {@link #afterRenderLiving} must then pop.
+	 * lurch), by its {@link #bodyPose} at this partial tick (1.21.1 has no render states: the entity is asked right here),
+	 * and hands the model what it poses on the limbs ({@link #poseBlackout}). Returns true if a pose was pushed, which
+	 * {@link #afterRenderLiving} must then pop.
 	 */
 	public static boolean beforeRenderLiving(LivingEntity entity, float partial, PoseStack stack) {
-		POSING_BEFORE.push(new Posing(posing, posingBody));
+		POSING_BEFORE.push(posing == null ? NOBODY : posing);
 		posing = null;
-		posingBody = null;
 		BodyPose pose = bodyPose(entity, partial);
+		float windup = entity instanceof Player player ? jexxme.vineandbarrel.tipsy.Rowdy.windup(player, partial) : 0.0F;
+		if (pose != null || windup > 0.0F) {
+			// What the model poses on head and limbs: the blackout on the ground, the arms out in a stumble, a Rowdy swing's
+			// arm drawn back, the chin sinking as they nod off
+			posing = new Posing(entity, pose == null ? null : pose.blackout(), pose == null || pose.fallen() > 0.0F ? 0.0F : pose.lurch(), windup,
+				pose == null ? 0.0F : pose.nod());
+		}
 		if (pose == null || entity.hasPose(Pose.SLEEPING)) {
 			return false;
 		}
-		int entityId = entity.getId();
 		float scale = entity.getScale();
 		float facing = 180.0F - bodyRot(entity, partial);
 		BlackoutPose.Body blackout = pose.blackout();
 		if (blackout != null) {
-			posing = entity;
-			posingBody = blackout;
 			// Out on the ground: the whole body turns around its hip, wherever the hip is now, turned the way it fell (head
 			// and limbs are posed on the model: poseBlackout); always shown, it is the blackout's show
 			stack.pushPose();
@@ -534,16 +532,25 @@ public final class TipsyClient
 			stack.mulPose(Axis.YP.rotationDegrees(-facing));
 			return true;
 		}
-		// Off for motion sickness: with the wobble at 0 nothing tipsy moves on this screen, other players' sway included
-		if (!TipsyConfig.otherPlayersSway() || TipsyConfig.wobbleIntensity() <= 0.0) {
+		// Off for motion sickness: with "drunk screen" at 0 nothing tipsy moves on this screen, other players' sway included
+		if (!TipsyConfig.otherPlayersSway() || TipsyConfig.drunkScreen() <= 0.0) {
 			return false;
 		}
-		float sway = TipsyWobble.bodySway(pose.swayLevel(), entity.tickCount + partial, entityId) + TipsyMotion.STUMBLE_LEAN * pose.lurch();
+		// The body tips onto each foot as it lands, in step with the legs, and leans into its curve (the walk as the game
+		// draws it: none riding or dead)
+		boolean walks = !entity.isPassenger() && entity.isAlive();
+		float step = pose.swayLevel() > 0 && walks ? TipsyGait.stepRoll(entity.walkAnimation.position(partial), entity.walkAnimation.speed(partial),
+			TipsyLevels.at(pose.swayLevel()).legs().stepRoll()) : 0.0F;
+		float sway = BODY_LEAN_ROLL * (pose.lean() + step) + TipsyMotion.STUMBLE_LEAN * pose.lurch();
+		// Nodding off, the body sags forward over the feet, and straightens with the jerk
+		float sag = pose.nod() > 0.0F ? TipsyNod.SAG * pose.nod() : 0.25F * TipsyNod.SAG * pose.nod();
 		stack.pushPose();
 		// A hiccup jerks the shoulders up; the lean is sideways around the feet, relative to where the body faces
 		stack.translate(0.0F, TipsyMotion.HICCUP_BOB * pose.jolt() * scale, 0.0F);
 		stack.mulPose(Axis.YP.rotationDegrees(facing));
 		stack.mulPose(Axis.ZP.rotationDegrees(sway));
+		// (facing this way, the body's front is -Z: a forward sag turns the top toward it)
+		stack.mulPose(Axis.XP.rotationDegrees(-(sag + pose.forward())));
 		stack.mulPose(Axis.YP.rotationDegrees(-facing));
 		return true;
 	}
@@ -567,15 +574,22 @@ public final class TipsyClient
 	 * copies it): a blacked-out player on the ground has head and limbs where the fall, lying and getting up put them, with
 	 * only as much of the game's own posing (looking around, the arms' idle sway, a held item's arm) as
 	 * {@link BlackoutPose.Body#vanilla} lets through (none while down, all of it standing); the hat, the armour and what
-	 * the hands hold come along. Called by {@code jexxme.vineandbarrel.mixin.HumanoidModelMixin} with whether it posed
-	 * this model the last time; {@return whether it posed it now}
+	 * the hands hold come along. A tipsy one standing has the chin sinking as they nod off, the arms out for balance in a
+	 * stumble and the arm drawn back for a Rowdy swing. Called by {@code jexxme.vineandbarrel.mixin.HumanoidModelMixin}
+	 * with whether it posed this model's head the last time; {@return whether it posed it now}
 	 */
 	public static boolean poseBlackout(HumanoidModel<?> model, LivingEntity entity, boolean posedBefore) {
-		BlackoutPose.Body body = entity == posing ? posingBody : null;
+		Posing now = posing != null && entity == posing.entity() ? posing : null;
+		BlackoutPose.Body body = now == null ? null : now.body();
 		if (body == null) {
 			if (posedBefore) {
 				// The game never sets the head's roll and place itself (one model draws every player): back to its own
 				restoreHead(model);
+			}
+			if (now != null) {
+				nod(model, now.nod());
+				balance(model, now.balance());
+				windup(model, now.windup());
 			}
 			return false;
 		}
@@ -598,6 +612,61 @@ public final class TipsyClient
 		model.head.x = initial.x;
 		model.head.z = initial.z;
 		model.hat.copyFrom(model.head);
+	}
+
+	/**
+	 * Nodding off: the chin sinks to the chest, and comes up with the jerk (the head's pitch as the game set it from where
+	 * the player looks, kept within a straight look up or down; later versions do it on the render state's pitch).
+	 */
+	private static void nod(HumanoidModel<?> model, float nod) {
+		if (nod == 0.0F) {
+			return;
+		}
+		float pitch = model.head.xRot * Mth.RAD_TO_DEG + (nod > 0.0F ? TipsyNod.CHIN * nod : 0.2F * TipsyNod.CHIN * nod);
+		model.head.xRot = Mth.clamp(pitch, -90.0F, 90.0F) * Mth.DEG_TO_RAD;
+		model.hat.copyFrom(model.head);
+	}
+
+	/** In a stumble the arms fly out for balance (radians, fully out), the one on the side it lurches to higher. */
+	private static final float ARMS_OUT = 1.1F, ARM_HIGHER = 0.35F;
+
+	/**
+	 * The hand in your own view as a Rowdy swing draws back ({@code jexxme.vineandbarrel.mixin.ItemInHandRendererMixin}):
+	 * back toward you, down and out, turned a little, so you feel the fist being cocked; the game's own swing then
+	 * throws it forward. A pose, not a distortion: always shown.
+	 */
+	public static void windupHand(PoseStack pose, boolean rightArm, float partial) {
+		LocalPlayer player = Minecraft.getInstance().player;
+		float windup = player == null ? 0.0F : jexxme.vineandbarrel.tipsy.Rowdy.windup(player, partial);
+		if (windup <= 0.0F) {
+			return;
+		}
+		float side = rightArm ? 1.0F : -1.0F;
+		pose.translate(side * 0.16F * windup, -0.22F * windup, 0.3F * windup);
+		pose.mulPose(Axis.YP.rotationDegrees(side * 25.0F * windup));
+		pose.mulPose(Axis.ZP.rotationDegrees(-side * 15.0F * windup));
+	}
+
+	/** A Rowdy swing drawn back: the right arm cocked back and out (radians at the most). */
+	private static final float WINDUP_BACK = 1.3F, WINDUP_OUT = 0.35F;
+
+	private static void windup(HumanoidModel<?> model, float windup) {
+		if (windup <= 0.0F) {
+			return;
+		}
+		model.rightArm.xRot = Mth.lerp(windup, model.rightArm.xRot, WINDUP_BACK);
+		model.rightArm.zRot += WINDUP_OUT * windup;
+	}
+
+	/** A stumble's catch: both arms out to the sides for balance, as far as the lurch goes (-1 right to 1 left). */
+	private static void balance(HumanoidModel<?> model, float lurch) {
+		if (lurch == 0.0F) {
+			return;
+		}
+		float out = ARMS_OUT * Math.abs(lurch);
+		// (out to the side: the right arm's roll goes up, the left's down)
+		model.rightArm.zRot += out * (1.0F + (lurch < 0.0F ? ARM_HIGHER : -ARM_HIGHER));
+		model.leftArm.zRot -= out * (1.0F + (lurch > 0.0F ? ARM_HIGHER : -ARM_HIGHER));
 	}
 
 	private static void pose(ModelPart part, BlackoutPose.Limb limb, float vanilla) {
@@ -632,8 +701,7 @@ public final class TipsyClient
 	/** After a living entity was drawn: undoes {@link #beforeRenderLiving}'s pose if it pushed one. */
 	public static void afterRenderLiving(boolean pushed, PoseStack pose) {
 		Posing before = POSING_BEFORE.poll();
-		posing = before == null ? null : before.entity();
-		posingBody = before == null ? null : before.body();
+		posing = before == null || before == NOBODY ? null : before;
 		if (pushed) {
 			pose.popPose();
 		}
@@ -646,6 +714,5 @@ public final class TipsyClient
 	public static void endRenderPoses() {
 		POSING_BEFORE.clear();
 		posing = null;
-		posingBody = null;
 	}
 }

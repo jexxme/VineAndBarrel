@@ -26,12 +26,15 @@
     "AbstractContainerScreenAccessor",
     "ClientAdvancementsAccessor",
     "CameraMixin",
+    "ChannelMixin",
     "EntityRendererMixin",
     "GameRendererMixin",
     "HumanoidModelMixin",
+    "ItemInHandRendererMixin",
     "ParticleEngineAccessor",
     "RecipeBookComponentAccessor",
     "SceneFigureDrinkMixin",
+    "SignRendererMixin",
     "SpriteContentsAccessor"
   ],
   "injectors": {
