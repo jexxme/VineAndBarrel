@@ -956,12 +956,14 @@ public final class TipsyGameTests
 		}
 		helper.assertValueEqual(swung, 0, "a pig in front: first the arm draws back, no swing yet");
 		helper.assertTrue(Rowdy.windupStart(player) >= 0L, "now and then the arm draws back");
-		jexxme.vineandbarrel.tipsy.RowdyAccess.endWindup(player);
 		float before = pig.getHealth();
-		helper.assertTrue(jexxme.vineandbarrel.tipsy.RowdyAccess.tick(player), "then the swing");
-		helper.assertTrue(pig.getHealth() < before, "and the pig takes the punch");
-		helper.assertTrue(Rowdy.windupStart(player) < 0L, "the arm comes forward with it");
-		helper.succeed();
+		// the wind-up takes its time: the swing comes once it is over (the world's own ticks, not faked)
+		helper.runAfterDelay(Rowdy.WINDUP, () -> {
+			helper.assertTrue(jexxme.vineandbarrel.tipsy.RowdyAccess.tick(player), "then the swing");
+			helper.assertTrue(pig.getHealth() < before, "and the pig takes the punch");
+			helper.assertTrue(Rowdy.windupStart(player) < 0L, "the arm comes forward with it");
+			helper.succeed();
+		});
 	}
 
 	/**
