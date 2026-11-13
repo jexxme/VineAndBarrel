@@ -16,6 +16,7 @@
     "LeashFenceKnotEntityMixin",
     "SleepStatusMixin",
     "ValidateNearbyPoiMixin",
+    "WorkAtPoiMixin",
     "WallBlockMixin"
   ],
   "client": [
