@@ -126,6 +126,7 @@ public final class TipsyGameTests
 		test("tipsy_rowdy_punches_what_is_in_front", TipsyGameTests::rowdyPunches);
 		test("tipsy_rowdy_only_at_someone", TipsyGameTests::rowdyOnlyAtSomeone);
 		test("tipsy_rowdy_a_glance_is_enough", TipsyGameTests::rowdyAGlanceIsEnough);
+		test("tipsy_rowdy_calms_down_below_four", TipsyGameTests::rowdyCalmsDownBelowFour);
 		test("tipsy_rowdy_walls_and_edges", TipsyGameTests::rowdyWallsAndEdges);
 		test("tipsy_going_under_waits_for_ground", TipsyGameTests::goingUnderWaitsForGround);
 		test("tipsy_rowdy_spares_pets_and_golems", TipsyGameTests::rowdySpares);
@@ -1046,6 +1047,31 @@ public final class TipsyGameTests
 		player.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, pig.getBoundingBox().getCenter());
 		jexxme.vineandbarrel.tipsy.RowdyAccess.tick(player);
 		helper.assertTrue(Rowdy.windupStart(player) >= 0L, "one glance at the pig: the arm draws back");
+		helper.succeed();
+	}
+
+	/**
+	 * Audit 1.2: sobered below IV, Rowdy is over at once: an itch left from IV winds no arm up any more (it used to wind
+	 * up at III and never swing), and an arm already drawn back comes down.
+	 */
+	private static void rowdyCalmsDownBelowFour(GameTestHelper helper) {
+		net.minecraft.world.entity.animal.pig.Pig pig = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityType.PIG, new Vec3(2.5, 1.0, 3.0));
+		TestPlayer player = facing(helper, pig);
+		Tipsy.setLevel(player, 5);
+		jexxme.vineandbarrel.tipsy.RowdyAccess.itch(player);
+		Tipsy.setLevel(player, 3);
+		for (int i = 0; i < 40; i++) {
+			helper.assertFalse(jexxme.vineandbarrel.tipsy.RowdyAccess.tick(player), "no swing at III");
+		}
+		helper.assertTrue(Rowdy.windupStart(player) < 0L, "the itch left from V winds no arm up at III");
+		helper.assertFalse(TipsyRegistry.ROWDY_ITCH.has(player), "the itch is gone");
+		Tipsy.setLevel(player, 5);
+		jexxme.vineandbarrel.tipsy.RowdyAccess.itch(player);
+		jexxme.vineandbarrel.tipsy.RowdyAccess.tick(player);
+		helper.assertTrue(Rowdy.windupStart(player) >= 0L, "at V the arm draws back");
+		Tipsy.setLevel(player, 3);
+		jexxme.vineandbarrel.tipsy.RowdyAccess.tick(player);
+		helper.assertTrue(Rowdy.windupStart(player) < 0L, "sobered to III: the arm comes down at once");
 		helper.succeed();
 	}
 
