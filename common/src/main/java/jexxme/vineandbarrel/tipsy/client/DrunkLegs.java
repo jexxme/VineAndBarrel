@@ -8,6 +8,7 @@ import jexxme.vineandbarrel.tipsy.TipsyLevels;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec2;
@@ -40,8 +41,16 @@ public final class DrunkLegs
 	 * 1.21.1 hands the keys over as two impulses, already slowed for sneaking or crawling and not yet shortened to one
 	 * step; the walk takes them as later versions do (one step at most, the slowing put back on after), and a walk that
 	 * isn't drunk leaves them exactly as they came.
+	 * <p>
+	 * A double tap on forward still sprints: the late legs hide it from vanilla (1.21.1 starts the sprint when the legs
+	 * go from under 0.8 forward to 0.8 or more, which late legs never do in a tap), so the walk reads the double tap from
+	 * the keys ({@link DrunkWalk#doubleTap}) and starts the sprint on vanilla's other conditions ({@link #maySprint}).
 	 */
 	static void onMovementInput(Player player, Input input) {
+		boolean tapped = WALK.doubleTap(input.up, input.shiftKeyDown || input.down, DOUBLE_TAP_WINDOW);
+		if (tapped && DrunkWalk.walksDrunk(player) && player instanceof LocalPlayer local && maySprint(local)) {
+			local.setSprinting(true);
+		}
 		float slowed = player instanceof LocalPlayer local && local.isMovingSlowly() ? (float) player.getAttributeValue(Attributes.SNEAKING_SPEED) : 1.0F;
 		if (slowed <= 0.0F) {
 			WALK.step(player, Vec2.ZERO, 0.0F);
@@ -56,6 +65,15 @@ public final class DrunkLegs
 			input.leftImpulse = walked.x * slowed;
 			input.forwardImpulse = walked.y * slowed;
 		}
+	}
+
+	/** Vanilla's double tap window (ticks). */
+	private static final int DOUBLE_TAP_WINDOW = 7;
+
+	/** Vanilla 1.21.1's conditions to start a sprint, but for how far forward the legs already go: fed, not using an item, not blind. */
+	private static boolean maySprint(LocalPlayer player) {
+		return !player.isSprinting() && (player.isPassenger() || player.getFoodData().getFoodLevel() > 6 || player.getAbilities().mayfly) && !player.isUsingItem()
+			&& !player.hasEffect(MobEffects.BLINDNESS) && !player.isFallFlying() && !player.input.shiftKeyDown;
 	}
 
 	/** A new world or a disconnect: the walk and the lean start afresh. */
