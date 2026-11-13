@@ -170,7 +170,7 @@ public final class KettleMultiblock
 				if (there.canBeReplaced()) {
 					return new Column(pieces, at, through);
 				}
-				if (!isRoof(there)) {
+				if (!isRoof(level, at, there)) {
 					break;
 				}
 			}
@@ -178,16 +178,38 @@ public final class KettleMultiblock
 		return new Column(pieces, null, 0);
 	}
 
-	/** A block the pipe goes through and leaves as it is: anything solid that holds nothing and isn't a kettle or chimney. */
-	private static boolean isRoof(BlockState state) {
-		return !state.canBeReplaced() && !state.hasBlockEntity() && !(state.getBlock() instanceof KettleChimneyBlock)
-			&& !(state.getBlock() instanceof BrewKettleBlock) && !(state.getBlock() instanceof BrewKettlePartBlock);
+	/**
+	 * A block the pipe goes through and leaves as it is: anything solid that holds nothing and isn't a kettle or chimney,
+	 * no harder than {@link #ROOF_HARDNESS} (bedrock, barriers, end portal frames and obsidian stop it).
+	 */
+	private static boolean isRoof(BlockGetter level, BlockPos pos, BlockState state) {
+		float hardness = state.getDestroySpeed(level, pos);
+		return !state.canBeReplaced() && !state.hasBlockEntity() && hardness >= 0.0F && hardness <= ROOF_HARDNESS
+			&& !(state.getBlock() instanceof KettleChimneyBlock) && !(state.getBlock() instanceof BrewKettleBlock)
+			&& !(state.getBlock() instanceof BrewKettlePartBlock);
+	}
+
+	/** The hardest block a chimney goes through: roofs (planks, tiles, slabs, stone, bricks, deepslate), not obsidian. */
+	private static final float ROOF_HARDNESS = 3.0F;
+
+	/** Whether {@code player} may build at the new piece and at every roof block its pipe goes through. */
+	private static boolean mayBuild(Level level, Column column, net.minecraft.world.entity.player.Player player) {
+		if (!player.mayBuild()) {
+			return false;
+		}
+		for (int i = 0; i <= column.through(); i++) {
+			if (!level.mayInteract(player, column.next().below(i))) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
 	 * A copper ingot on a kettle or its chimney: the chimney grows one block, up to {@link KettleChimneyBlock#MAX}. A roof
 	 * in the way stays whole: the piece goes on top of it and its pipe is drawn through (up to two roof blocks); blocks
-	 * that hold things (chests, kettles) and thicker roofs stop it. Hanging kettles have no room for a chimney. Returns
+	 * that hold things (chests, kettles), unbreakable or very hard blocks, roofs the player may not build in and thicker
+	 * roofs stop it. Hanging kettles have no room for a chimney. Returns
 	 * whether it grew; the new piece shows a glint and makes the copper sound.
 	 */
 	public static boolean extendChimney(Level level, Kettle kettle, net.minecraft.world.entity.player.@Nullable Player player) {
@@ -199,7 +221,7 @@ public final class KettleMultiblock
 		}
 		Column column = column(level, kettle);
 		BlockPos at = column.next();
-		if (at == null || !level.isInWorldBounds(at) || player != null && (!player.mayBuild() || !level.mayInteract(player, at))) {
+		if (at == null || !level.isInWorldBounds(at) || player != null && !mayBuild(level, column, player)) {
 			return false;
 		}
 		if (!level.isClientSide()) {

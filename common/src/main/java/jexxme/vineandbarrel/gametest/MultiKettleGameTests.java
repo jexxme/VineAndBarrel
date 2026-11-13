@@ -94,7 +94,8 @@ public final class MultiKettleGameTests
 		test("multikettle_breaking_the_controller_splits", 100, MultiKettleGameTests::breakingTheControllerSplits);
 		test("multikettle_removed_controller_keeps_the_brew", 100, MultiKettleGameTests::removedControllerKeepsTheBrew);
 		test("multikettle_copper_change_on_one_part_turns_all", 100, MultiKettleGameTests::copperChangeOnOnePartTurnsAll);
-		test("kettle_chimney_through_obsidian", 100, MultiKettleGameTests::chimneyThroughObsidian);
+		test("kettle_chimney_stops_at_obsidian", 100, MultiKettleGameTests::chimneyStopsAtObsidian);
+		test("kettle_chimney_stops_at_unbreakable_blocks", 100, MultiKettleGameTests::chimneyStopsAtUnbreakable);
 		test("kettle_chimney_leaves_a_vine", 100, MultiKettleGameTests::chimneyLeavesVine);
 		test("kettle_chimney_through_a_roof_in_one_click", 100, MultiKettleGameTests::chimneyThroughRoofInOneClick);
 		test("multikettle_removed_full_kettle_never_overfills", 100, MultiKettleGameTests::removedFullKettleNeverOverfills);
@@ -817,15 +818,37 @@ public final class MultiKettleGameTests
 		helper.succeed();
 	}
 
-	/** Obsidian is no stop any more: nothing is broken, the chimney goes on above it. */
-	private static void chimneyThroughObsidian(GameTestHelper helper) {
+	/** Obsidian (and anything harder than a stone roof) stops the chimney; it stays as it is. */
+	private static void chimneyStopsAtObsidian(GameTestHelper helper) {
 		place(helper, BASE, false);
 		helper.setBlock(BASE.above(2), Blocks.OBSIDIAN);
 		ServerPlayer player = survivorWithIngots(helper);
 		helper.useBlock(BASE, player);
 		helper.useBlock(BASE, player);
 		helper.assertTrue(helper.getBlockState(BASE.above(2)).is(Blocks.OBSIDIAN), "obsidian stays");
-		assertPiece(helper, BASE.above(3), 1, true, "over the obsidian");
+		assertPiece(helper, BASE.above(1), 0, true, "under the obsidian");
+		helper.assertTrue(helper.getBlockState(BASE.above(3)).isAir(), "no piece over the obsidian");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 3, "only one ingot used");
+		helper.succeed();
+	}
+
+	/** Bedrock and barriers stop the chimney, right on the kettle or as the second roof block: no piece goes over them. */
+	private static void chimneyStopsAtUnbreakable(GameTestHelper helper) {
+		place(helper, BASE, false);
+		helper.setBlock(BASE.above(), Blocks.BEDROCK);
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		helper.assertTrue(helper.getBlockState(BASE.above()).is(Blocks.BEDROCK), "bedrock stays");
+		helper.assertTrue(helper.getBlockState(BASE.above(2)).isAir(), "no piece over the bedrock");
+		helper.assertTrue(!helper.getBlockState(BASE).getValue(BrewKettleBlock.EXTENDED), "the kettle's chimney isn't extended");
+		BlockPos other = BASE.offset(4, 0, 0);
+		place(helper, other, false);
+		helper.setBlock(other.above(), Blocks.OAK_PLANKS);
+		helper.setBlock(other.above(2), Blocks.BARRIER);
+		helper.useBlock(other, player);
+		helper.assertTrue(helper.getBlockState(other.above(2)).is(Blocks.BARRIER), "the barrier stays");
+		helper.assertTrue(helper.getBlockState(other.above(3)).isAir(), "no piece over a roof with a barrier in it");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 4, "no ingot used");
 		helper.succeed();
 	}
 
