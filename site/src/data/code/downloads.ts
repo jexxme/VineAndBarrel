@@ -79,13 +79,13 @@ if (top.build !== metaJson.minecraft || top.neoforge !== metaJson.modVersion || 
 }
 
 // The optional mods each loader's file works with (gradle.properties: the compat runs; Nutritional Balance has no
-// Fabric build and no 1.20.1 build). Farmer's Delight is Farmer's Delight Neoforged on NeoForge for 26.x, the original
+// Fabric build and no 1.20.1 build; Kaleidoscope Tavern is Kaleidoscope Tavern Refabricated on Fabric, VBTags). Farmer's Delight is Farmer's Delight Neoforged on NeoForge for 26.x, the original
 // mod on NeoForge for 1.21.1 and on Forge, and Farmer's Delight Refabricated on Fabric (each branch's release.yml);
 // releases.json (without) says which version has which. Serene Seasons and Biomes O' Plenty work through tags on all.
 export const optional: Record<Loader, string[]> = {
-	neoforge: ["Farmer's Delight Neoforged", "Farmer's Delight", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Nutritional Balance', 'Spice of Life Onion'],
-	forge: ["Farmer's Delight", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Spice of Life Onion'],
-	fabric: ["Farmer's Delight Refabricated", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Spice of Life Onion'],
+	neoforge: ["Farmer's Delight Neoforged", "Farmer's Delight", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Nutritional Balance', 'Spice of Life Onion', 'Kaleidoscope Tavern'],
+	forge: ["Farmer's Delight", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Spice of Life Onion', 'Kaleidoscope Tavern'],
+	fabric: ["Farmer's Delight Refabricated", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Spice of Life Onion', 'Kaleidoscope Tavern Refabricated'],
 };
 // The optional mods that have no build for some Minecraft versions (releases.json: without), with the loaders each
 // version's file works with them on: "NeoForge, Fabric", "Forge", "Fabric" or "–". NeoForge and Forge count as the
