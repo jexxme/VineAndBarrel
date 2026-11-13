@@ -14,8 +14,9 @@ import net.minecraft.world.entity.player.Player;
  * <p>
  * The server keeps the game time it hits at ({@link TipsyRegistry#GOING_UNDER}, synced so every client draws the going
  * under from the same moment, smoothly, from its own game time). It only hits on your feet (or in a seat): gliding,
- * swimming, climbing or falling, it waits until you're steady. Sobering up first (milk, a night's sleep) gets you out of
- * it; another drink meanwhile never puts it off.
+ * swimming, climbing or falling, it waits until you're steady. Asleep in a bed it waits too: a night's sleep sobers you
+ * up and so gets you out of it; up again before that, the going under plays first. Sobering up first (milk, a night's
+ * sleep) gets you out of it; another drink meanwhile never puts it off.
  */
 public final class GoingUnder
 {
@@ -56,6 +57,14 @@ public final class GoingUnder
 			return;
 		}
 		long now = player.level().getGameTime();
+		if (player.isSleeping()) {
+			// asleep it waits (the night's sleep sobers you up, and that ends it); up again before that, the last
+			// seconds still lie ahead: never in bed, never the moment you get up
+			if (at < now + TICKS) {
+				comeAt(player, now + TICKS + ASLEEP_SLACK);
+			}
+			return;
+		}
 		if (player.tickCount < AWAY && now > at) {
 			// back after time away (logged out while it was coming): it comes again, the going under first
 			comeAt(player, now + TICKS);
@@ -70,11 +79,13 @@ public final class GoingUnder
 
 	/** A player who just joined (ticks since): time away from the world doesn't count. */
 	private static final int AWAY = 40;
+	/** Asleep, the blackout is put back this much further than its last seconds at a time (not once a tick). */
+	private static final int ASLEEP_SLACK = 20;
 
-	/** {@return whether the blackout may hit now: standing on solid ground, not gliding, swimming or climbing} */
+	/** {@return whether the blackout may hit now: standing on solid ground, not gliding, swimming, climbing or asleep} */
 	static boolean steady(ServerPlayer player) {
 		return (player.onGround() || player.isPassenger()) && !player.isFallFlying() && !player.isInWater() && !player.isInLava()
-			&& !player.onClimbable() && !player.isSwimming();
+			&& !player.onClimbable() && !player.isSwimming() && !player.isSleeping();
 	}
 
 	/** {@return how far gone under this player is now: 0 until the last {@link #TICKS}, then up to 1 as it hits} */
