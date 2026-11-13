@@ -90,11 +90,22 @@ public final class TavernKeeper
 	private TavernKeeper() {
 	}
 
-	/** Every state of every single Brew Kettle (all copper stages, waxed or not). */
+	/**
+	 * Every state of every single Brew Kettle (all copper stages, waxed or not), and of a Big Kettle's controller (the
+	 * kettle the rest join: a big brewery hires one keeper, and a keeper's kettle that grows into a Big Kettle stays a
+	 * job site).
+	 */
 	public static Set<BlockState> kettleStates() {
 		Set<BlockState> states = new HashSet<>();
 		for (Block kettle : KettleRegistry.allKettleBlocks()) {
 			states.addAll(kettle.getStateDefinition().getPossibleStates());
+		}
+		for (Block part : KettleRegistry.allPartBlocks()) {
+			for (BlockState state : part.getStateDefinition().getPossibleStates()) {
+				if (jexxme.vineandbarrel.kettle.KettlePart.byId(state.getValue(jexxme.vineandbarrel.kettle.BrewKettlePartBlock.PART)).isController()) {
+					states.add(state);
+				}
+			}
 		}
 		return Set.copyOf(states);
 	}

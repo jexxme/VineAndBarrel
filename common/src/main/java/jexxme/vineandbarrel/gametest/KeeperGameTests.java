@@ -64,6 +64,13 @@ final class KeeperGameTests
 			}
 		}
 		helper.assertTrue(KettleRegistry.allKettleBlocks().size() == 8, "four copper stages, waxed and not: " + KettleRegistry.allKettleBlocks().size());
+		// a Big Kettle: its controller is a job site, its other parts are not
+		for (Block part : KettleRegistry.allPartBlocks()) {
+			for (BlockState state : part.getStateDefinition().getPossibleStates()) {
+				boolean controller = jexxme.vineandbarrel.kettle.KettlePart.byId(state.getValue(jexxme.vineandbarrel.kettle.BrewKettlePartBlock.PART)).isController();
+				helper.assertValueEqual(TavernKeeper.isJobSite(state), controller, "a Big Kettle part is a job site only as its controller: " + state);
+			}
+		}
 		var poi = helper.getLevel().registryAccess().registryOrThrow(Registries.POINT_OF_INTEREST_TYPE).getHolderOrThrow(TavernKeeper.JOB_SITE);
 		helper.assertTrue(poi.is(PoiTypeTags.ACQUIRABLE_JOB_SITE), "the kettle is a job site an unemployed villager can take");
 		for (BlockState other : List.of(BarrelRegistry.AGING_BARREL.get().defaultBlockState(), Blocks.CAMPFIRE.defaultBlockState(), Blocks.BARREL.defaultBlockState(),
