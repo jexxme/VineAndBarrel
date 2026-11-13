@@ -33,13 +33,15 @@ public record WatchPath(List<Station> stations, List<Branch> branches)
 	 * @param verb        lang key of its short name ("Grow")
 	 * @param scene       the scene it plays
 	 * @param advancement the advancement that ticks it off; without one it is never ticked nor "next for you"
+	 * @param wiki        its page on the Vine &amp; Barrel wiki ("crops"), linked from its card
 	 */
-	public record Station(String verb, ResourceLocation scene, Optional<ResourceLocation> advancement)
+	public record Station(String verb, ResourceLocation scene, Optional<ResourceLocation> advancement, Optional<String> wiki)
 	{
 		public static final Codec<Station> CODEC = RecordCodecBuilder.create(inst -> inst.group(
 			Codec.STRING.fieldOf("verb").forGetter(Station::verb),
 			ResourceLocation.CODEC.fieldOf("scene").forGetter(Station::scene),
-			ResourceLocation.CODEC.optionalFieldOf("advancement").forGetter(Station::advancement)
+			ResourceLocation.CODEC.optionalFieldOf("advancement").forGetter(Station::advancement),
+			Codec.STRING.optionalFieldOf("wiki").forGetter(Station::wiki)
 		).apply(inst, Station::new));
 	}
 
@@ -50,14 +52,16 @@ public record WatchPath(List<Station> stations, List<Branch> branches)
 	 * @param scene    the scene it plays
 	 * @param note     lang key of a short line under its name
 	 * @param requires a mod that must be loaded for it to show
+	 * @param wiki     its page on the Vine &amp; Barrel wiki ("farmers-delight"), linked from its card
 	 */
-	public record Branch(ResourceLocation after, ResourceLocation scene, Optional<String> note, Optional<String> requires)
+	public record Branch(ResourceLocation after, ResourceLocation scene, Optional<String> note, Optional<String> requires, Optional<String> wiki)
 	{
 		public static final Codec<Branch> CODEC = RecordCodecBuilder.create(inst -> inst.group(
 			ResourceLocation.CODEC.fieldOf("after").forGetter(Branch::after),
 			ResourceLocation.CODEC.fieldOf("scene").forGetter(Branch::scene),
 			Codec.STRING.optionalFieldOf("note").forGetter(Branch::note),
-			Codec.STRING.optionalFieldOf("requires").forGetter(Branch::requires)
+			Codec.STRING.optionalFieldOf("requires").forGetter(Branch::requires),
+			Codec.STRING.optionalFieldOf("wiki").forGetter(Branch::wiki)
 		).apply(inst, Branch::new));
 	}
 

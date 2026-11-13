@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "全部观看",
   "watch.vineandbarrel.path.progress": "已完成 %s/%s",
   "watch.vineandbarrel.path.all_done": "全部完成",
+  "watch.vineandbarrel.path.wiki": "Wiki",
+  "watch.vineandbarrel.path.wiki_page": "Wiki 页面 ›",
   "watch.vineandbarrel.path.chapter": "（酿酒师之路，%s/%s）",
   "watch.vineandbarrel.farmers_delight.note": "灶台加热，绳子攀爬"
 }
