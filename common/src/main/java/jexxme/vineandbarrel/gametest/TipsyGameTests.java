@@ -19,7 +19,6 @@ import jexxme.vineandbarrel.tipsy.TipsyInfo;
 import jexxme.vineandbarrel.tipsy.TipsyLegs;
 import jexxme.vineandbarrel.tipsy.TipsyLevels;
 import jexxme.vineandbarrel.tipsy.TipsyMotion;
-import jexxme.vineandbarrel.tipsy.TipsyVision;
 import jexxme.vineandbarrel.tipsy.TipsyWobble;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.entity.npc.WanderingTrader;
@@ -28,6 +27,7 @@ import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
@@ -40,6 +40,7 @@ import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -64,8 +65,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * M4 Tipsy: stacking, cap, decay, the level-5 effects, every cure, non-alcoholic mode, slurred chat, stumbling and
- * the wobble math. Headless ({@code ./gradlew runGameTestServer}).
+ * Tipsy: stacking, cap, decay, the level table, no side effects, every cure, non-alcoholic mode, slurred chat, the legs,
+ * the renamed settings and the sway math. Headless ({@code ./gradlew runGameTestServer}).
  * <p>
  * Config switches are flipped and restored inside one synchronous test function, so tests running in the same batch
  * never see each other's settings.
@@ -83,8 +84,6 @@ public final class TipsyGameTests
 		test("tipsy_stacks_to_cap", TipsyGameTests::stacksToCap);
 		test("tipsy_cap_is_configurable", TipsyGameTests::capIsConfigurable);
 		test("tipsy_decays_one_level_per_interval", TipsyGameTests::decaysOneLevelPerInterval);
-		test("tipsy_level5_slowness_and_fatigue", TipsyGameTests::level5SlownessAndFatigue);
-		test("tipsy_level5_keeps_foreign_slowness", TipsyGameTests::level5KeepsForeignSlowness);
 		test("tipsy_sober_keeps_command_slowness", TipsyGameTests::soberKeepsCommandSlowness);
 		test("tipsy_milk_clears", TipsyGameTests::milkClears);
 		test("tipsy_water_lowers_by_one", TipsyGameTests::waterLowersByOne);
@@ -96,8 +95,10 @@ public final class TipsyGameTests
 		test("tipsy_stumble", TipsyGameTests::stumble);
 		test("tipsy_stumble_config_off", TipsyGameTests::stumbleConfigOff);
 		test("tipsy_hiccups", TipsyGameTests::hiccups);
-		test("tipsy_wobble_math", TipsyGameTests::wobbleMath);
-		test("tipsy_vision_math", TipsyGameTests::visionMath);
+		test("tipsy_body_sway", TipsyGameTests::bodySway);
+		test("tipsy_levels_table", TipsyGameTests::levelsTable);
+		test("tipsy_no_side_effects", TipsyGameTests::noSideEffects);
+		test("tipsy_renamed_settings", TipsyGameTests::renamedSettings);
 		test("tipsy_effect_tooltip", TipsyGameTests::effectTooltip);
 		test("tipsy_rowdy_swings_from_four", TipsyGameTests::rowdyRates);
 		test("tipsy_rowdy_punches_what_is_in_front", TipsyGameTests::rowdyPunches);
@@ -112,10 +113,6 @@ public final class TipsyGameTests
 		test("tipsy_too_drunk_keeps_absorption_hearts", TipsyGameTests::tooDrunkKeepsAbsorptionHearts);
 		test("tipsy_grape_juice_lowers_by_one", TipsyGameTests::grapeJuiceLowersByOne);
 		test("tipsy_courage_per_level", TipsyGameTests::couragePerLevel);
-		test("tipsy_weakness_from_level4", TipsyGameTests::weaknessFromLevel4);
-		test("tipsy_nausea_pulses_from_level3", TipsyGameTests::nauseaPulses);
-		test("tipsy_keeps_foreign_side_effects", TipsyGameTests::keepsForeignSideEffects);
-		test("tipsy_keeps_foreign_effect_under_its_own", TipsyGameTests::keepsForeignEffectUnderItsOwn);
 		test("tipsy_motion_math", TipsyGameTests::motionMath);
 		test("tipsy_blackout_damage_rules", TipsyGameTests::blackoutDamageRules);
 		test("tipsy_blackout_pauses_tipsy", TipsyGameTests::blackoutPausesTipsy);
@@ -286,52 +283,6 @@ public final class TipsyGameTests
 		for (int i = 0; i < ticks; i++) player.tickEffectsOnce();
 	}
 
-	/** Slowness II and Mining Fatigue I come with level 5 and leave as soon as it drops below. */
-	private static void level5SlownessAndFatigue(GameTestHelper helper) {
-		TestPlayer player = player(helper);
-		Tipsy.setLevel(player, 4);
-		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "No Slowness at level 4");
-		helper.assertFalse(player.hasEffect(MobEffects.DIG_SLOWDOWN), "No Mining Fatigue at level 4");
-
-		Tipsy.addLevel(player);
-		helper.assertValueEqual(Tipsy.getLevel(player), 5, "level");
-		MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
-		MobEffectInstance fatigue = player.getEffect(MobEffects.DIG_SLOWDOWN);
-		helper.assertTrue(slowness != null && slowness.getAmplifier() == 1, "Level 5 gives Slowness II: " + slowness);
-		helper.assertTrue(fatigue != null && fatigue.getAmplifier() == 0, "Level 5 gives Mining Fatigue I: " + fatigue);
-
-		// They are refreshed for as long as level 5 lasts, well past their own short duration
-		for (int i = 0; i < 200; i++) {
-			player.tickEffectsOnce();
-			TipsyEvents.onEntityTick(player);
-		}
-		helper.assertValueEqual(Tipsy.getLevel(player), 5, "level after 10 s");
-		helper.assertTrue(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Slowness still there while at level 5");
-		helper.assertTrue(player.hasEffect(MobEffects.DIG_SLOWDOWN), "Mining Fatigue still there while at level 5");
-
-		Tipsy.lowerLevel(player);
-		helper.assertValueEqual(Tipsy.getLevel(player), 4, "level after one sobering drink");
-		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Slowness gone below level 5");
-		helper.assertFalse(player.hasEffect(MobEffects.DIG_SLOWDOWN), "Mining Fatigue gone below level 5");
-		helper.succeed();
-	}
-
-	/**
-	 * Dropping below 5 only takes away Tipsy's own Slowness, never one from a potion. A Slowness I potion drunk at
-	 * level 5 waits under Tipsy's Slowness II (vanilla's hidden effect) and takes over within seconds.
-	 */
-	private static void level5KeepsForeignSlowness(GameTestHelper helper) {
-		TestPlayer player = player(helper);
-		Tipsy.setLevel(player, 5);
-		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 1800, 0));
-		Tipsy.lowerLevel(player);
-		tick(player, 61);
-		MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
-		helper.assertTrue(slowness != null && slowness.getAmplifier() == 0 && slowness.getDuration() > 1000, "A Slowness potion must survive Tipsy dropping below 5: " + slowness);
-		helper.assertFalse(player.hasEffect(MobEffects.DIG_SLOWDOWN), "Tipsy's own Mining Fatigue is gone");
-		helper.succeed();
-	}
-
 	/** A short particleless Slowness I from a command ({@code /effect give @s slowness 3 0 true}) is not Tipsy's to take. */
 	private static void soberKeepsCommandSlowness(GameTestHelper helper) {
 		TestPlayer player = player(helper);
@@ -344,14 +295,12 @@ public final class TipsyGameTests
 
 	// ------------------------------------------------------------------ cures
 
-	/** Drinking milk clears Tipsy and the level-5 effects, through vanilla's own milk mechanism. */
+	/** Drinking milk clears Tipsy, through vanilla's own milk mechanism. */
 	private static void milkClears(GameTestHelper helper) {
 		TestPlayer player = player(helper);
 		Tipsy.setLevel(player, 5);
 		drink(player, new ItemStack(Items.MILK_BUCKET));
 		helper.assertValueEqual(Tipsy.getLevel(player), 0, "level after milk");
-		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Milk clears Slowness too");
-		helper.assertFalse(player.hasEffect(MobEffects.DIG_SLOWDOWN), "Milk clears Mining Fatigue too");
 		helper.assertTrue(player.getMainHandItem().is(Items.BUCKET), "The empty bucket comes back");
 		helper.succeed();
 	}
@@ -635,119 +584,6 @@ public final class TipsyGameTests
 		helper.succeed();
 	}
 
-	/** Weakness I comes with level 4, stays at 5, and leaves as soon as the level drops below 4. */
-	private static void weaknessFromLevel4(GameTestHelper helper) {
-		TestPlayer player = player(helper);
-		Tipsy.setLevel(player, 3);
-		helper.assertFalse(player.hasEffect(MobEffects.WEAKNESS), "No Weakness at level 3");
-		Tipsy.addLevel(player);
-		MobEffectInstance weakness = player.getEffect(MobEffects.WEAKNESS);
-		helper.assertTrue(weakness != null && weakness.getAmplifier() == 0 && !weakness.isVisible(), "Level 4 gives Weakness I without particles: " + weakness);
-		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "No Slowness yet at level 4");
-		for (int i = 0; i < 200; i++) {
-			player.tickEffectsOnce();
-			TipsyEvents.onEntityTick(player);
-		}
-		helper.assertTrue(player.hasEffect(MobEffects.WEAKNESS), "Weakness refreshed while at level 4");
-		Tipsy.addLevel(player);
-		helper.assertTrue(player.hasEffect(MobEffects.WEAKNESS), "Weakness stays at level 5");
-		// A random Nausea pulse may have come along in those 10 s; it isn't what this test is about
-		player.removeEffect(MobEffects.CONFUSION);
-		Tipsy.lowerLevel(player);
-		Tipsy.lowerLevel(player);
-		helper.assertValueEqual(Tipsy.getLevel(player), 3, "level");
-		helper.assertFalse(player.hasEffect(MobEffects.WEAKNESS), "Weakness gone below level 4");
-		helper.assertFalse(TipsyRegistry.HEAVY_EFFECTS_OWNED.has(player), "Tipsy owns nothing any more");
-		helper.succeed();
-	}
-
-	/**
-	 * No Nausea up to III (peak drunk feels good); from IV a pulse now and then, at V in waves, dizzy more often than
-	 * not. A pulse runs out on its own and goes when the level drops below IV.
-	 */
-	private static void nauseaPulses(GameTestHelper helper) {
-		RandomSource random = RandomSource.create(7L);
-		int[] rolls = new int[6];
-		double[] dizzy = new double[6];
-		for (int level = 0; level <= 5; level++) {
-			int pulse = 0;
-			int dizzyTicks = 0;
-			for (int i = 0; i < 60000; i++) {
-				if (pulse > 0) {
-					pulse--;
-					dizzyTicks++;
-				} else if (Tipsy.rollsNausea(level, random)) {
-					rolls[level]++;
-					pulse = Tipsy.NAUSEA_PULSE_TICKS;
-				}
-			}
-			dizzy[level] = dizzyTicks / 60000.0;
-		}
-		helper.assertTrue(rolls[0] + rolls[1] + rolls[2] + rolls[3] == 0, "No Nausea up to III: " + java.util.Arrays.toString(rolls));
-		helper.assertValueEqual(Tipsy.NAUSEA_LEVEL, 4, "Nausea starts at IV");
-		helper.assertTrue(dizzy[4] > 0.2 && dizzy[4] < 0.5, "IV: dizzy now and then: " + dizzy[4]);
-		helper.assertTrue(dizzy[5] > 0.5 && dizzy[5] < 0.7, "V: in waves, about 60% of the time: " + dizzy[5]);
-
-		TestPlayer player = player(helper);
-		Tipsy.setLevel(player, 3);
-		helper.assertFalse(Tipsy.nauseaPulse(player), "No pulse at level 3");
-		Tipsy.setLevel(player, 4);
-		helper.assertTrue(Tipsy.nauseaPulse(player), "A pulse at level 4");
-		MobEffectInstance nausea = player.getEffect(MobEffects.CONFUSION);
-		helper.assertTrue(nausea != null && nausea.getDuration() == Tipsy.NAUSEA_PULSE_TICKS && nausea.getAmplifier() == 0, "A short pulse: " + nausea);
-		helper.assertFalse(Tipsy.nauseaPulse(player), "No second pulse on top of the first");
-		// It runs out on its own
-		tick(player, Tipsy.NAUSEA_PULSE_TICKS + 1);
-		Tipsy.setLevel(player, 4);
-		helper.assertFalse(player.hasEffect(MobEffects.CONFUSION), "The pulse is over after " + Tipsy.NAUSEA_PULSE_TICKS + " ticks");
-		// Dropping below IV ends a pulse right away
-		helper.assertTrue(Tipsy.nauseaPulse(player), "Another pulse");
-		Tipsy.lowerLevel(player);
-		helper.assertFalse(player.hasEffect(MobEffects.CONFUSION), "Nausea gone below level 4");
-		helper.assertFalse(TipsyRegistry.HEAVY_EFFECTS_OWNED.has(player), "Tipsy owns nothing at III");
-		helper.succeed();
-	}
-
-	/** A potion's Weakness or Nausea (and Slowness) stays when Tipsy drops; Tipsy never stacks a pulse onto foreign Nausea. */
-	private static void keepsForeignSideEffects(GameTestHelper helper) {
-		TestPlayer player = player(helper);
-		player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 1800, 0));
-		player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 1800, 0));
-		Tipsy.setLevel(player, 5);
-		helper.assertFalse(Tipsy.nauseaPulse(player), "No pulse while a foreign Nausea runs");
-		Tipsy.setLevel(player, 1);
-		MobEffectInstance weakness = player.getEffect(MobEffects.WEAKNESS);
-		MobEffectInstance nausea = player.getEffect(MobEffects.CONFUSION);
-		helper.assertTrue(weakness != null && weakness.getDuration() > 1000, "A Weakness potion survives Tipsy dropping: " + weakness);
-		helper.assertTrue(nausea != null && nausea.getDuration() > 1000, "A foreign Nausea survives Tipsy dropping: " + nausea);
-		helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Tipsy's own Slowness is gone");
-		// A sober player's short particleless Weakness from a command is not Tipsy's either
-		TestPlayer sober = player(helper);
-		sober.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 0, false, false, true));
-		TipsyEvents.onEntityTick(sober);
-		helper.assertTrue(sober.hasEffect(MobEffects.WEAKNESS), "A sober player keeps a command's Weakness");
-		helper.succeed();
-	}
-
-	/**
-	 * A weaker, longer, particleless effect from another mod that lands on Tipsy's own (vanilla keeps it hidden
-	 * underneath) comes back when Tipsy's runs out, instead of being removed with it.
-	 */
-	private static void keepsForeignEffectUnderItsOwn(GameTestHelper helper) {
-		TestPlayer player = player(helper);
-		Tipsy.setLevel(player, 5);
-		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 1800, 0, false, false, true));
-		helper.assertValueEqual(player.getEffect(MobEffects.MOVEMENT_SLOWDOWN).getAmplifier(), 1, "Tipsy's Slowness II on top");
-		Tipsy.lowerLevel(player);
-		for (int i = 0; i < 80; i++) {
-			player.tickEffectsOnce();
-			TipsyEvents.onEntityTick(player);
-		}
-		MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
-		helper.assertTrue(slowness != null && slowness.getAmplifier() == 0 && slowness.getDuration() > 1000, "The other mod's Slowness I is back: " + slowness);
-		helper.succeed();
-	}
-
 	// ------------------------------------------------------------------ camera wobble (pure math, client applies it)
 
 	/** One drink more at Tipsy V: out cold, then awake somewhere, hungry and shaky, with a souvenir. */
@@ -774,7 +610,9 @@ public final class TipsyGameTests
 		helper.assertFalse(Blackout.isOut(player), "awake again after the blackout");
 		helper.assertValueEqual(Tipsy.getLevel(player), 1, "Tipsy after waking");
 		helper.assertTrue(player.getFoodData().getFoodLevel() <= 20 - Blackout.HUNGER_LOST, "woke up hungry: " + player.getFoodData().getFoodLevel());
-		helper.assertTrue(player.hasEffect(MobEffects.CONFUSION) && player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "woke up shaky");
+		helper.assertFalse(player.hasEffect(MobEffects.CONFUSION), "no Nausea after waking");
+		MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+		helper.assertTrue(slowness == null || slowness.getAmplifier() > 0, "no shaky Slowness after waking (only the blackout's own, holding the body still): " + slowness);
 		helper.assertValueEqual(countItems(player), itemsBefore + 1, "a mystery souvenir in the pockets");
 		helper.succeed();
 	}
@@ -824,21 +662,17 @@ public final class TipsyGameTests
 		helper.succeed();
 	}
 
-	/** Out cold, Tipsy pauses: the Nausea swirl stops, no hiccups, no punches, no stumbles. */
+	/** Out cold, Tipsy pauses: no hiccups, no punches, no stumbles. */
 	private static void blackoutPausesTipsy(GameTestHelper helper) {
 		TestPlayer player = player(helper);
 		Tipsy.setLevel(player, 5);
-		helper.assertTrue(Tipsy.nauseaPulse(player), "dizzy before");
 		TipsyRegistry.HICCUPS.set(player, new Tipsy.HiccupBout(3, 0, 0));
 		Blackout.start(player);
-		helper.assertFalse(player.hasEffect(MobEffects.CONFUSION), "the swirl stops when the eyes close");
 		helper.assertFalse(TipsyRegistry.HICCUPS.has(player), "the bout of hiccups is over");
-		helper.assertFalse(Tipsy.nauseaPulse(player), "no new swirl while out");
 		TipsyMotion.Counts before = motion(player);
 		// Not as far as the wake-up (that would move the player: BlackoutGameTests covers it)
 		for (int i = 0; i < Blackout.TICKS - Blackout.WAKE_AT - 5; i++) {
 			TipsyEvents.onEntityTick(player);
-			helper.assertFalse(player.hasEffect(MobEffects.CONFUSION), "no swirl while out");
 		}
 		helper.assertValueEqual(motion(player), before, "no hiccup, stumble or trip while out");
 		helper.assertTrue(Blackout.isOut(player), "still out");
@@ -1004,8 +838,8 @@ public final class TipsyGameTests
 			"+10% Knockback Resistance | -15% Fall Damage",
 			"+20% Knockback Resistance | -25% Fall Damage",
 			"+30% Knockback Resistance | -35% Fall Damage | Slurring",
-			"Slurring, Weakness, Rowdy | No buffs, Cut off",
-			"Slurring, Weakness, Rowdy | No buffs, Cut off, Sluggish | Stumbling, Tripping"};
+			"Slurring, Rowdy, No buffs | Cut off",
+			"Slurring, Rowdy, No buffs | Cut off, Stumbling, Tripping"};
 		for (int level = 1; level <= 5; level++) {
 			helper.assertValueEqual(text(TipsyInfo.lines(level)), expected[level], "the tooltip at level " + level);
 			for (Component line : TipsyInfo.lines(level)) {
@@ -1028,50 +862,6 @@ public final class TipsyGameTests
 
 	private static String text(List<Component> lines) {
 		return String.join(" | ", lines.stream().map(Component::getString).toList());
-	}
-
-	/** Tunnel vision from level 1, gentle up to III, harder after; blinks only from 3, long ones only from 4. */
-	private static void visionMath(GameTestHelper helper) {
-		helper.assertValueEqual(TipsyVision.vignette(0.0F), 0.0F, "sober: no tunnel vision");
-		helper.assertTrue(TipsyVision.vignette(1.0F) > 0.0F, "level 1 already narrows the view a little");
-		float last = 0.0F;
-		for (int level = 1; level <= 5; level++) {
-			float v = TipsyVision.vignette(level);
-			helper.assertTrue(v > last && v < 1.0F, "tunnel vision grows at level " + level + ": " + v);
-			last = v;
-		}
-		helper.assertTrue(TipsyVision.vignette(3.0F) <= 0.4F, "III, peak drunk, keeps the edges light: " + TipsyVision.vignette(3.0F));
-		helper.assertTrue(TipsyVision.vignette(4.0F) - TipsyVision.vignette(3.0F) > TipsyVision.vignette(3.0F) - TipsyVision.vignette(2.0F),
-			"the edges close in harder after the turn");
-		helper.assertTrue(TipsyVision.vignette(2.5F) > TipsyVision.vignette(2.0F) && TipsyVision.vignette(2.5F) < TipsyVision.vignette(3.0F), "eases between levels");
-		for (int level = 3; level <= 5; level++) {
-			int shut = 0;
-			int longestShut = 0;
-			int run = 0;
-			int open = 0;
-			for (int tick = 0; tick < 20 * 60 * 5; tick++) {
-				float closed = TipsyVision.eyelids(level, tick, 42);
-				helper.assertTrue(closed >= 0.0F && closed <= 1.0F, "eyelids stay in 0..1");
-				if (closed >= 1.0F) {
-					shut++;
-					longestShut = Math.max(longestShut, ++run);
-				} else {
-					run = 0;
-				}
-				open += closed == 0.0F ? 1 : 0;
-			}
-			helper.assertTrue(shut > 0, "level " + level + " blinks at all");
-			helper.assertTrue(open > 20 * 60 * 5 * 0.8, "level " + level + ": the eyes are open most of the time (" + open + ")");
-			if (level == 3) {
-				helper.assertTrue(longestShut < 10, "level 3 only blinks briefly: " + longestShut);
-			} else {
-				helper.assertTrue(longestShut >= 10, "level " + level + " sometimes keeps the eyes shut for a moment: " + longestShut);
-			}
-		}
-		for (int tick = 0; tick < 20 * 60 * 5; tick++) {
-			helper.assertValueEqual(TipsyVision.eyelids(2, tick, 42), 0.0F, "no blinks below level 3");
-		}
-		helper.succeed();
 	}
 
 	/** Playtest 1: the drink that takes Tipsy to 4 or more gives no buff (a buff from before stays as it was). */
@@ -1230,16 +1020,14 @@ public final class TipsyGameTests
 		helper.succeed();
 	}
 
-	/** Non-alcoholic mode switched on mid-game: nobody stays tipsy, and Tipsy's own side effects go with it. */
+	/** Non-alcoholic mode switched on mid-game: nobody stays tipsy, and the other clients stop the sway. */
 	private static void nonAlcoholicMidGame(GameTestHelper helper) {
 		TestPlayer player = player(helper);
 		Tipsy.setLevel(player, 5);
-		helper.assertTrue(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Slowness at V");
 		with(TipsyConfig.ENABLED, false, () -> {
 			TipsyEvents.onEntityTick(player);
 			TipsyEvents.onEntityTick(player);
 			helper.assertValueEqual(Tipsy.getLevel(player), 0, "sober the moment it is switched on");
-			helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Tipsy's Slowness is gone too");
 			helper.assertTrue(TipsyRegistry.SYNCED_LEVEL.getExisting(player) == null, "the other clients stop the sway");
 		});
 		helper.succeed();
@@ -1336,39 +1124,104 @@ public final class TipsyGameTests
 		helper.succeed();
 	}
 
-	private static void wobbleMath(GameTestHelper helper) {
-		for (float t = 0; t < 400; t += 3.7F) {
-			helper.assertTrue(TipsyWobble.camera(5, t, 0.0) == TipsyWobble.Angles.NONE, "Intensity 0 turns the wobble off");
-			helper.assertTrue(TipsyWobble.camera(0, t, 1.0) == TipsyWobble.Angles.NONE, "Sober means no wobble");
-			TipsyWobble.Angles one = TipsyWobble.camera(4, t, 1.0);
-			TipsyWobble.Angles two = TipsyWobble.camera(4, t, 2.0);
-			helper.assertTrue(Math.abs(two.roll() - 2 * one.roll()) < 1.0E-4, "Intensity scales the wobble");
-			helper.assertValueEqual(TipsyWobble.camera(4, t, 1.0), one, "same inputs, same wobble");
-			TipsyWobble.Angles strongest = TipsyWobble.camera(5, t, 1.0);
-			helper.assertTrue(Math.abs(strongest.yaw()) < 1.0F && Math.abs(strongest.pitch()) < 1.0F, "Aim moves less than a degree");
-			helper.assertTrue(Math.abs(strongest.roll()) <= TipsyWobble.amplitude(5) + 1.0E-4, "Roll stays within its amplitude");
-			// The FOV breathes at V only, a few percent, and never with the wobble off
-			float fov = TipsyWobble.fov(5, t, 1.0);
-			helper.assertTrue(Math.abs(fov - 1.0F) <= TipsyWobble.FOV_BREATHING + 1.0E-4, "the FOV breathes a little at V: " + fov);
-			helper.assertValueEqual(TipsyWobble.fov(4, t, 1.0), 1.0F, "no FOV breathing at IV");
-			helper.assertValueEqual(TipsyWobble.fov(5, t, 0.0), 1.0F, "no FOV breathing with the wobble off");
-		}
-		for (int level = 1; level <= 5; level++) {
-			helper.assertTrue(Math.abs(TipsyWobble.amplitude(level) - TipsyLevels.at(level).rollDegrees()) < 1.0E-4, "the roll comes from the level table");
-		}
-		helper.assertTrue(TipsyWobble.amplitude(1) > 0 && TipsyWobble.amplitude(2) > TipsyWobble.amplitude(1), "Level 1-2 wobble slightly");
-		helper.assertTrue(TipsyWobble.amplitude(3) < 5.0F, "III, peak drunk, sways but doesn't spin: " + TipsyWobble.amplitude(3));
-		helper.assertTrue(TipsyWobble.amplitude(5) >= 15.0F, "Level 5 sways properly drunk: " + TipsyWobble.amplitude(5));
-		helper.assertTrue(TipsyWobble.amplitude(5) > TipsyWobble.amplitude(4) && TipsyWobble.amplitude(4) > TipsyWobble.amplitude(3), "Wobble grows with each level");
-		float mid = TipsyWobble.amplitude(2.5F);
-		helper.assertTrue(mid > TipsyWobble.amplitude(2) && mid < TipsyWobble.amplitude(3), "Easing between levels is smooth");
-
-		float peak = 0;
-		for (float t = 0; t < 2000; t += 1) peak = Math.max(peak, Math.abs(TipsyWobble.camera(3, t, 1.0).roll()));
-		helper.assertTrue(peak > 0.8F * TipsyWobble.amplitude(3), "The wobble actually reaches its strength, peak " + peak);
-
+	/** The sway friends see: none sober, within the level's degrees and reaching them, never in lockstep. */
+	private static void bodySway(GameTestHelper helper) {
 		helper.assertValueEqual(TipsyWobble.bodySway(0, 10, 1), 0.0F, "No sway when sober");
 		helper.assertFalse(TipsyWobble.bodySway(3, 10, 1) == TipsyWobble.bodySway(3, 10, 2), "Players don't sway in lockstep");
+		for (int level = 1; level <= Tipsy.ABSOLUTE_MAX_LEVEL; level++) {
+			float limit = TipsyLevels.at(level).legs().swayDegrees();
+			float peak = 0.0F;
+			for (float t = 0; t < 2000; t += 1) peak = Math.max(peak, Math.abs(TipsyWobble.bodySway(level, t, 7)));
+			helper.assertTrue(peak <= limit + 1.0E-4 && peak > 0.8F * limit, "the sway at " + level + " reaches its " + limit + " degrees and stays within: " + peak);
+		}
+		helper.succeed();
+	}
+
+	/**
+	 * The level table (Tipsy overhaul): every section has one row per level and the levels are put together from them,
+	 * each part gets worse level by level, and the thresholds the game and the wiki read.
+	 */
+	private static void levelsTable(GameTestHelper helper) {
+		helper.assertValueEqual(TipsyLevels.sections().size(), TipsyLevels.Level.class.getRecordComponents().length - 1, "every section is listed");
+		for (TipsyLevels.Section section : TipsyLevels.sections()) {
+			helper.assertValueEqual(section.rows().size(), Tipsy.ABSOLUTE_MAX_LEVEL, "a row per level in " + section.name());
+			for (TipsyLevels.Level level : TipsyLevels.LEVELS) {
+				helper.assertTrue(section.of().apply(level) == section.rows().get(level.level() - 1), section.name() + "'s row of level " + level.level());
+			}
+		}
+		for (int level = 2; level <= Tipsy.ABSOLUTE_MAX_LEVEL; level++) {
+			TipsyLevels.Level at = TipsyLevels.at(level);
+			TipsyLevels.Level below = TipsyLevels.at(level - 1);
+			helper.assertTrue(at.legs().swayDegrees() > below.legs().swayDegrees() && at.legs().weave() > below.legs().weave(), "the legs get worse at " + level);
+			helper.assertTrue(at.eyes().softEdges() >= below.eyes().softEdges() && at.eyes().doubleVision() >= below.eyes().doubleVision()
+				&& at.eyes().signBlur() >= below.eyes().signBlur(), "the eyes get worse at " + level);
+			helper.assertTrue(at.ears().muffle() >= below.ears().muffle(), "the ears get worse at " + level);
+			helper.assertValueEqual(at.chat().stage(), level - 1, "the chat stage at " + level);
+		}
+		helper.assertTrue(TipsyLevels.at(3).courage().any() && !TipsyLevels.at(4).courage().any(), "courage up to III, none from IV");
+		helper.assertValueEqual(Tipsy.HICCUP_LEVEL, 2, "hiccups from II");
+		helper.assertValueEqual(Tipsy.SLUR_LEVEL, 3, "slurring from III");
+		helper.assertValueEqual(Tipsy.NO_BUFF_LEVEL, 4, "no buffs from IV");
+		helper.assertValueEqual(Rowdy.ROWDY_LEVEL, 4, "Rowdy from IV");
+		helper.assertValueEqual(Rowdy.CUT_OFF_LEVEL, 4, "cut off from IV");
+		helper.assertValueEqual(TipsyLevels.first(level -> level.nod().any()), 4, "nodding off from IV");
+		helper.assertValueEqual(Tipsy.STUMBLE_LEVEL, 5, "unsteady legs at V");
+		helper.assertValueEqual(jexxme.vineandbarrel.tipsy.TipsySounds.HEARTBEAT_LEVEL, 5, "the heartbeat at V");
+		helper.assertTrue(TipsyLevels.at(0) == TipsyLevels.SOBER && TipsyLevels.at(9) == TipsyLevels.at(5), "sober below I, V above V");
+		helper.succeed();
+	}
+
+	/**
+	 * Being drunk costs control, never stats (Tipsy overhaul): at no level does Tipsy give Nausea, Slowness, Mining
+	 * Fatigue or Weakness, a potion's stays as it was when Tipsy ends, and an old save's mark of Tipsy's own side
+	 * effects goes.
+	 */
+	private static void noSideEffects(GameTestHelper helper) {
+		TestPlayer player = player(helper);
+		List<Holder<MobEffect>> gone = List.of(MobEffects.CONFUSION, MobEffects.MOVEMENT_SLOWDOWN, MobEffects.DIG_SLOWDOWN, MobEffects.WEAKNESS);
+		for (int level = 1; level <= Tipsy.ABSOLUTE_MAX_LEVEL; level++) {
+			Tipsy.setLevel(player, level);
+			for (int i = 0; i < 400; i++) {
+				TipsyEvents.onEntityTick(player);
+				for (Holder<MobEffect> effect : gone) {
+					helper.assertFalse(player.hasEffect(effect), "no " + effect.getRegisteredName() + " at level " + level);
+				}
+			}
+		}
+		player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 1800, 0));
+		TipsyEvents.onEntityTick(player);
+		Tipsy.clear(player);
+		TipsyEvents.onEntityTick(player);
+		MobEffectInstance weakness = player.getEffect(MobEffects.WEAKNESS);
+		helper.assertTrue(weakness != null && weakness.getDuration() > 1000, "a potion's Weakness stays when Tipsy ends: " + weakness);
+		Tipsy.setLevel(player, 1);
+		TipsyRegistry.HEAVY_EFFECTS_OWNED.set(player, 0b1111);
+		TipsyEvents.onEntityTick(player);
+		helper.assertFalse(TipsyRegistry.HEAVY_EFFECTS_OWNED.has(player), "an old save's mark of Tipsy's own side effects goes");
+		helper.succeed();
+	}
+
+	/**
+	 * The two renamed client settings take an old file's value, once: {@code wobbleIntensity} (0 to 2, 1 the default)
+	 * as {@code drunkScreen} in percent, {@code visionEffects} as {@code doubleVision}. The new key wins when both are there.
+	 */
+	private static void renamedSettings(GameTestHelper helper) {
+		java.util.function.BiFunction<ConfigValue<?>, java.util.Map<String, String>, String> read = (value, saved) -> value.savedText(saved::get);
+		helper.assertValueEqual(TipsyConfig.DRUNK_SCREEN.formerName(), "wobbleIntensity", "drunkScreen was wobbleIntensity");
+		helper.assertValueEqual(TipsyConfig.DOUBLE_VISION.formerName(), "visionEffects", "doubleVision was visionEffects");
+		String[][] wobble = {{"1.0", "100"}, {"1", "100"}, {"0.4", "40"}, {"0.0", "0"}, {"2.0", "100"}, {"1.5", "100"}};
+		for (String[] pair : wobble) {
+			helper.assertValueEqual(read.apply(TipsyConfig.DRUNK_SCREEN, java.util.Map.of("wobbleIntensity", pair[0])), pair[1], "wobbleIntensity " + pair[0]);
+		}
+		for (String bad : new String[] {"3.0", "-1", "lots"}) {
+			helper.assertTrue(read.apply(TipsyConfig.DRUNK_SCREEN, java.util.Map.of("wobbleIntensity", bad)) == null, "a broken old value gives the default: " + bad);
+		}
+		helper.assertValueEqual(read.apply(TipsyConfig.DRUNK_SCREEN, java.util.Map.of("drunkScreen", "70", "wobbleIntensity", "0")), "70", "the new key wins");
+		helper.assertTrue(read.apply(TipsyConfig.DRUNK_SCREEN, java.util.Map.of()) == null, "neither key: the default");
+		helper.assertValueEqual(read.apply(TipsyConfig.DOUBLE_VISION, java.util.Map.of("visionEffects", "false")), "false", "vision effects off: double vision off");
+		helper.assertValueEqual(read.apply(TipsyConfig.DOUBLE_VISION, java.util.Map.of("visionEffects", "TRUE")), "true", "vision effects on: double vision on");
+		helper.assertTrue(read.apply(TipsyConfig.DOUBLE_VISION, java.util.Map.of("visionEffects", "maybe")) == null, "a broken old value gives the default");
+		helper.assertTrue(read.apply(TipsyConfig.OTHER_PLAYERS_SWAY, java.util.Map.of("wobbleIntensity", "0")) == null, "a setting that was never renamed reads only its own key");
 		helper.succeed();
 	}
 

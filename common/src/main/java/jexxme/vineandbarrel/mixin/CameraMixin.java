@@ -15,8 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Where Tipsy moves the camera itself, on both loaders (their camera events can only turn it): once vanilla has put
  * the first-person camera at the eyes, a player lying on the ground after a blackout sees the world from down there,
  * and one who tripped from where the face lies ({@link TipsyClient#cameraOffset}; the turn comes from
- * {@link TipsyClient#cameraAngles}). The FOV breathing is in {@link GameRendererMixin}: 1.21.1 works the field of view
- * out there.
+ * {@link TipsyClient#cameraAngles}).
  */
 @Mixin(Camera.class)
 public abstract class CameraMixin
