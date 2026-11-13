@@ -368,5 +368,7 @@
   "watch.vineandbarrel.path.wiki": "Вікі",
   "watch.vineandbarrel.path.wiki_page": "Сторінка у вікі ›",
   "watch.vineandbarrel.path.chapter": "(Шлях пивовара, %s з %s)",
-  "watch.vineandbarrel.farmers_delight.note": "Плита для жару, мотузка для лози"
+  "watch.vineandbarrel.farmers_delight.note": "Плита для жару, мотузка для лози",
+  "entity.minecraft.villager.vineandbarrel.tavern_keeper": "Корчмар",
+  "entity.minecraft.villager.tavern_keeper": "Корчмар"
 }

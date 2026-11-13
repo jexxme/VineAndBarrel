@@ -368,5 +368,7 @@
   "watch.vineandbarrel.path.wiki": "Wiki",
   "watch.vineandbarrel.path.wiki_page": "Wiki-Seite ›",
   "watch.vineandbarrel.path.chapter": "(Brauerpfad, %s von %s)",
-  "watch.vineandbarrel.farmers_delight.note": "Ein Herd für Hitze, ein Seil zum Klettern"
+  "watch.vineandbarrel.farmers_delight.note": "Ein Herd für Hitze, ein Seil zum Klettern",
+  "entity.minecraft.villager.vineandbarrel.tavern_keeper": "Wirt",
+  "entity.minecraft.villager.tavern_keeper": "Wirt"
 }

@@ -368,5 +368,7 @@
   "watch.vineandbarrel.path.wiki": "Вики",
   "watch.vineandbarrel.path.wiki_page": "Страница в вики ›",
   "watch.vineandbarrel.path.chapter": "(Путь пивовара, %s из %s)",
-  "watch.vineandbarrel.farmers_delight.note": "Плита для жара, верёвка для лозы"
+  "watch.vineandbarrel.farmers_delight.note": "Плита для жара, верёвка для лозы",
+  "entity.minecraft.villager.vineandbarrel.tavern_keeper": "Трактирщик",
+  "entity.minecraft.villager.tavern_keeper": "Трактирщик"
 }

@@ -149,9 +149,10 @@ public interface Platform
 	/**
 	 * Adds trades to the pool a villager of this profession draws from at this level (1 novice to 5 master), next to the
 	 * vanilla ones and other mods' (26.x: a {@code villager_trade} tag). Called once at startup, before any world loads.
-	 * NeoForge: {@code VillagerTradesEvent}; Fabric: {@code TradeOfferHelper.registerVillagerOffers}.
+	 * The profession is looked up once it is registered (ours, the tavern keeper's, is registered after this call).
+	 * NeoForge: {@code VillagerTradesEvent}; Fabric: vanilla's own pools, once every entry is registered.
 	 */
-	void addVillagerTrades(net.minecraft.world.entity.npc.VillagerProfession profession, int level,
+	void addVillagerTrades(java.util.function.Supplier<? extends net.minecraft.world.entity.npc.VillagerProfession> profession, int level,
 			java.util.List<net.minecraft.world.entity.npc.VillagerTrades.ItemListing> trades);
 
 	/**

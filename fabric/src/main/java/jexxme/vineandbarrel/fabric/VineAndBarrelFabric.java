@@ -126,6 +126,9 @@ public final class VineAndBarrelFabric implements ModInitializer
 				// map, once the point-of-interest types exist (NeoForge: ExtendPoiTypesEvent)
 				leatherworkerStatesAdded = true;
 				PoiTypes.registerBlockStates(BuiltInRegistries.POINT_OF_INTEREST_TYPE.getHolderOrThrow(PoiTypes.LEATHERWORKER), VBCauldrons.states());
+				// The tavern keeper's job site: every Brew Kettle (NeoForge fills this map as the type is registered)
+				PoiTypes.registerBlockStates(BuiltInRegistries.POINT_OF_INTEREST_TYPE.getHolderOrThrow(jexxme.vineandbarrel.world.village.TavernKeeper.JOB_SITE),
+					jexxme.vineandbarrel.world.village.TavernKeeper.kettleStates());
 			}
 			if (!dispenserBehaviorsAdded) {
 				// After every mod's items exist (Fabric has no common setup event after all mods)

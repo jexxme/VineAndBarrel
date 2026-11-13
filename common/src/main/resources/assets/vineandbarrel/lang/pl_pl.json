@@ -368,5 +368,7 @@
   "watch.vineandbarrel.path.wiki": "Wiki",
   "watch.vineandbarrel.path.wiki_page": "Strona na wiki ›",
   "watch.vineandbarrel.path.chapter": "(Ścieżka piwowara, %s z %s)",
-  "watch.vineandbarrel.farmers_delight.note": "Kuchenka grzeje, po linie się wspina"
+  "watch.vineandbarrel.farmers_delight.note": "Kuchenka grzeje, po linie się wspina",
+  "entity.minecraft.villager.vineandbarrel.tavern_keeper": "Karczmarz",
+  "entity.minecraft.villager.tavern_keeper": "Karczmarz"
 }

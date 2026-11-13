@@ -88,13 +88,24 @@ public final class TavernWalk
 	/** Whether someone can be in this cell: nothing collides, or only a carpet or thin snow, or it's a door or open gate. */
 	private boolean free(BlockPos pos) {
 		BlockState state = state(pos);
-		if (state.getBlock() instanceof DoorBlock || (state.getBlock() instanceof FenceGateBlock && state.getValue(FenceGateBlock.OPEN))) {
+		if (state.getBlock() instanceof DoorBlock || (state.getBlock() instanceof FenceGateBlock && state.getValue(FenceGateBlock.OPEN))
+			|| isLadder(pos)) {
 			return true;
 		}
 		if (!state.getFluidState().isEmpty()) {
 			return false;
 		}
 		return top(pos) <= 0.2;
+	}
+
+	/** A rung: someone on a ladder is in its cell. */
+	private boolean isLadder(BlockPos pos) {
+		return state(pos).getBlock() instanceof net.minecraft.world.level.block.LadderBlock;
+	}
+
+	/** A trapdoor in a floor with a ladder under it (1.2's cellar vaults): a player opens it and climbs. */
+	private boolean isHatch(BlockPos pos) {
+		return state(pos).getBlock() instanceof net.minecraft.world.level.block.TrapDoorBlock && isLadder(pos.below());
 	}
 
 	private static boolean isStep(BlockState state) {
@@ -156,6 +167,33 @@ public final class TavernWalk
 				if (next != null && joined(node, next, d)) {
 					out.add(next);
 				}
+			}
+		}
+		// up and down a ladder, rung by rung (1.2's lower cellar rooms)
+		BlockPos p = node.pos();
+		for (BlockPos q : List.of(p.below(), p.above())) {
+			Node next = nodes.get(q);
+			if (next != null && (isLadder(p) || isLadder(q))) {
+				out.add(next);
+			}
+		}
+		// through a hatch: from the floor over it down to the first rung with headroom, and back up
+		if (isHatch(p.below())) {
+			for (BlockPos q = p.below(2); isLadder(q) && box.isInside(q); q = q.below()) {
+				Node rung = nodes.get(q);
+				if (rung != null) {
+					out.add(rung);
+					break;
+				}
+			}
+		}
+		if (isLadder(p)) {
+			BlockPos q = p.above();
+			while (isLadder(q) && box.isInside(q)) {
+				q = q.above();
+			}
+			if (isHatch(q) && nodes.get(q.above()) != null && (nodes.get(p.above()) == null)) {
+				out.add(nodes.get(q.above()));
 			}
 		}
 		return out;

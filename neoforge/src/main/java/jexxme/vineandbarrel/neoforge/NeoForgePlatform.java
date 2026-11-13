@@ -46,9 +46,7 @@ import net.minecraft.world.entity.npc.VillagerTrades;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -66,7 +64,7 @@ public final class NeoForgePlatform implements Platform
 	private static final List<Consumer<GameTestRegistrar>> GAME_TESTS = new ArrayList<>();
 	private static boolean gameTestsRegistered;
 	/** Our trades by profession and level, and the wandering trader's, added whenever NeoForge builds the trade tables. */
-	private static final Map<VillagerProfession, Map<Integer, List<VillagerTrades.ItemListing>>> VILLAGER_TRADES = new HashMap<>();
+	private static final List<VillagerTradeEntry> VILLAGER_TRADES = new ArrayList<>();
 	private static final List<VillagerTrades.ItemListing> WANDERING_TRADES = new ArrayList<>();
 
 	static void init(IEventBus bus) {
@@ -78,9 +76,10 @@ public final class NeoForgePlatform implements Platform
 		NeoForge.EVENT_BUS.addListener(ServerAboutToStartEvent.class, event -> registerGameTests());
 		// Both fire from the vanilla tables on every server start and tag reload, so nothing is added twice
 		NeoForge.EVENT_BUS.addListener(VillagerTradesEvent.class, event -> {
-			Map<Integer, List<VillagerTrades.ItemListing>> levels = VILLAGER_TRADES.get(event.getType());
-			if (levels != null) {
-				levels.forEach((level, trades) -> event.getTrades().get(level.intValue()).addAll(trades));
+			for (VillagerTradeEntry entry : VILLAGER_TRADES) {
+				if (entry.profession().get() == event.getType()) {
+					event.getTrades().get(entry.level()).addAll(entry.trades());
+				}
 			}
 		});
 		NeoForge.EVENT_BUS.addListener(WandererTradesEvent.class, event -> event.getGenericTrades().addAll(WANDERING_TRADES));
@@ -282,9 +281,13 @@ public final class NeoForgePlatform implements Platform
 
 	// ------------------------------------------------------------------ villager trades
 
+	/** Trades for a profession's level; the profession is looked up when the trades are built (it may be ours, registered later). */
+	private record VillagerTradeEntry(java.util.function.Supplier<? extends VillagerProfession> profession, int level, List<VillagerTrades.ItemListing> trades) {
+	}
+
 	@Override
-	public void addVillagerTrades(VillagerProfession profession, int level, List<VillagerTrades.ItemListing> trades) {
-		VILLAGER_TRADES.computeIfAbsent(profession, p -> new HashMap<>()).computeIfAbsent(level, l -> new ArrayList<>()).addAll(trades);
+	public void addVillagerTrades(java.util.function.Supplier<? extends VillagerProfession> profession, int level, List<VillagerTrades.ItemListing> trades) {
+		VILLAGER_TRADES.add(new VillagerTradeEntry(profession, level, List.copyOf(trades)));
 	}
 
 	@Override

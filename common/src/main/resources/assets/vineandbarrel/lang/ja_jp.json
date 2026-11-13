@@ -368,5 +368,7 @@
   "watch.vineandbarrel.path.wiki": "Wiki",
   "watch.vineandbarrel.path.wiki_page": "Wikiページ ›",
   "watch.vineandbarrel.path.chapter": "(醸造家の道 %s / %s)",
-  "watch.vineandbarrel.farmers_delight.note": "かまどで温め、ロープを登る"
+  "watch.vineandbarrel.farmers_delight.note": "かまどで温め、ロープを登る",
+  "entity.minecraft.villager.vineandbarrel.tavern_keeper": "酒場の主人",
+  "entity.minecraft.villager.tavern_keeper": "酒場の主人"
 }

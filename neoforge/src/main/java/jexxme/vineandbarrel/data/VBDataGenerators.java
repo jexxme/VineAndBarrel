@@ -66,7 +66,25 @@ public final class VBDataGenerators
 				new LootTableProvider.SubProviderEntry(VBBlockLoot::new, LootContextParamSets.BLOCK),
 				// 1.21.1 has no block_interact parameter set: ClimbingCropBlock#pick rolls the harvest tables with the block one
 				new LootTableProvider.SubProviderEntry(VBHarvestLoot::new, LootContextParamSets.BLOCK),
-				new LootTableProvider.SubProviderEntry(VillageData.ChestLoot::new, LootContextParamSets.CHEST)), registries));
+				new LootTableProvider.SubProviderEntry(VillageData.ChestLoot::new, LootContextParamSets.CHEST)), registries)
+		{
+			/**
+			 * The tavern chest draws once from vanilla's village house chest (1.2), a table this provider doesn't hold on
+			 * this Minecraft (26.x resolves it): that one reference is left to the GameTests (world_tavern_chest_loot),
+			 * everything else is checked as usual.
+			 */
+			@Override
+			protected void validate(net.minecraft.core.WritableRegistry<net.minecraft.world.level.storage.loot.LootTable> registry,
+					net.minecraft.world.level.storage.loot.ValidationContext context, net.minecraft.util.ProblemReporter.Collector problems) {
+				net.minecraft.util.ProblemReporter.Collector own = new net.minecraft.util.ProblemReporter.Collector();
+				super.validate(registry, new net.minecraft.world.level.storage.loot.ValidationContext(own, LootContextParamSets.ALL_PARAMS, context.resolver()), own);
+				own.get().forEach((where, problem) -> {
+					if (!problem.startsWith("Unknown loot table called minecraft:chests/village/")) {
+						problems.forChild(where).report(problem);
+					}
+				});
+			}
+		});
 		event.createProvider((output, registries) -> new AdvancementProvider(output, registries, List.of(new VBAdvancementGenerator())));
 		event.createProvider(VBRecipes::new);
 		event.createBlockAndItemTags((output, lookup) -> new VBTagProviders.Blocks(output, lookup, files),

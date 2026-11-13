@@ -168,7 +168,16 @@ public class BrewKettleBlockEntity extends BlockEntity implements MenuProvider, 
 
 	// ------------------------------------------------------------------ ticking
 
+	/** Whether this kettle made sure it is a tavern keeper's job site since it was loaded (not saved). */
+	private boolean jobSiteChecked;
+
 	public static void serverTick(ServerLevel level, BlockPos pos, BlockState state, BrewKettleBlockEntity kettle) {
+		if (!kettle.jobSiteChecked) {
+			// a kettle from before 1.2 in a section the game had already listed points of interest for is no job site
+			// until it is placed again: it becomes one the first time it ticks
+			kettle.jobSiteChecked = true;
+			jexxme.vineandbarrel.world.village.TavernKeeper.ensureJobSite(level, pos, state);
+		}
 		int fires = kettle.heatedBlocks();
 		boolean heated = fires > 0;
 		boolean changed = false;

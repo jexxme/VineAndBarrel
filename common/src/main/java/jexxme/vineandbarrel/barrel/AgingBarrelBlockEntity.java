@@ -322,6 +322,23 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 		return container;
 	}
 
+	/**
+	 * Fills an empty barrel with {@code servings} of the recipe's batch at {@code age} as a tavern's own stock (a tavern
+	 * keeper's restock, 1.2): never home-brewed, so tapping it earns nothing a player's own brewing would. Returns
+	 * whether it was empty and is filled now.
+	 */
+	public boolean stock(AgingRecipe recipe, int servings, long age) {
+		if (!batch.isEmpty() || servings <= 0) {
+			return false;
+		}
+		batch = recipe.newBatch().withServings(Math.min(servings, CAPACITY));
+		pausedAge = -1L;
+		homeBrewed = false;
+		stamp(Math.max(0L, age));
+		changed();
+		return true;
+	}
+
 	/** Rises as the barrel fills; wine pours lighter, beer deeper ({@link DrinkItems#pourPitch}). */
 	private float fillPitch() {
 		return (0.8F + 0.4F * batch.servings() / CAPACITY) * DrinkItems.pourPitch(drink());
