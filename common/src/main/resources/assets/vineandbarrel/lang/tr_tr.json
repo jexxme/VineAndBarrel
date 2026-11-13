@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "Hepsini izle",
   "watch.vineandbarrel.path.progress": "%s / %s tamam",
   "watch.vineandbarrel.path.all_done": "Hepsi tamam",
+  "watch.vineandbarrel.path.wiki": "Viki",
+  "watch.vineandbarrel.path.wiki_page": "Viki sayfası ›",
   "watch.vineandbarrel.path.chapter": "(Biracının yolu, %s / %s)",
   "watch.vineandbarrel.farmers_delight.note": "Isı için ocak, tırmanmak için ip"
 }
