@@ -48,6 +48,19 @@ Mira [Barril de crianza](/aging-barrel/).
 
 Mira [Marmita](/brew-kettle/).
 
+## Calderos
+
+<Render name="scenes/cauldrons" float="right" size={192} alt="Calderos con mosto de miel, mosto de cebada y zumo de uva" />
+
+Un caldero admite zumo, mosto y mosto de miel igual que admite agua.
+
+- **Vierte** con un cubo para llenarlo, o con un frasco para un nivel. Un frasco vacío saca un nivel, y un cubo vacío, un
+  caldero lleno.
+- **{rules.servingsPerBucket} niveles**, uno por ración, así que un cubo se reparte en frascos y los frascos vuelven a formar un cubo.
+- **Un cubo sustituye** el agua, la lava u otro tipo, como los cubos de vanilla, pero no el mismo tipo: ese se rellena
+  con frascos. Los frascos solo entran en un caldero vacío o en uno del mismo tipo.
+- **Como el agua**, apaga a un mob en llamas, un comparador lee el nivel y, al romperlo, queda un caldero normal.
+
 ## Bebidas y recipientes
 
 <Render name="scenes/placed-drinks" float="right" size={192} alt="Jarras y copas sobre un bloque" />
@@ -57,24 +70,25 @@ Mira [Marmita](/brew-kettle/).
 - **¡Salud!** Dos o más jugadores que terminan una bebida con {rules.cheersWindowTicks / 20} segundos de diferencia y a
   {rules.cheersRadius} bloques unos de otros brindan, y la mejora de todos dura un {rules.cheersBonusPercent}% más.
 - **Beber** suena y se ve como una poción, y recuperas el recipiente vacío.
-- **Los cubos de zumo y de mosto** no se pueden verter como líquido, como la leche.
+- **Los cubos de zumo y de mosto** no se pueden verter como líquido, como la leche, pero llenan un [caldero](#calderos).
 
 ## Achispado
 
-- **Los demás jugadores te ven balancearte** y ven tu hipo, tus tropiezos y tus caídas.
-- **Dormir la mona:** dormir toda la noche quita Achispado.
-- **La leche** lo quita; **el agua o cualquier zumo** lo baja un nivel.
+- **Los demás jugadores te ven tambalearte,** tropezar, caerte y dar cabezadas, y oyen tu hipo.
+- **Dormir la mona:** dormir toda la noche quita Achispado. Si te acuestas muy borracho, despiertas con resaca.
+- **La leche** lo quita; **el agua o cualquier zumo** lo baja un nivel. Con Farmer's Delight, también su botella de leche,
+  su zumo de sandía y su sidra de manzana.
 - **Pasa el cursor sobre el efecto** en tu inventario para ver qué hace tu nivel.
-- **Una copa de más** en el nivel máximo y sufres una laguna. Dónde despiertas es un misterio.
+- **Una copa de más** en el nivel máximo y, un poco después, sufres una laguna. Dónde despiertas es un misterio.
 
 Mira [Achispado](/tipsy/).
 
 ## Cultivos y vida de granja
 
-- Los arbustos se recogen con un clic derecho (también medio maduros) y retroceden una fase, como las bayas dulces. Una espaldera dentro o encima de un arbusto le deja trepar: clic derecho con ella sobre el arbusto, o sobre la espaldera con uvas o lúpulo.
+- Los arbustos se recogen con un clic derecho (también medio maduros) y retroceden una fase, como las bayas dulces. Una espaldera dentro o encima de un arbusto le deja trepar: clic derecho con ella sobre el arbusto, o sobre la espaldera con uvas o lúpulo. Una valla, un muro, una cadena o unos barrotes funcionan igual, con una fruta menos por recolección.
 - Las abejas ayudan a crecer a las uvas, el lúpulo y la cebada.
 - La cebada alimenta y cría animales como el trigo; sus semillas alimentan a gallinas y loros.
-- Los aldeanos granjeros plantan y cosechan cebada.
+- Los aldeanos granjeros plantan y cosechan cebada, y compran cebada y uvas tintas, como compran trigo.
 - Los zorros cogen uvas de los arbustos, tintas y blancas, como hacen con las bayas dulces.
 - Todos los cultivos se pueden convertir en abono.
 - La <Item id="barley_bale" /> amortigua una caída y eleva el humo de las hogueras como una bala de heno.

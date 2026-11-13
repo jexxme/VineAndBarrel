@@ -109,7 +109,6 @@ public final class VineAndBarrelFabric implements ModInitializer
 			InteractionResult result = TipsyEvents.onEntityInteract(player, entity);
 			return result != null ? result : InteractionResult.PASS;
 		});
-		// Slurred chat: typed chat messages only, through ServerGamePacketListenerImplMixin (as NeoForge's ServerChatEvent)
 		// Foxes learn to pick grapes
 		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> VBEntityEvents.onJoinLevel(entity));
 		// The server's life

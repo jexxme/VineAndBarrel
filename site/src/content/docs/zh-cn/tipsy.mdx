@@ -1,55 +1,91 @@
 ---
 title: 微醺
-description: 微醺每一级的效果、多喝一杯会怎样、怎么醒酒，以及怎么调低或关掉它。
+description: 微醺每一级的效果、多喝的那一杯怎样后劲上头、第二天早上会怎样、怎么醒酒，以及怎么调低或关掉它。
 ---
 import { Aside } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import TipsyLevels from '../../../components/data/TipsyLevels.astro';
 import EffectBadge from '../../../components/data/EffectBadge.astro';
-import { rules, nameOf, roman } from '../../../lib/l10n/zh-cn';
+import { rules, nameOf, roman, pct, duration } from '../../../lib/l10n/zh-cn';
 
 export const t = rules.tipsy;
 export const cfg = t.config;
+export const h = t.hangover;
+export const under = t.goingUnder;
 export const rowdyLevel = t.rowdyLevel;
 export const punchHearts = t.rowdyPunchDamage / 2;
+export const slower = (level) => t.levels[level - 1].legs.slower;
+export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.level ?? t.maxLevel;
 
-每一杯葡萄酒、啤酒、苹果西打和蜂蜜酒，除了增益之外，还会给你**一级<EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**。一开始很有意思：身子晃晃，打打嗝，生出一点酒壮胆的勇气，到微醺 {roman(t.slurLevel - 1)} 时你状态最好（聊天可就不一定了），不过眼皮已经开始发沉。再喝下去就要付出代价：一阵阵反胃，胳膊没劲，到了最高级，腿几乎撑不住你走回家。最高到 {t.maxLevel} 级。
+每一杯葡萄酒、啤酒、苹果西打和蜂蜜酒，除了增益之外，还会给你**一级<EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**。醉意体现在你的身体上，而不是屏幕上：腿不听使唤，眼前出现重影，周围的声音变得发闷。一开始很有意思：脚下发飘，打打嗝，生出一点酒壮胆的勇气，到微醺 {roman(t.slurLevel - 1)} 时你状态最好（聊天可就不一定了）。再喝下去就要付出代价：不再有增益，找人打架，站着就打起瞌睡，到了最高级，腿几乎撑不住你走回家。最高到 {t.maxLevel} 级。
 
 ## 等级
 
 <TipsyLevels />
 
-其他玩家也能看到你摇晃、打嗝、踉跄和绊倒。把鼠标移到物品栏里的微醺效果上，就能看到你当前这一级的效果。
+把鼠标移到物品栏里的微醺效果上，就能看到你当前这一级的效果。
 
-## 多喝一杯
+## 醉步
 
-已经到 {t.maxLevel} 级还在喝？你会**断片**。眼睛一闭，人直接倒下，星星绕着你的脑袋转，谁都看得见。这几秒里没人能伤到你，无论是生物还是玩家，倒下本身也不会；不过世界其余的危险照常有效，所以别在熔岩里睡过去。然后你醒来。在哪儿？要看这一晚怎么收场，而醒来的地方比你想的多……
+从微醺 {roman(t.drunkWalkLevel - 1)} 起，你的腿就不听使唤了。你的操作总是慢半拍才到，所以起步晚，也没法说停就停。走着走着就偏离方向，又绕回来，你得不停地纠正。身体随着每一步左右摇摆，步子也深一脚浅一脚。你自己的视角只会随身体微微倾斜；其他玩家则能看到你整个摇摇晃晃的样子，以及你真正走过的路线。
 
-你会饿着肚子、手脚发软好一阵子，回到微醺 I，口袋里也许多了件你不记得拿过的东西。你原来的东西一件都不会丢。
+从微醺 {roman(t.stumbleLevel - 1)} 起你会**踉跄**：往旁边踩空一步，张开双臂稳住平衡。偶尔没稳住，你就会**绊倒**，脸朝下摔个结实，过一会儿再爬起来。腿也会变沉：在微醺 {roman(t.slowerLevel - 1)} 时慢 {pct(slower(t.slowerLevel))}，在微醺 {roman(t.maxLevel - 1)} 时慢 {pct(slower(t.maxLevel))}。疾跑仍然可以用。
+
+醉步从不会把你带下悬崖边，也不会把你带进任何会伤到你的东西里。**潜行**时你就能走直线。游泳、骑乘、飞行和攀爬时都和清醒时一样。
+
+## 眼睛和耳朵
+
+从微醺 {roman(t.softEdgesLevel - 1)} 起，屏幕边缘会变得柔和模糊，还带一点暖色。从微醺 {roman(t.doubleVisionLevel - 1)} 起你会**看到重影**：第二个影像会分开再合拢，每升一级分得更开。**按住潜行眯起眼睛**，两个影像就会靠近一些，不过你越醉，效果越差。告示牌上的字从微醺 {roman(t.signBlurLevel - 1)} 起会渐渐淡进木纹里，到微醺 {roman(t.maxLevel - 1)} 时几乎看不清；眯眼在这里也有帮助。
+
+从微醺 {roman(t.woollyLevel - 1)} 起，世界的声音会**发闷**，像隔着一层毯子，每升一级更闷。音乐和菜单的声音保持清晰。到微醺 {roman(t.heartbeatLevel - 1)} 时，你会听到自己的心跳，而且只有你听得到。
+
+## 打瞌睡
+
+从微醺 {roman(t.nodLevel - 1)} 起，别站着不动太久。静止一会儿，你的眼皮就会往下沉，脑袋一点，然后一声呼噜，猛地惊醒。继续站着，它还会再来。做任何事都能让你醒过来：迈一步、四下看看、使用某样东西。周围的人都能看到你的下巴往下沉，也能听到那声呼噜。
+
+## 醉酒聊天
+
+你的聊天会像你嘴上说出来的那样。在微醺 {roman(t.hicChatLevel - 1)} 时偶尔会冒出一个\*嗝\*，在微醺 {roman(chatAt(2) - 1)} 时口齿不清但还很好读，在微醺 {roman(chatAt(3) - 1)} 时就难读了，到微醺 {roman(chatAt(4) - 1)} 时就是一堆胡言乱语。链接、@提及 和命令总是按你输入的原样发出。
 
 ## 发酒疯
 
-从微醺 {roman(rowdyLevel - 1)} 起，你会发酒疯。时不时你的手臂会自己挥出去，对正前方的一切打出真正的一拳：造成{punchHearts === 0.5 ? '半颗心' : `${punchHearts} 颗心`}的伤害并把对方推开，不管你手里拿着什么。驯服的宠物、铁傀儡和盔甲架它从不会打，其他玩家只有在开启 PvP 的地方才会挨打。不过村民和路人就是目标了，而且他们会记仇。
+从微醺 {roman(rowdyLevel - 1)} 起，你会发酒疯。时不时你会憋着想打一架，最多持续 {Math.round(t.rowdyItchTicks / 20)} 秒，这期间第一个出现在你面前的人就要挨揍，哪怕你只是朝那边瞥了一眼。你的手臂会先往后一收，所以谁都看得出这一拳要来，然后你打出真正的一拳：造成{punchHearts === 0.5 ? '半颗心' : `${punchHearts} 颗心`}的伤害并把对方推开，不管你手里拿着什么。挥拳的势头会带着你往前冲一步；如果对方躲开了，你就打空，踉跄一下。驯服的宠物、铁傀儡和盔甲架它从不会打，其他玩家只有在开启 PvP 的地方才会挨打。不过村民和路人就是目标了，而且他们会记仇。
 
 你还会**不再供酒**：从微醺 {roman(t.cutOffLevel - 1)} 起，村民和流浪商人会摇头，在你醒酒之前不肯跟你交易。要交易，请在喝第 {t.cutOffLevel} 杯之前办完。
+
+## 多喝一杯
+
+已经在微醺 {roman(t.maxLevel - 1)} 还在喝？这一杯不会当场把你放倒。它的**后劲**会在 {Math.round(under.soonestTicks / 20)} 到 {Math.round(under.latestTicks / 20)} 秒后上头，不管你那时在做什么。最后 {Math.round(under.ticks / 20)} 秒里，你会感觉自己在往下沉：眼皮发沉，脑袋耷拉，世界变得发闷又遥远，腿一软，身子晃得厉害。你的朋友们也看得出来要出事了。
+
+然后你会**断片**。眼睛一闭，人直接倒下，星星绕着你的脑袋转，谁都看得见。这几秒里没人能伤到你，无论是生物还是玩家，倒下本身也不会；不过世界其余的危险照常有效，所以别在熔岩里睡过去。然后你醒来。在哪儿？要看这一晚怎么收场，而醒来的地方比你想的多……
+
+醒来时你酒醒了，但会[宿醉](#第二天早上)，口袋里也许多了件你不记得拿过的东西。你原来的东西一件都不会丢。在后劲上头之前醒酒（一桶牛奶、睡一整晚），就能躲过去；再喝一杯也不会让它推迟。
+
+## 第二天早上
+
+断片之后，或者在微醺 {roman(h.sleepLevel - 1)} 及以上睡了一晚，你醒来时酒已经醒了，却带着<EffectBadge id="vineandbarrel:hangover" name="Hangover" />。你还会饿：饥饿格最多只剩 {h.hungryFood / 2} 个，饱和度清零。
+
+- **日光刺眼。** 在露天的天空下，明亮的白天会刺得你眯起眼睛。刚醒来时，就连在室内也一样，大约 {Math.round(h.freshGlareTicks / 20)} 秒内慢慢缓解。按住潜行眯眼会好一些。
+- 附近的**响声**会让你一激灵。
+- 视角不会晃动，你也不会犯恶心。
+
+它会持续：断片之后 {duration(h.afterBlackoutTicks)}，在微醺 {roman(h.sleepLevel - 1)} 时睡觉之后 {duration(h.afterSleepTicks[h.sleepLevel])}，在微醺 {roman(t.maxLevel - 1)} 时睡觉之后 {duration(h.afterSleepTicks[t.maxLevel])}。**一瓶水或任意果汁**会去掉剩余时间的 {pct(1 - h.drinkLeaves)}。
 
 ## 醒酒
 
 - **等待**：每一级会在 **{cfg.secondsPerLevel} 秒**后消退，一次一级。每喝一杯新的，各级的计时都会重新开始，所以在微醺 {roman(t.maxLevel - 1)} 时，再不喝一滴，大约 {Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10} 分钟后就清醒了。
 - **牛奶**会把它整个清掉，和清除其他效果一样。饮品给你的增益也会一并清掉。
 - **一瓶水或任意果汁**（<Item id="grape_juice" />、<Item id="white_grape_juice" />、<Item id="sweet_berry_juice" />、<Item id="apple_juice" />）会立刻让它降低一级。只有普通的水瓶有用，其他药水不行。
-- **睡一觉**：上床睡过整个夜晚。必须是真正被跳过的夜晚：提早起床，或者在服务器里其他人不睡时你躺着不睡着，醒来时你还是和上床时一样微醺。
+- **装了 Farmer's Delight 时**，它的<Item id="farmersdelight:milk_bottle" />、<Item id="farmersdelight:melon_juice" />和<Item id="farmersdelight:apple_cider" />也会让它降低一级。一瓶牛奶降低一级；一桶牛奶全部清除。
+- **睡一觉**：上床睡过整个夜晚。你醒来时就清醒了，不过从微醺 {roman(h.sleepLevel - 1)} 起会带着[宿醉](#第二天早上)。必须是真正被跳过的夜晚：提早起床，或者在服务器里其他人不睡时你躺着不睡着，醒来时你还是和上床时一样微醺。
 
 ## 小贴士
 
-- 在微醺 {roman(t.stumbleLevel - 1)} 时**潜行**，腿就稳得住：不会偏移，不会踉跄，也不会绊倒。游泳、骑乘和飞行也都安全。
 - **绊倒从不伤人**，也不会把你送到你没走到过的地方。只有在没有怪物靠近的平坦开阔地面上才会摔倒，而且 {Math.round(t.tripCooldownTicks / 20)} 秒内不会摔两次；别的地方只会是踉跄一下。
 - **喝水能让你很快摆脱糟糕的等级**，但较低的几级各有自己的计时，所以总体上并不会让你更快清醒。
-- 微醺只管自己带来的副作用：药水或命令给的缓慢、反胃不会被它动。
-- 聊天里的链接、命令和 @提及 永远不会被说成口齿不清。
-- 其他玩家能看到你摇晃，听到你打嗝，看到你的踉跄、绊倒和发酒疯的挥拳，但看不到你变暗的屏幕边缘和眨眼。
+- 其他玩家能看到你摇晃、踉跄、绊倒和打瞌睡，能看出你发酒疯的拳头要来，也能听到你打嗝。
 - **想知道断片的全部故事**？所有醒来的地方、概率和纪念品，都在[断片](/blackouts/)里。当然，有剧透。
 
 ## 设置
 
-服主可以整个关闭微醺（无酒精模式），也可以逐项关闭口齿不清的聊天、踉跄（连同绊倒和偏移）、断片、发酒疯的挥拳和不再供酒。每位玩家都可以调低微醺晃动屏幕的幅度，直到完全不晃，也可以关闭视觉效果；原版的“畸变效果”“视场角效果”和“黑暗脉动效果”滑块同样有效。所有选项和默认值见[配置](/reference/config/)。
+服主可以整个关闭微醺（无酒精模式），也可以逐项关闭口齿不清的聊天、醉步（连同踉跄和绊倒）、打瞌睡、宿醉、断片、发酒疯的挥拳和不再供酒。微醺从不会自己晃动你的屏幕；每位玩家都可以调低打嗝、踉跄或绊倒时屏幕晃动的幅度，直到完全不晃，原版的“屏幕扭曲效果”滑块同样有效。每位玩家还可以关掉醉眼（模糊的屏幕边缘、重影、褪色的告示牌文字和宿醉时的刺眼日光）以及发闷的声音。所有选项和默认值见[配置](/reference/config/)。

@@ -19,6 +19,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.minecraft.client.Minecraft;
@@ -45,11 +46,13 @@ public final class VineAndBarrelFabricClient implements ClientModInitializer
 			BlackoutClient.onClientTick();
 			WatchClient.onClientTick();
 		});
+		// Drunk chat: the own message slurred before it is signed and sent (commands aren't chat here)
+		ClientSendMessageEvents.MODIFY_CHAT.register(TipsyClient::ownChat);
 		// "Watch it": the tooltip line, and the key over an item in a screen
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> WatchClient.onTooltip(stack, lines));
 		ScreenEvents.AFTER_INIT.register((minecraft, screen, width, height) ->
 			ScreenKeyboardEvents.allowKeyPress(screen).register((s, event) -> !WatchClient.onScreenKey(s, event)));
-		// Tunnel vision above the camera overlays, under the rest of the HUD; the blackout above everything. Both stay with
+		// What the eyes do (TipsyClient.renderVision) above the camera overlays, under the rest of the HUD; the blackout above everything. Both stay with
 		// the HUD hidden (F1), as on NeoForge: vanilla skips the camera overlays then but still draws the sleep overlay,
 		// so with F1 on they are drawn right after it instead.
 		HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS, TipsyClient.VISION_LAYER, unlessHidden(false, TipsyClient::renderVision));

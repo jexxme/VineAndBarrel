@@ -125,7 +125,8 @@ public final class FabricConfig
 			if (value.side() != side) {
 				continue;
 			}
-			set(value, saved.getProperty(key(value)), own);
+			// A renamed setting still saved under its old key takes that value once; the file is written with the new key
+			set(value, value.savedText(name -> saved.getProperty(value.section() + "." + name)), own);
 		}
 		write(side, file);
 	}

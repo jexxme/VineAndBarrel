@@ -1,49 +1,114 @@
 ---
 title: Tipsy
-description: What Tipsy does at each level, what happens after one drink too many, how to sober up, and how to turn it down or off.
+description: What Tipsy does at each level, how one drink too many catches up with you, the morning after, how to sober up, and how to turn it down or off.
 ---
 import { Aside } from '@astrojs/starlight/components';
 import Item from '../../components/mc/Item.astro';
 import TipsyLevels from '../../components/data/TipsyLevels.astro';
 import EffectBadge from '../../components/data/EffectBadge.astro';
-import { rules, nameOf, roman } from '../../lib/data';
+import { rules, nameOf, roman, pct, duration } from '../../lib/data';
 
 export const t = rules.tipsy;
 export const cfg = t.config;
+export const h = t.hangover;
+export const under = t.goingUnder;
 export const rowdyLevel = t.rowdyLevel;
 export const punchHearts = t.rowdyPunchDamage / 2;
+export const slower = (level) => t.levels[level - 1].legs.slower;
+export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.level ?? t.maxLevel;
 
-Every wine, beer, cider and mead gives you its buff **and one level of <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. It's
-fun at first: a sway, hiccups, a little liquid courage, and at Tipsy {roman(t.slurLevel - 1)} you're at your best (and
-your chat isn't), though your eyes start to get heavy. Keep going and it starts to cost you: queasy spells, weak arms,
-and at the top, legs that barely carry you home. It tops out at level {t.maxLevel}.
+Every wine, beer, cider and mead gives you its buff **and one level of <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**.
+Being drunk shows in your body, not on your screen: your legs get a mind of their own, your eyes see double, the world
+goes woolly. It's fun at first: wobbly legs, hiccups, a little liquid courage, and at Tipsy {roman(t.slurLevel - 1)} you're at
+your best (and your chat isn't). Keep going and it starts to cost you: no more buffs, picking fights, nodding off on your
+feet, and at the top, legs that barely carry you home. It tops out at level {t.maxLevel}.
 
 ## Levels
 
 <TipsyLevels />
 
-Other players see you sway, hiccup, stumble and trip too. Hover over the Tipsy effect in your inventory to see what
-your current level does.
+Hover over the Tipsy effect in your inventory to see what your current level does.
 
-## One drink too many
+## Drunk legs
 
-Already at level {t.maxLevel} and still drinking? You **black out**. Your eyes fall shut and you keel over, stars
-circling your head for everyone to see. For those few seconds nobody can hurt you, no mob and no player, and keeling
-over doesn't either; the rest of the world still counts, so don't pass out in lava. Then you wake up. Where? That
-depends on the night, and there are more ways to wake up than you'd think…
+From Tipsy {roman(t.drunkWalkLevel - 1)}, your legs have a mind of their own. What you steer arrives a moment late, so you
+get going late and can't stop on the spot. The walk curves off course and back, and you keep correcting. Your body rocks
+onto each foot and the steps come uneven. Your own view only leans a little with your body; other players see the whole
+wobble, and the path you really take.
 
-You'll be hungry and shaky for a while, back at Tipsy I, and your pockets may hold something you don't remember picking
-up. Nothing you had is ever lost.
+From Tipsy {roman(t.stumbleLevel - 1)} you **stumble**: a misstep to the side, arms out for balance. Once in a while one isn't
+caught and you **trip**, flat on your face, and get back up a moment later. Your legs get heavy too: you're
+{pct(slower(t.slowerLevel))} slower at Tipsy {roman(t.slowerLevel - 1)} and {pct(slower(t.maxLevel))} slower at Tipsy {roman(t.maxLevel - 1)}.
+You can still sprint.
+
+The drunk walk never takes you over an edge or into anything that hurts. **Sneak** and you walk straight. Swimming,
+riding, flying and climbing stay sober.
+
+## Eyes and ears
+
+From Tipsy {roman(t.softEdgesLevel - 1)}, the edges of your screen go soft and a little warm. From Tipsy {roman(t.doubleVisionLevel - 1)}
+you **see double**: a second image slides apart and back, further with every level. **Hold sneak to squint** and the two
+come closer together, though it helps less the drunker you are. The writing on signs fades into the wood from
+Tipsy {roman(t.signBlurLevel - 1)}, until at Tipsy {roman(t.maxLevel - 1)} you can barely read it; squinting helps there too.
+
+From Tipsy {roman(t.woollyLevel - 1)} the world sounds **woolly**, muffled as if through a blanket, more with every level.
+Music and menus stay clear. At Tipsy {roman(t.heartbeatLevel - 1)} you hear your own heart beating, and only you hear it.
+
+## Nodding off
+
+From Tipsy {roman(t.nodLevel - 1)}, don't stand around too long. Stay still a while and your lids sink, your head drops,
+and then you jerk awake with a snort. Stand on and it comes back. Anything you do wakes you: a step, a look around, using
+something. Everyone around you sees your chin sink and hears the snort.
+
+## Drunk chat
+
+Your chat comes out the way you'd say it. At Tipsy {roman(t.hicChatLevel - 1)} the odd \*hic\* slips in, at Tipsy {roman(chatAt(2) - 1)}
+it's slurred but easy to read, at Tipsy {roman(chatAt(3) - 1)} it gets hard to read, and at Tipsy {roman(chatAt(4) - 1)} it's
+gibberish. Links, @mentions and commands always go out as you typed them.
 
 ## Rowdy
 
-From Tipsy {roman(rowdyLevel - 1)}, you get rowdy. Now and then your arm swings by itself and throws a real punch at
-whatever is right in front of you: {punchHearts === 0.5 ? 'half a heart' : `${punchHearts} hearts`} of damage
-and a shove, whatever you're holding. It never hits tamed pets, iron golems or armor stands, and it only hits other players
-where PvP is on. Villagers and passers-by are fair game, though, and they remember it.
+From Tipsy {roman(rowdyLevel - 1)}, you get rowdy. Now and then you're spoiling for a fight, for up to
+{Math.round(t.rowdyItchTicks / 20)} seconds, and the first one in front of you gets it, even if you only glance their way.
+Your arm draws back for a moment, so everyone sees it coming, then you throw a real punch:
+{punchHearts === 0.5 ? 'half a heart' : `${punchHearts} hearts`} of damage and a shove, whatever you're holding. The swing
+carries you a step forward; if they got out of the way, you miss and stumble. It never hits tamed pets, iron golems or
+armor stands, and it only hits other players where PvP is on. Villagers and passers-by are fair game, though, and they
+remember it.
 
 You're also **cut off**: from Tipsy {roman(t.cutOffLevel - 1)}, villagers and wandering traders shake their heads and won't
 trade with you until you've sobered up. Do your trading before the {t.cutOffLevel === 4 ? 'fourth' : `${t.cutOffLevel}th`} drink.
+
+## One drink too many
+
+Already at Tipsy {roman(t.maxLevel - 1)} and still drinking? That drink doesn't knock you out on the spot. It **catches up
+with you** {Math.round(under.soonestTicks / 20)} to {Math.round(under.latestTicks / 20)} seconds later, whatever you're doing
+by then. For the last {Math.round(under.ticks / 20)} seconds you feel yourself going under: your lids get heavy, your head
+sinks, the world goes muffled and far away, your legs give and you sway hard. Your friends see it coming too.
+
+Then you **black out**. Your eyes fall shut and you keel over, stars circling your head for everyone to see. For those few
+seconds nobody can hurt you, no mob and no player, and keeling over doesn't either; the rest of the world still counts, so
+don't pass out in lava. Then you wake up. Where? That depends on the night, and there are more ways to wake up than you'd
+think…
+
+You wake up sober but [hungover](#the-morning-after), and your pockets may hold something you don't remember picking up.
+Nothing you had is ever lost. Sobering up before it hits (a bucket of milk, a night's sleep) gets you out of it; another
+drink never puts it off.
+
+## The morning after
+
+After a blackout, or a night's sleep at Tipsy {roman(h.sleepLevel - 1)} or higher, you wake up sober but with a
+<EffectBadge id="vineandbarrel:hangover" name="Hangover" />. You're hungry, too: no more than {h.hungryFood / 2} hunger
+shanks, and nothing in your saturation.
+
+- **Daylight glares.** Under the open sky the bright day hurts and you squint into it. Right after waking it gets you even
+  indoors, easing off over about {Math.round(h.freshGlareTicks / 20)} seconds. Holding sneak to squint helps.
+- **Loud noises** close by make you wince.
+- Nothing moves your view and nothing makes you sick.
+
+It lasts {duration(h.afterBlackoutTicks)} after a blackout, {duration(h.afterSleepTicks[h.sleepLevel])} after sleeping at
+Tipsy {roman(h.sleepLevel - 1)} and {duration(h.afterSleepTicks[t.maxLevel])} at Tipsy {roman(t.maxLevel - 1)}. **A water bottle or any juice** takes
+{pct(1 - h.drinkLeaves)} of what's left away.
 
 ## Sobering up
 
@@ -53,27 +118,28 @@ trade with you until you've sobered up. Do your trading before the {t.cutOffLeve
 - **Milk** clears it completely, like any effect. It clears your drink buffs too.
 - **A water bottle or any juice** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
   <Item id="apple_juice" />) lowers it by one level right away. Only a plain water bottle works, no other potion.
-- **Sleep it off:** go to bed and sleep through the night. It has to be a night that's really skipped: get up early, or lie
-  awake while the others on the server stay up, and you wake up as tipsy as you went to bed.
+- **With Farmer's Delight**, its <Item id="farmersdelight:milk_bottle" />, <Item id="farmersdelight:melon_juice" /> and
+  <Item id="farmersdelight:apple_cider" /> lower it by one level too. A milk bottle takes one level; a bucket of milk
+  clears it all.
+- **Sleep it off:** go to bed and sleep through the night. You wake up sober, though from Tipsy {roman(h.sleepLevel - 1)} with
+  a [hangover](#the-morning-after). It has to be a night that's really skipped: get up early, or lie awake while the others
+  on the server stay up, and you wake up as tipsy as you went to bed.
 
 ## Good to know
 
-- **Sneak** at Tipsy {roman(t.stumbleLevel - 1)} and your legs hold: no drift, no stumbles, no trips. Swimming, riding and
-  flying are safe too.
 - **A trip never hurts** and never puts you anywhere you didn't walk. You only go down on flat, open ground with no
   monster near, and not twice within {Math.round(t.tripCooldownTicks / 20)} seconds; anywhere else it stays a stumble.
 - **Water gets you out of the bad levels fast,** but the levels below keep their own time, so it doesn't make you sober
   sooner overall.
-- Tipsy only looks after its own side effects: a Slowness or Nausea from a potion or a command is left alone.
-- Chat links, commands and @mentions are never slurred.
-- Other players see you sway, hear your hiccups and see your stumbles, trips and rowdy swings, but not your dark screen
-  edges or your blinks.
+- Other players see you wobble, stumble, trip and nod off, see your rowdy swings coming and hear your hiccups.
 - **Want the whole story of a blackout?** Every place you can wake up, the odds and the souvenirs are on
   [Blackouts](/blackouts/). Spoilers, of course.
 
 ## Settings
 
-Server owners can switch Tipsy off entirely (the non-alcoholic mode) or turn off slurred chat, stumbling (with the trips
-and the drift), blackouts, Rowdy's punches and the cut-off one by one. Every player can tone down how much Tipsy moves
-their screen, down to not at all, and switch off the vision effects; vanilla's Distortion Effects, FOV Effects and Darkness Pulsing
-sliders count too. All options and defaults are on [Configuration](/reference/config/).
+Server owners can switch Tipsy off entirely (the non-alcoholic mode) or turn off slurred chat, drunk legs (with the
+stumbles and trips), nodding off, the hangover, blackouts, Rowdy's punches and the cut-off one by one. Tipsy never moves
+your screen on its own; every player can tone down how much a hiccup, a stumble or a trip moves it, down to not at all,
+and vanilla's Distortion Effects slider counts too. Each player can also switch off the drunk eyes (soft edges, double
+vision, fading signs and the hangover's glare) and the woolly sound. All options and defaults are on
+[Configuration](/reference/config/).

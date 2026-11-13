@@ -5,7 +5,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -113,9 +112,6 @@ public interface Platform
 	/** The unwaxed form of a waxed block (vanilla's and every mod's), or null if it isn't waxed. */
 	@Nullable
 	Block unwaxed(Block block);
-
-	/** What chat makes of a player's message (slurred when Tipsy), through the loader's real chat decorators. */
-	Component decorateChat(ServerPlayer player, Component message);
 
 	/**
 	 * What this stack leaves behind in a recipe (a bucket, a glass bottle), asked of the stack, so items whose remainder

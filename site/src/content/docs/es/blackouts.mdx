@@ -5,18 +5,20 @@ description: "Una copa de más: qué pasa cuando sufres una laguna, todos los si
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
-import { rules, roman, seconds, gameText } from '../../../lib/l10n/es';
+import { rules, roman, seconds, gameText, duration } from '../../../lib/l10n/es';
 
 export const t = rules.tipsy;
 export const b = t.blackout;
 export const count = b.endings.filter((e) => e.collectable).length;
+export const under = t.goingUnder;
+export const h = t.hangover;
 
 <Aside type="caution" title="Spoilers">
 Esta página te cuenta todas las formas en que puede acabar una noche. Si prefieres descubrirlas tú mismo, para aquí: la
 página de [Achispado](/tipsy/#una-copa-de-más) solo lo insinúa.
 </Aside>
 
-¿Ya estás en Achispado {roman(t.maxLevel - 1)} y sigues bebiendo? Una más y sufres una **laguna**. Es inofensiva: nunca
+¿Ya estás en Achispado {roman(t.maxLevel - 1)} y sigues bebiendo? Una más y, un poco después, sufres una **laguna**. Es inofensiva: nunca
 pierdes nada de lo que llevabas, nunca despiertas en un sitio peligroso, no pasa el tiempo y no afecta a nadie más. Los
 dueños del servidor pueden desactivarla con la opción `blackout` (mira [Configuración](/reference/config/)).
 
@@ -24,24 +26,31 @@ dueños del servidor pueden desactivarla con la opción `blackout` (mira [Config
 
 <Steps>
 
-1. **Te desplomas.** Se te cierran los ojos y te caes. Todos los que te rodean te ven tirado, con estrellas girando sobre
+1. **Te alcanza.** La copa de más tarda entre {Math.round(under.soonestTicks / 20)} y
+   {Math.round(under.latestTicks / 20)} segundos en hacer efecto, hagas lo que hagas para entonces. Durante los últimos
+   {Math.round(under.ticks / 20)} segundos notas que te vas: párpados pesados, la cabeza que se te hunde, el mundo amortiguado
+   y lejano, las piernas que fallan, el cuerpo balanceándose con fuerza. Tus amigos lo ven venir. Espabílate antes de que
+   te alcance (un cubo de leche, una noche de sueño) y te libras; otra copa nunca lo retrasa.
+2. **Te desplomas.** Se te cierran los ojos y te caes. Todos los que te rodean te ven tirado, con estrellas girando sobre
    tu cabeza.
-2. **Negro.** Durante unos segundos no puedes moverte, y Achispado te deja en paz: sin balanceo, sin hipo, sin remolino.
+3. **Negro.** Durante unos segundos no puedes moverte, y Achispado te deja en paz: sin piernas que se tambalean, sin hipo.
    Nadie puede hacerte daño tampoco, ni mobs ni jugadores, y la caída tampoco. Solo cuenta lo que haría daño a cualquiera
    tumbado ahí, como la lava o el vacío, así que importa dónde sufres la laguna; el sitio donde *despiertas* siempre es seguro.
-3. **Despiertas en algún sitio.** Con la pantalla aún en negro, el juego elige dónde acabó tu noche (mira más abajo) y te
+4. **Despiertas en algún sitio.** Con la pantalla aún en negro, el juego elige dónde acabó tu noche (mira más abajo) y te
    coloca allí: tumbado en el suelo, en una cama o sentado en una barca. Abres los ojos poco a poco y te levantas.
-4. **Una frase en pantalla** cuenta cómo fue, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* o una de muchas otras.
+5. **Una frase en pantalla** cuenta cómo fue, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* o una de muchas otras.
 
 </Steps>
 
-Todo dura unos {seconds(b.ticks)}. Despiertas:
+De desplomarte a despertar pasan unos {seconds(b.ticks)}. Despiertas:
 
-- **de vuelta en Achispado I**, y sin las mejoras que te dieron tus bebidas,
-- **con hambre:** {b.hungerLost / 2} muslos de hambre menos, y nada de saturación,
-- **con temblores** durante {seconds(b.shakyTicks)}: algo mareado y lento,
+- **sobrio pero con resaca** durante {duration(h.afterBlackoutTicks)} (la luz del día deslumbra, los ruidos fuertes te hacen
+  estremecer; mira [la mañana siguiente](/tipsy/#la-mañana-siguiente)), y sin las mejoras que te dieron tus bebidas,
+- **con hambre:** no más de {h.hungryFood / 2} muslos de hambre, y nada de saturación,
 - **con un recuerdo** en los bolsillos, algo que encaja con el sitio donde despertaste (a tus pies si llevas los bolsillos llenos),
 - y, una vez de cada {b.pumpkinOneIn}, **con una calabaza tallada en la cabeza**, si no llevabas casco.
+
+Con la opción `hangover` del servidor desactivada, despiertas en Achispado I, con {b.hungerLost / 2} muslos de hambre menos.
 
 ## Dónde despiertas
 

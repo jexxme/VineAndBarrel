@@ -5,18 +5,20 @@ description: "One drink too many: what happens when you black out, every place y
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Item from '../../components/mc/Item.astro';
 import BlackoutEndings from '../../components/data/BlackoutEndings.astro';
-import { rules, roman, seconds } from '../../lib/data';
+import { rules, roman, seconds, duration } from '../../lib/data';
 
 export const t = rules.tipsy;
 export const b = t.blackout;
 export const count = b.endings.filter((e) => e.collectable).length;
+export const under = t.goingUnder;
+export const h = t.hangover;
 
 <Aside type="caution" title="Spoilers">
 This page tells you every way a night can end. If you'd rather find out for yourself, stop here: the
 [Tipsy](/tipsy/#one-drink-too-many) page only hints at it.
 </Aside>
 
-Already at Tipsy {roman(t.maxLevel - 1)} and still drinking? One more and you **black out**. It's harmless: nothing you had
+Already at Tipsy {roman(t.maxLevel - 1)} and still drinking? One more and, a little later, you **black out**. It's harmless: nothing you had
 is ever lost, you never wake up anywhere unsafe, no time passes, and nobody else is affected. Server owners can switch it
 off with the `blackout` option (see [Configuration](/reference/config/)).
 
@@ -24,24 +26,31 @@ off with the `blackout` option (see [Configuration](/reference/config/)).
 
 <Steps>
 
-1. **You keel over.** Your eyes fall shut and you tip over. Everyone around you sees you lying there, stars circling
+1. **It catches up with you.** The drink one too many takes {Math.round(under.soonestTicks / 20)} to
+   {Math.round(under.latestTicks / 20)} seconds to hit, whatever you're doing by then. For the last
+   {Math.round(under.ticks / 20)} seconds you feel yourself going under: heavy lids, your head sinking, the world muffled
+   and far away, legs giving, your body swaying hard. Your friends see it coming. Sober up before it hits (a bucket of
+   milk, a night's sleep) and you're out of it; another drink never puts it off.
+2. **You keel over.** Your eyes fall shut and you tip over. Everyone around you sees you lying there, stars circling
    your head.
-2. **Black.** For a few seconds you can't move, and Tipsy lets you be: no sway, no hiccups, no swirl. Nobody can hurt
+3. **Black.** For a few seconds you can't move, and Tipsy lets you be: no wobbly legs, no hiccups. Nobody can hurt
    you either, no mob and no player, and falling over doesn't. Only what would hurt anyone lying there still counts,
    like lava or the void, so where you black out matters; where you *wake up* is always safe.
-3. **You wake up somewhere.** While the screen is still black, the game picks where your night ended (see below) and
+4. **You wake up somewhere.** While the screen is still black, the game picks where your night ended (see below) and
    puts you there: lying on the ground, in a bed, or sitting in a boat. Your eyes open slowly, then you get up.
-4. **A line on the screen** says how it went, *{b.endings.find((e) => e.id === 'in_the_hay')?.lines[0]}* or one of many others.
+5. **A line on the screen** says how it went, *{b.endings.find((e) => e.id === 'in_the_hay')?.lines[0]}* or one of many others.
 
 </Steps>
 
-The whole thing takes about {seconds(b.ticks)}. You wake up:
+From keeling over to waking up takes about {seconds(b.ticks)}. You wake up:
 
-- **back at Tipsy I**, and without the buffs your drinks gave you,
-- **hungry:** {b.hungerLost / 2} hunger shanks lighter, and nothing in your saturation,
-- **shaky** for {seconds(b.shakyTicks)}: a little dizzy and slow,
+- **sober but hungover** for {duration(h.afterBlackoutTicks)} (daylight glares, loud noises make you wince; see
+  [the morning after](/tipsy/#the-morning-after)), and without the buffs your drinks gave you,
+- **hungry:** no more than {h.hungryFood / 2} hunger shanks, and nothing in your saturation,
 - **with a souvenir** in your pockets, something that fits where you woke up (at your feet if your pockets are full),
 - and, one time in {b.pumpkinOneIn}, **with a carved pumpkin on your head**, if you weren't wearing a helmet.
+
+With the server's `hangover` option off, you wake up at Tipsy I instead, {b.hungerLost / 2} hunger shanks lighter.
 
 ## Where you wake up
 
