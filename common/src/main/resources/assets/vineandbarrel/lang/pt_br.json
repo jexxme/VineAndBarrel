@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "Coração bate forte",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "Lençóis farfalham",
   "tag.item.vineandbarrel.sobering_drinks": "Bebidas sem Álcool",
+  "tag.item.vineandbarrel.grapes.red": "Qualquer uva tinta",
+  "tag.item.vineandbarrel.grapes.white": "Qualquer uva branca",
   "block.vineandbarrel.brew_kettle": "Tina de Brassagem",
   "block.vineandbarrel.brew_kettle_part": "Tina de Brassagem",
   "block.vineandbarrel.brew_kettle_chimney": "Tina de Brassagem",

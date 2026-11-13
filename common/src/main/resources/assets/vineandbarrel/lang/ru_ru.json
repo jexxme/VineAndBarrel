@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "Сердце колотится",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "Шорох простыней",
   "tag.item.vineandbarrel.sobering_drinks": "Безалкогольные напитки",
+  "tag.item.vineandbarrel.grapes.red": "Любой красный виноград",
+  "tag.item.vineandbarrel.grapes.white": "Любой белый виноград",
   "block.vineandbarrel.brew_kettle": "Варочный котёл",
   "block.vineandbarrel.brew_kettle_part": "Варочный котёл",
   "block.vineandbarrel.brew_kettle_chimney": "Варочный котёл",
