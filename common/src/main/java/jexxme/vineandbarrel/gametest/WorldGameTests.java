@@ -136,6 +136,7 @@ public final class WorldGameTests
 		register("world_taverns_in_village_pools", LARGE, 100, WorldGameTests::tavernsInPools);
 		register("world_taverns_one_village_in_three", LARGE, 200, WorldGameTests::taverns_oneVillageInThree);
 		register("world_tavern_cellar_casks_are_the_taverns", TALL, 100, WorldGameTests::cellarCasksAreTheTaverns);
+		register("world_tavern_keeper_restocks_his_own_casks", TALL, 100, WorldGameTests::keeperRestocks);
 		register("world_village_apply_is_idempotent", LARGE, 100, WorldGameTests::applyIsIdempotent);
 		register("world_legacy_taverns_resolve_and_count", TALL, 100, WorldGameTests::legacyTavernsResolveAndCount);
 		for (VillageStructures.TavernLayout layout : VillageStructures.TAVERNS) {
@@ -148,6 +149,7 @@ public final class WorldGameTests
 			register(n + "_is_built_whole", TALL, 100, helper -> tavernIsBuiltWhole(helper, layout));
 			register(n + "_closes_its_stairwell_without_room_for_a_cellar", TALL, 100, helper -> tavernWithoutCellar(helper, layout));
 			register(n + "_takes_a_village_plot", LARGE, 100, helper -> tavernTakesAVillagePlot(helper, layout));
+			register(n + "_holds_as_much_drink_as_before", LARGE, 100, helper -> tavernServings(helper, layout));
 		}
 	}
 
@@ -340,8 +342,8 @@ public final class WorldGameTests
 		assertBuys(helper, context, VillageData.FARMER_1_BARLEY_EMERALD, VBItems.BARLEY.get(), 20, 16);
 		assertBuys(helper, context, VillageData.FARMER_2_RED_GRAPES_EMERALD, VBItems.RED_GRAPES.get(), 20, 16);
 		long ours = level.registryAccess().lookupOrThrow(Registries.VILLAGER_TRADE).listElementIds()
-			.filter(key -> key.identifier().getNamespace().equals(VineAndBarrel.MODID)).count();
-		helper.assertValueEqual((int) ours, 10, "our villager trades");
+			.filter(key -> key.identifier().getNamespace().equals(VineAndBarrel.MODID) && !key.identifier().getPath().startsWith("tavern_keeper/")).count();
+		helper.assertValueEqual((int) ours, 10, "our villager trades for farmers and the wandering trader");
 		helper.succeed();
 	}
 
@@ -395,13 +397,32 @@ public final class WorldGameTests
 	/** The tavern chest: seeds, mugs or glasses and a few drinks, every time. */
 	private static void tavernLoot(GameTestHelper helper) {
 		for (VillageType type : VillageStructures.TAVERN_TYPES) {
-			tavernLoot(helper, helper.getLevel().getServer().reloadableRegistries().getLootTable(type.tavernLoot()));
+			LootTable bar = helper.getLevel().getServer().reloadableRegistries().getLootTable(type.tavernLoot());
+			tavernLoot(helper, bar);
+			// the bar's chest holds what a house chest of the village holds too (1.2: "why only VB loot?")
+			boolean vanilla = false;
+			for (int i = 0; i < 100 && !vanilla; i++) {
+				vanilla = bar.getRandomItems(chestParams(helper), RandomSource.create(i)).stream()
+					.anyMatch(s -> net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem()).getNamespace().equals("minecraft"));
+			}
+			helper.assertTrue(vanilla, type.id() + " tavern chest never holds anything of vanilla's village loot");
+			// the cellar's chest: always seeds or harvest and a drink, now and then an aged one
+			LootTable cellar = helper.getLevel().getServer().reloadableRegistries().getLootTable(type.tavernCellarLoot());
+			Set<Item> crops = Set.of(VBItems.BARLEY_SEEDS.get(), VBItems.RED_GRAPES.get(), VBItems.WHITE_GRAPES.get(), VBItems.HOPS.get(), VBItems.BARLEY.get());
+			boolean aged = false;
+			for (int i = 0; i < 100; i++) {
+				List<ItemStack> loot = cellar.getRandomItems(chestParams(helper), RandomSource.create(i));
+				helper.assertTrue(loot.stream().anyMatch(s -> crops.contains(s.getItem())), type.id() + " cellar chest without seeds: " + loot);
+				helper.assertTrue(loot.stream().anyMatch(s -> s.getItem() instanceof jexxme.vineandbarrel.drink.DrinkItem), type.id() + " cellar chest without a drink: " + loot);
+				aged |= loot.stream().anyMatch(s -> net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem()).getPath().startsWith("aged_"));
+			}
+			helper.assertTrue(aged, type.id() + " cellar chest never holds an aged drink");
 		}
 		helper.succeed();
 	}
 
 	private static void tavernLoot(GameTestHelper helper, LootTable table) {
-		Set<Item> seeds = Set.of(VBItems.BARLEY_SEEDS.get(), VBItems.RED_GRAPES.get(), VBItems.HOPS.get(), VBItems.BARLEY.get());
+		Set<Item> seeds = Set.of(VBItems.BARLEY_SEEDS.get(), VBItems.RED_GRAPES.get(), VBItems.WHITE_GRAPES.get(), VBItems.HOPS.get(), VBItems.BARLEY.get());
 		Set<Item> vessels = Set.of(DrinkItems.MUG.get(), DrinkItems.WINE_GLASS.get());
 		for (int i = 0; i < 100; i++) {
 			List<ItemStack> loot = table.getRandomItems(chestParams(helper), RandomSource.create(i));
@@ -650,9 +671,16 @@ public final class WorldGameTests
 		helper.assertValueEqual(t.joint().getY(), TAVERN_FLOOR + 1, name + " street joint one above the floor");
 		wayIn(helper, t, name);
 		helper.assertValueEqual(t.find(s -> s.is(Blocks.JIGSAW)).size(), 0, "jigsaws left in the " + name + " tavern");
-		// no job site: the tavern's villager keeps whatever trade it comes with
-		helper.assertValueEqual(t.find(s -> net.minecraft.world.entity.ai.village.poi.PoiTypes.forState(s).filter(poi -> poi.is(net.minecraft.tags.PoiTypeTags.ACQUIRABLE_JOB_SITE)).isPresent()).size(), 0,
-			"job sites in the " + name + " tavern");
+		// one job site, the kettle behind the bar: the keeper's (1.2); no vanilla job block, so no other villager moves in
+		List<BlockPos> sites = t.find(s -> net.minecraft.world.entity.ai.village.poi.PoiTypes.forState(s).filter(poi -> poi.is(net.minecraft.tags.PoiTypeTags.ACQUIRABLE_JOB_SITE)).isPresent());
+		helper.assertValueEqual(sites.size(), 1, "job sites in the " + name + " tavern");
+		helper.assertTrue(jexxme.vineandbarrel.world.village.TavernKeeper.isJobSite(level.getBlockState(sites.getFirst())), "the " + name + " job site is the keeper's kettle");
+		// and the tavern brings its keeper, once, standing by the kettle
+		List<net.minecraft.world.entity.npc.villager.Villager> keepers = level.getEntitiesOfClass(net.minecraft.world.entity.npc.villager.Villager.class,
+			net.minecraft.world.phys.AABB.of(t.box()).inflate(1), jexxme.vineandbarrel.world.village.TavernKeeper::isKeeper);
+		helper.assertValueEqual(keepers.size(), 1, name + " keepers");
+		helper.assertTrue(keepers.getFirst().getVillagerXp() > 0, name + " keeper keeps his trade until he reaches his kettle");
+		helper.assertTrue(keepers.getFirst().blockPosition().closerThan(sites.getFirst(), 3), name + " keeper stands by his kettle: " + keepers.getFirst().blockPosition().subtract(t.origin()));
 		// every dirt path stays one (a block on top would turn it to dirt)
 		List<BlockPos> sunk = t.find(s -> s.is(Blocks.DIRT_PATH)).stream().filter(pos -> !level.getBlockState(pos).canSurvive(level, pos))
 			.map(pos -> pos.subtract(t.origin())).toList();
@@ -692,10 +720,13 @@ public final class WorldGameTests
 			return true;
 		}), "the " + name + " hearth smokes out of an open chimney: " + hearths);
 
-		// the chest holds the tavern loot
+		// two chests: the bar's, with the tavern loot, and the one hidden in the cellar (1.2)
 		List<BlockPos> chests = t.find(s -> s.is(Blocks.CHEST));
-		helper.assertValueEqual(chests.size(), 1, name + " chests");
-		ChestBlockEntity chest = (ChestBlockEntity) level.getBlockEntity(chests.getFirst());
+		helper.assertValueEqual(chests.size(), 2, name + " chests");
+		List<BlockPos> cellarChests = chests.stream().filter(pos -> level.getBlockEntity(pos) instanceof ChestBlockEntity c && type.tavernCellarLoot().equals(c.getLootTable())).toList();
+		helper.assertValueEqual(cellarChests.size(), 1, name + " cellar chests");
+		helper.assertTrue(cellarChests.getFirst().getY() < t.origin().getY(), name + " cellar chest below the floor");
+		ChestBlockEntity chest = (ChestBlockEntity) level.getBlockEntity(chests.stream().filter(pos -> !cellarChests.contains(pos)).findFirst().orElseThrow());
 		helper.assertTrue(chest != null && type.tavernLoot().equals(chest.getLootTable()), name + " tavern chest loot table");
 		chest.unpackLootTable(null);
 		boolean vessel = false;
@@ -767,7 +798,8 @@ public final class WorldGameTests
 				for (BlockPos barrel : stock) {
 					aged += tapsByHand(helper, barrel) ? 1 : 0;
 				}
-				helper.assertTrue(aged >= 1 && aged <= 3, "a few aged casks in the " + name + " tavern: " + aged);
+				// a few, most of them in the cellar's find (1.2)
+				helper.assertTrue(aged >= 1 && aged <= 7, "a few aged casks in the " + name + " tavern: " + aged);
 				helper.succeed();
 			});
 		});
@@ -803,6 +835,45 @@ public final class WorldGameTests
 	 * Room to walk ({@link TavernWalk}): from the door a way two wide to the bar counter, and one at least one wide to
 	 * every seat, cask, the kettle and the chest, and down into the cellar, two blocks high all the way.
 	 */
+	/**
+	 * Each layout's servings before 1.2, as the dressing deals them on average: an aged cask keeps one or two (1.5), a
+	 * young one is drunk dry half the time and else holds one or two (0.75). Measured on the 1.1 templates, 2026-11-13.
+	 */
+	private static final Map<String, Double> SERVINGS_BEFORE = Map.of("plains_tavern_1", 18.8, "plains_tavern_2", 15.0, "desert_tavern_1", 20.2,
+		"desert_tavern_2", 20.2, "savanna_tavern_1", 18.8, "savanna_tavern_2", 17.2, "snowy_tavern_1", 18.0, "snowy_tavern_2", 16.5,
+		"taiga_tavern_1", 18.8, "taiga_tavern_2", 18.8);
+
+	/**
+	 * The 1.2 interiors move drink about (the cellar's find holds aged casks) but don't add any (Jexxme: "keep total loot
+	 * balanced"): a tavern and its cellar together hold today's servings, within 10%.
+	 */
+	private static void tavernServings(GameTestHelper helper, VillageStructures.TavernLayout layout) {
+		var manager = helper.getLevel().getStructureTemplateManager();
+		double expected = 0;
+		for (net.minecraft.resources.Identifier id : List.of(layout.id(), layout.cellarId())) {
+			for (var info : manager.get(id).orElseThrow().filterBlocks(BlockPos.ZERO, new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings(),
+				jexxme.vineandbarrel.barrel.BarrelRegistry.AGING_BARREL.get())) {
+				var nbt = info.nbt();
+				if (nbt == null || !(nbt.contains("Batch") || nbt.contains(jexxme.vineandbarrel.world.village.TavernDressingProcessor.CHOICES))) {
+					continue;
+				}
+				expected += info.state().getValue(jexxme.vineandbarrel.barrel.AgingBarrelBlock.BUNG) == jexxme.vineandbarrel.barrel.BungState.WAX
+					|| nbt.getBooleanOr(jexxme.vineandbarrel.world.village.TavernDressingProcessor.FULL, false) ? 1.5 : 0.75;
+			}
+		}
+		double before = SERVINGS_BEFORE.get(layout.name());
+		// and the aged casks as many as before (most of them now in the cellar's find)
+		int aged = 0;
+		for (net.minecraft.resources.Identifier id : List.of(layout.id(), layout.cellarId())) {
+			aged += (int) manager.get(id).orElseThrow().filterBlocks(BlockPos.ZERO, new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings(),
+				jexxme.vineandbarrel.barrel.BarrelRegistry.AGING_BARREL.get()).stream()
+				.filter(info -> info.state().getValue(jexxme.vineandbarrel.barrel.AgingBarrelBlock.BUNG) == jexxme.vineandbarrel.barrel.BungState.WAX).count();
+		}
+		helper.assertValueEqual(aged, layout.name().equals("plains_tavern_2") ? 1 : 2, layout.name() + " aged casks, as before 1.2");
+		helper.assertTrue(Math.abs(expected - before) <= before * 0.1, layout.name() + " holds " + expected + " servings on average, " + before + " before 1.2");
+		helper.succeed();
+	}
+
 	private static void tavernHasRoomToWalk(GameTestHelper helper, VillageStructures.TavernLayout layout) {
 		Placed t = placeTavern(helper, layout);
 		TavernWalk.Result walk = TavernWalk.check(t.level(), t.box(), t.street(), t.street().getY() - 1);
@@ -880,7 +951,8 @@ public final class WorldGameTests
 			for (Direction d : Direction.values()) {
 				BlockPos next = cellarAt.offset(info.pos()).relative(d);
 				BlockState wall = level.getBlockState(next);
-				helper.assertFalse(wall.is(BlockTags.DIRT) || wall.is(BlockTags.SAND) || wall.is(Blocks.GRAVEL),
+				// rooted dirt is the root cellar's ceiling, with roots hanging from it (1.2), not bare ground
+				helper.assertFalse((wall.is(BlockTags.DIRT) && !wall.is(Blocks.ROOTED_DIRT)) || wall.is(BlockTags.SAND) || wall.is(Blocks.GRAVEL),
 					"bare " + BuiltInRegistries.BLOCK.getKey(wall.getBlock()).getPath() + " in the " + name + " cellar wall at " + next.subtract(cellarAt));
 			}
 		}
@@ -936,10 +1008,12 @@ public final class WorldGameTests
 		String name = layout.name();
 		// the bar: in front of the tavern chest behind the counter; the cellar: in front of a cask on the cellar floor, down
 		// the stairs below the hall, that a villager can stand in front of (full or drunk dry: the way there is the same)
-		BlockPos chest = t.find(s -> s.is(Blocks.CHEST)).getFirst();
+		BlockPos chest = t.find(s -> s.is(Blocks.CHEST)).stream().filter(pos -> level.getBlockEntity(pos) instanceof ChestBlockEntity c
+			&& layout.type().tavernLoot().equals(c.getLootTable())).findFirst().orElseThrow();
 		BlockPos bar = chest.relative(level.getBlockState(chest).getValue(ChestBlock.FACING));
 		BlockPos cellar = t.find(s -> s.is(BarrelRegistry.AGING_BARREL.get())).stream()
-			.filter(pos -> pos.getY() < t.street().getY() - 1 && !level.getBlockState(pos.below()).is(BarrelRegistry.AGING_BARREL.get()))
+			// the cellar room's floor (the finds below it are reached by ladder, and kept for players)
+			.filter(pos -> pos.getY() == t.origin().getY() - 4 && !level.getBlockState(pos.below()).is(BarrelRegistry.AGING_BARREL.get()))
 			.sorted(java.util.Comparator.<BlockPos>comparingInt(pos -> -pos.getX()).thenComparingInt(pos -> -pos.getZ()))
 			.map(pos -> pos.relative(level.getBlockState(pos).getValue(AgingBarrelBlock.FACING)))
 			.filter(front -> level.getBlockState(front).isAir() && level.getBlockState(front.above()).isAir())
@@ -1066,6 +1140,49 @@ public final class WorldGameTests
 			} finally {
 				level.getServer().getPlayerList().remove(player);
 			}
+		});
+		helper.succeed();
+	}
+
+	/**
+	 * The keeper's daily restock picks an empty cask of his own tavern that he can walk to, never a player's cask beside
+	 * the tavern, and fills it as the tavern's stock (not home-brewed).
+	 */
+	private static void keeperRestocks(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		VillageStructures.TavernLayout layout = VillageStructures.taverns(VillageType.PLAINS).getFirst();
+		Placed t = placeTavern(helper, layout);
+		BoundingBox piece = BoundingBox.fromCorners(t.origin(), t.origin().offset(t.template().getSize()).offset(-1, -1, -1));
+		BlockPos kettle = t.find(s -> s.getBlock() instanceof BrewKettleBlock).getFirst();
+		net.minecraft.world.entity.npc.villager.Villager keeper = level.getEntitiesOfClass(net.minecraft.world.entity.npc.villager.Villager.class,
+			net.minecraft.world.phys.AABB.of(t.box()).inflate(1), jexxme.vineandbarrel.world.village.TavernKeeper::isKeeper).getFirst();
+		// every cask of the tavern full but one in the cellar, drunk dry; a player's empty cask outside the tavern
+		List<BlockPos> casks = t.find(s -> s.is(BarrelRegistry.AGING_BARREL.get()));
+		BlockPos dry = casks.stream().filter(pos -> pos.getY() == t.origin().getY() - 4).findFirst().orElseThrow();
+		for (BlockPos pos : casks) {
+			BlockState state = level.getBlockState(pos);
+			level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+			level.setBlockAndUpdate(pos, state.setValue(AgingBarrelBlock.FILL, 0));
+			if (!pos.equals(dry)) {
+				jexxme.vineandbarrel.world.village.TavernKeeper.fill(level, pos, DrinkItems.BARLEY_ALE.get());
+			}
+		}
+		BlockPos players = t.origin().offset(-2, 1, 2);
+		level.setBlockAndUpdate(players.below(), Blocks.STONE.defaultBlockState());
+		level.setBlockAndUpdate(players, BarrelRegistry.AGING_BARREL.get().defaultBlockState());
+		BlackoutGameTests.inVillage(helper, piece, () -> {
+			helper.assertFalse(jexxme.vineandbarrel.tipsy.BlackoutSpots.inTavern(level, players), "the player's cask is not the tavern's");
+			// a mob plans paths only while it stands on the ground; it has not fallen onto it yet on its first tick
+			keeper.setOnGround(true);
+			BlockPos cask = jexxme.vineandbarrel.world.village.TavernKeeper.restockCask(level, keeper, kettle);
+			var path = keeper.getNavigation().createPath(dry, 1);
+			helper.assertTrue(dry.equals(cask), "the cask he restocks: " + cask + " (tavern casks " + jexxme.vineandbarrel.tipsy.BlackoutSpots.tavernBarrels(level, kettle, 16).size()
+				+ ", path to the dry one " + (path == null ? "none" : path.canReach() + " " + path.getNodeCount() + " to " + path.getTarget()) + ", keeper at "
+				+ keeper.blockPosition().subtract(t.origin()) + ", dry at " + dry.subtract(t.origin()) + ")");
+			helper.assertTrue(jexxme.vineandbarrel.world.village.TavernKeeper.fill(level, cask, DrinkItems.BARLEY_ALE.get()), "filled");
+			AgingBarrelBlockEntity barrel = (AgingBarrelBlockEntity) level.getBlockEntity(cask);
+			helper.assertFalse(barrel.isHomeBrewed(), "the tavern's stock, not home-brewed");
+			helper.assertTrue(((AgingBarrelBlockEntity) level.getBlockEntity(players)).contents().isEmpty(), "the player's cask left alone");
 		});
 		helper.succeed();
 	}

@@ -66,6 +66,7 @@ public final class VBDataGenerators
 						new LootTableProvider.SubProviderEntry(VBHarvestLoot::new, LootContextParamSets.BLOCK_INTERACT),
 						new LootTableProvider.SubProviderEntry(VillageData.ChestLoot::new, LootContextParamSets.CHEST))))
 				.add(Registries.VILLAGER_TRADE, VillageData::bootstrapTrades)
+				.add(Registries.TRADE_SET, VillageData::bootstrapTradeSets)
 				.add(Registries.ADVANCEMENT, new AdvancementProvider(List.of(VBAdvancementGenerator::new)))
 				.add(VBRecipes.bootstrap());
 	}

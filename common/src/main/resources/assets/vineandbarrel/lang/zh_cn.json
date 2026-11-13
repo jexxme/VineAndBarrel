@@ -368,5 +368,6 @@
   "watch.vineandbarrel.path.wiki": "Wiki",
   "watch.vineandbarrel.path.wiki_page": "Wiki 页面 ›",
   "watch.vineandbarrel.path.chapter": "（酿酒师之路，%s/%s）",
-  "watch.vineandbarrel.farmers_delight.note": "灶台加热，绳子攀爬"
+  "watch.vineandbarrel.farmers_delight.note": "灶台加热，绳子攀爬",
+  "entity.vineandbarrel.villager.tavern_keeper": "酒馆老板"
 }

@@ -1,0 +1,24 @@
+{
+  "gives": {
+    "id": "vineandbarrel:aged_hard_cider"
+  },
+  "max_uses": 6,
+  "merchant_predicate": {
+    "type": "minecraft:entity_properties",
+    "entity": "this",
+    "predicate": {
+      "minecraft:predicates": {
+        "minecraft:villager/variant": [
+          "minecraft:plains",
+          "minecraft:swamp"
+        ]
+      }
+    }
+  },
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 5,
+    "id": "minecraft:emerald"
+  },
+  "xp": 15
+}

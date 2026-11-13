@@ -66,6 +66,11 @@ public enum VillageType
 		return ResourceKey.create(Registries.LOOT_TABLE, VineAndBarrel.id("chests/village/tavern_" + name));
 	}
 
+	/** The chest hidden in the tavern's cellar (1.2): {@code vineandbarrel:chests/village/tavern_cellar_<type>}. */
+	public ResourceKey<LootTable> tavernCellarLoot() {
+		return ResourceKey.create(Registries.LOOT_TABLE, VineAndBarrel.id("chests/village/tavern_cellar_" + name));
+	}
+
 	/** The first tavern layout's template. */
 	public Identifier tavern() {
 		return taverns().getFirst();

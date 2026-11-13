@@ -1,0 +1,25 @@
+{
+  "gives": {
+    "id": "vineandbarrel:aged_red_wine"
+  },
+  "max_uses": 6,
+  "merchant_predicate": {
+    "type": "minecraft:entity_properties",
+    "entity": "this",
+    "predicate": {
+      "minecraft:predicates": {
+        "minecraft:villager/variant": [
+          "minecraft:desert",
+          "minecraft:savanna",
+          "minecraft:jungle"
+        ]
+      }
+    }
+  },
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 5,
+    "id": "minecraft:emerald"
+  },
+  "xp": 15
+}

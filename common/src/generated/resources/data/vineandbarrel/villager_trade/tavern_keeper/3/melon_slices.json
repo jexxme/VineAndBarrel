@@ -1,0 +1,25 @@
+{
+  "gives": {
+    "id": "minecraft:emerald"
+  },
+  "max_uses": 16,
+  "merchant_predicate": {
+    "type": "minecraft:entity_properties",
+    "entity": "this",
+    "predicate": {
+      "minecraft:predicates": {
+        "minecraft:villager/variant": [
+          "minecraft:desert",
+          "minecraft:savanna",
+          "minecraft:jungle"
+        ]
+      }
+    }
+  },
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 16,
+    "id": "minecraft:melon_slice"
+  },
+  "xp": 20
+}
