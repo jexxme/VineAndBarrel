@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "Oglądaj wszystko",
   "watch.vineandbarrel.path.progress": "Zrobione: %s z %s",
   "watch.vineandbarrel.path.all_done": "Wszystko zrobione",
+  "watch.vineandbarrel.path.wiki": "Wiki",
+  "watch.vineandbarrel.path.wiki_page": "Strona na wiki ›",
   "watch.vineandbarrel.path.chapter": "(Ścieżka piwowara, %s z %s)",
   "watch.vineandbarrel.farmers_delight.note": "Kuchenka grzeje, po linie się wspina"
 }
