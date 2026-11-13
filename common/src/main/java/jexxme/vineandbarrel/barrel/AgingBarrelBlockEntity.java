@@ -94,6 +94,14 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 	 * the player's own aging earns Patience Pays, wherever the barrel stands.
 	 */
 	private boolean homeBrewed;
+	/**
+	 * One of a tavern's own casks, placed with the tavern (its dressing processor marks them): the only casks the tavern
+	 * keeper restocks, never a player's. It belongs to the block, not the batch: broken and placed again, a cask is a
+	 * player's.
+	 */
+	private boolean tavernCask;
+	/** The saved flag of {@link #tavernCask}. */
+	public static final String TAVERN_CASK = "TavernCask";
 	private @Nullable Component customName;
 
 	private final ItemSlots inventory;
@@ -189,12 +197,23 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 		return batch.servings();
 	}
 
-	/** The batch, with its current age. */
 	/** {@return whether the batch was poured in during play, rather than a tavern's stock from world generation} */
 	public boolean isHomeBrewed() {
 		return homeBrewed;
 	}
 
+	/** {@return whether this is one of a tavern's own casks, placed with the tavern} */
+	public boolean isTavernCask() {
+		return tavernCask;
+	}
+
+	/** Marks this as one of a tavern's own casks (as placing the tavern does; for tests). */
+	public void setTavernCask(boolean tavernCask) {
+		this.tavernCask = tavernCask;
+		setChanged();
+	}
+
+	/** The batch, with its current age. */
 	public BarrelContents contents() {
 		return batch.withElapsed(age());
 	}
@@ -650,6 +669,7 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 		super.load(tag);
 		inventory.deserialize(tag.getCompound("Inventory"));
 		readBatch(tag);
+		tavernCask = tag.getBoolean(TAVERN_CASK);
 		customName = readName(tag);
 	}
 
@@ -740,6 +760,9 @@ public class AgingBarrelBlockEntity extends BlockEntity implements Nameable, Dat
 		inventory.serialize(slots);
 		tag.put("Inventory", slots);
 		writeBatch(tag);
+		if (tavernCask) {
+			tag.putBoolean(TAVERN_CASK, true);
+		}
 		writeName(tag);
 	}
 

@@ -179,7 +179,7 @@ public final class TavernKeeper
 	/**
 	 * Once a day of play (game time, so a frozen or turned-back clock changes nothing), while he works: to an empty cask
 	 * of his own tavern that he can walk to, and two young servings of his region's drink go in. Never a player's cask
-	 * (only casks inside a generated tavern), never an aged batch, never home-brewed. Whatever happens (no empty cask, no
+	 * (only the casks placed with a tavern, not one a player put in it), never an aged batch, never home-brewed. Whatever happens (no empty cask, no
 	 * way there, a minute gone by), the day's restock is done.
 	 */
 	private static void restock(ServerLevel level, Villager keeper, BlockPos kettle) {
@@ -224,13 +224,15 @@ public final class TavernKeeper
 	}
 
 	/**
-	 * The cask he restocks: the nearest empty Aging Barrel of a generated tavern within {@link #RESTOCK_RANGE} of his
-	 * kettle that he can walk up to (the first few nearest are tried), or null.
+	 * The cask he restocks: the nearest empty one of a tavern's own casks (placed with the tavern, never one a player put
+	 * there: {@link AgingBarrelBlockEntity#isTavernCask}) within {@link #RESTOCK_RANGE} of his kettle that he can walk up
+	 * to (the first few nearest are tried), or null.
 	 */
 	public static @Nullable BlockPos restockCask(ServerLevel level, Villager keeper, BlockPos kettle) {
 		List<BlockPos> empty = new java.util.ArrayList<>();
 		for (BlockPos pos : jexxme.vineandbarrel.tipsy.BlackoutSpots.tavernBarrels(level, kettle, RESTOCK_RANGE)) {
-			if (Math.abs(pos.getY() - kettle.getY()) <= 10 && level.getBlockEntity(pos) instanceof AgingBarrelBlockEntity barrel && barrel.contents().isEmpty()) {
+			if (Math.abs(pos.getY() - kettle.getY()) <= 10 && level.getBlockEntity(pos) instanceof AgingBarrelBlockEntity barrel && barrel.isTavernCask()
+				&& barrel.contents().isEmpty()) {
 				empty.add(pos);
 			}
 		}
