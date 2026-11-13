@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "Herz pocht",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "Bettlaken rascheln",
   "tag.item.vineandbarrel.sobering_drinks": "Alkoholfreie Getränke",
+  "tag.item.vineandbarrel.grapes.red": "Beliebige rote Trauben",
+  "tag.item.vineandbarrel.grapes.white": "Beliebige weiße Trauben",
   "block.vineandbarrel.brew_kettle": "Braukessel",
   "block.vineandbarrel.brew_kettle_part": "Braukessel",
   "block.vineandbarrel.brew_kettle_chimney": "Braukessel",
