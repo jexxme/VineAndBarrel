@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "Guarda tutto",
   "watch.vineandbarrel.path.progress": "%s di %s fatti",
   "watch.vineandbarrel.path.all_done": "Tutto fatto",
+  "watch.vineandbarrel.path.wiki": "Wiki",
+  "watch.vineandbarrel.path.wiki_page": "Pagina del wiki ›",
   "watch.vineandbarrel.path.chapter": "(Sentiero del birraio, %s di %s)",
   "watch.vineandbarrel.farmers_delight.note": "Un fornello per scaldare, una corda per arrampicarsi"
 }

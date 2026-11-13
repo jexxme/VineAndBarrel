@@ -1,11 +1,11 @@
 {
   "stations": [
-    {"verb": "watch.vineandbarrel.path.grow", "scene": "vineandbarrel:trellis", "advancement": "vineandbarrel:main/root"},
-    {"verb": "watch.vineandbarrel.path.brew", "scene": "vineandbarrel:brew_kettle", "advancement": "vineandbarrel:main/first_brew"},
-    {"verb": "watch.vineandbarrel.path.age", "scene": "vineandbarrel:aging_barrel", "advancement": "vineandbarrel:main/patience_pays"},
-    {"verb": "watch.vineandbarrel.path.serve", "scene": "vineandbarrel:cheers", "advancement": "vineandbarrel:main/cheers"}
+    {"verb": "watch.vineandbarrel.path.grow", "scene": "vineandbarrel:trellis", "advancement": "vineandbarrel:main/root", "wiki": "crops"},
+    {"verb": "watch.vineandbarrel.path.brew", "scene": "vineandbarrel:brew_kettle", "advancement": "vineandbarrel:main/first_brew", "wiki": "brew-kettle"},
+    {"verb": "watch.vineandbarrel.path.age", "scene": "vineandbarrel:aging_barrel", "advancement": "vineandbarrel:main/patience_pays", "wiki": "aging-barrel"},
+    {"verb": "watch.vineandbarrel.path.serve", "scene": "vineandbarrel:cheers", "advancement": "vineandbarrel:main/cheers", "wiki": "drinks"}
   ],
   "branches": [
-    {"after": "vineandbarrel:brew_kettle", "scene": "vineandbarrel:farmers_delight", "note": "watch.vineandbarrel.farmers_delight.note", "requires": "farmersdelight"}
+    {"after": "vineandbarrel:brew_kettle", "scene": "vineandbarrel:farmers_delight", "note": "watch.vineandbarrel.farmers_delight.note", "requires": "farmersdelight", "wiki": "farmers-delight"}
   ]
 }

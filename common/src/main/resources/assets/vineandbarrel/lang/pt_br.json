@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "Assistir tudo",
   "watch.vineandbarrel.path.progress": "%s de %s feitos",
   "watch.vineandbarrel.path.all_done": "Tudo feito",
+  "watch.vineandbarrel.path.wiki": "Wiki",
+  "watch.vineandbarrel.path.wiki_page": "Página da wiki ›",
   "watch.vineandbarrel.path.chapter": "(Caminho do cervejeiro, %s de %s)",
   "watch.vineandbarrel.farmers_delight.note": "Um fogão para aquecer, corda para subir"
 }
