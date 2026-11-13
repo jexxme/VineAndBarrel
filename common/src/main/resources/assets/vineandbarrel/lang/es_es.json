@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "Corazón late con fuerza",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "Crujido de sábanas",
   "tag.item.vineandbarrel.sobering_drinks": "Bebidas sin alcohol",
+  "tag.item.vineandbarrel.grapes.red": "Cualquier uva tinta",
+  "tag.item.vineandbarrel.grapes.white": "Cualquier uva blanca",
   "block.vineandbarrel.brew_kettle": "Marmita",
   "block.vineandbarrel.brew_kettle_part": "Marmita",
   "block.vineandbarrel.brew_kettle_chimney": "Marmita",

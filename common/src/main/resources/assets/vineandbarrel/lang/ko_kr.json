@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "심장이 쿵쾅거림",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "이불이 바스락거림",
   "tag.item.vineandbarrel.sobering_drinks": "무알코올 음료",
+  "tag.item.vineandbarrel.grapes.red": "적포도 아무거나",
+  "tag.item.vineandbarrel.grapes.white": "청포도 아무거나",
   "block.vineandbarrel.brew_kettle": "양조 솥",
   "block.vineandbarrel.brew_kettle_part": "양조 솥",
   "block.vineandbarrel.brew_kettle_chimney": "양조 솥",

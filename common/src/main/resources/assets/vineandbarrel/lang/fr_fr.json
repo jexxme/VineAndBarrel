@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "Cœur qui bat fort",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "Froissement de draps",
   "tag.item.vineandbarrel.sobering_drinks": "Boissons sans alcool",
+  "tag.item.vineandbarrel.grapes.red": "N'importe quel raisin rouge",
+  "tag.item.vineandbarrel.grapes.white": "N'importe quel raisin blanc",
   "block.vineandbarrel.brew_kettle": "Cuve de brassage",
   "block.vineandbarrel.brew_kettle_part": "Cuve de brassage",
   "block.vineandbarrel.brew_kettle_chimney": "Cuve de brassage",
