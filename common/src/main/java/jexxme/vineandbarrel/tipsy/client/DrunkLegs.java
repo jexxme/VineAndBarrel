@@ -5,9 +5,11 @@ import jexxme.vineandbarrel.tipsy.DrunkWalk;
 import jexxme.vineandbarrel.tipsy.Tipsy;
 import jexxme.vineandbarrel.tipsy.TipsyGait;
 import jexxme.vineandbarrel.tipsy.TipsyLevels;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -33,9 +35,19 @@ public final class DrunkLegs
 		return DrunkWalk.walksDrunk(player);
 	}
 
-	/** Right after the player's input was read each tick: the legs take the steered direction late, unevenly, and curve. */
+	/**
+	 * Right after the player's input was read each tick: the legs take the steered direction late, unevenly, and curve.
+	 * A double tap on forward still sprints: the late legs hide it from vanilla, so the walk reads it from the keys and
+	 * presses sprint for that tick ({@link DrunkWalk#doubleTap}); vanilla still decides whether you may sprint.
+	 */
 	static void onMovementInput(Player player, ClientInput input) {
+		Input keys = input.keyPresses;
+		boolean tapped = WALK.doubleTap(input.moveVector.y > 1.0E-5F, keys.shift() || keys.backward(),
+			Minecraft.getInstance().options.sprintWindow().get());
 		input.moveVector = WALK.step(player, input.moveVector, TipsyClient.stumbleLurch(player, 0.0F));
+		if (tapped && walksDrunk(player) && !keys.sprint()) {
+			input.keyPresses = new Input(keys.forward(), keys.backward(), keys.left(), keys.right(), keys.jump(), keys.shift(), true);
+		}
 	}
 
 	/** A new world or a disconnect: the walk and the lean start afresh. */
