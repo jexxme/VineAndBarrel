@@ -183,7 +183,7 @@ public final class KettleMultiblock
 	/**
 	 * A block the pipe goes through and leaves as it is: a roof, that is stairs, a slab or a block solid all through (a
 	 * full collision box: planks, stone, bricks, tiles), that holds nothing, isn't a kettle or chimney and is no harder
-	 * than {@link #ROOF_HARDNESS} (bedrock, barriers, end portal frames and obsidian stop it). Plants, crops, ropes,
+	 * than {@link #ROOF_HARDNESS} (bedrock, barriers, end portal frames, obsidian and blocks of iron stop it). Plants, crops, ropes,
 	 * vines, torches, rails, doors and pots are no roof: they stop it.
 	 */
 	private static boolean isRoof(BlockGetter level, BlockPos pos, BlockState state) {
@@ -194,8 +194,11 @@ public final class KettleMultiblock
 			&& !(block instanceof KettleChimneyBlock) && !(block instanceof BrewKettleBlock) && !(block instanceof BrewKettlePartBlock);
 	}
 
-	/** The hardest block a chimney goes through: roofs (planks, tiles, slabs, stone, bricks, deepslate), not obsidian. */
-	private static final float ROOF_HARDNESS = 3.0F;
+	/**
+	 * The hardest block a chimney goes through: roofs (planks, tiles, slabs, stone, bricks, deepslate with its bricks and
+	 * tiles at 3.5), not obsidian or a block of iron.
+	 */
+	public static final float ROOF_HARDNESS = 3.5F;
 
 	/** Whether {@code player} may build at the new piece and at every roof block its pipe goes through. */
 	private static boolean mayBuild(Level level, Column column, net.minecraft.world.entity.player.Player player) {
