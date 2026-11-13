@@ -52,8 +52,12 @@ public final class VillageStructures
 		}
 	}
 
-	/** The cellar pieces' height: the cellar floor, three layers of room, the vault under the tavern floor. */
-	public static final int CELLAR_HEIGHT = 5;
+	/**
+	 * The cellar pieces' height: the cellar floor, three layers of room and the vault under the tavern floor, and under
+	 * them five more for the lower rooms of 1.2 (the old vault, the cistern and its pool, the cold store), solid
+	 * ground where a layout has none.
+	 */
+	public static final int CELLAR_HEIGHT = 10;
 
 	/**
 	 * Every tavern layout, two or three per village type, weighted for a tavern in about one village in three. Vanilla

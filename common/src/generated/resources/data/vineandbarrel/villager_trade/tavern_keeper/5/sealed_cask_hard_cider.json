@@ -1,0 +1,28 @@
+{
+  "given_item_modifiers": [
+    {
+      "drink": "vineandbarrel:aged_hard_cider",
+      "function": "vineandbarrel:sealed_cask",
+      "servings": 4
+    }
+  ],
+  "gives": {
+    "id": "vineandbarrel:aging_barrel"
+  },
+  "max_uses": 3.0,
+  "merchant_predicate": {
+    "condition": "minecraft:entity_properties",
+    "entity": "this",
+    "predicate": {
+      "predicates": {
+        "minecraft:villager/variant": "minecraft:swamp"
+      }
+    }
+  },
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 20.0,
+    "id": "minecraft:emerald"
+  },
+  "xp": 30.0
+}

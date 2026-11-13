@@ -25,5 +25,10 @@ public class VBTradeTags extends KeyTagProvider<VillagerTrade>
 			.add(VillageData.FARMER_2_RED_GRAPES_EMERALD);
 		tag(VillagerTradeTags.WANDERING_TRADER_COMMON).add(VillageData.WANDERING_TRADER_RED_GRAPES).add(VillageData.WANDERING_TRADER_HOPS).add(VillageData.WANDERING_TRADER_BARLEY_SEEDS)
 			.add(VillageData.WANDERING_TRADER_WHITE_GRAPES);
+		// The tavern keeper's own pools, one tag per level (his trade sets draw from them)
+		for (int level = 1; level <= 5; level++) {
+			var tag = tag(VillageData.keeperTag(level));
+			VillageData.keeperTradeKeys(level).forEach(tag::add);
+		}
 	}
 }

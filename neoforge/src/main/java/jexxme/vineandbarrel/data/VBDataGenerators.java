@@ -62,11 +62,12 @@ public final class VBDataGenerators
 
 	@SubscribeEvent
 	public static void gatherData(GatherDataEvent.Client event) {
-		event.createProvider((output, registries) -> new LootTableProvider(output, Set.of(), List.of(
+		event.createProvider((output, registries) -> new LootTables(output, List.of(
 				new LootTableProvider.SubProviderEntry(VBBlockLoot::new, LootContextParamSets.BLOCK),
 				new LootTableProvider.SubProviderEntry(VBHarvestLoot::new, LootContextParamSets.BLOCK_INTERACT),
 				new LootTableProvider.SubProviderEntry(VillageData.ChestLoot::new, LootContextParamSets.CHEST)), registries));
-		event.createDatapackRegistryObjects(new RegistrySetBuilder().add(Registries.VILLAGER_TRADE, VillageData::bootstrapTrades));
+		event.createDatapackRegistryObjects(new RegistrySetBuilder().add(Registries.VILLAGER_TRADE, VillageData::bootstrapTrades)
+				.add(Registries.TRADE_SET, VillageData::bootstrapTradeSets));
 		event.createProvider((output, registries) -> new AdvancementProvider(output, registries, List.of(new VBAdvancementGenerator())));
 		event.createProvider(VBRecipes.Runner::new);
 		event.createBlockAndItemTags(VBTagProviders.Blocks::new, (output, lookup, blockTags) -> new VBTagProviders.Items(output, lookup));
@@ -76,6 +77,36 @@ public final class VBDataGenerators
 		event.createProvider(VBTradeTags::new);
 		event.createProvider(VBLootModifiers::new);
 		event.createProvider(FdRecipes::new);
+	}
+
+	/**
+	 * 26.2: the loot tables are a classic provider, which validates references only against the tables it writes. The
+	 * tavern chest draws vanilla's village house chest by reference ({@code VillageData.tavernLoot}), which exists in the
+	 * game but not here, so that one missing reference is let through; every other problem still fails the run.
+	 */
+	static class LootTables extends LootTableProvider
+	{
+		LootTables(PackOutput output, List<SubProviderEntry> subProviders, CompletableFuture<HolderLookup.Provider> registries) {
+			super(output, Set.of(), subProviders, registries);
+		}
+
+		@Override
+		protected void validate(net.minecraft.core.WritableRegistry<net.minecraft.world.level.storage.loot.LootTable> registry,
+				net.minecraft.world.level.storage.loot.ValidationContextSource context, net.minecraft.util.ProblemReporter.Collector problems) {
+			Set<net.minecraft.resources.ResourceKey<?>> vanilla = new java.util.HashSet<>();
+			for (jexxme.vineandbarrel.world.village.VillageType type : jexxme.vineandbarrel.world.village.VillageType.values()) {
+				vanilla.add(type.vanillaHouseLoot());
+			}
+			net.minecraft.util.ProblemReporter.Collector own = new net.minecraft.util.ProblemReporter.Collector();
+			super.validate(registry, new net.minecraft.world.level.storage.loot.ValidationContextSource(own,
+					new net.minecraft.core.RegistryAccess.ImmutableRegistryAccess(List.of(registry)).freeze()), problems);
+			own.forEach((path, problem) -> {
+				if (!(problem instanceof net.minecraft.world.level.storage.loot.ValidationContext.MissingReferenceProblem missing
+						&& vanilla.contains(missing.referenced()))) {
+					problems.report(() -> path + ": " + problem.description());
+				}
+			});
+		}
 	}
 
 	/**
