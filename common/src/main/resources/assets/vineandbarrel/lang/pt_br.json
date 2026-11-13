@@ -368,5 +368,6 @@
   "watch.vineandbarrel.path.wiki": "Wiki",
   "watch.vineandbarrel.path.wiki_page": "Página da wiki ›",
   "watch.vineandbarrel.path.chapter": "(Caminho do cervejeiro, %s de %s)",
-  "watch.vineandbarrel.farmers_delight.note": "Um fogão para aquecer, corda para subir"
+  "watch.vineandbarrel.farmers_delight.note": "Um fogão para aquecer, corda para subir",
+  "entity.vineandbarrel.villager.tavern_keeper": "Taberneiro"
 }

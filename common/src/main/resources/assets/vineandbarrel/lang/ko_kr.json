@@ -368,5 +368,6 @@
   "watch.vineandbarrel.path.wiki": "위키",
   "watch.vineandbarrel.path.wiki_page": "위키 페이지 ›",
   "watch.vineandbarrel.path.chapter": "(양조가의 길, %s/%s)",
-  "watch.vineandbarrel.farmers_delight.note": "스토브로 데우고, 밧줄을 타고 올라요"
+  "watch.vineandbarrel.farmers_delight.note": "스토브로 데우고, 밧줄을 타고 올라요",
+  "entity.vineandbarrel.villager.tavern_keeper": "선술집 주인"
 }
