@@ -1,6 +1,0 @@
-{
-  "parent": "vineandbarrel:block/template_bush_on_rope",
-  "textures": {
-    "crop": "vineandbarrel:block/hop_bush_on_rope_stage0"
-  }
-}

@@ -62,9 +62,9 @@ final class TrellisFrameModel extends BakedModelWrapper<BakedModel>
 	/**
 	 * Bakes one model another way round, as the game's own baker does for a block state's rotation (the game's
 	 * {@code ModelBakery.ModelBakerImpl}, which mods can't reach on Forge 47; it also keeps a cache, which a handful of
-	 * pieces baked once per reload don't need).
+	 * pieces baked once per reload don't need). The vines on supports bake their turned leaf pieces with it too.
 	 */
-	private record PieceBaker(ModelBakery bakery, Function<Material, TextureAtlasSprite> sprites) implements ModelBaker
+	record PieceBaker(ModelBakery bakery, Function<Material, TextureAtlasSprite> sprites) implements ModelBaker
 	{
 		@Override
 		public UnbakedModel getModel(ResourceLocation location) {

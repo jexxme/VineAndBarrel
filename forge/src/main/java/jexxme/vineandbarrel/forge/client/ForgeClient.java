@@ -90,7 +90,8 @@ public final class ForgeClient
 			VBRenderLayers.register(ForgeClientRegistrar.renderLayers());
 		}));
 
-		// Vines on fences, walls, chains and bars draw the block they hold under their leaves
+		// Vines on fences, walls, chains and bars draw the block they hold, and leaves that follow its shape
+		modBus.addListener(SupportedVineModel::registerPieces);
 		modBus.addListener(SupportedVineModel::wrap);
 		// Trellis rows draw their frame (end posts, top rail) from their neighbours
 		modBus.addListener(TrellisFrameModel::registerParts);
