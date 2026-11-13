@@ -73,7 +73,7 @@ public final class TipsyInfo
 		if (!at.rules().buffs()) {
 			words.add(word("no_buffs"));
 		}
-		if (at.legs().slower() > 0.0F) {
+		if (TipsyEffect.heavyLegs(level) > 0.0F) {
 			words.add(word("slower"));
 		}
 		if (at.rules().cutOff() && TipsyConfig.cutOff()) {

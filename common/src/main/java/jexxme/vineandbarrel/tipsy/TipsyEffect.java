@@ -3,6 +3,7 @@ package jexxme.vineandbarrel.tipsy;
 import java.util.function.BiConsumer;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
@@ -47,7 +48,29 @@ public class TipsyEffect extends MobEffect
 		consumer.accept(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(COURAGE_KNOCKBACK, level.courage().knockbackResistance(), AttributeModifier.Operation.ADD_VALUE));
 		consumer.accept(Attributes.FALL_DAMAGE_MULTIPLIER, new AttributeModifier(COURAGE_FALL, -level.courage().fallDamageReduction(), AttributeModifier.Operation.ADD_VALUE));
 		// Heavy legs at IV and V: slower, sprinting too (never no sprinting)
-		consumer.accept(Attributes.MOVEMENT_SPEED, new AttributeModifier(HEAVY_LEGS, -level.legs().slower(), AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+		consumer.accept(Attributes.MOVEMENT_SPEED, new AttributeModifier(HEAVY_LEGS, -heavyLegs(amplifier + 1), AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+	}
+
+	/**
+	 * {@return how much slower heavy legs make you at this level (a share of your speed)} Part of the drunk walk, so the
+	 * server's {@code stumbling} switch turns it off with the rest.
+	 */
+	public static float heavyLegs(int level) {
+		return TipsyConfig.stumbling() ? TipsyLevels.at(level).legs().slower() : 0.0F;
+	}
+
+	/**
+	 * Once a tick for a tipsy entity: the heavy legs follow the {@code stumbling} switch when it is changed while the
+	 * effect is on (vanilla only sets the speed when the level changes).
+	 */
+	static void keepHeavyLegs(LivingEntity entity, int level) {
+		AttributeInstance speed = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+		AttributeModifier now = speed == null ? null : speed.getModifier(HEAVY_LEGS);
+		double want = -heavyLegs(level);
+		if (now != null && now.amount() != want) {
+			speed.removeModifier(HEAVY_LEGS);
+			speed.addPermanentModifier(new AttributeModifier(HEAVY_LEGS, want, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+		}
 	}
 
 	@Override
