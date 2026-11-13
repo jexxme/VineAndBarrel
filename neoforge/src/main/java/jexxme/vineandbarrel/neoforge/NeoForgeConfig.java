@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * key is read from the file before NeoForge loads it (NeoForge drops keys it doesn't know), and the converted value is
  * set and saved once the file is loaded.
  */
-final class NeoForgeConfig
+public final class NeoForgeConfig
 {
 	private NeoForgeConfig() {
 	}
@@ -58,7 +58,7 @@ final class NeoForgeConfig
 	private static final Pattern LINE = Pattern.compile("^\\s*([A-Za-z0-9_]+)\\s*=\\s*\"?([^\"#]*?)\"?\\s*(#.*)?$");
 
 	/** The client settings a file saved under their old keys only, with the values they carry over (empty if none). */
-	private static Map<ConfigValue<?>, String> carriedOver(Path file) {
+	public static Map<ConfigValue<?>, String> carriedOver(Path file) {
 		Map<ConfigValue<?>, String> carried = new HashMap<>();
 		if (!Files.isRegularFile(file)) {
 			return carried;
