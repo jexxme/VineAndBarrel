@@ -29,7 +29,10 @@ public final class TipsyLegs
 {
 	/**
 	 * Sideways speed of a stumble: a small give to the side. The misstep itself is the stumbler's own legs stepping out
-	 * that way (on their client, with the arms out for balance): a hard push looked like being shoved.
+	 * that way (on their client, with the arms out for balance): a hard push looked like being shoved. A player's give
+	 * comes from their own client too ({@link #ownStumble}), added to how they move there; the server never sends a
+	 * player a speed (it only knows how they moved a moment ago: sent back, that carried someone who had just stopped at
+	 * an edge on over it).
 	 */
 	public static final double STUMBLE_NUDGE = 0.08;
 	/** Horizontal speed (blocks/tick) above which an entity counts as walking. Sneaking is slower and never stumbles. */
@@ -148,14 +151,34 @@ public final class TipsyLegs
 			left = !left;
 		}
 		Vec3 side = across.scale(left ? 1.0 : -1.0);
-		if (safeStep(entity, side)) {
-			setMotion(entity, currentMotion(entity).add(side.scale(STUMBLE_NUDGE)));
+		// a mob moves on the server: the give right here; a player's own client gives it (ownStumble)
+		if (!(entity instanceof Player) && safeStep(entity, side)) {
+			setMotion(entity, entity.getDeltaMovement().add(side.scale(STUMBLE_NUDGE)));
 		}
 		TipsySounds.stumble(entity, ground(entity));
 		Legs legs = legs(entity);
 		set(entity, new Legs(legs.trip(), legs.cooldown(), TipsyMotion.CATCH_STEP_AFTER));
 		TipsyMotion.stumble(entity, left);
 		return true;
+	}
+
+	/**
+	 * On the stumbler's own client, when it sees them stumble ({@link TipsyMotion.Counts#stumbles}): the small give to the
+	 * side the stumble lurched to, to add to how they move right now, at right angles to where they walk. Only while
+	 * walking (as {@link #walkingMotion} counts it) and only where a step that way is safe from where they are now, else
+	 * nothing.
+	 *
+	 * @param moved how far the player moved in the last tick
+	 * @param left  the stumble lurched to the walker's left
+	 * @return the push to add to the player's movement, or {@link Vec3#ZERO}
+	 */
+	public static Vec3 ownStumble(Player player, Vec3 moved, boolean left) {
+		Vec3 walking = new Vec3(moved.x, 0.0, moved.z);
+		if (!steadyGround(player) || player.isShiftKeyDown() || walking.lengthSqr() <= WALKING_SPEED * WALKING_SPEED || isDown(player)) {
+			return Vec3.ZERO;
+		}
+		Vec3 side = new Vec3(walking.z, 0.0, -walking.x).normalize().scale(left ? 1.0 : -1.0);
+		return safeStep(player, side) ? side.scale(STUMBLE_NUDGE) : Vec3.ZERO;
 	}
 
 	// ------------------------------------------------------------------ the trip
@@ -301,18 +324,10 @@ public final class TipsyLegs
 		return entity instanceof Player ? entity.getKnownMovement() : entity.getDeltaMovement();
 	}
 
-	/**
-	 * Adds {@code push} to how the entity moves now, synced to its own client too (a Rowdy swing's step forward);
-	 * {@code onTop} adds it to a push already given this tick (a stumble's), not to the movement before it.
-	 */
-	static void push(LivingEntity entity, Vec3 push, boolean onTop) {
-		setMotion(entity, (onTop ? entity.getDeltaMovement() : currentMotion(entity)).add(push));
-	}
-
+	/** A mob's new speed (it moves on the server), sent to the clients that show it. Never a player's: see {@link #ownStumble}. */
 	private static void setMotion(LivingEntity entity, Vec3 motion) {
 		entity.setDeltaMovement(motion);
 		entity.needsSync = true;
-		// Sends the new speed to the entity's own client too (a player moves on its client), like knockback does
 		entity.syncVelocity = true;
 	}
 }

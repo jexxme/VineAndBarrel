@@ -106,6 +106,7 @@ public final class TipsyGameTests
 		test("tipsy_slur_level_and_config", TipsyGameTests::slurLevelAndConfig);
 		test("tipsy_stumble", TipsyGameTests::stumble);
 		test("tipsy_stumble_config_off", TipsyGameTests::stumbleConfigOff);
+		test("tipsy_stumble_at_an_edge_never_pushes", TipsyGameTests::stumbleAtAnEdgeNeverPushes);
 		test("tipsy_hiccups", TipsyGameTests::hiccups);
 		test("tipsy_gait_math", TipsyGameTests::gaitMath);
 		test("tipsy_weave_only_where_safe", TipsyGameTests::weaveOnlyWhereSafe);
@@ -620,7 +621,10 @@ public final class TipsyGameTests
 
 	// ------------------------------------------------------------------ level 5: stumbling, level 3: hiccups
 
-	/** At level 5 a stumble lurches sideways, at right angles to walking; below IV or standing still it does nothing. */
+	/**
+	 * At level 5 a stumble lurches sideways, at right angles to walking; below IV or standing still it does nothing. A
+	 * player's give to the side comes from their own client, never as a speed the server sends.
+	 */
 	private static void stumble(GameTestHelper helper) {
 		// Ground to step onto on both sides (a stumble never lurches over an edge)
 		for (int x = 0; x < 5; x++) {
@@ -640,15 +644,61 @@ public final class TipsyGameTests
 		helper.assertValueEqual(TipsyLegs.walkingMotion(player), Vec3.ZERO, "A player who isn't moving isn't walking");
 
 		player.setDeltaMovement(Vec3.ZERO);
+		player.syncVelocity = false;
 		int before = motion(player).stumbles();
 		helper.assertTrue(TipsyLegs.stumble(player, walkingEast, random), "Level 5 walking stumbles");
-		Vec3 nudge = player.getDeltaMovement();
+		helper.assertValueEqual(player.getDeltaMovement(), Vec3.ZERO, "the server pushes no player");
+		helper.assertFalse(player.syncVelocity, "no speed is sent to the player's client");
+		helper.assertValueEqual(motion(player).stumbles(), before + 1, "every client is told to play the stumble");
+		// the player's own client gives the lurch, from how it moved last
+		boolean left = motion(player).stumbleLeft();
+		Vec3 nudge = TipsyLegs.ownStumble(player, walkingEast, left);
 		helper.assertTrue(Math.abs(nudge.x) < 1.0E-6 && Math.abs(nudge.y) < 1.0E-6, "The lurch is purely sideways, got " + nudge);
 		helper.assertTrue(Math.abs(Math.abs(nudge.z) - TipsyLegs.STUMBLE_NUDGE) < 1.0E-6, "The lurch is about a step, got " + nudge);
-		helper.assertTrue(player.syncVelocity, "The lurch is sent to the player's client");
-		helper.assertValueEqual(motion(player).stumbles(), before + 1, "every client is told to play the stumble");
 		// walking east, left is north (-z): the nudge goes the way every client shows the misstep
-		helper.assertValueEqual(motion(player).stumbleLeft(), nudge.z < 0, "to the side it lurched");
+		helper.assertValueEqual(left, nudge.z < 0, "to the side it lurched");
+		helper.assertValueEqual(TipsyLegs.ownStumble(player, Vec3.ZERO, left), Vec3.ZERO, "standing still: no give");
+		helper.succeed();
+	}
+
+	/**
+	 * Audit 1.2: a player who has just stopped at a cliff edge still has, on the server, the last movement their client
+	 * reported, toward the edge. A stumble then must not send that back with the give (it carried them half a block over
+	 * the edge): the server sends a player no speed at all, and their own client gives only the push to the side, only
+	 * where that side is safe.
+	 */
+	private static void stumbleAtAnEdgeNeverPushes(GameTestHelper helper) {
+		for (int x = 0; x < 5; x++) {
+			for (int z = 0; z < 5; z++) {
+				helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+			}
+		}
+		// a drop right ahead (south) and to the left of the walk (east, walking south)
+		for (int x = 0; x < 5; x++) {
+			helper.setBlock(new BlockPos(x, 0, 3), Blocks.AIR);
+			helper.setBlock(new BlockPos(x, 0, 4), Blocks.AIR);
+		}
+		helper.setBlock(new BlockPos(3, 0, 2), Blocks.AIR);
+		TestPlayer player = player(helper);
+		Vec3 at = helper.absoluteVec(new Vec3(2.5, 1.0, 2.8));
+		player.snapTo(at.x, at.y, at.z, 0.0F, 0.0F);
+		player.setOnGround(true);
+		Tipsy.setLevel(player, 5);
+		// stopped at the edge; the server still knows the last step toward it
+		Vec3 towardEdge = new Vec3(0.0, 0.0, 0.25);
+		player.setKnownMovement(towardEdge);
+		player.setDeltaMovement(Vec3.ZERO);
+		player.syncVelocity = false;
+		RandomSource random = RandomSource.create(4L);
+		for (int i = 0; i < 20; i++) {
+			TipsyLegs.stumble(player, towardEdge, random);
+			helper.assertValueEqual(player.getDeltaMovement(), Vec3.ZERO, "nothing carries the player on toward the edge");
+			helper.assertFalse(player.syncVelocity, "and nothing is sent to their client");
+		}
+		// on their client, walking south: the give to the left (east) has a drop there, the right (west) is safe
+		helper.assertValueEqual(TipsyLegs.ownStumble(player, towardEdge, true), Vec3.ZERO, "no give toward a drop");
+		Vec3 right = TipsyLegs.ownStumble(player, towardEdge, false);
+		helper.assertTrue(right.x < 0.0 && Math.abs(right.z) < 1.0E-6, "the safe side still gives, purely sideways: " + right);
 		helper.succeed();
 	}
 
@@ -1022,9 +1072,21 @@ public final class TipsyGameTests
 		helper.setBlock(new BlockPos(2, 0, 3), Blocks.AIR);
 		player.setOnGround(true);
 		player.setDeltaMovement(Vec3.ZERO);
+		// the server still knows the last steps sideways and back: never sent back with the swing
+		player.setKnownMovement(new Vec3(0.2, 0.0, -0.2));
+		player.syncVelocity = false;
+		int lunges = motion(player).lunges();
 		Rowdy.swing(player);
+		helper.assertValueEqual(player.getDeltaMovement(), Vec3.ZERO, "the server pushes no player");
+		helper.assertFalse(player.syncVelocity, "no speed is sent to the player's client");
+		helper.assertValueEqual(motion(player).lunges(), lunges + 1, "the own client is told to take the step");
+		helper.assertValueEqual(Rowdy.ownLunge(player), Vec3.ZERO, "no step forward toward the edge");
+		// the ground back: a step forward, as far as a lunge goes
+		helper.setBlock(new BlockPos(2, 0, 2), Blocks.STONE);
+		helper.setBlock(new BlockPos(2, 0, 3), Blocks.STONE);
 		Vec3 facingFlat = new Vec3(player.getLookAngle().x, 0.0, player.getLookAngle().z).normalize();
-		helper.assertTrue(player.getDeltaMovement().dot(facingFlat) <= 1.0E-6, "no step forward toward the edge: " + player.getDeltaMovement());
+		Vec3 step = Rowdy.ownLunge(player);
+		helper.assertTrue(Math.abs(step.dot(facingFlat) - Rowdy.LUNGE) < 1.0E-6, "on safe ground the step forward: " + step);
 		helper.succeed();
 	}
 
