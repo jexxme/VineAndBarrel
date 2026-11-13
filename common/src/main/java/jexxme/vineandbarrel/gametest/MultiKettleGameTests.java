@@ -96,7 +96,9 @@ public final class MultiKettleGameTests
 		test("multikettle_copper_change_on_one_part_turns_all", 100, MultiKettleGameTests::copperChangeOnOnePartTurnsAll);
 		test("kettle_chimney_stops_at_obsidian", 100, MultiKettleGameTests::chimneyStopsAtObsidian);
 		test("kettle_chimney_stops_at_unbreakable_blocks", 100, MultiKettleGameTests::chimneyStopsAtUnbreakable);
-		test("kettle_chimney_leaves_a_vine", 100, MultiKettleGameTests::chimneyLeavesVine);
+		test("kettle_chimney_stops_at_a_vine", 100, MultiKettleGameTests::chimneyStopsAtVine);
+		test("kettle_chimney_stops_at_a_bush_a_rope_vine_and_a_torch", 100, MultiKettleGameTests::chimneyStopsAtPlantsAndTorches);
+		test("kettle_chimney_through_a_slab_roof", 100, MultiKettleGameTests::chimneyThroughSlabRoof);
 		test("kettle_chimney_through_a_roof_in_one_click", 100, MultiKettleGameTests::chimneyThroughRoofInOneClick);
 		test("multikettle_removed_full_kettle_never_overfills", 100, MultiKettleGameTests::removedFullKettleNeverOverfills);
 		test("kettle_chimney_grows_from_the_chimney", 100, MultiKettleGameTests::chimneyGrowsFromChimney);
@@ -852,18 +854,53 @@ public final class MultiKettleGameTests
 		helper.succeed();
 	}
 
-	/** A vine on a trellis over the kettle stays as it grows: the chimney goes on above it. */
-	private static void chimneyLeavesVine(GameTestHelper helper) {
+	/** A vine on a trellis over the kettle is no roof: it stays, and the chimney stops under it. */
+	private static void chimneyStopsAtVine(GameTestHelper helper) {
 		place(helper, BASE, false);
 		helper.runAfterDelay(2, () -> {
 			BlockPos above = helper.absolutePos(BASE.above());
 			helper.getLevel().setBlock(above, VBBlocks.GRAPE_VINE_ON_TRELLIS.get().defaultBlockState(), Block.UPDATE_CLIENTS);
 			helper.assertTrue(helper.getBlockState(BASE.above()).is(VBBlocks.GRAPE_VINE_ON_TRELLIS.get()), "a vine on a trellis over the kettle");
-			helper.useBlock(BASE, survivorWithIngots(helper));
+			ServerPlayer player = survivorWithIngots(helper);
+			helper.useBlock(BASE, player);
 			helper.assertTrue(helper.getBlockState(BASE.above()).is(VBBlocks.GRAPE_VINE_ON_TRELLIS.get()), "the vine stays");
-			assertPiece(helper, BASE.above(2), 1, true, "over the vine");
+			helper.assertTrue(helper.getBlockState(BASE.above(2)).isAir(), "no piece over the vine");
+			VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 4, "no ingot used");
 			helper.succeed();
 		});
+	}
+
+	/** A grape bush, a vine on a rope and a torch over a kettle are no roof either: each stays, with no piece over it. */
+	private static void chimneyStopsAtPlantsAndTorches(GameTestHelper helper) {
+		BlockState[] inTheWay = {VBBlocks.GRAPE_BUSH.get().defaultBlockState(), VBBlocks.GRAPE_VINE_ON_ROPE.get().defaultBlockState(),
+			Blocks.TORCH.defaultBlockState()};
+		for (int i = 0; i < inTheWay.length; i++) place(helper, BASE.offset(4 * i, 0, 0), false);
+		helper.runAfterDelay(2, () -> {
+			ServerPlayer player = survivorWithIngots(helper);
+			for (int i = 0; i < inTheWay.length; i++) {
+				BlockPos kettle = BASE.offset(4 * i, 0, 0);
+				BlockState block = inTheWay[i];
+				helper.getLevel().setBlock(helper.absolutePos(kettle.above()), block, Block.UPDATE_CLIENTS);
+				helper.useBlock(kettle, player);
+				String what = block.getBlock().getName().getString();
+				helper.assertTrue(helper.getBlockState(kettle.above()).is(block.getBlock()), what + " stays");
+				helper.assertTrue(helper.getBlockState(kettle.above(2)).isAir(), "no piece over " + what);
+			}
+			VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 4, "no ingot used");
+			helper.succeed();
+		});
+	}
+
+	/** A slab roof right on the kettle stays whole: the piece goes on it, its pipe drawn through the slab. */
+	private static void chimneyThroughSlabRoof(GameTestHelper helper) {
+		place(helper, BASE, false);
+		roof(helper, 1, Blocks.SPRUCE_SLAB.defaultBlockState());
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		helper.assertTrue(helper.getBlockState(BASE.above()).is(Blocks.SPRUCE_SLAB), "the slab stays");
+		assertPiece(helper, BASE.above(2), 1, true, "on the slab");
+		VBGameTests.assertValueEqual(helper, player.getMainHandItem().getCount(), 3, "one ingot used");
+		helper.succeed();
 	}
 
 	/** A roof right on the kettle: one click puts the piece on it, the roof stays, for one ingot. */
