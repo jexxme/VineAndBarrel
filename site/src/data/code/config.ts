@@ -20,6 +20,8 @@ export const configFiles = {
 			{ key: 'secondsPerLevel', fallback: 90, range: [1, 3600], what: (_lv, l = 'en') => t('How long each level lasts before it drops by one.', l) },
 			{ key: 'slurredChat', fallback: true, what: (lv, l = 'en') => t('Slurred chat from level {slurLevel}.', l, { slurLevel: lv.slurLevel }) },
 			{ key: 'stumbling', fallback: true, what: (lv, l = 'en') => t('Unsteady legs at level {stumbleLevel}: the drift while walking, the stumbles and the trips.', l, { stumbleLevel: lv.stumbleLevel }) },
+			{ key: 'noddingOff', fallback: true, what: (_lv, l = 'en') => t('Kept for nodding off on your feet; it changes nothing yet.', l) },
+			{ key: 'hangover', fallback: true, what: (_lv, l = 'en') => t('Kept for the hangover; it changes nothing yet.', l) },
 			{ key: 'blackout', fallback: true, what: (_lv, l = 'en') => t('Black out after one drink too many at the top level.', l) },
 			{ key: 'rowdy', fallback: true, what: (lv, l = 'en') => t('Rowdy from level {rowdyLevel}: the wild punches and being cut off at the bar. `false` turns both off; the next two turn off just one.', l, { rowdyLevel: lv.rowdyLevel }) },
 			{ key: 'rowdyPunches', fallback: true, what: (lv, l = 'en') => t('From level {rowdyLevel}: now and then a wild punch at whoever is in front.', l, { rowdyLevel: lv.rowdyLevel }) },
@@ -31,11 +33,11 @@ export const configFiles = {
 		fabricFile: 'vineandbarrel-tipsy-client.properties',
 		section: 'tipsy',
 		options: [
-			{ key: 'wobbleIntensity', fallback: 1, range: [0, 2], what: (_lv, l = 'en') => t("How much Tipsy moves your screen (the sway, the jolts, the Nausea spells): 0 keeps it still (for motion sickness), 2 doubles it. Vanilla's Distortion Effects and FOV Effects sliders scale it too. It always wins over the server.", l) },
+			{ key: 'drunkScreen', fallback: 100, range: [0, 100], what: (_lv, l = 'en') => t("How much being tipsy moves your own view, in percent: a hiccup's flick, a stumble's dip, a trip. 0 keeps it still (for motion sickness). Tipsy never moves your view on its own. Vanilla's Distortion Effects slider scales it too. It always wins over the server.", l) },
 			{ key: 'otherPlayersSway', fallback: true, what: (_lv, l = 'en') => t('Show tipsy players swaying, hiccuping and stumbling, yourself in third person included.', l) },
-			{ key: 'visionEffects', fallback: true, what: (_lv, l = 'en') => t('The darker screen edges and the heavy-eyed blinks.', l) },
+			{ key: 'doubleVision', fallback: true, what: (_lv, l = 'en') => t('Kept for double vision; it changes nothing yet.', l) },
 			{ key: 'heartbeatVolume', fallback: 1, range: [0, 1], what: (_lv, l = 'en') => t('How loud you hear your own heart at Tipsy V (only you hear it). 0 turns it off.', l) },
 		] as Option[],
 	},
-	src: 'tipsy/TipsyConfig.java:29-51, tipsy/TipsyEvents.java:34-38, neoforge/NeoForgeConfig.java:22-26, fabric/FabricConfig.java:27-56',
+	src: 'tipsy/TipsyConfig.java:29-71, tipsy/TipsyEvents.java:34-38, neoforge/NeoForgeConfig.java:38-50, fabric/FabricConfig.java:27-56',
 };

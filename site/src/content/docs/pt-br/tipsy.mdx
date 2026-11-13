@@ -15,7 +15,7 @@ export const punchHearts = t.rowdyPunchDamage / 2;
 
 Todo vinho, cerveja, sidra e hidromel dá o bônus dele **e um nível de <EffectBadge id="vineandbarrel:tipsy" name="Alegrinho" />**. No começo
 é divertido: um balanço, soluços, um pouco de coragem líquida, e no Alegrinho {roman(t.slurLevel - 1)} você está no seu melhor (e
-seu chat não), embora os olhos comecem a pesar. Continue e a conta chega: enjoos, braços fracos e, no topo, pernas que mal
+seu chat não). Continue e a conta chega: nada mais de bônus, um soco doido de vez em quando e, no topo, pernas que mal
 te levam para casa. O máximo é o nível {t.maxLevel}.
 
 ## Níveis
@@ -32,7 +32,7 @@ girando em volta da cabeça para todo mundo ver. Nesses poucos segundos ninguém
 também não; o resto do mundo continua valendo, então não apague na lava. Depois você acorda. Onde? Isso
 depende da noite, e há mais jeitos de acordar do que você imagina…
 
-Você vai ficar com fome e trêmulo por um tempo, de volta ao Alegrinho I, e talvez tenha nos bolsos algo de que não lembra de ter
+Você vai ficar com fome, de volta ao Alegrinho I, e talvez tenha nos bolsos algo de que não lembra de ter
 pegado. Você nunca perde nada do que tinha.
 
 ## Arruaceiro
@@ -67,16 +67,14 @@ negociam com você até você ficar sóbrio. Faça suas trocas antes da {t.cutOf
   monstro por perto, e não duas vezes em {Math.round(t.tripCooldownTicks / 20)} segundos; em qualquer outro lugar fica só um tropeço.
 - **A água tira você dos níveis ruins rápido,** mas os níveis de baixo têm o próprio tempo, então ela não deixa você sóbrio
   mais cedo no geral.
-- O Alegrinho só cuida dos próprios efeitos colaterais: uma Lentidão ou Náusea de uma poção ou de um comando fica como está.
 - Links, comandos e @menções no chat nunca são enrolados.
-- Os outros jogadores veem você balançar, ouvem seus soluços e veem seus tropeços, tombos e socos de arruaceiro, mas não as bordas escuras
-  da sua tela nem suas piscadas.
+- Os outros jogadores veem você balançar, ouvem seus soluços e veem seus tropeços, tombos e socos de arruaceiro.
 - **Quer a história completa de um apagão?** Todos os lugares onde você pode acordar, as chances e as lembranças estão em
   [Apagões](/blackouts/). Spoilers, claro.
 
 ## Configurações
 
 Donos de servidor podem desligar o Alegrinho por completo (o modo sem álcool) ou desligar um a um a fala enrolada, os tropeços (com os tombos
-e o desvio), os apagões, os socos de arruaceiro e o corte de doses. Cada jogador pode reduzir o quanto o Alegrinho mexe na
-tela, até nada, e desligar os efeitos de visão; os controles Efeitos de Distorção, Efeitos de FOV e Escuridão pulsante do Minecraft
-também valem. Todas as opções e padrões estão em [Configuração](/reference/config/).
+e o desvio), os apagões, os socos de arruaceiro e o corte de doses. O Alegrinho nunca mexe na sua tela sozinho; cada jogador
+pode reduzir o quanto um soluço, um tropeço ou um tombo mexe nela, até nada, e o controle Efeitos de Distorção do Minecraft
+também vale. Todas as opções e padrões estão em [Configuração](/reference/config/).
