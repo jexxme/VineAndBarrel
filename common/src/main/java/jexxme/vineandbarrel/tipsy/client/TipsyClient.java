@@ -1,6 +1,5 @@
 package jexxme.vineandbarrel.tipsy.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import jexxme.vineandbarrel.VineAndBarrel;
@@ -13,7 +12,6 @@ import jexxme.vineandbarrel.tipsy.TipsyInfo;
 import jexxme.vineandbarrel.tipsy.TipsyLevels;
 import jexxme.vineandbarrel.tipsy.TipsyMotion;
 import jexxme.vineandbarrel.tipsy.TipsyRegistry;
-import jexxme.vineandbarrel.tipsy.TipsyVision;
 import jexxme.vineandbarrel.tipsy.TipsyWobble;
 import jexxme.vineandbarrel.platform.client.ClientRegistrar;
 import net.minecraft.client.Camera;
@@ -48,22 +46,20 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * Client side of Tipsy: what this player sees (the sway, the hiccup's flick, a stumble's dip, a trip face down, the FOV
- * breathing, the dark edges and the blinks), what they feel in their keys (the drift at V, held still while down after a
- * trip) and how every tipsy player looks to the others (the sway, the jolts, the trip). The math lives in
- * {@link TipsyWobble}, {@link TipsyMotion} and {@link TipsyVision} so it is tested headless. Each loader calls these from
- * its own client events (NeoForge: {@code NeoForgeClient}; Fabric: Fabric API callbacks and our client mixins).
+ * Client side of Tipsy: what this player sees (the hiccup's flick, a stumble's dip, a trip face down), what they feel
+ * in their keys (the drift at V, held still while down after a trip) and how every tipsy player looks to the others
+ * (the sway, the jolts, the trip). Tipsy never moves the own view on its own: only with the body. The math lives in
+ * {@link TipsyWobble} and {@link TipsyMotion} so it is tested headless. Each loader calls these from its own client
+ * events (NeoForge: {@code NeoForgeClient}; Fabric: Fabric API callbacks and our client mixins).
  * <p>
- * What moves the screen follows the player's own settings: {@code wobbleIntensity} (0 = never), vanilla's Distortion
- * Effects (the camera, squared like vanilla's Nausea) and FOV Effects (the breathing). Poses (lying down after a trip)
- * are not distortions and always show.
+ * What moves the own view follows the player's settings: "drunk screen" ({@link TipsyConfig#drunkScreen}, 0 = never)
+ * and vanilla's Distortion Effects (squared like vanilla's Nausea). Poses (lying down after a trip) are not distortions
+ * and always show.
  */
 public final class TipsyClient
 {
-	/** The HUD layer for tunnel vision and blinks, by id (Forge GUI overlays; Fabric draws it from its Gui mixin). */
+	/** The HUD layer for what the eyes do, by id (Forge GUI overlays; Fabric draws it from its Gui mixin); see {@link #renderVision}. */
 	public static final ResourceLocation VISION_LAYER = VineAndBarrel.id("tipsy_vision");
-	/** Per tick, how far the shown wobble eases toward the real level (about 1.5 s to settle). */
-	private static final float EASE = 0.05F;
 	/** Per tick, how fast Tipsy's screen effects fade out when a blackout starts, and back in after. */
 	private static final float PAUSE_EASE = 0.15F;
 	/** How far the moved camera stays from a block in its way. */
@@ -71,8 +67,6 @@ public final class TipsyClient
 	/** At V, walking drifts this far to the side at most (a share of a full sideways step). */
 	private static final float DRIFT = 0.3F;
 
-	private static float wobbleLevel;
-	private static float wobbleLevelO;
 	/** 1 normally, 0 while blacked out: Tipsy pauses then (the blackout has the screen). */
 	private static float awake = 1.0F;
 	private static float awakeO = 1.0F;
@@ -102,16 +96,16 @@ public final class TipsyClient
 	}
 
 	/**
-	 * Tipsy's side effects (and the blackout's) come without an icon, but the inventory lists every effect anyway. For
-	 * these vanilla effects (Slowness, Mining Fatigue, Weakness, Nausea) the inventory shows an instance only when it
-	 * has its icon, so a potion's or a command's still shows exactly as in vanilla.
+	 * The blackout's Slowness comes without an icon, but the inventory lists every effect anyway. For the vanilla effects
+	 * in {@link #SIDE_EFFECTS} the inventory shows an instance only when it has its icon, so a potion's or a command's
+	 * still shows exactly as in vanilla.
 	 */
 	public static boolean isVisibleInInventory(MobEffectInstance instance) {
 		return instance.showIcon();
 	}
 
-	/** The vanilla effects {@link #isVisibleInInventory} is for. */
-	public static final List<MobEffect> SIDE_EFFECTS = List.of(MobEffects.MOVEMENT_SLOWDOWN, MobEffects.DIG_SLOWDOWN, MobEffects.WEAKNESS, MobEffects.CONFUSION);
+	/** The vanilla effects {@link #isVisibleInInventory} is for: the blackout's Slowness (it holds the body still). */
+	public static final List<MobEffect> SIDE_EFFECTS = List.of(MobEffects.MOVEMENT_SLOWDOWN);
 
 	// ------------------------------------------------------------------ the tick
 
@@ -121,12 +115,6 @@ public final class TipsyClient
 		releasePosing();
 		Minecraft minecraft = Minecraft.getInstance();
 		LocalPlayer player = minecraft.player;
-		float target = player == null ? 0.0F : Tipsy.getLevel(player);
-		wobbleLevelO = wobbleLevel;
-		wobbleLevel += (target - wobbleLevel) * EASE;
-		if (Math.abs(target - wobbleLevel) < 0.01F) {
-			wobbleLevel = target;
-		}
 		awakeO = awake;
 		awake = Mth.approach(awake, player != null && Blackout.isOut(player) ? 0.0F : 1.0F, PAUSE_EASE);
 		ClientLevel level = minecraft.level;
@@ -137,9 +125,6 @@ public final class TipsyClient
 		for (AbstractClientPlayer other : level.players()) {
 			track(other);
 		}
-		if (player != null && TipsyConfig.wobbleIntensity() <= 0.0) {
-			stillScreen(player);
-		}
 		if (player != null) {
 			heartbeat(player);
 		}
@@ -149,30 +134,19 @@ public final class TipsyClient
 	private static int heartbeatIn;
 
 	/**
-	 * Tipsy V: this player hears their own heart (nobody else does), unless blacked out or with the volume at 0. The
-	 * first beat comes right away, then one about every {@link TipsySounds#HEARTBEAT_GAP} ticks.
+	 * From {@link TipsySounds#HEARTBEAT_LEVEL} this player hears their own heart (nobody else does), as loud as the level
+	 * says ({@link TipsyLevels.Ears#heartbeat}), unless blacked out or with the volume at 0. The first beat comes right
+	 * away, then one about every {@link TipsySounds#HEARTBEAT_GAP} ticks.
 	 */
 	private static void heartbeat(LocalPlayer player) {
-		double volume = TipsyConfig.heartbeatVolume();
-		if (Tipsy.getLevel(player) < TipsySounds.HEARTBEAT_LEVEL || Blackout.isOut(player) || volume <= 0.0) {
+		double volume = TipsyConfig.heartbeatVolume() * TipsyLevels.at(Tipsy.getLevel(player)).ears().heartbeat();
+		if (Blackout.isOut(player) || volume <= 0.0) {
 			heartbeatIn = 0;
 			return;
 		}
 		if (--heartbeatIn <= 0) {
 			TipsySounds.heartbeat(player, volume);
 			heartbeatIn = TipsySounds.HEARTBEAT_GAP - 1 + player.getRandom().nextInt(3);
-		}
-	}
-
-	/**
-	 * Wobble off means Tipsy never moves this player's screen, its Nausea spells included: Tipsy's own Nausea (and the
-	 * blackout's shakes) come without an icon, so an icon-less Nausea is dropped here, on this client only. The server
-	 * keeps it, nobody else sees a difference, and a potion's Nausea (with its icon) stays.
-	 */
-	private static void stillScreen(LocalPlayer player) {
-		MobEffectInstance nausea = player.getEffect(MobEffects.CONFUSION);
-		if (nausea != null && !nausea.showIcon()) {
-			player.removeEffect(MobEffects.CONFUSION);
 		}
 	}
 
@@ -257,13 +231,15 @@ public final class TipsyClient
 		return scale * scale;
 	}
 
+	/** {@return how much Tipsy may move this player's own view: their "drunk screen" setting, 0 to 1} */
 	private static float intensity() {
-		return (float) Math.max(0.0, TipsyConfig.wobbleIntensity());
+		return (float) Mth.clamp(TipsyConfig.drunkScreen(), 0.0, 1.0);
 	}
 
 	/**
-	 * What to add to the camera's angles this frame ({@link TipsyWobble.Angles#NONE} for nothing): the sway, a hiccup's
-	 * flick, a stumble's dip, a trip's look at the ground, and the blackout's roll. The one camera hook both loaders call.
+	 * What to add to the camera's angles this frame ({@link TipsyWobble.Angles#NONE} for nothing): only what the body
+	 * does (a hiccup's flick, a stumble's dip, a trip's shake and its look at the ground) and the blackout's roll; Tipsy
+	 * never turns the view on its own. The one camera hook both loaders call.
 	 */
 	public static TipsyWobble.Angles cameraAngles(@Nullable Entity cameraEntity, float partial) {
 		Minecraft minecraft = Minecraft.getInstance();
@@ -271,16 +247,12 @@ public final class TipsyClient
 		if (player == null || cameraEntity != player) {
 			return TipsyWobble.Angles.NONE;
 		}
-		float intensity = intensity();
-		float time = player.tickCount + partial;
-		float paused = Mth.lerp(partial, awakeO, awake);
-		float level = Mth.lerp(partial, wobbleLevelO, wobbleLevel);
-		TipsyWobble.Angles angles = TipsyWobble.camera(level, time, intensity).scaled(paused);
+		float intensity = intensity() * Mth.lerp(partial, awakeO, awake);
 		float jolt = hiccupJolt(player, partial);
 		float lurch = stumbleLurch(player, partial);
 		float trip = tripElapsed(player, partial);
 		float shake = TipsyMotion.tripShake(trip) * TipsyMotion.TRIP_SHAKE;
-		angles = angles.plus(
+		TipsyWobble.Angles angles = TipsyWobble.Angles.NONE.plus(
 			(Math.signum(lurch) * TipsyMotion.STUMBLE_ROLL * Math.abs(lurch) + shake * Mth.sin(trip * 2.7F)) * intensity,
 			(TipsyMotion.STUMBLE_DIP * Math.abs(lurch) - TipsyMotion.HICCUP_FLICK * jolt + shake * 0.6F * Mth.cos(trip * 3.1F)) * intensity,
 			0.0F);
@@ -295,18 +267,6 @@ public final class TipsyClient
 		// Out on the ground after a blackout the eyes go where the head goes (a pose: always), its roll scaled like the rest
 		TipsyWobble.Angles head = BlackoutClient.cameraTurn(cameraEntity, partial);
 		return angles.plus(head.roll() * distortion(minecraft), head.pitch(), head.yaw());
-	}
-
-	/** {@return what the field of view is multiplied by this frame: the breathing at V (FOV Effects scales it)} */
-	public static float fovFactor(@Nullable Entity cameraEntity, float partial) {
-		Minecraft minecraft = Minecraft.getInstance();
-		LocalPlayer player = minecraft.player;
-		if (player == null || cameraEntity != player) {
-			return 1.0F;
-		}
-		float effects = minecraft.options.fovEffectScale().get().floatValue();
-		float level = Mth.lerp(partial, wobbleLevelO, wobbleLevel) * Mth.lerp(partial, awakeO, awake);
-		return TipsyWobble.fov(level, player.tickCount + partial, intensity() * effects);
 	}
 
 	/**
@@ -378,7 +338,7 @@ public final class TipsyClient
 
 	/** {@return how far the legs pull to the side right now (0 = not at all)} */
 	private static float drift(Player player) {
-		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(player)).drift() || !player.onGround() || player.isShiftKeyDown()
+		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(player)).legs().drift() || !player.onGround() || player.isShiftKeyDown()
 			|| player.isPassenger() || player.isInWater() || Blackout.isOut(player)) {
 			return 0.0F;
 		}
@@ -402,49 +362,14 @@ public final class TipsyClient
 		return BlackoutClient.hidesHands() || player != null && tripFallen(player, 0.0F) > 0.0F;
 	}
 
-	// ------------------------------------------------------------------ tunnel vision and heavy-eyed blinks
-
-	private static final ResourceLocation VIGNETTE = VineAndBarrel.id("textures/gui/tipsy_vignette.png");
-	private static final int VIGNETTE_SIZE = 128;
+	// ------------------------------------------------------------------ the eyes
 
 	/**
-	 * Tunnel vision and blinks: above the vanilla camera overlays (pumpkin, powder snow), under the crosshair and the HUD, which
-	 * stay readable. Both scale with vanilla's Darkness Pulsing slider, as the wobble does with Distortion Effects.
+	 * The layer for what the eyes do, above the vanilla camera overlays (pumpkin, powder snow), under the crosshair and the
+	 * HUD. Tipsy draws nothing here at the moment: the dark edges and the random blinks are gone (Tipsy overhaul); the
+	 * drunk eyes and nodding off's lids come here.
 	 */
 	public static void renderVision(GuiGraphics gui, float partial) {
-		Minecraft minecraft = Minecraft.getInstance();
-		LocalPlayer player = minecraft.player;
-		if (player == null || !TipsyConfig.visionEffects()) {
-			return;
-		}
-		float paused = Mth.lerp(partial, awakeO, awake);
-		if (paused <= 0.0F) {
-			// Out cold: the blackout's own lids have the screen
-			return;
-		}
-		float darkness = minecraft.options.darknessEffectScale().get().floatValue();
-		if (darkness <= 0.0F) {
-			return;
-		}
-		int width = gui.guiWidth();
-		int height = gui.guiHeight();
-		float vignette = TipsyVision.vignette(Mth.lerp(partial, wobbleLevelO, wobbleLevel)) * paused * darkness;
-		if (vignette > 0.0F) {
-			// The whole texture over the whole view, see-through by its strength (as vanilla draws the pumpkin's)
-			RenderSystem.disableDepthTest();
-			RenderSystem.depthMask(false);
-			RenderSystem.enableBlend();
-			gui.setColor(1.0F, 1.0F, 1.0F, Math.round(vignette * 255.0F) / 255.0F);
-			gui.blit(VIGNETTE, 0, 0, width, height, 0.0F, 0.0F, VIGNETTE_SIZE, VIGNETTE_SIZE, VIGNETTE_SIZE, VIGNETTE_SIZE);
-			RenderSystem.disableBlend();
-			RenderSystem.depthMask(true);
-			RenderSystem.enableDepthTest();
-			gui.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-		}
-		float closed = TipsyVision.eyelids(Tipsy.getLevel(player), player.tickCount + partial, player.getId()) * paused * darkness;
-		if (closed > 0.0F) {
-			BlackoutClient.drawLids(gui, closed);
-		}
 	}
 
 	// ------------------------------------------------------------------ T1: how others see you
@@ -545,8 +470,8 @@ public final class TipsyClient
 			stack.mulPose(Axis.YP.rotationDegrees(-facing));
 			return true;
 		}
-		// Off for motion sickness: with the wobble at 0 nothing tipsy moves on this screen, other players' sway included
-		if (!TipsyConfig.otherPlayersSway() || TipsyConfig.wobbleIntensity() <= 0.0) {
+		// Off for motion sickness: with "drunk screen" at 0 nothing tipsy moves on this screen, other players' sway included
+		if (!TipsyConfig.otherPlayersSway() || TipsyConfig.drunkScreen() <= 0.0) {
 			return false;
 		}
 		float sway = TipsyWobble.bodySway(pose.swayLevel(), entity.tickCount + partial, entityId) + TipsyMotion.STUMBLE_LEAN * pose.lurch();

@@ -48,7 +48,7 @@ public class TipsyEffect extends MobEffect
 	@Override
 	public double getAttributeModifierValue(int amplifier, AttributeModifier modifier) {
 		// "Liquid courage" (TipsyLevels): from I to III a little knockback resistance, none from IV
-		return TipsyLevels.at(amplifier + 1).knockbackResistance();
+		return TipsyLevels.at(amplifier + 1).courage().knockbackResistance();
 	}
 
 	/**
@@ -57,7 +57,7 @@ public class TipsyEffect extends MobEffect
 	 * horses and their kin); this is that attribute's value over its {@code base}.
 	 */
 	public static float fallDamageFactor(LivingEntity entity, double base) {
-		double reduction = TipsyLevels.at(Tipsy.getLevel(entity)).fallDamageReduction();
+		double reduction = TipsyLevels.at(Tipsy.getLevel(entity)).courage().fallDamageReduction();
 		return reduction > 0.0 ? (float) (Math.max(0.0, base - reduction) / base) : 1.0F;
 	}
 }

@@ -82,14 +82,14 @@ public final class TipsyLegs
 
 	/** The level's unsteady-legs roll, while walking. Called from {@link Tipsy#tick} unless paused or down. */
 	static void tick(LivingEntity entity, Level at, RandomSource random) {
-		if (!at.unsteadyLegs() || !TipsyConfig.stumbling() || random.nextInt(at.legsOneIn()) != 0) {
+		if (!at.legs().unsteady() || !TipsyConfig.stumbling() || random.nextInt(at.legs().legsOneIn()) != 0) {
 			return;
 		}
 		Vec3 walking = walkingMotion(entity);
 		if (walking.lengthSqr() < 1.0E-6) {
 			return;
 		}
-		int tripOneIn = entity.isSprinting() ? TipsyLevels.SPRINT_TRIP_ONE_IN : at.tripOneIn();
+		int tripOneIn = entity.isSprinting() ? TipsyLevels.SPRINT_TRIP_ONE_IN : at.legs().tripOneIn();
 		if (tripOneIn > 0 && random.nextInt(tripOneIn) == 0 && trip(entity)) {
 			return;
 		}
@@ -139,7 +139,7 @@ public final class TipsyLegs
 	 * @return whether the entity stumbled
 	 */
 	public static boolean stumble(LivingEntity entity, Vec3 walking, RandomSource random) {
-		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(entity)).unsteadyLegs() || walking.lengthSqr() < 1.0E-6
+		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(entity)).legs().unsteady() || walking.lengthSqr() < 1.0E-6
 			|| isDown(entity)) {
 			return false;
 		}
@@ -169,7 +169,7 @@ public final class TipsyLegs
 	 * @return whether the entity tripped (else the caller lets it stumble)
 	 */
 	public static boolean trip(LivingEntity entity) {
-		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(entity)).unsteadyLegs() || !canTrip(entity)) {
+		if (!TipsyConfig.stumbling() || !TipsyLevels.at(Tipsy.getLevel(entity)).legs().unsteady() || !canTrip(entity)) {
 			return false;
 		}
 		TipsySounds.stumble(entity, ground(entity));
