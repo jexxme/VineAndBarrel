@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "すべて見る",
   "watch.vineandbarrel.path.progress": "%s / %s 完了",
   "watch.vineandbarrel.path.all_done": "すべて完了",
+  "watch.vineandbarrel.path.wiki": "Wiki",
+  "watch.vineandbarrel.path.wiki_page": "Wikiページ ›",
   "watch.vineandbarrel.path.chapter": "(醸造家の道 %s / %s)",
   "watch.vineandbarrel.farmers_delight.note": "かまどで温め、ロープを登る"
 }

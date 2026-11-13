@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "Alle ansehen",
   "watch.vineandbarrel.path.progress": "%s von %s erledigt",
   "watch.vineandbarrel.path.all_done": "Alles erledigt",
+  "watch.vineandbarrel.path.wiki": "Wiki",
+  "watch.vineandbarrel.path.wiki_page": "Wiki-Seite ›",
   "watch.vineandbarrel.path.chapter": "(Brauerpfad, %s von %s)",
   "watch.vineandbarrel.farmers_delight.note": "Ein Herd für Hitze, ein Seil zum Klettern"
 }

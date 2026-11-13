@@ -13,15 +13,19 @@ import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -29,7 +33,8 @@ import java.util.Optional;
  * the player's own advancements (done, next for you, not yet). Side scenes hang under the station they belong to (with
  * Farmer's Delight: its stove and ropes). Pick a station for its card (its finished stage, what it is, how far you
  * are), then watch it: it plays on into the stations after it like chapters. The stations and branches are data
- * ({@code watch/path.json}).
+ * ({@code watch/path.json}). The wiki is a click away, in the player's language: its home page from the footer's Wiki
+ * button, the chosen station's own page from a quiet link on its card.
  */
 public class WatchPathScreen extends Screen
 {
@@ -42,9 +47,16 @@ public class WatchPathScreen extends Screen
 	private static final int TRACK = 0xFF555555;
 	private static final int BOX = 40, BOX_COMPACT = 28, BRANCH_BOX = 24;
 	private static final int DONE_W = 64;
+	/** The wiki (the mod's home page in neoforge.mods.toml and fabric.mod.json): English at its root, the rest under /<code>/. */
+	private static final String WIKI = "https://jexxme.github.io/VineAndBarrel/";
+	/** The game's languages the wiki is translated into, and their place on it (site/src/i18n/locales.mjs); others get English. */
+	private static final Map<String, String> WIKI_LANGUAGES = Map.ofEntries(
+		Map.entry("de_de", "de"), Map.entry("es_es", "es"), Map.entry("fr_fr", "fr"), Map.entry("it_it", "it"),
+		Map.entry("pl_pl", "pl"), Map.entry("pt_br", "pt-br"), Map.entry("tr_tr", "tr"), Map.entry("ru_ru", "ru"),
+		Map.entry("uk_ua", "uk"), Map.entry("zh_cn", "zh-cn"), Map.entry("ja_jp", "ja"), Map.entry("ko_kr", "ko"));
 
 	/** One place on the screen: a station of the main line, or a branch under one. */
-	private record Spot(ResourceLocation scene, Component name, Optional<ResourceLocation> advancement, Optional<String> note, boolean branch) {
+	private record Spot(ResourceLocation scene, Component name, Optional<ResourceLocation> advancement, Optional<String> note, boolean branch, Optional<String> wiki) {
 	}
 
 	private final @Nullable Screen parent;
@@ -67,6 +79,8 @@ public class WatchPathScreen extends Screen
 	/** The last click, to tell a double click (this Minecraft version doesn't). */
 	private long lastClickAt;
 	private int lastClickButton = -1;
+	/** The card has its wiki line (the spot has a page, and it fits). */
+	private boolean cardWiki;
 
 	public WatchPathScreen(@Nullable Screen parent) {
 		super(Component.translatable("watch.vineandbarrel.path"));
@@ -74,13 +88,13 @@ public class WatchPathScreen extends Screen
 		WatchPath path = WatchIndex.INSTANCE.path();
 		for (WatchPath.Station station : path.stations()) {
 			if (WatchIndex.INSTANCE.scene(station.scene()).isPresent()) {
-				stations.add(new Spot(station.scene(), Component.translatable(station.verb()), station.advancement(), Optional.empty(), false));
+				stations.add(new Spot(station.scene(), Component.translatable(station.verb()), station.advancement(), Optional.empty(), false, station.wiki()));
 			}
 		}
 		for (WatchPath.Branch branch : path.branches()) {
 			int at = indexOf(branch.after());
 			if (at >= 0 && WatchIndex.INSTANCE.scene(branch.scene()).isPresent() && branch.requires().map(Services.PLATFORM::isModLoaded).orElse(true)) {
-				branches.add(new Spot(branch.scene(), titleOf(branch.scene()), Optional.empty(), branch.note(), true));
+				branches.add(new Spot(branch.scene(), titleOf(branch.scene()), Optional.empty(), branch.note(), true, branch.wiki()));
 				branchAt.add(at);
 			}
 		}
@@ -172,13 +186,37 @@ public class WatchPathScreen extends Screen
 		int colX = cardX + cardW / 2 + 12, colW = cardX + cardW - 10 - colX;
 		// one button: a station plays on into the next one from its end card (like chapters), a side scene plays alone
 		int buttonsY = cardPreview ? cardY + cardH - 28 : cardY + 8;
+		// the chosen station's wiki page: a grey line under what it is (in the tab order before Watch, as on the card),
+		// only where it fits above the button
+		Spot spot = spot(selected);
+		Component page = Component.translatable("watch.vineandbarrel.path.wiki_page");
+		int textX = cardPreview ? colX : cardX + 10;
+		int textRight = cardPreview ? cardX + cardW - 10 : colX - 8;
+		cardWiki = spot.wiki().isPresent() && textX + font.width(page) <= textRight
+			&& cardY + statusY(spot, true) + 9 <= (cardPreview ? buttonsY - 4 : cardY + cardH - 6);
+		if (cardWiki) {
+			addRenderableWidget(new WikiLink(textX, cardY + wikiY(spot), page, b -> openWiki(spot.wiki().get())));
+		}
 		addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.path.watch"), b -> watch(selected))
 			.bounds(colX, buttonsY, colW, 20).build());
 		addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.path.watch_all"), b -> watch(0))
 			.bounds(ox + 8, footerY + 12, 100, 20).build());
+		// the wiki's home page: a button as wide as its label right after Watch all, only where it fits before the progress
+		Component wiki = Component.translatable("watch.vineandbarrel.path.wiki");
+		int wikiX = ox + 8 + 100 + 10, wikiW = Math.max(40, font.width(wiki) + 20);
+		if (wikiX + wikiW + 10 <= progressX(progress())) {
+			addRenderableWidget(Button.builder(wiki, b -> openWiki("")).bounds(wikiX, footerY + 12, wikiW, 20).build());
+		}
 		Button done = addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> minecraft.setScreen(WatchScreen.outside(parent)))
 			.bounds(ox + ow - 8 - DONE_W, footerY + 12, DONE_W, 20).build());
 		setInitialFocus(done);
+	}
+
+	/** Opens a wiki page ("" for its home page) in the player's language, through the game's "Open this link?" prompt. */
+	private void openWiki(String page) {
+		String language = WIKI_LANGUAGES.get(minecraft.getLanguageManager().getSelected());
+		String url = WIKI + (language == null ? "" : language + "/") + (page.isEmpty() ? "" : page + "/");
+		ConfirmLinkScreen.confirmLinkNow(url, this, true);
 	}
 
 	/** Watches a spot: a station and the ones after it like chapters (each end card leads on), a side scene alone. */
@@ -266,14 +304,11 @@ public class WatchPathScreen extends Screen
 
 	private void renderPath(GuiGraphics gui, int mouseX, int mouseY) {
 		int next = nextForYou();
-		int doneCount = (int) stations.stream().filter(this::done).count();
-		int ticked = (int) stations.stream().filter(s -> s.advancement().isPresent()).count();
 		gui.drawString(font, title, ox + 8, oy + 6, TITLE_INK, false);
 		RenderSystem.enableBlend();
 		WatchScreen.blitNineSlice(gui, WatchScreen.INSET, ox + 6, stageY - 2, ow - 12, stageH + 4, WatchScreen.INSET_SIZE, WatchScreen.INSET_BORDER);
-		Component progress = next < 0 ? Component.translatable("watch.vineandbarrel.path.all_done")
-			: Component.translatable("watch.vineandbarrel.path.progress", doneCount, ticked);
-		gui.drawString(font, progress, ox + ow - 8 - DONE_W - 10 - font.width(progress), footerY + 18, TITLE_INK, false);
+		Component progress = progress();
+		gui.drawString(font, progress, progressX(progress), footerY + 18, TITLE_INK, false);
 
 		// the road between the stations: walked (light) up to where you are, the rest still dark
 		int y = pathY + box / 2;
@@ -319,7 +354,7 @@ public class WatchPathScreen extends Screen
 			gui.drawString(font, titleOf(spot.scene()), colX, cardY + 24, INK_MUTED, false);
 			gui.drawString(font, steps, colX, cardY + 35, INK_MUTED, false);
 		}
-		gui.drawString(font, status(selected), colX, cardY + (compact ? 35 : 54), statusColor(selected), true);
+		gui.drawString(font, status(selected), colX, cardY + statusY(spot, cardWiki), statusColor(selected), true);
 	}
 
 	private void renderBranch(GuiGraphics gui, int b, int roadY, int mouseX, int mouseY) {
@@ -339,6 +374,29 @@ public class WatchPathScreen extends Screen
 				gui.drawString(font, note, right ? labelX : bx - 16 - font.width(note), by + 14, INK_MUTED, false);
 			}
 		});
+	}
+
+	/** "2 of 4 done" (or "All done"), right in the footer, before Done. */
+	private Component progress() {
+		int doneCount = (int) stations.stream().filter(this::done).count();
+		int ticked = (int) stations.stream().filter(s -> s.advancement().isPresent()).count();
+		return nextForYou() < 0 ? Component.translatable("watch.vineandbarrel.path.all_done")
+			: Component.translatable("watch.vineandbarrel.path.progress", doneCount, ticked);
+	}
+
+	private int progressX(Component progress) {
+		return ox + ow - 8 - DONE_W - 10 - font.width(progress);
+	}
+
+	/** The card's wiki line: a line under the last grey line of what the spot is (its scene's steps). */
+	private int wikiY(Spot spot) {
+		return (!spot.branch() && !compact ? 35 : spot.branch() && !compact ? 24 : 21) + 12;
+	}
+
+	/** The card's status line: under the wiki line when there is one. */
+	private int statusY(Spot spot, boolean wiki) {
+		int plain = compact ? 35 : 54;
+		return wiki ? Math.max(plain, wikiY(spot) + 14) : plain;
 	}
 
 	private Component status(int index) {
@@ -468,6 +526,26 @@ public class WatchPathScreen extends Screen
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * The card's link as quiet text, not a button: grey, underlined and yellow (as "Next for you") while the mouse is on it
+	 * or Tab has reached it.
+	 */
+	private class WikiLink extends Button
+	{
+		private final Component underlined;
+
+		WikiLink(int x, int y, Component message, OnPress onPress) {
+			super(x, y, font.width(message), font.lineHeight, message, onPress, DEFAULT_NARRATION);
+			this.underlined = ComponentUtils.mergeStyles(message.copy(), Style.EMPTY.withUnderlined(true));
+		}
+
+		@Override
+		public void renderWidget(GuiGraphics gui, int mouseX, int mouseY, float a) {
+			boolean lit = isHoveredOrFocused();
+			gui.drawString(font, lit ? underlined : getMessage(), getX(), getY(), lit ? HIGHLIGHT : INK_MUTED, lit);
+		}
 	}
 
 	@Override
