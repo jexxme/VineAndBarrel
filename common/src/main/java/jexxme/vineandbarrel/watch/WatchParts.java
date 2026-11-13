@@ -101,9 +101,12 @@ public record WatchParts(Recipes recipes, Optional<ResourceLocation> written, Op
 		return Optional.of(part.part().equals("fermenting_time") ? recipe.fermentingTime() : recipe.agingTime());
 	}
 
-	/** {@return how many days a time-lapse shows: as many as its recipe's time takes, else as written} */
+	/**
+	 * {@return how many days a time-lapse shows: as many as its recipe's time takes, else as written}; a quarter day to
+	 * thirty, as a written one (a data pack's hundred-day wine would make the sky flicker)
+	 */
 	public float days(WatchScene.Timelapse lapse) {
-		return lapse.daysOf().flatMap(this::ticks).map(ticks -> Math.max(0.25F, ticks / 24000.0F)).orElse(lapse.days());
+		return lapse.daysOf().flatMap(this::ticks).map(ticks -> net.minecraft.util.Mth.clamp(ticks / 24000.0F, 0.25F, 30.0F)).orElse(lapse.days());
 	}
 
 	/** {@return the lang key a step shows here: the first variant whose item fits, else its own} */

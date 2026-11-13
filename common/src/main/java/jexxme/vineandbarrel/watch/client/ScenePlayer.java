@@ -92,6 +92,10 @@ public final class ScenePlayer
 	/** A scene played for an aging recipe other than the one it is written for (a wort bucket asked for, say). */
 	public ScenePlayer(WatchScene scene, ClientLevel level, Optional<net.minecraft.resources.ResourceLocation> recipe) {
 		this.scene = scene;
+		// a data pack took out the recipe the scene is written for: play the first aging recipe there is, not an empty stage
+		if (recipe.isEmpty() && scene.recipe().isPresent() && agingRecipe(scene.recipe().get(), false) == null) {
+			recipe = jexxme.vineandbarrel.barrel.AgingRecipes.all(level).stream().findFirst().map(holder -> holder.id());
+		}
 		this.parts = WatchParts.of(scene, CLIENT_RECIPES, recipe);
 		this.level = level;
 		this.world = new SceneWorld(level.registryAccess().lookupOrThrow(Registries.BIOME).get(Biomes.PLAINS).orElse(null));
