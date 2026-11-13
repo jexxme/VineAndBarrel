@@ -61,6 +61,9 @@ final class KeeperGameTests
 		test("keeper_restock_pours_young_servings", KeeperGameTests::restock);
 		test("keeper_clinks_with_a_drink", KeeperGameTests::cheers);
 		test("keeper_a_jobless_villager_takes_a_kettle", VBGameTests.SMALL, 4800, KeeperGameTests::hiring);
+		test("keeper_a_jobless_villager_takes_a_kettle_on_a_campfire", VBGameTests.SMALL, 4800, KeeperGameTests::hiringOnCampfire);
+		test("keeper_works_at_a_kettle_on_a_campfire", KeeperGameTests::worksAtACampfireKettle);
+		test("keeper_hired_beside_the_campfire", KeeperGameTests::hiredBesideTheCampfire);
 		test("keeper_an_old_kettle_becomes_a_job_site", KeeperGameTests::oldKettle);
 	}
 
@@ -218,13 +221,93 @@ final class KeeperGameTests
 		helper.succeedWhen(() -> helper.assertTrue(level.getPoiManager().existsAtPosition(TavernKeeper.JOB_SITE, at), "the kettle is a job site again"));
 	}
 
-	/** A villager without a job, next to a kettle, takes it as his job site and becomes a keeper, as with any job block. */
+	/**
+	 * A villager without a job, next to a kettle, takes it as his job site and becomes a keeper, as with any job block.
+	 * He stands next to it from the start: villagers only walk to a job site by day, and the test may run at night.
+	 */
 	private static void hiring(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		level.setBlockAndUpdate(helper.absolutePos(new BlockPos(3, 1, 3)), KettleRegistry.kettle().defaultBlockState());
-		Villager villager = helper.spawn(EntityType.VILLAGER, new BlockPos(1, 1, 1));
+		Villager villager = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 1, 3));
 		helper.succeedWhen(() -> helper.assertTrue(TavernKeeper.isKeeper(villager), "still " + villager.getVillagerData().profession().getRegisteredName()
 			+ ", memories " + villager.getBrain().getMemory(MemoryModuleType.POTENTIAL_JOB_SITE)));
+	}
+
+	/**
+	 * Audit 1.2: a kettle on a campfire (as behind every tavern's bar) is a block above where the villager stands, and he
+	 * takes it all the same: he can't get within a block of it, so the job site counts as reached two blocks away. He
+	 * stands beside the fire from the start: villagers only walk to a job site by day, and the test may run at night.
+	 */
+	private static void hiringOnCampfire(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		helper.assertValueEqual(level.registryAccess().lookupOrThrow(Registries.POINT_OF_INTEREST_TYPE).getOrThrow(TavernKeeper.JOB_SITE).value().validRange(),
+			TavernKeeper.JOB_SITE_RANGE, "the kettle's reach");
+		// the campfire on the floor the villager walks on, the kettle on it at head height
+		level.setBlockAndUpdate(helper.absolutePos(new BlockPos(3, 0, 3)), Blocks.CAMPFIRE.defaultBlockState());
+		level.setBlockAndUpdate(helper.absolutePos(new BlockPos(3, 1, 3)), KettleRegistry.kettle().defaultBlockState());
+		Villager villager = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 1, 3));
+		helper.succeedWhen(() -> helper.assertTrue(TavernKeeper.isKeeper(villager), "still " + villager.getVillagerData().profession().getRegisteredName()
+			+ ", memories " + villager.getBrain().getMemory(MemoryModuleType.POTENTIAL_JOB_SITE)));
+	}
+
+	/** Vanilla's work at the job site, as it decides whether he is close enough to work there. */
+	private static final class Work extends net.minecraft.world.entity.ai.behavior.WorkAtPoi
+	{
+		boolean closeEnough(ServerLevel level, Villager villager) {
+			return canStillUse(level, villager, level.getGameTime());
+		}
+	}
+
+	/**
+	 * Audit 1.2: a keeper works at his kettle on a campfire from the block beside the fire (he restocks his trades when
+	 * he works); any other villager still has to stand as close to his job site as ever, and he has to come up close.
+	 */
+	private static void worksAtACampfireKettle(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		BlockPos kettle = helper.absolutePos(new BlockPos(3, 1, 3));
+		level.setBlockAndUpdate(kettle.below(), Blocks.CAMPFIRE.defaultBlockState());
+		level.setBlockAndUpdate(kettle, KettleRegistry.kettle().defaultBlockState());
+		Villager keeper = keeper(helper, VillagerType.PLAINS, new BlockPos(2, 0, 3));
+		keeper.getBrain().setMemory(MemoryModuleType.JOB_SITE, net.minecraft.core.GlobalPos.of(level.dimension(), kettle));
+		Vec3 beside = helper.absoluteVec(new Vec3(2.5, 0.0, 3.5));
+		keeper.setPos(beside.x, beside.y, beside.z);
+		helper.assertTrue(new Work().closeEnough(level, keeper), "beside the campfire he works at his kettle");
+		Vec3 off = helper.absoluteVec(new Vec3(0.5, 0.0, 3.5));
+		keeper.setPos(off.x, off.y, off.z);
+		helper.assertFalse(new Work().closeEnough(level, keeper), "three blocks off he doesn't");
+		Villager farmer = keeper(helper, VillagerType.PLAINS, new BlockPos(2, 0, 3));
+		farmer.setVillagerData(farmer.getVillagerData().withProfession(level.registryAccess(), net.minecraft.world.entity.npc.villager.VillagerProfession.FARMER));
+		farmer.getBrain().setMemory(MemoryModuleType.JOB_SITE, net.minecraft.core.GlobalPos.of(level.dimension(), kettle));
+		farmer.setPos(beside.x, beside.y, beside.z);
+		helper.assertFalse(new Work().closeEnough(level, farmer), "any other villager: vanilla's reach");
+		helper.succeed();
+	}
+
+	/**
+	 * Audit 1.2: a villager who has set out for a kettle on a campfire is hired as soon as he stands beside the fire,
+	 * wherever in that block he stops (vanilla's 2 blocks reach a kettle on the floor, not one on a fire); farther off,
+	 * not yet.
+	 */
+	private static void hiredBesideTheCampfire(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		BlockPos kettle = helper.absolutePos(new BlockPos(3, 1, 3));
+		level.setBlockAndUpdate(kettle.below(), Blocks.CAMPFIRE.defaultBlockState());
+		level.setBlockAndUpdate(kettle, KettleRegistry.kettle().defaultBlockState());
+		Villager villager = helper.spawn(EntityType.VILLAGER, new BlockPos(0, 0, 3));
+		villager.setNoAi(true);
+		villager.getBrain().setMemory(MemoryModuleType.POTENTIAL_JOB_SITE, net.minecraft.core.GlobalPos.of(level.dimension(), kettle));
+		Vec3 far = helper.absoluteVec(new Vec3(0.5, 0.0, 3.5));
+		villager.setPos(far.x, far.y, far.z);
+		TavernKeeper.hire(level, villager);
+		helper.assertFalse(TavernKeeper.isKeeper(villager), "three blocks off: not yet");
+		// beside the fire, off the middle of the block: 2.02 from the kettle's middle, out of vanilla's reach
+		Vec3 beside = helper.absoluteVec(new Vec3(2.2, 0.0, 3.9));
+		villager.setPos(beside.x, beside.y, beside.z);
+		TavernKeeper.hire(level, villager);
+		helper.assertTrue(TavernKeeper.isKeeper(villager), "beside the fire: hired");
+		helper.assertTrue(villager.getBrain().getMemory(MemoryModuleType.JOB_SITE).map(site -> site.pos().equals(kettle)).orElse(false), "the kettle is his job site");
+		helper.assertTrue(villager.getBrain().getMemory(MemoryModuleType.POTENTIAL_JOB_SITE).isEmpty(), "no longer on his way");
+		helper.succeed();
 	}
 
 	private static Villager keeper(GameTestHelper helper, ResourceKey<VillagerType> type, BlockPos at) {
