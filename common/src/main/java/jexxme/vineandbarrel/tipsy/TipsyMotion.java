@@ -18,15 +18,19 @@ import net.minecraft.world.entity.player.Player;
  */
 public final class TipsyMotion
 {
-	/** How many of each movement this player has made (they only ever go up, wrapping round). */
-	public record Counts(int hiccups, int stumbles, boolean stumbleLeft, int trips)
+	/**
+	 * How many of each movement this player has made (they only ever go up, wrapping round); {@code lunges} counts the
+	 * steps forward a Rowdy swing carries the swinger, which only their own client makes ({@link Rowdy#ownLunge}).
+	 */
+	public record Counts(int hiccups, int stumbles, boolean stumbleLeft, int trips, int lunges)
 	{
-		public static final Counts NONE = new Counts(0, 0, false, 0);
+		public static final Counts NONE = new Counts(0, 0, false, 0, 0);
 		public static final StreamCodec<ByteBuf, Counts> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.VAR_INT, Counts::hiccups,
 			ByteBufCodecs.VAR_INT, Counts::stumbles,
 			ByteBufCodecs.BOOL, Counts::stumbleLeft,
 			ByteBufCodecs.VAR_INT, Counts::trips,
+			ByteBufCodecs.VAR_INT, Counts::lunges,
 			Counts::new);
 	}
 
@@ -83,22 +87,28 @@ public final class TipsyMotion
 	static void hiccup(LivingEntity entity) {
 		if (entity instanceof Player) {
 			Counts c = counts(entity);
-			TipsyRegistry.MOTION.set(entity, new Counts(c.hiccups() + 1, c.stumbles(), c.stumbleLeft(), c.trips()));
+			TipsyRegistry.MOTION.set(entity, new Counts(c.hiccups() + 1, c.stumbles(), c.stumbleLeft(), c.trips(), c.lunges()));
 		}
 	}
 
 	static void stumble(LivingEntity entity, boolean left) {
 		if (entity instanceof Player) {
 			Counts c = counts(entity);
-			TipsyRegistry.MOTION.set(entity, new Counts(c.hiccups(), c.stumbles() + 1, left, c.trips()));
+			TipsyRegistry.MOTION.set(entity, new Counts(c.hiccups(), c.stumbles() + 1, left, c.trips(), c.lunges()));
 		}
 	}
 
 	static void trip(LivingEntity entity) {
 		if (entity instanceof Player) {
 			Counts c = counts(entity);
-			TipsyRegistry.MOTION.set(entity, new Counts(c.hiccups(), c.stumbles(), c.stumbleLeft(), c.trips() + 1));
+			TipsyRegistry.MOTION.set(entity, new Counts(c.hiccups(), c.stumbles(), c.stumbleLeft(), c.trips() + 1, c.lunges()));
 		}
+	}
+
+	/** Counts a Rowdy swing's step forward: the swinger's own client takes the step ({@link Rowdy#ownLunge}). */
+	static void lunge(Player player) {
+		Counts c = counts(player);
+		TipsyRegistry.MOTION.set(player, new Counts(c.hiccups(), c.stumbles(), c.stumbleLeft(), c.trips(), c.lunges() + 1));
 	}
 
 	// ------------------------------------------------------------------ the curves (ticks since the movement started)
