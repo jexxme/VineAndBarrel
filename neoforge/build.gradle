@@ -249,8 +249,16 @@ def preparePlaytest = tasks.register('preparePlaytest') {
             props.text = [
                 'server-ip=127.0.0.1', 'online-mode=false', 'motd=Vine & Barrel playtest', 'level-name=world',
                 'gamemode=survival', 'difficulty=normal', 'spawn-protection=0', 'view-distance=12', 'simulation-distance=10',
-                'allow-flight=true', 'enable-command-block=true',
+                'allow-flight=true', 'enable-command-block=true', 'white-list=false',
             ].join(System.lineSeparator()) + System.lineSeparator()
+        } else {
+            // Since 26.x a new server whitelists by default and writes white-list=true into this file on its first start
+            // ("You are not white-listed on this server!"). A playtest server this task set up (bound to this computer,
+            // offline) lets its local players in; any other server.properties is left exactly as it is
+            def lines = props.readLines()*.trim()
+            if (lines.contains('server-ip=127.0.0.1') && lines.contains('online-mode=false') && lines.contains('white-list=true')) {
+                props.text = props.readLines().collect { it.trim() == 'white-list=true' ? 'white-list=false' : it }.join(System.lineSeparator()) + System.lineSeparator()
+            }
         }
     }
 }
