@@ -27,6 +27,7 @@
     "JigsawPlacerMixin",
     "LeadItemMixin",
     "LeashFenceKnotEntityMixin",
+    "MoveToTargetSinkMixin",
     "PlayerKnownMovementMixin",
     "SinglePoolElementAccessor",
     "SleepStatusMixin",

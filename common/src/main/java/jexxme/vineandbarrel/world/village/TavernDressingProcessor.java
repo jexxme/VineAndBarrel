@@ -165,8 +165,15 @@ public final class TavernDressingProcessor extends StructureProcessor
 			keeper.moveTo(feet.getX() + 0.5, feet.getY(), feet.getZ() + 0.5, side.getOpposite().toYRot(), 0.0F);
 			keeper.finalizeSpawn(level, level.getCurrentDifficultyAt(feet), net.minecraft.world.entity.MobSpawnType.STRUCTURE, null, null);
 			keeper.setVillagerData(keeper.getVillagerData().setProfession(TavernKeeper.TAVERN_KEEPER.get()));
-			// a little experience: the tavern's own keeper keeps his trade while he walks to his kettle (a villager with
-			// none and no job site yet goes back to having no job)
+			// a keeper's mind: a villager's brain is made for the job he has when he is made (none), and with a jobless
+			// villager's brain he drops every job site he takes the moment he takes it and its ticket stays taken, so
+			// nobody can ever take that kettle again (a village's keeper got a new brain when his chunk loaded, one placed
+			// by a command never did)
+			keeper.refreshBrain(level.getLevel());
+			// his kettle, which he takes as his job site on his first tick (it is no job site before the tavern is built)
+			TavernKeeper.TAVERN_KETTLE.set(keeper, kettle);
+			// a little experience: the tavern's own keeper keeps his trade should he ever lose his kettle (a villager
+			// with none and no job site goes back to having no job)
 			keeper.setVillagerXp(1);
 			keeper.setPersistenceRequired();
 			level.addFreshEntityWithPassengers(keeper);
