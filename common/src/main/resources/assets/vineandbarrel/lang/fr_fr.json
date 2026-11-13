@@ -368,5 +368,6 @@
   "watch.vineandbarrel.path.wiki": "Wiki",
   "watch.vineandbarrel.path.wiki_page": "Page du wiki ›",
   "watch.vineandbarrel.path.chapter": "(Chemin du brasseur, %s sur %s)",
-  "watch.vineandbarrel.farmers_delight.note": "Un fourneau pour chauffer, une corde pour grimper"
+  "watch.vineandbarrel.farmers_delight.note": "Un fourneau pour chauffer, une corde pour grimper",
+  "entity.vineandbarrel.villager.tavern_keeper": "Aubergiste"
 }

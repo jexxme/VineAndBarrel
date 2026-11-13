@@ -42,6 +42,7 @@ public final class VineAndBarrel
 		jexxme.vineandbarrel.compat.farmersdelight.FDCompat.register();
 		jexxme.vineandbarrel.compat.ModCompat.register();
 		jexxme.vineandbarrel.world.village.VillageStructures.register();
+		jexxme.vineandbarrel.world.village.TavernKeeper.register();
 		jexxme.vineandbarrel.advancement.VBAdvancements.register();
 
 		// GameTests only in the dev environment (or with -Dvineandbarrel.gametests=true), not in the released jar.

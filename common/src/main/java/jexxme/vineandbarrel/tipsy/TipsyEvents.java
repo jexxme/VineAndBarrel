@@ -28,6 +28,9 @@ public final class TipsyEvents
 		if (!(tickingEntity instanceof LivingEntity entity) || entity.level().isClientSide()) {
 			return;
 		}
+		if (entity instanceof net.minecraft.world.entity.npc.villager.Villager villager) {
+			jexxme.vineandbarrel.world.village.TavernKeeper.tick(villager);
+		}
 		if (entity instanceof ServerPlayer player && TipsyRegistry.BLACKOUT.has(player)) {
 			Blackout.tick(player);
 		}
