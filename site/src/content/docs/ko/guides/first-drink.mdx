@@ -73,7 +73,8 @@ export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('
 
 9. **마시세요.** <Item id="red_wine" />을 마시면 <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> 버프와
    <EffectBadge id="vineandbarrel:tipsy" name="알딸딸함" /> 한 단계가 붙어요. 잔은 그대로 돌려받아요. 근처의 친구와 같은 순간에
-   마시면 **건배!**가 돼서, 모두의 버프가 {rules.cheersBonusPercent}% 더 오래 가요.
+   마시면 **건배!**가 돼서, 모두의 버프가 {rules.cheersBonusPercent}% 더 오래 가요. 선술집 주인 앞에서 다 마시면
+   주인도 잔을 부딪쳐 줘요.
 
 10. **나머지는 숙성시키세요.** 통을 **{days(wine.agingTime)}** 더 그대로 두면 남은 술이
     <Item id="aged_red_wine" />이 돼요. 더 짙은 붉은색으로 반짝이고, 버프는 <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />로 바뀌어요.

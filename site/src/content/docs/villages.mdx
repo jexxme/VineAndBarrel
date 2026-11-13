@@ -1,6 +1,6 @@
 ---
 title: Villages & taverns
-description: Village taverns with barrels ready to tap, village farms that grow grapes, hops and barley, seed trades and chest loot.
+description: Village taverns with barrels ready to tap, a cellar in every one, the tavern keeper and his drinks, village farms that grow grapes, hops and barley, trades and chest loot.
 ---
 import Item from '../../components/mc/Item.astro';
 import Render from '../../components/mc/Render.astro';
@@ -17,8 +17,8 @@ village in three, never more than one per village. No two are quite alike: what'
 tables, the flowers, banners and candles change from tavern to tavern.
 
 Look for the hanging sign over the door. Inside there's room to move: a table by the fire, stools at the bar, the kettle
-on its campfire behind it. Behind the bar, stairs lead down to the **barrel cellar**, a vaulted, torch-lit room under the
-hall, racked with casks.
+on its campfire behind it and the [tavern keeper](#tavern-keeper) by the kettle. Behind the bar, stairs lead down to the
+**cellar**.
 
 Each village type has a feature of its own:
 
@@ -28,15 +28,24 @@ Each village type has a feature of its own:
 - **Snowy:** a hearth room with a big fireplace and fur rugs.
 - **Taiga:** a mead hall with a long table, and a woodpile under the eaves.
 
-Its barrels are **already full**: walk in, grab a mug or glass, and tap a drink. A couple of them are aged. The tavern
-chest holds seeds, mugs and glasses, and a few drinks of the region, everything you need to start brewing yourself.
+And each has a cellar of its own:
+
+- **Plains:** the beer cellar, a store of malt and hops, with a trapdoor down to the old vault.
+- **Desert:** the wine cellar, with a cistern vault below and a chest behind a pot in a niche.
+- **Savanna:** the press cellar, a treading room with a pit of grape crates, an old cask and a chest under the stairs.
+- **Snowy:** the ice cellar, casks in the snow and an ice well down to the cold store, with a chest buried in the snow.
+- **Taiga:** the root cellar, with the old store behind a curtain of hanging roots.
+
+Its barrels are **already full**: walk in, grab a mug or glass, and tap a drink. A couple of them are aged. The chest by
+the bar holds what a house chest of the village holds, plus some seeds, mugs and glasses and a drink of the region. A chest
+hidden in the cellar holds seeds and a drink, more often an aged one.
 
 <Shot src="taverns/plains.jpg" caption="Plains: the beer garden, long tables under a pergola of hop bines." />
 <Shot src="taverns/desert.jpg" caption="Desert: the roof terrace, up the outside stairs." />
 <Shot src="taverns/savanna.jpg" caption="Savanna: the veranda bar, a counter under the hall's open hatches." />
 <Shot src="taverns/snowy.jpg" caption="Snowy: the hearth room, three fires wide, fur rugs and armchairs." />
 <Shot src="taverns/taiga.jpg" caption="Taiga: the mead hall's long table." />
-<Shot src="taverns/cellar.jpg" caption="The barrel cellar under the hall: racked casks under a stone vault, a lantern overhead." />
+<Shot src="taverns/cellar.jpg" caption="Casks in a tavern cellar, a lantern overhead." />
 
 ### Good to know
 
@@ -44,7 +53,29 @@ chest holds seeds, mugs and glasses, and a few drinks of the region, everything 
   an aged drink from a barrel you filled yourself is what earns *Patience Pays*.
 - The young tavern barrels keep aging like any barrel, so a tavern you leave alone for a few days ends up with more aged drinks.
 - Tapping any barrel in a village, a tavern's or your own, earns *On Tap*.
-- Do your trading sober: from Tipsy {roman(rules.tipsy.rowdyLevel - 1)}, villagers and traders won't deal with you. See [Tipsy](/tipsy/#rowdy).
+- Do your trading sober: from Tipsy {roman(rules.tipsy.cutOffLevel - 1)}, villagers and traders won't deal with you. See [Tipsy](/tipsy/#rowdy).
+
+## Tavern keeper
+
+Every tavern has its **tavern keeper**, behind the bar by the kettle, in a wine-red apron with a striped bar towel. He's a
+villager like any other: he works, trades, levels up and sleeps.
+
+- **His job site** is the <Item id="brew_kettle" />, at every copper stage, waxed or not. A Big Brew Kettle is one job
+  site, for one keeper. A villager without a job may claim a kettle of yours too, the way a farmer claims a composter.
+- **What he trades:** at first he buys barley and hops and sells mugs and wine glasses. Then he buys grapes and sells
+  <Item id="barley_ale" /> and <Item id="wheat_beer" />, then his region's wines, mead and cider (and buys honey, berries,
+  apples or melon for them), then aged drinks.
+- **His region's drink:** <Item id="barley_ale" /> in the plains, <Item id="red_wine" /> in the desert,
+  <Item id="melon_wine" /> in the savanna and jungle, <Item id="mead" /> in snowy villages, <Item id="sweet_berry_wine" />
+  in the taiga and <Item id="hard_cider" /> in the swamp.
+- **The master's sealed cask:** a master keeper sells an <Item id="aging_barrel" /> full of his region's drink, aged. Place
+  it and it's full and sealed, ready to tap.
+- **Cheers:** finish a drink alone in front of him and he raises his mug and clinks with you: you get the
+  [Cheers!](/drinks/#cheers) bonus. He thinks a little better of you each time, so regulars pay a little less.
+- **Restocking:** once a day he fills an empty cask of his own tavern, one he can walk to, with a couple of servings of
+  his region's young drink. He never touches your own casks, and what he pours never counts as your own brew.
+
+<VillageInfo show="keeper" />
 
 ## Village farms
 
@@ -55,7 +86,8 @@ in plains and taiga villages, hops where it's cool, barley nearly everywhere.
 
 ## Trades
 
-Farmers and the wandering trader sell seeds, and farmers buy barley and red grapes, as they buy wheat.
+Farmers and the wandering trader sell seeds, hops and grapes, and farmers buy barley and red grapes, as they buy wheat. The
+tavern keeper buys our crops too and sells drinks: see [Tavern keeper](#tavern-keeper).
 
 <VillageInfo show="trades" />
 

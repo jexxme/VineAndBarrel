@@ -72,7 +72,8 @@ export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('
 
 9. **飲む。** <Item id="red_wine" />を飲むと<EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} />と、
    <EffectBadge id="vineandbarrel:tipsy" name="ほろ酔い" />が1レベル付きます。グラスは手元に残ります。近くにいる友達と同時に飲むと
-   **乾杯！**になり、全員の強化効果が{rules.cheersBonusPercent}%長く続きます。
+   **乾杯！**になり、全員の強化効果が{rules.cheersBonusPercent}%長く続きます。酒場の主人の前で飲み干すと、
+   主人もグラスを合わせてくれます。
 
 10. **残りを熟成させる。** 樽をさらに**{days(wine.agingTime)}**そのままにしておくと、残りは
     <Item id="aged_red_wine" />になります。深い赤色できらめき、<EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />が付きます。

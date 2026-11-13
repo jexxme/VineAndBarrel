@@ -1,6 +1,6 @@
 ---
 title: Villages et tavernes
-description: Des tavernes de village avec des fûts prêts à tirer, des fermes de village qui cultivent raisins, houblon et orge, des échanges de graines et du butin en coffre.
+description: Des tavernes de village avec des fûts prêts à tirer, une cave dans chacune, l'aubergiste et ses boissons, des fermes de village qui cultivent raisins, houblon et orge, des échanges et du butin en coffre.
 ---
 import Item from '../../../components/mc/Item.astro';
 import Render from '../../../components/mc/Render.astro';
@@ -17,8 +17,8 @@ village sur trois, jamais plus d'une par village. Il n'y en a pas deux tout à f
 tables, les fleurs, les bannières et les bougies changent d'une taverne à l'autre.
 
 Cherche l'enseigne suspendue au-dessus de la porte. À l'intérieur, il y a de la place pour circuler : une table près du feu, des tabourets au comptoir, la cuve
-sur son feu de camp derrière. Derrière le comptoir, un escalier descend à la **cave aux fûts**, une salle voûtée éclairée aux torches sous
-la grande salle, pleine de tonneaux en rang.
+sur son feu de camp derrière et l'[aubergiste](#aubergiste) près de la cuve. Derrière le comptoir, un escalier descend à la
+**cave**.
 
 Chaque type de village a sa particularité :
 
@@ -28,15 +28,24 @@ Chaque type de village a sa particularité :
 - **Neige :** une salle au coin du feu avec une grande cheminée et des tapis de fourrure.
 - **Taïga :** une salle d'hydromel avec une longue table, et un tas de bois sous l'avant-toit.
 
-Ses fûts sont **déjà pleins** : entre, prends une chope ou un verre, et tire une boisson. Quelques-uns sont vieillis. Le coffre de la taverne
-contient des graines, des chopes et des verres, et quelques boissons de la région, tout ce qu'il te faut pour te mettre toi-même au brassage.
+Et chacun a sa propre cave :
+
+- **Plaines :** la cave à bière, une réserve de malt et de houblon, avec une trappe qui descend au vieux caveau.
+- **Désert :** la cave à vin, avec une citerne voûtée en dessous et un coffre derrière un pot dans une niche.
+- **Savane :** la cave du pressoir, une salle de foulage avec une fosse pleine de caisses de raisin, un vieux tonneau et un coffre sous l'escalier.
+- **Neige :** la glacière, des tonneaux dans la neige et un puits de glace qui descend à la chambre froide, avec un coffre enfoui dans la neige.
+- **Taïga :** le cellier à racines, avec la vieille réserve derrière un rideau de racines pendantes.
+
+Ses fûts sont **déjà pleins** : entre, prends une chope ou un verre, et tire une boisson. Quelques-uns sont vieillis. Le coffre près du
+comptoir contient ce que contient un coffre de maison du village, plus quelques graines, des chopes et des verres et une boisson de la
+région. Un coffre caché dans la cave contient des graines et une boisson, plus souvent vieillie.
 
 <Shot src="taverns/plains.jpg" caption="Plaines : le jardin à bière, de longues tables sous une pergola de houblon." />
 <Shot src="taverns/desert.jpg" caption="Désert : la terrasse sur le toit, par l'escalier extérieur." />
 <Shot src="taverns/savanna.jpg" caption="Savane : le bar sous véranda, un comptoir sous les trappes ouvertes de la salle." />
 <Shot src="taverns/snowy.jpg" caption="Neige : la salle au coin du feu, trois foyers de large, tapis de fourrure et fauteuils." />
 <Shot src="taverns/taiga.jpg" caption="Taïga : la longue table de la salle d'hydromel." />
-<Shot src="taverns/cellar.jpg" caption="La cave aux fûts sous la grande salle : des tonneaux en rang sous une voûte de pierre, une lanterne au plafond." />
+<Shot src="taverns/cellar.jpg" caption="Des tonneaux dans une cave de taverne, une lanterne au plafond." />
 
 ### Bon à savoir
 
@@ -44,7 +53,31 @@ contient des graines, des chopes et des verres, et quelques boissons de la régi
   une boisson vieillie issue d'un fût que tu as rempli toi-même, c'est ce qui te vaut *Patience récompensée*.
 - Les fûts de taverne encore jeunes continuent de vieillir comme n'importe quel fût, donc une taverne que tu laisses tranquille quelques jours finit avec plus de boissons vieillies.
 - Tirer dans n'importe quel fût d'un village, celui d'une taverne ou le tien, te vaut *À la pression*.
-- Fais tes échanges sobre : dès Pompette {roman(rules.tipsy.rowdyLevel - 1)}, les villageois et les marchands ne commercent plus avec toi. Voir [Pompette](/tipsy/#tapageur).
+- Fais tes échanges sobre : dès Pompette {roman(rules.tipsy.cutOffLevel - 1)}, les villageois et les marchands ne commercent plus avec toi. Voir [Pompette](/tipsy/#tapageur).
+
+## Aubergiste
+
+Chaque taverne a son **aubergiste**, derrière le comptoir près de la cuve, avec un tablier lie-de-vin et un torchon de bar rayé. C'est
+un villageois comme les autres : il travaille, fait du commerce, monte de niveau et dort.
+
+- **Son poste de travail** est la <Item id="brew_kettle" />, à chaque stade du cuivre, cirée ou non. Une Grande cuve de brassage est un
+  seul poste de travail, pour un seul aubergiste. Un villageois sans métier peut aussi prendre une de tes cuves, comme un fermier prend un
+  composteur.
+- **Ce qu'il échange :** d'abord il achète de l'orge et du houblon et vend des chopes et des verres à vin. Ensuite il achète des raisins et
+  vend de la <Item id="barley_ale" /> et de la <Item id="wheat_beer" />, puis les vins, l'hydromel et le cidre de sa région (et achète du miel,
+  des baies, des pommes ou du melon pour les faire), puis des boissons vieillies.
+- **La boisson de sa région :** <Item id="barley_ale" /> dans les plaines, <Item id="red_wine" /> dans le désert,
+  <Item id="melon_wine" /> dans la savane et la jungle, <Item id="mead" /> dans les villages enneigés, <Item id="sweet_berry_wine" />
+  dans la taïga et <Item id="hard_cider" /> dans le marais.
+- **Le fût scellé du maître :** un aubergiste maître vend un <Item id="aging_barrel" /> plein de la boisson de sa région, vieillie. Pose-le
+  et il est plein et scellé, prêt à tirer.
+- **Santé :** finis une boisson seul devant lui et il lève sa chope et trinque avec toi : tu obtiens le bonus
+  [Santé !](/drinks/#santé-). Il t'apprécie un peu plus à chaque fois, donc les habitués paient un peu moins cher.
+- **Réapprovisionnement :** une fois par jour, il remplit un fût vide de sa propre taverne, un fût qu'il peut atteindre à pied, avec
+  quelques portions de la boisson jeune de sa région. Il ne touche jamais à tes fûts, et ce qu'il verse ne compte jamais comme ta propre
+  préparation.
+
+<VillageInfo show="keeper" />
 
 ## Fermes de village
 
@@ -55,7 +88,8 @@ dans les villages de plaines et de taïga, du houblon là où il fait frais, de 
 
 ## Échanges
 
-Les fermiers et le marchand ambulant vendent des graines, et les fermiers achètent de l'orge et des raisins rouges, comme ils achètent le blé.
+Les fermiers et le marchand ambulant vendent des graines, du houblon et des raisins, et les fermiers achètent de l'orge et des raisins
+rouges, comme ils achètent le blé. L'aubergiste achète lui aussi nos cultures et vend des boissons : voir [Aubergiste](#aubergiste).
 
 <VillageInfo show="trades" />
 

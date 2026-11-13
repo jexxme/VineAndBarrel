@@ -2,6 +2,9 @@
 	{
 		"profession": "wandering_trader",
 		"level": null,
+		"levelKey": null,
+		"levelName": null,
+		"offers": null,
 		"gives": {
 			"id": "vineandbarrel:barley_seeds",
 			"count": 1
@@ -10,11 +13,16 @@
 			"id": "minecraft:emerald",
 			"count": 1
 		},
-		"maxUses": 12
+		"maxUses": 12,
+		"variants": null,
+		"sealed": null
 	},
 	{
 		"profession": "wandering_trader",
 		"level": null,
+		"levelKey": null,
+		"levelName": null,
+		"offers": null,
 		"gives": {
 			"id": "vineandbarrel:hops",
 			"count": 1
@@ -23,11 +31,16 @@
 			"id": "minecraft:emerald",
 			"count": 1
 		},
-		"maxUses": 12
+		"maxUses": 12,
+		"variants": null,
+		"sealed": null
 	},
 	{
 		"profession": "wandering_trader",
 		"level": null,
+		"levelKey": null,
+		"levelName": null,
+		"offers": null,
 		"gives": {
 			"id": "vineandbarrel:red_grapes",
 			"count": 1
@@ -36,11 +49,16 @@
 			"id": "minecraft:emerald",
 			"count": 1
 		},
-		"maxUses": 12
+		"maxUses": 12,
+		"variants": null,
+		"sealed": null
 	},
 	{
 		"profession": "wandering_trader",
 		"level": null,
+		"levelKey": null,
+		"levelName": null,
+		"offers": null,
 		"gives": {
 			"id": "vineandbarrel:white_grapes",
 			"count": 1
@@ -49,11 +67,16 @@
 			"id": "minecraft:emerald",
 			"count": 1
 		},
-		"maxUses": 12
+		"maxUses": 12,
+		"variants": null,
+		"sealed": null
 	},
 	{
 		"profession": "farmer",
 		"level": 1,
+		"levelKey": "merchant.level.1",
+		"levelName": "Novice",
+		"offers": null,
 		"gives": {
 			"id": "minecraft:emerald",
 			"count": 1
@@ -62,11 +85,16 @@
 			"id": "vineandbarrel:barley",
 			"count": 20
 		},
-		"maxUses": 16
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
 	},
 	{
 		"profession": "farmer",
 		"level": 1,
+		"levelKey": "merchant.level.1",
+		"levelName": "Novice",
+		"offers": null,
 		"gives": {
 			"id": "vineandbarrel:barley_seeds",
 			"count": 6
@@ -75,11 +103,16 @@
 			"id": "minecraft:emerald",
 			"count": 1
 		},
-		"maxUses": 16
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
 	},
 	{
 		"profession": "farmer",
 		"level": 2,
+		"levelKey": "merchant.level.2",
+		"levelName": "Apprentice",
+		"offers": null,
 		"gives": {
 			"id": "vineandbarrel:hops",
 			"count": 3
@@ -88,11 +121,16 @@
 			"id": "minecraft:emerald",
 			"count": 1
 		},
-		"maxUses": 16
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
 	},
 	{
 		"profession": "farmer",
 		"level": 2,
+		"levelKey": "merchant.level.2",
+		"levelName": "Apprentice",
+		"offers": null,
 		"gives": {
 			"id": "vineandbarrel:red_grapes",
 			"count": 3
@@ -101,11 +139,16 @@
 			"id": "minecraft:emerald",
 			"count": 1
 		},
-		"maxUses": 16
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
 	},
 	{
 		"profession": "farmer",
 		"level": 2,
+		"levelKey": "merchant.level.2",
+		"levelName": "Apprentice",
+		"offers": null,
 		"gives": {
 			"id": "minecraft:emerald",
 			"count": 1
@@ -114,11 +157,16 @@
 			"id": "vineandbarrel:red_grapes",
 			"count": 20
 		},
-		"maxUses": 16
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
 	},
 	{
 		"profession": "farmer",
 		"level": 2,
+		"levelKey": "merchant.level.2",
+		"levelName": "Apprentice",
+		"offers": null,
 		"gives": {
 			"id": "vineandbarrel:white_grapes",
 			"count": 3
@@ -127,6 +175,867 @@
 			"id": "minecraft:emerald",
 			"count": 1
 		},
-		"maxUses": 16
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 1,
+		"levelKey": "merchant.level.1",
+		"levelName": "Novice",
+		"offers": 2,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "vineandbarrel:barley",
+			"count": 20
+		},
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 1,
+		"levelKey": "merchant.level.1",
+		"levelName": "Novice",
+		"offers": 2,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "vineandbarrel:hops",
+			"count": 16
+		},
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 1,
+		"levelKey": "merchant.level.1",
+		"levelName": "Novice",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:mug",
+			"count": 3
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 12,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 1,
+		"levelKey": "merchant.level.1",
+		"levelName": "Novice",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:wine_glass",
+			"count": 2
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 12,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 2,
+		"levelKey": "merchant.level.2",
+		"levelName": "Apprentice",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:barley_ale",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 12,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 2,
+		"levelKey": "merchant.level.2",
+		"levelName": "Apprentice",
+		"offers": 2,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "vineandbarrel:red_grapes",
+			"count": 20
+		},
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 2,
+		"levelKey": "merchant.level.2",
+		"levelName": "Apprentice",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:wheat_beer",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"maxUses": 12,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 2,
+		"levelKey": "merchant.level.2",
+		"levelName": "Apprentice",
+		"offers": 2,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "vineandbarrel:white_grapes",
+			"count": 20
+		},
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:apple",
+			"count": 10
+		},
+		"maxUses": 16,
+		"variants": [
+			{
+				"id": "plains",
+				"key": "biome.minecraft.plains",
+				"name": "Plains"
+			},
+			{
+				"id": "swamp",
+				"key": "biome.minecraft.swamp",
+				"name": "Swamp"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:hard_cider",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 2
+		},
+		"maxUses": 12,
+		"variants": [
+			{
+				"id": "plains",
+				"key": "biome.minecraft.plains",
+				"name": "Plains"
+			},
+			{
+				"id": "swamp",
+				"key": "biome.minecraft.swamp",
+				"name": "Swamp"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:honey_bottle",
+			"count": 4
+		},
+		"maxUses": 16,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:mead",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 2
+		},
+		"maxUses": 12,
+		"variants": [
+			{
+				"id": "snow",
+				"key": "biome.minecraft.snowy_plains",
+				"name": "Snowy Plains"
+			},
+			{
+				"id": "taiga",
+				"key": "biome.minecraft.taiga",
+				"name": "Taiga"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:melon_slice",
+			"count": 16
+		},
+		"maxUses": 16,
+		"variants": [
+			{
+				"id": "desert",
+				"key": "biome.minecraft.desert",
+				"name": "Desert"
+			},
+			{
+				"id": "savanna",
+				"key": "biome.minecraft.savanna",
+				"name": "Savanna"
+			},
+			{
+				"id": "jungle",
+				"key": "biome.minecraft.jungle",
+				"name": "Jungle"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:melon_wine",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 2
+		},
+		"maxUses": 12,
+		"variants": [
+			{
+				"id": "savanna",
+				"key": "biome.minecraft.savanna",
+				"name": "Savanna"
+			},
+			{
+				"id": "jungle",
+				"key": "biome.minecraft.jungle",
+				"name": "Jungle"
+			},
+			{
+				"id": "desert",
+				"key": "biome.minecraft.desert",
+				"name": "Desert"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:red_wine",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 2
+		},
+		"maxUses": 12,
+		"variants": [
+			{
+				"id": "desert",
+				"key": "biome.minecraft.desert",
+				"name": "Desert"
+			},
+			{
+				"id": "savanna",
+				"key": "biome.minecraft.savanna",
+				"name": "Savanna"
+			},
+			{
+				"id": "jungle",
+				"key": "biome.minecraft.jungle",
+				"name": "Jungle"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "minecraft:emerald",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:sweet_berries",
+			"count": 16
+		},
+		"maxUses": 16,
+		"variants": [
+			{
+				"id": "taiga",
+				"key": "biome.minecraft.taiga",
+				"name": "Taiga"
+			},
+			{
+				"id": "snow",
+				"key": "biome.minecraft.snowy_plains",
+				"name": "Snowy Plains"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:sweet_berry_wine",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 2
+		},
+		"maxUses": 12,
+		"variants": [
+			{
+				"id": "taiga",
+				"key": "biome.minecraft.taiga",
+				"name": "Taiga"
+			},
+			{
+				"id": "snow",
+				"key": "biome.minecraft.snowy_plains",
+				"name": "Snowy Plains"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 3,
+		"levelKey": "merchant.level.3",
+		"levelName": "Journeyman",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:white_wine",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 2
+		},
+		"maxUses": 12,
+		"variants": [
+			{
+				"id": "plains",
+				"key": "biome.minecraft.plains",
+				"name": "Plains"
+			},
+			{
+				"id": "taiga",
+				"key": "biome.minecraft.taiga",
+				"name": "Taiga"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 4,
+		"levelKey": "merchant.level.4",
+		"levelName": "Expert",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aged_barley_ale",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 5
+		},
+		"maxUses": 6,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 4,
+		"levelKey": "merchant.level.4",
+		"levelName": "Expert",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aged_hard_cider",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 5
+		},
+		"maxUses": 6,
+		"variants": [
+			{
+				"id": "plains",
+				"key": "biome.minecraft.plains",
+				"name": "Plains"
+			},
+			{
+				"id": "swamp",
+				"key": "biome.minecraft.swamp",
+				"name": "Swamp"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 4,
+		"levelKey": "merchant.level.4",
+		"levelName": "Expert",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aged_mead",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 5
+		},
+		"maxUses": 6,
+		"variants": [
+			{
+				"id": "snow",
+				"key": "biome.minecraft.snowy_plains",
+				"name": "Snowy Plains"
+			},
+			{
+				"id": "taiga",
+				"key": "biome.minecraft.taiga",
+				"name": "Taiga"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 4,
+		"levelKey": "merchant.level.4",
+		"levelName": "Expert",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aged_melon_wine",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 5
+		},
+		"maxUses": 6,
+		"variants": [
+			{
+				"id": "savanna",
+				"key": "biome.minecraft.savanna",
+				"name": "Savanna"
+			},
+			{
+				"id": "jungle",
+				"key": "biome.minecraft.jungle",
+				"name": "Jungle"
+			},
+			{
+				"id": "desert",
+				"key": "biome.minecraft.desert",
+				"name": "Desert"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 4,
+		"levelKey": "merchant.level.4",
+		"levelName": "Expert",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aged_red_wine",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 5
+		},
+		"maxUses": 6,
+		"variants": [
+			{
+				"id": "desert",
+				"key": "biome.minecraft.desert",
+				"name": "Desert"
+			},
+			{
+				"id": "savanna",
+				"key": "biome.minecraft.savanna",
+				"name": "Savanna"
+			},
+			{
+				"id": "jungle",
+				"key": "biome.minecraft.jungle",
+				"name": "Jungle"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 4,
+		"levelKey": "merchant.level.4",
+		"levelName": "Expert",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aged_sweet_berry_wine",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 5
+		},
+		"maxUses": 6,
+		"variants": [
+			{
+				"id": "taiga",
+				"key": "biome.minecraft.taiga",
+				"name": "Taiga"
+			},
+			{
+				"id": "snow",
+				"key": "biome.minecraft.snowy_plains",
+				"name": "Snowy Plains"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 4,
+		"levelKey": "merchant.level.4",
+		"levelName": "Expert",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aged_wheat_beer",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 5
+		},
+		"maxUses": 6,
+		"variants": [
+			{
+				"id": "plains",
+				"key": "biome.minecraft.plains",
+				"name": "Plains"
+			},
+			{
+				"id": "snow",
+				"key": "biome.minecraft.snowy_plains",
+				"name": "Snowy Plains"
+			},
+			{
+				"id": "taiga",
+				"key": "biome.minecraft.taiga",
+				"name": "Taiga"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 4,
+		"levelKey": "merchant.level.4",
+		"levelName": "Expert",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aged_white_wine",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 5
+		},
+		"maxUses": 6,
+		"variants": [
+			{
+				"id": "plains",
+				"key": "biome.minecraft.plains",
+				"name": "Plains"
+			},
+			{
+				"id": "taiga",
+				"key": "biome.minecraft.taiga",
+				"name": "Taiga"
+			}
+		],
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 5,
+		"levelKey": "merchant.level.5",
+		"levelName": "Master",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aged_white_wine",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 6
+		},
+		"maxUses": 6,
+		"variants": null,
+		"sealed": null
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 5,
+		"levelKey": "merchant.level.5",
+		"levelName": "Master",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aging_barrel",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 20
+		},
+		"maxUses": 3,
+		"variants": [
+			{
+				"id": "plains",
+				"key": "biome.minecraft.plains",
+				"name": "Plains"
+			}
+		],
+		"sealed": {
+			"drink": "vineandbarrel:aged_barley_ale",
+			"servings": 4
+		}
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 5,
+		"levelKey": "merchant.level.5",
+		"levelName": "Master",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aging_barrel",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 20
+		},
+		"maxUses": 3,
+		"variants": [
+			{
+				"id": "swamp",
+				"key": "biome.minecraft.swamp",
+				"name": "Swamp"
+			}
+		],
+		"sealed": {
+			"drink": "vineandbarrel:aged_hard_cider",
+			"servings": 4
+		}
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 5,
+		"levelKey": "merchant.level.5",
+		"levelName": "Master",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aging_barrel",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 20
+		},
+		"maxUses": 3,
+		"variants": [
+			{
+				"id": "snow",
+				"key": "biome.minecraft.snowy_plains",
+				"name": "Snowy Plains"
+			}
+		],
+		"sealed": {
+			"drink": "vineandbarrel:aged_mead",
+			"servings": 4
+		}
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 5,
+		"levelKey": "merchant.level.5",
+		"levelName": "Master",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aging_barrel",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 20
+		},
+		"maxUses": 3,
+		"variants": [
+			{
+				"id": "savanna",
+				"key": "biome.minecraft.savanna",
+				"name": "Savanna"
+			},
+			{
+				"id": "jungle",
+				"key": "biome.minecraft.jungle",
+				"name": "Jungle"
+			}
+		],
+		"sealed": {
+			"drink": "vineandbarrel:aged_melon_wine",
+			"servings": 4
+		}
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 5,
+		"levelKey": "merchant.level.5",
+		"levelName": "Master",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aging_barrel",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 20
+		},
+		"maxUses": 3,
+		"variants": [
+			{
+				"id": "desert",
+				"key": "biome.minecraft.desert",
+				"name": "Desert"
+			}
+		],
+		"sealed": {
+			"drink": "vineandbarrel:aged_red_wine",
+			"servings": 4
+		}
+	},
+	{
+		"profession": "tavern_keeper",
+		"level": 5,
+		"levelKey": "merchant.level.5",
+		"levelName": "Master",
+		"offers": 2,
+		"gives": {
+			"id": "vineandbarrel:aging_barrel",
+			"count": 1
+		},
+		"wants": {
+			"id": "minecraft:emerald",
+			"count": 20
+		},
+		"maxUses": 3,
+		"variants": [
+			{
+				"id": "taiga",
+				"key": "biome.minecraft.taiga",
+				"name": "Taiga"
+			}
+		],
+		"sealed": {
+			"drink": "vineandbarrel:aged_sweet_berry_wine",
+			"servings": 4
+		}
 	}
 ]

@@ -74,6 +74,7 @@ export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('
 9. **喝下去。** <Item id="red_wine" />会给你<EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} />，
    外加一级<EffectBadge id="vineandbarrel:tipsy" name="微醺" />。杯子还是你的。
    和附近的朋友同时喝，就会触发一次 **干杯！**：所有人的增益都延长 {rules.cheersBonusPercent}%。
+   在酒馆老板面前喝完，他也会和你碰杯。
 
 10. **让剩下的继续陈酿。** 再放着酒桶不动 **{days(wine.agingTime)}**，剩下的就会变成
     <Item id="aged_red_wine" />：颜色更深、会闪光，还带有<EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />。

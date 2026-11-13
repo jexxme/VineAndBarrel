@@ -2,10 +2,10 @@
 // Village farms, trades and chest loot, from the mod's data (runtime.json and the generated loot tables and trades).
 import Slot from '../mc/Slot.astro';
 import Item from '../mc/Item.astro';
-import { rules, trades, loot, nameOf, pct, num } from '../../lib/data';
+import { rules, trades, loot, nameOf, gameText, pct, num, list } from '../../lib/data';
 import { t, localeOf } from '../../lib/i18n';
 interface Props {
-	show: 'farms' | 'trades' | 'loot';
+	show: 'farms' | 'trades' | 'keeper' | 'loot';
 }
 const { show } = Astro.props;
 const locale = localeOf(Astro.currentLocale);
@@ -27,10 +27,28 @@ const VILLAGE: Record<string, () => string> = {
 	taiga: () => t('Taiga', locale),
 };
 const villageName = (s: string) => (VILLAGE[s] ? VILLAGE[s]() : s);
+// A village type from a loot table's name: village/tavern_plains, village/tavern_cellar_plains, village/village_plains_house
+const villageOf = (k: string) => k.split('/').pop()!.split('_').find((p) => VILLAGE[p]) ?? k;
 const cropItem: Record<string, string> = { 'vineandbarrel:grape_bush': 'vineandbarrel:red_grapes', 'vineandbarrel:hop_bush': 'vineandbarrel:hops', 'vineandbarrel:barley': 'vineandbarrel:barley' };
-const tavern = (Object.keys(loot) as string[]).filter((k) => k.includes('tavern'));
-const house = (Object.keys(loot) as string[]).filter((k) => k.includes('house'));
-const lootRows = (keys: string[]) => keys.map((k) => ({ type: villageName(k.split('_')[1]), pools: loot[k] }));
+const tables = Object.keys(loot) as string[];
+const bar = tables.filter((k) => k.includes('tavern_') && !k.includes('tavern_cellar_'));
+const cellar = tables.filter((k) => k.includes('tavern_cellar_'));
+const house = tables.filter((k) => k.includes('house'));
+const lootRows = (keys: string[]) => keys.map((k) => ({ type: villageName(villageOf(k)), pools: loot[k] }));
+// Farmers and the wandering trader in one table; the tavern keeper gets his own, by level
+const others = trades.filter((tr) => tr.profession !== 'tavern_keeper');
+const keeper = trades.filter((tr) => tr.profession === 'tavern_keeper');
+const keeperLevels = [...new Set(keeper.map((tr) => tr.level as number))].sort((a, b) => a - b).map((level) => ({
+	level,
+	name: gameText(`merchant.level.${level}`, keeper.find((tr) => tr.level === level)?.levelName ?? String(level), locale),
+	trades: keeper.filter((tr) => tr.level === level),
+}));
+const offers = [...new Set(keeper.map((tr) => tr.offers).filter((n) => n != null))];
+// Where a regional trade is offered: the village type's name, else the biome's (swamp, jungle)
+const regionName = (v: { id: string; key: string; name: string }) => {
+	const village = v.id === 'snow' ? 'snowy' : v.id;
+	return VILLAGE[village] ? VILLAGE[village]() : gameText(v.key, v.name, locale);
+};
 ---
 {
 	show === 'farms' && (
@@ -52,7 +70,7 @@ const lootRows = (keys: string[]) => keys.map((k) => ({ type: villageName(k.spli
 		<table class="not-content">
 			<thead><tr><th>{t('Who', locale)}</th><th>{t('Gives', locale)}</th><th>{t('For', locale)}</th><th>{t('Uses', locale)}</th></tr></thead>
 			<tbody>
-				{trades.map((tr) => (
+				{others.map((tr) => (
 					<tr>
 						<td>{tr.profession === 'farmer' ? t('Farmer (level {level})', locale, { level: tr.level }) : t('Wandering trader', locale)}</td>
 						<td><Slot id={tr.gives.id} count={tr.gives.count} /></td>
@@ -65,9 +83,36 @@ const lootRows = (keys: string[]) => keys.map((k) => ({ type: villageName(k.spli
 	)
 }
 {
+	show === 'keeper' && (
+		<>
+			<table class="not-content">
+				<thead><tr><th>{t('Level', locale)}</th><th>{t('Gives', locale)}</th><th>{t('For', locale)}</th><th>{t('Only in', locale)}</th><th>{t('Uses', locale)}</th></tr></thead>
+				<tbody>
+					{keeperLevels.map((lv) => lv.trades.map((tr, i) => (
+						<tr class:list={{ first: i === 0 }}>
+							{i === 0 && <td rowspan={lv.trades.length} class="level">{lv.name}</td>}
+							{tr.sealed ? (
+								<td class="slots">
+									<Slot id={tr.gives.id} count={tr.gives.count} note={t('Sealed, full of {drink} ({n} servings)', locale, { drink: nameOf(tr.sealed.drink, locale), n: tr.sealed.servings })} />
+									<span class="sealed">{t('full of', locale)}</span>
+									<Slot id={tr.sealed.drink} count={tr.sealed.servings} note={t('Sealed, full of {drink} ({n} servings)', locale, { drink: nameOf(tr.sealed.drink, locale), n: tr.sealed.servings })} />
+								</td>
+							) : <td><Slot id={tr.gives.id} count={tr.gives.count} /></td>}
+							<td><Slot id={tr.wants.id} count={tr.wants.count} /></td>
+							<td>{tr.variants ? list(tr.variants.map(regionName), locale) : t('Everywhere', locale)}</td>
+							<td>{num(tr.maxUses, locale)}</td>
+						</tr>
+					)))}
+				</tbody>
+			</table>
+			{offers.length === 1 && <p class="note">{t('At each level he offers {n} of the trades listed for it, picked at random.', locale, { n: offers[0] as number })}</p>}
+		</>
+	)
+}
+{
 	show === 'loot' && (
 		<>
-			{[[t('Tavern chests', locale), tavern], [t('Village house chests', locale), house]].map(([title, keys]) => (
+			{[[t('Tavern bar chests', locale), bar], [t('Tavern cellar chests', locale), cellar], [t('Village house chests', locale), house]].map(([title, keys]) => (
 				<>
 					<h3>{title}</h3>
 					<table class="not-content">
@@ -77,7 +122,9 @@ const lootRows = (keys: string[]) => keys.map((k) => ({ type: villageName(k.spli
 								<tr>
 									<td>{r.type}</td>
 									<td class="slots">
-										{r.pools.flatMap((p) => p.entries).map((e) => (
+										{r.pools.flatMap((p) => p.entries).map((e) => e.table ? (
+											<span class="draw">{t('One draw from a {village} house chest', locale, { village: villageName(villageOf(e.table)) })}</span>
+										) : (
 											<Slot id={e.id} count={e.count[1]} note={t('{count} · {pct} of the picks', locale, { count: e.count[0] === e.count[1] ? num(e.count[0], locale) : t('{min} to {max}', locale, { min: e.count[0], max: e.count[1] }), pct: pct(e.chance, 0, locale) })} />
 										))}
 									</td>
@@ -113,6 +160,27 @@ const lootRows = (keys: string[]) => keys.map((k) => ({ type: villageName(k.spli
 		display: flex;
 		flex-wrap: wrap;
 		gap: 4px;
+	}
+	td.level {
+		color: var(--fd-heading-ink);
+		white-space: nowrap;
+	}
+	tr.first td {
+		border-top: 2px solid var(--fd-border);
+	}
+	td.slots .sealed {
+		align-self: center;
+		font-size: 18px;
+	}
+	.draw {
+		align-self: center;
+		padding: 0 8px;
+		font-size: 18px;
+		border: 1px dashed var(--fd-border);
+	}
+	p.note {
+		font-size: 18px;
+		margin-top: -0.5rem;
 	}
 	h3 {
 		color: var(--fd-heading-ink);

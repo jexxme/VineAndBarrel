@@ -63,7 +63,8 @@ const drink = drinks.find((d) => d.id === item.id);
 
 // Where to find it: wild plants, picking a bush, village farms, trades, chests
 const wild = worldgen.filter((w) => !w.extra && (w.crop === item.id || rules.wildDrops[w.crop]?.some((d: any) => d.id === item.id)));
-const myTrades = trades.filter((tr) => tr.gives.id === item.id);
+// (not the master tavern keeper's sealed cask: that Aging Barrel comes full, the Aging Barrel page tells of it)
+const myTrades = trades.filter((tr) => tr.gives.id === item.id && !tr.sealed);
 const chestOdds = (pools: any[]) => {
 	let miss = 1;
 	const counts: string[] = [];
@@ -82,8 +83,10 @@ const chests = Object.entries(loot)
 	.map(([table, pools]) => ({ table, ...chestOdds(pools) }))
 	.filter((ch) => ch.chance > 0)
 	.map((ch) => {
-		const v = village(ch.table.split('_')[1]);
-		return { ...ch, name: ch.table.includes('tavern') ? t('Tavern ({village})', locale, { village: v }) : t('Village house ({village})', locale, { village: v }) };
+		const v = village(ch.table.split('/').pop()!.split('_').find((p) => ['desert', 'plains', 'savanna', 'snowy', 'taiga'].includes(p)) ?? ch.table);
+		const name = ch.table.includes('tavern_cellar_') ? t('Tavern cellar ({village})', locale, { village: v })
+			: ch.table.includes('tavern') ? t('Tavern ({village})', locale, { village: v }) : t('Village house ({village})', locale, { village: v });
+		return { ...ch, name };
 	});
 const picked = Object.entries(rules.harvest as Record<string, { id: string; count: number[] }>).filter(([, h]) => h.id === item.id);
 const farms = Object.entries(rules.villages.farmCrops as Record<string, { block: string }[]>).filter(([, cs]) => cs.some((x) => x.block === item.block)).map(([v]) => v);
@@ -219,11 +222,11 @@ const description = [
 						<li>
 							{tr.level ? (
 								<Tr k="{who} sell {n} for {m} {item} (from level {level})." vars={{ n: tr.gives.count, m: tr.wants.count, item: nameOf(tr.wants.id, locale), level: tr.level }} locale={locale}>
-									<strong slot="who">{tr.profession === 'farmer' ? t('Farmer villagers', locale) : t('Wandering Traders', locale)}</strong>
+									<strong slot="who">{tr.profession === 'farmer' ? t('Farmer villagers', locale) : tr.profession === 'tavern_keeper' ? t('Tavern keepers', locale) : t('Wandering Traders', locale)}</strong>
 								</Tr>
 							) : (
 								<Tr k="{who} sell {n} for {m} {item}." vars={{ n: tr.gives.count, m: tr.wants.count, item: nameOf(tr.wants.id, locale) }} locale={locale}>
-									<strong slot="who">{tr.profession === 'farmer' ? t('Farmer villagers', locale) : t('Wandering Traders', locale)}</strong>
+									<strong slot="who">{tr.profession === 'farmer' ? t('Farmer villagers', locale) : tr.profession === 'tavern_keeper' ? t('Tavern keepers', locale) : t('Wandering Traders', locale)}</strong>
 								</Tr>
 							)}
 						</li>

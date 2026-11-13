@@ -1,6 +1,6 @@
 ---
 title: Aldeias e tavernas
-description: Tavernas de aldeia com barris prontos para servir, fazendas de aldeia que cultivam uvas, lúpulo e cevada, trocas de sementes e itens em baús.
+description: Tavernas de aldeia com barris prontos para servir, uma adega em cada uma, o taberneiro e as bebidas dele, fazendas de aldeia que cultivam uvas, lúpulo e cevada, trocas e itens em baús.
 ---
 import Item from '../../../components/mc/Item.astro';
 import Render from '../../../components/mc/Render.astro';
@@ -17,8 +17,8 @@ aldeia a cada três, e nunca mais de uma por aldeia. Não há duas exatamente ig
 mesas, as flores, os estandartes e as velas mudam de taverna para taverna.
 
 Procure a placa pendurada sobre a porta. Lá dentro há espaço para circular: uma mesa junto ao fogo, bancos no balcão, a tina
-na fogueira atrás dele. Atrás do balcão, uma escada desce para a **adega de barris**, uma sala abobadada e iluminada por tochas sob o
-salão, cheia de tonéis enfileirados.
+na fogueira atrás dele e o [taberneiro](#taberneiro) junto à tina. Atrás do balcão, uma escada desce para a
+**adega**.
 
 Cada tipo de aldeia tem um destaque próprio:
 
@@ -28,15 +28,24 @@ Cada tipo de aldeia tem um destaque próprio:
 - **Nevada:** uma sala de lareira com uma lareira grande e tapetes de pele.
 - **Taiga:** um salão de hidromel com uma mesa comprida e uma pilha de lenha sob o beiral.
 
+E cada um tem uma adega própria:
+
+- **Planície:** a adega de cerveja, um depósito de malte e lúpulo, com um alçapão que desce para a antiga cripta.
+- **Deserto:** a adega de vinho, com uma cisterna abobadada embaixo e um baú atrás de um vaso num nicho.
+- **Savana:** a adega da prensa, uma sala de pisa com um fosso de caixotes de uva, um tonel velho e um baú sob a escada.
+- **Nevada:** a adega de gelo, tonéis na neve e um poço de gelo que desce até o depósito frio, com um baú enterrado na neve.
+- **Taiga:** a adega de raízes, com o depósito antigo atrás de uma cortina de raízes penduradas.
+
 Os barris dela já vêm **cheios**: entre, pegue uma caneca ou taça e sirva uma bebida. Alguns deles estão envelhecidos. O baú
-da taverna tem sementes, canecas e taças, e algumas bebidas da região, tudo o que você precisa para começar a brassar por conta própria.
+junto ao balcão tem o que o baú de uma casa da aldeia tem, mais algumas sementes, canecas e taças e uma bebida da região. Um
+baú escondido na adega tem sementes e uma bebida, muitas vezes envelhecida.
 
 <Shot src="taverns/plains.jpg" caption="Planície: o jardim de cerveja, mesas compridas sob um caramanchão de ramas de lúpulo." />
 <Shot src="taverns/desert.jpg" caption="Deserto: o terraço no telhado, subindo pela escada de fora." />
 <Shot src="taverns/savanna.jpg" caption="Savana: o bar de varanda, um balcão sob as escotilhas abertas do salão." />
 <Shot src="taverns/snowy.jpg" caption="Nevada: a sala de lareira, três fogos de largura, tapetes de pele e poltronas." />
 <Shot src="taverns/taiga.jpg" caption="Taiga: a mesa comprida do salão de hidromel." />
-<Shot src="taverns/cellar.jpg" caption="A adega de barris sob o salão: tonéis enfileirados sob uma abóbada de pedra, uma lanterna no alto." />
+<Shot src="taverns/cellar.jpg" caption="Tonéis na adega de uma taverna, uma lanterna no alto." />
 
 ### Bom saber
 
@@ -44,7 +53,30 @@ da taverna tem sementes, canecas e taças, e algumas bebidas da região, tudo o 
   uma bebida envelhecida de um barril que você mesmo encheu é o que rende *Paciência Compensa*.
 - Os barris jovens da taverna continuam envelhecendo como qualquer barril, então uma taverna deixada em paz por alguns dias acaba com mais bebidas envelhecidas.
 - Servir de qualquer barril numa aldeia, da taverna ou seu, rende *Na Torneira*.
-- Faça suas trocas sóbrio: a partir do Alegrinho {roman(rules.tipsy.rowdyLevel - 1)}, aldeões e mercadores não negociam com você. Veja [Alegrinho](/tipsy/#arruaceiro).
+- Faça suas trocas sóbrio: a partir do Alegrinho {roman(rules.tipsy.cutOffLevel - 1)}, aldeões e mercadores não negociam com você. Veja [Alegrinho](/tipsy/#arruaceiro).
+
+## Taberneiro
+
+Toda taverna tem o seu **taberneiro**, atrás do balcão junto à tina, com um avental vinho e um pano de balcão listrado. Ele
+é um aldeão como qualquer outro: trabalha, negocia, sobe de nível e dorme.
+
+- **A estação de trabalho dele** é a <Item id="brew_kettle" />, em qualquer fase do cobre, encerada ou não. Uma Tina de Brassagem
+  Grande é uma só estação de trabalho, para um só taberneiro. Um aldeão sem profissão também pode ficar com uma tina sua, do
+  jeito que um fazendeiro fica com uma composteira.
+- **O que ele negocia:** no começo compra cevada e lúpulo e vende canecas e taças de vinho. Depois compra uvas e vende
+  <Item id="barley_ale" /> e <Item id="wheat_beer" />, depois os vinhos, o hidromel e a sidra da região dele (e compra mel,
+  bagas, maçãs ou melancia para eles), e por fim bebidas envelhecidas.
+- **A bebida da região dele:** <Item id="barley_ale" /> na planície, <Item id="red_wine" /> no deserto,
+  <Item id="melon_wine" /> na savana e na selva, <Item id="mead" /> nas aldeias nevadas, <Item id="sweet_berry_wine" />
+  na taiga e <Item id="hard_cider" /> no pântano.
+- **O tonel lacrado do mestre:** um taberneiro mestre vende um <Item id="aging_barrel" /> cheio da bebida da região dele,
+  envelhecida. Coloque-o e ele já está cheio e lacrado, pronto para servir.
+- **Saúde!** Termine uma bebida sozinho na frente dele e ele ergue a caneca e brinda com você: você ganha o bônus do
+  [Saúde!](/drinks/#saúde). A cada vez ele gosta um pouco mais de você, então os clientes de sempre pagam um pouco menos.
+- **Reabastecimento:** uma vez por dia ele enche um tonel vazio da própria taverna, um até onde consiga andar, com algumas
+  porções da bebida jovem da região dele. Ele nunca mexe nos seus tonéis, e o que ele serve nunca conta como sua própria infusão.
+
+<VillageInfo show="keeper" />
 
 ## Fazendas da aldeia
 
@@ -55,7 +87,8 @@ em aldeias de planície e taiga, lúpulo onde é fresco, cevada quase em todo lu
 
 ## Trocas
 
-Fazendeiros e o mercador ambulante vendem sementes, e os fazendeiros compram cevada e uvas tintas, como compram trigo.
+Fazendeiros e o mercador ambulante vendem sementes, lúpulo e uvas, e os fazendeiros compram cevada e uvas tintas, como
+compram trigo. O taberneiro também compra as nossas plantações e vende bebidas: veja [Taberneiro](#taberneiro).
 
 <VillageInfo show="trades" />
 

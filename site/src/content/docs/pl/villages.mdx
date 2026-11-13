@@ -1,6 +1,6 @@
 ---
 title: Wioski i karczmy
-description: Wioskowe karczmy z beczkami gotowymi do nalewania, wioskowe farmy uprawiające winogrona, chmiel i jęczmień, handel nasionami i łupy ze skrzyń.
+description: Wioskowe karczmy z beczkami gotowymi do nalewania, piwnica w każdej z nich, karczmarz i jego napoje, wioskowe farmy uprawiające winogrona, chmiel i jęczmień, handel i łupy ze skrzyń.
 ---
 import Item from '../../../components/mc/Item.astro';
 import Render from '../../../components/mc/Render.astro';
@@ -17,8 +17,7 @@ w co trzeciej wiosce, nigdy więcej niż jedną na wioskę. Żadne dwie nie są 
 sztandary i świece zmieniają się od karczmy do karczmy.
 
 Szukaj wiszącego szyldu nad drzwiami. W środku jest miejsce na ruch: stół przy kominku, stołki przy ladzie, a za nią kocioł
-na ognisku. Za ladą schody prowadzą w dół do **piwnicy z beczkami**, sklepionej, oświetlonej pochodniami sali pod główną
-izbą, pełnej beczek.
+na ognisku i [karczmarz](#karczmarz) przy kotle. Za ladą schody prowadzą w dół do **piwnicy**.
 
 Każdy typ wioski ma coś swojego:
 
@@ -28,16 +27,24 @@ Każdy typ wioski ma coś swojego:
 - **Śnieg:** izba z wielkim kominkiem i futrzanymi dywanami.
 - **Tajga:** sala miodowa z długim stołem i stosem drewna pod okapem.
 
-Jej beczki są **już pełne**: wejdź, weź kufel lub kieliszek i nalej sobie. Kilka z nich zawiera napój leżakowany. Skrzynia w
-karczmie skrywa nasiona, kufle i kieliszki oraz kilka napojów z regionu, czyli wszystko, czego potrzebujesz, by zacząć
-warzyć samemu.
+I każdy ma własną piwnicę:
+
+- **Równiny:** piwnica piwna, skład słodu i chmielu, z klapą w dół do starego lochu.
+- **Pustynia:** piwnica winna, pod nią sklepiona cysterna, a skrzynia za donicą we wnęce.
+- **Sawanna:** piwnica z tłocznią, izba do deptania winogron z dołem pełnym skrzynek winogron, stara beczka i skrzynia pod schodami.
+- **Śnieg:** lodownia, beczki w śniegu i lodowa studnia w dół do zimnej spiżarni, ze skrzynią zakopaną w śniegu.
+- **Tajga:** ziemianka, ze starym składem za zasłoną zwisających korzeni.
+
+Jej beczki są **już pełne**: wejdź, weź kufel lub kieliszek i nalej sobie. Kilka z nich zawiera napój leżakowany. Skrzynia
+przy ladzie skrywa to, co skrzynia w wiejskim domu, a do tego trochę nasion, kufle i kieliszki oraz napój z regionu.
+Skrzynia ukryta w piwnicy skrywa nasiona i napój, częściej leżakowany.
 
 <Shot src="taverns/plains.jpg" caption="Równiny: piwiarnia ogródkowa, długie stoły pod pergolą z chmielu." />
 <Shot src="taverns/desert.jpg" caption="Pustynia: taras na dachu, na górę zewnętrznymi schodami." />
 <Shot src="taverns/savanna.jpg" caption="Sawanna: weranda z ladą pod otwartymi klapami izby." />
 <Shot src="taverns/snowy.jpg" caption="Śnieg: izba z kominkiem, trzy paleniska szerokości, futrzane dywany i fotele." />
 <Shot src="taverns/taiga.jpg" caption="Tajga: długi stół sali miodowej." />
-<Shot src="taverns/cellar.jpg" caption="Piwnica z beczkami pod izbą: beczki ułożone pod kamiennym sklepieniem, nad nimi latarnia." />
+<Shot src="taverns/cellar.jpg" caption="Beczki w piwnicy karczmy, nad nimi latarnia." />
 
 ### Warto wiedzieć
 
@@ -45,7 +52,30 @@ warzyć samemu.
   leżakowany napój z beczki, którą napełniłeś sam, daje osiągnięcie *Cierpliwość popłaca*.
 - Młode beczki w karczmie leżakują dalej jak każda inna, więc karczma zostawiona na kilka dni ma w końcu więcej napojów leżakowanych.
 - Nalanie z dowolnej beczki w wiosce, karczmianej lub własnej, daje osiągnięcie *Prosto z beczki*.
-- Handluj na trzeźwo: od Rauszyk {roman(rules.tipsy.rowdyLevel - 1)} osadnicy i handlarze nie chcą z tobą interesów. Zobacz [Rauszyk](/tipsy/#awanturnik).
+- Handluj na trzeźwo: od Rauszyk {roman(rules.tipsy.cutOffLevel - 1)} osadnicy i handlarze nie chcą z tobą interesów. Zobacz [Rauszyk](/tipsy/#awanturnik).
+
+## Karczmarz
+
+Każda karczma ma swojego **karczmarza**, za ladą przy kotle, w bordowym fartuchu i z ręcznikiem barowym w paski. To
+osadnik jak każdy inny: pracuje, handluje, awansuje i śpi.
+
+- **Jego stanowisko pracy** to <Item id="brew_kettle" />, na każdym etapie miedzi, woskowany czy nie. Duży kocioł warzelny
+  to jedno stanowisko pracy, dla jednego karczmarza. Osadnik bez zawodu może też zająć twój kocioł, tak jak rolnik zajmuje
+  kompostownik.
+- **Czym handluje:** na początku kupuje jęczmień i chmiel, a sprzedaje kufle i kieliszki do wina. Potem kupuje winogrona i
+  sprzedaje <Item id="barley_ale" /> i <Item id="wheat_beer" />, potem wina, miód pitny i cydr ze swojego regionu (i kupuje do
+  nich miód, jagody, jabłka albo arbuza), a na koniec napoje leżakowane.
+- **Napój jego regionu:** <Item id="barley_ale" /> na równinach, <Item id="red_wine" /> na pustyni,
+  <Item id="melon_wine" /> na sawannie i w dżungli, <Item id="mead" /> w śnieżnych wioskach, <Item id="sweet_berry_wine" />
+  w tajdze i <Item id="hard_cider" /> na bagnach.
+- **Zapieczętowana beczka mistrza:** karczmarz na poziomie mistrza sprzedaje beczkę pełną leżakowanego napoju z jego
+  regionu: <Item id="aging_barrel" />. Postaw ją, a jest pełna i zapieczętowana, gotowa do nalewania.
+- **Na zdrowie!** Dopij napój sam przed nim, a uniesie kufel i stuknie się z tobą: dostajesz bonus
+  [Na zdrowie!](/drinks/#na-zdrowie). Za każdym razem lubi cię trochę bardziej, więc stali bywalcy płacą trochę mniej.
+- **Uzupełnianie:** raz dziennie napełnia pustą beczkę we własnej karczmie, taką, do której może dojść, kilkoma porcjami
+  młodego napoju ze swojego regionu. Nigdy nie rusza twoich beczek, a to, co naleje, nigdy nie liczy się jako twój własny trunek.
+
+<VillageInfo show="keeper" />
 
 ## Wioskowe farmy
 
@@ -56,7 +86,8 @@ ciepło, białe winogrona w wioskach na równinach i w tajdze, chmiel tam, gdzie
 
 ## Handel
 
-Rolnicy i wędrowny handlarz sprzedają nasiona, a rolnicy kupują jęczmień i czerwone winogrona, tak jak pszenicę.
+Rolnicy i wędrowny handlarz sprzedają nasiona, chmiel i winogrona, a rolnicy kupują jęczmień i czerwone winogrona, tak
+jak pszenicę. Karczmarz też kupuje nasze uprawy i sprzedaje napoje: zobacz [Karczmarz](#karczmarz).
 
 <VillageInfo show="trades" />
 

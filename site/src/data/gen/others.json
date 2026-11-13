@@ -139,6 +139,10 @@
 		"id": "minecraft:emerald",
 		"name": "Emerald"
 	},
+	"minecraft:melon_slice": {
+		"id": "minecraft:melon_slice",
+		"name": "Melon Slice"
+	},
 	"minecraft:clock": {
 		"id": "minecraft:clock",
 		"name": "Clock"
@@ -298,9 +302,5 @@
 	"minecraft:iron_chain": {
 		"id": "minecraft:iron_chain",
 		"name": "Iron Chain"
-	},
-	"minecraft:melon_slice": {
-		"id": "minecraft:melon_slice",
-		"name": "Melon Slice"
 	}
 }

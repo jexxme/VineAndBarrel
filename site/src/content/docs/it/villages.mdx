@@ -1,6 +1,6 @@
 ---
 title: Villaggi e taverne
-description: Taverne di villaggio con botti pronte da spillare, fattorie di villaggio che coltivano uva, luppolo e orzo, scambi di semi e bottino nei forzieri.
+description: Taverne di villaggio con botti pronte da spillare, una cantina in ognuna, l'oste e le sue bevande, fattorie di villaggio che coltivano uva, luppolo e orzo, scambi e bottino nei forzieri.
 ---
 import Item from '../../../components/mc/Item.astro';
 import Render from '../../../components/mc/Render.astro';
@@ -17,8 +17,7 @@ villaggio su tre, mai più di una per villaggio. Non ce ne sono due uguali: cosa
 tavoli, i fiori, gli stendardi e le candele cambiano da una taverna all'altra.
 
 Cerca l'insegna appesa sopra la porta. Dentro c'è spazio per muoversi: un tavolo accanto al fuoco, sgabelli al bancone, il bollitore
-sul suo falò dietro. Dietro il bancone, una scala scende alla **cantina delle botti**, una sala a volta illuminata da torce sotto
-la sala, piena di botti in fila.
+sul suo falò dietro e l'[oste](#oste) accanto al bollitore. Dietro il bancone, una scala scende alla **cantina**.
 
 Ogni tipo di villaggio ha una particolarità sua:
 
@@ -28,15 +27,24 @@ Ogni tipo di villaggio ha una particolarità sua:
 - **Innevato:** una sala con un grande camino e tappeti di pelliccia.
 - **Taiga:** una sala dell'idromele con un lungo tavolo, e una catasta di legna sotto la gronda.
 
+E ognuno ha una cantina tutta sua:
+
+- **Pianure:** la cantina della birra, una dispensa di malto e luppolo, con una botola che scende alla vecchia volta.
+- **Deserto:** la cantina del vino, con una cisterna a volta sotto e un baule dietro un vaso in una nicchia.
+- **Savana:** la cantina del torchio, una sala di pigiatura con una fossa di casse d'uva, una vecchia botte e un baule sotto le scale.
+- **Innevato:** la ghiacciaia, botti nella neve e un pozzo di ghiaccio che scende alla cella fredda, con un baule sepolto nella neve.
+- **Taiga:** la cantina delle radici, con la vecchia dispensa dietro una tenda di radici pendenti.
+
 Le sue botti sono **già piene**: entra, prendi un boccale o un calice e spilla una bevanda. Un paio sono invecchiate. Il baule
-della taverna contiene semi, boccali e calici, e qualche bevanda della regione, tutto ciò che serve per iniziare a preparare da solo.
+accanto al bancone contiene ciò che contiene un baule di una casa del villaggio, più qualche seme, boccali e calici e una bevanda
+della regione. Un baule nascosto nella cantina contiene semi e una bevanda, più spesso invecchiata.
 
 <Shot src="taverns/plains.jpg" caption="Pianure: il giardino della birra, lunghi tavoli sotto una pergola di rampicanti di luppolo." />
 <Shot src="taverns/desert.jpg" caption="Deserto: il terrazzo sul tetto, su per le scale esterne." />
 <Shot src="taverns/savanna.jpg" caption="Savana: il bar in veranda, un bancone sotto i portelli aperti della sala." />
 <Shot src="taverns/snowy.jpg" caption="Innevato: la sala del camino, tre fuochi di larghezza, tappeti di pelliccia e poltrone." />
 <Shot src="taverns/taiga.jpg" caption="Taiga: il lungo tavolo della sala dell'idromele." />
-<Shot src="taverns/cellar.jpg" caption="La cantina delle botti sotto la sala: botti in fila sotto una volta di pietra, una lanterna in alto." />
+<Shot src="taverns/cellar.jpg" caption="Botti nella cantina di una taverna, una lanterna in alto." />
 
 ### Da sapere
 
@@ -44,7 +52,29 @@ della taverna contiene semi, boccali e calici, e qualche bevanda della regione, 
   una bevanda invecchiata da una botte che hai riempito tu è ciò che ti fa ottenere *La pazienza premia*.
 - Le botti giovani della taverna continuano a invecchiare come qualsiasi botte, quindi una taverna che lasci stare per qualche giorno ha più bevande invecchiate.
 - Spillare da una botte qualsiasi in un villaggio, di una taverna o tua, ti fa ottenere *Alla spina*.
-- Fai i tuoi scambi da sobrio: da Brillo {roman(rules.tipsy.rowdyLevel - 1)}, villici e mercanti non commerciano con te. Vedi [Brillo](/tipsy/#attaccabrighe).
+- Fai i tuoi scambi da sobrio: da Brillo {roman(rules.tipsy.cutOffLevel - 1)}, villici e mercanti non commerciano con te. Vedi [Brillo](/tipsy/#attaccabrighe).
+
+## Oste
+
+Ogni taverna ha il suo **oste**, dietro il bancone accanto al bollitore, con un grembiule rosso vino e uno strofinaccio a righe. È
+un villico come gli altri: lavora, commercia, sale di livello e dorme.
+
+- **Il suo luogo di lavoro** è il <Item id="brew_kettle" />, a ogni stadio del rame, cerato o no. Un Bollitore grande è un solo luogo
+  di lavoro, per un solo oste. Anche un villico senza lavoro può prendersi un tuo bollitore, come un contadino si prende una compostiera.
+- **Cosa scambia:** all'inizio compra orzo e luppolo e vende boccali e calici da vino. Poi compra uva e vende
+  <Item id="barley_ale" /> e <Item id="wheat_beer" />, poi i vini, l'idromele e il sidro della sua regione (e compra miele, bacche,
+  mele o anguria per farli), poi bevande invecchiate.
+- **La bevanda della sua regione:** <Item id="barley_ale" /> in pianura, <Item id="red_wine" /> nel deserto,
+  <Item id="melon_wine" /> nella savana e nella giungla, <Item id="mead" /> nei villaggi innevati, <Item id="sweet_berry_wine" />
+  nella taiga e <Item id="hard_cider" /> nella palude.
+- **La botte sigillata del maestro:** un oste maestro vende una <Item id="aging_barrel" /> piena della bevanda della sua regione,
+  invecchiata. Piazzala ed è piena e sigillata, pronta da spillare.
+- **Cin cin:** finisci una bevanda da solo davanti a lui e lui alza il boccale e brinda con te: ottieni il bonus
+  [Cin cin!](/drinks/#cin-cin). Ogni volta ti stima un po' di più, così i clienti abituali pagano un po' meno.
+- **Rifornimento:** una volta al giorno riempie una botte vuota della sua taverna, una che può raggiungere a piedi, con qualche porzione
+  della bevanda giovane della sua regione. Non tocca mai le tue botti, e ciò che versa non conta mai come una tua preparazione.
+
+<VillageInfo show="keeper" />
 
 ## Fattorie del villaggio
 
@@ -55,7 +85,8 @@ nei villaggi di pianura e di taiga, luppolo dove fa fresco, orzo quasi ovunque.
 
 ## Scambi
 
-I contadini e il mercante errante vendono semi, e i contadini comprano orzo e uva rossa, come comprano il grano.
+I contadini e il mercante errante vendono semi, luppolo e uva, e i contadini comprano orzo e uva rossa, come comprano il grano.
+Anche l'oste compra le nostre colture e vende bevande: vedi [Oste](#oste).
 
 <VillageInfo show="trades" />
 

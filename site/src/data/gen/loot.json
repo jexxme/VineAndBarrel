@@ -1,9 +1,530 @@
 {
+	"village/tavern_cellar_desert": [
+		{
+			"rolls": [
+				1,
+				2
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:barley_seeds",
+					"weight": 3,
+					"chance": 0.3,
+					"count": [
+						2,
+						6
+					]
+				},
+				{
+					"id": "vineandbarrel:red_grapes",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:hops",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:barley",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						5
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:red_wine",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:wheat_beer",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						2
+					]
+				},
+				{
+					"id": "vineandbarrel:barley_ale",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						2
+					]
+				},
+				{
+					"id": "vineandbarrel:aged_red_wine",
+					"weight": 4,
+					"chance": 0.3076923076923077,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		}
+	],
+	"village/tavern_cellar_plains": [
+		{
+			"rolls": [
+				1,
+				2
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:barley_seeds",
+					"weight": 3,
+					"chance": 0.3,
+					"count": [
+						2,
+						6
+					]
+				},
+				{
+					"id": "vineandbarrel:red_grapes",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:hops",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:barley",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						5
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:barley_ale",
+					"weight": 3,
+					"chance": 0.21428571428571427,
+					"count": [
+						1,
+						2
+					]
+				},
+				{
+					"id": "vineandbarrel:wheat_beer",
+					"weight": 3,
+					"chance": 0.21428571428571427,
+					"count": [
+						1,
+						2
+					]
+				},
+				{
+					"id": "vineandbarrel:red_wine",
+					"weight": 3,
+					"chance": 0.21428571428571427,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:sweet_berry_wine",
+					"weight": 1,
+					"chance": 0.07142857142857142,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:aged_barley_ale",
+					"weight": 4,
+					"chance": 0.2857142857142857,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		}
+	],
+	"village/tavern_cellar_savanna": [
+		{
+			"rolls": [
+				1,
+				2
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:barley_seeds",
+					"weight": 3,
+					"chance": 0.3,
+					"count": [
+						2,
+						6
+					]
+				},
+				{
+					"id": "vineandbarrel:red_grapes",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:hops",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:barley",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						5
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:red_wine",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:barley_ale",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						2
+					]
+				},
+				{
+					"id": "vineandbarrel:sweet_berry_wine",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:aged_red_wine",
+					"weight": 4,
+					"chance": 0.3076923076923077,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		}
+	],
+	"village/tavern_cellar_snowy": [
+		{
+			"rolls": [
+				1,
+				2
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:barley_seeds",
+					"weight": 3,
+					"chance": 0.3,
+					"count": [
+						2,
+						6
+					]
+				},
+				{
+					"id": "vineandbarrel:red_grapes",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:hops",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:barley",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						5
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:barley_ale",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						2
+					]
+				},
+				{
+					"id": "vineandbarrel:wheat_beer",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						2
+					]
+				},
+				{
+					"id": "vineandbarrel:sweet_berry_wine",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:aged_barley_ale",
+					"weight": 4,
+					"chance": 0.3076923076923077,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		}
+	],
+	"village/tavern_cellar_taiga": [
+		{
+			"rolls": [
+				1,
+				2
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:barley_seeds",
+					"weight": 3,
+					"chance": 0.3,
+					"count": [
+						2,
+						6
+					]
+				},
+				{
+					"id": "vineandbarrel:red_grapes",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:white_grapes",
+					"weight": 1,
+					"chance": 0.1,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:hops",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						4
+					]
+				},
+				{
+					"id": "vineandbarrel:barley",
+					"weight": 2,
+					"chance": 0.2,
+					"count": [
+						2,
+						5
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
+			],
+			"entries": [
+				{
+					"id": "vineandbarrel:sweet_berry_wine",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						1
+					]
+				},
+				{
+					"id": "vineandbarrel:barley_ale",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						2
+					]
+				},
+				{
+					"id": "vineandbarrel:wheat_beer",
+					"weight": 3,
+					"chance": 0.23076923076923078,
+					"count": [
+						1,
+						2
+					]
+				},
+				{
+					"id": "vineandbarrel:aged_sweet_berry_wine",
+					"weight": 4,
+					"chance": 0.3076923076923077,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		}
+	],
 	"village/tavern_desert": [
 		{
 			"rolls": [
-				2,
-				3
+				1,
+				1
+			],
+			"entries": [
+				{
+					"table": "minecraft:chests/village/village_desert_house",
+					"weight": 1,
+					"chance": 1,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
 			],
 			"entries": [
 				{
@@ -82,7 +603,7 @@
 		{
 			"rolls": [
 				1,
-				3
+				1
 			],
 			"entries": [
 				{
@@ -127,8 +648,25 @@
 	"village/tavern_plains": [
 		{
 			"rolls": [
-				2,
-				3
+				1,
+				1
+			],
+			"entries": [
+				{
+					"table": "minecraft:chests/village/village_plains_house",
+					"weight": 1,
+					"chance": 1,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
 			],
 			"entries": [
 				{
@@ -207,7 +745,7 @@
 		{
 			"rolls": [
 				1,
-				3
+				1
 			],
 			"entries": [
 				{
@@ -261,8 +799,25 @@
 	"village/tavern_savanna": [
 		{
 			"rolls": [
-				2,
-				3
+				1,
+				1
+			],
+			"entries": [
+				{
+					"table": "minecraft:chests/village/village_savanna_house",
+					"weight": 1,
+					"chance": 1,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
 			],
 			"entries": [
 				{
@@ -341,7 +896,7 @@
 		{
 			"rolls": [
 				1,
-				3
+				1
 			],
 			"entries": [
 				{
@@ -386,8 +941,25 @@
 	"village/tavern_snowy": [
 		{
 			"rolls": [
-				2,
-				3
+				1,
+				1
+			],
+			"entries": [
+				{
+					"table": "minecraft:chests/village/village_snowy_house",
+					"weight": 1,
+					"chance": 1,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
 			],
 			"entries": [
 				{
@@ -466,7 +1038,7 @@
 		{
 			"rolls": [
 				1,
-				3
+				1
 			],
 			"entries": [
 				{
@@ -511,8 +1083,25 @@
 	"village/tavern_taiga": [
 		{
 			"rolls": [
-				2,
-				3
+				1,
+				1
+			],
+			"entries": [
+				{
+					"table": "minecraft:chests/village/village_taiga_house",
+					"weight": 1,
+					"chance": 1,
+					"count": [
+						1,
+						1
+					]
+				}
+			]
+		},
+		{
+			"rolls": [
+				1,
+				1
 			],
 			"entries": [
 				{
@@ -591,7 +1180,7 @@
 		{
 			"rolls": [
 				1,
-				3
+				1
 			],
 			"entries": [
 				{

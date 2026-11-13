@@ -246,11 +246,43 @@ for (const s of ['spring', 'summer', 'autumn', 'winter']) {
 const ANIMAL_TAGS = ['minecraft:chicken_food', 'minecraft:cow_food', 'minecraft:sheep_food', 'minecraft:goat_food', 'minecraft:horse_food', 'minecraft:llama_food', 'minecraft:parrot_food', 'minecraft:fox_food', 'minecraft:villager_plantable_seeds', 'minecraft:bee_growables'];
 const animals = Object.fromEntries(ANIMAL_TAGS.map((t) => [t, [...(itemTags[t] ?? []), ...(runtime.tags.block[t] ?? [])].filter((i) => i.startsWith(NS))]));
 
+// Villager types a trade is limited to (its merchant predicate), named by their biome ("snow" by the snowy plains)
+const VARIANT_BIOME = { snow: 'snowy_plains' };
+const variantsOf = (json) => {
+	const v = json.merchant_predicate?.predicate?.['minecraft:predicates']?.['minecraft:villager/variant'];
+	if (!v) return null;
+	return (Array.isArray(v) ? v : [v]).map((id) => {
+		const p = id.replace(/^minecraft:/, '');
+		const key = `biome.minecraft.${VARIANT_BIOME[p] ?? p}`;
+		return { id: p, key, name: lang[key] ?? titleCase(p) };
+	});
+};
+// How many of a level's trades a villager is offered (its trade set's amount), by profession and level
+const offers = {};
+for (const { rel, json } of dataFiles('trade_set')) {
+	const m = /^(\w+)\/level_(\d+)\.json$/.exec(rel);
+	if (m && typeof json.amount === 'number') (offers[m[1]] ??= {})[+m[2]] = json.amount;
+}
 const trades = dataFiles('villager_trade').map(({ rel, json }) => {
 	const [profession, level] = rel.split('/');
 	referenced.add(json.gives.id);
 	referenced.add(json.wants.id);
-	return { profession, level: /^\d+$/.test(level) ? +level : null, gives: stack(json.gives), wants: stack(json.wants), maxUses: json.max_uses };
+	const lv = /^\d+$/.test(level) ? +level : null;
+	// The master tavern keeper's sealed cask: an Aging Barrel filled with an aged drink when the trade is made
+	const mod = json.given_item_modifier;
+	const sealed = mod?.type === `${NS}:sealed_cask` ? (referenced.add(mod.drink), { drink: mod.drink, servings: mod.servings }) : null;
+	return {
+		profession,
+		level: lv,
+		levelKey: lv ? `merchant.level.${lv}` : null,
+		levelName: lv ? lang[`merchant.level.${lv}`] ?? null : null,
+		offers: lv ? offers[profession]?.[lv] ?? null : null,
+		gives: stack(json.gives),
+		wants: stack(json.wants),
+		maxUses: json.max_uses,
+		variants: variantsOf(json),
+		sealed,
+	};
 });
 
 const countRange = (fns) => {
@@ -267,7 +299,10 @@ for (const { rel, json } of dataFiles('loot_table/chests')) {
 		const rolls = typeof p.rolls === 'number' ? [p.rolls, p.rolls] : [p.rolls.min, p.rolls.max];
 		return {
 			rolls,
-			entries: p.entries.map((e) => (referenced.add(e.name), { id: e.name, weight: e.weight ?? 1, chance: (e.weight ?? 1) / total, count: countRange(e.modifier ?? e.functions) })),
+			// a nested table (the tavern's bar chest draws once from the village's house chest): its id, not an item
+			entries: p.entries.map((e) => e.type === 'minecraft:loot_table'
+				? { table: e.value, weight: e.weight ?? 1, chance: (e.weight ?? 1) / total, count: [1, 1] }
+				: (referenced.add(e.name), { id: e.name, weight: e.weight ?? 1, chance: (e.weight ?? 1) / total, count: countRange(e.modifier ?? e.functions) })),
 		};
 	});
 }
@@ -397,7 +432,7 @@ for (const { code, mc } of LOCALES) {
 	};
 	const ids = new Set([...Object.keys(items), ...Object.keys(others), ...Object.keys(blocks), ...Object.keys(locLang).filter((k) => /^(item|block)\.minecraft\.[a-z0-9_]+$/.test(k)).map((k) => 'minecraft:' + k.split('.')[2])]);
 	const out = Object.fromEntries([...ids].sort().map((id) => [id, nameIn(id)]).filter(([, n]) => n));
-	for (const [k, v] of Object.entries(locLang).sort()) if (k in ours || /^(effect|biome|entity)\.minecraft\.[a-z0-9_]+$/.test(k)) out[k] = v;
+	for (const [k, v] of Object.entries(locLang).sort()) if (k in ours || /^(effect|biome|entity)\.minecraft\.[a-z0-9_]+$/.test(k) || /^merchant\.level\.\d$/.test(k)) out[k] = v;
 	const ourNames = Object.keys(out).filter((id) => id.startsWith(NS + ':')).length;
 	console.log(`lang.${code}.json: ${Object.keys(out).length} entries, ${ourNames} of our names${ourFile ? '' : ` (no ${mc}.json yet)`}`);
 	write(`lang.${code}.json`, out);

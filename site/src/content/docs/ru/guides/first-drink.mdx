@@ -74,7 +74,8 @@ export const grapesPerBatch = juice.ingredients.filter((g) => g.items.includes('
 
 9. **Выпей.** <Item id="red_wine" /> даст тебе <EffectBadge id={young.effect.id} name={young.effect.name} ticks={young.effect.duration} amplifier={young.effect.amplifier} /> и один уровень
    <EffectBadge id="vineandbarrel:tipsy" name="Навеселе" />. Бокал останется у тебя. Если выпить одновременно с другом рядом,
-   выйдет **«За здоровье!»**: бонус у всех продлится на {rules.cheersBonusPercent}% дольше.
+   выйдет **«За здоровье!»**: бонус у всех продлится на {rules.cheersBonusPercent}% дольше. Допей его перед
+   трактирщиком, и он чокнется с тобой.
 
 10. **Оставь остальное выдерживаться.** Не трогай бочку ещё **{days(wine.agingTime)}**, и то, что в ней осталось, станет
     <Item id="aged_red_wine" />: более глубокий красный цвет, переливы и <EffectBadge id={aged.effect.id} name={aged.effect.name} ticks={aged.effect.duration} amplifier={aged.effect.amplifier} />.
