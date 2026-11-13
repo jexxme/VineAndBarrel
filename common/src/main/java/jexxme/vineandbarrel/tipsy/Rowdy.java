@@ -61,6 +61,11 @@ public final class Rowdy
 	 * swing. {@return whether it swung this tick}
 	 */
 	static boolean tick(ServerPlayer player, TipsyLevels.Level at) {
+		if (!TipsyConfig.rowdy() || !at.rules().rowdy()) {
+			// switched off, or sobered below Rowdy: the arm comes down at once, and the itch is gone
+			calmDown(player);
+			return false;
+		}
 		long start = windupStart(player);
 		long now = player.level().getGameTime();
 		if (start >= 0L) {
@@ -68,14 +73,14 @@ public final class Rowdy
 				return false;
 			}
 			TipsyRegistry.ROWDY_WINDUP.remove(player);
-			// switched off, sobered below Rowdy or asleep meanwhile: the arm comes down, no swing
-			if (!TipsyConfig.rowdy() || !at.rules().rowdy() || player.isSpectator() || player.isSleeping()) {
+			// asleep or a spectator meanwhile: the arm comes down, no swing
+			if (player.isSpectator() || player.isSleeping()) {
 				return false;
 			}
 			swing(player);
 			return true;
 		}
-		if (!TipsyConfig.rowdy() || player.isSpectator() || player.isSleeping()) {
+		if (player.isSpectator() || player.isSleeping()) {
 			return false;
 		}
 		int itch = TipsyRegistry.ROWDY_ITCH.getExisting(player) instanceof Integer left ? left : 0;
