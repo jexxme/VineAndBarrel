@@ -524,6 +524,17 @@ public final class TipsyGameTests
 		Tipsy.setLevel(player, 5);
 		double five = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
 		helper.assertTrue(four < base && five < four && five > base * 0.75, "a little slower at IV, more at V, never crawling: " + four + ", " + five);
+		helper.assertTrue(TipsyInfo.drawbacks(5).contains(Component.translatable("effect.vineandbarrel.tipsy.info.slower")), "the tooltip says slower");
+		// Audit 1.2: heavy legs are part of the drunk walk, the stumbling switch turns them off too (also mid-game)
+		with(TipsyConfig.STUMBLING, false, () -> {
+			TipsyEvents.onEntityTick(player);
+			helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - base) < 1.0E-6, "stumbling switched off: full speed at V");
+			Tipsy.setLevel(player, 4);
+			helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - base) < 1.0E-6, "and at IV");
+			helper.assertFalse(TipsyInfo.drawbacks(4).contains(Component.translatable("effect.vineandbarrel.tipsy.info.slower")), "the tooltip doesn't say slower");
+		});
+		TipsyEvents.onEntityTick(player);
+		helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - four) < 1.0E-6, "switched back on: heavy legs again");
 		Tipsy.clear(player);
 		helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - base) < 1.0E-6, "full speed again when sober");
 		helper.succeed();
