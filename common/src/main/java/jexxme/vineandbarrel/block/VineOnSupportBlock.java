@@ -155,6 +155,9 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 			if (followed != support && followed.is(support.getBlock())) {
 				entity.setSupport(followed);
 				updated = updated.setValue(LOOK, VineSupports.lookOf(followed));
+				// the neighbours see the held block (a wall below turns tall or low with it): tell them on the next tick,
+				// also when the vine's own state stays the same and so tells nobody
+				level.scheduleTick(pos, this, 1);
 			}
 		}
 		if (!updated.canSurvive(level, pos)) {
@@ -183,6 +186,8 @@ public class VineOnSupportBlock extends ClimbingCropBlock implements EntityBlock
 					entity.setSupport(followed);
 					level.setBlock(pos, state.setValue(LOOK, VineSupports.lookOf(followed)), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
 				}
+				// the neighbours follow the held block as it is now (they read it through VineSupports.appearance)
+				level.getBlockState(pos).updateNeighbourShapes(level, pos, Block.UPDATE_ALL);
 			}
 			return;
 		}

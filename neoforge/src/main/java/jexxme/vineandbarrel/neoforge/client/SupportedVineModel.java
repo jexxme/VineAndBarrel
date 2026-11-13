@@ -1,5 +1,6 @@
 package jexxme.vineandbarrel.neoforge.client;
 
+import com.mojang.logging.LogUtils;
 import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.block.SupportLeaves;
 import jexxme.vineandbarrel.block.VineOnSupportBlock;
@@ -27,11 +28,14 @@ import net.neoforged.neoforge.client.model.BakedModelWrapper;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A vine on a fence, wall, chain or bars ({@link VineOnSupportBlock}): the block it holds, drawn with that block's own
@@ -55,6 +59,9 @@ final class SupportedVineModel extends BakedModelWrapper<BakedModel>
 	private static final ModelProperty<Support> SUPPORT = new ModelProperty<>();
 	/** The baked leaf pieces of the last model reload, by model and turn (read by the chunk builders' threads). */
 	private static volatile Map<String, BakedModel> pieces = Map.of();
+	private static final Logger LOGGER = LogUtils.getLogger();
+	/** Missing pieces already reported (each once: this runs every time a vine is drawn). */
+	private static final Set<String> MISSING = ConcurrentHashMap.newKeySet();
 
 	private SupportedVineModel(BakedModel model) {
 		super(model);
@@ -73,6 +80,13 @@ final class SupportedVineModel extends BakedModelWrapper<BakedModel>
 					}
 				}
 			}
+		}
+	}
+
+	/** A leaf piece that has no model: a model or registration gap, reported loudly once instead of drawn as nothing. */
+	private static void missing(String name) {
+		if (MISSING.add(name)) {
+			LOGGER.error("Vine on a support: no model for leaf piece {} (every piece SupportLeaves picks must ship and be registered)", name);
 		}
 	}
 
@@ -121,10 +135,13 @@ final class SupportedVineModel extends BakedModelWrapper<BakedModel>
 		Map<String, BakedModel> baked = pieces;
 		List<BakedModel> leaves = new ArrayList<>(6);
 		for (SupportLeaves.Placed placed : SupportLeaves.of(support)) {
-			BakedModel piece = baked.get(SupportLeaves.model(state.getBlock(), placed.piece(), base, age) + "#" + placed.turn());
-			if (piece != null) {
-				leaves.add(piece);
+			String name = SupportLeaves.model(state.getBlock(), placed.piece(), base, age) + "#" + placed.turn();
+			BakedModel piece = baked.get(name);
+			if (piece == null) {
+				missing(name);
+				continue;
 			}
+			leaves.add(piece);
 		}
 		BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModel(support);
 		return own.derive().with(SUPPORT, new Support(support, model, model.getModelData(level, pos, support, ModelData.EMPTY), leaves)).build();
