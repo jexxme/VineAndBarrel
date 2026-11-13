@@ -26,6 +26,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * The blackout on the client: the stars above the head of everyone who is out, and for the player themselves the
@@ -52,10 +54,37 @@ public final class BlackoutClient
 		registrar.particle(TipsyRegistry.DIZZY_STAR_PARTICLE.get(), DizzyStarParticle.Provider::new);
 	}
 
+	/**
+	 * Each player's blackout clock on this client (ticks left). The server sends its count every tick, but on a server
+	 * those updates arrive unevenly (two in one tick, none in the next), and drawn straight from them the fall, the lids
+	 * and the getting up jump. So the client keeps its own clock, one tick per client tick, held within a tick of the
+	 * server's count: smooth, and never further off than that (a pause on the server holds it too).
+	 */
+	private static final Map<Player, float[]> CLOCK = new WeakHashMap<>();
+
+	/** Once a client tick: each player's clock a tick on, kept within a tick of the server's count. */
+	static void stepClock(Player player) {
+		int synced = Blackout.ticksLeft(player);
+		if (synced <= 0) {
+			CLOCK.remove(player);
+			return;
+		}
+		float[] clock = CLOCK.get(player);
+		if (clock == null) {
+			CLOCK.put(player, new float[] {synced});
+		} else {
+			clock[0] = Mth.clamp(clock[0] - 1.0F, synced - 1.0F, synced + 1.0F);
+		}
+	}
+
 	/** {@return the ticks left of this player's blackout, minus the partial tick (0 when not out)} */
 	public static float left(Player player, float partial) {
-		int left = Blackout.ticksLeft(player);
-		return left <= 0 ? 0.0F : Math.max(0.0F, left - partial);
+		int synced = Blackout.ticksLeft(player);
+		if (synced <= 0) {
+			return 0.0F;
+		}
+		float[] clock = CLOCK.get(player);
+		return Math.max(0.0F, (clock == null ? synced : clock[0]) - partial);
 	}
 
 	/**
@@ -98,6 +127,9 @@ public final class BlackoutClient
 		ClientLevel level = minecraft.level;
 		if (level == null || minecraft.isPaused()) {
 			return;
+		}
+		for (AbstractClientPlayer player : level.players()) {
+			stepClock(player);
 		}
 		for (AbstractClientPlayer player : level.players()) {
 			// A fallen body lies the way its head looks: the body's own turn lags behind it (up to 50 degrees) and would
@@ -264,11 +296,11 @@ public final class BlackoutClient
 	/** The blackout layer, above all others: covers everything, the HUD included (and is not part of the optional vision effects). */
 	public static void renderBlackout(GuiGraphics gui, float partial) {
 		LocalPlayer player = Minecraft.getInstance().player;
-		Integer left = player == null ? null : TipsyRegistry.BLACKOUT.getExisting(player);
-		if (left == null || left <= 0) {
+		float left = player == null ? 0.0F : left(player, partial);
+		if (left <= 0.0F) {
 			return;
 		}
-		float closed = BlackoutPose.eyesClosed(left - partial);
+		float closed = BlackoutPose.eyesClosed(left);
 		if (closed > 0.0F) {
 			drawLids(gui, Mth.clamp(closed, 0.0F, 1.0F));
 		}
