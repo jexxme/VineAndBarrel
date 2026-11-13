@@ -76,9 +76,9 @@ public final class TipsyRegistry
 			EntityAttachment.Spec.<List<DrinkBuffs.Buff>>builder(List::of).serialize(DrinkBuffs.CODEC).build());
 
 	/**
-	 * Which side effects Tipsy itself gave and still owns (bit 0 Slowness, bit 1 Mining Fatigue, bit 2 Weakness, bit 3
-	 * Nausea; see {@code Tipsy.SIDE_EFFECTS}), so the clean-up never takes away one from a potion, a command or another
-	 * mod. Saved, since the effects are. The id keeps its pre-playtest name so old saves still load.
+	 * Old saves only: before the overhaul, which side effects Tipsy itself gave and still owned (Slowness, Mining
+	 * Fatigue, Weakness, Nausea). Nothing sets it any more; it stays registered so a save that has it still loads, and
+	 * {@code Tipsy.forgetOldSideEffects} drops it.
 	 */
 	public static final EntityAttachment<Integer> HEAVY_EFFECTS_OWNED = Services.PLATFORM.attachment(VineAndBarrel.id("tipsy_heavy_effects"),
 			EntityAttachment.Spec.builder(() -> 0).serialize(Codec.INT.fieldOf("owned")).build());
