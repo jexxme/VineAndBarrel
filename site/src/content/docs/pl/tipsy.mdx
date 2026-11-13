@@ -15,7 +15,7 @@ export const punchHearts = t.rowdyPunchDamage / 2;
 
 Każde wino, piwo, cydr i miód pitny daje swój bonus **i jeden poziom efektu <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. Na początku
 jest zabawnie: lekkie kołysanie, czkawka, odrobina pijackiej odwagi, a przy Rauszyk {roman(t.slurLevel - 1)} jesteś w
-najlepszej formie (czat już nie). Pij dalej, a zacznie cię to kosztować: koniec z bonusami, od czasu do czasu dziki cios, a na
+najlepszej formie (czat już nie), choć powieki zaczynają ciążyć. Pij dalej, a zacznie cię to kosztować: mdłości, słabe ręce, a na
 samym szczycie nogi, które ledwo niosą cię do domu. Maksymalny poziom to {t.maxLevel}.
 
 ## Poziomy
@@ -32,7 +32,7 @@ krążą gwiazdki, które widzą wszyscy. Przez te kilka sekund nikt cię nie sk
 Reszta świata nadal działa, więc nie odpływaj w lawie. Potem się budzisz. Gdzie? To zależy od nocy, a sposobów na
 przebudzenie jest więcej, niż myślisz…
 
-Czujesz głód, z powrotem na poziomie Rauszyk I, a w kieszeniach może znajdziesz coś, czego
+Przez chwilę czujesz głód i drżenie rąk, z powrotem na poziomie Rauszyk I, a w kieszeniach może znajdziesz coś, czego
 nie pamiętasz. Nic z tego, co masz, nie przepada.
 
 ## Awanturnik
@@ -68,15 +68,17 @@ handlują z tobą, dopóki nie wytrzeźwiejesz. Handluj przed {t.cutOffLevel ===
   kończy się na zatoczeniu.
 - **Woda szybko wyciąga cię z najgorszych poziomów,** ale niższe poziomy mają własny czas, więc ogólnie nie
   trzeźwiejesz od niej szybciej.
+- Rauszyk pilnuje tylko własnych skutków ubocznych: Spowolnienie albo Mdłości z mikstury lub komendy zostają nietknięte.
 - Linki na czacie, komendy i @wzmianki nigdy nie są bełkotane.
-- Inni gracze widzą, jak się kołyszesz, słyszą twoją czkawkę i widzą zataczanie, potknięcia i awanturnicze zamachy.
+- Inni gracze widzą, jak się kołyszesz, słyszą twoją czkawkę i widzą zataczanie, potknięcia i awanturnicze zamachy,
+  ale nie widzą ciemnych brzegów twojego ekranu ani mrugnięć.
 - **Chcesz poznać całą historię urwanego filmu?** Każde miejsce przebudzenia, szanse i pamiątki są na stronie
   [Urwany film](/blackouts/). Ze spoilerami, oczywiście.
 
 ## Ustawienia
 
 Właściciele serwerów mogą całkiem wyłączyć Rauszyk (tryb bezalkoholowy) albo osobno wyłączyć bełkot na czacie,
-zataczanie się (razem z potknięciami i znoszeniem), urwany film, ciosy Awanturnika i brak nalewania. Rauszyk nigdy
-sam nie rusza twoim ekranem; każdy gracz może ograniczyć, jak bardzo ruszają nim czkawka, zatoczenie czy potknięcie, nawet do zera,
-a suwak Efekty zniekształcenia z podstawowej gry też się liczy. Wszystkie opcje i wartości domyślne są w
+zataczanie się (razem z potknięciami i znoszeniem), urwany film, ciosy Awanturnika i brak nalewania. Każdy gracz może
+ograniczyć, jak bardzo Rauszyk rusza jego ekranem, nawet do zera, i wyłączyć efekty widzenia; suwaki Efekty zniekształcenia,
+Efekty pola widzenia i Miganie mroku z podstawowej gry też się liczą. Wszystkie opcje i wartości domyślne są w
 [Konfiguracji](/reference/config/).

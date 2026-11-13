@@ -15,8 +15,8 @@ export const punchHearts = t.rowdyPunchDamage / 2;
 
 Every wine, beer, cider and mead gives you its buff **and one level of <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. It's
 fun at first: a sway, hiccups, a little liquid courage, and at Tipsy {roman(t.slurLevel - 1)} you're at your best (and
-your chat isn't). Keep going and it starts to cost you: no more buffs, a wild punch now and then, and at the top, legs
-that barely carry you home. It tops out at level {t.maxLevel}.
+your chat isn't), though your eyes start to get heavy. Keep going and it starts to cost you: queasy spells, weak arms,
+and at the top, legs that barely carry you home. It tops out at level {t.maxLevel}.
 
 ## Levels
 
@@ -32,7 +32,7 @@ circling your head for everyone to see. For those few seconds nobody can hurt yo
 over doesn't either; the rest of the world still counts, so don't pass out in lava. Then you wake up. Where? That
 depends on the night, and there are more ways to wake up than you'd think…
 
-You'll be hungry, back at Tipsy I, and your pockets may hold something you don't remember picking
+You'll be hungry and shaky for a while, back at Tipsy I, and your pockets may hold something you don't remember picking
 up. Nothing you had is ever lost.
 
 ## Rowdy
@@ -67,14 +67,16 @@ trade with you until you've sobered up. Do your trading before the {t.cutOffLeve
   monster near, and not twice within {Math.round(t.tripCooldownTicks / 20)} seconds; anywhere else it stays a stumble.
 - **Water gets you out of the bad levels fast,** but the levels below keep their own time, so it doesn't make you sober
   sooner overall.
+- Tipsy only looks after its own side effects: a Slowness or Nausea from a potion or a command is left alone.
 - Chat links, commands and @mentions are never slurred.
-- Other players see you sway, hear your hiccups and see your stumbles, trips and rowdy swings.
+- Other players see you sway, hear your hiccups and see your stumbles, trips and rowdy swings, but not your dark screen
+  edges or your blinks.
 - **Want the whole story of a blackout?** Every place you can wake up, the odds and the souvenirs are on
   [Blackouts](/blackouts/). Spoilers, of course.
 
 ## Settings
 
 Server owners can switch Tipsy off entirely (the non-alcoholic mode) or turn off slurred chat, stumbling (with the trips
-and the drift), blackouts, Rowdy's punches and the cut-off one by one. Tipsy never moves your screen on its own; every player
-can tone down how much a hiccup, a stumble or a trip moves it, down to not at all, and vanilla's Distortion Effects slider
-counts too. All options and defaults are on [Configuration](/reference/config/).
+and the drift), blackouts, Rowdy's punches and the cut-off one by one. Every player can tone down how much Tipsy moves
+their screen, down to not at all, and switch off the vision effects; vanilla's Distortion Effects, FOV Effects and Darkness Pulsing
+sliders count too. All options and defaults are on [Configuration](/reference/config/).

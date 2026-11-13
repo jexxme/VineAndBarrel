@@ -15,7 +15,7 @@ export const punchHearts = t.rowdyPunchDamage / 2;
 
 Ogni vino, birra, sidro e idromele ti dà il suo bonus **e un livello di <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**. All'inizio
 è divertente: un'ondeggiata, il singhiozzo, un po' di coraggio liquido, e a Brillo {roman(t.slurLevel - 1)} sei al tuo meglio (la tua
-chat un po' meno). Se continui, inizia a costarti caro: niente più bonus, ogni tanto un pugno a casaccio e, in cima, gambe
+chat un po' meno), anche se gli occhi iniziano a farsi pesanti. Se continui, inizia a costarti caro: giramenti di testa, braccia deboli e, in cima, gambe
 che a stento ti riportano a casa. Si ferma al livello {t.maxLevel}.
 
 ## Livelli
@@ -32,7 +32,7 @@ stelline che ti girano attorno alla testa per tutti. Per quei pochi secondi ness
 e nemmeno la caduta; il resto del mondo però conta, quindi non svenire nella lava. Poi ti svegli. Dove? Dipende dalla
 serata, e i modi per svegliarsi sono più di quanti pensi…
 
-Avrai fame, di nuovo a Brillo I, e nelle tasche potresti trovare qualcosa che non ricordi
+Avrai fame e ti sentirai tremante per un po', di nuovo a Brillo I, e nelle tasche potresti trovare qualcosa che non ricordi
 di aver preso. Non perdi mai niente di ciò che avevi.
 
 ## Attaccabrighe
@@ -67,14 +67,16 @@ commerciano con te finché non ti sei ripreso. Fai i tuoi scambi prima del {t.cu
   mostri vicini, e non due volte entro {Math.round(t.tripCooldownTicks / 20)} secondi; altrove resta un semplice inciampo.
 - **L'acqua ti toglie in fretta dai livelli peggiori,** ma i livelli sotto mantengono il loro tempo, quindi non ti rende
   sobrio prima, nel complesso.
+- Brillo si occupa solo dei propri effetti collaterali: Lentezza o Nausea di una pozione o di un comando non vengono toccate.
 - Link, comandi e @menzioni in chat non vengono mai impastati.
-- Gli altri giocatori ti vedono ondeggiare, sentono i tuoi singhiozzi e vedono inciampi, capitomboli e pugni.
+- Gli altri giocatori ti vedono ondeggiare, sentono i tuoi singhiozzi e vedono inciampi, capitomboli e pugni, ma non i bordi
+  scuri dello schermo né i tuoi battiti di ciglia.
 - **Vuoi la storia completa di un vuoto di memoria?** Ogni posto in cui puoi svegliarti, le probabilità e i souvenir sono
   su [Vuoti di memoria](/blackouts/). Spoiler, ovviamente.
 
 ## Impostazioni
 
 I proprietari del server possono disattivare del tutto Brillo (la modalità analcolica) oppure spegnere uno per uno la chat impastata,
-gli inciampi (con capitomboli e deriva), i vuoti di memoria, i pugni da attaccabrighe e il rifiuto di servirti. Brillo non muove mai lo schermo da solo;
-ogni giocatore può ridurre quanto lo muovono un singhiozzo, un inciampo o un capitombolo, fino a zero, e conta anche il cursore
-Effetti di distorsione di vanilla. Tutte le opzioni e i valori predefiniti sono su [Configurazione](/reference/config/).
+gli inciampi (con capitomboli e deriva), i vuoti di memoria, i pugni da attaccabrighe e il rifiuto di servirti. Ogni giocatore può ridurre quanto
+Brillo muove lo schermo, fino a zero, e disattivare gli effetti visivi; contano anche i cursori Effetti di distorsione,
+Effetti sul campo visivo e Pulsazione oscurità di vanilla. Tutte le opzioni e i valori predefiniti sono su [Configurazione](/reference/config/).

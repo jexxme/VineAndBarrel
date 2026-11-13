@@ -15,7 +15,7 @@ export const punchHearts = t.rowdyPunchDamage / 2;
 
 Chaque vin, bière, cidre et hydromel te donne son bonus **et un niveau de <EffectBadge id="vineandbarrel:tipsy" name="Pompette" />**. Au début,
 c'est drôle : un petit balancement, des hoquets, un brin de courage liquide, et à Pompette {roman(t.slurLevel - 1)} tu es au
-meilleur de ta forme (pas ton tchat). Si tu continues, ça se paie : plus aucun bonus, un coup de poing sauvage de temps en temps, et tout en haut, des jambes
+meilleur de ta forme (pas ton tchat), même si tes yeux commencent à s'alourdir. Si tu continues, ça se paie : nausées, bras mous, et tout en haut, des jambes
 qui te ramènent à peine chez toi. Le maximum est le niveau {t.maxLevel}.
 
 ## Niveaux
@@ -32,7 +32,7 @@ tournant autour de ta tête, pour que tout le monde les voie. Pendant ces quelqu
 joueur, et tomber non plus ; le reste du monde compte toujours, alors ne t'évanouis pas dans la lave. Puis tu te réveilles. Où ?
 Ça dépend de la soirée, et il y a plus de façons de se réveiller que tu ne le crois…
 
-Tu auras faim, de retour à Pompette I, et tes poches contiendront peut-être quelque chose que
+Tu auras faim et tu seras tremblant un moment, de retour à Pompette I, et tes poches contiendront peut-être quelque chose que
 tu ne te souviens pas d'avoir ramassé. Tu ne perds jamais rien de ce que tu avais.
 
 ## Tapageur
@@ -67,14 +67,16 @@ commercent plus avec toi tant que tu n'as pas dessaoulé. Fais tes échanges ava
   monstre à proximité, et pas deux fois en moins de {Math.round(t.tripCooldownTicks / 20)} secondes ; partout ailleurs, ça reste un titubement.
 - **L'eau te sort vite des mauvais niveaux,** mais les niveaux du dessous gardent leur propre durée, donc tu ne dessaoules pas
   plus vite au total.
+- Pompette ne s'occupe que de ses propres effets secondaires : une Lenteur ou une Nausée venue d'une potion ou d'une commande n'est pas touchée.
 - Les liens, les commandes et les @mentions du tchat ne sont jamais pâteux.
-- Les autres joueurs te voient te balancer, entendent tes hoquets et voient tes titubements, tes chutes et tes coups de poing tapageurs.
+- Les autres joueurs te voient te balancer, entendent tes hoquets et voient tes titubements, tes chutes et tes coups de poing tapageurs, mais pas les
+  bords d'écran sombres ni tes clignements d'yeux.
 - **Tu veux toute l'histoire d'un trou noir ?** Tous les endroits où tu peux te réveiller, les probabilités et les souvenirs sont sur
   [Trous noirs](/blackouts/). Spoilers, bien sûr.
 
 ## Réglages
 
 Les propriétaires de serveur peuvent désactiver Pompette entièrement (le mode sans alcool) ou couper un par un le tchat pâteux, le titubement (avec les chutes
-et la dérive), les trous noirs, les coups de poing de Tapageur et le refus de servir. Pompette ne bouge jamais ton écran de lui-même ; chaque joueur
-peut réduire à quel point un hoquet, un titubement ou une chute le bouge, jusqu'à zéro, et le curseur Effets de distorsion de Minecraft
-compte aussi. Toutes les options et leurs valeurs par défaut sont sur [Configuration](/reference/config/).
+et la dérive), les trous noirs, les coups de poing de Tapageur et le refus de servir. Chaque joueur peut réduire à quel point Pompette secoue
+son écran, jusqu'à zéro, et désactiver les effets de vision ; les curseurs Effets de distorsion, Effets de champ de vision et Pulsations d'obscurité de Minecraft
+comptent aussi. Toutes les options et leurs valeurs par défaut sont sur [Configuration](/reference/config/).

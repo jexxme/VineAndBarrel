@@ -15,7 +15,7 @@ export const punchHearts = t.rowdyPunchDamage / 2;
 
 Her şarap, bira, elma şarabı ve bal şarabı sana bonusunu verir **ve bir seviye <EffectBadge id="vineandbarrel:tipsy" name="Çakırkeyif" />** ekler. Başta
 eğlencelidir: hafif bir sallanma, hıçkırık, biraz sarhoş cesareti ve Çakırkeyif {roman(t.slurLevel - 1)} seviyesinde tam formundasın
-(sohbetin değil). Devam edersen bedeli çıkmaya başlar: artık bonus yok, arada bir çılgın bir yumruk ve en üstte, seni
+(sohbetin değil), ama gözlerin ağırlaşmaya başlar. Devam edersen bedeli çıkmaya başlar: mide bulantısı, güçsüz kollar ve en üstte, seni
 eve zor taşıyan bacaklar. En fazla {t.maxLevel}. seviyeye çıkar.
 
 ## Seviyeler
@@ -32,7 +32,7 @@ herkesin görebileceği yıldızlar döner. O birkaç saniye boyunca kimse sana 
 zarar vermez. Dünyanın geri kalanı hâlâ geçerli, yani lavda bayılma. Sonra uyanırsın. Nerede? O gecenin gidişine bağlı ve
 uyanmanın düşündüğünden daha fazla yolu var…
 
-Aç olursun, yine Çakırkeyif I seviyesindesindir ve cebinde aldığını hatırlamadığın bir şey olabilir.
+Bir süre aç ve titrek olursun, yine Çakırkeyif I seviyesindesindir ve cebinde aldığını hatırlamadığın bir şey olabilir.
 Elindeki hiçbir şey kaybolmaz.
 
 ## Kavgacı
@@ -66,14 +66,16 @@ ve sen ayılana kadar seninle takas yapmaz. Ticaretini {t.cutOffLevel === 4 ? 'd
   düşersin, ayrıca {Math.round(t.tripCooldownTicks / 20)} saniye içinde iki kez düşmezsin; başka her yerde tökezlemede kalır.
 - **Su seni kötü seviyelerden hızla çıkarır,** ama alttaki seviyeler kendi sürelerini korur; yani toplamda daha çabuk
   ayılmazsın.
+- Çakırkeyif yalnızca kendi yan etkilerine bakar: bir iksirden ya da komuttan gelen Yavaşlık veya Bulantı'ya dokunmaz.
 - Sohbet bağlantıları, komutlar ve @etiketler hiçbir zaman peltek çıkmaz.
-- Diğer oyuncular senin sallandığını, hıçkırdığını, tökezlediğini, düştüğünü ve kavgacı savruşlarını görür-duyar.
+- Diğer oyuncular senin sallandığını, hıçkırdığını, tökezlediğini, düştüğünü ve kavgacı savruşlarını görür-duyar; ama
+  karanlık ekran kenarlarını ve göz kırpmalarını görmez.
 - **Bir film kopmasının tüm hikâyesini mi istiyorsun?** Uyanabileceğin her yer, ihtimaller ve hatıralar
   [Film Kopması](/blackouts/) sayfasında. Tabii ki spoiler.
 
 ## Ayarlar
 
 Sunucu sahipleri Çakırkeyif'i tamamen kapatabilir (alkolsüz mod) ya da peltek sohbeti, tökezlemeyi (düşmeler ve savrulmayla
-birlikte), film kopmalarını, Kavgacı yumruklarını ve Servis Yok durumunu tek tek kapatabilir. Çakırkeyif ekranını asla kendi kendine
-oynatmaz; her oyuncu bir hıçkırığın, bir tökezlemenin ya da bir düşmenin ekranı ne kadar oynattığını, hiç oynatmayacak kadar kısabilir,
-vanilla'nın Bozulma Efektleri kaydırıcısı da geçerlidir. Tüm seçenekler ve varsayılanlar [Yapılandırma](/reference/config/) sayfasında.
+birlikte), film kopmalarını, Kavgacı yumruklarını ve Servis Yok durumunu tek tek kapatabilir. Her oyuncu Çakırkeyif'in ekranını
+ne kadar oynattığını, hiç oynatmayacak kadar kısabilir ve görüş efektlerini kapatabilir; vanilla'nın Bozulma Efektleri,
+Görüş Alanı Efektleri ve Karanlık Çarpıyor kaydırıcıları da geçerlidir. Tüm seçenekler ve varsayılanlar [Yapılandırma](/reference/config/) sayfasında.
