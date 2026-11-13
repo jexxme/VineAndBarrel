@@ -48,6 +48,19 @@ Bkz. [Yıllandırma Fıçısı](/aging-barrel/).
 
 Bkz. [Kaynatma Kazanı](/brew-kettle/).
 
+## Kazanlar
+
+<Render name="scenes/cauldrons" float="right" size={192} alt="Bal şırası, arpa şırası ve üzüm suyu dolu kazanlar" />
+
+Kazan, suyu aldığı gibi meyve suyu, şıra ve bal şırası da alır.
+
+- **Doldurmak** için kova kullan, bir seviye için şişe. Boş bir şişe bir seviye alır, boş bir kova
+  dolu bir kazanın hepsini.
+- **{rules.servingsPerBucket} seviye**, porsiyon başına bir tane; böylece bir kova şişelere bölünür, şişeler de yeniden bir kova olur.
+- **Kova**, vanilla kovaları gibi suyun, lavın ya da başka bir türün yerine geçer, ama aynı türün yerine geçmez: onu
+  şişelerle tamamlarsın. Şişeler yalnızca boş bir kazana ya da içinde aynı türden içecek olan bir kazana girer.
+- **Su gibi** yanan bir yaratığı söndürür, karşılaştırıcı seviyeyi okur, kırılınca da düz bir kazan olur.
+
 ## İçecekler ve kaplar
 
 <Render name="scenes/placed-drinks" float="right" size={192} alt="Bir blok üzerinde kupalar ve kadehler" />
@@ -57,24 +70,25 @@ Bkz. [Kaynatma Kazanı](/brew-kettle/).
 - **Şerefe!** İki ya da daha fazla oyuncu, birbirinin {rules.cheersRadius} blok yakınında, {rules.cheersWindowTicks / 20} saniye içinde
   içkisini bitirirse kadehler tokuşur ve herkesin bonusu %{rules.cheersBonusPercent} daha uzun sürer.
 - **İçmek** iksir gibi ses çıkarır ve görünür, boş kabı geri alırsın.
-- **Meyve suyu ve şıra kovaları** süt gibi sıvı olarak boşaltılamaz.
+- **Meyve suyu ve şıra kovaları** süt gibi sıvı olarak boşaltılamaz, ama bir [kazanı](#kazanlar) doldurur.
 
 ## Çakırkeyif
 
-- **Diğer oyuncular senin sallandığını görür** ve hıçkırıklarını, tökezlemelerini ve düşmelerini de.
-- **Uyuyup geçir:** geceyi uyuyarak geçmek Çakırkeyif'i temizler.
-- **Süt** temizler; **su ya da herhangi bir meyve suyu** bir seviye azaltır.
+- **Diğer oyuncular senin yalpaladığını görür,** tökezlediğini, düştüğünü ve uyukladığını da; hıçkırıklarını da duyar.
+- **Uyuyup geçir:** geceyi uyuyarak geçmek Çakırkeyif'i temizler. Çok sarhoşken yatarsan akşamdan kalma uyanırsın.
+- **Süt** temizler; **su ya da herhangi bir meyve suyu** bir seviye azaltır. Farmer's Delight varsa onun süt şişesi,
+  karpuz suyu ve elma şarabı da öyle.
 - **Efektin üstüne gel,** envanterinde, seviyenin ne yaptığını görmek için.
-- **Bir kadeh fazla** en üst seviyede filmini koparır. Nerede uyanacağın belli olmaz.
+- **Bir kadeh fazla** en üst seviyede, biraz sonra filmini koparır. Nerede uyanacağın belli olmaz.
 
 Bkz. [Çakırkeyif](/tipsy/).
 
 ## Ürünler ve çiftlik hayatı
 
-- Çalılar sağ tıkla toplanır (yarı olgunken de) ve bir aşama geri düşer, tatlı orman meyveleri gibi. Bir çalının içindeki ya da üstündeki bahçe kafesi onun tırmanmasını sağlar: kafesle çalıya ya da üzüm veya şerbetçiotuyla kafese sağ tıkla.
+- Çalılar sağ tıkla toplanır (yarı olgunken de) ve bir aşama geri düşer, tatlı orman meyveleri gibi. Bir çalının içindeki ya da üstündeki bahçe kafesi onun tırmanmasını sağlar: kafesle çalıya ya da üzüm veya şerbetçiotuyla kafese sağ tıkla. Bir çit, duvar, zincir ya da parmaklık da aynı şekilde çalışır, toplama başına bir meyve eksik verir.
 - Arılar üzüm, şerbetçiotu ve arpanın büyümesine yardım eder.
 - Arpa hayvanları buğday gibi besler ve çiftleştirir; tohumları tavukları ve papağanları besler.
-- Çiftçi köylüler arpa eker ve biçer.
+- Çiftçi köylüler arpa eker ve biçer, buğday aldıkları gibi arpa ve kırmızı üzüm de satın alır.
 - Tilkiler üzümleri çalılardan, kırmızı ve beyaz, tatlı orman meyveleri gibi toplar.
 - Her ürün komposta gider.
 - <Item id="barley_bale" /> düşüşü yumuşatır ve kamp ateşi dumanını yükseltir, saman balyası gibi.

@@ -48,6 +48,19 @@ Voir [Fût de vieillissement](/aging-barrel/).
 
 Voir [Cuve de brassage](/brew-kettle/).
 
+## Chaudrons
+
+<Render name="scenes/cauldrons" float="right" size={192} alt="Chaudrons de moût de miel, de moût d'orge et de jus de raisin" />
+
+Un chaudron accepte le jus, le moût et le moût de miel comme il accepte l'eau.
+
+- **Verse** avec un seau pour le remplir, ou avec une fiole pour un niveau. Une fiole vide retire un niveau, un seau vide
+  un chaudron plein.
+- **{rules.servingsPerBucket} niveaux**, un par portion : un seau se partage en fioles, et des fioles refont un seau.
+- **Un seau remplace** l'eau, la lave ou une autre sorte, comme les seaux de vanilla, mais pas la même sorte : celle-là
+  se complète avec des fioles. Les fioles ne vont que dans un chaudron vide ou qui contient la même chose.
+- **Comme l'eau**, il éteint un mob en feu, un comparateur lit le niveau, et une fois cassé, il redonne un chaudron normal.
+
 ## Boissons et récipients
 
 <Render name="scenes/placed-drinks" float="right" size={192} alt="Des chopes et des verres posés sur un bloc" />
@@ -57,24 +70,25 @@ Voir [Cuve de brassage](/brew-kettle/).
 - **Santé !** Deux joueurs ou plus qui finissent un verre à moins de {rules.cheersWindowTicks / 20} secondes d'écart et à moins de {rules.cheersRadius}
   blocs l'un de l'autre trinquent, et le bonus de chacun dure {rules.cheersBonusPercent} % de plus.
 - **Boire** sonne et ressemble à une potion, et tu récupères le récipient vide.
-- **Les seaux de jus et de moût** ne peuvent pas être vidés comme un liquide, comme le lait.
+- **Les seaux de jus et de moût** ne peuvent pas être vidés comme un liquide, comme le lait, mais ils remplissent un [chaudron](#chaudrons).
 
 ## Pompette
 
-- **Les autres joueurs te voient te balancer** et voient tes hoquets, tes titubements et tes chutes.
-- **Cuver :** dormir toute la nuit efface Pompette.
-- **Le lait** l'efface ; **l'eau ou n'importe quel jus** la baisse d'un niveau.
+- **Les autres joueurs te voient vaciller,** tituber, trébucher et piquer du nez, et entendent tes hoquets.
+- **Cuver :** dormir toute la nuit efface Pompette. Couche-toi très soûl et tu te réveilles avec la gueule de bois.
+- **Le lait** l'efface ; **l'eau ou n'importe quel jus** la baisse d'un niveau. Avec Farmer's Delight, sa bouteille de lait,
+  son jus de pastèque et son cidre de pomme aussi.
 - **Passe la souris sur l'effet** dans ton inventaire pour voir ce que fait ton niveau.
-- **Un verre de trop** au niveau maximum et tu fais un trou noir. Où tu te réveilles, personne ne peut le dire.
+- **Un verre de trop** au niveau maximum et, un peu plus tard, tu fais un trou noir. Où tu te réveilles, personne ne peut le dire.
 
 Voir [Pompette](/tipsy/).
 
 ## Cultures et vie à la ferme
 
-- Les buissons se cueillent d'un clic droit (mi-mûrs aussi) et reculent d'une étape, comme les baies sucrées. Un treillis dans ou au-dessus d'un buisson le laisse grimper : clic droit sur le buisson avec le treillis, ou sur le treillis avec du raisin ou du houblon.
+- Les buissons se cueillent d'un clic droit (mi-mûrs aussi) et reculent d'une étape, comme les baies sucrées. Un treillis dans ou au-dessus d'un buisson le laisse grimper : clic droit sur le buisson avec le treillis, ou sur le treillis avec du raisin ou du houblon. Une barrière, un muret, une chaîne ou des barreaux marchent pareil, avec un fruit de moins par cueillette.
 - Les abeilles aident les raisins, le houblon et l'orge à pousser.
 - L'orge nourrit et fait se reproduire les animaux comme le blé ; ses graines nourrissent les poules et les perroquets.
-- Les villageois fermiers plantent et récoltent l'orge.
+- Les villageois fermiers plantent et récoltent l'orge, et achètent orge et raisins rouges, comme ils achètent le blé.
 - Les renards cueillent les raisins sur les buissons, rouges et blancs, comme ils le font avec les baies sucrées.
 - Toutes les cultures se compostent.
 - <Item id="barley_bale" /> amortit une chute et fait monter la fumée des feux de camp, comme une botte de paille.

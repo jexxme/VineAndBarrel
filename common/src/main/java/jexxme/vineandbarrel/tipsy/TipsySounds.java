@@ -18,12 +18,12 @@ import org.jspecify.annotations.Nullable;
  * The hiccup is our own sound event ({@link TipsyRegistry#HICCUP_SOUND}): three takes of a real, dry hiccup (CC0),
  * and the legs use the vanilla foley of the block underfoot (its step for the scuff, its fall and vanilla's big fall for
  * the thud), so they always fit the ground. The blackout's wake-up sounds like the place you wake up in, and Tipsy V
- * has a heartbeat that only you hear ({@link #heartbeat}, the one sound played on the client).
+ * has a heartbeat that only you hear (played in your head by the client, {@code client.TipsyClient}).
  */
 public final class TipsySounds
 {
-	/** From this level you hear your own heart: Tipsy V, the top. */
-	public static final int HEARTBEAT_LEVEL = Tipsy.ABSOLUTE_MAX_LEVEL;
+	/** The first level you hear your own heart at ({@link TipsyLevels.Ears#heartbeat}). */
+	public static final int HEARTBEAT_LEVEL = TipsyLevels.first(level -> level.ears().heartbeat() > 0.0F);
 	/** A heartbeat about every this many ticks (a little over 50 a minute, slow and heavy). */
 	public static final int HEARTBEAT_GAP = 22;
 	/** The heartbeat's loudness at full {@link TipsyConfig#heartbeatVolume()}: quiet, under everything else. */
@@ -36,16 +36,6 @@ public final class TipsySounds
 	private TipsySounds() {
 	}
 
-	/**
-	 * One heartbeat, on this client only, for the local player at Tipsy V (see {@code TipsyClient}). {@code volume} is the
-	 * player's own setting, 0 to 1; nothing plays at 0.
-	 */
-	public static void heartbeat(LivingEntity entity, double volume) {
-		if (entity.level().isClientSide() && volume > 0.0) {
-			entity.level().playLocalSound(entity.getX(), entity.getEyeY(), entity.getZ(), TipsyRegistry.HEARTBEAT_SOUND.value(), SoundSource.PLAYERS,
-				(float) (HEARTBEAT_VOLUME * volume), 0.95F + entity.getRandom().nextFloat() * 0.1F, false);
-		}
-	}
 
 	/**
 	 * As the eyes open after a blackout: the place you woke up in. The sheets of a bed, the water under the boat, the
@@ -111,6 +101,14 @@ public final class TipsySounds
 	public static void catchStep(LivingEntity entity, BlockState ground) {
 		SoundType sound = soundOf(ground);
 		play(entity, sound.getStepSound(), sound.getVolume() * 0.45F, sound.getPitch() * 0.9F);
+	}
+
+	/**
+	 * Nodding off: the jerk awake, a short snort. A vanilla stand-in (a horse breathing out, higher) until a real, dry snort
+	 * is recorded and picked by ear.
+	 */
+	public static void snort(LivingEntity entity) {
+		play(entity, SoundEvents.HORSE_BREATHE, 0.45F, 1.35F + entity.getRandom().nextFloat() * 0.1F);
 	}
 
 	/** A trip's thud: the body hits the ground. */

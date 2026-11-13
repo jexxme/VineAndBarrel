@@ -1,5 +1,5 @@
 // Copies the GUI textures the recipe cards, the kettle screen and the effect badges use: Vine & Barrel's own kettle
-// screen and Tipsy icon, plus a few vanilla GUI sprites (furnace arrow, hunger icons, effect icons).
+// screen and the Tipsy and Hangover icons, plus a few vanilla GUI sprites (furnace arrow, hunger icons, effect icons).
 // Output: public/gui/**.png
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,6 +10,7 @@ const OUT = path.join(SITE, 'public/gui');
 const files = {
 	'brew_kettle.png': 'assets/vineandbarrel/textures/gui/brew_kettle.png',
 	'effect/tipsy.png': 'assets/vineandbarrel/textures/mob_effect/tipsy.png',
+	'effect/hangover.png': 'assets/vineandbarrel/textures/mob_effect/hangover.png',
 	'mc/burn_progress.png': 'assets/minecraft/textures/gui/sprites/container/furnace/burn_progress.png',
 	'mc/lit_progress.png': 'assets/minecraft/textures/gui/sprites/container/furnace/lit_progress.png',
 	'mc/food_full.png': 'assets/minecraft/textures/gui/sprites/hud/food_full.png',

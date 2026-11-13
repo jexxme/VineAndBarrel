@@ -48,6 +48,19 @@ See [Aging Barrel](/aging-barrel/).
 
 See [Brew Kettle](/brew-kettle/).
 
+## Cauldrons
+
+<Render name="scenes/cauldrons" float="right" size={192} alt="Cauldrons of honey must, barley wort and grape juice" />
+
+A cauldron takes juice, wort and honey must the way it takes water.
+
+- **Pour in** with a bucket to fill it, or with a bottle for one level. An empty bottle takes a level out, an empty
+  bucket a full cauldron.
+- **{rules.servingsPerBucket} levels**, one per serving, so a bucket splits into bottles and bottles make a bucket again.
+- **A bucket pours over** water, lava or another kind, as vanilla's buckets do, but not over its own kind: top that up
+  with bottles. Bottles only go into an empty cauldron or one of the same kind.
+- **Like water**, it puts out a burning mob, a comparator reads the level, and it breaks into a plain cauldron.
+
 ## Drinks and vessels
 
 <Render name="scenes/placed-drinks" float="right" size={192} alt="Mugs and glasses on a block" />
@@ -57,24 +70,25 @@ See [Brew Kettle](/brew-kettle/).
 - **Cheers!** Two or more players finishing a drink within {rules.cheersWindowTicks / 20} seconds and {rules.cheersRadius}
   blocks of each other clink glasses, and everyone's buff lasts {rules.cheersBonusPercent}% longer.
 - **Drinking** sounds and looks like a potion, and you get the empty vessel back.
-- **Buckets of juice and wort** can't be poured out as a liquid, like milk.
+- **Buckets of juice and wort** can't be poured out as a liquid, like milk, but they fill a [cauldron](#cauldrons).
 
 ## Tipsy
 
-- **Other players see you sway** and see your hiccups, stumbles and trips.
-- **Sleep it off:** sleeping through the night clears Tipsy.
-- **Milk** clears it; **water or any juice** lowers it by one level.
+- **Other players see you wobble,** stumble, trip and nod off, and hear your hiccups.
+- **Sleep it off:** sleeping through the night clears Tipsy. Go to bed very drunk and you wake up hungover.
+- **Milk** clears it; **water or any juice** lowers it by one level. With Farmer's Delight, so do its milk bottle,
+  melon juice and apple cider.
 - **Hover over the effect** in your inventory to see what your level does.
-- **One drink too many** at the top level and you black out. Where you wake up is anyone's guess.
+- **One drink too many** at the top level and, a little later, you black out. Where you wake up is anyone's guess.
 
 See [Tipsy](/tipsy/).
 
 ## Crops and farm life
 
-- Bushes are picked with a right-click (half-ripe too) and drop back a stage, like sweet berries. A trellis in or above a bush lets it climb: right-click the bush with it, or the trellis with grapes or hops.
+- Bushes are picked with a right-click (half-ripe too) and drop back a stage, like sweet berries. A trellis in or above a bush lets it climb: right-click the bush with it, or the trellis with grapes or hops. A fence, wall, chain or bars works the same way, for one fewer fruit per pick.
 - Bees help grapes, hops and barley grow.
 - Barley feeds and breeds animals like wheat; its seeds feed chickens and parrots.
-- Farmer villagers plant and harvest barley.
+- Farmer villagers plant and harvest barley, and buy barley and red grapes, as they buy wheat.
 - Foxes pick grapes off the bushes, red and white, like they do sweet berries.
 - Every crop composts.
 - The <Item id="barley_bale" /> softens a fall and lifts campfire smoke like a hay bale.

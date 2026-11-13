@@ -5,36 +5,40 @@ description: "多喝一杯：断片时会发生什么，你可能醒来的每个
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
-import { rules, roman, seconds, gameText } from '../../../lib/l10n/zh-cn';
+import { rules, roman, seconds, duration, gameText } from '../../../lib/l10n/zh-cn';
 
 export const t = rules.tipsy;
 export const b = t.blackout;
 export const count = b.endings.filter((e) => e.collectable).length;
+export const under = t.goingUnder;
+export const h = t.hangover;
 
 <Aside type="caution" title="剧透">
 本页会告诉你一晚上的每一种收场方式。想自己去发现的话，就到这里为止吧：[微醺](/tipsy/#多喝一杯)页只给了一点暗示。
 </Aside>
 
-已经在微醺 {roman(t.maxLevel - 1)} 还继续喝？再来一杯，你就会**断片**。它无害：你的东西一件都不会丢，醒来的地方永远安全，时间不会流逝，也不影响其他人。服主可以用 `blackout` 选项把它关掉（见[配置](/reference/config/)）。
+已经在微醺 {roman(t.maxLevel - 1)} 还继续喝？再来一杯，过一小会儿你就会**断片**。它无害：你的东西一件都不会丢，醒来的地方永远安全，时间不会流逝，也不影响其他人。服主可以用 `blackout` 选项把它关掉（见[配置](/reference/config/)）。
 
 ## 过程
 
 <Steps>
 
-1. **你倒下了**。眼睛一闭，人就栽倒。周围的人都看到你躺在那里，星星绕着你的脑袋转。
-2. **一片漆黑**。几秒钟里你动不了，微醺也不来打扰你：没有摇晃，没有打嗝，没有旋转。也没人能伤到你，无论是生物还是玩家，摔倒本身也不会。只有任何人躺在那里都会受到的伤害仍然有效，比如熔岩或虚空，所以你在哪里断片很重要；而你*醒来*的地方永远是安全的。
-3. **你在某处醒来**。屏幕还黑着的时候，游戏会选好你这一晚的收场地点（见下文），把你放在那里：躺在地上、躺在床上，或坐在船里。你慢慢睁开眼，然后起身。
-4. **屏幕上出现一行字**，说明刚才是怎么回事，比如 *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}*，或者其他很多种。
+1. **后劲上头**。多喝的那一杯会在 {Math.round(under.soonestTicks / 20)} 到 {Math.round(under.latestTicks / 20)} 秒后上头，不管你那时在做什么。最后 {Math.round(under.ticks / 20)} 秒里，你会感觉自己在往下沉：眼皮发沉，脑袋耷拉，世界变得发闷又遥远，腿一软，身子晃得厉害。你的朋友们也看得出来要出事了。在后劲上头之前醒酒（一桶牛奶、睡一整晚），就能躲过去；再喝一杯也不会让它推迟。
+2. **你倒下了**。眼睛一闭，人就栽倒。周围的人都看到你躺在那里，星星绕着你的脑袋转。
+3. **一片漆黑**。几秒钟里你动不了，微醺也不来打扰你：腿不再打晃，也不再打嗝。也没人能伤到你，无论是生物还是玩家，摔倒本身也不会。只有任何人躺在那里都会受到的伤害仍然有效，比如熔岩或虚空，所以你在哪里断片很重要；而你*醒来*的地方永远是安全的。
+4. **你在某处醒来**。屏幕还黑着的时候，游戏会选好你这一晚的收场地点（见下文），把你放在那里：躺在地上、躺在床上，或坐在船里。你慢慢睁开眼，然后起身。
+5. **屏幕上出现一行字**，说明刚才是怎么回事，比如 *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}*，或者其他很多种。
 
 </Steps>
 
-整个过程大约持续 {seconds(b.ticks)}。醒来时：
+从倒下到醒来大约持续 {seconds(b.ticks)}。醒来时：
 
-- **回到微醺 I**，饮品给你的增益也没了，
-- **饿了**：少了 {b.hungerLost / 2} 个饥饿格，饱和度清零，
-- **发软**，持续 {seconds(b.shakyTicks)}：有点头晕，动作变慢，
+- **酒醒了，但宿醉**会持续 {duration(h.afterBlackoutTicks)}（日光刺眼，响声让你一激灵；见[第二天早上](/tipsy/#第二天早上)），饮品给你的增益也没了，
+- **饿了**：饥饿格最多只剩 {h.hungryFood / 2} 个，饱和度清零，
 - **口袋里多了一件纪念品**，和你醒来的地方有关（口袋满了就掉在脚边），
 - 另外，有 {b.pumpkinOneIn} 分之一的几率，**头上多了一个雕刻南瓜**，前提是你没戴头盔。
+
+如果服务器关掉了 `hangover` 选项，你醒来时会回到微醺 I，并少掉 {b.hungerLost / 2} 个饥饿格。
 
 ## 你会在哪里醒来
 

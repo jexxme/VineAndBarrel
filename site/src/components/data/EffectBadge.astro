@@ -13,7 +13,7 @@ const { id, name, ticks, amplifier = 0, note } = Astro.props;
 const locale = localeOf(Astro.currentLocale);
 const [ns, p] = id.split(':');
 // Effect icons copied by scripts/copy-gui.mjs
-const AVAILABLE = new Set(['tipsy', 'regeneration', 'speed', 'haste', 'saturation', 'absorption', 'fire_resistance', 'slowness', 'mining_fatigue', 'nausea']);
+const AVAILABLE = new Set(['tipsy', 'hangover', 'regeneration', 'speed', 'haste', 'saturation', 'absorption', 'fire_resistance', 'slowness', 'mining_fatigue', 'nausea']);
 const icon = AVAILABLE.has(p) ? url(`/gui/effect/${p}.png`) : null;
 const label = gameText(`effect.${ns}.${p}`, name ?? p.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase()), locale);
 // The mod's own effect links to its page (except on that page); vanilla effects are plain badges

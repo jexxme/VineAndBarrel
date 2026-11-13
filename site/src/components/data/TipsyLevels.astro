@@ -1,37 +1,27 @@
 ---
 // The Tipsy levels, from the mod: what each level adds, and a view through the player's eyes at that level. Hover a
 // level (tap it on a phone) to see it; the tooltip lists what the level does in the effect tooltip's own words (exported
-// by the game: blue the courage, red the drawbacks), the view sways, darkens at the edges, blinks, hiccups and slurs like
-// the game. Everything comes from runtime.json (tipsy.levels, the mod's TipsyLevels table); the strengths of the sway
-// and blinks in the view are only illustrations.
+// by the game: blue the courage, red the drawbacks). Tipsy never moves your view on its own, so the view only jolts
+// with a hiccup and lurches with a stumble; the drunk eyes soften its edges and, from double vision on, a second image
+// slides apart and back; the chat comes out the way that level slurs it. Everything comes from the rules export
+// (tipsy.levels: each level's row of the mod's TipsyLevels sections: legs, eyes, ears, nod, chat, rules); the view's
+// motion and the chat lines are only illustrations.
 import { Picture } from 'astro:assets';
 import { rules, pct, roman, url, gameText } from '../../lib/data';
 import { t, localeOf } from '../../lib/i18n';
 import Tr from '../mc/Tr.astro';
-import EffectBadge from './EffectBadge.astro';
 import view from '../../assets/shots/terrace.jpg';
 
 type Level = {
 	level: number;
-	roll: number;
-	vignette: number;
-	blinkEveryTicks: number;
-	longBlinkOneIn: number;
-	knockbackResistance: number;
-	fallDamageReduction: number;
-	hiccupBoutOneIn: number;
-	slurs: boolean;
-	nauseaOneIn: number;
-	weakness: boolean;
-	slowness: number;
-	miningFatigue: number;
-	buffs: boolean;
-	rowdySwingOneIn: number;
-	cutOff: boolean;
-	legsOneIn: number;
-	tripOneIn: number;
-	drift: boolean;
-	fovBreathing: boolean;
+	courage: { knockbackResistance: number; fallDamageReduction: number };
+	hiccups: { boutOneIn: number; fewest: number; most: number };
+	legs: { steer: number; weave: number; legsOneIn: number; tripOneIn: number; slower: number };
+	eyes: { softEdges: number; doubleVision: number; signBlur: number };
+	ears: { muffle: number; heartbeat: number };
+	nod: { stillTicks: number };
+	chat: { stage: number };
+	rules: { buffs: boolean; rowdySwingOneIn: number; cutOff: boolean };
 	tooltipGood: string[];
 	tooltipBad: string[];
 };
@@ -39,73 +29,96 @@ const locale = localeOf(Astro.currentLocale);
 const tipsy = rules.tipsy;
 const cfg = tipsy.config;
 const levels: Level[] = tipsy.levels;
-const effectName = (path: string, en: string) => gameText(`effect.minecraft.${path}`, en, locale);
 const tipsyName = gameText('effect.vineandbarrel.tipsy', 'Tipsy', locale);
+const drunkWalk = (at: Level | undefined) => !!at && (at.legs.steer < 1 || at.legs.weave > 0);
+const stage = (at: Level | undefined) => (cfg.slurredChat && at ? at.chat.stage : 0);
+// How the chat line in the view comes out at each chat stage (0 as typed .. 4 gibberish), like the game's slur
+const chatLines = [
+	t('I love this song', locale),
+	t('I love this song *hic*', locale),
+	t('I love thish shooong *hic*', locale),
+	t('I lvoe thishh *hic* shooong', locale),
+	t('I blamu whish gluff *hic*', locale),
+];
 const rows = levels.map((at, i) => {
 	const prev: Level | undefined = levels[i - 1];
-	const last = i === levels.length - 1;
 	const adds: string[] = [];
-	// The sway: gentle, growing, then the world spins
-	if (!prev) adds.push(t('The view sways gently', locale));
-	else if (last) adds.push(t('The world really spins', locale));
-	else adds.push(at.roll >= prev.roll * 1.5 ? t('A heavier sway', locale) : t('The sway grows', locale));
-	if (at.fovBreathing && !prev?.fovBreathing) adds.push(t('the view breathes in and out with it', locale));
-	if (!prev && at.vignette > 0) adds.push(t('the edges of the screen darken a little', locale));
-	else if (prev && at.vignette - prev.vignette > 0.2) adds.push(t('the dark edges close in', locale));
+	// The legs: the drunk walk from the start, stumbles and trips later, then heavy legs
+	if (cfg.stumbling) {
+		if (drunkWalk(at) && !drunkWalk(prev)) adds.push(t('drunk legs: your steps come a moment late and the walk curves off course, so you keep correcting', locale));
+		if (at.legs.legsOneIn > 0 && !(prev?.legs.legsOneIn > 0)) adds.push(t('stumbles to the side, and now and then a trip onto your face (it never hurts)', locale));
+		else if (at.legs.legsOneIn > 0 && at.legs.legsOneIn < prev.legs.legsOneIn) adds.push(t('you stumble far more often', locale));
+		else if (drunkWalk(prev) && at.legs.weave > prev.legs.weave) adds.push(t('the walk weaves more', locale));
+		if (at.legs.slower > 0 && !(prev?.legs.slower > 0)) adds.push(t('heavy legs: {n} slower', locale, { n: pct(at.legs.slower, 0, locale) }));
+		else if (at.legs.slower > (prev?.legs.slower ?? 0)) adds.push(t('heavier legs: {n} slower', locale, { n: pct(at.legs.slower, 0, locale) }));
+	}
+	// The eyes: soft edges, then double vision and fading signs, stronger each level
+	if (cfg.doubleVision) {
+		if (at.eyes.softEdges > 0 && !(prev?.eyes.softEdges > 0)) adds.push(t('soft, slightly warm screen edges', locale));
+		if (at.eyes.doubleVision > 0 && !(prev?.eyes.doubleVision > 0)) adds.push(t('double vision (hold sneak to squint)', locale));
+		else if (at.eyes.doubleVision > (prev?.eyes.doubleVision ?? 0)) adds.push(t('stronger double vision', locale));
+		if (at.eyes.signBlur > 0 && !(prev?.eyes.signBlur > 0)) adds.push(t('the writing on signs fades', locale));
+		else if (at.eyes.signBlur >= 1 && prev && prev.eyes.signBlur < 1) adds.push(t('signs barely readable', locale));
+	}
+	// The ears: woolly sound, then your own heart
+	if (cfg.woollySound) {
+		if (at.ears.muffle > 0 && !(prev?.ears.muffle > 0)) adds.push(t('woolly sound: the world goes muffled', locale));
+		else if (at.ears.muffle > (prev?.ears.muffle ?? 0)) adds.push(t('more muffled', locale));
+	}
+	if (at.ears.heartbeat > 0 && !(prev?.ears.heartbeat > 0)) adds.push(t('you hear your own heart', locale));
+	if (at.nod.stillTicks > 0 && !(prev?.nod.stillTicks > 0) && cfg.noddingOff) adds.push(t('stand still a while and you nod off on your feet', locale));
 	// Hiccups come in bouts: a few, a couple of seconds apart, then a quiet stretch
-	if (at.hiccupBoutOneIn > 0 && !(prev?.hiccupBoutOneIn > 0)) adds.push(t('now and then a short bout of hiccups', locale));
-	else if (at.hiccupBoutOneIn > 0 && prev && at.hiccupBoutOneIn < prev.hiccupBoutOneIn && !last) adds.push(t('more hiccups', locale));
-	if (at.slurs && !prev?.slurs && cfg.slurredChat) adds.push(t('slurred chat: stretched letters and the odd *hic*', locale));
-	if (at.blinkEveryTicks > 0 && !(prev?.blinkEveryTicks > 0)) adds.push(t('heavy eyes: now and then they fall shut', locale));
-	else if (at.longBlinkOneIn > 0 && !(prev?.longBlinkOneIn > 0)) adds.push(t('longer blinks: sometimes your eyes stay shut a while', locale));
-	else if (at.blinkEveryTicks > 0 && prev && at.blinkEveryTicks < prev.blinkEveryTicks / 2) adds.push(t('your eyes keep falling shut', locale));
-	if (at.knockbackResistance > 0 || at.fallDamageReduction > 0) {
-		adds.push(t('liquid courage: {kb} knockback resistance and {fall} less fall damage', locale, { kb: pct(at.knockbackResistance, 0, locale), fall: pct(at.fallDamageReduction, 0, locale) }));
-	} else if (prev && (prev.knockbackResistance > 0 || prev.fallDamageReduction > 0)) {
+	if (at.hiccups.boutOneIn > 0 && !(prev?.hiccups.boutOneIn > 0)) adds.push(t('now and then a short bout of hiccups', locale));
+	else if (at.hiccups.boutOneIn > 0 && prev && at.hiccups.boutOneIn < prev.hiccups.boutOneIn && i < levels.length - 1) adds.push(t('more hiccups', locale));
+	// Chat, worse each stage
+	const chat = stage(at);
+	if (chat > stage(prev)) {
+		const says = [
+			'',
+			t('the odd *hic* in chat', locale),
+			t('slurred chat, still easy to read', locale),
+			t('chat gets hard to read', locale),
+			t('chat turns to gibberish', locale),
+		];
+		adds.push(says[Math.min(chat, 4)]);
+	}
+	const courage = at.courage;
+	if (courage.knockbackResistance > 0 || courage.fallDamageReduction > 0) {
+		adds.push(t('liquid courage: {kb} knockback resistance and {fall} less fall damage', locale, { kb: pct(courage.knockbackResistance, 0, locale), fall: pct(courage.fallDamageReduction, 0, locale) }));
+	} else if (prev && (prev.courage.knockbackResistance > 0 || prev.courage.fallDamageReduction > 0)) {
 		adds.push(t('the courage is gone', locale));
 	}
-	if (at.nauseaOneIn > 0 && !(prev?.nauseaOneIn > 0)) adds.push(t('now and then a spell of Nausea', locale));
-	else if (at.nauseaOneIn > 0 && prev && at.nauseaOneIn < prev.nauseaOneIn) adds.push(t('Nausea comes in waves, more often than not', locale));
-	if (!at.buffs && prev?.buffs) adds.push(t("you're too drunk to enjoy it: drinks give no buff, and the earlier drinks' buffs go too", locale));
-	if (at.rowdySwingOneIn > 0 && !(prev?.rowdySwingOneIn > 0) && cfg.rowdy) adds.push(t('rowdy: now and then you throw a punch at whoever is in front of you', locale));
-	if (at.cutOff && !prev?.cutOff && cfg.cutOff) adds.push(t("villagers and traders won't serve you", locale));
-	if (at.legsOneIn > 0 && !(prev?.legsOneIn > 0) && cfg.stumbling) {
-		adds.push(t('your legs give: you drift as you walk, stumble to the side now and then, and once in a while trip flat on your face (it never hurts)', locale));
-	}
-	const effects: [string, string][] = [];
-	if (at.weakness) effects.push(['minecraft:weakness', effectName('weakness', 'Weakness')]);
-	if (at.slowness >= 0) effects.push(['minecraft:slowness', `${effectName('slowness', 'Slowness')} ${roman(at.slowness)}`]);
-	if (at.miningFatigue >= 0) effects.push(['minecraft:mining_fatigue', `${effectName('mining_fatigue', 'Mining Fatigue')} ${roman(at.miningFatigue)}`]);
-	if (effects.length > 0) adds.push(t('and', locale));
+	if (!at.rules.buffs && prev?.rules.buffs) adds.push(t("you're too drunk to enjoy it: drinks give no buff, and the earlier drinks' buffs go too", locale));
+	if (at.rules.rowdySwingOneIn > 0 && !(prev?.rules.rowdySwingOneIn > 0) && cfg.rowdy && cfg.rowdyPunches) adds.push(t('rowdy: now and then you pick a fight with whoever is in front of you', locale));
+	if (at.rules.cutOff && !prev?.rules.cutOff && cfg.rowdy && cfg.cutOff) adds.push(t("villagers and traders won't serve you", locale));
 	// The effect tooltip's lines, as the game builds them (tipsy/TipsyInfo.java): three words a line
 	const lines: string[] = [];
 	for (let j = 0; j < at.tooltipBad.length; j += 3) lines.push(at.tooltipBad.slice(j, j + 3).join(', '));
 	// What the view shows
 	const flags = [
-		at.hiccupBoutOneIn > 0 && 'hic',
-		at.blinkEveryTicks > 0 && 'blink',
-		at.longBlinkOneIn > 0 && 'longblink',
-		at.nauseaOneIn > 0 && 'dizzy',
-		at.slurs && cfg.slurredChat && 'slur',
-		at.legsOneIn > 0 && cfg.stumbling && 'stumble',
+		at.hiccups.boutOneIn > 0 && 'hic',
+		at.legs.legsOneIn > 0 && cfg.stumbling && 'stumble',
+		at.eyes.doubleVision > 0 && cfg.doubleVision && 'double',
 	].filter(Boolean);
-	return { lvl: at.level, text: adds.join(', '), effects, good: at.tooltipGood, lines, flags: flags.join(' '), vignette: at.vignette };
+	const eyes = cfg.doubleVision ? at.eyes : { softEdges: 0, doubleVision: 0 };
+	return { lvl: at.level, adds, good: at.tooltipGood, lines, flags: flags.join(' '), say: chatLines[Math.min(chat, 4)], soft: eyes.softEdges, split: eyes.doubleVision };
 });
 ---
 <div class="vb-tipsy not-content" data-level="0" data-i18n={JSON.stringify({ sober: t('sober', locale), tipsy: tipsyName })}>
 	<div class="view-wrap">
-		<div class="view" aria-hidden="true" style="--vig:0;--amp:0">
+		<div class="view" aria-hidden="true">
 			<div class="world">
 				<Picture src={view} formats={['avif', 'webp']} fallbackFormat="jpg" widths={[480, 720, 960]} sizes="(max-width: 50rem) 100vw, 30rem" alt="" class="shot" />
+				<div class="ghost">
+					<Picture src={view} formats={['avif', 'webp']} fallbackFormat="jpg" widths={[480, 720, 960]} sizes="(max-width: 50rem) 100vw, 30rem" alt="" class="shot" />
+				</div>
 			</div>
-			<span class="vig"></span>
-			<span class="lid top"></span>
-			<span class="lid bottom"></span>
+			<div class="edges"></div>
 			<span class="hic-txt">{t('*hic*', locale)}</span>
 			<div class="hud">
 				<span class="eff tipsy"><img src={url('/gui/effect/tipsy.png')} alt="" width="36" height="36" /><b></b></span>
 			</div>
-			<p class="chat"><span class="who">&lt;Steve&gt;</span> <span class="say" data-sober={t('I love this song', locale)} data-slurred={t('I love thish shooong *hic*', locale)}>{t('I love this song', locale)}</span></p>
+			<p class="chat"><span class="who">&lt;Steve&gt;</span> <span class="say" data-sober={chatLines[0]}>{chatLines[0]}</span></p>
 		</div>
 		<p class="view-cap fd-kicker"><Tr k="Through your eyes: {level}" locale={locale}><span slot="level" class="lvl-name">{t('sober', locale)}</span></Tr></p>
 	</div>
@@ -121,7 +134,9 @@ const rows = levels.map((at, i) => {
 				class="pip"
 				data-level={r.lvl}
 				data-flags={r.flags}
-				data-vig={r.vignette}
+				data-say={r.say}
+				data-soft={r.soft}
+				data-split={r.split}
 				data-tip-items={`${tipsyName} ${roman(r.lvl - 1)}~`}
 				data-tip-extra={r.good.join('\n') || undefined}
 				data-tip-bad={r.lines.join('\n')}
@@ -135,21 +150,13 @@ const rows = levels.map((at, i) => {
 		{rows.map((r) => (
 			<li style={`--lvl:${r.lvl}`} data-level={r.lvl}>
 				<span class="lvl">{r.lvl}</span>
-				<span class="what">
-					{r.text}
-					{r.effects.length > 0 && (
-						<span class="heavy">
-							{r.effects.map(([id, name]) => <EffectBadge id={id} name={name} />)}
-						</span>
-					)}
-				</span>
+				<span class="what">{r.adds.map((a) => <span class="add">{a}</span>)}</span>
 			</li>
 		))}
 	</ol>
 </div>
 
 <script>
-	const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 	for (const root of document.querySelectorAll<HTMLElement>('.vb-tipsy')) {
 		const view = root.querySelector<HTMLElement>('.view')!;
 		const pips = [...root.querySelectorAll<HTMLButtonElement>('.pip')];
@@ -166,12 +173,11 @@ const rows = levels.map((at, i) => {
 			for (const c of [...view.classList]) if (c.startsWith('f-') || c === 'tipsy') view.classList.remove(c);
 			for (const f of flags) view.classList.add(`f-${f}`);
 			view.classList.toggle('tipsy', lvl > 0);
-			view.style.setProperty('--vig', pip.dataset.vig ?? '0');
-			view.style.setProperty('--amp', reduce ? '0' : String(lvl));
-			// only Tipsy's own icon: the game hides the icons of the effects it brings, the tooltip names them
 			for (const e of view.querySelectorAll<HTMLElement>('.hud .eff')) e.hidden = lvl === 0;
 			view.querySelector('.hud .tipsy b')!.textContent = lvl ? roman[lvl - 1] : '';
-			say.textContent = flags.includes('slur') ? say.dataset.slurred! : say.dataset.sober!;
+			say.textContent = pip.dataset.say ?? say.dataset.sober!;
+			view.style.setProperty('--soft', pip.dataset.soft ?? '0');
+			view.style.setProperty('--split', pip.dataset.split ?? '0');
 			name.textContent = lvl ? `${i18n.tipsy} ${roman[lvl - 1]}` : i18n.sober;
 			rows.forEach((r) => r.classList.toggle('on', +r.dataset.level! === lvl));
 		};
@@ -248,8 +254,6 @@ const rows = levels.map((at, i) => {
 	}
 	/* The view: a window into the game */
 	.view {
-		--vig: 0;
-		--amp: 0;
 		position: relative;
 		aspect-ratio: 4 / 3;
 		overflow: hidden;
@@ -264,42 +268,44 @@ const rows = levels.map((at, i) => {
 		inset: -8%;
 		transform-origin: 50% 60%;
 	}
+	/* Double vision: a second, faint image slides apart and back (the game's split is a share of the screen's width) */
+	.ghost {
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+		transition: opacity 0.3s;
+	}
+	.f-double .ghost {
+		opacity: 0.35;
+		translate: calc(var(--split, 0) * 150%) 0;
+		animation: double 5s ease-in-out infinite;
+	}
+	@keyframes double {
+		0%,
+		100% {
+			translate: calc(var(--split, 0) * 30%) 0;
+		}
+		50% {
+			translate: calc(var(--split, 0) * 150%) calc(var(--split, 0) * 25%);
+		}
+	}
+	/* Drunk eyes: soft, slightly warm screen edges */
+	.edges {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		backdrop-filter: blur(calc(var(--soft, 0) * 5px));
+		background: radial-gradient(ellipse at center, transparent 50%, rgb(255 170 90 / calc(var(--soft, 0) * 0.3)) 100%);
+		-webkit-mask-image: radial-gradient(ellipse at center, transparent 45%, #000 90%);
+		mask-image: radial-gradient(ellipse at center, transparent 45%, #000 90%);
+		transition: backdrop-filter 0.3s;
+	}
 	.world :global(img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 		image-rendering: auto;
 		display: block;
-	}
-	/* Sway: a slow roll and drift, stronger at each level */
-	.tipsy .world {
-		animation: sway calc(5.2s - var(--amp) * 0.45s) ease-in-out infinite;
-	}
-	@keyframes sway {
-		0%,
-		100% {
-			transform: rotate(calc(var(--amp) * -0.7deg)) translate(calc(var(--amp) * -0.6%), 0);
-		}
-		50% {
-			transform: rotate(calc(var(--amp) * 0.7deg)) translate(calc(var(--amp) * 0.6%), calc(var(--amp) * 0.3%));
-		}
-	}
-	/* Dizzy (Nausea): now and then the world warps and tints */
-	.f-dizzy {
-		animation: dizzy 6s ease-in-out infinite;
-	}
-	@keyframes dizzy {
-		0%,
-		60%,
-		100% {
-			filter: none;
-		}
-		72% {
-			filter: hue-rotate(40deg) saturate(1.4) blur(1px);
-		}
-		84% {
-			filter: hue-rotate(-30deg) saturate(1.2);
-		}
 	}
 	/* Stumble: a sudden lurch sideways */
 	.f-stumble .shot,
@@ -316,68 +322,9 @@ const rows = levels.map((at, i) => {
 			transform: translateX(5%) rotate(2deg);
 		}
 	}
-	/* Tunnel vision: dark edges, as dark as the mod draws them */
-	.vig {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		background: radial-gradient(ellipse at center, transparent 30%, #000 105%);
-		opacity: calc(var(--vig) * 1.25);
-		transition: opacity 0.4s;
-	}
-	/* Heavy eyes: the lids fall shut now and then; long blinks stay shut a while */
-	.lid {
-		position: absolute;
-		left: 0;
-		right: 0;
-		height: 51%;
-		background: #000;
-		transform: scaleY(0);
-		pointer-events: none;
-	}
-	.lid.top {
-		top: 0;
-		transform-origin: top;
-	}
-	.lid.bottom {
-		bottom: 0;
-		transform-origin: bottom;
-	}
-	.f-blink .lid {
-		animation: blink 4s ease-in-out infinite;
-	}
-	.f-longblink .lid {
-		animation: longblink 5s ease-in-out infinite;
-	}
-	@keyframes blink {
-		0%,
-		70%,
-		82%,
-		100% {
-			transform: scaleY(0);
-		}
-		76% {
-			transform: scaleY(1);
-		}
-	}
-	@keyframes longblink {
-		0%,
-		55%,
-		90%,
-		100% {
-			transform: scaleY(0);
-		}
-		62%,
-		82% {
-			transform: scaleY(1);
-		}
-	}
 	/* Hiccups: a sharp little jolt of the view and a *hic* */
 	.f-hic .world {
-		animation:
-			sway calc(5.2s - var(--amp) * 0.45s) ease-in-out infinite,
-			jolt 2.6s ease-out infinite;
-		animation-composition: add;
+		animation: jolt 2.6s ease-out infinite;
 	}
 	@keyframes jolt {
 		0%,
@@ -512,6 +459,11 @@ const rows = levels.map((at, i) => {
 		background: var(--fd-surface-2);
 		box-shadow: inset 4px 0 0 var(--sl-color-text-accent);
 	}
+	/* One row's additions, separated by a dot */
+	.add + .add::before {
+		content: ' · ';
+		color: var(--sl-color-gray-3);
+	}
 	.lvl {
 		flex: none;
 		width: 40px;
@@ -522,13 +474,6 @@ const rows = levels.map((at, i) => {
 		text-shadow: 2px 2px 0 #000;
 		background: color-mix(in srgb, #a8283f calc((var(--lvl) - 1) * 25%), #e8a23c);
 		box-shadow: inset 2px 2px 0 rgb(255 255 255 / 0.3), inset -2px -2px 0 rgb(0 0 0 / 0.3);
-	}
-	.heavy {
-		display: inline-flex;
-		gap: 6px;
-		margin-left: 8px;
-		flex-wrap: wrap;
-		vertical-align: middle;
 	}
 	@media (max-width: 40rem) {
 		.vb-tipsy {

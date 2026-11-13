@@ -10,7 +10,6 @@
     "RecipeBookTypeMixin",
     "RegistryLoadTaskMixin",
     "ResourceManagerRegistryLoadTaskMixin",
-    "ServerGamePacketListenerImplMixin",
     "ServerLevelMixin",
     "ServerPlayerGameModeMixin"
   ],
