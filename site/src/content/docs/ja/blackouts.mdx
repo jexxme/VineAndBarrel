@@ -5,18 +5,20 @@ description: "飲みすぎた夜に起きること、目覚められるすべて
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
-import { rules, roman, seconds, gameText } from '../../../lib/l10n/ja';
+import { rules, roman, seconds, duration, gameText } from '../../../lib/l10n/ja';
 
 export const t = rules.tipsy;
 export const b = t.blackout;
 export const count = b.endings.filter((e) => e.collectable).length;
+export const under = t.goingUnder;
+export const h = t.hangover;
 
 <Aside type="caution" title="ネタバレ">
 このページには、夜の終わり方がすべて書いてあります。自分で確かめたいなら、ここで引き返してください。
 [ほろ酔い](/tipsy/#飲みすぎ)のページでは、ほのめかすだけにしています。
 </Aside>
 
-すでにほろ酔い {roman(t.maxLevel - 1)} なのにまだ飲む? もう一杯で**記憶が飛びます**。害はありません。持ち物は失われず、
+すでにほろ酔い {roman(t.maxLevel - 1)} なのにまだ飲む? もう一杯飲むと、少しして**記憶が飛びます**。害はありません。持ち物は失われず、
 危ない場所で目覚めることもなく、時間も進まず、ほかの人には影響しません。サーバー管理者は`blackout`オプションでオフにできます
 ([設定](/reference/config/)を参照)。
 
@@ -24,23 +26,29 @@ export const count = b.endings.filter((e) => e.collectable).length;
 
 <Steps>
 
-1. **倒れる。** 目が閉じて、そのまま倒れます。周りの人には、横たわるあなたと、頭の上をぐるぐる回る星が見えます。
-2. **暗転。** 数秒間は動けませんが、ほろ酔いも手加減してくれます。ふらつきも、しゃっくりも、渦もありません。モブもプレイヤーも、
+1. **あとから効いてくる。** 飲みすぎた一杯は、{Math.round(under.soonestTicks / 20)}〜{Math.round(under.latestTicks / 20)}秒後に効いてきます。
+   そのとき何をしていてもです。最後の{Math.round(under.ticks / 20)}秒間は、沈んでいくのが自分でわかります。まぶたが重くなり、頭が垂れ、
+   世界の音がこもって遠のき、足から力が抜けて、体が大きく揺れます。友だちにも、それが来るのが見えます。効いてくる前に酔いを覚ませば
+   (ミルク入りバケツ、一晩の睡眠)、記憶は飛びません。もう一杯飲んでも先送りにはなりません。
+2. **倒れる。** 目が閉じて、そのまま倒れます。周りの人には、横たわるあなたと、頭の上をぐるぐる回る星が見えます。
+3. **暗転。** 数秒間は動けませんが、ほろ酔いも手加減してくれます。ふらつく足も、しゃっくりもありません。モブもプレイヤーも、
    倒れたこと自体も、あなたを傷つけられません。そこに寝ている誰にとっても痛いもの、たとえば溶岩や奈落だけは普通に効くので、
    気を失う場所は大事です。ただし、*目覚める*場所は必ず安全です。
-3. **どこかで目覚める。** 画面がまだ暗いうちに、ゲームが夜の終わった場所を決めて(下を参照)、あなたをそこに運びます。
+4. **どこかで目覚める。** 画面がまだ暗いうちに、ゲームが夜の終わった場所を決めて(下を参照)、あなたをそこに運びます。
    地面に寝ているか、ベッドの中か、ボートに座っています。ゆっくり目が開き、そして起き上がります。
-4. **画面に一行。** 夜がどうだったかを伝えます。*{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}*のようなものから、ほかにもいろいろあります。
+5. **画面に一行。** 夜がどうだったかを伝えます。*{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}*のようなものから、ほかにもいろいろあります。
 
 </Steps>
 
-全体で約{seconds(b.ticks)}かかります。目覚めたとき:
+倒れてから目覚めるまで約{seconds(b.ticks)}かかります。目覚めたとき:
 
-- **ほろ酔い I に戻り**、飲み物でもらった強化効果もなくなっています。
-- **空腹:** 空腹ゲージが{b.hungerLost / 2}個分減り、隠し満腹度もゼロです。
-- **ふらふら:** {seconds(b.shakyTicks)}のあいだ、少しめまいがして動きが遅くなります。
+- **素面ですが二日酔い**が{duration(h.afterBlackoutTicks)}続きます(日の光がまぶしく、大きな音に顔をしかめます。
+  [翌朝](/tipsy/#翌朝)を参照)。飲み物でもらった強化効果もなくなっています。
+- **空腹:** 空腹ゲージは{h.hungryFood / 2}個分までしかなく、隠し満腹度もゼロです。
 - **おみやげ**がポケットに入っています。目覚めた場所にふさわしいものです(ポケットがいっぱいなら足元に)。
 - そして{b.pumpkinOneIn}回に1回は、ヘルメットをかぶっていなければ**頭にくり抜かれたカボチャ**がのっています。
+
+サーバーの`hangover`オプションがオフなら、代わりにほろ酔い I で目覚め、空腹ゲージが{b.hungerLost / 2}個分減っています。
 
 ## 目覚める場所
 

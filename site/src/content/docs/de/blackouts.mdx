@@ -5,18 +5,20 @@ description: "Ein Drink zu viel: was bei einem Filmriss passiert, an welchen Ort
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
-import { rules, roman, seconds, gameText } from '../../../lib/l10n/de';
+import { rules, roman, seconds, duration, gameText } from '../../../lib/l10n/de';
 
 export const t = rules.tipsy;
 export const b = t.blackout;
 export const count = b.endings.filter((e) => e.collectable).length;
+export const under = t.goingUnder;
+export const h = t.hangover;
 
 <Aside type="caution" title="Spoiler">
 Diese Seite verrät dir jedes Ende einer Nacht. Wenn du es lieber selbst herausfinden willst, hör hier auf: Die Seite
 [Schwips](/tipsy/#ein-drink-zu-viel) deutet es nur an.
 </Aside>
 
-Schon auf Schwips {roman(t.maxLevel - 1)} und trinkst weiter? Noch einer, und du hast einen **Filmriss**. Er ist harmlos: Verloren geht
+Schon auf Schwips {roman(t.maxLevel - 1)} und trinkst weiter? Noch einer, und kurz darauf hast du einen **Filmriss**. Er ist harmlos: Verloren geht
 dir nie etwas, du wachst nie an einem unsicheren Ort auf, es vergeht keine Zeit, und niemand sonst ist betroffen. Serverbetreiber können
 ihn mit der Option `blackout` abschalten (siehe [Konfiguration](/reference/config/)).
 
@@ -24,23 +26,30 @@ ihn mit der Option `blackout` abschalten (siehe [Konfiguration](/reference/confi
 
 <Steps>
 
-1. **Du kippst um.** Deine Augen fallen zu und du kippst um. Alle um dich herum sehen dich liegen, Sterne kreisen um deinen Kopf.
-2. **Schwarz.** Ein paar Sekunden lang kannst du dich nicht bewegen, und Schwips lässt dich in Ruhe: kein Schwanken, kein Schluckauf, kein
-   Wirbeln. Auch dir kann niemand etwas tun, kein Mob und kein Spieler, und das Hinfallen auch nicht. Nur was jedem schaden würde, der da
+1. **Es holt dich ein.** Der eine Drink zu viel wirkt erst nach {Math.round(under.soonestTicks / 20)} bis
+   {Math.round(under.latestTicks / 20)} Sekunden, egal was du dann gerade tust. In den letzten {Math.round(under.ticks / 20)} Sekunden
+   spürst du, wie du wegdämmerst: schwere Lider, dein Kopf sinkt, die Welt klingt gedämpft und weit weg, die Beine geben nach, dein Körper
+   schwankt heftig. Deine Freunde sehen es kommen. Wirst du vorher nüchtern (ein Eimer Milch, eine Nacht Schlaf), kommst du davon; ein
+   weiterer Drink schiebt es nie hinaus.
+2. **Du kippst um.** Deine Augen fallen zu und du kippst um. Alle um dich herum sehen dich liegen, Sterne kreisen um deinen Kopf.
+3. **Schwarz.** Ein paar Sekunden lang kannst du dich nicht bewegen, und Schwips lässt dich in Ruhe: keine wackligen Beine, kein Schluckauf.
+   Auch dir kann niemand etwas tun, kein Mob und kein Spieler, und das Hinfallen auch nicht. Nur was jedem schaden würde, der da
    liegt, zählt weiter, etwa Lava oder die Leere. Wo du umkippst, ist also wichtig; wo du *aufwachst*, ist immer sicher.
-3. **Du wachst irgendwo auf.** Solange der Bildschirm noch schwarz ist, sucht das Spiel aus, wo deine Nacht endete (siehe unten), und
+4. **Du wachst irgendwo auf.** Solange der Bildschirm noch schwarz ist, sucht das Spiel aus, wo deine Nacht endete (siehe unten), und
    setzt dich dorthin: liegend auf dem Boden, in einem Bett oder sitzend in einem Boot. Deine Augen öffnen sich langsam, dann stehst du auf.
-4. **Eine Zeile auf dem Bildschirm** sagt, wie es lief, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* oder eine von vielen anderen.
+5. **Eine Zeile auf dem Bildschirm** sagt, wie es lief, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* oder eine von vielen anderen.
 
 </Steps>
 
-Das Ganze dauert etwa {seconds(b.ticks)}. Du wachst auf:
+Vom Umkippen bis zum Aufwachen dauert es etwa {seconds(b.ticks)}. Du wachst auf:
 
-- **wieder auf Schwips I** und ohne die Boni, die deine Getränke dir gegeben haben,
-- **hungrig:** {b.hungerLost / 2} Hungerkeulen weniger und nichts mehr in deiner Sättigung,
-- **zittrig** für {seconds(b.shakyTicks)}: ein bisschen schwindelig und langsam,
+- **nüchtern, aber verkatert** für {duration(h.afterBlackoutTicks)} (Tageslicht blendet, bei lauten Geräuschen zuckst du zusammen; siehe
+  [Der Morgen danach](/tipsy/#der-morgen-danach)) und ohne die Boni, die deine Getränke dir gegeben haben,
+- **hungrig:** höchstens {h.hungryFood / 2} Hungerkeulen und nichts in deiner Sättigung,
 - **mit einem Andenken** in den Taschen, etwas, das zu dem Ort passt, an dem du aufgewacht bist (zu deinen Füßen, wenn deine Taschen voll sind),
 - und einmal in {b.pumpkinOneIn} Fällen **mit einem geschnitzten Kürbis auf dem Kopf**, wenn du keinen Helm getragen hast.
+
+Ist die Server-Option `hangover` aus, wachst du stattdessen auf Schwips I auf, mit {b.hungerLost / 2} Hungerkeulen weniger.
 
 ## Wo du aufwachst
 

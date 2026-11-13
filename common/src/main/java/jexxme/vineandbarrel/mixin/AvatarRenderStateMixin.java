@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 /**
- * Every player's render state can carry how they lie on the ground after a blackout (falling, lying, getting up), on
- * both loaders, so the player model (and the armour drawn with it) can pose head and limbs from it
+ * Every player's render state can carry how they lie on the ground after a blackout (falling, lying, getting up), and
+ * how far their arms go out for balance in a stumble, on both loaders, so the player model (and the armour drawn with it) can pose head and limbs from it
  * ({@link TipsyClient#poseBlackout}). Filled in where the loaders fill in the rest of the body's pose
  * ({@link TipsyClient#bodyPose(net.minecraft.world.entity.Entity, AvatarRenderState)}).
  */
@@ -27,5 +27,31 @@ public abstract class AvatarRenderStateMixin implements TipsyClient.BlackoutCarr
 	@Override
 	public void vineandbarrel$setBlackout(BlackoutPose.@Nullable Body body) {
 		this.vineandbarrel$blackout = body;
+	}
+
+	@Unique
+	private float vineandbarrel$balance;
+
+	@Override
+	public float vineandbarrel$balance() {
+		return this.vineandbarrel$balance;
+	}
+
+	@Override
+	public void vineandbarrel$setBalance(float balance) {
+		this.vineandbarrel$balance = balance;
+	}
+
+	@Unique
+	private float vineandbarrel$windup;
+
+	@Override
+	public float vineandbarrel$windup() {
+		return this.vineandbarrel$windup;
+	}
+
+	@Override
+	public void vineandbarrel$setWindup(float windup) {
+		this.vineandbarrel$windup = windup;
 	}
 }

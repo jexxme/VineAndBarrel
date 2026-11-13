@@ -115,6 +115,8 @@ public final class NeoForgeClient
 		});
 		// The drift at V; out cold or down after a trip: keys and mouse held still, no hand. And in a blackout's bed no
 		// darkening sleep overlay and no "Leave Bed"
+		// Drunk chat: the own message slurred before it is signed and sent
+		jexxme.vineandbarrel.neoforge.NeoForgeChat.register(game, TipsyClient::ownChat);
 		game.addListener(MovementInputUpdateEvent.class, event -> TipsyClient.onMovementInput(event.getEntity(), event.getInput()));
 		game.addListener(CalculatePlayerTurnEvent.class, event -> event.setMouseSensitivity(TipsyClient.mouseSensitivity(event.getMouseSensitivity())));
 		game.addListener(RenderHandEvent.class, event -> {

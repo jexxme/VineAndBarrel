@@ -48,6 +48,19 @@ Veja [Barril de Envelhecimento](/aging-barrel/).
 
 Veja [Tina de Brassagem](/brew-kettle/).
 
+## Caldeirões
+
+<Render name="scenes/cauldrons" float="right" size={192} alt="Caldeirões com mosto de mel, mosto de cevada e suco de uva" />
+
+Um caldeirão aceita suco, mosto e mosto de mel do mesmo jeito que aceita água.
+
+- **Despeje** com um balde para encher, ou com um frasco para um nível. Um frasco vazio tira um nível, e um balde vazio, um
+  caldeirão cheio.
+- **{rules.servingsPerBucket} níveis**, um por porção, então um balde se divide em frascos e os frascos voltam a formar um balde.
+- **Um balde substitui** água, lava ou outro tipo, como os baldes do vanilla, mas não o mesmo tipo: esse você completa
+  com frascos. Frascos só entram num caldeirão vazio ou num do mesmo tipo.
+- **Como a água**, apaga um mob em chamas, um comparador lê o nível, e quebrado vira um caldeirão comum.
+
 ## Bebidas e recipientes
 
 <Render name="scenes/placed-drinks" float="right" size={192} alt="Canecas e taças sobre um bloco" />
@@ -57,24 +70,25 @@ Veja [Tina de Brassagem](/brew-kettle/).
 - **Saúde!** Dois ou mais jogadores que terminam uma bebida em até {rules.cheersWindowTicks / 20} segundos e a {rules.cheersRadius}
   blocos um do outro brindam, e o bônus de todos dura {rules.cheersBonusPercent}% mais.
 - **Beber** soa e parece com uma poção, e você recebe o recipiente vazio de volta.
-- **Baldes de suco e de mosto** não podem ser despejados como líquido, como o leite.
+- **Baldes de suco e de mosto** não podem ser despejados como líquido, como o leite, mas enchem um [caldeirão](#caldeirões).
 
 ## Alegrinho
 
-- **Os outros jogadores veem você balançar** e veem seus soluços, tropeços e tombos.
-- **Dormir pra passar:** dormir a noite toda limpa o Alegrinho.
-- **Leite** limpa; **água ou qualquer suco** baixa um nível.
+- **Os outros jogadores veem você cambalear,** tropeçar, levar tombos e cochilar em pé, e ouvem seus soluços.
+- **Dormir pra passar:** dormir a noite toda limpa o Alegrinho. Vá para a cama muito bêbado e você acorda de ressaca.
+- **Leite** limpa; **água ou qualquer suco** baixa um nível. Com o Farmer's Delight, a garrafa de leite, o suco de melancia
+  e a sidra de maçã dele também.
 - **Passe o mouse sobre o efeito** no inventário para ver o que seu nível faz.
-- **Uma bebida a mais** no nível máximo e você apaga. Onde você acorda, ninguém sabe.
+- **Uma bebida a mais** no nível máximo e, um pouco depois, você apaga. Onde você acorda, ninguém sabe.
 
 Veja [Alegrinho](/tipsy/).
 
 ## Plantações e vida na fazenda
 
-- Os arbustos são colhidos com um clique direito (meio maduros também) e voltam uma etapa, como as bagas doces. Uma treliça dentro ou acima de um arbusto o deixa subir: clique direito no arbusto com ela, ou na treliça com uvas ou lúpulo.
+- Os arbustos são colhidos com um clique direito (meio maduros também) e voltam uma etapa, como as bagas doces. Uma treliça dentro ou acima de um arbusto o deixa subir: clique direito no arbusto com ela, ou na treliça com uvas ou lúpulo. Uma cerca, um muro, uma corrente ou barras funcionam do mesmo jeito, com uma fruta a menos por colheita.
 - As abelhas ajudam as uvas, o lúpulo e a cevada a crescer.
 - A cevada alimenta e faz os animais procriarem como o trigo; as sementes dela alimentam galinhas e papagaios.
-- Os aldeões fazendeiros plantam e colhem cevada.
+- Os aldeões fazendeiros plantam e colhem cevada, e compram cevada e uvas tintas, como compram trigo.
 - As raposas pegam uvas dos arbustos, tintas e brancas, como fazem com as bagas doces.
 - Toda plantação vira composto.
 - O <Item id="barley_bale" /> amortece uma queda e ergue a fumaça da fogueira como um fardo de feno.

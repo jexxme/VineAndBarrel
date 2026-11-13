@@ -26,6 +26,8 @@ public final class TipsyRegistry
 	private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, VineAndBarrel.MODID);
 
 	public static final Holder<MobEffect> TIPSY = EFFECTS.register("tipsy", TipsyEffect::new).asHolder();
+	/** The morning after ({@link Hangover}). */
+	public static final Holder<MobEffect> HANGOVER = EFFECTS.register("hangover", Hangover.Effect::new).asHolder();
 
 	public static final Supplier<SimpleParticleType> HICCUP_PARTICLE = PARTICLES.register("hiccup", () -> new SimpleParticleType(false) {});
 	/** Gold stars circling above the head of a blacked-out player (client-side only, spawned by every client itself). */
@@ -76,9 +78,9 @@ public final class TipsyRegistry
 			EntityAttachment.Spec.<List<DrinkBuffs.Buff>>builder(List::of).serialize(DrinkBuffs.CODEC).build());
 
 	/**
-	 * Which side effects Tipsy itself gave and still owns (bit 0 Slowness, bit 1 Mining Fatigue, bit 2 Weakness, bit 3
-	 * Nausea; see {@code Tipsy.SIDE_EFFECTS}), so the clean-up never takes away one from a potion, a command or another
-	 * mod. Saved, since the effects are. The id keeps its pre-playtest name so old saves still load.
+	 * Old saves only: before the overhaul, which side effects Tipsy itself gave and still owned (Slowness, Mining
+	 * Fatigue, Weakness, Nausea). Nothing sets it any more; it stays registered so a save that has it still loads, and
+	 * {@code Tipsy.forgetOldSideEffects} drops it.
 	 */
 	public static final EntityAttachment<Integer> HEAVY_EFFECTS_OWNED = Services.PLATFORM.attachment(VineAndBarrel.id("tipsy_heavy_effects"),
 			EntityAttachment.Spec.builder(() -> 0).serialize(Codec.INT.fieldOf("owned")).build());
@@ -97,6 +99,29 @@ public final class TipsyRegistry
 	 */
 	public static final EntityAttachment<TipsyMotion.Counts> MOTION = Services.PLATFORM.attachment(VineAndBarrel.id("tipsy_motion"),
 			EntityAttachment.Spec.builder(() -> TipsyMotion.Counts.NONE).sync(TipsyMotion.Counts.STREAM_CODEC).build());
+
+	/**
+	 * The game time a player's nodding off started ({@link TipsyNod}), synced to the player and everyone near, so every
+	 * client draws the same nod; absent when awake. Not saved.
+	 */
+	/** The game time the blackout catches up with a player who drank one too many ({@link GoingUnder}); synced, saved. */
+	public static final EntityAttachment<Long> GOING_UNDER = Services.PLATFORM.attachment(VineAndBarrel.id("going_under"),
+			EntityAttachment.Spec.builder(() -> -1L).serialize(Codec.LONG.fieldOf("at")).sync(ByteBufCodecs.VAR_LONG).build());
+
+	/** The game time a Rowdy player started winding up a wild swing ({@link Rowdy}); synced so everyone sees the arm go back. */
+	/** How much longer a Rowdy player is spoiling for a fight ({@link Rowdy#ITCH}); server only, not saved. */
+	public static final EntityAttachment<Integer> ROWDY_ITCH = Services.PLATFORM.attachment(VineAndBarrel.id("rowdy_itch"),
+			EntityAttachment.Spec.builder(() -> 0).build());
+
+	public static final EntityAttachment<Long> ROWDY_WINDUP = Services.PLATFORM.attachment(VineAndBarrel.id("rowdy_windup"),
+			EntityAttachment.Spec.builder(() -> -1L).sync(ByteBufCodecs.VAR_LONG).build());
+
+	public static final EntityAttachment<Long> NOD = Services.PLATFORM.attachment(VineAndBarrel.id("tipsy_nod"),
+			EntityAttachment.Spec.builder(() -> -1L).sync(ByteBufCodecs.VAR_LONG).build());
+
+	/** How long a player has stood still, and where ({@link TipsyNod.Stillness}); server only, not saved. */
+	public static final EntityAttachment<TipsyNod.Stillness> STILL = Services.PLATFORM.attachment(VineAndBarrel.id("tipsy_still"),
+			EntityAttachment.Spec.builder(() -> new TipsyNod.Stillness(0.0, 0.0, 0.0, 0.0F, 0.0F, 0L, 0)).build());
 
 	/**
 	 * Drinks that sober you up by one level (T3). Holds the water bottle; M2's grape juice only has to join it.

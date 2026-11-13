@@ -28,7 +28,6 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.common.world.poi.ExtendPoiTypesEvent;
-import net.neoforged.neoforge.event.ServerChatEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -93,12 +92,6 @@ public final class VineAndBarrelNeoForge
 			if (result != null) {
 				event.setCanceled(true);
 				event.setCancellationResult(result);
-			}
-		});
-		game.addListener(ServerChatEvent.class, event -> {
-			Component slurred = TipsyEvents.onChat(event.getPlayer(), event.getRawText());
-			if (slurred != null) {
-				event.setMessage(slurred);
 			}
 		});
 		// Foxes learn to pick grapes

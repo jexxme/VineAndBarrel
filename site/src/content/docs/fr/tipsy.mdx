@@ -1,49 +1,115 @@
 ---
 title: Pompette
-description: Ce que fait Pompette à chaque niveau, ce qui arrive après un verre de trop, comment dessaouler, et comment la baisser ou la couper.
+description: Ce que fait Pompette à chaque niveau, comment un verre de trop te rattrape, le lendemain matin, comment dessaouler, et comment la baisser ou la couper.
 ---
 import { Aside } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import TipsyLevels from '../../../components/data/TipsyLevels.astro';
 import EffectBadge from '../../../components/data/EffectBadge.astro';
-import { rules, nameOf, roman } from '../../../lib/l10n/fr';
+import { rules, nameOf, roman, pct, duration } from '../../../lib/l10n/fr';
 
 export const t = rules.tipsy;
 export const cfg = t.config;
+export const h = t.hangover;
+export const under = t.goingUnder;
 export const rowdyLevel = t.rowdyLevel;
 export const punchHearts = t.rowdyPunchDamage / 2;
+export const slower = (level) => t.levels[level - 1].legs.slower;
+export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.level ?? t.maxLevel;
 
-Chaque vin, bière, cidre et hydromel te donne son bonus **et un niveau de <EffectBadge id="vineandbarrel:tipsy" name="Pompette" />**. Au début,
-c'est drôle : un petit balancement, des hoquets, un brin de courage liquide, et à Pompette {roman(t.slurLevel - 1)} tu es au
-meilleur de ta forme (pas ton tchat), même si tes yeux commencent à s'alourdir. Si tu continues, ça se paie : nausées, bras mous, et tout en haut, des jambes
-qui te ramènent à peine chez toi. Le maximum est le niveau {t.maxLevel}.
+Chaque vin, bière, cidre et hydromel te donne son bonus **et un niveau de <EffectBadge id="vineandbarrel:tipsy" name="Pompette" />**.
+L'ivresse se voit dans ton corps, pas sur ton écran : tes jambes n'en font qu'à leur tête, tes yeux voient double, le monde devient
+cotonneux. Au début, c'est drôle : des jambes flageolantes, des hoquets, un brin de courage liquide, et à Pompette {roman(t.slurLevel - 1)}
+tu es au meilleur de ta forme (pas ton tchat). Si tu continues, ça se paie : plus aucun bonus, des envies de bagarre, piquer du nez debout,
+et tout en haut, des jambes qui te ramènent à peine chez toi. Le maximum est le niveau {t.maxLevel}.
 
 ## Niveaux
 
 <TipsyLevels />
 
-Les autres joueurs te voient aussi te balancer, hoqueter, tituber et trébucher. Passe la souris sur l'effet Pompette dans ton
-inventaire pour voir ce que fait ton niveau actuel.
+Passe la souris sur l'effet Pompette dans ton inventaire pour voir ce que fait ton niveau actuel.
 
-## Un verre de trop
+## Jambes pompettes
 
-Déjà au niveau {t.maxLevel} et tu bois encore ? Tu fais un **trou noir**. Tes yeux se ferment et tu t'écroules, des étoiles
-tournant autour de ta tête, pour que tout le monde les voie. Pendant ces quelques secondes, personne ne peut te blesser, ni mob ni
-joueur, et tomber non plus ; le reste du monde compte toujours, alors ne t'évanouis pas dans la lave. Puis tu te réveilles. Où ?
-Ça dépend de la soirée, et il y a plus de façons de se réveiller que tu ne le crois…
+Dès Pompette {roman(t.drunkWalkLevel - 1)}, tes jambes n'en font qu'à leur tête. Ce que tu diriges arrive avec un temps de retard : tu
+démarres en retard et tu ne peux pas t'arrêter net. Ta marche dévie de sa route puis y revient, et tu corriges sans cesse. Ton corps bascule
+d'un pied sur l'autre et tes pas sont inégaux. Ta propre vue ne penche qu'un peu avec ton corps ; les autres joueurs voient tout ton
+vacillement, et le chemin que tu prends vraiment.
 
-Tu auras faim et tu seras tremblant un moment, de retour à Pompette I, et tes poches contiendront peut-être quelque chose que
-tu ne te souviens pas d'avoir ramassé. Tu ne perds jamais rien de ce que tu avais.
+Dès Pompette {roman(t.stumbleLevel - 1)}, tu **titubes** : un faux pas de côté, les bras écartés pour garder l'équilibre. De temps en temps,
+tu ne te rattrapes pas et tu **trébuches**, face contre terre, puis tu te relèves un instant plus tard. Tes jambes s'alourdissent aussi : tu
+es {pct(slower(t.slowerLevel))} plus lent à Pompette {roman(t.slowerLevel - 1)} et {pct(slower(t.maxLevel))} plus lent à Pompette {roman(t.maxLevel - 1)}.
+Tu peux toujours sprinter.
+
+La démarche pompette ne te fait jamais passer par-dessus un rebord ni entrer dans quoi que ce soit qui fait mal. **Accroupis-toi** et tu
+marches droit. Nager, chevaucher, voler et grimper restent sobres.
+
+## Yeux et oreilles
+
+Dès Pompette {roman(t.softEdgesLevel - 1)}, les bords de ton écran deviennent flous et un peu chauds. Dès Pompette {roman(t.doubleVisionLevel - 1)},
+tu **vois double** : une deuxième image s'écarte puis revient, un peu plus loin à chaque niveau. **Reste accroupi pour plisser les yeux** et
+les deux se rapprochent, même si ça aide de moins en moins à mesure que tu es soûl. L'écriture sur les panneaux s'efface dans le bois dès
+Pompette {roman(t.signBlurLevel - 1)}, jusqu'à ce qu'à Pompette {roman(t.maxLevel - 1)} tu puisses à peine la lire ; plisser les yeux aide
+là aussi.
+
+Dès Pompette {roman(t.woollyLevel - 1)}, le monde sonne **cotonneux**, étouffé comme à travers une couverture, un peu plus à chaque niveau.
+La musique et les menus restent nets. À Pompette {roman(t.heartbeatLevel - 1)}, tu entends ton propre cœur battre, et toi seul l'entends.
+
+## Piquer du nez
+
+Dès Pompette {roman(t.nodLevel - 1)}, ne reste pas planté trop longtemps. Reste immobile un moment et tes paupières tombent, ta tête
+s'affaisse, puis tu te réveilles en sursaut avec un ronflement. Reste planté là et ça recommence. Tout ce que tu fais te réveille : un pas,
+un coup d'œil autour de toi, utiliser quelque chose. Tout le monde autour de toi voit ton menton tomber et entend le ronflement.
+
+## Tchat pompette
+
+Ton tchat sort comme tu le dirais. À Pompette {roman(t.hicChatLevel - 1)}, un \*hips\* s'y glisse de temps en temps, à
+Pompette {roman(chatAt(2) - 1)} il est pâteux mais facile à lire, à Pompette {roman(chatAt(3) - 1)} il devient difficile à lire, et à
+Pompette {roman(chatAt(4) - 1)} c'est du charabia. Les liens, les @mentions et les commandes partent toujours comme tu les as tapés.
 
 ## Tapageur
 
-Dès Pompette {roman(rowdyLevel - 1)}, tu deviens tapageur. De temps en temps, ton bras part tout seul et envoie un vrai coup de
-poing sur ce qui se trouve juste devant toi : {punchHearts === 0.5 ? 'un demi-cœur' : `${String(punchHearts).replace('.', ',')} cœurs`} de dégâts
-et une poussée, quoi que tu tiennes en main. Il ne touche jamais les animaux apprivoisés, les golems de fer ni les supports d'armure, et il ne touche
-les autres joueurs que si le PvP est activé. Les villageois et les passants, en revanche, sont des cibles, et ils s'en souviennent.
+Dès Pompette {roman(rowdyLevel - 1)}, tu deviens tapageur. De temps en temps, tu as envie d'en découdre, jusqu'à
+{Math.round(t.rowdyItchTicks / 20)} secondes d'affilée, et le premier qui se trouve devant toi y a droit, même si tu ne fais que jeter un œil
+vers lui. Ton bras recule un instant, si bien que tout le monde le voit venir, puis tu envoies un vrai coup de poing :
+{punchHearts === 0.5 ? 'un demi-cœur' : `${String(punchHearts).replace('.', ',')} cœurs`} de dégâts et une poussée, quoi que tu tiennes en
+main. L'élan te porte d'un pas en avant ; s'il s'est écarté, tu le rates et tu titubes. Il ne touche jamais les animaux apprivoisés, les
+golems de fer ni les supports d'armure, et il ne touche les autres joueurs que si le PvP est activé. Les villageois et les passants, en
+revanche, sont des cibles, et ils s'en souviennent.
 
 Et tu n’es **plus servi** : dès Pompette {roman(t.cutOffLevel - 1)}, les villageois et les marchands ambulants secouent la tête et ne
 commercent plus avec toi tant que tu n'as pas dessaoulé. Fais tes échanges avant le {t.cutOffLevel === 4 ? 'quatrième' : `${t.cutOffLevel}e`} verre.
+
+## Un verre de trop
+
+Déjà à Pompette {roman(t.maxLevel - 1)} et tu bois encore ? Ce verre ne t'assomme pas sur-le-champ. Il te **rattrape**
+{Math.round(under.soonestTicks / 20)} à {Math.round(under.latestTicks / 20)} secondes plus tard, quoi que tu sois en train de faire. Pendant
+les {Math.round(under.ticks / 20)} dernières secondes, tu te sens sombrer : tes paupières s'alourdissent, ta tête tombe, le monde devient
+étouffé et lointain, tes jambes lâchent et tu tangues fort. Tes amis le voient venir, eux aussi.
+
+Puis tu fais un **trou noir**. Tes yeux se ferment et tu t'écroules, des étoiles tournant autour de ta tête, pour que tout le monde les voie.
+Pendant ces quelques secondes, personne ne peut te blesser, ni mob ni joueur, et tomber non plus ; le reste du monde compte toujours, alors
+ne t'évanouis pas dans la lave. Puis tu te réveilles. Où ? Ça dépend de la soirée, et il y a plus de façons de se réveiller que tu ne le
+crois…
+
+Tu te réveilles sobre mais avec la [gueule de bois](#le-lendemain-matin), et tes poches contiendront peut-être quelque chose que tu ne te
+souviens pas d'avoir ramassé. Tu ne perds jamais rien de ce que tu avais. Dessaouler avant que ça frappe (un seau de lait, une nuit de
+sommeil) t'en sort ; un autre verre ne le repousse jamais.
+
+## Le lendemain matin
+
+Après un trou noir, ou une nuit de sommeil à Pompette {roman(h.sleepLevel - 1)} ou plus, tu te réveilles sobre, mais avec la
+<EffectBadge id="vineandbarrel:hangover" name="Gueule de bois" />. Tu as faim, aussi : pas plus de {h.hungryFood / 2} cuisses de viande,
+et rien dans ta saturation.
+
+- **La lumière du jour éblouit.** Sous le ciel ouvert, le grand jour fait mal et tu plisses les yeux. Juste après le réveil, ça te prend
+  même à l'intérieur, puis ça s'atténue en environ {Math.round(h.freshGlareTicks / 20)} secondes. Rester accroupi pour plisser les yeux aide.
+- **Les bruits forts** tout près te font grimacer.
+- Rien ne bouge ta vue et rien ne te donne la nausée.
+
+Elle dure {duration(h.afterBlackoutTicks)} après un trou noir, {duration(h.afterSleepTicks[h.sleepLevel])} après une nuit à
+Pompette {roman(h.sleepLevel - 1)} et {duration(h.afterSleepTicks[t.maxLevel])} à Pompette {roman(t.maxLevel - 1)}. **Une fiole d'eau ou
+n'importe quel jus** retire {pct(1 - h.drinkLeaves)} de ce qui reste.
 
 ## Dessaouler
 
@@ -53,27 +119,29 @@ commercent plus avec toi tant que tu n'as pas dessaoulé. Fais tes échanges ava
 - **Le lait** l'efface complètement, comme n'importe quel effet. Il efface aussi les bonus de tes boissons.
 - **Une fiole d'eau ou n'importe quel jus** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
   <Item id="apple_juice" />) la baisse d'un niveau tout de suite. Seule une simple fiole d'eau marche, aucune autre potion.
-- **Cuver :** va te coucher et dors toute la nuit. Il faut que la nuit soit vraiment passée : si tu te lèves tôt, ou si tu restes
-  éveillé pendant que les autres joueurs du serveur veillent, tu te réveilles aussi pompette que tu t'es couché.
+- **Avec Farmer's Delight**, ses <Item id="farmersdelight:milk_bottle" />, <Item id="farmersdelight:melon_juice" /> et
+  <Item id="farmersdelight:apple_cider" /> la baissent aussi d'un niveau. Une bouteille de lait retire un niveau ; un seau de lait
+  l'efface complètement.
+- **Cuver :** va te coucher et dors toute la nuit. Tu te réveilles sobre, mais dès Pompette {roman(h.sleepLevel - 1)} avec la
+  [gueule de bois](#le-lendemain-matin). Il faut que la nuit soit vraiment passée : si tu te lèves tôt, ou si tu restes éveillé pendant que
+  les autres joueurs du serveur veillent, tu te réveilles aussi pompette que tu t'es couché.
 
 ## Bon à savoir
 
-- **Accroupis-toi** à Pompette {roman(t.stumbleLevel - 1)} et tes jambes tiennent : pas de dérive, pas de titubement, pas de chute. Nager, monter
-  et voler sont sans risque aussi.
 - **Un trébuchement ne fait jamais mal** et ne te met jamais là où tu n'as pas marché. Tu ne tombes que sur un terrain plat et dégagé, sans
   monstre à proximité, et pas deux fois en moins de {Math.round(t.tripCooldownTicks / 20)} secondes ; partout ailleurs, ça reste un titubement.
 - **L'eau te sort vite des mauvais niveaux,** mais les niveaux du dessous gardent leur propre durée, donc tu ne dessaoules pas
   plus vite au total.
-- Pompette ne s'occupe que de ses propres effets secondaires : une Lenteur ou une Nausée venue d'une potion ou d'une commande n'est pas touchée.
-- Les liens, les commandes et les @mentions du tchat ne sont jamais pâteux.
-- Les autres joueurs te voient te balancer, entendent tes hoquets et voient tes titubements, tes chutes et tes coups de poing tapageurs, mais pas les
-  bords d'écran sombres ni tes clignements d'yeux.
+- Les autres joueurs te voient vaciller, tituber, trébucher et piquer du nez, voient venir tes coups de poing tapageurs et entendent tes
+  hoquets.
 - **Tu veux toute l'histoire d'un trou noir ?** Tous les endroits où tu peux te réveiller, les probabilités et les souvenirs sont sur
   [Trous noirs](/blackouts/). Spoilers, bien sûr.
 
 ## Réglages
 
-Les propriétaires de serveur peuvent désactiver Pompette entièrement (le mode sans alcool) ou couper un par un le tchat pâteux, le titubement (avec les chutes
-et la dérive), les trous noirs, les coups de poing de Tapageur et le refus de servir. Chaque joueur peut réduire à quel point Pompette secoue
-son écran, jusqu'à zéro, et désactiver les effets de vision ; les curseurs Effets de distorsion, Effets de champ de vision et Pulsations d'obscurité de Minecraft
-comptent aussi. Toutes les options et leurs valeurs par défaut sont sur [Configuration](/reference/config/).
+Les propriétaires de serveur peuvent désactiver Pompette entièrement (le mode sans alcool) ou couper un par un le tchat pâteux, les jambes
+pompettes (avec les titubements et les chutes), le fait de piquer du nez, la gueule de bois, les trous noirs, les coups de poing de Tapageur
+et le refus de servir. Pompette ne bouge jamais ton écran de lui-même ; chaque joueur peut réduire à quel point un hoquet, un titubement ou
+une chute le bouge, jusqu'à zéro, et le curseur Effets de distorsion de Minecraft compte aussi. Chaque joueur peut aussi couper les yeux
+pompettes (bords flous, vision double, panneaux qui s'effacent et l'éblouissement de la gueule de bois) et les oreilles cotonneuses. Toutes
+les options et leurs valeurs par défaut sont sur [Configuration](/reference/config/).

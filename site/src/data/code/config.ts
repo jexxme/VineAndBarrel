@@ -5,7 +5,18 @@
 // folder, the same keys as `section.key=value` with the same comments and ranges (fabric/FabricConfig.java).
 import { t, type Locale } from '../../lib/i18n';
 
-type Levels = { slurLevel: number; stumbleLevel: number; rowdyLevel: number; cutOffLevel: number };
+type Levels = {
+	slurLevel: number;
+	stumbleLevel: number;
+	rowdyLevel: number;
+	cutOffLevel: number;
+	drunkWalkLevel: number;
+	nodLevel: number;
+	doubleVisionLevel: number;
+	woollyLevel: number;
+	heartbeatLevel: number;
+	hangover: { sleepLevel: number };
+};
 /** `what` says what the option does, in the page's language (t() keys are the English text; `code` in backticks). */
 export type Option = { key: string; fallback: boolean | number; range?: [number, number]; what: (lv: Levels, l?: Locale) => string };
 export const configFiles = {
@@ -19,8 +30,10 @@ export const configFiles = {
 			{ key: 'maxLevel', fallback: 5, range: [1, 5], what: (_lv, l = 'en') => t('The highest level drinks can stack to. A lower cap also leaves out everything above it (no-buff, slurred chat, Rowdy, stumbling).', l) },
 			{ key: 'secondsPerLevel', fallback: 90, range: [1, 3600], what: (_lv, l = 'en') => t('How long each level lasts before it drops by one.', l) },
 			{ key: 'slurredChat', fallback: true, what: (lv, l = 'en') => t('Slurred chat from level {slurLevel}.', l, { slurLevel: lv.slurLevel }) },
-			{ key: 'stumbling', fallback: true, what: (lv, l = 'en') => t('Unsteady legs at level {stumbleLevel}: the drift while walking, the stumbles and the trips.', l, { stumbleLevel: lv.stumbleLevel }) },
-			{ key: 'blackout', fallback: true, what: (_lv, l = 'en') => t('Black out after one drink too many at the top level.', l) },
+			{ key: 'stumbling', fallback: true, what: (lv, l = 'en') => t('Drunk legs from level {drunkWalkLevel}: steps that come late and a walk that weaves; from level {stumbleLevel} the stumbles, the trips and heavy legs.', l, { drunkWalkLevel: lv.drunkWalkLevel, stumbleLevel: lv.stumbleLevel }) },
+			{ key: 'noddingOff', fallback: true, what: (lv, l = 'en') => t('From level {nodLevel}: stand still a while and you nod off on your feet.', l, { nodLevel: lv.nodLevel }) },
+			{ key: 'hangover', fallback: true, what: (lv, l = 'en') => t("After a blackout, or a night's sleep from level {sleepLevel}, you wake up hungover. `false`: a blackout leaves you at Tipsy I and hungry instead.", l, { sleepLevel: lv.hangover.sleepLevel }) },
+			{ key: 'blackout', fallback: true, what: (_lv, l = 'en') => t('One drink too many at the top level catches up with you a little later: you go under and black out.', l) },
 			{ key: 'rowdy', fallback: true, what: (lv, l = 'en') => t('Rowdy from level {rowdyLevel}: the wild punches and being cut off at the bar. `false` turns both off; the next two turn off just one.', l, { rowdyLevel: lv.rowdyLevel }) },
 			{ key: 'rowdyPunches', fallback: true, what: (lv, l = 'en') => t('From level {rowdyLevel}: now and then a wild punch at whoever is in front.', l, { rowdyLevel: lv.rowdyLevel }) },
 			{ key: 'cutOff', fallback: true, what: (lv, l = 'en') => t('From level {cutOffLevel}: villagers and wandering traders refuse to trade.', l, { cutOffLevel: lv.cutOffLevel }) },
@@ -31,11 +44,12 @@ export const configFiles = {
 		fabricFile: 'vineandbarrel-tipsy-client.properties',
 		section: 'tipsy',
 		options: [
-			{ key: 'wobbleIntensity', fallback: 1, range: [0, 2], what: (_lv, l = 'en') => t("How much Tipsy moves your screen (the sway, the jolts, the Nausea spells): 0 keeps it still (for motion sickness), 2 doubles it. Vanilla's Distortion Effects and FOV Effects sliders scale it too. It always wins over the server.", l) },
+			{ key: 'drunkScreen', fallback: 100, range: [0, 100], what: (_lv, l = 'en') => t("How much being tipsy moves your own view, in percent: a hiccup's flick, a stumble's dip, a trip. 0 keeps it still (for motion sickness). Tipsy never moves your view on its own. Vanilla's Distortion Effects slider scales it too. It always wins over the server.", l) },
 			{ key: 'otherPlayersSway', fallback: true, what: (_lv, l = 'en') => t('Show tipsy players swaying, hiccuping and stumbling, yourself in third person included.', l) },
-			{ key: 'visionEffects', fallback: true, what: (_lv, l = 'en') => t('The darker screen edges and the heavy-eyed blinks.', l) },
+			{ key: 'doubleVision', fallback: true, what: (lv, l = 'en') => t("Drunk eyes: soft screen edges, from level {doubleVisionLevel} double vision and fading signs, and the hangover's glare. `false` keeps your view clear.", l, { doubleVisionLevel: lv.doubleVisionLevel }) },
+			{ key: 'woollySound', fallback: true, what: (lv, l = 'en') => t('From level {woollyLevel}, the world sounds muffled. Music, menus and your own heartbeat stay clear.', l, { woollyLevel: lv.woollyLevel }) },
 			{ key: 'heartbeatVolume', fallback: 1, range: [0, 1], what: (_lv, l = 'en') => t('How loud you hear your own heart at Tipsy V (only you hear it). 0 turns it off.', l) },
 		] as Option[],
 	},
-	src: 'tipsy/TipsyConfig.java:29-51, tipsy/TipsyEvents.java:34-38, neoforge/NeoForgeConfig.java:22-26, fabric/FabricConfig.java:27-56',
+	src: 'tipsy/TipsyConfig.java:29-71, tipsy/TipsyEvents.java:34-38, neoforge/NeoForgeConfig.java:38-50, fabric/FabricConfig.java:27-56',
 };
