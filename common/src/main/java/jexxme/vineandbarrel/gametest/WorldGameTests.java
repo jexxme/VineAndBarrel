@@ -15,7 +15,10 @@ import jexxme.vineandbarrel.kettle.BrewKettleBlock;
 import jexxme.vineandbarrel.kettle.KettleSupport;
 import jexxme.vineandbarrel.registry.VBBlocks;
 import jexxme.vineandbarrel.registry.VBItems;
+import jexxme.vineandbarrel.world.village.TavernKeeper;
 import jexxme.vineandbarrel.world.village.VillageData;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import jexxme.vineandbarrel.world.village.VillageStructures;
 import jexxme.vineandbarrel.world.village.VillageType;
 import net.minecraft.core.BlockPos;
@@ -148,7 +151,11 @@ public final class WorldGameTests
 			register(n + "_closes_its_stairwell_without_room_for_a_cellar", TALL, 100, helper -> tavernWithoutCellar(helper, layout));
 			register(n + "_takes_a_village_plot", LARGE, 100, helper -> tavernTakesAVillagePlot(helper, layout));
 			register(n + "_holds_as_much_drink_as_before", LARGE, 100, helper -> tavernServings(helper, layout));
+			register(n + "_keeper_holds_his_kettle", TALL, 200, helper -> keeperHoldsHisKettle(helper, layout));
+			register(n + "_a_villager_takes_its_free_kettle", TALL, 400, helper -> villagerTakesFreeKettle(helper, layout));
 		}
+		register("world_tavern_keeper_takes_his_kettle_again", TALL, 600, WorldGameTests::keeperTakesHisKettleAgain);
+		register("world_tavern_keeper_from_a_generated_chunk_holds_his_kettle", TALL, 200, WorldGameTests::keeperFromAGeneratedChunk);
 	}
 
 	private WorldGameTests() {
@@ -1281,6 +1288,154 @@ public final class WorldGameTests
 		}
 		helper.assertTrue(holes.isEmpty(), layout.name() + " floor left open without a cellar under it: " + holes);
 		helper.succeed();
+	}
+
+	// ------------------------------------------------------------------ the tavern keeper at his kettle (1.2)
+
+	/** The keeper the tavern brought as it was placed. */
+	private static Villager keeperOf(Placed t) {
+		List<Villager> keepers = t.level().getEntitiesOfClass(Villager.class, net.minecraft.world.phys.AABB.of(t.box()).inflate(1), TavernKeeper::isKeeper);
+		if (keepers.size() != 1) {
+			throw new IllegalStateException("keepers in the tavern: " + keepers.size());
+		}
+		return keepers.getFirst();
+	}
+
+	/** Whether the job site at this kettle is free: its one ticket not taken by any villager. */
+	private static boolean free(ServerLevel level, BlockPos kettle) {
+		return level.getPoiManager().getInRange(poi -> poi.is(TavernKeeper.JOB_SITE), kettle, 0, PoiManager.Occupancy.HAS_SPACE)
+			.anyMatch(record -> record.getPos().equals(kettle));
+	}
+
+	/** The cell beside the kettle's campfire where a villager stands at the kettle (the only open one behind the bar). */
+	private static BlockPos besideTheFire(ServerLevel level, BlockPos kettle) {
+		for (Direction side : Direction.Plane.HORIZONTAL) {
+			BlockPos feet = kettle.below().relative(side);
+			if (level.getBlockState(feet).isAir() && level.getBlockState(feet.above()).isAir() && level.getBlockState(feet.below()).isSolid()) {
+				return feet;
+			}
+		}
+		throw new IllegalStateException("no room beside the fire under " + kettle);
+	}
+
+	/** A villager's job as far as the kettle goes, for a failure message. */
+	private static String jobState(ServerLevel level, Villager villager, BlockPos kettle, BlockPos origin) {
+		var brain = villager.getBrain();
+		return villager.getVillagerData().profession().getRegisteredName() + " at " + villager.blockPosition().subtract(origin).toShortString()
+			+ ", job site " + brain.getMemory(MemoryModuleType.JOB_SITE).map(site -> site.pos().subtract(origin).toShortString()).orElse("none")
+			+ ", on his way to " + brain.getMemory(MemoryModuleType.POTENTIAL_JOB_SITE).map(site -> site.pos().subtract(origin).toShortString()).orElse("none")
+			+ ", kettle at " + kettle.subtract(origin).toShortString() + " " + (free(level, kettle) ? "free" : "taken");
+	}
+
+	private static boolean holds(Villager villager, BlockPos kettle) {
+		return villager.getBrain().getMemory(MemoryModuleType.JOB_SITE).map(site -> site.pos().equals(kettle)).orElse(false);
+	}
+
+	/**
+	 * Review 1.2: the keeper a tavern brings holds its kettle as his job site, its ticket his, and keeps it; placing the
+	 * tavern takes no ticket of its own (nobody holds the kettle as it is placed).
+	 */
+	private static void keeperHoldsHisKettle(GameTestHelper helper, VillageStructures.TavernLayout layout) {
+		ServerLevel level = helper.getLevel();
+		Placed t = placeTavern(helper, layout);
+		BlockPos kettle = t.find(TavernKeeper::isJobSite).getFirst();
+		Villager keeper = keeperOf(t);
+		helper.assertTrue(free(level, kettle), layout.name() + ": nobody holds the kettle as the tavern is placed");
+		helper.runAfterDelay(100, () -> {
+			String state = jobState(level, keeper, kettle, t.origin());
+			helper.assertTrue(TavernKeeper.isKeeper(keeper), layout.name() + " keeper keeps his trade: " + state);
+			helper.assertTrue(holds(keeper, kettle), layout.name() + " keeper holds his kettle as his job site: " + state);
+			helper.assertFalse(free(level, kettle), layout.name() + " keeper's kettle is taken (his): " + state);
+			helper.succeed();
+		});
+	}
+
+	/**
+	 * Review 1.2: a tavern's kettle that nobody holds is any jobless villager's to take. From the street a villager finds
+	 * it (within a job site's reach) and walks to the spot beside its fire, where he is hired, never onto the bar or the
+	 * roof; one standing there takes it.
+	 */
+	private static void villagerTakesFreeKettle(GameTestHelper helper, VillageStructures.TavernLayout layout) {
+		ServerLevel level = helper.getLevel();
+		Placed t = placeTavern(helper, layout);
+		BlockPos kettle = t.find(TavernKeeper::isJobSite).getFirst();
+		keeperOf(t).discard();
+		helper.assertTrue(free(level, kettle), layout.name() + ": the kettle is free");
+		BlockPos beside = besideTheFire(level, kettle);
+		Villager walker = helper.spawn(EntityType.VILLAGER, relativePos(helper, t.street()));
+		walker.setNoAi(true);
+		// a mob plans paths only while it stands on the ground; it has not fallen onto it yet on its first tick
+		walker.setOnGround(true);
+		var site = level.registryAccess().lookupOrThrow(Registries.POINT_OF_INTEREST_TYPE).getOrThrow(TavernKeeper.JOB_SITE);
+		Path found = net.minecraft.world.entity.ai.behavior.AcquirePoi.findPathToPois(walker, Set.of(com.mojang.datafixers.util.Pair.of(site, kettle)));
+		helper.assertTrue(found != null && found.canReach(), "a villager from the " + layout.name() + " street finds the kettle: " + describe(found, t.origin()));
+		// his walk there, as the game's walking behaviour plans it when he sets out for the kettle
+		walker.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new net.minecraft.world.entity.ai.memory.WalkTarget(kettle, 0.5F, 1));
+		new net.minecraft.world.entity.ai.behavior.MoveToTargetSink().tryStart(level, walker, level.getGameTime());
+		Path walk = walker.getNavigation().getPath();
+		helper.assertTrue(walk != null && walk.canReach() && walk.getEndNode() != null && beside.equals(walk.getEndNode().asBlockPos()),
+			"his walk to the " + layout.name() + " kettle ends beside its fire at " + beside.subtract(t.origin()).toShortString() + ": " + describe(walk, t.origin()));
+		walker.discard();
+		Villager jobless = helper.spawn(EntityType.VILLAGER, relativePos(helper, beside));
+		// he stays where he stands (by night he would stroll off, and only walk back by day)
+		jobless.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED).setBaseValue(0.0);
+		helper.succeedWhen(() -> {
+			String state = jobState(level, jobless, kettle, t.origin());
+			helper.assertTrue(TavernKeeper.isKeeper(jobless) && holds(jobless, kettle) && !free(level, kettle),
+				"a jobless villager in the " + layout.name() + " takes its kettle: " + state);
+		});
+	}
+
+	/**
+	 * Review 1.2: a village's keeper is generated with his chunk, saved with it and loaded with it: loaded before his
+	 * first tick, he holds his tavern's kettle too.
+	 */
+	private static void keeperFromAGeneratedChunk(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		Placed t = placeTavern(helper, VillageStructures.taverns(VillageType.DESERT).getFirst());
+		BlockPos kettle = t.find(TavernKeeper::isJobSite).getFirst();
+		Villager placed = keeperOf(t);
+		net.minecraft.world.level.storage.TagValueOutput output = net.minecraft.world.level.storage.TagValueOutput.createWithContext(
+			net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess());
+		helper.assertTrue(placed.save(output), "the keeper is saved with his chunk");
+		placed.discard();
+		var loaded = net.minecraft.world.entity.EntityType.loadEntityRecursive(net.minecraft.world.level.storage.TagValueInput.create(
+			net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess(), output.buildResult()), level, net.minecraft.world.entity.EntitySpawnReason.LOAD,
+			net.minecraft.world.entity.EntityProcessor.NOP);
+		helper.assertTrue(loaded instanceof Villager, "and loaded with it: " + loaded);
+		Villager keeper = (Villager) loaded;
+		helper.assertTrue(TavernKeeper.TAVERN_KETTLE.has(keeper), "he still knows his tavern's kettle once loaded");
+		level.addFreshEntity(keeper);
+		helper.succeedWhen(() -> helper.assertTrue(holds(keeper, kettle) && !free(level, kettle),
+			"the loaded keeper holds his kettle: " + jobState(level, keeper, kettle, t.origin())));
+	}
+
+	/**
+	 * Review 1.2: a keeper whose kettle is broken loses his job site, and takes it again once a kettle is back on the fire;
+	 * he keeps his trade meanwhile (a little experience).
+	 */
+	private static void keeperTakesHisKettleAgain(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		Placed t = placeTavern(helper, VillageStructures.taverns(VillageType.PLAINS).getFirst());
+		BlockPos kettle = t.find(TavernKeeper::isJobSite).getFirst();
+		BlockState state = level.getBlockState(kettle);
+		Villager keeper = keeperOf(t);
+		BlockPos beside = besideTheFire(level, kettle);
+		helper.startSequence()
+			.thenWaitUntil(() -> helper.assertTrue(holds(keeper, kettle), "the keeper holds his kettle first: " + jobState(level, keeper, kettle, t.origin())))
+			.thenExecute(() -> level.setBlockAndUpdate(kettle, Blocks.AIR.defaultBlockState()))
+			.thenWaitUntil(() -> helper.assertTrue(keeper.getBrain().getMemory(MemoryModuleType.JOB_SITE).isEmpty(),
+				"without the kettle no job site: " + jobState(level, keeper, kettle, t.origin())))
+			.thenExecute(() -> {
+				helper.assertTrue(TavernKeeper.isKeeper(keeper), "he keeps his trade without his kettle");
+				level.setBlockAndUpdate(kettle, state);
+				// beside the fire again, wherever he strolled off to, and he stays there (villagers only walk to a job site by day)
+				keeper.teleportTo(beside.getX() + 0.5, beside.getY(), beside.getZ() + 0.5);
+				keeper.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED).setBaseValue(0.0);
+			})
+			.thenWaitUntil(() -> helper.assertTrue(holds(keeper, kettle) && !free(level, kettle),
+				"the keeper takes the kettle back: " + jobState(level, keeper, kettle, t.origin())))
+			.thenSucceed();
 	}
 
 	/** A path's nodes relative to the tavern, for a failure message. */
