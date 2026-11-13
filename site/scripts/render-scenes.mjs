@@ -15,6 +15,42 @@ const failed = [];
 /** A piece of the trellis frame (end posts, top rail, caps; the game adds them from the neighbours) for an east-west row. */
 const frame = (part, offset) => ({ model: `vineandbarrel:block/trellis_${part}`, offset });
 
+/**
+ * The leaves of a vine on a fence, wall, bars or chain, as the game adds them from the block it holds (SupportLeaves):
+ * on each arm that reaches a neighbour and on the post's faces; crossed planes through a chain. kind: fence, wall, bars
+ * or chain; sides: the held block's north/east/south/west (and up for a wall) as in its block state.
+ */
+function supportLeaves(crop, kind, sides, base, age, offset) {
+	const model = (piece) => `vineandbarrel:block/${crop}_vine_on_support_${piece}${base ? '_base' : ''}_stage${age}`;
+	const out = [];
+	const add = (piece, turn) => out.push({ model: model(piece), y: turn ? turn * 90 : undefined, offset });
+	const arms = ['west', 'north', 'east', 'south'];
+	if (kind === 'chain') {
+		add('cross', 0);
+	} else if (kind === 'wall') {
+		let any = false;
+		arms.forEach((side, turn) => {
+			const v = sides[side] ?? 'none';
+			if (v !== 'none') { add(v === 'tall' ? 'wall_arm_tall' : 'wall_arm_low', turn); any = true; }
+		});
+		if (sides.up === 'true' || !any) { add('wall_post', 0); add('wall_post', 1); }
+	} else {
+		let alongX = false, alongZ = false;
+		arms.forEach((side, turn) => {
+			if (sides[side] === 'true') {
+				add(kind === 'fence' ? 'fence_arm' : 'bars_arm', turn);
+				if (side === 'west' || side === 'east') alongX = true; else alongZ = true;
+			}
+		});
+		const lone = !alongX && !alongZ;
+		if (kind === 'fence') {
+			if (alongX || lone) add('fence_post', 0);
+			if (alongZ || lone) add('fence_post', 1);
+		} else if (lone) { add('bars_post', 0); add('bars_post', 1); }
+	}
+	return out;
+}
+
 /** place(blockId, state, [x, y, z]) -> scene parts */
 function place(block, state = {}, offset = [0, 0, 0], tint) {
 	// Fire is a multipart model with OR conditions; its floor model is what you see on a block
@@ -171,21 +207,23 @@ const scenes = {
 		...[1, 2, 3].flatMap((y) => [frame('post_left', [0, y, 0]), frame('post_right', [3, y, 0])]),
 		...[0, 1, 2, 3].map((x) => frame('rail', [x, 3, 0])), frame('cap_left', [0, 3, 0]), frame('cap_right', [3, 3, 0]),
 	],
-	// Grapes and hops grown into an oak fence row and a mossy wall two high (the wiki shows the block they hold under the
-	// leaves, as the game draws it): ripe red grapes, ripe hops, a bare post; ripe white grapes, half-ripe red, a bare wall
-	'supports': [
-		...[0, 1, 2, 3, 4, 5].flatMap((x) => place('minecraft:grass_block', {}, [x, 0, 0], GRASS)),
-		...[0, 1, 2].flatMap((x) => place('minecraft:oak_fence', { east: String(x < 2), west: String(x > 0), north: 'false', south: 'false' }, [x, 1, 0])),
-		...place('vineandbarrel:grape_vine_on_support', { age: '3', base: 'true', look: 'thin_x' }, [0, 1, 0]),
-		...place('vineandbarrel:hop_vine_on_support', { age: '3', base: 'true', look: 'thin_x' }, [1, 1, 0]),
-		...[3, 4, 5].flatMap((x) => [1, 2].flatMap((y) => place('minecraft:mossy_cobblestone_wall',
-			{ east: x < 5 ? (y === 1 ? 'tall' : 'low') : 'none', west: x > 3 ? (y === 1 ? 'tall' : 'low') : 'none', north: 'none', south: 'none', up: String(x === 3 || x === 5) },
-			[x, y, 0]))),
-		...[['white_grape', '3', 3], ['grape', '2', 4]].flatMap(([crop, age, x]) => [
-			...place(`vineandbarrel:${crop}_vine_on_support`, { age, base: 'true', look: 'wide_x' }, [x, 1, 0]),
-			...place(`vineandbarrel:${crop}_vine_on_support`, { age, base: 'false', look: 'wide_x' }, [x, 2, 0]),
-		]),
-	],
+	// Grapes and hops grown into an oak fence row and a mossy wall two high, the leaves following the block they hold:
+	// ripe red grapes, ripe hops, a bare post; ripe white grapes, half-ripe red, a bare wall
+	'supports': (() => {
+		const fence = (x) => ({ east: String(x < 2), west: String(x > 0), north: 'false', south: 'false' });
+		const wall = (x, y) => ({ east: x < 5 ? (y === 1 ? 'tall' : 'low') : 'none', west: x > 3 ? (y === 1 ? 'tall' : 'low') : 'none', north: 'none', south: 'none', up: String(x === 3 || x === 5) });
+		return [
+			...[0, 1, 2, 3, 4, 5].flatMap((x) => place('minecraft:grass_block', {}, [x, 0, 0], GRASS)),
+			...[0, 1, 2].flatMap((x) => place('minecraft:oak_fence', fence(x), [x, 1, 0])),
+			...supportLeaves('grape', 'fence', fence(0), true, 3, [0, 1, 0]),
+			...supportLeaves('hop', 'fence', fence(1), true, 3, [1, 1, 0]),
+			...[3, 4, 5].flatMap((x) => [1, 2].flatMap((y) => place('minecraft:mossy_cobblestone_wall', wall(x, y), [x, y, 0]))),
+			...[['white_grape', 3, 3], ['grape', 2, 4]].flatMap(([crop, age, x]) => [
+				...supportLeaves(crop, 'wall', wall(x, 1), true, age, [x, 1, 0]),
+				...supportLeaves(crop, 'wall', wall(x, 2), false, age, [x, 2, 0]),
+			]),
+		];
+	})(),
 	'garden': [
 		...[0, 1, 2].flatMap((x) => place('minecraft:farmland', { moisture: '7' }, [x, 0, 1])),
 		...[0, 1, 2].flatMap((x) => place('minecraft:grass_block', {}, [x, 0, 0], GRASS)),

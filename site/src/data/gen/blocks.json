@@ -16,7 +16,8 @@
 				"trellis_z",
 				"rope",
 				"faces_x",
-				"faces_z"
+				"faces_z",
+				"cross"
 			],
 			"trellis": [
 				"none",
@@ -54,7 +55,8 @@
 				"trellis_z",
 				"rope",
 				"faces_x",
-				"faces_z"
+				"faces_z",
+				"cross"
 			],
 			"trellis": [
 				"none",
@@ -140,7 +142,8 @@
 				"trellis_z",
 				"rope",
 				"faces_x",
-				"faces_z"
+				"faces_z",
+				"cross"
 			],
 			"trellis": [
 				"none",

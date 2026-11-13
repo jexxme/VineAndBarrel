@@ -57,6 +57,18 @@ Bir çalıya <Item id="trellis" /> yerleştir (bahçe kafesiyle çalıya sağ t�
 Bir çalının üstündeki Farmer's Delight halatı tıpkı bir bahçe kafesi gibi çalışır, FD'nin domateslerinin tırmandığı gibi. Farmer's Delight Neoforged 1.3.4-3 veya daha yenisiyle FD'nin domatesleri bahçe kafesine de tırmanır (NeoForge, Minecraft 26.x). Bkz. [Farmer's Delight](/farmers-delight/).
 </Aside>
 
+## Çitler, duvarlar, zincirler ve parmaklıklar
+
+<Render name="scenes/supports" float="right" size={256} alt="Meşe çit sırasına ve yosunlu bir duvara sarılmış üzüm ve şerbetçiotu asmaları" />
+
+Elinde bahçe kafesi yok mu? Üzüm ve şerbetçiotu **çitlere, duvarlara, zincirlere ve demir parmaklıklara** da tırmanır, iki yönde de, tıpkı bahçe kafesi gibi: çimde, toprakta ya da tarım arazisinde duran birine üzüm ya da şerbetçiotuyla sağ tıkla, ya da bu bloklardan biriyle çalıya sağ tıkla. Bitki bu durumda üstüne dizilenlere tırmanır, {c.climbMaxHeight} bloğa kadar.
+
+- Her toplama bahçe kafesine göre bir meyve eksik verir: olgunken {h.grapes_on_support.count[0]} ile {h.grapes_on_support.count[1]} arası, yarı olgunken {h.grapes_on_support.halfRipe[0]}. En iyi destek yine bahçe kafesi.
+- Blok olduğu gibi kalır: ladin çiti ladin çiti olarak kalır, çitler ve duvarlar birbirine bağlanmaya devam eder, bir tasma bağlı kalır. Bitkiyi kırınca blok yerinde durur.
+- Zincirler yalnızca dik dururken sayılır. Merdivenler, ince camlar ve çit kapıları hiçbir şeyi tutmaz.
+- Çitler ve duvarlar bitkinin içinde durmalı: üstüne biri konan çalı, çalı olarak kalır. Çalının üstündeki zincirlere ve demir parmaklıklara ise bahçe kafesi gibi tırmanır.
+- Diğer modların çitleri ve duvarları da olur, paketler de `#vineandbarrel:makeshift_vine_supports` etiketine blok ekleyebilir.
+
 ## Arpa
 
 Tarlaya <Item id="barley_seeds" /> ek. Arpa tam olarak buğday gibi, {barleyStages} aşamada büyür ve aynı şekilde verir: olgunlaşınca <Item id="barley" />, bir de fazladan tohum.
