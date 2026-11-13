@@ -22,8 +22,8 @@ import org.jspecify.annotations.Nullable;
  */
 public final class TipsySounds
 {
-	/** The first level you hear your own heart at ({@link TipsyLevels.Ears#heartbeat}). */
-	public static final int HEARTBEAT_LEVEL = TipsyLevels.first(level -> level.ears().heartbeat() > 0.0F);
+	/** From this level you hear your own heart: Tipsy V, the top. */
+	public static final int HEARTBEAT_LEVEL = Tipsy.ABSOLUTE_MAX_LEVEL;
 	/** A heartbeat about every this many ticks (a little over 50 a minute, slow and heavy). */
 	public static final int HEARTBEAT_GAP = 22;
 	/** The heartbeat's loudness at full {@link TipsyConfig#heartbeatVolume()}: quiet, under everything else. */

@@ -42,8 +42,8 @@ public class TipsyEffect extends MobEffect
 	public void createModifiers(int amplifier, BiConsumer<Holder<Attribute>, AttributeModifier> consumer) {
 		// "Liquid courage" (TipsyLevels): from I to III a little knockback resistance and less fall damage, none from IV
 		TipsyLevels.Level level = TipsyLevels.at(amplifier + 1);
-		consumer.accept(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(COURAGE_KNOCKBACK, level.courage().knockbackResistance(), AttributeModifier.Operation.ADD_VALUE));
-		consumer.accept(Attributes.FALL_DAMAGE_MULTIPLIER, new AttributeModifier(COURAGE_FALL, -level.courage().fallDamageReduction(), AttributeModifier.Operation.ADD_VALUE));
+		consumer.accept(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(COURAGE_KNOCKBACK, level.knockbackResistance(), AttributeModifier.Operation.ADD_VALUE));
+		consumer.accept(Attributes.FALL_DAMAGE_MULTIPLIER, new AttributeModifier(COURAGE_FALL, -level.fallDamageReduction(), AttributeModifier.Operation.ADD_VALUE));
 	}
 
 	@Override
