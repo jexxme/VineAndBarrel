@@ -209,6 +209,7 @@ public final class Tipsy
 			soberUp(entity);
 		} else {
 			DrinkBuffs.tick(entity);
+			TipsyEffect.keepHeavyLegs(entity, level);
 		}
 	}
 

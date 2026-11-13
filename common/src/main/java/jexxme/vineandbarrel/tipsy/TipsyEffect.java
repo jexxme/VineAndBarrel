@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import jexxme.vineandbarrel.VineAndBarrel;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -52,10 +53,32 @@ public class TipsyEffect extends MobEffect
 		TipsyLevels.Level level = TipsyLevels.at(amplifier + 1);
 		if (HEAVY_LEGS.equals(modifier.getId())) {
 			// Heavy legs at IV and V: slower, sprinting too (never no sprinting)
-			return -level.legs().slower();
+			return -heavyLegs(amplifier + 1);
 		}
 		// "Liquid courage" (TipsyLevels): from I to III a little knockback resistance, none from IV
 		return level.courage().knockbackResistance();
+	}
+
+	/**
+	 * {@return how much slower heavy legs make you at this level (a share of your speed)} Part of the drunk walk, so the
+	 * server's {@code stumbling} switch turns it off with the rest.
+	 */
+	public static float heavyLegs(int level) {
+		return TipsyConfig.stumbling() ? TipsyLevels.at(level).legs().slower() : 0.0F;
+	}
+
+	/**
+	 * Once a tick for a tipsy entity: the heavy legs follow the {@code stumbling} switch when it is changed while the
+	 * effect is on (vanilla only sets the speed when the level changes).
+	 */
+	static void keepHeavyLegs(LivingEntity entity, int level) {
+		AttributeInstance speed = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+		AttributeModifier now = speed == null ? null : speed.getModifier(HEAVY_LEGS);
+		double want = -heavyLegs(level);
+		if (now != null && now.getAmount() != want) {
+			speed.removeModifier(HEAVY_LEGS);
+			speed.addPermanentModifier(new AttributeModifier(HEAVY_LEGS, now.getName(), want, AttributeModifier.Operation.MULTIPLY_TOTAL));
+		}
 	}
 
 	/**
