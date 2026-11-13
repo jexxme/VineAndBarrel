@@ -84,6 +84,14 @@ public final class TavernKeeper
 	public static final EntityAttachment<Long> RESTOCKED = Services.PLATFORM.attachment(VineAndBarrel.id("keeper_restocked"),
 		EntityAttachment.Spec.builder(() -> -1L).serialize(com.mojang.serialization.Codec.LONG.fieldOf("game_time")).build());
 
+	/**
+	 * The kettle of the tavern a keeper came with, until he holds it as his job site (server only, saved). A village
+	 * places its tavern's keeper with the chunk, before the game lists the kettle as a job site, so he takes it on his
+	 * first tick in the world ({@link #takeTavernKettle}).
+	 */
+	public static final EntityAttachment<BlockPos> TAVERN_KETTLE = Services.PLATFORM.attachment(VineAndBarrel.id("keeper_kettle"),
+		EntityAttachment.Spec.builder(() -> BlockPos.ZERO).serialize(BlockPos.CODEC.fieldOf("pos")).build());
+
 	/** He raises his mug to a drink finished this close to him, if he can see the drinker. */
 	public static final double CHEERS_RANGE = 6.0;
 	/** Each cheers with him is a little good word about you, up to vanilla's cap for it (25). */
@@ -174,6 +182,7 @@ public final class TavernKeeper
 	/** Every tick for every villager: hired at a kettle ({@link #hire}); once a second for every keeper: the daily restock. */
 	public static void tick(Villager keeper) {
 		if (keeper.level() instanceof ServerLevel server) {
+			takeTavernKettle(server, keeper);
 			hire(server, keeper);
 		}
 		if (!(keeper.level() instanceof ServerLevel level) || keeper.tickCount % 20 != 0 || !isKeeper(keeper) || keeper.isBaby()) {
@@ -208,6 +217,64 @@ public final class TavernKeeper
 			villager.setVillagerData(villager.getVillagerData().setProfession(TAVERN_KEEPER.get()));
 			villager.refreshBrain(level);
 		}
+	}
+
+	/**
+	 * The keeper a tavern brought takes its kettle as his job site, as a villager who walked up to it would (its one
+	 * ticket his), once the game lists it as one. Should another villager hold it already, or the kettle be gone, he
+	 * looks for a kettle as any keeper does.
+	 */
+	public static void takeTavernKettle(ServerLevel level, Villager keeper) {
+		if (!TAVERN_KETTLE.has(keeper)) {
+			return;
+		}
+		BlockPos kettle = TAVERN_KETTLE.get(keeper);
+		if (!level.isLoaded(kettle)) {
+			return;
+		}
+		var brain = keeper.getBrain();
+		if (!isKeeper(keeper) || brain.hasMemoryValue(MemoryModuleType.JOB_SITE) || !isJobSite(level.getBlockState(kettle))) {
+			TAVERN_KETTLE.remove(keeper);
+			return;
+		}
+		var pois = level.getPoiManager();
+		if (pois.getType(kettle).isEmpty()) {
+			return; // listed on its next tick (ensureJobSite)
+		}
+		TAVERN_KETTLE.remove(keeper);
+		if (pois.take(type -> type.is(JOB_SITE), (type, pos) -> pos.equals(kettle), kettle, 1).isPresent()) {
+			keeper.releasePoi(MemoryModuleType.POTENTIAL_JOB_SITE);
+			brain.eraseMemory(MemoryModuleType.POTENTIAL_JOB_SITE);
+			brain.setMemory(MemoryModuleType.JOB_SITE, GlobalPos.of(level.dimension(), kettle));
+		}
+	}
+
+	/**
+	 * Where a villager walking to the kettle at {@code kettle} stands at it: an open spot beside the campfire it sits on,
+	 * else beside the kettle itself, the one nearest to {@code from}; null when it has none. Walking to the kettle itself,
+	 * a villager aims above it (a path's target moves up out of solid blocks, through the shelf over a tavern's kettle)
+	 * and ends up on the bar or the roof, too far off to be hired or to work.
+	 */
+	public static @Nullable BlockPos standingSpot(net.minecraft.world.level.BlockGetter level, BlockPos kettle, BlockPos from) {
+		for (BlockPos base : List.of(kettle.below(), kettle)) {
+			BlockPos best = null;
+			for (net.minecraft.core.Direction side : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+				BlockPos feet = base.relative(side);
+				if (open(level, feet) && open(level, feet.above()) && !open(level, feet.below())
+					&& kettle.closerToCenterThan(net.minecraft.world.phys.Vec3.atBottomCenterOf(feet), KETTLE_REACH)
+					&& (best == null || feet.distSqr(from) < best.distSqr(from))) {
+					best = feet;
+				}
+			}
+			if (best != null) {
+				return best;
+			}
+		}
+		return null;
+	}
+
+	private static boolean open(net.minecraft.world.level.BlockGetter level, BlockPos pos) {
+		return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
 	}
 
 	/** A restock under way: the cask he walks to, and when he gives up on it. */
