@@ -53,7 +53,7 @@ public final class Rowdy
 	 */
 	public static final int ITCH = 20 * 20;
 	/** The swing carries you this far forward (blocks per tick, once). */
-	private static final double LUNGE = 0.35;
+	public static final double LUNGE = 0.35;
 
 	/**
 	 * Once a tick on the server, for tipsy players (from {@link Tipsy#tick}: never while out cold or down after a trip):
@@ -134,11 +134,11 @@ public final class Rowdy
 		Entity target = inFront(player);
 		boolean missed = target == null || !mayHit(player, target);
 		// swung at nothing: the swing takes you with it, a stumble on top of the step forward
-		boolean stumbled = missed && TipsyLegs.stumble(player, ahead, player.getRandom());
-		// The step forward only where the ground ahead is safe for two steps (it carries a walking player further)
-		if (player.onGround() && ahead.lengthSqr() > 1.0E-6 && TipsyLegs.safeToWeave(player, ahead, ahead)) {
-			TipsyLegs.push(player, ahead.normalize().scale(LUNGE), stumbled);
+		if (missed) {
+			TipsyLegs.stumble(player, ahead, player.getRandom());
 		}
+		// The step forward: the swinger's own client takes it, from where they really are (ownLunge)
+		TipsyMotion.lunge(player);
 		if (missed) {
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_ATTACK_NODAMAGE, SoundSource.PLAYERS, 0.8F, 0.8F);
 			return null;
@@ -154,6 +154,21 @@ public final class Rowdy
 
 	/** How far a player reaches an entity on 1.20.1 (no reach attribute yet): vanilla's 3 blocks, 6 in creative mode. */
 	private static final double REACH = 3.0, CREATIVE_REACH = 6.0;
+
+	/**
+	 * On the swinger's own client, when it sees the swing's step forward ({@link TipsyMotion.Counts#lunges}): the push
+	 * to add to how they move right now, toward where they face, or {@link Vec3#ZERO}. Only on the ground, and only where
+	 * the ground ahead is safe for two steps from where they are now (the step carries a walking player further). The
+	 * server never sends it as a speed: it only knows how the player moved a moment ago, and sent back with the step that
+	 * carried someone who had just stopped or turned at an edge over it.
+	 */
+	public static Vec3 ownLunge(Player player) {
+		Vec3 ahead = new Vec3(player.getLookAngle().x, 0.0, player.getLookAngle().z);
+		if (!player.onGround() || ahead.lengthSqr() < 1.0E-6 || !TipsyLegs.safeToWeave(player, ahead, ahead)) {
+			return Vec3.ZERO;
+		}
+		return ahead.normalize().scale(LUNGE);
+	}
 
 	/** Someone counts as in front within this angle either side of where you face (degrees, cosine). */
 	private static final double IN_FRONT_COS = Math.cos(Math.toRadians(55.0));

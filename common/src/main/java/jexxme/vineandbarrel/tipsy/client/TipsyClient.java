@@ -5,11 +5,13 @@ import com.mojang.math.Axis;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.tipsy.Blackout;
 import jexxme.vineandbarrel.tipsy.BlackoutPose;
+import jexxme.vineandbarrel.tipsy.Rowdy;
 import jexxme.vineandbarrel.tipsy.Tipsy;
 import jexxme.vineandbarrel.tipsy.TipsyConfig;
 import jexxme.vineandbarrel.tipsy.TipsyGait;
 import jexxme.vineandbarrel.tipsy.TipsySounds;
 import jexxme.vineandbarrel.tipsy.TipsyInfo;
+import jexxme.vineandbarrel.tipsy.TipsyLegs;
 import jexxme.vineandbarrel.tipsy.TipsyLevels;
 import jexxme.vineandbarrel.tipsy.TipsyMotion;
 import jexxme.vineandbarrel.tipsy.TipsyNod;
@@ -213,9 +215,18 @@ public final class TipsyClient
 		if (counts.hiccups() != moves.seen.hiccups()) {
 			moves.hiccupAt = now;
 		}
+		boolean own = player == Minecraft.getInstance().player;
 		if (counts.stumbles() != moves.seen.stumbles()) {
 			moves.stumbleAt = now;
 			moves.left = counts.stumbleLeft();
+			if (own) {
+				// the stumble's small give to the side, from where this player really is now
+				push(player, TipsyLegs.ownStumble(player, player.position().subtract(player.xo, player.yo, player.zo), counts.stumbleLeft()));
+			}
+		}
+		if (own && counts.lunges() != moves.seen.lunges()) {
+			// a wild swing's step forward
+			push(player, Rowdy.ownLunge(player));
 		}
 		if (counts.trips() != moves.seen.trips()) {
 			moves.tripAt = now;
@@ -230,6 +241,13 @@ public final class TipsyClient
 		float most = level == null ? 0.0F : TipsyLevels.at(level).legs().swayDegrees() * BODY_CURVE_LEAN;
 		float target = most <= 0.0F || !player.onGround() ? 0.0F : TipsyGait.leanTarget(turning, most);
 		moves.lean = TipsyGait.ease(moves.lean, target);
+	}
+
+	/** Adds {@code push} to how this client's own player moves (it moves here, not on the server). */
+	private static void push(Player player, Vec3 push) {
+		if (push != Vec3.ZERO) {
+			player.setDeltaMovement(player.getDeltaMovement().add(push));
+		}
 	}
 
 	/** Of the level's sway, how far the body others see leans into a curve it walks. */
