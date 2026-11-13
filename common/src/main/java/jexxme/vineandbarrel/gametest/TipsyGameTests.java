@@ -124,6 +124,7 @@ public final class TipsyGameTests
 		test("tipsy_rowdy_calms_down_below_four", TipsyGameTests::rowdyCalmsDownBelowFour);
 		test("tipsy_rowdy_walls_and_edges", TipsyGameTests::rowdyWallsAndEdges);
 		test("tipsy_going_under_waits_for_ground", TipsyGameTests::goingUnderWaitsForGround);
+		test("tipsy_going_under_waits_while_asleep", TipsyGameTests::goingUnderWaitsWhileAsleep);
 		test("tipsy_rowdy_spares_pets_and_golems", TipsyGameTests::rowdySpares);
 		test("tipsy_rowdy_cut_off_at_the_bar", TipsyGameTests::rowdyCutOff);
 		test("tipsy_rowdy_cut_off_by_a_real_click", TipsyGameTests::rowdyCutOffClick);
@@ -1137,6 +1138,41 @@ public final class TipsyGameTests
 		TipsyEvents.onEntityTick(player);
 		helper.assertFalse(Blackout.isOut(player), "just back: not on the spot");
 		helper.assertValueEqual(GoingUnder.hitAt(player), helper.getLevel().getGameTime() + GoingUnder.TICKS, "the going under first");
+		helper.succeed();
+	}
+
+	/**
+	 * Audit 1.2: asleep in a bed, the delayed blackout never hits and its last seconds don't start; a night's sleep sobers
+	 * up and ends it; up again before that, the going under plays first.
+	 */
+	private static void goingUnderWaitsWhileAsleep(GameTestHelper helper) {
+		BlockPos foot = new BlockPos(2, 1, 1);
+		BlockPos head = foot.south();
+		helper.setBlock(foot, Blocks.RED_BED.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH).setValue(BlockStateProperties.BED_PART, BedPart.FOOT));
+		helper.setBlock(head, Blocks.RED_BED.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH).setValue(BlockStateProperties.BED_PART, BedPart.HEAD));
+		TestPlayer player = player(helper);
+		Tipsy.setLevel(player, 5);
+		player.tickCount = 100;
+		player.startSleeping(helper.absolutePos(head));
+		player.setOnGround(true);
+		long now = helper.getLevel().getGameTime();
+		GoingUnder.comeAt(player, now);
+		TipsyEvents.onEntityTick(player);
+		helper.assertFalse(Blackout.isOut(player), "asleep: no blackout");
+		helper.assertTrue(GoingUnder.hitAt(player) >= now + GoingUnder.TICKS, "and its last seconds lie ahead again: " + (GoingUnder.hitAt(player) - now));
+		helper.assertValueEqual(GoingUnder.under(player, 0.0F), 0.0F, "no going under in bed");
+		// up again in the night: the going under first, not the blackout on the spot
+		player.stopSleepInBed(true, true);
+		player.setOnGround(true);
+		TipsyEvents.onEntityTick(player);
+		helper.assertFalse(Blackout.isOut(player), "up again: not on the spot");
+		helper.assertTrue(GoingUnder.hitAt(player) > helper.getLevel().getGameTime(), "it is still coming");
+		// asleep through the night: sober, and it is off
+		player.startSleeping(helper.absolutePos(head));
+		player.stopSleepInBed(false, false);
+		TipsyEvents.onEntityTick(player);
+		helper.assertFalse(Blackout.isOut(player), "slept it off: no blackout");
+		helper.assertValueEqual(GoingUnder.hitAt(player), -1L, "it is off");
 		helper.succeed();
 	}
 
