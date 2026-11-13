@@ -1,5 +1,7 @@
 package jexxme.vineandbarrel.neoforge.client;
 
+import jexxme.vineandbarrel.block.ClimbingCropBlock;
+import jexxme.vineandbarrel.block.SupportLeaves;
 import jexxme.vineandbarrel.block.VineOnSupportBlock;
 import jexxme.vineandbarrel.block.VineSupports;
 import net.minecraft.client.Minecraft;
@@ -7,9 +9,14 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.BlockModelRotation;
+import net.minecraft.client.resources.model.ModelBaker;
+import net.minecraft.client.resources.model.ModelBakery;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.Block;
@@ -22,46 +29,105 @@ import net.neoforged.neoforge.client.model.data.ModelProperty;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * A vine on a fence, wall, chain or bars ({@link VineOnSupportBlock}): its leaves (the block state's own model), plus the
- * block it holds drawn with that block's own model, read from the vine's block entity. So an oak fence stays an oak fence
- * under the leaves, with its arms as they are.
+ * A vine on a fence, wall, chain or bars ({@link VineOnSupportBlock}): the block it holds, drawn with that block's own
+ * model (read from the vine's block entity), and the vine's leaves as pieces that follow that block's shape
+ * ({@link SupportLeaves}). So an oak fence stays an oak fence, with its arms as they are, and the leaves run along them.
  */
 final class SupportedVineModel extends BakedModelWrapper<BakedModel>
 {
-	/** The block the vine holds and what its own model wants to know about this spot, read when the chunk is drawn. */
-	private record Support(BlockState state, BakedModel model, ModelData data)
+	/** A piece's quarter turns, as a block state's {@code "y"} turns a model (0, 90, 180, 270). */
+	private static final BlockModelRotation[] TURNS = {BlockModelRotation.X0_Y0, BlockModelRotation.X0_Y90, BlockModelRotation.X0_Y180,
+			BlockModelRotation.X0_Y270};
+
+	/**
+	 * The block the vine holds, what its own model wants to know about this spot, and the leaf pieces on it, read when the
+	 * chunk is drawn.
+	 */
+	private record Support(BlockState state, BakedModel model, ModelData data, List<BakedModel> leaves)
 	{
 	}
 
 	private static final ModelProperty<Support> SUPPORT = new ModelProperty<>();
+	/** The baked leaf pieces of the last model reload, by model and turn (read by the chunk builders' threads). */
+	private static volatile Map<String, BakedModel> pieces = Map.of();
 
-	private SupportedVineModel(BakedModel leaves) {
-		super(leaves);
+	private SupportedVineModel(BakedModel model) {
+		super(model);
 	}
 
-	/** Wraps the baked model of every vine-on-support state (NeoForge: {@code ModelEvent.ModifyBakingResult}). */
-	static void wrap(ModelEvent.ModifyBakingResult event) {
+	/** Every leaf piece of every vine on a support, per age and root: models no block state names, loaded as standalone models. */
+	static void registerPieces(ModelEvent.RegisterAdditional event) {
 		for (Block block : BuiltInRegistries.BLOCK) {
-			if (block instanceof VineOnSupportBlock) {
-				for (BlockState state : block.getStateDefinition().getPossibleStates()) {
-					event.getModels().computeIfPresent(BlockModelShaper.stateToModelLocation(state), (location, model) -> new SupportedVineModel(model));
+			if (!(block instanceof VineOnSupportBlock)) {
+				continue;
+			}
+			for (int age = 0; age <= ClimbingCropBlock.MAX_AGE; age++) {
+				for (boolean base : new boolean[] {false, true}) {
+					for (SupportLeaves.Piece piece : SupportLeaves.Piece.values()) {
+						event.register(ModelResourceLocation.standalone(SupportLeaves.model(block, piece, base, age)));
+					}
 				}
 			}
 		}
 	}
 
+	/**
+	 * Bakes every leaf piece in each of its quarter turns and wraps the baked model of every vine-on-support state
+	 * (NeoForge: {@code ModelEvent.ModifyBakingResult}).
+	 */
+	static void wrap(ModelEvent.ModifyBakingResult event) {
+		Map<String, BakedModel> baked = new HashMap<>();
+		ModelBakery bakery = event.getModelBakery();
+		for (Block block : BuiltInRegistries.BLOCK) {
+			if (!(block instanceof VineOnSupportBlock)) {
+				continue;
+			}
+			for (int age = 0; age <= ClimbingCropBlock.MAX_AGE; age++) {
+				for (boolean base : new boolean[] {false, true}) {
+					for (SupportLeaves.Piece piece : SupportLeaves.Piece.values()) {
+						ResourceLocation model = SupportLeaves.model(block, piece, base, age);
+						ModelBaker baker = bakery.new ModelBakerImpl((location, material) -> event.getTextureGetter().apply(material),
+								ModelResourceLocation.standalone(model));
+						for (int turn = 0; turn < piece.turns(); turn++) {
+							BakedModel turned = baker.bake(model, TURNS[turn], event.getTextureGetter());
+							if (turned != null) {
+								baked.put(model + "#" + turn, turned);
+							}
+						}
+					}
+				}
+			}
+			for (BlockState state : block.getStateDefinition().getPossibleStates()) {
+				event.getModels().computeIfPresent(BlockModelShaper.stateToModelLocation(state), (location, model) -> new SupportedVineModel(model));
+			}
+		}
+		pieces = baked;
+	}
+
 	@Override
 	public ModelData getModelData(BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData modelData) {
-		ModelData leaves = originalModel.getModelData(level, pos, state, modelData);
+		ModelData own = originalModel.getModelData(level, pos, state, modelData);
 		BlockState support = VineSupports.supportAt(level, pos);
 		if (support == null) {
-			return leaves;
+			return own;
+		}
+		boolean base = state.getValue(VineOnSupportBlock.BASE);
+		int age = state.getValue(ClimbingCropBlock.AGE);
+		Map<String, BakedModel> baked = pieces;
+		List<BakedModel> leaves = new ArrayList<>(6);
+		for (SupportLeaves.Placed placed : SupportLeaves.of(support)) {
+			BakedModel piece = baked.get(SupportLeaves.model(state.getBlock(), placed.piece(), base, age) + "#" + placed.turn());
+			if (piece != null) {
+				leaves.add(piece);
+			}
 		}
 		BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModel(support);
-		return leaves.derive().with(SUPPORT, new Support(support, model, model.getModelData(level, pos, support, ModelData.EMPTY))).build();
+		return own.derive().with(SUPPORT, new Support(support, model, model.getModelData(level, pos, support, ModelData.EMPTY), leaves)).build();
 	}
 
 	@Override
@@ -74,6 +140,9 @@ final class SupportedVineModel extends BakedModelWrapper<BakedModel>
 		List<BakedQuad> quads = new ArrayList<>();
 		if (renderType == null || state == null || originalModel.getRenderTypes(state, random, data).contains(renderType)) {
 			quads.addAll(originalModel.getQuads(state, side, random, data, renderType));
+			for (BakedModel leaves : support.leaves()) {
+				quads.addAll(leaves.getQuads(state, side, random, ModelData.EMPTY, renderType));
+			}
 		}
 		if (renderType == null || support.model().getRenderTypes(support.state(), random, support.data()).contains(renderType)) {
 			quads.addAll(support.model().getQuads(support.state(), side, random, support.data(), renderType));

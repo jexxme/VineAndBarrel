@@ -4,6 +4,7 @@ import jexxme.vineandbarrel.block.BushSupport;
 import jexxme.vineandbarrel.block.ClimbingBushBlock;
 import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.block.SupportLook;
+import jexxme.vineandbarrel.block.SupportLeaves;
 import jexxme.vineandbarrel.block.TrellisFrame;
 import jexxme.vineandbarrel.block.VineClimbing;
 import jexxme.vineandbarrel.block.VineOnSupportBlock;
@@ -80,6 +81,7 @@ final class VBSupportTests
 		test("crops_support_root_lives_on_soil", LARGE, 200, VBSupportTests::rootLivesOnSoil);
 		test("crops_support_planting_both_ways", LARGE, 200, VBSupportTests::plantingBothWays);
 		test("crops_support_holds_plain_blocks_and_catches_up", LARGE, 100, VBSupportTests::holdsPlainBlocksAndCatchesUp);
+		test("crops_support_leaves_follow_the_block", VBSupportTests::leavesFollowTheBlock);
 	}
 
 	/**
@@ -121,6 +123,37 @@ final class VBSupportTests
 			helper.assertTrue(grapes.vineOn(above) == null, above + " grows no vine");
 			helper.assertFalse(boneMeal(helper, under), "bone meal does nothing for a ripe bush under " + above);
 		}
+		helper.succeed();
+	}
+
+	/**
+	 * The leaves follow the block they are on ({@link SupportLeaves}): along each arm of a fence, wall or bars and on the
+	 * post's faces across the row, both ways on a lone post or a corner; a wall's arm low or tall as the wall is; crossed
+	 * planes through a chain.
+	 */
+	private static void leavesFollowTheBlock(GameTestHelper helper) {
+		BlockState fence = Blocks.OAK_FENCE.defaultBlockState();
+		helper.assertValueEqual(SupportLeaves.of(fence.setValue(CrossCollisionBlock.EAST, true).setValue(CrossCollisionBlock.WEST, true)),
+				List.of(new SupportLeaves.Placed(SupportLeaves.Piece.FENCE_ARM, 0), new SupportLeaves.Placed(SupportLeaves.Piece.FENCE_ARM, 2),
+						new SupportLeaves.Placed(SupportLeaves.Piece.FENCE_POST, 0)), "a fence in an east-west row");
+		helper.assertValueEqual(SupportLeaves.of(fence.setValue(CrossCollisionBlock.SOUTH, true)),
+				List.of(new SupportLeaves.Placed(SupportLeaves.Piece.FENCE_ARM, 3), new SupportLeaves.Placed(SupportLeaves.Piece.FENCE_POST, 1)),
+				"the north end of a north-south row");
+		helper.assertValueEqual(SupportLeaves.of(fence), List.of(new SupportLeaves.Placed(SupportLeaves.Piece.FENCE_POST, 0),
+				new SupportLeaves.Placed(SupportLeaves.Piece.FENCE_POST, 1)), "a lone fence post");
+		helper.assertValueEqual(SupportLeaves.of(Blocks.NETHER_BRICK_FENCE.defaultBlockState().setValue(CrossCollisionBlock.NORTH, true)
+				.setValue(CrossCollisionBlock.EAST, true)).size(), 4, "a nether brick fence corner: two arms, the post both ways");
+		BlockState wall = Blocks.COBBLESTONE_WALL.defaultBlockState().setValue(WallBlock.UP, false)
+				.setValue(WallBlock.EAST_WALL, WallSide.LOW).setValue(WallBlock.WEST_WALL, WallSide.TALL);
+		helper.assertValueEqual(SupportLeaves.of(wall), List.of(new SupportLeaves.Placed(SupportLeaves.Piece.WALL_ARM_TALL, 0),
+				new SupportLeaves.Placed(SupportLeaves.Piece.WALL_ARM_LOW, 2)), "a wall without a post, low on one side, tall on the other");
+		helper.assertTrue(SupportLeaves.of(Blocks.COBBLESTONE_WALL.defaultBlockState()).contains(new SupportLeaves.Placed(SupportLeaves.Piece.WALL_POST, 1)),
+				"a lone wall post");
+		helper.assertValueEqual(SupportLeaves.of(Blocks.IRON_BARS.defaultBlockState().setValue(CrossCollisionBlock.NORTH, true)),
+				List.of(new SupportLeaves.Placed(SupportLeaves.Piece.BARS_ARM, 1)), "bars reaching north");
+		helper.assertValueEqual(SupportLeaves.of(Blocks.IRON_BARS.defaultBlockState()).size(), 2, "lone bars: the post both ways");
+		helper.assertValueEqual(SupportLeaves.of(Blocks.CHAIN.defaultBlockState()), List.of(new SupportLeaves.Placed(SupportLeaves.Piece.CROSS, 0)),
+				"a chain: crossed planes");
 		helper.succeed();
 	}
 
@@ -262,10 +295,18 @@ final class VBSupportTests
 				build(helper, plant.above(), column.support());
 			}
 			BlockState before = state(helper, plant.above());
-			for (int i = 0; i < 3000 && !state(helper, plant.above()).is(crop.supportVine()); i++) {
+			// 1.21.1: the chain is the test data's rope there, so the plant climbs it as a rope
+			boolean rope = before.is(Blocks.CHAIN) && chainIsARope();
+			for (int i = 0; i < 3000 && !(rope ? state(helper, plant.above()).getBlock() instanceof jexxme.vineandbarrel.block.VineOnRopeBlock
+					: state(helper, plant.above()).is(crop.supportVine())); i++) {
 				helper.randomTick(plant);
 			}
 			BlockState vine = state(helper, plant.above());
+			if (rope) {
+				helper.assertTrue(vine.getBlock() instanceof jexxme.vineandbarrel.block.VineOnRopeBlock, column.bush() + " should climb the test data's rope " + before + ", found " + vine);
+				x += 4;
+				continue;
+			}
 			helper.assertTrue(vine.is(crop.supportVine()), column.bush() + " should climb " + before + ", found " + vine);
 			helper.assertValueEqual(vine.getValue(VineOnSupportBlock.LOOK), column.look(), "how the vine sits on " + before);
 			helper.assertValueEqual(support(helper, plant.above()), before, "the block kept inside");
@@ -289,11 +330,18 @@ final class VBSupportTests
 				Blocks.STONE_BRICK_WALL.defaultBlockState(), Blocks.CHAIN.defaultBlockState(),
 				Blocks.IRON_BARS.defaultBlockState())) {
 			helper.assertTrue(VineSupports.isMakeshift(holds), holds + " holds a vine");
+			if (holds.is(Blocks.CHAIN) && chainIsARope()) {
+				continue; // the test data's rope: a rope vine grows on it there
+			}
 			helper.assertTrue(grapes.vineOn(holds) != null && grapes.vineOn(holds).is(VBBlocks.GRAPE_VINE_ON_SUPPORT.get()), holds + " grows the vine on a support");
 		}
 		for (BlockState holdsNot : List.of(Blocks.CHAIN.defaultBlockState().setValue(ChainBlock.AXIS, Direction.Axis.X),
 				Blocks.LADDER.defaultBlockState(), Blocks.GLASS_PANE.defaultBlockState(), Blocks.OAK_FENCE_GATE.defaultBlockState(),
 				Blocks.OAK_FENCE.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, true), Blocks.OAK_LOG.defaultBlockState())) {
+			if (holdsNot.is(Blocks.CHAIN) && chainIsARope()) {
+				helper.assertFalse(VineSupports.isMakeshift(holdsNot), holdsNot + " holds no vine");
+				continue; // the test data's rope: a rope vine grows on it there
+			}
 			helper.assertTrue(grapes.vineOn(holdsNot) == null, holdsNot + " grows no vine");
 		}
 		BlockState fence = Blocks.OAK_FENCE.defaultBlockState();
@@ -722,8 +770,16 @@ final class VBSupportTests
 		if (!chainIsARope()) {
 			// 26.x: a copper chain (the iron one is the test data's rope). 1.21.1's only chain is that rope
 			helper.setBlock(pos.above(), Blocks.CHAIN.defaultBlockState());
-			helper.assertValueEqual(outline.apply(ripe), VineSupports.ENABLED ? new AABB(2.0 / 16.0, 0, 2.0 / 16.0, 14.0 / 16.0, 1, 14.0 / 16.0)
-					: new AABB(0, 0, 0, 1, 1, 1), "a ripe bush under a chain");
+			AABB underChain = outline.apply(ripe);
+			if (VineSupports.ENABLED) {
+				// the foot of the vine crossed through the chain: two crossed planes, not a block
+				helper.assertValueEqual(state(helper, pos).getValue(ClimbingBushBlock.SUPPORT), BushSupport.CROSS, "a ripe bush under a chain is the crossed foot");
+				double volume = state(helper, pos).getShape(helper.getLevel(), helper.absolutePos(pos)).toAabbs().stream()
+						.mapToDouble(box -> box.getXsize() * box.getYsize() * box.getZsize()).sum();
+				helper.assertTrue(volume < 0.3, "a ripe bush under a chain: its crossed planes, " + volume);
+			} else {
+				helper.assertValueEqual(underChain, new AABB(0, 0, 0, 1, 1, 1), "a ripe bush under a chain");
+			}
 			helper.setBlock(pos.above(), Blocks.AIR);
 		}
 		if (!VineSupports.ENABLED) {
