@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "玩家：心跳怦怦",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "床单：沙沙作响",
   "tag.item.vineandbarrel.sobering_drinks": "软饮料",
+  "tag.item.vineandbarrel.grapes.red": "任意红葡萄",
+  "tag.item.vineandbarrel.grapes.white": "任意白葡萄",
   "block.vineandbarrel.brew_kettle": "酿造锅",
   "block.vineandbarrel.brew_kettle_part": "酿造锅",
   "block.vineandbarrel.brew_kettle_chimney": "酿造锅",

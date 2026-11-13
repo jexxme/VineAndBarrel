@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "Серце калатає",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "Шелест простирадл",
   "tag.item.vineandbarrel.sobering_drinks": "Безалкогольні напої",
+  "tag.item.vineandbarrel.grapes.red": "Будь-який червоний виноград",
+  "tag.item.vineandbarrel.grapes.white": "Будь-який білий виноград",
   "block.vineandbarrel.brew_kettle": "Варильний казан",
   "block.vineandbarrel.brew_kettle_part": "Варильний казан",
   "block.vineandbarrel.brew_kettle_chimney": "Варильний казан",
