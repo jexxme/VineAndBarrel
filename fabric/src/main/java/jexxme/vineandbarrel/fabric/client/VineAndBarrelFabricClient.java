@@ -49,7 +49,7 @@ public final class VineAndBarrelFabricClient implements ClientModInitializer
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> WatchClient.onTooltip(stack, lines));
 		ScreenEvents.AFTER_INIT.register((minecraft, screen, width, height) ->
 			ScreenKeyboardEvents.allowKeyPress(screen).register((s, event) -> !WatchClient.onScreenKey(s, event)));
-		// What the eyes do (TipsyClient.renderVision) above the camera overlays, under the rest of the HUD; the blackout above everything. Both stay with
+		// Tunnel vision above the camera overlays, under the rest of the HUD; the blackout above everything. Both stay with
 		// the HUD hidden (F1), as on NeoForge: vanilla skips the camera overlays then but still draws the sleep overlay,
 		// so with F1 on they are drawn right after it instead.
 		HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS, TipsyClient.VISION_LAYER, unlessHidden(false, TipsyClient::renderVision));
