@@ -104,6 +104,7 @@ public final class TipsyGameTests
 		test("tipsy_rowdy_cut_off_at_the_bar", TipsyGameTests::rowdyCutOff);
 		test("tipsy_rowdy_cut_off_by_a_real_click", TipsyGameTests::rowdyCutOffClick);
 		loaderTest("tipsy_server_config_per_world");
+		loaderTest("tipsy_config_carry_over");
 		test("tipsy_blackout_one_too_many", TipsyGameTests::blackoutOneTooMany);
 		test("tipsy_blackout_config_off", TipsyGameTests::blackoutConfigOff);
 		test("tipsy_blackout_never_onto_the_nether_roof", TipsyGameTests::blackoutNoNetherRoof);

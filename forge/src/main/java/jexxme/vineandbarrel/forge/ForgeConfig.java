@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  * converted value is set and saved once the file is loaded (Forge 47 loads the client file right after the mods are
  * constructed).
  */
-final class ForgeConfig
+public final class ForgeConfig
 {
 	private ForgeConfig() {
 	}
@@ -60,7 +60,7 @@ final class ForgeConfig
 	private static final Pattern LINE = Pattern.compile("^\\s*([A-Za-z0-9_]+)\\s*=\\s*\"?([^\"#]*?)\"?\\s*(#.*)?$");
 
 	/** The client settings a file saved under their old keys only, with the values they carry over (empty if none). */
-	private static Map<ConfigValue<?>, String> carriedOver(Path file) {
+	public static Map<ConfigValue<?>, String> carriedOver(Path file) {
 		Map<ConfigValue<?>, String> carried = new HashMap<>();
 		if (!Files.isRegularFile(file)) {
 			return carried;

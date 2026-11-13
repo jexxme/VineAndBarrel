@@ -37,13 +37,44 @@ public final class ForgeGameTests
 		"drinks_cancelled_place_keeps_no_duplicate", ForgeGameTests::cancelledPlaceNoDuplicate,
 		"fd_optional_dependency", ForgeGameTests::optionalDependency,
 		"compat_optional_dependencies", ForgeGameTests::compatOptionalDependencies,
-		"drinks_cheers_reaches_the_neoforge_bus", ForgeGameTests::cheersOnTheBus);
+		"drinks_cheers_reaches_the_neoforge_bus", ForgeGameTests::cheersOnTheBus,
+		"tipsy_config_carry_over", ForgeGameTests::tipsyConfigCarryOver);
 
 	private ForgeGameTests() {
 	}
 
 	public static @Nullable Consumer<GameTestHelper> get(String name) {
 		return TESTS.get(name);
+	}
+
+	/**
+	 * An old client settings file (as 1.1.1 wrote it) on Forge, read from a real file the way the client reads it before
+	 * Forge loads it: wobbleIntensity and visionEffects under [tipsy] carry over as drunkScreen and doubleVision; a file
+	 * that already has the new key, a key in another section and a missing file carry nothing.
+	 */
+	static void tipsyConfigCarryOver(GameTestHelper helper) {
+		try {
+			java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("vineandbarrel-config");
+			java.nio.file.Path old = dir.resolve("old.toml");
+			java.nio.file.Files.writeString(old, String.join("\n", "#Tipsy visuals on this client", "[tipsy]",
+				"\t#How much Tipsy moves your screen", "\t#Range: 0.0 ~ 2.0", "\twobbleIntensity = 0.4",
+				"\t#Show tipsy players swaying", "\totherPlayersSway = true", "\t#Darker screen edges and slow, heavy-eyed blinks",
+				"\tvisionEffects = false", "\t#Range: 0.0 ~ 1.0", "\theartbeatVolume = 1.0", ""));
+			var carried = jexxme.vineandbarrel.forge.ForgeConfig.carriedOver(old);
+			VBGameTests.assertValueEqual(helper, carried.get(jexxme.vineandbarrel.tipsy.TipsyConfig.DRUNK_SCREEN), "40", "wobbleIntensity 0.4 carries over as 40 %");
+			VBGameTests.assertValueEqual(helper, carried.get(jexxme.vineandbarrel.tipsy.TipsyConfig.DOUBLE_VISION), "false", "visionEffects false carries over");
+			VBGameTests.assertValueEqual(helper, carried.size(), 2, "nothing else carries over: " + carried);
+			java.nio.file.Path both = dir.resolve("both.toml");
+			java.nio.file.Files.writeString(both, "[tipsy]\n\tdrunkScreen = 70\n\twobbleIntensity = 0.0\n");
+			helper.assertTrue(jexxme.vineandbarrel.forge.ForgeConfig.carriedOver(both).isEmpty(), "the new key is there: nothing carries over");
+			java.nio.file.Path other = dir.resolve("other.toml");
+			java.nio.file.Files.writeString(other, "[somethingElse]\n\twobbleIntensity = 0.0\n");
+			helper.assertTrue(jexxme.vineandbarrel.forge.ForgeConfig.carriedOver(other).isEmpty(), "only the [tipsy] section counts");
+			helper.assertTrue(jexxme.vineandbarrel.forge.ForgeConfig.carriedOver(dir.resolve("missing.toml")).isEmpty(), "no file: nothing");
+		} catch (java.io.IOException e) {
+			throw new RuntimeException(e);
+		}
+		helper.succeed();
 	}
 
 	/** A protection mod cancelling the place event: the item comes back and the table has no copy of it. */
