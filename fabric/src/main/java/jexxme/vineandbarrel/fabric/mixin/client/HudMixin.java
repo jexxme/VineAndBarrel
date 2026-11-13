@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Tipsy's two HUD layers (Forge: {@code RegisterGuiOverlaysEvent}; Fabric API has no HUD layers on this Minecraft, its
- * {@code HudRenderCallback} only draws last): what the eyes do ({@link TipsyClient#renderVision}) above the camera
- * overlays and under the rest of the HUD, the blackout above everything. And in a blackout's bed the eyes are opening: no darkening sleep overlay (Forge: the
+ * {@code HudRenderCallback} only draws last): tunnel vision above the camera overlays and under the rest of the HUD, the
+ * blackout above everything. And in a blackout's bed the eyes are opening: no darkening sleep overlay (Forge: the
  * overlay's Pre event). On this Minecraft the whole HUD is one method, so each has its spot inside {@code render}.
  * With the HUD hidden (F1) and no screen open the game does not call {@code render} at all: both layers are drawn by the
  * common {@code GameRendererMixin} then.

@@ -29,8 +29,8 @@ import org.jspecify.annotations.Nullable;
  */
 public final class Rowdy
 {
-	public static final int ROWDY_LEVEL = TipsyLevels.first(level -> level.rules().rowdy());
-	public static final int CUT_OFF_LEVEL = TipsyLevels.first(level -> level.rules().cutOff());
+	public static final int ROWDY_LEVEL = TipsyLevels.first(TipsyLevels.Level::rowdy);
+	public static final int CUT_OFF_LEVEL = TipsyLevels.first(TipsyLevels.Level::cutOff);
 	/** A fist's damage (half a heart) and a fist's knockback, whatever is held. */
 	public static final float PUNCH_DAMAGE = 1.0F;
 	private static final double PUNCH_KNOCKBACK = 0.4;
@@ -38,9 +38,9 @@ public final class Rowdy
 	private Rowdy() {
 	}
 
-	/** Chance roll for one tick ({@link TipsyLevels.Rules#rowdySwingOneIn}): a wild swing about every 30 s at IV, every 15 s at V. */
+	/** Chance roll for one tick ({@link TipsyLevels.Level#rowdySwingOneIn}): a wild swing about every 30 s at IV, every 15 s at V. */
 	public static boolean rollsSwing(int level, RandomSource random) {
-		int oneIn = TipsyLevels.at(level).rules().rowdySwingOneIn();
+		int oneIn = TipsyLevels.at(level).rowdySwingOneIn();
 		return oneIn > 0 && random.nextInt(oneIn) == 0;
 	}
 
@@ -99,7 +99,7 @@ public final class Rowdy
 
 	/** {@return whether a villager or trader turns this player away: from Tipsy IV, with the cut-off on} */
 	public static boolean cutOff(Player player) {
-		return TipsyConfig.enabled() && TipsyConfig.cutOff() && TipsyLevels.at(Tipsy.getLevel(player)).rules().cutOff();
+		return TipsyConfig.enabled() && TipsyConfig.cutOff() && TipsyLevels.at(Tipsy.getLevel(player)).cutOff();
 	}
 
 	/** The villager shakes its head ("Hmm.", like when it has nothing to trade). */

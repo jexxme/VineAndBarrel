@@ -65,7 +65,7 @@ public final class DrinkBuffs
 	/** {@return whether the drink being finished now is one too many to enjoy: it takes Tipsy to a level without buffs} */
 	public static boolean tooDrunk(LivingEntity entity) {
 		return TipsyConfig.enabled() && !entity.level().isClientSide()
-			&& !TipsyLevels.at(Math.min(Tipsy.getLevel(entity) + 1, TipsyConfig.maxLevel())).rules().buffs();
+			&& !TipsyLevels.at(Math.min(Tipsy.getLevel(entity) + 1, TipsyConfig.maxLevel())).buffs();
 	}
 
 	/**

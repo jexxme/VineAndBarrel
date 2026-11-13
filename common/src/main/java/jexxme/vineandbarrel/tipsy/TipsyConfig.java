@@ -9,11 +9,11 @@ import static jexxme.vineandbarrel.platform.ConfigValue.Side.SERVER;
  * Tipsy settings. What each level does is {@link TipsyLevels}.
  * <ul>
  *   <li><b>Server</b> (per world, sent to every client so the effect tooltip can follow it): non-alcoholic mode, max
- *       level, decay speed, and one switch each for slurred chat, the legs (stumbling and tripping), nodding off, the
- *       hangover, the blackout and Rowdy (with two more to turn off just its punches or just the cut-off at the bar).</li>
- *   <li><b>Client</b>: how much being tipsy may move your own view ("drunk screen", 0 = never, for motion sickness;
- *       vanilla's Distortion Effects slider scales it too), double vision, whether tipsy players sway, and the
- *       heartbeat's volume. The client value always wins for what this client sees.</li>
+ *       level, decay speed, and one switch each for slurred chat, stumbling and tripping, the blackout and Rowdy (with
+ *       two more to turn off just its punches or just the cut-off at the bar).</li>
+ *   <li><b>Client</b>: how much Tipsy moves the screen (0 = never, for motion sickness; vanilla's Distortion Effects
+ *       and FOV Effects sliders scale it too), whether tipsy players sway, and the vision effects. The client value
+ *       always wins for what this client sees.</li>
  * </ul>
  * The loader stores them (NeoForge: {@code vineandbarrel-tipsy-server.toml} and {@code -client.toml}). Read values
  * through the accessors here: they fall back to the defaults while a config is not loaded yet (main menu, early
@@ -35,11 +35,7 @@ public final class TipsyConfig
 	public static final ConfigValue<Boolean> SLURRED_CHAT = ConfigValue.define(SERVER, SECTION, "slurredChat",
 			"Level 3+: chat messages come out slurred (stretched letters, the odd *hic*)", true);
 	public static final ConfigValue<Boolean> STUMBLING = ConfigValue.define(SERVER, SECTION, "stumbling",
-			"Unsteady legs while walking (level 5): now and then a stumble to the side, and once in a while a trip onto your face (never hurts), plus a slow drift to the side", true);
-	public static final ConfigValue<Boolean> NODDING_OFF = ConfigValue.define(SERVER, SECTION, "noddingOff",
-			"Level 4+: standing still too long, you nod off on your feet and jerk awake", true);
-	public static final ConfigValue<Boolean> HANGOVER = ConfigValue.define(SERVER, SECTION, "hangover",
-			"After a blackout, or a night's sleep at level 4+, you wake up hungover", true);
+			"Level 5: unsteady legs while walking: now and then a stumble to the side, and once in a while a trip onto your face (never hurts), plus a slow drift to the side", true);
 	public static final ConfigValue<Boolean> BLACKOUT = ConfigValue.define(SERVER, SECTION, "blackout",
 			"One drink more at the top level: a short blackout, and you wake up somewhere", true);
 	public static final ConfigValue<Boolean> ROWDY = ConfigValue.define(SERVER, SECTION, "rowdy",
@@ -49,23 +45,12 @@ public final class TipsyConfig
 	public static final ConfigValue<Boolean> CUT_OFF = ConfigValue.define(SERVER, SECTION, "cutOff",
 			"Level 4+ (with rowdy on): villagers and wandering traders won't trade with you", true);
 
-	public static final ConfigValue<Integer> DRUNK_SCREEN = ConfigValue.defineInRange(CLIENT, SECTION, "drunkScreen",
-			"How much being tipsy moves your own view, in percent: a hiccup's flick, a stumble's dip, a trip. 0 keeps it still (for motion sickness), 100 is the default. Tipsy never moves your view on its own. Vanilla's Distortion Effects slider scales it too.", 100, 0, 100)
-			// Was wobbleIntensity, 0 to 2 with 1 the default: 0 stays off, anything from 1 up is the full 100 %
-			.formerly("wobbleIntensity", old -> {
-				try {
-					double wobble = Double.parseDouble(old);
-					return wobble >= 0.0 && wobble <= 2.0 ? Long.toString(Math.round(Math.min(wobble, 1.0) * 100.0)) : null;
-				} catch (NumberFormatException e) {
-					return null;
-				}
-			});
+	public static final ConfigValue<Double> WOBBLE_INTENSITY = ConfigValue.defineInRange(CLIENT, SECTION, "wobbleIntensity",
+			"How much Tipsy moves your screen: the sway, hiccups, stumbles and the Nausea spells. 0 keeps it still (for motion sickness), 1 is the default, 2 is double. Vanilla's Distortion Effects and FOV Effects sliders scale it too.", 1.0, 0.0, 2.0);
 	public static final ConfigValue<Boolean> OTHER_PLAYERS_SWAY = ConfigValue.define(CLIENT, SECTION, "otherPlayersSway",
 			"Show tipsy players (yourself in third person included) swaying, hiccuping and stumbling", true);
-	public static final ConfigValue<Boolean> DOUBLE_VISION = ConfigValue.define(CLIENT, SECTION, "doubleVision",
-			"From Tipsy III you see double, and the screen edges go soft", true)
-			// Was visionEffects (darker edges and blinks): whoever switched those off doesn't want these either
-			.formerly("visionEffects", old -> old.equalsIgnoreCase("true") || old.equalsIgnoreCase("false") ? old.toLowerCase(java.util.Locale.ROOT) : null);
+	public static final ConfigValue<Boolean> VISION_EFFECTS = ConfigValue.define(CLIENT, SECTION, "visionEffects",
+			"Darker screen edges and slow, heavy-eyed blinks", true);
 	public static final ConfigValue<Double> HEARTBEAT_VOLUME = ConfigValue.defineInRange(CLIENT, SECTION, "heartbeatVolume",
 			"At Tipsy V you hear your own heart. 0 turns it off, 1 is the default.", 1.0, 0.0, 1.0);
 
@@ -92,14 +77,6 @@ public final class TipsyConfig
 		return SLURRED_CHAT.get();
 	}
 
-	public static boolean noddingOff() {
-		return NODDING_OFF.get();
-	}
-
-	public static boolean hangover() {
-		return HANGOVER.get();
-	}
-
 	public static boolean blackout() {
 		return BLACKOUT.get();
 	}
@@ -118,13 +95,12 @@ public final class TipsyConfig
 		return STUMBLING.get();
 	}
 
-	/** {@return how much Tipsy may move this player's own view, 0 (never) to 1 (fully)} */
-	public static double drunkScreen() {
-		return DRUNK_SCREEN.get() / 100.0;
+	public static double wobbleIntensity() {
+		return WOBBLE_INTENSITY.get();
 	}
 
-	public static boolean doubleVision() {
-		return DOUBLE_VISION.get();
+	public static boolean visionEffects() {
+		return VISION_EFFECTS.get();
 	}
 
 	public static double heartbeatVolume() {

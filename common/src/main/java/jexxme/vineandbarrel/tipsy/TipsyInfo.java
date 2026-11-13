@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * What Tipsy does at the current level, for the effect's tooltip in the inventory, in vanilla's style: the good part in
  * blue with its numbers (like a potion's attribute lines), the drawbacks in red as a few short words. Only what you
- * can't see or feel yourself is named (the hiccups and the sway speak for themselves), and a drawback the server
- * switched off isn't. Built from {@link TipsyLevels}, so it can't drift from the effects; kept
+ * can't see or feel yourself is named (the sway, the dark edges, the blinks and the hiccups speak for themselves), and
+ * a drawback the server switched off isn't. Built from {@link TipsyLevels}, so it can't drift from the effects; kept
  * free of client classes so it is tested headless.
  */
 public final class TipsyInfo
@@ -47,12 +47,11 @@ public final class TipsyInfo
 		if (level <= 0) {
 			return lines;
 		}
-		TipsyLevels.Courage courage = at.courage();
-		if (courage.knockbackResistance() > 0.0) {
-			lines.add(Component.translatable(KEY + "knockback_resistance", percent(courage.knockbackResistance())).withStyle(ChatFormatting.BLUE));
+		if (at.knockbackResistance() > 0.0) {
+			lines.add(Component.translatable(KEY + "knockback_resistance", percent(at.knockbackResistance())).withStyle(ChatFormatting.BLUE));
 		}
-		if (courage.fallDamageReduction() > 0.0) {
-			lines.add(Component.translatable(KEY + "fall_damage", percent(courage.fallDamageReduction())).withStyle(ChatFormatting.BLUE));
+		if (at.fallDamageReduction() > 0.0) {
+			lines.add(Component.translatable(KEY + "fall_damage", percent(at.fallDamageReduction())).withStyle(ChatFormatting.BLUE));
 		}
 		return lines;
 	}
@@ -64,21 +63,27 @@ public final class TipsyInfo
 		if (level <= 0) {
 			return words;
 		}
-		if (at.chat().slurs() && TipsyConfig.slurredChat()) {
+		if (at.slurs() && TipsyConfig.slurredChat()) {
 			words.add(word("slurred"));
 		}
-		if (at.rules().rowdy() && TipsyConfig.rowdy()) {
+		if (at.weakness()) {
+			words.add(word("weakness"));
+		}
+		if (at.rowdy() && TipsyConfig.rowdy()) {
 			words.add(word("rowdy"));
 		}
-		if (!at.rules().buffs()) {
+		if (!at.buffs()) {
 			words.add(word("no_buffs"));
 		}
-		if (at.rules().cutOff() && TipsyConfig.cutOff()) {
+		if (at.cutOff() && TipsyConfig.cutOff()) {
 			words.add(word("cut_off"));
 		}
-		if (at.legs().unsteady() && TipsyConfig.stumbling()) {
+		if (at.slowness() >= 0 || at.miningFatigue() >= 0) {
+			words.add(word("sluggish"));
+		}
+		if (at.unsteadyLegs() && TipsyConfig.stumbling()) {
 			words.add(word("stumbling"));
-			if (at.legs().tripOneIn() > 0) {
+			if (at.tripOneIn() > 0) {
 				words.add(word("tripping"));
 			}
 		}
