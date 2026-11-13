@@ -17,10 +17,4 @@ public final class RowdyAccess
 		TipsyRegistry.ROWDY_ITCH.set(player, Rowdy.ITCH);
 	}
 
-	/** Lets a wind-up that began be over (the test can't wait for the game time to move on). */
-	public static void endWindup(ServerPlayer player) {
-		if (Rowdy.windupStart(player) >= 0L) {
-			TipsyRegistry.ROWDY_WINDUP.set(player, player.level().getGameTime() - Rowdy.WINDUP);
-		}
-	}
 }
