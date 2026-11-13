@@ -27,6 +27,7 @@
     "ClientAdvancementsAccessor",
     "CameraMixin",
     "EntityRendererMixin",
+    "GameRendererMixin",
     "HumanoidModelMixin",
     "ParticleEngineAccessor",
     "RecipeBookComponentAccessor",

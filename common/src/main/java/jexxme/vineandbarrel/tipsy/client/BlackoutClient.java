@@ -178,8 +178,8 @@ public final class BlackoutClient
 			return TipsyWobble.Angles.NONE;
 		}
 		float roll = body.viewRoll();
-		if (TipsyConfig.drunkScreen() <= 0.0 && left(player, partial) < Blackout.GROUND_GET_UP - BlackoutPose.LOOK) {
-			// Up off the cheek, the head's tilt is a sway: none with "drunk screen" at 0
+		if (TipsyConfig.wobbleIntensity() <= 0.0 && left(player, partial) < Blackout.GROUND_GET_UP - BlackoutPose.LOOK) {
+			// Up off the cheek, the head's tilt is a sway: none with the wobble off
 			roll = 0.0F;
 		}
 		return new TipsyWobble.Angles(roll, body.viewPitch() - player.getViewXRot(partial),
@@ -276,8 +276,8 @@ public final class BlackoutClient
 	}
 
 	/**
-	 * Two lids with a soft edge that meet in the middle; fully closed they cover the whole view. Drawn like vanilla's
-	 * sleep overlay, over whatever was drawn before it (1.21.1's HUD layers lie at different depths).
+	 * Two lids with a soft edge that meet in the middle; fully closed they cover the whole view (also the tipsy blinks).
+	 * Drawn like vanilla's sleep overlay, over whatever was drawn before it (1.21.1's HUD layers lie at different depths).
 	 */
 	static void drawLids(GuiGraphics gui, float closed) {
 		int width = gui.guiWidth();

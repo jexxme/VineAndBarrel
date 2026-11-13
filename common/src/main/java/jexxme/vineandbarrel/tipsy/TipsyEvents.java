@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.BedBlock;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Server-side Tipsy hooks: the level tick and sync, the cures, and slurred chat. Each loader calls these from its own
+ * Server-side Tipsy hooks: the side effects and sync, the cures, and slurred chat. Each loader calls these from its own
  * events (NeoForge: {@code NeoForgeEvents}; Fabric: Fabric API callbacks and our Fabric mixins).
  */
 public final class TipsyEvents
