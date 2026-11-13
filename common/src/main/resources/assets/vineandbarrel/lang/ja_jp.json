@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "心臓がドキドキする",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "シーツがこすれる",
   "tag.item.vineandbarrel.sobering_drinks": "ソフトドリンク",
+  "tag.item.vineandbarrel.grapes.red": "任意の赤ブドウ",
+  "tag.item.vineandbarrel.grapes.white": "任意の白ブドウ",
   "block.vineandbarrel.brew_kettle": "醸造釜",
   "block.vineandbarrel.brew_kettle_part": "醸造釜",
   "block.vineandbarrel.brew_kettle_chimney": "醸造釜",

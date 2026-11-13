@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "Cuore batte forte",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "Lenzuola frusciano",
   "tag.item.vineandbarrel.sobering_drinks": "Bevande analcoliche",
+  "tag.item.vineandbarrel.grapes.red": "Qualsiasi uva rossa",
+  "tag.item.vineandbarrel.grapes.white": "Qualsiasi uva bianca",
   "block.vineandbarrel.brew_kettle": "Bollitore",
   "block.vineandbarrel.brew_kettle_part": "Bollitore",
   "block.vineandbarrel.brew_kettle_chimney": "Bollitore",

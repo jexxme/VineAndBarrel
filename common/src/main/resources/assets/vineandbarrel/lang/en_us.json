@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "Heart pounds",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "Sheets rustle",
   "tag.item.vineandbarrel.sobering_drinks": "Soft Drinks",
+  "tag.item.vineandbarrel.grapes.red": "Any red grapes",
+  "tag.item.vineandbarrel.grapes.white": "Any white grapes",
   "block.vineandbarrel.brew_kettle": "Brew Kettle",
   "block.vineandbarrel.brew_kettle_part": "Brew Kettle",
   "block.vineandbarrel.brew_kettle_chimney": "Brew Kettle",

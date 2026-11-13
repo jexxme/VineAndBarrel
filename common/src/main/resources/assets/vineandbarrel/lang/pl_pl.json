@@ -40,6 +40,8 @@
   "subtitles.vineandbarrel.entity.player.heartbeat": "Serce wali",
   "subtitles.vineandbarrel.entity.player.wake_in_bed": "Szelest pościeli",
   "tag.item.vineandbarrel.sobering_drinks": "Napoje bezalkoholowe",
+  "tag.item.vineandbarrel.grapes.red": "Dowolne czerwone winogrona",
+  "tag.item.vineandbarrel.grapes.white": "Dowolne białe winogrona",
   "block.vineandbarrel.brew_kettle": "Kocioł warzelny",
   "block.vineandbarrel.brew_kettle_part": "Kocioł warzelny",
   "block.vineandbarrel.brew_kettle_chimney": "Kocioł warzelny",
