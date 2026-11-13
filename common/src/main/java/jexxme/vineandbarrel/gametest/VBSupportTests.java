@@ -36,6 +36,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.WallSide;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
@@ -73,6 +74,10 @@ final class VBSupportTests
 		test("crops_support_planting_both_ways", LARGE, 200, VBSupportTests::plantingBothWays);
 		test("crops_support_holds_plain_blocks_and_catches_up", LARGE, 100, VBSupportTests::holdsPlainBlocksAndCatchesUp);
 		test("crops_support_leaves_follow_the_block", VBSupportTests::leavesFollowTheBlock);
+		test("crops_support_never_takes_a_block_entity", LARGE, 100, VBSupportTests::neverTakesABlockEntity);
+		test("crops_support_neighbours_follow_the_held_block", LARGE, 100, VBSupportTests::neighboursFollowTheHeldBlock);
+		test("crops_support_picked_fruit_lands_on_an_open_side", LARGE, 100, VBSupportTests::pickedFruitLandsOnAnOpenSide);
+		test("crops_support_every_leaf_piece_has_a_model", VBSupportTests::everyLeafPieceHasAModel);
 	}
 
 	/**
@@ -330,6 +335,140 @@ final class VBSupportTests
 		helper.assertValueEqual(VBBlocks.GRAPE_VINE_ON_SUPPORT.get().defaultBlockState().getPistonPushReaction(), PushReaction.IMMOVEABLE,
 				"pistons leave an overgrown support alone");
 		helper.succeed();
+	}
+
+	/**
+	 * A block with a block entity of its own is never held, even when a pack puts it in the tag (the test data adds the
+	 * decorated pot): the vine keeps only the block state, so the block entity and what it holds would be lost. Grapes used
+	 * on one standing on grass stay in the hand, and one used on a bush doesn't go into it.
+	 */
+	private static void neverTakesABlockEntity(GameTestHelper helper) {
+		BlockState pot = Blocks.DECORATED_POT.defaultBlockState();
+		helper.assertTrue(pot.is(jexxme.vineandbarrel.tag.VBTags.MAKESHIFT_VINE_SUPPORTS), "the test data puts the decorated pot in the tag");
+		helper.assertFalse(VineSupports.isMakeshift(pot), "a block with a block entity holds no vine");
+		helper.assertTrue(VBBlocks.GRAPE_BUSH.get().vineOn(pot) == null, "no vine grows on it");
+		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		BlockPos onGrass = new BlockPos(2, 2, 2);
+		helper.setBlock(onGrass.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(onGrass, pot);
+		ItemStack grapes = new ItemStack(VBItems.RED_GRAPES.get(), 4);
+		player.setItemInHand(InteractionHand.MAIN_HAND, grapes);
+		helper.useBlock(onGrass, player);
+		helper.assertBlockPresent(Blocks.DECORATED_POT, onGrass);
+		helper.assertTrue(helper.getBlockEntity(onGrass, net.minecraft.world.level.block.entity.DecoratedPotBlockEntity.class) != null, "the pot keeps its block entity");
+		BlockPos bush = new BlockPos(6, 2, 2);
+		ripeBush(helper, bush, VBBlocks.GRAPE_BUSH.get());
+		ItemStack pots = new ItemStack(net.minecraft.world.item.Items.DECORATED_POT, 2);
+		player.setItemInHand(InteractionHand.MAIN_HAND, pots);
+		helper.useBlock(bush, player);
+		helper.assertBlockPresent(VBBlocks.GRAPE_BUSH.get(), bush);
+		helper.succeed();
+	}
+
+	/**
+	 * A held block that changes tells its neighbours, even when the vine's own look stays the same: a wall column two high
+	 * with a vine in both, stone west of the lower one (the wall connects to it; stone never changes, so only the vine can
+	 * pass the news on) and a wall east of both. A wall put west of the upper one gives the held wall a west arm (the vine
+	 * still runs east-west), and the wall held below turns tall on its west side, as under a bare wall.
+	 */
+	private static void neighboursFollowTheHeldBlock(GameTestHelper helper) {
+		BlockPos low = new BlockPos(3, 2, 2);
+		helper.setBlock(low.below(), Blocks.GRASS_BLOCK);
+		helper.setBlock(low.west(), Blocks.STONE);
+		for (BlockPos pos : List.of(low, low.east(), low.above(), low.above().east())) {
+			build(helper, pos, Blocks.COBBLESTONE_WALL.defaultBlockState());
+		}
+		overgrow(helper, low, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), 3, true);
+		overgrow(helper, low.above(), VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), 3, false);
+		helper.runAfterDelay(3, () -> {
+			helper.assertValueEqual(support(helper, low).getValue(WallBlock.WEST), WallSide.LOW, "nothing above the west side yet");
+			SupportLook before = state(helper, low.above()).getValue(VineOnSupportBlock.LOOK);
+			build(helper, low.above().west(), Blocks.COBBLESTONE_WALL.defaultBlockState());
+			helper.assertValueEqual(support(helper, low.above()).getValue(WallBlock.WEST), WallSide.LOW, "the upper held wall reaches west");
+			helper.assertValueEqual(state(helper, low.above()).getValue(VineOnSupportBlock.LOOK), before, "the vine's own look stays");
+			helper.runAfterDelay(3, () -> {
+				helper.assertValueEqual(support(helper, low).getValue(WallBlock.WEST), WallSide.TALL, "the wall held below turns tall on its west side");
+				helper.succeed();
+			});
+		});
+	}
+
+	/**
+	 * Picked fruit lands where nothing solid is: picked from above by a player standing on the next wall of the row, on
+	 * the open side nearest them (not inside the wall they stand on); with walls all round, at the player's feet.
+	 */
+	private static void pickedFruitLandsOnAnOpenSide(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		BlockPos plant = new BlockPos(3, 2, 3);
+		helper.setBlock(plant.below(), Blocks.GRASS_BLOCK);
+		for (BlockPos pos : List.of(plant.west(), plant, plant.east())) {
+			build(helper, pos, Blocks.COBBLESTONE_WALL.defaultBlockState());
+		}
+		overgrow(helper, plant, VBBlocks.GRAPE_VINE_ON_SUPPORT.get(), 3, true);
+		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		Vec3 onWall = Vec3.atBottomCenterOf(helper.absolutePos(plant.west())).add(0.0, 1.5, -0.2);
+		player.setPos(onWall);
+		BlockPos at = helper.absolutePos(plant);
+		helper.useBlock(plant, player, new BlockHitResult(Vec3.atCenterOf(at).add(0.0, 0.5, 0.0), Direction.UP, at, false));
+		List<ItemEntity> drops = level.getEntitiesOfClass(ItemEntity.class, new AABB(at).inflate(2.5));
+		helper.assertFalse(drops.isEmpty(), "picking dropped grapes");
+		for (ItemEntity drop : drops) {
+			BlockPos lies = drop.blockPosition();
+			helper.assertTrue(level.getBlockState(lies).getCollisionShape(level, lies).isEmpty(), "the grapes lie in the open, not in " + level.getBlockState(lies));
+			helper.assertValueEqual(lies.getX(), at.getX(), "beside the picked plant, not over the wall the player stands on");
+			drop.discard();
+		}
+		// walls all round: at the player's feet
+		build(helper, plant.north(), Blocks.COBBLESTONE_WALL.defaultBlockState());
+		build(helper, plant.south(), Blocks.COBBLESTONE_WALL.defaultBlockState());
+		VineOnSupportBlock.place(level, at, state(helper, plant).setValue(ClimbingCropBlock.AGE, 3), support(helper, plant), true);
+		helper.useBlock(plant, player, new BlockHitResult(Vec3.atCenterOf(at).add(0.0, 0.5, 0.0), Direction.UP, at, false));
+		List<ItemEntity> atFeet = level.getEntitiesOfClass(ItemEntity.class, new AABB(at).inflate(2.5));
+		helper.assertFalse(atFeet.isEmpty(), "picking dropped grapes again");
+		for (ItemEntity drop : atFeet) {
+			helper.assertTrue(drop.position().distanceTo(player.position()) < 0.6, "with no open side the grapes land at the player's feet: " + drop.position());
+		}
+		helper.succeed();
+	}
+
+	/**
+	 * Every leaf model the loaders can ask for ({@link SupportLeaves#model}: each vine on a support, piece, root or not,
+	 * age) ships with the mod, and so does each piece's template: the generated models are shared by both loaders, so a
+	 * datagen gap would draw a vine without leaves on both. Read from the mod's own classpath, as the client loads them.
+	 */
+	private static void everyLeafPieceHasAModel(GameTestHelper helper) {
+		List<String> missing = new java.util.ArrayList<>();
+		int checked = 0;
+		for (Block block : net.minecraft.core.registries.BuiltInRegistries.BLOCK) {
+			if (!(block instanceof VineOnSupportBlock)) {
+				continue;
+			}
+			for (SupportLeaves.Piece piece : SupportLeaves.Piece.values()) {
+				for (boolean base : new boolean[] {false, true}) {
+					for (int age = 0; age <= ClimbingCropBlock.MAX_AGE; age++) {
+						checked++;
+						if (!modelShips(SupportLeaves.model(block, piece, base, age))) {
+							missing.add(SupportLeaves.model(block, piece, base, age).toString());
+						}
+					}
+				}
+				if (!modelShips(jexxme.vineandbarrel.VineAndBarrel.id("block/template_vine_support_" + piece.pieceName()))) {
+					missing.add("template_vine_support_" + piece.pieceName());
+				}
+			}
+		}
+		helper.assertTrue(checked == 3 * SupportLeaves.Piece.values().length * 2 * (ClimbingCropBlock.MAX_AGE + 1), "three vines on supports, every piece: " + checked);
+		helper.assertTrue(missing.isEmpty(), "leaf models missing: " + missing);
+		helper.succeed();
+	}
+
+	private static boolean modelShips(net.minecraft.resources.Identifier model) {
+		String path = "/assets/" + model.getNamespace() + "/models/" + model.getPath() + ".json";
+		try (java.io.InputStream in = VBSupportTests.class.getResourceAsStream(path)) {
+			return in != null;
+		} catch (java.io.IOException e) {
+			return false;
+		}
 	}
 
 	// ------------------------------------------------------------------ giving the block back
