@@ -1,5 +1,6 @@
 package jexxme.vineandbarrel.neoforge.client;
 
+import com.mojang.logging.LogUtils;
 import com.mojang.math.OctahedralGroup;
 import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.block.SupportLeaves;
@@ -21,10 +22,13 @@ import net.neoforged.neoforge.client.model.DelegateBlockStateModel;
 import net.neoforged.neoforge.client.model.standalone.SimpleUnbakedStandaloneModel;
 import net.neoforged.neoforge.client.model.standalone.StandaloneModelKey;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A vine on a fence, wall, chain or bars ({@link VineOnSupportBlock}): the block it holds, drawn with that block's own
@@ -36,6 +40,9 @@ final class SupportedVineModel extends DelegateBlockStateModel
 	private static final OctahedralGroup[] TURNS = {OctahedralGroup.IDENTITY, OctahedralGroup.BLOCK_ROT_Y_90, OctahedralGroup.BLOCK_ROT_Y_180,
 			OctahedralGroup.BLOCK_ROT_Y_270};
 	private static final Map<String, StandaloneModelKey<BlockStateModel>> PIECES = new HashMap<>();
+	private static final Logger LOGGER = LogUtils.getLogger();
+	/** Missing pieces already reported (each once: this runs every time a vine is drawn). */
+	private static final Set<String> MISSING = ConcurrentHashMap.newKeySet();
 
 	private SupportedVineModel(BlockStateModel model) {
 		super(model);
@@ -63,6 +70,13 @@ final class SupportedVineModel extends DelegateBlockStateModel
 		}
 	}
 
+	/** A leaf piece that has no model: a datagen or registration gap, reported loudly once instead of drawn as nothing. */
+	private static void missing(String name) {
+		if (MISSING.add(name)) {
+			LOGGER.error("Vine on a support: no model for leaf piece {} (run datagen; every piece SupportLeaves picks must be registered)", name);
+		}
+	}
+
 	/** Wraps the baked model of every vine-on-support state (NeoForge: {@code ModelEvent.ModifyBakingResult}). */
 	static void wrap(ModelEvent.ModifyBakingResult event) {
 		for (Map.Entry<BlockState, BlockStateModel> entry : event.getBakingResult().blockStateModels().entrySet()) {
@@ -85,11 +99,14 @@ final class SupportedVineModel extends DelegateBlockStateModel
 		boolean base = state.getValue(VineOnSupportBlock.BASE);
 		int age = state.getValue(ClimbingCropBlock.AGE);
 		for (SupportLeaves.Placed placed : SupportLeaves.of(support)) {
-			StandaloneModelKey<BlockStateModel> key = PIECES.get(SupportLeaves.model(state.getBlock(), placed.piece(), base, age) + "#" + placed.turn());
+			String name = SupportLeaves.model(state.getBlock(), placed.piece(), base, age) + "#" + placed.turn();
+			StandaloneModelKey<BlockStateModel> key = PIECES.get(name);
 			BlockStateModel leaves = key == null ? null : Minecraft.getInstance().getModelManager().getStandaloneModel(key);
-			if (leaves != null) {
-				leaves.collectParts(level, pos, state, random, parts);
+			if (leaves == null) {
+				missing(name);
+				continue;
 			}
+			leaves.collectParts(level, pos, state, random, parts);
 		}
 		BlockStateModel model = supportModel(support);
 		if (model != null) {
