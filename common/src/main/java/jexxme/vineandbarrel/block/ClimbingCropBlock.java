@@ -1,6 +1,7 @@
 package jexxme.vineandbarrel.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -193,7 +194,11 @@ public abstract class ClimbingCropBlock extends BushBlock implements Bonemealabl
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
 		if (canPick(state)) {
 			if (level instanceof ServerLevel serverLevel) {
-				pick(serverLevel, pos, state, player, stack -> Block.popResource(serverLevel, pos, stack));
+				// on the side the player picked from, just outside the block: the middle of a fence, wall, bars or
+				// trellis is inside its collision, which would shove the fruit out and fling it away
+				Direction side = hitResult.getDirection().getAxis().isHorizontal() ? hitResult.getDirection()
+						: Direction.getNearest((float) (player.getX() - (pos.getX() + 0.5)), 0.0F, (float) (player.getZ() - (pos.getZ() + 0.5)));
+				pick(serverLevel, pos, state, player, stack -> Block.popResourceFromFace(serverLevel, pos, side, stack));
 			}
 			return InteractionResult.sidedSuccess(level.isClientSide());
 		}
