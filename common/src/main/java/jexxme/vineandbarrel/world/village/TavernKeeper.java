@@ -62,7 +62,20 @@ public final class TavernKeeper
 	public static final ResourceKey<PoiType> JOB_SITE = ResourceKey.create(Registries.POINT_OF_INTEREST_TYPE, VineAndBarrel.id(NAME));
 	public static final ResourceKey<VillagerProfession> PROFESSION = ResourceKey.create(Registries.VILLAGER_PROFESSION, VineAndBarrel.id(NAME));
 
-	public static final DeferredHolder<PoiType, PoiType> JOB_SITE_TYPE = POI_TYPES.register(NAME, () -> new PoiType(kettleStates(), 1, 1));
+	/**
+	 * A villager takes a job site he can walk to within this many blocks (vanilla's job blocks: 1). A kettle often sits on
+	 * a campfire, a block above where anyone stands: with 1 no path ever counted as reaching it and nobody took it. Only
+	 * finding and handing on the job site use it; to be hired he still steps up next to it.
+	 */
+	public static final int JOB_SITE_RANGE = 2;
+	/**
+	 * He is hired at his kettle ({@link #hire}) and works at it ({@code mixin.WorkAtPoiMixin}) from this close: blocks
+	 * from his feet to its middle. Vanilla's 2 and 1.73 are for a job block on the floor; next to the campfire a kettle
+	 * sits on he stands 1.8 to 2.2 away, wherever in the block beside the fire he stops.
+	 */
+	public static final double KETTLE_REACH = 2.5;
+
+	public static final DeferredHolder<PoiType, PoiType> JOB_SITE_TYPE = POI_TYPES.register(NAME, () -> new PoiType(kettleStates(), 1, JOB_SITE_RANGE));
 
 	public static final DeferredHolder<VillagerProfession, VillagerProfession> TAVERN_KEEPER = PROFESSIONS.register(NAME, () -> new VillagerProfession(NAME,
 		poi -> poi.is(JOB_SITE), poi -> poi.is(JOB_SITE), ImmutableSet.of(), ImmutableSet.of(), BarrelRegistry.BARREL_TAP.get()));
@@ -157,8 +170,11 @@ public final class TavernKeeper
 
 	// ------------------------------------------------------------------ behaviour (server, from the entity tick)
 
-	/** Once a second for every keeper: the daily restock. */
+	/** Every tick for every villager: hired at a kettle ({@link #hire}); once a second for every keeper: the daily restock. */
 	public static void tick(Villager keeper) {
+		if (keeper.level() instanceof ServerLevel server) {
+			hire(server, keeper);
+		}
 		if (!(keeper.level() instanceof ServerLevel level) || keeper.tickCount % 20 != 0 || !isKeeper(keeper) || keeper.isBaby()) {
 			return;
 		}
@@ -166,6 +182,30 @@ public final class TavernKeeper
 		BlockPos kettle = site.filter(pos -> pos.dimension() == level.dimension()).map(GlobalPos::pos).orElse(null);
 		if (kettle != null) {
 			restock(level, keeper, kettle);
+		}
+	}
+
+	/**
+	 * A villager who has set out for a kettle as his job site is hired there (or, a keeper already, takes it as his) once
+	 * he is within {@link #KETTLE_REACH} of it, as vanilla's {@code AssignProfessionFromJobSite} does within 2 blocks of
+	 * any job site: from beside the campfire a kettle sits on he never or only now and then got that close.
+	 */
+	public static void hire(ServerLevel level, Villager villager) {
+		Optional<GlobalPos> potential = villager.getBrain().getMemory(MemoryModuleType.POTENTIAL_JOB_SITE);
+		if (potential == null || potential.isEmpty()) {
+			return;
+		}
+		GlobalPos site = potential.get();
+		if (site.dimension() != level.dimension() || !site.pos().closerToCenterThan(villager.position(), KETTLE_REACH)
+			|| !level.getPoiManager().getType(site.pos()).map(type -> type.is(JOB_SITE)).orElse(false)) {
+			return;
+		}
+		villager.getBrain().eraseMemory(MemoryModuleType.POTENTIAL_JOB_SITE);
+		villager.getBrain().setMemory(MemoryModuleType.JOB_SITE, site);
+		level.broadcastEntityEvent(villager, (byte) 14);
+		if (villager.getVillagerData().getProfession() == VillagerProfession.NONE) {
+			villager.setVillagerData(villager.getVillagerData().setProfession(TAVERN_KEEPER.get()));
+			villager.refreshBrain(level);
 		}
 	}
 
