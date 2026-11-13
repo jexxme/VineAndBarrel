@@ -108,6 +108,7 @@ public final class MultiKettleGameTests
 		test("kettle_chimney_stops_at_a_vine", 100, MultiKettleGameTests::chimneyStopsAtVine);
 		test("kettle_chimney_stops_at_a_bush_a_rope_vine_and_a_torch", 100, MultiKettleGameTests::chimneyStopsAtPlantsAndTorches);
 		test("kettle_chimney_through_a_slab_roof", 100, MultiKettleGameTests::chimneyThroughSlabRoof);
+		test("kettle_chimney_through_a_deepslate_roof", 100, MultiKettleGameTests::chimneyThroughDeepslateRoof);
 		test("kettle_chimney_through_a_roof_in_one_click", 100, MultiKettleGameTests::chimneyThroughRoofInOneClick);
 		test("multikettle_removed_full_kettle_never_overfills", 100, MultiKettleGameTests::removedFullKettleNeverOverfills);
 		test("kettle_chimney_grows_from_the_chimney", 100, MultiKettleGameTests::chimneyGrowsFromChimney);
@@ -898,6 +899,32 @@ public final class MultiKettleGameTests
 		helper.useBlock(BASE, player);
 		helper.assertTrue(helper.getBlockState(BASE.above()).is(Blocks.SPRUCE_SLAB), "the slab stays");
 		assertPiece(helper, BASE.above(2), 1, true, "on the slab");
+		helper.assertValueEqual(player.getMainHandItem().getCount(), 3, "one ingot used");
+		helper.succeed();
+	}
+
+	/**
+	 * Audit 1.2: deepslate roofs are roofs too. Deepslate tiles and bricks (hardness 3.5) let the chimney through, slabs
+	 * and stairs of them as well; a block of iron (5) stops it like obsidian.
+	 */
+	private static void chimneyThroughDeepslateRoof(GameTestHelper helper) {
+		for (Block roof : new Block[] {Blocks.DEEPSLATE_TILES, Blocks.DEEPSLATE_BRICKS, Blocks.POLISHED_DEEPSLATE, Blocks.COBBLED_DEEPSLATE}) {
+			helper.assertTrue(roof.defaultBlockState().getDestroySpeed(helper.getLevel(), BASE) <= KettleMultiblock.ROOF_HARDNESS, roof + " is a roof");
+		}
+		helper.assertTrue(Blocks.IRON_BLOCK.defaultBlockState().getDestroySpeed(helper.getLevel(), BASE) > KettleMultiblock.ROOF_HARDNESS, "a block of iron is no roof");
+		place(helper, BASE, false);
+		roof(helper, 1, Blocks.DEEPSLATE_TILES.defaultBlockState());
+		roof(helper, 2, Blocks.DEEPSLATE_TILE_SLAB.defaultBlockState());
+		roof(helper, 3, Blocks.IRON_BLOCK.defaultBlockState());
+		ServerPlayer player = survivorWithIngots(helper);
+		helper.useBlock(BASE, player);
+		helper.assertTrue(helper.getBlockState(BASE.above()).is(Blocks.DEEPSLATE_TILES), "the tiles stay");
+		helper.assertTrue(helper.getBlockState(BASE.above(2)).is(Blocks.DEEPSLATE_TILE_SLAB), "the slab stays");
+		helper.assertTrue(helper.getBlockState(BASE.above(3)).is(Blocks.IRON_BLOCK), "the block of iron stays");
+		helper.assertValueEqual(player.getMainHandItem().getCount(), 4, "no piece under a block of iron");
+		roof(helper, 3, Blocks.AIR.defaultBlockState());
+		helper.useBlock(BASE, player);
+		assertPiece(helper, BASE.above(3), 2, true, "on the deepslate roof");
 		helper.assertValueEqual(player.getMainHandItem().getCount(), 3, "one ingot used");
 		helper.succeed();
 	}
