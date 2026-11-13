@@ -5,8 +5,12 @@ import com.google.gson.JsonParser;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.JsonOps;
 import jexxme.vineandbarrel.VineAndBarrel;
+import jexxme.vineandbarrel.barrel.AgingRecipe;
+import jexxme.vineandbarrel.barrel.AgingRecipes;
 import jexxme.vineandbarrel.barrel.BarrelRegistry;
+import jexxme.vineandbarrel.kettle.BrewingRecipe;
 import jexxme.vineandbarrel.kettle.KettleRegistry;
+import jexxme.vineandbarrel.watch.WatchParts;
 import jexxme.vineandbarrel.watch.WatchPath;
 import jexxme.vineandbarrel.watch.WatchScene;
 import net.minecraft.core.Holder;
@@ -61,6 +65,7 @@ final class WatchGameTests
 
 	static void registerAll() {
 		VBGameTests.test("watch_scenes_are_complete", WatchGameTests::scenesAreComplete);
+		VBGameTests.test("watch_aging_scene_plays_each_base", WatchGameTests::agingScenePlaysEachBase);
 	}
 
 	private static void scenesAreComplete(GameTestHelper helper) {
@@ -82,7 +87,26 @@ final class WatchGameTests
 			key(lang, scene.title(), name, problems);
 			Set<String> figures = new HashSet<>();
 			for (WatchScene.Step step : scene.steps()) {
-				key(lang, step.caption(), name, problems);
+				for (String caption : step.captions()) {
+					key(lang, caption, name, problems);
+					// a line's %s are what the step's "with" names, as many of them
+					int args = lang.has(caption) ? countArgs(lang.get(caption).getAsString()) : step.with().size();
+					if (args != step.with().size()) {
+						problems.add(name + ": " + caption + " has " + args + " %s, the step names " + step.with().size());
+					}
+				}
+				for (Either<Holder<Item>, WatchScene.RecipePart> with : step.with()) {
+					part(helper, with, name, problems, true);
+				}
+				for (WatchScene.CaptionVariant variant : step.variants()) {
+					item(helper, variant.of(), name, problems);
+					for (String selector : variant.items()) {
+						ResourceLocation id = ResourceLocation.tryParse(selector.startsWith("#") ? selector.substring(1) : selector);
+						if (id == null || !selector.startsWith("#") && !BuiltInRegistries.ITEM.containsKey(id)) {
+							problems.add(name + ": a caption variant names " + selector + ", which isn't an item");
+						}
+					}
+				}
 				for (WatchScene.Action action : step.actions()) {
 					check(helper, name, action, figures, problems);
 				}
@@ -110,6 +134,7 @@ final class WatchGameTests
 					problems.add(name + ": " + entry.block() + " opens at step " + entry.step() + " of " + scene.steps().size());
 				}
 			}
+			scene.recipe().ifPresent(recipe -> recipe(helper, recipe, name, problems));
 			for (ResourceLocation also : scene.also()) {
 				if (!isScene(also, names)) {
 					problems.add(name + ": offers " + also + ", which isn't one of the scenes");
@@ -201,6 +226,8 @@ final class WatchGameTests
 			brewing(helper, kettle.recipe(), name, problems);
 		} else if (action instanceof WatchScene.Particles particles) {
 			particles.colorOf().ifPresent(item -> item(helper, item, name, problems));
+		} else if (action instanceof WatchScene.Timelapse lapse) {
+			lapse.daysOf().ifPresent(part -> part(helper, Either.right(part), name, problems, true));
 		} else if (action instanceof WatchScene.Sound sound) {
 			if (!BuiltInRegistries.SOUND_EVENT.containsKey(sound.sound())) {
 				problems.add(name + ": no sound event " + sound.sound());
@@ -218,9 +245,21 @@ final class WatchGameTests
 	}
 
 	private static void item(GameTestHelper helper, Either<Holder<Item>, WatchScene.RecipePart> item, String name, List<String> problems) {
+		part(helper, item, name, problems, false);
+	}
+
+	/** An item or a recipe's part; {@code times}: also an aging recipe's fermenting or aging time (a caption's or a time-lapse's). */
+	private static void part(GameTestHelper helper, Either<Holder<Item>, WatchScene.RecipePart> item, String name, List<String> problems, boolean times) {
 		item.ifRight(part -> {
 			switch (part.part()) {
-				case "base", "young", "aged" -> recipe(helper, part.recipe(), name, problems);
+				case "fermenting_time", "aging_time" -> {
+					if (times) {
+						recipe(helper, part.recipe(), name, problems);
+					} else {
+						problems.add(name + ": " + part.part() + " is a time, not an item");
+					}
+				}
+				case "base", "young", "aged", "vessel" -> recipe(helper, part.recipe(), name, problems);
 				case "result", "ingredient" -> brewing(helper, part.recipe(), name, problems);
 				case "bucket" -> {
 					if (!isType(helper, part.recipe(), BarrelRegistry.AGING.get()) && !isType(helper, part.recipe(), KettleRegistry.BREWING.get())) {
@@ -247,6 +286,123 @@ final class WatchGameTests
 	private static boolean isType(GameTestHelper helper, ResourceLocation id, RecipeType<?> type) {
 		Optional<? extends Recipe<?>> recipe = helper.getLevel().getRecipeManager().byKey(id);
 		return recipe.isPresent() && recipe.get().getType() == type;
+	}
+
+	private static int countArgs(String line) {
+		int count = 0;
+		java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("%(\\d+\\$)?s").matcher(line);
+		while (matcher.find()) {
+			count++;
+		}
+		return count;
+	}
+
+	/**
+	 * The barrel scene played for each aging base, as a player asks for it (the base's bucket or bottle, a barrel of it,
+	 * JEI's page): it plays that recipe, its "What you need" names that base's bucket (a bottle where there is none) and
+	 * the vessel its drinks are tapped into, the brewer holds them, and the lines say the right thing: "Pour in the wort."
+	 * for a wort, a mug for a drink served in one. A mug or a wine glass asked for plays a recipe served in it.
+	 */
+	private static void agingScenePlaysEachBase(GameTestHelper helper) {
+		JsonObject lang = read(helper, "/assets/vineandbarrel/lang/en_us.json");
+		WatchScene scene = WatchScene.CODEC.parse(JsonOps.INSTANCE, read(helper, FOLDER + "aging_barrel.json")).getOrThrow(false, VineAndBarrel.LOGGER::error);
+		helper.assertTrue(scene.recipe().isPresent(), "the barrel scene names the recipe it is written for");
+		List<String> problems = new ArrayList<>();
+		WatchParts.Recipes recipes = serverRecipes(helper);
+		List<AgingRecipe> all = AgingRecipes.all(helper.getLevel());
+		helper.assertTrue(all.size() >= 7, "only " + all.size() + " aging recipes");
+		Item mug = BuiltInRegistries.ITEM.get(VineAndBarrel.id("mug"));
+		Item glass = BuiltInRegistries.ITEM.get(VineAndBarrel.id("wine_glass"));
+		Set<Item> bases = new HashSet<>();
+		for (AgingRecipe recipe : all) {
+			ResourceLocation id = recipe.getId();
+			if (!bases.add(recipe.base().value())) {
+				// a second recipe from the same base (the test data pack's duplicates): the barrel uses the lowest id, so does the scene
+				continue;
+			}
+			List<net.minecraft.world.item.ItemStack> asks = new ArrayList<>();
+			asks.add(new net.minecraft.world.item.ItemStack(recipe.base()));
+			recipe.bucket().ifPresent(bucket -> asks.add(new net.minecraft.world.item.ItemStack(bucket)));
+			for (net.minecraft.world.item.ItemStack ask : asks) {
+				Optional<ResourceLocation> played = WatchParts.agingRecipeFor(ask, all, scene.recipe());
+				if (!played.equals(Optional.of(id))) {
+					problems.add(ask.getItem() + " plays " + played + " instead of " + id);
+				}
+			}
+			if (!WatchParts.agingRecipeOfBase(new net.minecraft.world.item.ItemStack(recipe.base()), all).equals(Optional.of(id))) {
+				problems.add("a barrel of " + recipe.base().value() + " doesn't play " + id);
+			}
+			WatchParts parts = WatchParts.of(scene, recipes, Optional.of(id));
+			Item pour = recipe.bucket().map(Holder::value).orElse(recipe.base().value());
+			Item vessel = WatchParts.vesselOf(recipe).getItem();
+			Item other = vessel == mug ? glass : mug;
+			List<Item> needs = scene.needs().stream().map(parts::item).map(net.minecraft.world.item.ItemStack::getItem).toList();
+			if (!needs.contains(pour) || !needs.contains(vessel) || needs.contains(other)) {
+				problems.add(id + ": What you need is " + needs + " (its " + pour + " and " + vessel + ", never " + other + ")");
+			}
+			List<Item> held = new ArrayList<>();
+			for (WatchScene.Step step : scene.steps()) {
+				for (WatchScene.Action action : step.actions()) {
+					if (action instanceof WatchScene.Hold hold) {
+						held.add(parts.item(hold.item()).getItem());
+					}
+				}
+			}
+			if (!held.contains(pour) || !held.contains(vessel) || held.contains(other) || !held.contains(recipe.young().getItem())) {
+				problems.add(id + ": the brewer holds " + held + " (its " + pour + ", " + vessel + " and young drink)");
+			}
+			// the lines: the base's kind where it is poured, the vessel where it is tapped, the recipe's own days
+			String base = BuiltInRegistries.ITEM.getKey(recipe.base().value()).getPath();
+			String expectedPour = base.endsWith("_wort_bottle") ? ".wort" : base.equals("honey_must_bottle") ? ".must" : "";
+			String pourKey = parts.captionKey(scene.steps().get(0));
+			if (!pourKey.equals(scene.steps().get(0).caption() + expectedPour)) {
+				problems.add(id + ": pouring " + base + " says " + pourKey);
+			}
+			boolean mugLine = false;
+			for (WatchScene.Step step : scene.steps()) {
+				String key = parts.captionKey(step);
+				mugLine |= key.endsWith(".mug");
+				String english = lang.has(key) ? lang.get(key).getAsString() : "";
+				if (vessel == mug && english.contains("glass") || vessel == glass && english.contains("mug")) {
+					problems.add(id + ": " + key + " (" + english + ") names the other vessel");
+				}
+				parts.caption(step).getString();
+			}
+			if (mugLine != (vessel == mug)) {
+				problems.add(id + ": served in " + vessel + ", " + (mugLine ? "a line says mug" : "no line says mug"));
+			}
+		}
+		// a vessel asked for: a recipe whose drinks are served in it (the wine glass: the red wine the scene is written for)
+		for (Item vessel : List.of(mug, glass)) {
+			Optional<ResourceLocation> played = WatchParts.agingRecipeFor(new net.minecraft.world.item.ItemStack(vessel), all, scene.recipe());
+			Optional<AgingRecipe> recipe = played.map(recipes::aging);
+			if (recipe.isEmpty() || WatchParts.vesselOf(recipe.get()).getItem() != vessel) {
+				problems.add("asked for " + vessel + ", the scene plays " + played);
+			}
+		}
+		if (!WatchParts.agingRecipeFor(new net.minecraft.world.item.ItemStack(glass), all, scene.recipe()).equals(scene.recipe())) {
+			problems.add("a wine glass doesn't play the red wine the scene is written for");
+		}
+		helper.assertTrue(problems.isEmpty(), "barrel scene variants: " + problems);
+		helper.succeed();
+	}
+
+	/** The server's recipes, for what a scene names. */
+	private static WatchParts.Recipes serverRecipes(GameTestHelper helper) {
+		return new WatchParts.Recipes()
+		{
+			@Override
+			public AgingRecipe aging(ResourceLocation id) {
+				return helper.getLevel().getRecipeManager().byKey(id)
+					.filter(AgingRecipe.class::isInstance).map(AgingRecipe.class::cast).orElse(null);
+			}
+
+			@Override
+			public BrewingRecipe brewing(ResourceLocation id) {
+				return helper.getLevel().getRecipeManager().byKey(id)
+					.filter(BrewingRecipe.class::isInstance).map(BrewingRecipe.class::cast).orElse(null);
+			}
+		};
 	}
 
 	private static void key(JsonObject lang, String key, String name, List<String> problems) {

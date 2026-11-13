@@ -28,7 +28,7 @@ import java.util.Optional;
  * The Brewer's path: the whole journey from vine to glass as a row of stations, each a "Watch it" scene, ticked from
  * the player's own advancements (done, next for you, not yet). Side scenes hang under the station they belong to (with
  * Farmer's Delight: its stove and ropes). Pick a station for its card (its finished stage, what it is, how far you
- * are), then watch it, or every station from there on like chapters. The stations and branches are data
+ * are), then watch it: it plays on into the stations after it like chapters. The stations and branches are data
  * ({@code watch/path.json}).
  */
 public class WatchPathScreen extends Screen
@@ -170,24 +170,23 @@ public class WatchPathScreen extends Screen
 		cardX = ox + (ow - cardW) / 2;
 		cardPreview = cardH >= 94;
 		int colX = cardX + cardW / 2 + 12, colW = cardX + cardW - 10 - colX;
-		int buttonsY = cardPreview ? cardY + cardH - 52 : cardY + 8;
-		addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.path.watch"), b -> watch(selected, false))
+		// one button: a station plays on into the next one from its end card (like chapters), a side scene plays alone
+		int buttonsY = cardPreview ? cardY + cardH - 28 : cardY + 8;
+		addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.path.watch"), b -> watch(selected))
 			.bounds(colX, buttonsY, colW, 20).build());
-		Button from = addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.path.watch_from"), b -> watch(selected, true))
-			.bounds(colX, buttonsY + 24, colW, 20).build());
-		from.active = selected < stations.size();
-		addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.path.watch_all"), b -> watch(0, true))
+		addRenderableWidget(Button.builder(Component.translatable("watch.vineandbarrel.path.watch_all"), b -> watch(0))
 			.bounds(ox + 8, footerY + 12, 100, 20).build());
 		Button done = addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> minecraft.setScreen(WatchScreen.outside(parent)))
 			.bounds(ox + ow - 8 - DONE_W, footerY + 12, DONE_W, 20).build());
 		setInitialFocus(done);
 	}
 
-	private void watch(int from, boolean chapters) {
+	/** Watches a spot: a station and the ones after it like chapters (each end card leads on), a side scene alone. */
+	private void watch(int from) {
 		if (from < 0 || from >= spots()) {
 			return;
 		}
-		if (from >= stations.size() || !chapters) {
+		if (from >= stations.size()) {
 			WatchScreen.open(spot(from).scene(), 0, null, this);
 		} else {
 			WatchScreen.openChapters(stations.get(from).scene(), stations.stream().map(Spot::scene).toList(), this);
@@ -452,7 +451,7 @@ public class WatchPathScreen extends Screen
 		if (spot >= 0) {
 			select(spot);
 			if (doubleClick) {
-				watch(spot, false);
+				watch(spot);
 			}
 			return true;
 		}

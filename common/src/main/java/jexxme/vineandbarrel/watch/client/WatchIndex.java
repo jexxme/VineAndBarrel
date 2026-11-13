@@ -10,6 +10,7 @@ import jexxme.vineandbarrel.drink.DrinkItem;
 import jexxme.vineandbarrel.kettle.KettleTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import jexxme.vineandbarrel.watch.WatchParts;
 import jexxme.vineandbarrel.watch.WatchPath;
 import jexxme.vineandbarrel.watch.WatchScene;
 import net.minecraft.client.Minecraft;
@@ -122,8 +123,24 @@ public final class WatchIndex implements ResourceManagerReloadListener
 		return Optional.empty();
 	}
 
-	/** A block in the world that opens a scene, at a step, maybe with a line about what the block is doing. */
-	public record BlockEntry(ResourceLocation scene, int step, Optional<String> now) {
+	/**
+	 * {@return the aging recipe a scene plays when this item asks for it}: a wort bucket the barrel scene for that wort,
+	 * a mug the barrel scene for a drink served in a mug; none if the scene isn't written for a recipe
+	 */
+	public Optional<ResourceLocation> recipeFor(ResourceLocation scene, ItemStack stack) {
+		Minecraft minecraft = Minecraft.getInstance();
+		Optional<ResourceLocation> written = scene(scene).flatMap(WatchScene::recipe);
+		if (written.isEmpty() || minecraft.level == null) {
+			return Optional.empty();
+		}
+		return WatchParts.agingRecipeFor(stack, AgingRecipes.all(minecraft.level), written);
+	}
+
+	/**
+	 * A block in the world that opens a scene, at a step, maybe with a line about what the block is doing, and the aging
+	 * recipe of what it holds (a barrel of ale opens the barrel scene for ale).
+	 */
+	public record BlockEntry(ResourceLocation scene, int step, Optional<String> now, Optional<ResourceLocation> recipe) {
 	}
 
 	public Optional<BlockEntry> forBlock(Level level, BlockPos pos, BlockState state) {
@@ -147,7 +164,12 @@ public final class WatchIndex implements ResourceManagerReloadListener
 			for (WatchScene.Entry block : entry.getValue().opens().blocks()) {
 				if (block.fits(look) && block.heated().map(heated -> heated == heat.orElseGet(() -> KettleTags.isHeated(level, pos))).orElse(true)) {
 					int step = Math.min(block.step(), entry.getValue().steps().size()) - 1;
-					return Optional.of(new BlockEntry(entry.getKey(), step, block.now()));
+					Optional<ResourceLocation> recipe = Optional.empty();
+					if (entry.getValue().recipe().isPresent() && level.getBlockEntity(pos) instanceof jexxme.vineandbarrel.barrel.AgingBarrelBlockEntity barrel
+						&& !barrel.contents().isEmpty()) {
+						recipe = WatchParts.agingRecipeOfBase(barrel.contents().base(), AgingRecipes.all(level));
+					}
+					return Optional.of(new BlockEntry(entry.getKey(), step, block.now(), recipe));
 				}
 			}
 		}

@@ -1,5 +1,6 @@
 package jexxme.vineandbarrel.watch.client;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import jexxme.vineandbarrel.VineAndBarrel;
@@ -13,7 +14,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.PageButton;
 import net.minecraft.core.BlockPos;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
@@ -42,8 +42,8 @@ import java.util.Optional;
 /**
  * "Watch it": a short scene of the real blocks, one step at a time, in a window in vanilla's container look. The
  * stage shows the scene; each step's caption sits beside the block it is about (outlined as in the world), tied to it
- * by a short line. One row under the stage: what you need (click for recipes), the steps between the book's page arrows
- * (click one to jump, hover for its caption), the Brewer's path and Done. A small button in the stage's corner pauses
+ * by a short line. One row under the stage: what you need (click for recipes), the numbered steps (click one to jump,
+ * hover for its caption; the arrow keys step too), the Brewer's path and Done. A small button in the stage's corner pauses
  * and plays (so does Space, or a click on the scene); drag to turn, scroll to zoom, double-click to set the view back.
  * At the end the scene keeps its last frame, and a small box offers what's next.
  */
@@ -73,11 +73,15 @@ public class WatchScreen extends Screen
 	private static final ResourceLocation SLOT = new ResourceLocation("textures/gui/container/generic_54.png");
 	/** Vanilla's buttons: disabled, plain and highlighted, each 200 x 20, from y = 46 down. */
 	private static final ResourceLocation WIDGETS = new ResourceLocation("textures/gui/widgets.png");
+	/** The sky's sun (32 pixels) and moon phases (a 4 x 2 sheet of 32-pixel phases; the full moon is the first). */
+	private static final ResourceLocation SUN = new ResourceLocation("textures/environment/sun.png");
+	private static final ResourceLocation MOON = new ResourceLocation("textures/environment/moon_phases.png");
+	/** The sun's and the moon's textures (32 pixels) drawn at twice that. */
+	private static final int CELESTIAL = 64;
 
 	private static final int HEADER = 20;
 	private static final int FOOTER = 36;
 	private static final int CHIP = 20;
-	private static final int ARROW = 23;
 	private static final int DONE_W = 64;
 	private static final int SLOT_SIZE = 18;
 	private static final int LINE_H = 10;
@@ -129,12 +133,20 @@ public class WatchScreen extends Screen
 	}
 
 	public static boolean open(ResourceLocation id, int step, @Nullable Component now, @Nullable Screen parent) {
+		return open(id, step, now, parent, Optional.empty());
+	}
+
+	/**
+	 * Opens a scene; one written for an aging recipe plays {@code recipe} instead if given (a wort bucket asked for: the
+	 * barrel scene pours that wort and taps it into a mug).
+	 */
+	public static boolean open(ResourceLocation id, int step, @Nullable Component now, @Nullable Screen parent, Optional<ResourceLocation> recipe) {
 		Minecraft minecraft = Minecraft.getInstance();
 		Optional<WatchScene> scene = WatchIndex.INSTANCE.scene(id);
 		if (minecraft.level == null || scene.isEmpty()) {
 			return false;
 		}
-		ScenePlayer player = new ScenePlayer(scene.get(), minecraft.level);
+		ScenePlayer player = new ScenePlayer(scene.get(), minecraft.level, recipe);
 		if (step > 0) {
 			player.jumpTo(step);
 		}
@@ -200,8 +212,8 @@ public class WatchScreen extends Screen
 		int max = Math.max(90, Math.min(TAG_MAX, Math.min(stageW / 2 - 24, beside)));
 		int lines = 1;
 		int widest = 0;
-		for (WatchScene.Step step : player.scene().steps()) {
-			List<FormattedCharSequence> split = font.split(Component.translatable(step.caption()), max);
+		for (int i = 0; i < player.scene().steps().size(); i++) {
+			List<FormattedCharSequence> split = font.split(player.caption(i), max);
 			lines = Math.max(lines, split.size());
 			for (FormattedCharSequence line : split) {
 				widest = Math.max(widest, font.width(line));
@@ -210,13 +222,13 @@ public class WatchScreen extends Screen
 		tagW = widest + 2 * TAG_PAD;
 		tagH = lines * LINE_H + 2 * TAG_PAD - 2;
 
-		// One row under the stage: what you need (left), the steps between the book's arrows (middle), the path and Done
-		// (right). The steps sit in the middle unless the slots would touch them; then they move right. Only when even
-		// that doesn't fit, the slots give way (the brewer's hands still show what is in use).
+		// One row under the stage: what you need (left), the numbered steps (middle), the path and Done (right). The steps
+		// sit in the middle unless the slots would touch them; then they move right. Only when even that doesn't fit, the
+		// slots give way (the brewer's hands still show what is in use).
 		int rowY = footerY + 12;
 		int steps = player.scene().steps().size();
 		int chipsW = steps * (CHIP + 2) - 2;
-		int group = ARROW + 6 + chipsW + 6 + ARROW;
+		int group = chipsW;
 		int railW = needs().size() * SLOT_SIZE;
 		int left = ox + 8 + railW + 8;
 		int right = ox + ow - 8 - DONE_W - 4 - 20 - 8;
@@ -228,9 +240,7 @@ public class WatchScreen extends Screen
 		} else {
 			start = Math.max(start, ox + 8);
 		}
-		chipsX = start + ARROW + 6;
-		addRenderableWidget(new PageButton(chipsX - ARROW - 6, rowY + 4, false, b -> back(), true));
-		addRenderableWidget(new PageButton(chipsX + chipsW + 6, rowY + 4, true, b -> next(), true));
+		chipsX = start;
 		Button path = addRenderableWidget(icon("watch/big/path", Component.translatable("watch.vineandbarrel.path"), 20, b -> openPath()));
 		path.setPosition(ox + ow - 8 - DONE_W - 4 - 20, rowY);
 		path.visible = WatchPathScreen.available();
@@ -398,7 +408,7 @@ public class WatchScreen extends Screen
 		lastTick = Util.getNanos();
 		if (player.step() != step) {
 			// the narrator reads each new step's caption, as it reads a screen's title
-			minecraft.getNarrator().say(Component.translatable(player.currentStep().caption()));
+			minecraft.getNarrator().say(player.caption());
 		}
 		if (player.isFinished() != finished) {
 			updateButtons();
@@ -523,6 +533,10 @@ public class WatchScreen extends Screen
 		}
 		BlockPos at = BlockPos.containing(point.get());
 		for (int i = 0; i < 2; i++) {
+			if (at.getY() == 0 && player.scene().floor().isPresent()) {
+				// the floor is never what a caption is about (a block the step puts up isn't there yet)
+				return null;
+			}
 			if (!player.world().getBlockState(at).isAir()) {
 				return at;
 			}
@@ -546,6 +560,11 @@ public class WatchScreen extends Screen
 	}
 
 	private void renderTag(GuiGraphics gui, float a) {
+		if (player.tick() < player.captionAt()) {
+			// the block it is about isn't there yet (the barrel is still in the brewer's hands): the caption comes with it
+			tagStep = -1;
+			return;
+		}
 		if (tagStep != player.step()) {
 			tagStep = player.step();
 			stepShownAt = Util.getMillis();
@@ -555,7 +574,7 @@ public class WatchScreen extends Screen
 			: Mth.clamp((Util.getMillis() - stepShownAt) / (float) FADE_MS, 0.0F, 1.0F);
 		float alpha = 1.0F - (1.0F - fade) * (1.0F - fade);
 		int rise = Math.round((1.0F - alpha) * 4.0F);
-		List<FormattedCharSequence> lines = font.split(Component.translatable(player.currentStep().caption()), tagW - 2 * TAG_PAD);
+		List<FormattedCharSequence> lines = font.split(player.caption(), tagW - 2 * TAG_PAD);
 		Optional<Vec3> anchor = anchorPoint(a);
 		int x, y;
 		if (anchor.isPresent()) {
@@ -678,7 +697,7 @@ public class WatchScreen extends Screen
 	// ------------------------------------------------------------------ what you need
 
 	private List<ItemStack> needs() {
-		return player.scene().needs().stream().map(SceneItems::resolve).filter(stack -> !stack.isEmpty()).toList();
+		return player.scene().needs().stream().map(player.parts()::item).filter(stack -> !stack.isEmpty()).toList();
 	}
 
 	/** "What you need": a container's row of slots with its label above; what the brewer holds now is framed. */
@@ -720,7 +739,7 @@ public class WatchScreen extends Screen
 			int steps = player.scene().steps().size();
 			gui.renderComponentTooltip(font, List.of(
 				Component.translatable("watch.vineandbarrel.step", step + 1, steps).withStyle(s -> s.withColor(HIGHLIGHT)),
-				Component.translatable(player.scene().steps().get(step).caption())), mouseX, mouseY);
+				player.caption(step)), mouseX, mouseY);
 		}
 		if (dragging && moved) {
 			return;
@@ -816,7 +835,10 @@ public class WatchScreen extends Screen
 
 	// ------------------------------------------------------------------ sky and end box
 
-	/** Days passing: the sky fills the stage, the sun or moon crosses it, and a dot per day counts them. */
+	/**
+	 * Days passing: the sky fills the stage and the sun or the moon crosses it, once each per day (the day count is the
+	 * crossings, and the caption where it matters; the small marks that counted them read as stray squares).
+	 */
 	private void renderSky(GuiGraphics gui, float a) {
 		Optional<ScenePlayer.Lapse> lapse = player.timelapse(a);
 		if (lapse.isEmpty()) {
@@ -827,23 +849,26 @@ public class WatchScreen extends Screen
 		gui.fill(stageX, stageY, stageX + stageW, stageY + stageH, (FastColor.ARGB32.lerp(light, NIGHT, DAY) & 0xFFFFFF) | 0xA0000000);
 		boolean sunUp = day < 0.5F;
 		float along = sunUp ? day * 2.0F : (day - 0.5F) * 2.0F;
-		int size = 16;
-		int x = stageX + 16 + (int) (along * (stageW - 32 - size));
-		int y = stageY + stageH / 2 - (int) (Mth.sin(along * Mth.PI) * (stageH / 2.0F - 20)) - size / 2;
+		// the game's own sun and full moon (the player's resource pack's), at twice their pixels, added onto the sky the
+		// way the sky draws them: their black adds nothing and the sun's glow fades out around it (the disc is 16 pixels)
+		int size = CELESTIAL;
+		int x = stageX + 8 + (int) (along * (stageW - 16 - size));
+		// a low arc in the stage's upper part: it rises from under the top third and stays above the captions beside the stage's middle
+		// (the texture's outer 18 of 64 pixels are black: at the top of the arc its glow begins 4 pixels into the stage)
+		int top = stageY - 14, low = stageY + Math.round(stageH * 0.38F) - size / 2;
+		int y = low - (int) (Mth.sin(along * Mth.PI) * (low - top));
+		// this Minecraft version's GUI has no additive pipeline: the blend the sky draws them with (source alpha, one), set
+		// by hand; the full moon is the first quarter of the phases' sheet
+		gui.flush();
+		RenderSystem.enableBlend();
+		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE,
+			GlStateManager.DestFactor.ZERO);
 		if (sunUp) {
-			gui.fill(x, y, x + size, y + size, 0xFFFFE36A);
-			gui.fill(x + 3, y + 3, x + size - 3, y + size - 3, 0xFFFFF6C4);
+			gui.blit(SUN, x, y, size, size, 0.0F, 0.0F, 32, 32, 32, 32);
 		} else {
-			gui.fill(x, y, x + size, y + size, 0xFFDCE3EC);
-			gui.fill(x + 4, y + 3, x + 8, y + 7, 0xFFB4BCC8);
-			gui.fill(x + 8, y + 9, x + 12, y + 13, 0xFFB4BCC8);
+			gui.blit(MOON, x, y, size, size, 0.0F, 0.0F, 32, 32, 128, 64);
 		}
-		int days = Mth.ceil(lapse.get().days());
-		int passed = (int) (lapse.get().days() * lapse.get().progress());
-		for (int d = 0; d < days; d++) {
-			int dx = stageX + stageW - 12 - (days - d) * 8;
-			gui.fill(dx, stageY + 8, dx + 4, stageY + 12, d < passed ? 0xFFFFE36A : 0x40FFFFFF);
-		}
+		RenderSystem.defaultBlendFunc();
 	}
 
 	private void renderEndCard(GuiGraphics gui) {
@@ -998,7 +1023,7 @@ public class WatchScreen extends Screen
 	@Override
 	public Component getNarrationMessage() {
 		Component step = Component.translatable("watch.vineandbarrel.step", player.step() + 1, player.scene().steps().size());
-		Component caption = Component.translatable(player.currentStep().caption());
+		Component caption = player.caption();
 		return now != null ? CommonComponents.joinForNarration(title, step, now, caption) : CommonComponents.joinForNarration(title, step, caption);
 	}
 }
