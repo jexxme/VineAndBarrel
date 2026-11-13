@@ -77,6 +77,7 @@ public final class VBGameTests
 		test("skeleton_mod_loaded", VBGameTests::modLoaded);
 		test("skeleton_world_edit", VBGameTests::worldEdit);
 		test("polish_lang_covers_everything", VBGameTests::langCoversEverything);
+		test("polish_lang_translations_match_english", VBGameTests::langTranslationsMatchEnglish);
 		test("polish_creative_tab_has_every_item_once", VBGameTests::creativeTabHasEveryItemOnce);
 		VBCropTests.registerAll();
 		VBTrellisTests.registerAll();
@@ -380,6 +381,49 @@ public final class VBGameTests
 		need(lang, "itemGroup.vineandbarrel", missing);
 		helper.assertTrue(missing.isEmpty(), "missing English names: " + missing);
 		helper.succeed();
+	}
+
+	/** The languages the mod is translated into, besides English. */
+	private static final List<String> TRANSLATIONS = List.of("de_de", "es_es", "fr_fr", "it_it", "ja_jp", "ko_kr", "pl_pl", "pt_br", "ru_ru", "tr_tr", "uk_ua", "zh_cn");
+
+	/**
+	 * Every translation has every English line and as many {@code %s} in it: a line with one too many shows the game's
+	 * format error instead of the text, one too few drops what the line was about.
+	 */
+	private static void langTranslationsMatchEnglish(GameTestHelper helper) {
+		JsonObject english = lang(helper, "en_us");
+		List<String> problems = new ArrayList<>();
+		for (String code : TRANSLATIONS) {
+			JsonObject lang = lang(helper, code);
+			for (String key : english.keySet()) {
+				if (!lang.has(key)) {
+					problems.add(code + ": " + key + " is missing");
+				} else if (placeholders(lang.get(key).getAsString()) != placeholders(english.get(key).getAsString())) {
+					problems.add(code + ": " + key + " has " + placeholders(lang.get(key).getAsString()) + " placeholders, English has "
+						+ placeholders(english.get(key).getAsString()));
+				}
+			}
+		}
+		helper.assertTrue(problems.isEmpty(), problems.size() + " lines differ from English: " + problems.subList(0, Math.min(problems.size(), 12)));
+		helper.succeed();
+	}
+
+	private static JsonObject lang(GameTestHelper helper, String code) {
+		try (InputStream in = VineAndBarrel.class.getResourceAsStream("/assets/vineandbarrel/lang/" + code + ".json")) {
+			helper.assertTrue(in != null, code + ".json is in the jar");
+			return JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+	}
+
+	private static int placeholders(String line) {
+		int count = 0;
+		java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("%(\\d+\\$)?[sd]").matcher(line);
+		while (matcher.find()) {
+			count++;
+		}
+		return count;
 	}
 
 	private static void need(JsonObject lang, String key, List<String> missing) {
