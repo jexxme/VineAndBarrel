@@ -8,6 +8,7 @@ import jexxme.vineandbarrel.tipsy.TipsyLevels;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec2;
@@ -41,8 +42,16 @@ public final class DrunkLegs
 	 * later; 1.20.1 hands over the two impulses already slowed (crawling), a diagonal longer than one step (shortened only
 	 * when the body moves). So the walk gets what is pressed as newer versions have it, and its answer gets the slowing
 	 * and the diagonal's length back (vanilla starts a sprint from how far forward is pressed); a sober walk is left as it was.
+	 * <p>
+	 * A double tap on forward still sprints: the late legs hide it from vanilla (1.20.1 starts the sprint when the legs
+	 * go from under 0.8 forward to 0.8 or more, which late legs never do in a tap), so the walk reads the double tap from
+	 * the keys ({@link DrunkWalk#doubleTap}) and starts the sprint on vanilla's other conditions ({@link #maySprint}).
 	 */
 	static void onMovementInput(Player player, Input input) {
+		boolean tapped = WALK.doubleTap(input.up, input.shiftKeyDown || input.down, DOUBLE_TAP_WINDOW);
+		if (tapped && DrunkWalk.walksDrunk(player) && player instanceof LocalPlayer local && maySprint(local)) {
+			local.setSprinting(true);
+		}
 		float slowed = player instanceof LocalPlayer local && local.isMovingSlowly()
 			? Mth.clamp(0.3F + EnchantmentHelper.getSneakingSpeedBonus(player), 0.0F, 1.0F) : 1.0F;
 		Vec2 raw = slowed > 0.0F ? new Vec2(input.leftImpulse / slowed, input.forwardImpulse / slowed) : Vec2.ZERO;
@@ -53,6 +62,15 @@ public final class DrunkLegs
 			input.leftImpulse = walked.x * length * slowed;
 			input.forwardImpulse = walked.y * length * slowed;
 		}
+	}
+
+	/** Vanilla's double tap window (ticks). */
+	private static final int DOUBLE_TAP_WINDOW = 7;
+
+	/** Vanilla 1.20.1's conditions to start a sprint, but for how far forward the legs already go: fed, not using an item, not blind. */
+	private static boolean maySprint(LocalPlayer player) {
+		return !player.isSprinting() && (player.isPassenger() || player.getFoodData().getFoodLevel() > 6 || player.getAbilities().mayfly) && !player.isUsingItem()
+			&& !player.hasEffect(MobEffects.BLINDNESS) && !player.isFallFlying() && !player.input.shiftKeyDown;
 	}
 
 	/** A new world or a disconnect: the walk and the lean start afresh. */

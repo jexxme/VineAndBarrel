@@ -36,6 +36,9 @@ public final class DrunkWalk
 	private int settle;
 	private Vec3 last = Vec3.ZERO;
 	private @Nullable Player who;
+	/** The double tap: ticks left to tap forward a second time, and whether forward was pressed last tick. */
+	private int tapWindow;
+	private boolean forwardWas;
 
 	/** Forgets the player (a new world, a disconnect): the next tick starts sober-steady. */
 	public void reset() {
@@ -45,6 +48,39 @@ public final class DrunkWalk
 		walked = 0.0F;
 		settle = 0;
 		last = Vec3.ZERO;
+		tapWindow = 0;
+		forwardWas = false;
+	}
+
+	/**
+	 * Vanilla's double tap on forward to sprint, read from the keys themselves: the late legs never let go of forward at
+	 * once (they carry on for a while after the key is let go), so vanilla, which waits for a tick without forward in
+	 * between, never saw a double tap at any level. The same rule as vanilla's: a second press within {@code window} ticks
+	 * of the first; sneaking or backing off in between cancels it. Called once a tick, before {@link #step}.
+	 *
+	 * @param forward whether forward is pressed now
+	 * @param cancel  whether sneak or back is pressed now
+	 * @param window  the double tap's window (vanilla's sprint window option)
+	 * @return whether this press is the second of a double tap: then the client presses sprint for this tick
+	 */
+	public boolean doubleTap(boolean forward, boolean cancel, int window) {
+		if (tapWindow > 0) {
+			tapWindow--;
+		}
+		if (cancel) {
+			tapWindow = 0;
+		}
+		boolean tapped = false;
+		if (forward && !forwardWas) {
+			if (tapWindow > 0) {
+				tapped = true;
+				tapWindow = 0;
+			} else {
+				tapWindow = window;
+			}
+		}
+		forwardWas = forward;
+		return tapped;
 	}
 
 	/** {@return whether this player's walk is drunk right now: tipsy, on the ground on their own legs, not careful} */

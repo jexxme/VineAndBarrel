@@ -104,6 +104,7 @@ public final class TipsyGameTests
 		test("tipsy_gait_math", TipsyGameTests::gaitMath);
 		test("tipsy_weave_only_where_safe", TipsyGameTests::weaveOnlyWhereSafe);
 		test("tipsy_late_legs_stop_at_an_edge", TipsyGameTests::lateLegsStopAtAnEdge);
+		test("tipsy_double_tap_sprints", TipsyGameTests::doubleTapSprints);
 		test("tipsy_nodding_off_wakes_on_anything", TipsyGameTests::noddingOffWakesOnAnything);
 		test("tipsy_nod_math", TipsyGameTests::nodMath);
 		test("tipsy_eyes_math", TipsyGameTests::eyesMath);
@@ -1677,6 +1678,61 @@ public final class TipsyGameTests
 		}
 		Vec2 atLava = walk.step(player, none, 0.0F);
 		helper.assertTrue(Math.abs(atLava.y) < 1.0E-4F, "letting go before lava: a sober stop, got " + atLava);
+		helper.succeed();
+	}
+
+	/**
+	 * Audit 1.2: a double tap on forward starts a sprint at every level. The late legs carry on after forward is let go,
+	 * so the move vector vanilla reads never has the tick without forward that its double tap waits for; the walk reads
+	 * the double tap from the keys instead, by vanilla's rule (a second press within the window, sneak or back cancels).
+	 */
+	private static void doubleTapSprints(GameTestHelper helper) {
+		for (int x = 0; x < 5; x++) {
+			for (int z = 0; z < 5; z++) {
+				helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+			}
+		}
+		TestPlayer player = player(helper);
+		Vec3 at = helper.absoluteVec(new Vec3(2.5, 1.0, 1.5));
+		player.moveTo(at.x, at.y, at.z, 0.0F, 0.0F);
+		player.setOnGround(true);
+		int window = 7;
+		for (int level = 1; level <= Tipsy.ABSOLUTE_MAX_LEVEL; level++) {
+			Tipsy.setLevel(player, level);
+			// what vanilla sees: tap, let go, tap; the legs never come to a stop in between
+			DrunkWalk walk = new DrunkWalk();
+			boolean[] keys = {true, true, false, false, false, true};
+			boolean stopped = false;
+			boolean tapped = false;
+			for (int i = 0; i < keys.length; i++) {
+				tapped = walk.doubleTap(keys[i], false, window);
+				Vec2 legs = walk.step(player, keys[i] ? new Vec2(0.0F, 1.0F) : Vec2.ZERO, 0.0F);
+				stopped |= i > 0 && i < keys.length - 1 && legs.y <= 1.0E-5F;
+			}
+			helper.assertFalse(stopped, "level " + level + ": the late legs hide the gap from vanilla");
+			helper.assertTrue(tapped, "level " + level + ": the second tap sprints");
+		}
+		DrunkWalk walk = new DrunkWalk();
+		helper.assertFalse(walk.doubleTap(true, false, window), "the first tap does not");
+		for (int i = 0; i < 20; i++) {
+			helper.assertFalse(walk.doubleTap(true, false, window), "holding forward does not");
+		}
+		walk.doubleTap(false, false, window);
+		helper.assertFalse(walk.doubleTap(true, false, window), "a second press long after the first does not");
+		walk = new DrunkWalk();
+		walk.doubleTap(true, false, window);
+		walk.doubleTap(false, true, window);
+		helper.assertFalse(walk.doubleTap(true, false, window), "sneaking or backing off in between cancels it");
+		walk = new DrunkWalk();
+		walk.doubleTap(true, false, window);
+		for (int i = 0; i < window; i++) {
+			walk.doubleTap(false, false, window);
+		}
+		helper.assertFalse(walk.doubleTap(true, false, window), "too slow: outside the window");
+		walk = new DrunkWalk();
+		walk.doubleTap(true, false, window);
+		walk.doubleTap(false, false, window);
+		helper.assertTrue(walk.doubleTap(true, false, window), "a quick double tap");
 		helper.succeed();
 	}
 
