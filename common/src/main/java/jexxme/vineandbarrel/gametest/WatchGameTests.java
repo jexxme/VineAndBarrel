@@ -348,8 +348,9 @@ final class WatchGameTests
 					}
 				}
 			}
-			if (!held.contains(pour) || !held.contains(vessel) || held.contains(other) || !held.contains(recipe.young().getItem())) {
-				problems.add(id + ": the brewer holds " + held + " (its " + pour + ", " + vessel + " and young drink)");
+			if (!held.contains(pour) || !held.contains(vessel) || held.contains(other) || !held.contains(recipe.young().getItem())
+				|| !held.contains(recipe.aged().getItem())) {
+				problems.add(id + ": the brewer holds " + held + " (its " + pour + ", " + vessel + ", young and aged drink)");
 			}
 			// the lines: the base's kind where it is poured, the vessel where it is tapped, the recipe's own days
 			String base = BuiltInRegistries.ITEM.getKey(recipe.base().value()).getPath();
