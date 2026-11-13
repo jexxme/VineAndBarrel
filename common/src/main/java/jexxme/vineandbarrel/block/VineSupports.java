@@ -41,11 +41,12 @@ public final class VineSupports
 	}
 
 	/**
-	 * True for a block in {@code #vineandbarrel:makeshift_vine_supports} that a vine can hold: not one of our vines, and
-	 * standing upright if it has an axis (a chain lying on its side holds nothing).
+	 * True for a block in {@code #vineandbarrel:makeshift_vine_supports} that a vine can hold: not one of our vines, no
+	 * block with a block entity of its own (a mod's framed fence: the vine keeps only the block state, so its block entity
+	 * and what it holds would be lost), and standing upright if it has an axis (a chain lying on its side holds nothing).
 	 */
 	public static boolean isMakeshift(BlockState state) {
-		if (!ENABLED || !state.is(VBTags.MAKESHIFT_VINE_SUPPORTS) || state.getBlock() instanceof VineOnSupportBlock) {
+		if (!ENABLED || !state.is(VBTags.MAKESHIFT_VINE_SUPPORTS) || state.getBlock() instanceof VineOnSupportBlock || state.hasBlockEntity()) {
 			return false;
 		}
 		return !state.hasProperty(BlockStateProperties.AXIS) || state.getValue(BlockStateProperties.AXIS) == Direction.Axis.Y;

@@ -1,5 +1,6 @@
 package jexxme.vineandbarrel.fabric.client;
 
+import com.mojang.logging.LogUtils;
 import jexxme.vineandbarrel.block.ClimbingCropBlock;
 import jexxme.vineandbarrel.block.SupportLeaves;
 import jexxme.vineandbarrel.block.VineOnSupportBlock;
@@ -20,11 +21,14 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
@@ -37,6 +41,9 @@ final class SupportedVineModel extends ForwardingBakedModel
 	/** A piece's quarter turns, as a block state's {@code "y"} turns a model. */
 	private static final BlockModelRotation[] TURNS = {BlockModelRotation.X0_Y0, BlockModelRotation.X0_Y90, BlockModelRotation.X0_Y180,
 			BlockModelRotation.X0_Y270};
+	private static final Logger LOGGER = LogUtils.getLogger();
+	/** Missing pieces already reported (each once: this runs every time a vine is drawn). */
+	private static final Set<String> MISSING = ConcurrentHashMap.newKeySet();
 
 	/** The leaf pieces of this state's vine, age and root, by piece and turn. */
 	private final Map<SupportLeaves.Placed, BakedModel> pieces;
@@ -45,6 +52,13 @@ final class SupportedVineModel extends ForwardingBakedModel
 	private SupportedVineModel(BakedModel particle, Map<SupportLeaves.Placed, BakedModel> pieces) {
 		this.wrapped = particle;
 		this.pieces = pieces;
+	}
+
+	/** A leaf piece that has no model: a datagen or registration gap, reported loudly once instead of drawn as nothing. */
+	private static void missing(String name) {
+		if (MISSING.add(name)) {
+			LOGGER.error("Vine on a support: no model for leaf piece {} (run datagen; every piece SupportLeaves picks must be registered)", name);
+		}
 	}
 
 	/** Every leaf piece (per vine block, age and root) and the wrapper, once at client start. */
@@ -110,9 +124,12 @@ final class SupportedVineModel extends ForwardingBakedModel
 		}
 		for (SupportLeaves.Placed placed : SupportLeaves.of(support)) {
 			BakedModel piece = pieces.get(placed);
-			if (piece != null) {
-				piece.emitBlockQuads(level, state, pos, random, context);
+			if (piece == null) {
+				missing(SupportLeaves.model(state.getBlock(), placed.piece(), state.getValue(VineOnSupportBlock.BASE), state.getValue(ClimbingCropBlock.AGE))
+						+ "#" + placed.turn());
+				continue;
 			}
+			piece.emitBlockQuads(level, state, pos, random, context);
 		}
 		BakedModel model = supportModel(support);
 		if (model != null) {
