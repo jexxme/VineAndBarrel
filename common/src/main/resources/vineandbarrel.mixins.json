@@ -19,10 +19,13 @@
     "WallBlockMixin"
   ],
   "client": [
+    "AbstractSignRendererMixin",
     "AbstractContainerScreenAccessor",
     "AvatarRenderStateMixin",
+    "ChannelMixin",
     "CameraMixin",
     "EntityRendererMixin",
+    "FirstPersonHandsAndItemsRendererMixin",
     "GuiGraphicsExtractorAccessor",
     "HumanoidModelMixin",
     "ParticleEngineAccessor"

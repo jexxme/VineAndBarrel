@@ -418,8 +418,8 @@ public final class SmokeClient implements ClientModInitializer
 			}
 			return level != null && level == 4 ? null : "synced Tipsy level " + level + " instead of 4";
 		}, "tipsy_4", true).polled());
-		// Slurred chat at Tipsy IV, through the server's real chat path (Fabric: ServerGamePacketListenerImplMixin): a typed
-		// message comes back slurred, a /me line as typed, as on NeoForge (ServerChatEvent is typed chat only)
+		// Drunk chat at Tipsy IV, through the real chat path (the client slurs its own message before signing it, Fabric
+		// API's MODIFY_CHAT): a typed message comes back slurred, a /me line as typed (commands aren't chat)
 		steps.add(new Step("typed_chat_is_slurred_and_me_is_not", 40, mc -> {
 			chat.clear();
 			mc.player.connection.sendChat(TYPED);
@@ -469,7 +469,7 @@ public final class SmokeClient implements ClientModInitializer
 			mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);
 		}, null, "sway_third_person", true));
 		// The blackout, ending in the player's own bed (the smoke command picks that ending): out cold on the ground with no
-		// hand in view, then waking up in bed without a "Leave Bed" screen, then up again at Tipsy I
+		// hand in view, then waking up in bed without a "Leave Bed" screen, then up again, sober and hungover
 		steps.add(new Step("blackout_reaches_the_client", 40, mc -> {
 			mc.options.setCameraType(CameraType.FIRST_PERSON);
 			command(mc, "vbsmoke blackout home");
@@ -503,8 +503,12 @@ public final class SmokeClient implements ClientModInitializer
 			if (mc.player.isSleeping()) {
 				return "still in bed";
 			}
+			// sober and hungover (the hangover is on by default), the player's own client knows the effect
 			Integer level = TipsyRegistry.SYNCED_LEVEL.getExisting(mc.player);
-			return level != null && level == 1 ? null : "Tipsy " + level + " after waking up instead of 1";
+			if (level != null && level > 0) {
+				return "Tipsy " + level + " after waking up instead of sober";
+			}
+			return mc.player.hasEffect(TipsyRegistry.HANGOVER) ? null : "not hungover after waking up";
 		}, "after_blackout", true).polled());
 		// Getting up off the ground moves the limbs, not only the body: on Fabric too (the common HumanoidModelMixin, fed
 		// through AvatarRendererMixin); seen from the front in third person, the arms swing in under the body as they push

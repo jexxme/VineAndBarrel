@@ -15,7 +15,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTestInstance;
 import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -214,11 +213,6 @@ public final class NeoForgePlatform implements Platform
 	@Override
 	public @Nullable Block unwaxed(Block block) {
 		return DataMapHooks.getBlockUnwaxed(block);
-	}
-
-	@Override
-	public Component decorateChat(ServerPlayer player, Component message) {
-		return CommonHooks.getServerChatSubmittedDecorator().decorate(player, message);
 	}
 
 	@Override

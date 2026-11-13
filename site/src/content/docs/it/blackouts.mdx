@@ -5,18 +5,20 @@ description: "Un bicchiere di troppo: cosa succede quando hai un vuoto di memori
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Item from '../../../components/mc/Item.astro';
 import BlackoutEndings from '../../../components/data/BlackoutEndings.astro';
-import { rules, roman, seconds, gameText } from '../../../lib/l10n/it';
+import { rules, roman, seconds, duration, gameText } from '../../../lib/l10n/it';
 
 export const t = rules.tipsy;
 export const b = t.blackout;
 export const count = b.endings.filter((e) => e.collectable).length;
+export const under = t.goingUnder;
+export const h = t.hangover;
 
 <Aside type="caution" title="Spoiler">
 Questa pagina rivela tutti i modi in cui può finire una serata. Se preferisci scoprirli da solo, fermati qui: la pagina
 [Brillo](/tipsy/#un-goccetto-di-troppo) ne dà solo un accenno.
 </Aside>
 
-Sei già a Brillo {roman(t.maxLevel - 1)} e continui a bere? Un altro e hai un **vuoto di memoria**. È innocuo: non perdi mai niente
+Sei già a Brillo {roman(t.maxLevel - 1)} e continui a bere? Un altro e, poco dopo, hai un **vuoto di memoria**. È innocuo: non perdi mai niente
 di ciò che avevi, non ti svegli mai in un posto pericoloso, non passa tempo e nessun altro ne è toccato. I proprietari del server
 possono disattivarlo con l'opzione `blackout` (vedi [Configurazione](/reference/config/)).
 
@@ -24,24 +26,31 @@ possono disattivarlo con l'opzione `blackout` (vedi [Configurazione](/reference/
 
 <Steps>
 
-1. **Crolli a terra.** Gli occhi si chiudono e ti ribalti. Tutti quelli intorno ti vedono lì steso, con le stelline che ti
+1. **Ti raggiunge.** Il bicchiere di troppo ci mette da {Math.round(under.soonestTicks / 20)} a {Math.round(under.latestTicks / 20)}
+   secondi a colpire, qualunque cosa tu stia facendo in quel momento. Negli ultimi {Math.round(under.ticks / 20)} secondi ti senti andare
+   giù: palpebre pesanti, la testa che cala, il mondo ovattato e lontano, le gambe che cedono, il corpo che ondeggia forte. I tuoi amici lo
+   vedono arrivare. Se torni sobrio prima che colpisca (un secchio di latte, una notte di sonno), te la scampi; un altro bicchiere non lo
+   rimanda mai.
+2. **Crolli a terra.** Gli occhi si chiudono e ti ribalti. Tutti quelli intorno ti vedono lì steso, con le stelline che ti
    girano attorno alla testa.
-2. **Buio.** Per qualche secondo non puoi muoverti, e Brillo ti lascia in pace: niente ondeggiamento, niente singhiozzo, niente giramento. Nessuno può
+3. **Buio.** Per qualche secondo non puoi muoverti, e Brillo ti lascia in pace: niente gambe malferme, niente singhiozzo. Nessuno può
    farti del male, né mob né giocatori, e nemmeno cadere. Conta solo ciò che farebbe male a chiunque fosse steso lì,
    come la lava o il vuoto, quindi dove hai il vuoto di memoria è importante; dove ti *svegli* è sempre sicuro.
-3. **Ti svegli da qualche parte.** Mentre lo schermo è ancora nero, il gioco sceglie dove è finita la tua serata (vedi sotto) e
+4. **Ti svegli da qualche parte.** Mentre lo schermo è ancora nero, il gioco sceglie dove è finita la tua serata (vedi sotto) e
    ti ci porta: steso a terra, in un letto o seduto in una barca. Gli occhi si aprono piano, poi ti alzi.
-4. **Una riga sullo schermo** dice com'è andata, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* o una tra tante altre.
+5. **Una riga sullo schermo** dice com'è andata, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* o una tra tante altre.
 
 </Steps>
 
-Il tutto dura circa {seconds(b.ticks)}. Ti svegli:
+Dal crollo al risveglio passano circa {seconds(b.ticks)}. Ti svegli:
 
-- **di nuovo a Brillo I**, e senza i bonus che ti davano le bevande,
-- **affamato:** {b.hungerLost / 2} cosce in meno nella barra della fame, e niente nella saturazione,
-- **tremante** per {seconds(b.shakyTicks)}: un po' stordito e lento,
+- **sobrio ma con i postumi** per {duration(h.afterBlackoutTicks)} (la luce del giorno abbaglia, i rumori forti ti fanno sussultare; vedi
+  [La mattina dopo](/tipsy/#la-mattina-dopo)), e senza i bonus che ti davano le bevande,
+- **affamato:** non più di {h.hungryFood / 2} cosce nella barra della fame, e niente nella saturazione,
 - **con un souvenir** nelle tasche, qualcosa che c'entra con il posto in cui ti sei svegliato (ai tuoi piedi se le tasche sono piene),
 - e, una volta su {b.pumpkinOneIn}, **con una zucca intagliata in testa**, se non indossavi un elmo.
+
+Con l'opzione `hangover` del server disattivata, ti svegli invece a Brillo I, con {b.hungerLost / 2} cosce in meno nella barra della fame.
 
 ## Dove ti svegli
 

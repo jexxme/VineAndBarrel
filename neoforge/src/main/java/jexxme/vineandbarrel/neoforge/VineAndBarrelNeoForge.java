@@ -14,7 +14,6 @@ import jexxme.vineandbarrel.neoforge.client.NeoForgeClient;
 import jexxme.vineandbarrel.neoforge.transfer.NeoForgeItemAccess;
 import jexxme.vineandbarrel.tipsy.TipsyEvents;
 import jexxme.vineandbarrel.world.village.VillageStructures;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.village.poi.PoiTypes;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -28,7 +27,6 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.common.world.poi.ExtendPoiTypesEvent;
 import net.neoforged.neoforge.event.RegisterCauldronInteractionEvent;
-import net.neoforged.neoforge.event.ServerChatEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -86,12 +84,6 @@ public final class VineAndBarrelNeoForge
 			if (result != null) {
 				event.setCanceled(true);
 				event.setCancellationResult(result);
-			}
-		});
-		game.addListener(ServerChatEvent.class, event -> {
-			Component slurred = TipsyEvents.onChat(event.getPlayer(), event.getRawText());
-			if (slurred != null) {
-				event.setMessage(slurred);
 			}
 		});
 		// Foxes learn to pick grapes

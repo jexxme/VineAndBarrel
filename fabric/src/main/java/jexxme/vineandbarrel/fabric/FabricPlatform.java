@@ -247,11 +247,6 @@ public final class FabricPlatform implements Platform
 	}
 
 	@Override
-	public Component decorateChat(ServerPlayer player, Component message) {
-		return player.level().getServer().getChatDecorator().decorate(player, FabricChat.slur(player, message));
-	}
-
-	@Override
 	public @Nullable ItemStackTemplate craftingRemainder(ItemStack stack) {
 		return stack.getCraftingRemainder();
 	}

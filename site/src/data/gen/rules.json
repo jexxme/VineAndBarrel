@@ -216,46 +216,87 @@
 		"maxLevel": 5,
 		"hiccupLevel": 2,
 		"slurLevel": 3,
-		"blinkLevel": 3,
-		"longBlinkLevel": 4,
-		"nauseaLevel": 4,
-		"nauseaPulseTicks": 300,
-		"weaknessLevel": 4,
 		"noBuffLevel": 4,
-		"slownessLevel": 5,
-		"miningFatigueLevel": 5,
-		"stumbleLevel": 5,
+		"stumbleLevel": 4,
+		"heartbeatLevel": 5,
 		"cutOffLevel": 4,
 		"hiccupGapTicks": "40-80",
-		"tripCooldownTicks": 600,
+		"tripCooldownTicks": 900,
 		"tripTicks": 49,
 		"tripDownTicks": 24,
 		"tripMonsterFree": 10,
-		"sprintTripOneIn": 5,
+		"sprintTripOneIn": 6,
+		"drunkWalkLevel": 1,
+		"slowerLevel": 4,
+		"hicChatLevel": 2,
+		"softEdgesLevel": 1,
+		"doubleVisionLevel": 3,
+		"signBlurLevel": 3,
+		"woollyLevel": 3,
+		"nodLevel": 4,
+		"rowdyItchTicks": 400,
+		"rowdyWindupTicks": 16,
+		"goingUnder": {
+			"soonestTicks": 200,
+			"latestTicks": 800,
+			"ticks": 100
+		},
+		"hangover": {
+			"afterBlackoutTicks": 4800,
+			"afterSleepTicks": {
+				"4": 2400,
+				"5": 3600
+			},
+			"sleepLevel": 4,
+			"hungryFood": 6,
+			"drinkLeaves": 0.55,
+			"freshGlareTicks": 600
+		},
 		"levels": [
 			{
 				"level": 1,
-				"roll": 1.7,
-				"vignette": 0.16,
-				"blinkEveryTicks": 0,
-				"longBlinkOneIn": 0,
-				"knockbackResistance": 0.1,
-				"fallDamageReduction": 0.15,
-				"hiccupBoutOneIn": 0,
-				"hiccupsPerBoutMin": 0,
-				"hiccupsPerBoutMax": 0,
-				"slurs": false,
-				"nauseaOneIn": 0,
-				"weakness": false,
-				"slowness": -1,
-				"miningFatigue": -1,
-				"buffs": true,
-				"rowdySwingOneIn": 0,
-				"cutOff": false,
-				"legsOneIn": 0,
-				"tripOneIn": 0,
-				"drift": false,
-				"fovBreathing": false,
+				"courage": {
+					"knockbackResistance": 0.1,
+					"fallDamageReduction": 0.15
+				},
+				"hiccups": {
+					"boutOneIn": 0,
+					"fewest": 0,
+					"most": 0
+				},
+				"legs": {
+					"swayDegrees": 1.54,
+					"steer": 0.45,
+					"weave": 4.95,
+					"stepRoll": 1.1,
+					"stride": 0.044,
+					"leanDegrees": 1.21,
+					"legsOneIn": 0,
+					"tripOneIn": 0,
+					"tripCooldown": 0,
+					"slower": 0
+				},
+				"eyes": {
+					"softEdges": 0.24,
+					"doubleVision": 0,
+					"signBlur": 0
+				},
+				"ears": {
+					"muffle": 0,
+					"heartbeat": 0
+				},
+				"nod": {
+					"stillTicks": 0,
+					"cycleTicks": 0
+				},
+				"chat": {
+					"stage": 0
+				},
+				"rules": {
+					"buffs": true,
+					"rowdySwingOneIn": 0,
+					"cutOff": false
+				},
 				"tooltipGood": [
 					"+10% Knockback Resistance",
 					"-15% Fall Damage"
@@ -264,27 +305,48 @@
 			},
 			{
 				"level": 2,
-				"roll": 3,
-				"vignette": 0.32,
-				"blinkEveryTicks": 0,
-				"longBlinkOneIn": 0,
-				"knockbackResistance": 0.2,
-				"fallDamageReduction": 0.25,
-				"hiccupBoutOneIn": 900,
-				"hiccupsPerBoutMin": 2,
-				"hiccupsPerBoutMax": 3,
-				"slurs": false,
-				"nauseaOneIn": 0,
-				"weakness": false,
-				"slowness": -1,
-				"miningFatigue": -1,
-				"buffs": true,
-				"rowdySwingOneIn": 0,
-				"cutOff": false,
-				"legsOneIn": 0,
-				"tripOneIn": 0,
-				"drift": false,
-				"fovBreathing": false,
+				"courage": {
+					"knockbackResistance": 0.2,
+					"fallDamageReduction": 0.25
+				},
+				"hiccups": {
+					"boutOneIn": 900,
+					"fewest": 2,
+					"most": 3
+				},
+				"legs": {
+					"swayDegrees": 1.89,
+					"steer": 0.43,
+					"weave": 6.3,
+					"stepRoll": 1.58,
+					"stride": 0.084,
+					"leanDegrees": 1.58,
+					"legsOneIn": 0,
+					"tripOneIn": 0,
+					"tripCooldown": 0,
+					"slower": 0
+				},
+				"eyes": {
+					"softEdges": 0.315,
+					"doubleVision": 0,
+					"signBlur": 0
+				},
+				"ears": {
+					"muffle": 0,
+					"heartbeat": 0
+				},
+				"nod": {
+					"stillTicks": 0,
+					"cycleTicks": 0
+				},
+				"chat": {
+					"stage": 1
+				},
+				"rules": {
+					"buffs": true,
+					"rowdySwingOneIn": 0,
+					"cutOff": false
+				},
 				"tooltipGood": [
 					"+20% Knockback Resistance",
 					"-25% Fall Damage"
@@ -293,27 +355,48 @@
 			},
 			{
 				"level": 3,
-				"roll": 4.5,
-				"vignette": 0.4,
-				"blinkEveryTicks": 480,
-				"longBlinkOneIn": 0,
-				"knockbackResistance": 0.3,
-				"fallDamageReduction": 0.35,
-				"hiccupBoutOneIn": 700,
-				"hiccupsPerBoutMin": 3,
-				"hiccupsPerBoutMax": 5,
-				"slurs": true,
-				"nauseaOneIn": 0,
-				"weakness": false,
-				"slowness": -1,
-				"miningFatigue": -1,
-				"buffs": true,
-				"rowdySwingOneIn": 0,
-				"cutOff": false,
-				"legsOneIn": 0,
-				"tripOneIn": 0,
-				"drift": false,
-				"fovBreathing": false,
+				"courage": {
+					"knockbackResistance": 0.3,
+					"fallDamageReduction": 0.35
+				},
+				"hiccups": {
+					"boutOneIn": 700,
+					"fewest": 3,
+					"most": 5
+				},
+				"legs": {
+					"swayDegrees": 2.7,
+					"steer": 0.32,
+					"weave": 10,
+					"stepRoll": 3,
+					"stride": 0.15,
+					"leanDegrees": 2.2,
+					"legsOneIn": 0,
+					"tripOneIn": 0,
+					"tripCooldown": 0,
+					"slower": 0
+				},
+				"eyes": {
+					"softEdges": 0.45,
+					"doubleVision": 0.004,
+					"signBlur": 0.35
+				},
+				"ears": {
+					"muffle": 0.3,
+					"heartbeat": 0
+				},
+				"nod": {
+					"stillTicks": 0,
+					"cycleTicks": 0
+				},
+				"chat": {
+					"stage": 2
+				},
+				"rules": {
+					"buffs": true,
+					"rowdySwingOneIn": 0,
+					"cutOff": false
+				},
 				"tooltipGood": [
 					"+30% Knockback Resistance",
 					"-35% Fall Damage"
@@ -324,83 +407,117 @@
 			},
 			{
 				"level": 4,
-				"roll": 7.8,
-				"vignette": 0.64,
-				"blinkEveryTicks": 320,
-				"longBlinkOneIn": 3,
-				"knockbackResistance": 0,
-				"fallDamageReduction": 0,
-				"hiccupBoutOneIn": 600,
-				"hiccupsPerBoutMin": 3,
-				"hiccupsPerBoutMax": 5,
-				"slurs": true,
-				"nauseaOneIn": 500,
-				"weakness": true,
-				"slowness": -1,
-				"miningFatigue": -1,
-				"buffs": false,
-				"rowdySwingOneIn": 600,
-				"cutOff": true,
-				"legsOneIn": 0,
-				"tripOneIn": 0,
-				"drift": false,
-				"fovBreathing": false,
+				"courage": {
+					"knockbackResistance": 0,
+					"fallDamageReduction": 0
+				},
+				"hiccups": {
+					"boutOneIn": 600,
+					"fewest": 3,
+					"most": 5
+				},
+				"legs": {
+					"swayDegrees": 5.14,
+					"steer": 0.219,
+					"weave": 15.3,
+					"stepRoll": 4.92,
+					"stride": 0.27,
+					"leanDegrees": 3.17,
+					"legsOneIn": 160,
+					"tripOneIn": 15,
+					"tripCooldown": 1800,
+					"slower": 0.05
+				},
+				"eyes": {
+					"softEdges": 0.6,
+					"doubleVision": 0.0099,
+					"signBlur": 0.77
+				},
+				"ears": {
+					"muffle": 0.55,
+					"heartbeat": 0
+				},
+				"nod": {
+					"stillTicks": 70,
+					"cycleTicks": 150
+				},
+				"chat": {
+					"stage": 3
+				},
+				"rules": {
+					"buffs": false,
+					"rowdySwingOneIn": 400,
+					"cutOff": true
+				},
 				"tooltipGood": [],
 				"tooltipBad": [
 					"Slurring",
-					"Weakness",
 					"Rowdy",
 					"No buffs",
-					"Cut off"
+					"Slower",
+					"Cut off",
+					"Stumbling",
+					"Tripping"
 				]
 			},
 			{
 				"level": 5,
-				"roll": 15.6,
-				"vignette": 0.8,
-				"blinkEveryTicks": 140,
-				"longBlinkOneIn": 2,
-				"knockbackResistance": 0,
-				"fallDamageReduction": 0,
-				"hiccupBoutOneIn": 500,
-				"hiccupsPerBoutMin": 3,
-				"hiccupsPerBoutMax": 5,
-				"slurs": true,
-				"nauseaOneIn": 200,
-				"weakness": true,
-				"slowness": 1,
-				"miningFatigue": 0,
-				"buffs": false,
-				"rowdySwingOneIn": 300,
-				"cutOff": true,
-				"legsOneIn": 60,
-				"tripOneIn": 12,
-				"drift": true,
-				"fovBreathing": true,
+				"courage": {
+					"knockbackResistance": 0,
+					"fallDamageReduction": 0
+				},
+				"hiccups": {
+					"boutOneIn": 500,
+					"fewest": 3,
+					"most": 5
+				},
+				"legs": {
+					"swayDegrees": 11.4,
+					"steer": 0.145,
+					"weave": 22,
+					"stepRoll": 7.8,
+					"stride": 0.43,
+					"leanDegrees": 4.3,
+					"legsOneIn": 60,
+					"tripOneIn": 15,
+					"tripCooldown": 900,
+					"slower": 0.17
+				},
+				"eyes": {
+					"softEdges": 0.78,
+					"doubleVision": 0.0185,
+					"signBlur": 1
+				},
+				"ears": {
+					"muffle": 0.78,
+					"heartbeat": 1
+				},
+				"nod": {
+					"stillTicks": 50,
+					"cycleTicks": 110
+				},
+				"chat": {
+					"stage": 4
+				},
+				"rules": {
+					"buffs": false,
+					"rowdySwingOneIn": 200,
+					"cutOff": true
+				},
 				"tooltipGood": [],
 				"tooltipBad": [
 					"Slurring",
-					"Weakness",
 					"Rowdy",
 					"No buffs",
+					"Slower",
 					"Cut off",
-					"Sluggish",
 					"Stumbling",
 					"Tripping"
 				]
 			}
 		],
-		"vignette": [
-			0,
-			0.16,
-			0.32,
-			0.4,
-			0.64,
-			0.8
-		],
 		"blackout": {
 			"ticks": 170,
-			"shakyTicks": 300,
 			"wakeAt": 100,
 			"unseenBonus": 3,
 			"pumpkinOneIn": 6,
@@ -676,8 +793,11 @@
 			"rowdy": true,
 			"rowdyPunches": true,
 			"cutOff": true,
-			"visionEffects": true,
-			"wobbleIntensity": 1,
+			"noddingOff": true,
+			"hangover": true,
+			"drunkScreen": 100,
+			"doubleVision": true,
+			"woollySound": true,
 			"otherPlayersSway": true,
 			"heartbeatVolume": 1
 		}

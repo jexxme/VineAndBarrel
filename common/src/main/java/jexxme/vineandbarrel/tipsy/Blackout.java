@@ -52,7 +52,7 @@ import java.util.function.Function;
  * now and then a pumpkin on the head); the eyes open slowly; at {@link #GET_UP} they get out of the bed (off the ground
  * from {@link #GROUND_GET_UP}, slowly, up onto hands and toes and from there onto the feet), and at the end the
  * ending's line shows.
- * They wake hungry and shaky, back at Tipsy I. Nothing is lost, no spot is unsafe, there is no time skip (a bed is lain
+ * They wake hungry, back at Tipsy I. Nothing is lost, no spot is unsafe, there is no time skip (a bed is lain
  * in for less than vanilla's 100 ticks of deep sleep) and other players aren't affected. It can be switched off.
  * <p>
  * The draw prefers endings the player hasn't had yet and never repeats the last one when there is another; what was
@@ -86,7 +86,6 @@ public final class Blackout
 	public static final int UNSEEN_BONUS = 3;
 	public static final int PUMPKIN_ONE_IN = 6;
 	public static final int HUNGER_LOST = 6;
-	public static final int SHAKY_TICKS = 15 * 20;
 	/** Lying, the player's own look is level (the head's pose has the view); they stand up looking ahead. */
 	static final float LIE_PITCH = 0.0F;
 	/**
@@ -200,7 +199,6 @@ public final class Blackout
 		// Can't walk or jump (the client also holds the keys and the mouse still)
 		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, TICKS, 9, false, false, false));
 		// Tipsy pauses while out (Tipsy#tick): no swirl behind the closed eyes, no hiccups
-		Tipsy.endNauseaPulse(player);
 		if (TipsyRegistry.HICCUPS.has(player)) {
 			TipsyRegistry.HICCUPS.remove(player);
 		}
@@ -324,7 +322,10 @@ public final class Blackout
 
 	// ------------------------------------------------------------------ waking up
 
-	/** Puts the player where {@code wake} says, in its pose, and gives the wake-up: Tipsy I, hunger, the shakes, a souvenir. */
+	/**
+	 * Puts the player where {@code wake} says, in its pose, and gives the wake-up: sober, hungover and hungry
+	 * ({@link Hangover}; with the hangover switched off Tipsy I and {@link #HUNGER_LOST} food less), and a souvenir.
+	 */
 	public static void wakeUp(ServerPlayer player, BlackoutSpots.Wake chosen, RandomSource random) {
 		ServerLevel level = player.level();
 		BlackoutSpots.Wake wake = place(player, chosen);
@@ -332,13 +333,16 @@ public final class Blackout
 		player.fallDistance = 0.0;
 
 		DrinkBuffs.removeAll(player);
-		Tipsy.setLevel(player, 1);
-		var food = player.getFoodData();
-		food.setFoodLevel(Math.max(0, food.getFoodLevel() - HUNGER_LOST));
-		food.setSaturation(0.0F);
-		// Felt, not listed: no icons, like Tipsy's own side effects
-		player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, SHAKY_TICKS, 0, false, false, false));
-		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, SHAKY_TICKS + WAKE_AT, 0, false, false, false));
+		if (TipsyConfig.hangover()) {
+			// sober, hungover and hungry (the hangover leaves three drumsticks at most)
+			Tipsy.clear(player);
+			Hangover.start(player, Hangover.AFTER_BLACKOUT);
+		} else {
+			Tipsy.setLevel(player, 1);
+			var food = player.getFoodData();
+			food.setFoodLevel(Math.max(0, food.getFoodLevel() - HUNGER_LOST));
+			food.setSaturation(0.0F);
+		}
 
 		ItemStack souvenir = ending.souvenir(random);
 		if (!souvenir.isEmpty() && !player.getInventory().add(souvenir)) {
