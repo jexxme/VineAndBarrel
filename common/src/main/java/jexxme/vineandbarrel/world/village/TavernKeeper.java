@@ -231,7 +231,7 @@ public final class TavernKeeper
 			return;
 		}
 		GlobalPos site = potential.get();
-		if (site.dimension() != level.dimension() || !site.pos().closerToCenterThan(villager.position(), KETTLE_REACH)
+		if (site.dimension() != level.dimension() || !reaches(level, site.pos(), villager.position())
 			|| !level.getPoiManager().getType(site.pos()).map(type -> type.is(JOB_SITE)).orElse(false)) {
 			return;
 		}
@@ -275,27 +275,91 @@ public final class TavernKeeper
 	}
 
 	/**
-	 * Where a villager walking to the kettle at {@code kettle} stands at it: an open spot beside the campfire it sits on,
-	 * else beside the kettle itself, the one nearest to {@code from}; null when it has none. Walking to the kettle itself,
-	 * a villager aims above it (a path's target moves up out of solid blocks, through the shelf over a tavern's kettle)
-	 * and ends up on the bar or the roof, too far off to be hired or to work.
+	 * Whether a villager at {@code at} is at the kettle whose job site is {@code site}: within {@link #KETTLE_REACH} of
+	 * the middle of its block, or of any block of a Big Kettle's bottom layer (he stands beside the whole kettle).
 	 */
-	public static @Nullable BlockPos standingSpot(net.minecraft.world.level.BlockGetter level, BlockPos kettle, BlockPos from) {
-		for (BlockPos base : List.of(kettle.below(), kettle)) {
-			BlockPos best = null;
-			for (net.minecraft.core.Direction side : net.minecraft.core.Direction.Plane.HORIZONTAL) {
-				BlockPos feet = base.relative(side);
-				if (open(level, feet) && open(level, feet.above()) && !open(level, feet.below())
-					&& kettle.closerToCenterThan(net.minecraft.world.phys.Vec3.atBottomCenterOf(feet), KETTLE_REACH)
-					&& (best == null || feet.distSqr(from) < best.distSqr(from))) {
-					best = feet;
+	public static boolean reaches(net.minecraft.world.level.BlockGetter level, BlockPos site, net.minecraft.core.Position at) {
+		for (BlockPos part : bottom(level, site)) {
+			if (part.closerToCenterThan(at, KETTLE_REACH)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** The kettle's bottom layer: the kettle itself, or the four (nine) blocks a Big Kettle stands on its fires with. */
+	private static List<BlockPos> bottom(net.minecraft.world.level.BlockGetter level, BlockPos site) {
+		var kettle = jexxme.vineandbarrel.kettle.KettleMultiblock.kettleAt(level, site);
+		if (kettle == null || !kettle.isBig()) {
+			return List.of(site);
+		}
+		return kettle.positions().stream().filter(pos -> pos.getY() == kettle.controller().getY()).toList();
+	}
+
+	/**
+	 * Where a villager walking to the kettle at {@code kettle} can stand at it, best first: open spots beside the fire it
+	 * sits on (beside the whole fire under a Big Kettle), then beside the kettle itself, each nearer to {@code from}
+	 * first, all within {@link #reaches reach}. Never in, on or under anything that hurts (a lit campfire, fire, magma,
+	 * lava, a cactus or berry bush: what the game's paths treat as burning or damaging). Walking to the kettle itself, a
+	 * villager aims above it (a path's target moves up out of solid blocks, through the shelf over a tavern's kettle) and
+	 * ends up on the bar, the roof or the fire.
+	 */
+	public static List<BlockPos> standingSpots(net.minecraft.world.level.BlockGetter level, BlockPos kettle, BlockPos from) {
+		List<BlockPos> bottom = bottom(level, kettle);
+		List<BlockPos> spots = new java.util.ArrayList<>();
+		for (int down = 1; down >= 0; down--) {
+			List<BlockPos> ring = new java.util.ArrayList<>();
+			for (BlockPos part : bottom) {
+				for (net.minecraft.core.Direction side : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+					BlockPos feet = part.relative(side).below(down);
+					if (!bottom.contains(feet.above(down)) && !ring.contains(feet) && open(level, feet) && open(level, feet.above()) && !open(level, feet.below())
+						&& !hurts(level, feet) && !hurts(level, feet.above()) && !hurts(level, feet.below())
+						&& reaches(level, kettle, net.minecraft.world.phys.Vec3.atBottomCenterOf(feet))) {
+						ring.add(feet);
+					}
 				}
 			}
-			if (best != null) {
-				return best;
+			ring.sort(java.util.Comparator.comparingDouble(pos -> pos.distSqr(from)));
+			spots.addAll(ring);
+		}
+		return spots;
+	}
+
+	/** Spots tried for a way to a kettle (each try plans a path). */
+	private static final int SPOTS_TRIED = 4;
+
+	/**
+	 * A villager's way to where he stands at the kettle at {@code kettle} ({@link #standingSpots}), clear of everything
+	 * that hurts, or null when no spot has one.
+	 */
+	public static net.minecraft.world.level.pathfinder.@Nullable Path wayToKettle(net.minecraft.world.entity.Mob body, BlockPos kettle) {
+		List<BlockPos> spots = standingSpots(body.level(), kettle, body.blockPosition());
+		for (BlockPos spot : spots.subList(0, Math.min(SPOTS_TRIED, spots.size()))) {
+			var path = body.getNavigation().createPath(spot, 0);
+			if (path != null && path.canReach() && isSafeWalk(body.level(), path)) {
+				return path;
 			}
 		}
 		return null;
+	}
+
+	/** Whether a walk keeps clear of everything that hurts: no step in, on or under it. */
+	public static boolean isSafeWalk(net.minecraft.world.level.BlockGetter level, net.minecraft.world.level.pathfinder.Path path) {
+		for (int i = 0; i < path.getNodeCount(); i++) {
+			BlockPos step = path.getNode(i).asBlockPos();
+			if (hurts(level, step) || hurts(level, step.above()) || hurts(level, step.below())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** What hurts to stand in or on: what the game's paths call burning (lit campfires, fire, magma, lava) or damaging. */
+	private static boolean hurts(net.minecraft.world.level.BlockGetter level, BlockPos pos) {
+		BlockState state = level.getBlockState(pos);
+		return net.minecraft.world.level.pathfinder.WalkNodeEvaluator.isBurningBlock(state) || state.getFluidState().is(net.minecraft.tags.FluidTags.LAVA)
+			|| state.is(net.minecraft.world.level.block.Blocks.CACTUS) || state.is(net.minecraft.world.level.block.Blocks.SWEET_BERRY_BUSH)
+			|| state.is(net.minecraft.world.level.block.Blocks.WITHER_ROSE) || state.is(net.minecraft.world.level.block.Blocks.POWDER_SNOW);
 	}
 
 	private static boolean open(net.minecraft.world.level.BlockGetter level, BlockPos pos) {
