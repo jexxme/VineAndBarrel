@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "Watch all",
   "watch.vineandbarrel.path.progress": "%s of %s done",
   "watch.vineandbarrel.path.all_done": "All done",
+  "watch.vineandbarrel.path.wiki": "Wiki",
+  "watch.vineandbarrel.path.wiki_page": "Wiki page ›",
   "watch.vineandbarrel.path.chapter": "(Brewer's path, %s of %s)",
   "watch.vineandbarrel.farmers_delight.note": "A stove for heat, rope to climb"
 }

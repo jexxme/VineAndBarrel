@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "Дивитись усе",
   "watch.vineandbarrel.path.progress": "Готово: %s з %s",
   "watch.vineandbarrel.path.all_done": "Усе готово",
+  "watch.vineandbarrel.path.wiki": "Вікі",
+  "watch.vineandbarrel.path.wiki_page": "Сторінка у вікі ›",
   "watch.vineandbarrel.path.chapter": "(Шлях пивовара, %s з %s)",
   "watch.vineandbarrel.farmers_delight.note": "Плита для жару, мотузка для лози"
 }

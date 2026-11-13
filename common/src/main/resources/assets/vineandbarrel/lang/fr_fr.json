@@ -363,6 +363,8 @@
   "watch.vineandbarrel.path.watch_all": "Tout voir",
   "watch.vineandbarrel.path.progress": "%s sur %s faits",
   "watch.vineandbarrel.path.all_done": "Tout est fait",
+  "watch.vineandbarrel.path.wiki": "Wiki",
+  "watch.vineandbarrel.path.wiki_page": "Page du wiki ›",
   "watch.vineandbarrel.path.chapter": "(Chemin du brasseur, %s sur %s)",
   "watch.vineandbarrel.farmers_delight.note": "Un fourneau pour chauffer, une corde pour grimper"
 }
