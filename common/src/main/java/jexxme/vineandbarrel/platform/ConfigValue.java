@@ -4,7 +4,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -24,6 +26,8 @@ public final class ConfigValue<T>
 	}
 
 	private static final List<ConfigValue<?>> ALL = new ArrayList<>();
+	/** The comment over each section of each side's file, by side and section name. */
+	private static final Map<String, String> SECTION_COMMENTS = new LinkedHashMap<>();
 
 	private final Side side;
 	private final String section;
@@ -95,6 +99,21 @@ public final class ConfigValue<T>
 	/** Every setting declared so far, in declaration order (each loader builds its files from these). */
 	public static List<ConfigValue<?>> all() {
 		return Collections.unmodifiableList(ALL);
+	}
+
+	/** Declares the comment over one section of one side's file (the Tipsy section has one per side). */
+	public static void describeSection(Side side, String section, String comment) {
+		SECTION_COMMENTS.put(side + "/" + section, comment);
+	}
+
+	/** {@return the comment over this section of this side's file, or the section's name without one} */
+	public static String sectionComment(Side side, String section) {
+		return SECTION_COMMENTS.getOrDefault(side + "/" + section, section);
+	}
+
+	/** {@return the sections of one side's file, in the order their first setting was declared} */
+	public static List<String> sections(Side side) {
+		return ALL.stream().filter(value -> value.side == side).map(value -> value.section).distinct().toList();
 	}
 
 	public T get() {
