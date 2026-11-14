@@ -35,6 +35,9 @@ public final class VineAndBarrel
 
 	/** Hands every registry entry to the loader. */
 	public static void init() {
+		// The settings first, in the order of the config files: Tipsy, then world generation
+		jexxme.vineandbarrel.tipsy.TipsyConfig.load();
+		jexxme.vineandbarrel.world.WorldgenConfig.load();
 		VBBlocks.register();
 		VBItems.register();
 		jexxme.vineandbarrel.registry.VBBlockEntities.register();
@@ -45,6 +48,7 @@ public final class VineAndBarrel
 		jexxme.vineandbarrel.barrel.BarrelRegistry.register();
 		jexxme.vineandbarrel.compat.farmersdelight.FDCompat.register();
 		jexxme.vineandbarrel.compat.ModCompat.register();
+		jexxme.vineandbarrel.world.WorldgenConfig.register();
 		jexxme.vineandbarrel.world.village.VillageStructures.register();
 		jexxme.vineandbarrel.world.village.TavernKeeper.register();
 		jexxme.vineandbarrel.world.village.VillageData.registerTrades();

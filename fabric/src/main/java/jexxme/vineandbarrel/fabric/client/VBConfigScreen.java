@@ -74,13 +74,16 @@ public class VBConfigScreen extends OptionsSubScreen
 		super.render(graphics, mouseX, mouseY, partialTick);
 	}
 
+	/** One side's settings, a header over each of its sections ({@code <modid>.configuration.header.<section>.<side>}). */
 	private void section(ConfigValue.Side side) {
-		// A header row: the section's name across the row, centred (this Minecraft's options list has no header rows of its own)
-		Component header = Component.translatable(PREFIX + "section." + VineAndBarrel.MODID + ".tipsy." + side.name().toLowerCase(Locale.ROOT) + ".toml");
-		this.list.add(new StringWidget(this.width / 2 - HEADER_WIDTH / 2, 0, HEADER_WIDTH, Button.DEFAULT_HEIGHT, header, this.font));
-		for (ConfigValue<?> value : ConfigValue.all()) {
-			if (value.side() == side) {
-				this.list.add(option(value).createButton(this.options, this.width / 2 - HEADER_WIDTH / 2, 0, HEADER_WIDTH));
+		for (String section : ConfigValue.sections(side)) {
+			// A header row: the section's name across the row, centred (this Minecraft's options list has no header rows of its own)
+			Component header = Component.translatable(PREFIX + "header." + section + "." + side.name().toLowerCase(Locale.ROOT));
+			this.list.add(new StringWidget(this.width / 2 - HEADER_WIDTH / 2, 0, HEADER_WIDTH, Button.DEFAULT_HEIGHT, header, this.font));
+			for (ConfigValue<?> value : ConfigValue.all()) {
+				if (value.side() == side && value.section().equals(section)) {
+					this.list.add(option(value).createButton(this.options, this.width / 2 - HEADER_WIDTH / 2, 0, HEADER_WIDTH));
+				}
 			}
 		}
 	}

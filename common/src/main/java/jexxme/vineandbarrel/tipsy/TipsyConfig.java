@@ -26,6 +26,11 @@ public final class TipsyConfig
 	public static final String SERVER_COMMENT = "Tipsy: the effect alcoholic drinks stack, one level per drink (I-III the fun part, IV the turn, V really drunk, then a blackout)";
 	public static final String CLIENT_COMMENT = "Tipsy visuals on this client";
 
+	static {
+		ConfigValue.describeSection(SERVER, SECTION, SERVER_COMMENT);
+		ConfigValue.describeSection(CLIENT, SECTION, CLIENT_COMMENT);
+	}
+
 	public static final ConfigValue<Boolean> ENABLED = ConfigValue.define(SERVER, SECTION, "enabled",
 			"false = non-alcoholic mode: drinks never make you tipsy. Their buffs stay and their names don't change.", true);
 	public static final ConfigValue<Integer> MAX_LEVEL = ConfigValue.defineInRange(SERVER, SECTION, "maxLevel",

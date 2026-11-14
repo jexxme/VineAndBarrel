@@ -3,6 +3,7 @@ package jexxme.vineandbarrel.forge;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.platform.ConfigValue;
 import jexxme.vineandbarrel.tipsy.TipsyConfig;
+import jexxme.vineandbarrel.world.WorldgenConfig;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -15,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +23,8 @@ import java.util.regex.Pattern;
 /**
  * The common settings ({@link ConfigValue}) as Forge config files, exactly as on NeoForge: the server file is
  * {@link ModConfig.Type#SYNCED} (per world, sent to every client so tooltips can follow it), the client file is each
- * player's own. Same file names, keys, comments and ranges.
+ * player's own. Same file names, keys, comments and ranges. Each side's file has a section per group of settings:
+ * {@code [tipsy]} in both, {@code [worldgen]} in the server file.
  * <p>
  * A renamed client setting ({@link ConfigValue#formerly}) still saved under its old key takes that value once: the old
  * key is read from the file before Forge loads it (Forge drops keys it doesn't know when it corrects the file), and the
@@ -40,9 +41,10 @@ public final class ForgeConfig
 
 	static void register() {
 		TipsyConfig.load();
+		WorldgenConfig.load();
 		String clientFile = VineAndBarrel.MODID + "-tipsy-client.toml";
 		Map<ConfigValue<?>, String> carried = carriedOver(FMLPaths.CONFIGDIR.get().resolve(clientFile));
-		ForgeConfigSpec client = build(ConfigValue.Side.CLIENT, TipsyConfig.CLIENT_COMMENT);
+		ForgeConfigSpec client = build(ConfigValue.Side.CLIENT);
 		if (!carried.isEmpty()) {
 			FMLJavaModLoadingContext.get().getModEventBus().addListener((ModConfigEvent.Loading event) -> {
 				if (event.getConfig().getSpec() == client) {
@@ -51,7 +53,7 @@ public final class ForgeConfig
 				}
 			});
 		}
-		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, build(ConfigValue.Side.SERVER, TipsyConfig.SERVER_COMMENT), VineAndBarrel.MODID + "-tipsy-server.toml");
+		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, build(ConfigValue.Side.SERVER), VineAndBarrel.MODID + "-tipsy-server.toml");
 		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, client, clientFile);
 	}
 
@@ -108,9 +110,9 @@ public final class ForgeConfig
 	}
 
 	/** {@return one side's settings as a spec of its own, not bound to the game's settings} */
-	public static Detached detached(ConfigValue.Side side, String sectionComment) {
+	public static Detached detached(ConfigValue.Side side) {
 		Map<ConfigValue<?>, ForgeConfigSpec.ConfigValue<?>> values = new HashMap<>();
-		return new Detached(build(side, sectionComment, values, false), values);
+		return new Detached(build(side, values, false), values);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -129,24 +131,26 @@ public final class ForgeConfig
 		}
 	}
 
-	private static ForgeConfigSpec build(ConfigValue.Side side, String sectionComment) {
-		return build(side, sectionComment, FORGE, true);
+	private static ForgeConfigSpec build(ConfigValue.Side side) {
+		return build(side, FORGE, true);
 	}
 
-	/** {@return one side's spec}, each setting's value put in {@code values}, and bound to the game's setting if {@code live} */
-	private static ForgeConfigSpec build(ConfigValue.Side side, String sectionComment, Map<ConfigValue<?>, ForgeConfigSpec.ConfigValue<?>> values,
-		boolean live) {
+	/**
+	 * {@return one side's spec}, a section per group of settings with its comment, each setting's value put in
+	 * {@code values}, and bound to the game's setting if {@code live}
+	 */
+	private static ForgeConfigSpec build(ConfigValue.Side side, Map<ConfigValue<?>, ForgeConfigSpec.ConfigValue<?>> values, boolean live) {
 		ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-		List<ConfigValue<?>> settings = ConfigValue.all().stream().filter(value -> value.side() == side).toList();
-		builder.comment(sectionComment).push(TipsyConfig.SECTION);
 		ForgeConfigSpec[] spec = new ForgeConfigSpec[1];
-		for (ConfigValue<?> value : settings) {
-			if (!value.section().equals(TipsyConfig.SECTION)) {
-				throw new IllegalStateException("Only the Tipsy section is supported so far: " + value);
+		for (String section : ConfigValue.sections(side)) {
+			builder.comment(ConfigValue.sectionComment(side, section)).push(section);
+			for (ConfigValue<?> value : ConfigValue.all()) {
+				if (value.side() == side && value.section().equals(section)) {
+					define(builder, value, spec, values, live);
+				}
 			}
-			define(builder, value, spec, values, live);
+			builder.pop();
 		}
-		builder.pop();
 		spec[0] = builder.build();
 		return spec[0];
 	}

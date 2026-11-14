@@ -77,8 +77,7 @@ public final class ForgeGameTests
 			// the way Forge's own config loading opens it and hands it to the spec (Forge 47 has one config tracker, the
 			// game's, so the file is opened here as it does), the carried values set and saved, and the file then has the new
 			// keys with the old values
-			var detached = jexxme.vineandbarrel.forge.ForgeConfig.detached(jexxme.vineandbarrel.platform.ConfigValue.Side.CLIENT,
-				jexxme.vineandbarrel.tipsy.TipsyConfig.CLIENT_COMMENT);
+			var detached = jexxme.vineandbarrel.forge.ForgeConfig.detached(jexxme.vineandbarrel.platform.ConfigValue.Side.CLIENT);
 			com.electronwill.nightconfig.core.file.CommentedFileConfig file = com.electronwill.nightconfig.core.file.CommentedFileConfig.builder(old)
 				.sync().preserveInsertionOrder().writingMode(com.electronwill.nightconfig.core.io.WritingMode.REPLACE).build();
 			file.load();
