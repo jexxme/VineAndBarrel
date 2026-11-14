@@ -16,6 +16,7 @@
     "IronBarsBlockMixin",
     "JigsawPlacerMixin",
     "LeadItemMixin",
+    "LithostitchedJigsawMixin",
     "LeashFenceKnotEntityMixin",
     "MoveToTargetSinkMixin",
     "SinglePoolElementAccessor",
