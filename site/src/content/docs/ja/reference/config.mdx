@@ -9,8 +9,10 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrelの設定ファイルは2つあり、どちらも[ほろ酔い](/tipsy/)に関するものです。それ以外、レシピから樽の熟成にかかる時間まで、
+Vine & Barrelの設定ファイルは2つあります。ひとつはサーバー用で、[ほろ酔い](/tipsy/)のルールと野生の作物ごとのスイッチが入っています。
+もうひとつはプレイヤーごとのもので、ほろ酔いが自分の画面と耳にどう効くかを決めます。それ以外、レシピから樽の熟成にかかる時間まで、
 すべてMODの出荷時のまま動き、ほかのレシピと同じようにデータパックで変更できます（Minecraft 1.21.1 と 1.20.1 では、村人の取引だけは変更できません）。
 
 ゲーム内では設定画面で変更します。NeoForgeでは**Mod**、Vine & Barrel、**コンフィグ**の順に開きます。Fabricでは
@@ -21,7 +23,8 @@ Vine & Barrelの設定ファイルは2つあり、どちらも[ほろ酔い](/ti
 ファイルそのものについて: NeoForgeとForgeではTOMLファイルで、オプションは<code>[{configFiles.server.section}]</code>の下にあります。
 Fabricでは<code>config</code>フォルダにある普通の<code>.properties</code>ファイルで、同じオプションを
 <code>{configFiles.server.section}.option=value</code>の形で書きます。Fabricのクライアントファイルはゲームの起動時に読み込まれるので、
-編集したら再起動してください。サーバーファイルは<code>/reload</code>で読み込み直されます。
+編集したら再起動してください。サーバーファイルは<code>/reload</code>で読み込み直されます。野生の作物のスイッチは
+<code>[{configFiles.worldgen.section}]</code>の下にあります（Fabricでは<code>{configFiles.worldgen.section}.option=value</code>）。
 
 ## サーバーオプション
 
@@ -45,6 +48,30 @@ NeoForgeとForgeでは<code>{configFiles.server.file}</code>、Fabricでは<code
 <Aside title="ノンアルコールモード">
 `enabled = false`(Fabricでは`tipsy.enabled=false`)にすると、飲み物はただの強化効果つきの飲み物になります。ほろ酔いも、しゃっくりも、記憶飛びもありませんが、名前と強化効果は同じです。
 家族向けのサーバーや、ふらふらが好きではない人に向いています。
+</Aside>
+
+### 野生の作物
+
+同じファイルの<code>[{configFiles.worldgen.section}]</code>の下に、[野生の作物](/crops/#野生の作物)ごとのスイッチがあります。変わるのはこれから生成される
+土地だけです。オフにすると新しいチャンクにはその作物が生えず、すでに外に生えている株はそのまま残ります。
+
+<table>
+	<thead><tr><th>オプション</th><th>初期値</th><th>効果</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="ほかのMODにもうブドウがある？">
+パックのMODが自前の野生のブドウ、ホップ、大麦を生やすなら、こちらのものをオフにしましょう（`wildWhiteGrapes = false`、
+Fabricでは`worldgen.wildWhiteGrapes=false`）。同じ植物が2種類見つかって迷うことがなくなります。村の畑では
+これまでどおり育ち、チェストや商人も種を持っているので、作物がゲームから消えることはありません。
 </Aside>
 
 ## クライアントオプション

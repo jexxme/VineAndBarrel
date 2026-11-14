@@ -9,8 +9,10 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrel'ın iki yapılandırma dosyası var, ikisi de [Çakırkeyif](/tipsy/) ile ilgili. Tariflerden bir fıçının ne kadar
+Vine & Barrel'ın iki yapılandırma dosyası var: biri sunucu için, [Çakırkeyif](/tipsy/) kuralları ve her yabani ürün için bir anahtarla,
+biri de her oyuncu için, Çakırkeyif'in onun kendi ekranına ve kulaklarına ne yaptığıyla. Tariflerden bir fıçının ne kadar
 sürdüğüne kadar geri kalan her şey mod nasıl geldiyse öyle çalışır ve her tarif gibi bir veri paketiyle değiştirilebilir (Minecraft 1.21.1 ve 1.20.1'de köylü takasları hariç).
 
 Oyunda ayar ekranından değiştir: NeoForge'da **Modlar**, Vine & Barrel, **Yapılandırma**; Fabric'te [Mod Menu](https://modrinth.com/mod/modmenu)
@@ -21,7 +23,8 @@ görünür (dünya LAN'a açılınca görünmez); bir sunucuda ise sunucunun de�
 Dosyalar: NeoForge ve Forge'da seçenekler <code>[{configFiles.server.section}]</code> altında olan TOML dosyalarıdır. Fabric'te
 <code>config</code> klasöründeki düz <code>.properties</code> dosyalarıdır ve aynı seçenekler
 <code>{configFiles.server.section}.option=value</code> olarak yazılır. Fabric'te istemci dosyası oyun açılırken okunur, bu yüzden
-düzenledikten sonra yeniden başlat; sunucu dosyası <code>/reload</code> ile yeniden okunur.
+düzenledikten sonra yeniden başlat; sunucu dosyası <code>/reload</code> ile yeniden okunur. Yabani ürün anahtarları
+<code>[{configFiles.worldgen.section}]</code> altında (Fabric'te <code>{configFiles.worldgen.section}.option=value</code>).
 
 ## Sunucu seçenekleri
 
@@ -45,6 +48,30 @@ dünyanın <code>serverconfig</code> klasörüne koy; o dünya çalışırken <c
 <Aside title="Alkolsüz mod">
 `enabled = false` yap (Fabric'te `tipsy.enabled=false`) ve içecekler sade bonus içeceklerine döner: Çakırkeyif yok, hıçkırık yok, film kopması yok; adlar ve bonuslar aynı.
 Aile sunucusu için iyidir, ya da sallanmayı sevmiyorsan.
+</Aside>
+
+### Yabani ürünler
+
+Aynı dosyada <code>[{configFiles.worldgen.section}]</code> altında, her [yabani ürün](/crops/#yabani-ürünler) için bir anahtar. Yalnızca henüz oluşturulacak araziyi
+değiştirirler: kapatılınca yeni chunk'larda o üründen hiç olmaz, dışarıda zaten duran bitkiler ise yerinde kalır.
+
+<table>
+	<thead><tr><th>Seçenek</th><th>Varsayılan</th><th>Ne yapar</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Başka bir modda zaten üzüm mü var?">
+Paketindeki bir mod kendi yabani üzümünü, şerbetçiotunu ya da arpasını yetiştiriyorsa bizimkileri kapat (`wildWhiteGrapes = false`,
+Fabric'te `worldgen.wildWhiteGrapes=false`), böylece kimse aynı bitkinin iki türünü bulmaz. Köy tarlaları onu yetiştirmeye
+devam eder, sandıklarda ve tüccarlarda tohumu hâlâ bulunur, yani ürün oyundan çıkmaz.
 </Aside>
 
 ## İstemci seçenekleri

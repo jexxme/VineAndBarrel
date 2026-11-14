@@ -9,8 +9,10 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrel hat zwei Konfigurationsdateien, beide rund um [Schwips](/tipsy/). Alles andere, von Rezepten bis zur Dauer im Fass,
+Vine & Barrel hat zwei Konfigurationsdateien: eine für den Server, mit den Regeln für [Schwips](/tipsy/) und einem Schalter für jede Wildpflanze,
+und eine für jeden Spieler, mit dem, was Schwips mit seinem eigenen Bild und Ton macht. Alles andere, von Rezepten bis zur Dauer im Fass,
 funktioniert so, wie die Mod ausgeliefert wird, und lässt sich wie jedes Rezept mit einem Datapack ändern (auf Minecraft 1.21.1 und 1.20.1 alles außer den Handelsangeboten der
 Dorfbewohner).
 
@@ -22,7 +24,8 @@ zeigen sich dort im Einzelspieler (nicht mehr, sobald die Welt für LAN geöffne
 Die Dateien selbst: Bei NeoForge und Forge sind es TOML-Dateien mit den Optionen unter <code>[{configFiles.server.section}]</code>. Bei
 Fabric sind es einfache <code>.properties</code>-Dateien im Ordner <code>config</code>, mit denselben Optionen als
 <code>{configFiles.server.section}.option=wert</code>. Bei Fabric wird die Client-Datei beim Spielstart gelesen, starte also
-nach dem Bearbeiten neu; die Server-Datei wird bei <code>/reload</code> erneut gelesen.
+nach dem Bearbeiten neu; die Server-Datei wird bei <code>/reload</code> erneut gelesen. Die Schalter für die Wildpflanzen stehen unter
+<code>[{configFiles.worldgen.section}]</code> (<code>{configFiles.worldgen.section}.option=wert</code> bei Fabric).
 
 ## Serveroptionen
 
@@ -46,6 +49,31 @@ gehen an jeden Spieler, der beitritt, alle spielen also nach denselben Regeln. E
 <Aside title="Alkoholfreier Modus">
 Setze `enabled = false` (`tipsy.enabled=false` bei Fabric), und Getränke werden zu schlichten Bonus-Getränken: kein Schwips, kein Schluckauf, keine Filmrisse, aber dieselben Namen und Boni.
 Gut für einen Familienserver oder wenn dir das Schwanken einfach nicht gefällt.
+</Aside>
+
+### Wildpflanzen
+
+Unter <code>[{configFiles.worldgen.section}]</code> in derselben Datei, ein Schalter für jede [Wildpflanze](/crops/#wildpflanzen). Sie ändern nur Land,
+das erst noch erzeugt wird: Ausgeschaltet bekommen neue Chunks nichts mehr von dieser Pflanze, und die Pflanzen, die schon draußen
+stehen, bleiben, wo sie sind.
+
+<table>
+	<thead><tr><th>Option</th><th>Standard</th><th>Wirkung</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Eine andere Mod hat schon Trauben?">
+Wenn eine Mod in deinem Pack eigene wilde Trauben, eigenen Hopfen oder eigene Gerste wachsen lässt, schalte unsere aus (`wildWhiteGrapes = false`,
+`worldgen.wildWhiteGrapes=false` bei Fabric), damit niemand zwei Sorten derselben Pflanze findet. Dorffelder bauen die Pflanze
+weiter an, und Truhen und Händler haben weiter ihr Saatgut, so bleibt sie im Spiel.
 </Aside>
 
 ## Client-Optionen

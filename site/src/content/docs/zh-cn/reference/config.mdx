@@ -9,12 +9,13 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrel 有两个配置文件，都与[微醺](/tipsy/)有关。其他一切，从配方到酒桶要多久，都按模组出厂的样子工作，可以像修改配方一样用数据包来改（在 Minecraft 1.21.1 和 1.20.1 上，村民交易除外）。
+Vine & Barrel 有两个配置文件：一个给服务器，里面是[微醺](/tipsy/)的规则和每种野生作物的开关；另一个每位玩家各有一份，决定微醺对自己的画面和耳朵有什么影响。其他一切，从配方到酒桶要多久，都按模组出厂的样子工作，可以像修改配方一样用数据包来改（在 Minecraft 1.21.1 和 1.20.1 上，村民交易除外）。
 
 在游戏里，到设置界面修改：NeoForge 上是**模组**，Vine & Barrel，**配置**；Fabric 上安装了 [Mod Menu](https://modrinth.com/mod/modmenu) 后会出现同样的按钮。在那里的改动立即生效。服务器选项在单人游戏中会显示在那里（世界对局域网开放后就不显示了）；在服务器上，它们归服务器所有。Forge（Minecraft 1.20.1）上没有这个按钮：直接编辑文件。
 
-文件本身：NeoForge 和 Forge 上是 TOML 文件，选项位于 <code>[{configFiles.server.section}]</code> 下。Fabric 上是 <code>config</code> 文件夹里的普通 <code>.properties</code> 文件，同样的选项写成 <code>{configFiles.server.section}.option=value</code>。Fabric 上客户端文件在游戏启动时读取，所以改完要重启；服务器文件会在 <code>/reload</code> 时重新读取。
+文件本身：NeoForge 和 Forge 上是 TOML 文件，选项位于 <code>[{configFiles.server.section}]</code> 下。Fabric 上是 <code>config</code> 文件夹里的普通 <code>.properties</code> 文件，同样的选项写成 <code>{configFiles.server.section}.option=value</code>。Fabric 上客户端文件在游戏启动时读取，所以改完要重启；服务器文件会在 <code>/reload</code> 时重新读取。野生作物的开关在 <code>[{configFiles.worldgen.section}]</code> 下（Fabric 上写成 <code>{configFiles.worldgen.section}.option=value</code>）。
 
 ## 服务器选项
 
@@ -36,6 +37,27 @@ NeoForge 和 Forge 上在 <code>{configFiles.server.file}</code> 里，Fabric �
 <Aside title="无酒精模式">
 设置 `enabled = false`（Fabric 上是 `tipsy.enabled=false`），饮品就变成普通的增益饮品：没有微醺，没有打嗝，没有断片，但名字和增益都不变。
 适合家庭服务器，或者你单纯不喜欢那种晃悠悠的感觉。
+</Aside>
+
+### 野生作物
+
+在同一个文件的 <code>[{configFiles.worldgen.section}]</code> 下，每种[野生作物](/crops/#野生作物)各有一个开关。它们只影响还没生成的土地：关掉后，新的区块里不会再长出这种作物，外面已经长着的植株原地保留。
+
+<table>
+	<thead><tr><th>选项</th><th>默认值</th><th>作用</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="别的模组已经有葡萄了？">
+如果整合包里的某个模组有自己的野生葡萄、啤酒花或大麦，就关掉我们的（`wildWhiteGrapes = false`，Fabric 上是 `worldgen.wildWhiteGrapes=false`），免得玩家找到同一种植物的两个版本。村庄的农田照样种它，箱子和商人也照样有它的种子，所以它不会从游戏里消失。
 </Aside>
 
 ## 客户端选项

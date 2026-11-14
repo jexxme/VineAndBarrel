@@ -498,5 +498,9 @@
 	"Young": "Молоде",
 	"Your first drink": "Твій перший напій",
 	"Any red grapes": "Будь-який червоний виноград",
-	"Any white grapes": "Будь-який білий виноград"
+	"Any white grapes": "Будь-який білий виноград",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "У нових чанках росте дикий червоний виноград. `false`: у нових чанках його немає, той, що вже є, лишається.",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "У нових чанках росте дикий білий виноград. `false`: у нових чанках його немає, той, що вже є, лишається.",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "У нових чанках росте дикий хміль. `false`: у нових чанках його немає, той, що вже є, лишається.",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "У нових чанках росте дикий ячмінь. `false`: у нових чанках його немає, той, що вже є, лишається."
 }

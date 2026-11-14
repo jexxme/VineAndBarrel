@@ -9,8 +9,10 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrel a deux fichiers de configuration, tous deux sur [Pompette](/tipsy/). Tout le reste, des recettes à la durée de vieillissement d'un fût,
+Vine & Barrel a deux fichiers de configuration : un pour le serveur, avec les règles de [Pompette](/tipsy/) et un interrupteur pour chaque culture sauvage,
+et un pour chaque joueur, avec ce que Pompette fait à son propre écran et à ses oreilles. Tout le reste, des recettes à la durée de vieillissement d'un fût,
 fonctionne comme le mod le fournit et peut être modifié avec un datapack comme n'importe quelle recette (sur Minecraft 1.21.1 et 1.20.1, tout sauf
 les échanges des villageois).
 
@@ -22,7 +24,8 @@ y apparaissent en solo (pas une fois le monde ouvert au LAN) ; sur un serveur, c
 Les fichiers eux-mêmes : sur NeoForge et Forge, ce sont des fichiers TOML avec les options sous <code>[{configFiles.server.section}]</code>. Sur
 Fabric, ce sont de simples fichiers <code>.properties</code> dans le dossier <code>config</code>, avec les mêmes options écrites
 <code>{configFiles.server.section}.option=valeur</code>. Sur Fabric, le fichier client est lu au lancement du jeu, donc
-redémarre après l'avoir modifié ; le fichier serveur est relu avec <code>/reload</code>.
+redémarre après l'avoir modifié ; le fichier serveur est relu avec <code>/reload</code>. Les interrupteurs des cultures sauvages sont sous
+<code>[{configFiles.worldgen.section}]</code> (<code>{configFiles.worldgen.section}.option=valeur</code> sur Fabric).
 
 ## Options du serveur
 
@@ -46,6 +49,31 @@ vont à chaque joueur qui se connecte, donc tout le monde joue avec les mêmes r
 <Aside title="Mode sans alcool">
 Mets `enabled = false` (`tipsy.enabled=false` sur Fabric) et les boissons deviennent de simples boissons à bonus : pas de Pompette, pas de hoquets, pas de trous noirs, mais les mêmes noms et les mêmes bonus.
 Pratique pour un serveur familial, ou si tu n'aimes simplement pas le tangage.
+</Aside>
+
+### Cultures sauvages
+
+Sous <code>[{configFiles.worldgen.section}]</code>, dans le même fichier, un interrupteur pour chaque [culture sauvage](/crops/#cultures-sauvages). Ils ne changent que les terres
+encore à générer : désactivé, les nouveaux chunks n'ont plus rien de cette culture, et les plantes déjà là-dehors
+restent où elles sont.
+
+<table>
+	<thead><tr><th>Option</th><th>Par défaut</th><th>Ce qu'elle fait</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Un autre mod a déjà du raisin ?">
+Si un mod de ton pack fait pousser son propre raisin, houblon ou orge sauvage, désactive les nôtres (`wildWhiteGrapes = false`,
+`worldgen.wildWhiteGrapes=false` sur Fabric) pour que personne ne trouve deux sortes de la même plante. Les champs des villages
+la cultivent toujours, et les coffres et les marchands ont toujours ses graines, elle reste donc dans le jeu.
 </Aside>
 
 ## Options du client

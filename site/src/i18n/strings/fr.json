@@ -482,5 +482,9 @@
 	"Young": "Jeune",
 	"Your first drink": "Ta première boisson",
 	"Any red grapes": "N'importe quel raisin rouge",
-	"Any white grapes": "N'importe quel raisin blanc"
+	"Any white grapes": "N'importe quel raisin blanc",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Le raisin rouge sauvage pousse dans les nouveaux chunks. `false` : les nouveaux chunks n'en ont plus, celui déjà là-dehors reste.",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Le raisin blanc sauvage pousse dans les nouveaux chunks. `false` : les nouveaux chunks n'en ont plus, celui déjà là-dehors reste.",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Le houblon sauvage pousse dans les nouveaux chunks. `false` : les nouveaux chunks n'en ont plus, celui déjà là-dehors reste.",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "L'orge sauvage pousse dans les nouveaux chunks. `false` : les nouveaux chunks n'en ont plus, celle déjà là-dehors reste."
 }

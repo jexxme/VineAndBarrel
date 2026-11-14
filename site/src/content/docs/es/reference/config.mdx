@@ -9,8 +9,10 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrel tiene dos archivos de configuración, los dos sobre [Achispado](/tipsy/). Todo lo demás, desde las recetas hasta lo que
+Vine & Barrel tiene dos archivos de configuración: uno para el servidor, con las reglas de [Achispado](/tipsy/) y un interruptor para cada cultivo silvestre,
+y otro para cada jugador, con lo que Achispado le hace a su propia pantalla y a sus oídos. Todo lo demás, desde las recetas hasta lo que
 tarda un barril, funciona como lo trae el mod y se puede cambiar con un datapack como cualquier receta (en Minecraft 1.21.1 y 1.20.1, todo menos los
 tratos de los aldeanos).
 
@@ -22,7 +24,8 @@ no tiene ese botón: edita los archivos.
 Los archivos en sí: en NeoForge y Forge son archivos TOML con las opciones bajo <code>[{configFiles.server.section}]</code>. En
 Fabric son archivos <code>.properties</code> normales en la carpeta <code>config</code>, con las mismas opciones escritas como
 <code>{configFiles.server.section}.opción=valor</code>. En Fabric el archivo de cliente se lee al iniciar el juego, así que
-reinicia tras editarlo; el archivo de servidor se vuelve a leer con <code>/reload</code>.
+reinicia tras editarlo; el archivo de servidor se vuelve a leer con <code>/reload</code>. Los interruptores de los cultivos silvestres están en
+<code>[{configFiles.worldgen.section}]</code> (<code>{configFiles.worldgen.section}.opción=valor</code> en Fabric).
 
 ## Opciones del servidor
 
@@ -46,6 +49,31 @@ carpeta <code>serverconfig</code> de ese mundo, y prevalece sobre el de <code>co
 <Aside title="Modo sin alcohol">
 Pon `enabled = false` (`tipsy.enabled=false` en Fabric) y las bebidas pasan a ser bebidas de mejoras sin más: sin Achispado, sin hipo, sin lagunas, pero con los mismos nombres y mejoras.
 Bueno para un servidor familiar, o si simplemente no te gusta el bamboleo.
+</Aside>
+
+### Cultivos silvestres
+
+En <code>[{configFiles.worldgen.section}]</code>, en el mismo archivo, un interruptor para cada [cultivo silvestre](/crops/#cultivos-silvestres). Solo cambian el terreno
+que aún está por generarse: apagado, los chunks nuevos no tienen nada de ese cultivo, y las plantas que ya hay ahí fuera
+se quedan donde están.
+
+<table>
+	<thead><tr><th>Opción</th><th>Por defecto</th><th>Qué hace</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="¿Otro mod ya tiene uvas?">
+Si un mod de tu pack hace crecer sus propias uvas, lúpulo o cebada silvestres, apaga los nuestros (`wildWhiteGrapes = false`,
+`worldgen.wildWhiteGrapes=false` en Fabric) para que nadie encuentre dos clases de la misma planta. Los huertos de las aldeas
+siguen cultivándolo, y los cofres y los comerciantes siguen teniendo sus semillas, así que no desaparece del juego.
 </Aside>
 
 ## Opciones del cliente

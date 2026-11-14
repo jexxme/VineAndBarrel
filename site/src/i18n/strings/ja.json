@@ -460,5 +460,9 @@
 	"Young": "若い",
 	"Your first drink": "はじめての一杯",
 	"Any red grapes": "任意の赤ブドウ",
-	"Any white grapes": "任意の白ブドウ"
+	"Any white grapes": "任意の白ブドウ",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "新しいチャンクに野生の赤ブドウが生える。`false`：新しいチャンクには生えず、すでに生えているものは残る。",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "新しいチャンクに野生の白ブドウが生える。`false`：新しいチャンクには生えず、すでに生えているものは残る。",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "新しいチャンクに野生のホップが生える。`false`：新しいチャンクには生えず、すでに生えているものは残る。",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "新しいチャンクに野生の大麦が生える。`false`：新しいチャンクには生えず、すでに生えているものは残る。"
 }

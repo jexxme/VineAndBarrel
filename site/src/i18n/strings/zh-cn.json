@@ -460,5 +460,9 @@
 	"Young": "新酿",
 	"Your first drink": "你的第一杯酒",
 	"Any red grapes": "任意红葡萄",
-	"Any white grapes": "任意白葡萄"
+	"Any white grapes": "任意白葡萄",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "新区块里会长出野生红葡萄。`false`：新区块里不再有，已经长着的会保留。",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "新区块里会长出野生白葡萄。`false`：新区块里不再有，已经长着的会保留。",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "新区块里会长出野生啤酒花。`false`：新区块里不再有，已经长着的会保留。",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "新区块里会长出野生大麦。`false`：新区块里不再有，已经长着的会保留。"
 }

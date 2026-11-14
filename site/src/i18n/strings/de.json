@@ -471,5 +471,9 @@
 	"Young": "Jung",
 	"Your first drink": "Dein erstes Getränk",
 	"Any red grapes": "Beliebige rote Trauben",
-	"Any white grapes": "Beliebige weiße Trauben"
+	"Any white grapes": "Beliebige weiße Trauben",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Wilde rote Trauben wachsen in neuen Chunks. `false`: Neue Chunks bekommen keine, die schon vorhandenen bleiben.",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Wilde weiße Trauben wachsen in neuen Chunks. `false`: Neue Chunks bekommen keine, die schon vorhandenen bleiben.",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Wilder Hopfen wächst in neuen Chunks. `false`: Neue Chunks bekommen keinen, der schon vorhandene bleibt.",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "Wilde Gerste wächst in neuen Chunks. `false`: Neue Chunks bekommen keine, die schon vorhandene bleibt."
 }

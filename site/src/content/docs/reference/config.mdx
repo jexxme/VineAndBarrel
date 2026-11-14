@@ -9,8 +9,10 @@ import { configFiles } from '../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrel has two config files, both about [Tipsy](/tipsy/). Everything else, from recipes to how long a barrel
+Vine & Barrel has two config files: one for the server, with the rules of [Tipsy](/tipsy/) and a switch for each wild
+crop, and one for each player, with what Tipsy does to their own screen and ears. Everything else, from recipes to how long a barrel
 takes, works the way the mod ships and can be changed with a datapack like any recipe (on Minecraft 1.21.1 and 1.20.1, all but
 the villager trades).
 
@@ -22,7 +24,8 @@ show there in singleplayer (not once the world is open to LAN); on a server they
 The files themselves: on NeoForge and Forge they are TOML files with the options under <code>[{configFiles.server.section}]</code>. On
 Fabric they are plain <code>.properties</code> files in the <code>config</code> folder, with the same options written as
 <code>{configFiles.server.section}.option=value</code>. On Fabric the client file is read when the game starts, so
-restart after editing it; the server file is read again on <code>/reload</code>.
+restart after editing it; the server file is read again on <code>/reload</code>. The wild crop switches are under
+<code>[{configFiles.worldgen.section}]</code> (<code>{configFiles.worldgen.section}.option=value</code> on Fabric).
 
 ## Server options
 
@@ -46,6 +49,31 @@ that world's <code>serverconfig</code> folder, and it wins over the one in <code
 <Aside title="Non-alcoholic mode">
 Set `enabled = false` (`tipsy.enabled=false` on Fabric) and drinks become plain buff drinks: no Tipsy, no hiccups, no blackouts, but the same names and buffs.
 Good for a family server, or if you simply don't like the wobble.
+</Aside>
+
+### Wild crops
+
+Under <code>[{configFiles.worldgen.section}]</code> in the same file, one switch for each [wild crop](/crops/#wild-crops). They
+only change land that is still to be generated: switched off, new chunks get none of that crop, and the plants already out
+there stay where they are.
+
+<table>
+	<thead><tr><th>Option</th><th>Default</th><th>What it does</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Another mod already has grapes?">
+If a mod in your pack grows its own wild grapes, hops or barley, switch ours off (`wildWhiteGrapes = false`,
+`worldgen.wildWhiteGrapes=false` on Fabric) so players don't find two kinds of the same plant. Village farms still grow
+the crop, and chests and traders still have its seeds, so it stays in the game.
 </Aside>
 
 ## Client options

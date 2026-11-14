@@ -9,8 +9,10 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-У Vine & Barrel два файла настроек, оба про [«Навеселе»](/tipsy/). Всё остальное, от рецептов до времени выдержки в бочке,
+У Vine & Barrel два файла настроек: один для сервера, с правилами [«Навеселе»](/tipsy/) и переключателем для каждой дикой культуры,
+и один для каждого игрока, с тем, что «Навеселе» делает с его собственным экраном и слухом. Всё остальное, от рецептов до времени выдержки в бочке,
 работает так, как поставляется в моде, и меняется датапаком, как любой рецепт (на Minecraft 1.21.1 и 1.20.1 всё, кроме торговли с жителями).
 
 В игре их можно менять на экране настроек: **Моды**, Vine & Barrel, **Настройки** на NeoForge; на Fabric та же кнопка
@@ -21,7 +23,8 @@ export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: ty
 Сами файлы: на NeoForge и Forge это файлы TOML с параметрами в разделе <code>[{configFiles.server.section}]</code>. На
 Fabric это обычные файлы <code>.properties</code> в папке <code>config</code>, те же параметры записаны как
 <code>{configFiles.server.section}.option=value</code>. На Fabric клиентский файл читается при запуске игры, так что
-после правки перезапусти её; серверный файл перечитывается по <code>/reload</code>.
+после правки перезапусти её; серверный файл перечитывается по <code>/reload</code>. Переключатели диких культур лежат в
+<code>[{configFiles.worldgen.section}]</code> (<code>{configFiles.worldgen.section}.option=value</code> на Fabric).
 
 ## Серверные параметры
 
@@ -45,6 +48,31 @@ Fabric это обычные файлы <code>.properties</code> в папке <
 <Aside title="Режим без алкоголя">
 Поставь `enabled = false` (`tipsy.enabled=false` на Fabric), и напитки станут обычными напитками с бонусами: никакого «Навеселе», икоты и провалов в памяти, но названия и бонусы те же.
 Подходит для семейного сервера или если тебе просто не нравится качание.
+</Aside>
+
+### Дикие культуры
+
+В <code>[{configFiles.worldgen.section}]</code>, в том же файле, по переключателю для каждой [дикой культуры](/crops/#дикие-культуры). Они меняют только землю,
+которая ещё будет сгенерирована: если выключить, в новых чанках этой культуры не будет, а растения, что уже растут,
+останутся на месте.
+
+<table>
+	<thead><tr><th>Параметр</th><th>По умолчанию</th><th>Что делает</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="В другом моде уже есть виноград?">
+Если мод в твоей сборке выращивает свой дикий виноград, хмель или ячмень, выключи наши (`wildWhiteGrapes = false`,
+`worldgen.wildWhiteGrapes=false` на Fabric), чтобы никто не находил два вида одного растения. Поля в деревнях
+по-прежнему его выращивают, а в сундуках и у торговцев по-прежнему есть семена, так что культура остаётся в игре.
 </Aside>
 
 ## Клиентские параметры

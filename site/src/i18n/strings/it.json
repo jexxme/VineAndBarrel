@@ -482,5 +482,9 @@
 	"Young": "Giovane",
 	"Your first drink": "La tua prima bevanda",
 	"Any red grapes": "Qualsiasi uva rossa",
-	"Any white grapes": "Qualsiasi uva bianca"
+	"Any white grapes": "Qualsiasi uva bianca",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "L'uva rossa selvatica cresce nei chunk nuovi. `false`: i chunk nuovi non ne hanno, quella già là fuori resta.",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "L'uva bianca selvatica cresce nei chunk nuovi. `false`: i chunk nuovi non ne hanno, quella già là fuori resta.",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Il luppolo selvatico cresce nei chunk nuovi. `false`: i chunk nuovi non ne hanno, quello già là fuori resta.",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "L'orzo selvatico cresce nei chunk nuovi. `false`: i chunk nuovi non ne hanno, quello già là fuori resta."
 }

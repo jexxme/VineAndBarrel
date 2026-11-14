@@ -9,8 +9,10 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrel ma dwa pliki konfiguracyjne, oba o [Rauszyku](/tipsy/). Wszystko inne, od receptur po czas leżakowania w beczce,
+Vine & Barrel ma dwa pliki konfiguracyjne: jeden dla serwera, z zasadami [Rauszyku](/tipsy/) i przełącznikiem dla każdej dzikiej uprawy,
+i jeden dla każdego gracza, z tym, co Rauszyk robi z jego własnym obrazem i dźwiękiem. Wszystko inne, od receptur po czas leżakowania w beczce,
 działa tak, jak mod jest dostarczany, i można to zmienić datapackiem jak każdą recepturę (na Minecrafcie 1.21.1 i 1.20.1 wszystko poza handlem z
 osadnikami).
 
@@ -22,7 +24,8 @@ widać tam w trybie jednego gracza (nie po otwarciu świata dla LAN); na serwerz
 Same pliki: w NeoForge i Forge to pliki TOML z opcjami pod <code>[{configFiles.server.section}]</code>. W Fabricu to zwykłe
 pliki <code>.properties</code> w folderze <code>config</code>, z tymi samymi opcjami zapisanymi jako
 <code>{configFiles.server.section}.option=value</code>. W Fabricu plik klienta jest czytany przy starcie gry, więc
-po edycji uruchom ją ponownie; plik serwera jest czytany ponownie przy <code>/reload</code>.
+po edycji uruchom ją ponownie; plik serwera jest czytany ponownie przy <code>/reload</code>. Przełączniki dzikich upraw są w
+<code>[{configFiles.worldgen.section}]</code> (<code>{configFiles.worldgen.section}.option=value</code> na Fabricu).
 
 ## Opcje serwera
 
@@ -46,6 +49,31 @@ folderu <code>serverconfig</code> tego świata, a będzie miał pierwszeństwo p
 <Aside title="Tryb bezalkoholowy">
 Ustaw `enabled = false` (`tipsy.enabled=false` w Fabricu), a napoje staną się zwykłymi napojami z bonusami: bez Rauszyka, czkawki i urwanego filmu, ale z tymi samymi nazwami i bonusami.
 Dobre na rodzinny serwer albo jeśli po prostu nie lubisz kołysania.
+</Aside>
+
+### Dzikie uprawy
+
+W <code>[{configFiles.worldgen.section}]</code>, w tym samym pliku, przełącznik dla każdej [dzikiej uprawy](/crops/#dzikie-uprawy). Zmieniają tylko teren,
+który dopiero zostanie wygenerowany: po wyłączeniu nowe chunki nie mają już tej uprawy, a rośliny, które już rosną,
+zostają tam, gdzie są.
+
+<table>
+	<thead><tr><th>Opcja</th><th>Domyślnie</th><th>Co robi</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Inny mod ma już winogrona?">
+Jeśli mod w twojej paczce ma własne dzikie winogrona, chmiel albo jęczmień, wyłącz nasze (`wildWhiteGrapes = false`,
+`worldgen.wildWhiteGrapes=false` na Fabricu), żeby nikt nie znajdował dwóch rodzajów tej samej rośliny. Pola w wioskach
+dalej ją uprawiają, a skrzynie i handlarze dalej mają jej nasiona, więc zostaje w grze.
 </Aside>
 
 ## Opcje klienta

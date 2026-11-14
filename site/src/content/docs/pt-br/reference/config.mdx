@@ -9,8 +9,10 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrel tem dois arquivos de configuração, os dois sobre o [Alegrinho](/tipsy/). Todo o resto, das receitas ao tempo que um barril
+Vine & Barrel tem dois arquivos de configuração: um para o servidor, com as regras do [Alegrinho](/tipsy/) e uma chave para cada cultivo silvestre,
+e um para cada jogador, com o que o Alegrinho faz com a própria tela e os ouvidos dele. Todo o resto, das receitas ao tempo que um barril
 leva, funciona do jeito que o mod vem e pode ser mudado com um datapack, como qualquer receita (no Minecraft 1.21.1 e 1.20.1, tudo menos as
 trocas dos aldeões).
 
@@ -22,7 +24,8 @@ aparecem ali no modo um jogador (não depois que o mundo é aberto para LAN); em
 Os arquivos em si: no NeoForge e no Forge são arquivos TOML com as opções em <code>[{configFiles.server.section}]</code>. No
 Fabric são arquivos <code>.properties</code> simples na pasta <code>config</code>, com as mesmas opções escritas como
 <code>{configFiles.server.section}.option=value</code>. No Fabric o arquivo do cliente é lido quando o jogo inicia, então
-reinicie depois de editar; o arquivo do servidor é lido de novo com <code>/reload</code>.
+reinicie depois de editar; o arquivo do servidor é lido de novo com <code>/reload</code>. As chaves dos cultivos silvestres ficam em
+<code>[{configFiles.worldgen.section}]</code> (<code>{configFiles.worldgen.section}.option=value</code> no Fabric).
 
 ## Opções do servidor
 
@@ -46,6 +49,31 @@ vão para todo jogador que entra, então todos jogam pelas mesmas regras. Um mun
 <Aside title="Modo sem álcool">
 Defina `enabled = false` (`tipsy.enabled=false` no Fabric) e as bebidas viram bebidas de bônus comuns: sem Alegrinho, sem soluços, sem apagões, mas com os mesmos nomes e bônus.
 Bom para um servidor família, ou se você simplesmente não curte o balanço.
+</Aside>
+
+### Cultivos silvestres
+
+Em <code>[{configFiles.worldgen.section}]</code>, no mesmo arquivo, uma chave para cada [cultivo silvestre](/crops/#plantas-silvestres). Elas só mudam o terreno
+que ainda vai ser gerado: desligada, os chunks novos não têm nada daquele cultivo, e as plantas que já estão por aí
+ficam onde estão.
+
+<table>
+	<thead><tr><th>Opção</th><th>Padrão</th><th>O que faz</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="Outro mod já tem uvas?">
+Se um mod do seu pack tem as próprias uvas, lúpulo ou cevada silvestres, desligue os nossos (`wildWhiteGrapes = false`,
+`worldgen.wildWhiteGrapes=false` no Fabric) para ninguém achar dois tipos da mesma planta. As plantações das vilas
+continuam cultivando, e baús e comerciantes continuam com as sementes, então o cultivo continua no jogo.
 </Aside>
 
 ## Opções do cliente

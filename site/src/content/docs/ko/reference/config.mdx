@@ -9,8 +9,10 @@ import { configFiles } from '../../../../data/code/config';
 export const exported = rules.tipsy.config;
 export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
+export const wild = configFiles.worldgen.options.map((o) => ({ ...o, def: String(rules.crops.config[o.key] ?? o.fallback), what: o.what(rules.tipsy, LOCALE) }));
 
-Vine & Barrel에는 설정 파일이 두 개 있고, 둘 다 [알딸딸함](/tipsy/)에 관한 것이에요. 그 밖의 모든 것, 레시피부터 통이 걸리는 시간까지는
+Vine & Barrel에는 설정 파일이 두 개 있어요. 하나는 서버용으로, [알딸딸함](/tipsy/)의 규칙과 야생 작물마다 하나씩 있는 스위치가 들어 있고,
+다른 하나는 플레이어마다 따로 있어서, 알딸딸함이 자기 화면과 귀에 어떻게 작용할지를 정해요. 그 밖의 모든 것, 레시피부터 통이 걸리는 시간까지는
 모드가 배포된 그대로 작동하고, 다른 레시피처럼 데이터 팩으로 바꿀 수 있어요(Minecraft 1.21.1과 1.20.1에서는 주민 거래만 빼고요).
 
 게임 안에서는 설정 화면에서 바꿔요. NeoForge에서는 **Mods**, Vine & Barrel, **Config**예요. Fabric에서는
@@ -21,7 +23,8 @@ Vine & Barrel에는 설정 파일이 두 개 있고, 둘 다 [알딸딸함](/tip
 파일 자체는 NeoForge와 Forge에서는 TOML 파일이고 옵션이 <code>[{configFiles.server.section}]</code> 아래에 있어요. Fabric에서는
 <code>config</code> 폴더의 평범한 <code>.properties</code> 파일이고, 같은 옵션이
 <code>{configFiles.server.section}.option=value</code> 꼴로 적혀 있어요. Fabric에서는 클라이언트 파일을 게임을 시작할 때 읽으니까
-고친 뒤에는 다시 시작하세요. 서버 파일은 <code>/reload</code> 때 다시 읽어요.
+고친 뒤에는 다시 시작하세요. 서버 파일은 <code>/reload</code> 때 다시 읽어요. 야생 작물 스위치는
+<code>[{configFiles.worldgen.section}]</code> 아래에 있어요(Fabric에서는 <code>{configFiles.worldgen.section}.option=value</code>).
 
 ## 서버 옵션
 
@@ -45,6 +48,30 @@ NeoForge와 Forge에서는 <code>{configFiles.server.file}</code>, Fabric에서�
 <Aside title="무알코올 모드">
 `enabled = false`(Fabric에서는 `tipsy.enabled=false`)로 하면 술은 평범한 버프 음료가 돼요. 알딸딸함도, 딸꾹질도, 필름 끊김도 없고, 이름과 버프는 그대로예요.
 가족 서버에 좋고, 흔들리는 게 그냥 싫은 사람에게도 좋아요.
+</Aside>
+
+### 야생 작물
+
+같은 파일의 <code>[{configFiles.worldgen.section}]</code> 아래에 [야생 작물](/crops/#야생-작물)마다 스위치가 하나씩 있어요. 바뀌는 건 앞으로 생성될 땅뿐이에요.
+끄면 새 청크에는 그 작물이 나지 않고, 이미 밖에 나 있는 것은 그 자리에 그대로 남아요.
+
+<table>
+	<thead><tr><th>옵션</th><th>기본값</th><th>하는 일</th></tr></thead>
+	<tbody>
+		{wild.map((o) => (
+			<tr id={`opt-${o.key}`} class="ref-target">
+				<td><code>{o.key}</code></td>
+				<td><code>{o.def}</code></td>
+				<td>{o.what.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}</td>
+			</tr>
+		))}
+	</tbody>
+</table>
+
+<Aside title="다른 모드에 이미 포도가 있나요?">
+팩의 다른 모드가 자기 야생 포도, 홉, 보리를 키운다면 우리 것을 끄세요(`wildWhiteGrapes = false`,
+Fabric에서는 `worldgen.wildWhiteGrapes=false`). 같은 식물을 두 종류나 보게 될 일이 없어져요. 마을 밭에서는
+계속 자라고, 상자와 상인에게도 여전히 씨앗이 있어서 작물이 게임에서 사라지지는 않아요.
 </Aside>
 
 ## 클라이언트 옵션

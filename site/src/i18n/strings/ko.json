@@ -460,5 +460,9 @@
 	"Young": "어림",
 	"Your first drink": "첫 번째 술",
 	"Any red grapes": "적포도 아무거나",
-	"Any white grapes": "청포도 아무거나"
+	"Any white grapes": "청포도 아무거나",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "새 청크에 야생 적포도가 자라요. `false`: 새 청크에는 나지 않고, 이미 있는 것은 남아요.",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "새 청크에 야생 청포도가 자라요. `false`: 새 청크에는 나지 않고, 이미 있는 것은 남아요.",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "새 청크에 야생 홉이 자라요. `false`: 새 청크에는 나지 않고, 이미 있는 것은 남아요.",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "새 청크에 야생 보리가 자라요. `false`: 새 청크에는 나지 않고, 이미 있는 것은 남아요."
 }

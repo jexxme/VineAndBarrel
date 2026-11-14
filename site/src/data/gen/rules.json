@@ -34,7 +34,13 @@
 		"bushMaxAge": 3,
 		"bushPickedAge": 1,
 		"bushHalfRipeAge": 2,
-		"climbMaxHeight": 3
+		"climbMaxHeight": 3,
+		"config": {
+			"wildGrapes": true,
+			"wildWhiteGrapes": true,
+			"wildHops": true,
+			"wildBarley": true
+		}
 	},
 	"villages": {
 		"tavernWeights": {

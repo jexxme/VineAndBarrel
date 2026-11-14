@@ -493,5 +493,9 @@
 	"Young": "Młode",
 	"Your first drink": "Twój pierwszy napój",
 	"Any red grapes": "Dowolne czerwone winogrona",
-	"Any white grapes": "Dowolne białe winogrona"
+	"Any white grapes": "Dowolne białe winogrona",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Dzikie czerwone winogrona rosną w nowych chunkach. `false`: nowe chunki ich nie mają, te, które już są, zostają.",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Dzikie białe winogrona rosną w nowych chunkach. `false`: nowe chunki ich nie mają, te, które już są, zostają.",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Dziki chmiel rośnie w nowych chunkach. `false`: nowe chunki go nie mają, ten, który już jest, zostaje.",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "Dziki jęczmień rośnie w nowych chunkach. `false`: nowe chunki go nie mają, ten, który już jest, zostaje."
 }

@@ -460,5 +460,9 @@
 	"Young": "Genç",
 	"Your first drink": "İlk içeceğin",
 	"Any red grapes": "Herhangi bir kırmızı üzüm",
-	"Any white grapes": "Herhangi bir beyaz üzüm"
+	"Any white grapes": "Herhangi bir beyaz üzüm",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Yeni chunk'larda yabani kırmızı üzüm yetişir. `false`: yeni chunk'larda hiç olmaz, zaten var olanlar kalır.",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Yeni chunk'larda yabani beyaz üzüm yetişir. `false`: yeni chunk'larda hiç olmaz, zaten var olanlar kalır.",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Yeni chunk'larda yabani şerbetçiotu yetişir. `false`: yeni chunk'larda hiç olmaz, zaten var olanlar kalır.",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "Yeni chunk'larda yabani arpa yetişir. `false`: yeni chunk'larda hiç olmaz, zaten var olanlar kalır."
 }

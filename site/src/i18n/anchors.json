@@ -83,6 +83,7 @@
 		"/guides/cellar/#serving-a-round": "eine-runde-ausgeben",
 		"/guides/first-drink/#where-to-go-next": "wie-es-weitergeht",
 		"/reference/config/#server-options": "serveroptionen",
+		"/reference/config/#wild-crops": "wildpflanzen",
 		"/reference/config/#client-options": "client-optionen"
 	},
 	"es": {
@@ -170,6 +171,7 @@
 		"/guides/cellar/#serving-a-round": "repartir-una-ronda",
 		"/guides/first-drink/#where-to-go-next": "a-dónde-ir-después",
 		"/reference/config/#server-options": "opciones-del-servidor",
+		"/reference/config/#wild-crops": "cultivos-silvestres",
 		"/reference/config/#client-options": "opciones-del-cliente"
 	},
 	"fr": {
@@ -257,6 +259,7 @@
 		"/guides/cellar/#serving-a-round": "servir-une-tournée",
 		"/guides/first-drink/#where-to-go-next": "et-ensuite",
 		"/reference/config/#server-options": "options-du-serveur",
+		"/reference/config/#wild-crops": "cultures-sauvages",
 		"/reference/config/#client-options": "options-du-client"
 	},
 	"it": {
@@ -344,6 +347,7 @@
 		"/guides/cellar/#serving-a-round": "servire-un-giro",
 		"/guides/first-drink/#where-to-go-next": "dove-andare-dopo",
 		"/reference/config/#server-options": "opzioni-del-server",
+		"/reference/config/#wild-crops": "colture-selvatiche",
 		"/reference/config/#client-options": "opzioni-del-client"
 	},
 	"pl": {
@@ -432,6 +436,7 @@
 		"/guides/cellar/#serving-a-round": "stawianie-kolejki",
 		"/guides/first-drink/#where-to-go-next": "co-dalej",
 		"/reference/config/#server-options": "opcje-serwera",
+		"/reference/config/#wild-crops": "dzikie-uprawy",
 		"/reference/config/#client-options": "opcje-klienta"
 	},
 	"pt-br": {
@@ -519,6 +524,7 @@
 		"/guides/cellar/#serving-a-round": "oferecendo-uma-rodada",
 		"/guides/first-drink/#where-to-go-next": "para-onde-ir-depois",
 		"/reference/config/#server-options": "opções-do-servidor",
+		"/reference/config/#wild-crops": "cultivos-silvestres",
 		"/reference/config/#client-options": "opções-do-cliente"
 	},
 	"tr": {
@@ -607,6 +613,7 @@
 		"/guides/cellar/#serving-a-round": "bir-tur-ısmarlamak",
 		"/guides/first-drink/#where-to-go-next": "sonra-nereye",
 		"/reference/config/#server-options": "sunucu-seçenekleri",
+		"/reference/config/#wild-crops": "yabani-ürünler",
 		"/reference/config/#client-options": "i̇stemci-seçenekleri"
 	},
 	"ru": {
@@ -694,6 +701,7 @@
 		"/guides/cellar/#serving-a-round": "угощаем-друзей",
 		"/guides/first-drink/#where-to-go-next": "что-дальше",
 		"/reference/config/#server-options": "серверные-параметры",
+		"/reference/config/#wild-crops": "дикие-культуры",
 		"/reference/config/#client-options": "клиентские-параметры"
 	},
 	"uk": {
@@ -782,6 +790,7 @@
 		"/guides/cellar/#serving-a-round": "пригощання",
 		"/guides/first-drink/#where-to-go-next": "куди-далі",
 		"/reference/config/#server-options": "серверні-параметри",
+		"/reference/config/#wild-crops": "дикі-культури",
 		"/reference/config/#client-options": "клієнтські-параметри"
 	},
 	"zh-cn": {
@@ -869,6 +878,7 @@
 		"/guides/cellar/#serving-a-round": "请大家喝一轮",
 		"/guides/first-drink/#where-to-go-next": "接下来去哪",
 		"/reference/config/#server-options": "服务器选项",
+		"/reference/config/#wild-crops": "野生作物",
 		"/reference/config/#client-options": "客户端选项"
 	},
 	"ja": {
@@ -956,6 +966,7 @@
 		"/guides/cellar/#serving-a-round": "みんなに振る舞う",
 		"/guides/first-drink/#where-to-go-next": "次に進むなら",
 		"/reference/config/#server-options": "サーバーオプション",
+		"/reference/config/#wild-crops": "野生の作物",
 		"/reference/config/#client-options": "クライアントオプション"
 	},
 	"ko": {
@@ -1044,6 +1055,7 @@
 		"/guides/cellar/#serving-a-round": "한-순배-돌리기",
 		"/guides/first-drink/#where-to-go-next": "다음으로-가볼-곳",
 		"/reference/config/#server-options": "서버-옵션",
+		"/reference/config/#wild-crops": "야생-작물",
 		"/reference/config/#client-options": "클라이언트-옵션"
 	}
 }

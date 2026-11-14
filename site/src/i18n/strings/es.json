@@ -482,5 +482,9 @@
 	"Young": "Joven",
 	"Your first drink": "Tu primera bebida",
 	"Any red grapes": "Cualquier uva tinta",
-	"Any white grapes": "Cualquier uva blanca"
+	"Any white grapes": "Cualquier uva blanca",
+	"Wild red grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Las uvas tintas silvestres crecen en los chunks nuevos. `false`: los chunks nuevos no tienen ninguna, las que ya hay se quedan.",
+	"Wild white grapes grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "Las uvas blancas silvestres crecen en los chunks nuevos. `false`: los chunks nuevos no tienen ninguna, las que ya hay se quedan.",
+	"Wild hops grow in new chunks. `false`: new chunks get none, the ones already out there stay.": "El lúpulo silvestre crece en los chunks nuevos. `false`: los chunks nuevos no tienen nada, el que ya hay se queda.",
+	"Wild barley grows in new chunks. `false`: new chunks get none, what is already out there stays.": "La cebada silvestre crece en los chunks nuevos. `false`: los chunks nuevos no tienen nada, la que ya hay se queda."
 }
