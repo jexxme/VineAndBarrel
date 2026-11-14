@@ -26,6 +26,7 @@
     "AbstractContainerScreenAccessor",
     "AvatarRenderStateMixin",
     "ChannelMixin",
+    "SoundPhysicsMixin",
     "CameraMixin",
     "EntityRendererMixin",
     "FirstPersonHandsAndItemsRendererMixin",
