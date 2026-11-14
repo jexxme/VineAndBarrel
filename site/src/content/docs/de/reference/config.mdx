@@ -11,7 +11,7 @@ export const value = (o) => String(exported[o.key] ?? o.fallback);
 export const rows = (f) => f.options.map((o) => ({ ...o, def: value(o), what: typeof o.what === 'function' ? o.what(rules.tipsy, LOCALE) : o.what }));
 
 Vine & Barrel hat zwei Konfigurationsdateien, beide rund um [Schwips](/tipsy/). Alles andere, von Rezepten bis zur Dauer im Fass,
-funktioniert so, wie die Mod ausgeliefert wird, und lässt sich wie jedes Rezept mit einem Datapack ändern (auf Minecraft 1.21.1 und 1.20.1 alles außer dem Handel der
+funktioniert so, wie die Mod ausgeliefert wird, und lässt sich wie jedes Rezept mit einem Datapack ändern (auf Minecraft 1.21.1 und 1.20.1 alles außer den Handelsangeboten der
 Dorfbewohner).
 
 Im Spiel änderst du sie auf dem Einstellungsbildschirm: **Mods**, Vine & Barrel, **Config** bei NeoForge; bei Fabric erscheint derselbe Knopf,
@@ -67,7 +67,7 @@ stellt sie für sich ein; sie ändern nur, was du siehst.
 </table>
 
 <Aside type="tip" title="Bewegungskrankheit?">
-Setze „Schwankende Sicht“ auf 0 % (`drunkScreen = 0`, `tipsy.drunkScreen=0` bei Fabric). Schwips bewegt deinen Bildschirm nie von selbst, und bei 0 bewegt ihn auch kein Schluckauf, kein Torkeln und kein Stolpern, egal was der Server sagt. Auch der Vanilla-Regler Verzerrungseffekte schwächt es ab, und sein Regler Pulsierende Dunkelheit schwächt die sinkenden Lider beim Einnicken ab. Dass du nach einem Stolpern auf dem Gesicht liegst, siehst du weiterhin, das ist kein Bildschirmeffekt. Wenn dich das Doppeltsehen stört, schalte „Doppelt sehen“ aus (`doubleVision = false`); alles andere an Schwips bleibt.
+Setze „Schwankende Sicht“ auf 0 % (`drunkScreen = 0`, `tipsy.drunkScreen=0` bei Fabric). Schwips bewegt deinen Bildschirm nie von selbst, und bei 0 bewegt ihn auch kein Schluckauf, kein Torkeln und kein Stolpern, egal was der Server sagt. Auch der Vanilla-Regler Verzerrungseffekte schwächt es ab, und der Regler Pulsierende Dunkelheit dämpft die sinkenden Lider beim Einnicken. Dass du nach einem Stolpern auf dem Gesicht liegst, siehst du weiterhin, das ist kein Bildschirmeffekt. Wenn dich das Doppeltsehen stört, schalte „Doppelt sehen“ aus (`doubleVision = false`); alles andere an Schwips bleibt.
 </Aside>
 
 <style>{`

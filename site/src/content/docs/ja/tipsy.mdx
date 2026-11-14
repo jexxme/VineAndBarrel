@@ -60,7 +60,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 
 ## 酔っぱらいのチャット
 
-チャットは、口で言うとおりに出てしまいます。ほろ酔い {roman(t.hicChatLevel - 1)} ではときどき\*ヒック\*が混ざり、ほろ酔い {roman(chatAt(2) - 1)} では
+チャットは、口で言うとおりに出てしまいます。ほろ酔い {roman(t.hicChatLevel - 1)} ではときどき\*hic\*が混ざり、ほろ酔い {roman(chatAt(2) - 1)} では
 ろれつが回らないもののまだ読みやすく、ほろ酔い {roman(chatAt(3) - 1)} では読みにくくなり、ほろ酔い {roman(chatAt(4) - 1)} ではもう意味不明です。
 リンク、@メンション、コマンドは、いつも打ったとおりに送られます。
 
@@ -80,7 +80,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 
 すでにほろ酔い {roman(t.maxLevel - 1)} なのに、まだ飲む? その一杯で、その場で倒れるわけではありません。{Math.round(under.soonestTicks / 20)}〜{Math.round(under.latestTicks / 20)}秒後、
 そのとき何をしていても、**あとから効いてきます**。最後の{Math.round(under.ticks / 20)}秒間は、沈んでいくのが自分でわかります。まぶたが重くなり、頭が垂れ、
-世界の音がこもって遠のき、足から力が抜けて、体が大きく揺れます。友だちにも、それが来るのが見えます。
+世界の音がこもって遠のき、足から力が抜けて、体が大きく揺れます。友だちにも、もうすぐ倒れそうなのがわかります。
 
 そして**記憶が飛びます**。目が閉じて、切り倒された木のように顔から倒れ、頭の上で星がぐるぐる回るのがみんなに見えます。
 その数秒間は、モブもプレイヤーも、倒れたこと自体も、あなたを傷つけられません。ただし、世界のそれ以外のものは普通に効くので、溶岩の上で気を失わないように。
@@ -100,7 +100,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 - 視界が揺れることも、気分が悪くなることもありません。
 
 続くのは、記憶が飛んだあとなら{duration(h.afterBlackoutTicks)}、ほろ酔い {roman(h.sleepLevel - 1)} で眠ったあとなら{duration(h.afterSleepTicks[h.sleepLevel])}、
-ほろ酔い {roman(t.maxLevel - 1)} なら{duration(h.afterSleepTicks[t.maxLevel])}です。**水入りの瓶かジュース**を飲むと、残り時間の{pct(1 - h.drinkLeaves)}が消えます。
+ほろ酔い {roman(t.maxLevel - 1)} で眠ったあとなら{duration(h.afterSleepTicks[t.maxLevel])}です。**水入りの瓶かジュース**を飲むと、残り時間の{pct(1 - h.drinkLeaves)}が消えます。
 
 ## 酔いを覚ます
 

@@ -33,7 +33,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 
 알딸딸함 {roman(t.drunkWalkLevel - 1)}부터 다리가 제멋대로 움직여요. 조작이 한 박자 늦게 전해져서 늦게 출발하고, 그 자리에서 딱
 멈추지도 못해요. 걸음은 옆으로 빗나갔다가 다시 돌아오고, 너는 계속 바로잡게 돼요. 몸은 한 발 한 발마다 좌우로 기울고, 걸음도
-고르지 않아요. 내 시야는 몸과 함께 살짝만 기울지만, 다른 플레이어는 휘청거리는 모습 전부와 네가 실제로 걸어간 길을 봐요.
+고르지 않아요. 네 시야는 몸과 함께 살짝만 기울지만, 다른 플레이어는 휘청거리는 모습 전부와 네가 실제로 걸어간 길을 봐요.
 
 알딸딸함 {roman(t.stumbleLevel - 1)}부터는 **비틀거려요**. 옆으로 한 발 헛디디고, 균형을 잡으려고 팔을 벌려요. 가끔은 버티지 못하고
 **넘어져서** 얼굴을 박고 엎어졌다가, 잠시 뒤에 일어나요. 다리도 무거워져요. 알딸딸함 {roman(t.slowerLevel - 1)}에서는
@@ -50,7 +50,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 알딸딸함 {roman(t.maxLevel - 1)}에서는 거의 읽을 수 없어요. 여기서도 눈을 가늘게 뜨면 조금 나아요.
 
 알딸딸함 {roman(t.woollyLevel - 1)}부터 세상 소리가 **먹먹해져요**. 이불 너머로 듣는 것처럼 둔해지고, 단계마다 더 심해져요. 음악과 메뉴
-소리는 또렷하게 남아요. 알딸딸함 {roman(t.heartbeatLevel - 1)}에서는 내 심장이 뛰는 소리가 들리고, 그건 너만 들어요.
+소리는 또렷하게 남아요. 알딸딸함 {roman(t.heartbeatLevel - 1)}에서는 네 심장이 뛰는 소리가 들리고, 그건 너만 들어요.
 
 ## 꾸벅 졸기
 
@@ -60,7 +60,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 
 ## 취한 채팅
 
-채팅이 말하는 그대로 나가요. 알딸딸함 {roman(t.hicChatLevel - 1)}에서는 가끔 \*딸꾹\*이 섞이고, 알딸딸함 {roman(chatAt(2) - 1)}에서는 혀가
+채팅이 말하는 그대로 나가요. 알딸딸함 {roman(t.hicChatLevel - 1)}에서는 가끔 \*hic\*이 섞이고, 알딸딸함 {roman(chatAt(2) - 1)}에서는 혀가
 꼬여도 아직 읽기 쉽고, 알딸딸함 {roman(chatAt(3) - 1)}에서는 읽기 힘들어지고, 알딸딸함 {roman(chatAt(4) - 1)}에서는 알아들을 수 없는 말이
 돼요. 링크, @멘션, 명령어는 언제나 입력한 그대로 나가요.
 
@@ -80,7 +80,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 
 이미 알딸딸함 {roman(t.maxLevel - 1)}인데 계속 마신다고요? 그 한 잔에 바로 쓰러지지는 않아요. {Math.round(under.soonestTicks / 20)}초에서
 {Math.round(under.latestTicks / 20)}초 뒤에, 그때 뭘 하고 있든 **취기가 덮쳐 와요**. 마지막 {Math.round(under.ticks / 20)}초 동안은 정신이 가라앉는 게 느껴져요. 눈꺼풀이 무거워지고,
-고개가 처지고, 세상이 먹먹하게 멀어지고, 다리가 풀리고 몸이 크게 흔들려요. 친구들도 그게 오는 걸 봐요.
+고개가 처지고, 세상이 먹먹하게 멀어지고, 다리가 풀리고 몸이 크게 흔들려요. 친구들 눈에도 네가 곧 쓰러질 게 보여요.
 
 그러고는 **필름이 끊겨요**. 눈이 감기고 베어진 나무처럼 얼굴부터 쓰러지고, 머리 위로 별이 빙글빙글 돌아서 모두가 볼 수
 있어요. 그 몇 초 동안은 아무도
@@ -102,7 +102,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 - 시야가 흔들리지도 않고, 속이 메스껍지도 않아요.
 
 필름이 끊긴 뒤에는 {duration(h.afterBlackoutTicks)}, 알딸딸함 {roman(h.sleepLevel - 1)}에서 자고 난 뒤에는 {duration(h.afterSleepTicks[h.sleepLevel])},
-알딸딸함 {roman(t.maxLevel - 1)}에서는 {duration(h.afterSleepTicks[t.maxLevel])} 동안 가요. **물병이나 주스**를 마시면 남은 시간의
+알딸딸함 {roman(t.maxLevel - 1)}에서 자고 난 뒤에는 {duration(h.afterSleepTicks[t.maxLevel])} 동안 가요. **물병이나 주스**를 마시면 남은 시간의
 {pct(1 - h.drinkLeaves)}가 사라져요.
 
 ## 술 깨기

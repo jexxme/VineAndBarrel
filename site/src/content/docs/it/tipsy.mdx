@@ -19,7 +19,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 
 Ogni vino, birra, sidro e idromele ti dà il suo bonus **e un livello di <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**.
 L'ubriachezza si vede nel corpo, non sullo schermo: le gambe fanno di testa loro, gli occhi vedono doppio, il mondo diventa ovattato.
-All'inizio è divertente: gambe malferme, il singhiozzo, un po' di coraggio liquido, e a Brillo {roman(t.slurLevel - 1)} sei al tuo meglio
+All'inizio è divertente: gambe malferme, il singhiozzo, un po' di coraggio liquido, e a Brillo {roman(t.slurLevel - 1)} sei in gran forma
 (la tua chat un po' meno). Se continui, inizia a costarti caro: niente più bonus, voglia di attaccar briga, colpi di sonno in piedi e, in
 cima, gambe che a stento ti riportano a casa. Si ferma al livello {t.maxLevel}.
 
@@ -47,24 +47,24 @@ cavalcare, volare e arrampicarsi restano sobri.
 ## Occhi e orecchie
 
 Da Brillo {roman(t.softEdgesLevel - 1)} i bordi dello schermo diventano sfumati e un po' caldi. Da Brillo {roman(t.doubleVisionLevel - 1)}
-**vedi doppio**: una seconda immagine si separa e poi torna, più lontano a ogni livello. **Tieni premuto accovacciati per strizzare gli
-occhi** e le due si avvicinano, anche se aiuta meno quanto più sei ubriaco. La scritta sui cartelli sbiadisce nel legno da
+**vedi doppio**: una seconda immagine si separa e poi torna, più lontano a ogni livello. **Tieni premuto Accovacciati per strizzare gli
+occhi** e le due si avvicinano, anche se aiuta sempre meno quanto più sei ubriaco. La scritta sui cartelli sbiadisce nel legno da
 Brillo {roman(t.signBlurLevel - 1)}, finché a Brillo {roman(t.maxLevel - 1)} riesci a leggerla a stento; anche lì strizzare gli occhi aiuta.
 
-Da Brillo {roman(t.woollyLevel - 1)} il mondo suona **ovattato**, attutito come attraverso una coperta, di più a ogni livello. Musica e
-menu restano chiari. A Brillo {roman(t.heartbeatLevel - 1)} senti il tuo cuore battere, e lo senti solo tu.
+Da Brillo {roman(t.woollyLevel - 1)} senti il mondo **ovattato**, attutito come attraverso una coperta, di più a ogni livello. Musica e
+menu restano nitidi. A Brillo {roman(t.heartbeatLevel - 1)} senti il tuo cuore battere, e lo senti solo tu.
 
 ## Colpi di sonno
 
 Da Brillo {roman(t.nodLevel - 1)}, non restare fermo troppo a lungo. Stai immobile per un po' e le palpebre calano, la testa ciondola, e poi
-ti risvegli di soprassalto con una russata. Resta lì fermo e ricomincia. Qualsiasi cosa tu faccia ti sveglia: un passo, un'occhiata
+ti risvegli di soprassalto con una russata. Se resti lì fermo, ricomincia. Qualsiasi cosa tu faccia ti sveglia: un passo, un'occhiata
 intorno, usare qualcosa. Tutti intorno a te vedono il mento calare e sentono la russata.
 
 ## Chat brilla
 
 La chat esce come la diresti tu. A Brillo {roman(t.hicChatLevel - 1)} scappa qualche \*hic\*, a Brillo {roman(chatAt(2) - 1)} è impastata
-ma si legge bene, a Brillo {roman(chatAt(3) - 1)} diventa difficile da leggere, e a Brillo {roman(chatAt(4) - 1)} è un farfuglio
-incomprensibile. Link, @menzioni e comandi partono sempre come li hai scritti.
+ma si legge bene, a Brillo {roman(chatAt(3) - 1)} diventa difficile da leggere, e a Brillo {roman(chatAt(4) - 1)} è un farfugliare
+senza senso. Link, @menzioni e comandi partono sempre come li hai scritti.
 
 ## Attaccabrighe
 
@@ -73,21 +73,21 @@ secondi di fila, e il primo che ti capita davanti se le prende, anche se gli lan
 così tutti lo vedono arrivare, poi tiri un vero pugno: {punchHearts === 0.5 ? 'mezzo cuore' : `${punchHearts} cuori`} di danno
 e una spinta, qualunque cosa tu stia tenendo in mano. Lo slancio ti porta un passo avanti; se si è scansato, vai a vuoto e inciampi. Non
 colpisce mai animali addomesticati, golem di ferro o supporti per armature, e colpisce altri giocatori solo dove il PvP è attivo. I villici
-e i passanti, invece, sono bersagli validi, e se lo ricordano.
+e i passanti, invece, sono bersagli leciti, e se lo ricordano.
 
 Inoltre **non ti servono più da bere**: da Brillo {roman(t.cutOffLevel - 1)}, villici e mercanti ambulanti scuotono la testa e non
 commerciano con te finché non ti sei ripreso. Fai i tuoi scambi prima del {t.cutOffLevel === 4 ? 'quarto' : `${t.cutOffLevel}°`} bicchiere.
 
 ## Un goccetto di troppo
 
-Sei già a Brillo {roman(t.maxLevel - 1)} e continui a bere? Quel bicchiere non ti stende subito. Ti **raggiunge** da
+Sei già a Brillo {roman(t.maxLevel - 1)} e continui a bere? Quel bicchiere non ti stende subito. Ti **presenta il conto** da
 {Math.round(under.soonestTicks / 20)} a {Math.round(under.latestTicks / 20)} secondi dopo, qualunque cosa tu stia facendo in quel momento.
 Negli ultimi {Math.round(under.ticks / 20)} secondi ti senti andare giù: le palpebre si fanno pesanti, la testa cala, il mondo diventa
 ovattato e lontano, le gambe cedono e ondeggi forte. Anche i tuoi amici lo vedono arrivare.
 
 Poi hai un **vuoto di memoria**. Gli occhi si chiudono e cadi a faccia in giù come un albero abbattuto, con le stelline che ti
-girano attorno alla testa per tutti. Per
-quei pochi secondi nessuno può farti del male, né mob né giocatori, e nemmeno la caduta; il resto del mondo però conta, quindi non svenire
+girano attorno alla testa, sotto gli occhi di tutti. Per
+quei pochi secondi nessuno può farti del male, né mob né giocatori, e nemmeno la caduta; il resto del mondo però sì, quindi non svenire
 nella lava. Poi ti svegli e ti tiri su. Dove? Dipende dalla serata, e i modi per svegliarsi sono più di quanti pensi…
 
 Ti svegli sobrio ma con i [postumi](#la-mattina-dopo), e nelle tasche potresti trovare qualcosa che non ricordi di aver preso. Non perdi mai
@@ -100,8 +100,8 @@ Dopo un vuoto di memoria, o una notte di sonno da Brillo {roman(h.sleepLevel - 1
 <EffectBadge id="vineandbarrel:hangover" name="Postumi" />. E hai pure fame: non più di {h.hungryFood / 2} cosce nella barra della fame, e
 niente nella saturazione.
 
-- **La luce del giorno abbaglia.** Sotto il cielo aperto la luce del giorno fa male e strizzi gli occhi. Appena sveglio ti colpisce perfino
-  al chiuso, e si attenua in circa {Math.round(h.freshGlareTicks / 20)} secondi. Tenere premuto accovacciati per strizzare gli occhi aiuta.
+- **La luce del giorno abbaglia.** All'aperto la luce del giorno fa male e strizzi gli occhi. Appena sveglio ti colpisce perfino
+  al chiuso, e si attenua in circa {Math.round(h.freshGlareTicks / 20)} secondi. Strizzare gli occhi (tieni premuto Accovacciati) aiuta.
 - **I rumori forti** vicini ti fanno sussultare.
 - Niente ti muove la visuale e niente ti dà la nausea.
 
@@ -128,7 +128,7 @@ succo qualsiasi** toglie il {pct(1 - h.drinkLeaves)} di quello che resta.
 
 - **Un capitombolo non fa mai male** e non ti porta mai dove non sei andato a piedi. Cadi solo su terreno piano e aperto, senza
   mostri vicini, e non due volte entro {Math.round(t.tripCooldownTicks / 20)} secondi; altrove resta un semplice inciampo.
-- **L'acqua ti toglie in fretta dai livelli peggiori,** ma i livelli sotto mantengono il loro tempo, quindi non ti rende
+- **L'acqua ti tira fuori in fretta dai livelli peggiori,** ma i livelli sotto mantengono il loro tempo, quindi non ti rende
   sobrio prima, nel complesso.
 - Gli altri giocatori ti vedono barcollare, inciampare, fare capitomboli e appisolarti, vedono arrivare i tuoi pugni da attaccabrighe e
   sentono i tuoi singhiozzi.
@@ -140,6 +140,6 @@ succo qualsiasi** toglie il {pct(1 - h.drinkLeaves)} di quello che resta.
 I proprietari del server possono disattivare del tutto Brillo (la modalità analcolica) oppure spegnere uno per uno la chat impastata, le
 gambe brille (con inciampi e capitomboli), i colpi di sonno, i postumi, i vuoti di memoria, i pugni da attaccabrighe e il rifiuto di
 servirti. Brillo non muove mai lo schermo da solo; ogni giocatore può ridurre quanto lo muovono un singhiozzo, un inciampo o un capitombolo,
-fino a zero, e conta anche il cursore Effetti di distorsione di vanilla. Ogni giocatore può anche disattivare gli occhi brilli (bordi
+fino a zero, e conta anche il cursore Effetti di distorsione di Minecraft. Ogni giocatore può anche disattivare gli occhi brilli (bordi
 sfumati, vista doppia, cartelli che sbiadiscono e il bagliore dei postumi) e le orecchie ovattate. Tutte le opzioni e i valori predefiniti
 sono su [Configurazione](/reference/config/).

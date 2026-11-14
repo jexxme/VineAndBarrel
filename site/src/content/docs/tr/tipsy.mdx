@@ -20,8 +20,8 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 Her şarap, bira, elma şarabı ve bal şarabı sana bonusunu verir **ve bir seviye <EffectBadge id="vineandbarrel:tipsy" name="Çakırkeyif" />** ekler.
 Sarhoşluk ekranında değil, bedeninde belli olur: bacakların kendi bildiğini okur, gözlerin çift görür, dünya boğuklaşır.
 Başta eğlencelidir: yalpalayan bacaklar, hıçkırık, biraz sarhoş cesareti ve Çakırkeyif {roman(t.slurLevel - 1)} seviyesinde
-tam formundasın (sohbetin değil). Devam edersen bedeli çıkmaya başlar: artık bonus yok, kavga çıkarırsın, ayakta
-uyuklarsın ve en üstte, seni eve zor taşıyan bacaklar. En fazla {t.maxLevel}. seviyeye çıkar.
+tam formundasın (sohbetin pek değil). Devam edersen bedeli çıkmaya başlar: bonuslar biter, kavga çıkarırsın, ayakta
+uyuklarsın ve en üstte bacakların seni eve zor taşır. En fazla {t.maxLevel}. seviyeye çıkar.
 
 ## Seviyeler
 
@@ -31,13 +31,13 @@ Envanterindeki Çakırkeyif efektinin üstüne gelirsen şu anki seviyenin ne ya
 
 ## Sarhoş bacaklar
 
-Çakırkeyif {roman(t.drunkWalkLevel - 1)} seviyesinden itibaren bacakların kendi bildiğini okur. Yönlendirdiğin her şey bir an
-geç gelir; bu yüzden geç harekete geçersin ve olduğun yerde duramazsın. Yürüyüşün rotadan sapıp geri döner, sen de
+Çakırkeyif {roman(t.drunkWalkLevel - 1)} seviyesinden itibaren bacakların kendi bildiğini okur. Verdiğin her komut bir an
+geç gelir; bu yüzden geç harekete geçersin ve bir anda duramazsın. Yürüyüşün rotadan sapıp geri döner, sen de
 sürekli düzeltirsin. Bedenin bir ayağından ötekine yalpalar, adımların düzensiz çıkar. Kendi görüşün bedeninle birlikte
-yalnızca biraz yatar; diğer oyuncular bütün yalpalamayı ve gerçekte yürüdüğün yolu görür.
+yalnızca biraz eğilir; diğer oyuncular bütün yalpalamayı ve gerçekte yürüdüğün yolu görür.
 
 Çakırkeyif {roman(t.stumbleLevel - 1)} seviyesinden itibaren **tökezlersin**: yana yanlış bir adım, denge için açılan kollar.
-Arada bir toparlanamaz ve **düşersin**, yüzüstü yere kapaklanır, bir an sonra kalkarsın. Bacakların da ağırlaşır:
+Arada bir toparlanamazsın ve **düşersin**: yüzüstü yere kapaklanır, bir an sonra kalkarsın. Bacakların da ağırlaşır:
 Çakırkeyif {roman(t.slowerLevel - 1)} seviyesinde {pct(slower(t.slowerLevel))}, Çakırkeyif {roman(t.maxLevel - 1)} seviyesinde {pct(slower(t.maxLevel))} daha yavaşsın.
 Yine de koşabilirsin.
 
@@ -59,23 +59,23 @@ attığını duyarsın, hem de yalnızca sen.
 ## Uyuklama
 
 Çakırkeyif {roman(t.nodLevel - 1)} seviyesinden itibaren bir yerde fazla dikilme. Bir süre kıpırdamadan durursan göz kapakların
-ağırlaşır, başın düşer, sonra bir horlamayla irkilip uyanırsın. Durmaya devam edersen yine gelir. Yaptığın her şey seni
+ağırlaşır, başın düşer, sonra bir horlamayla irkilip uyanırsın. Hâlâ kıpırdamazsan yine olur. Yaptığın her şey seni
 uyandırır: bir adım, etrafa bir bakış, bir şey kullanmak. Etrafındaki herkes çenenin düştüğünü görür ve horlamayı duyar.
 
 ## Sarhoş sohbet
 
 Sohbete yazdıkların, ağzından nasıl çıkacaksa öyle gider. Çakırkeyif {roman(t.hicChatLevel - 1)} seviyesinde araya ara sıra bir
-\*hık\* kaçar, Çakırkeyif {roman(chatAt(2) - 1)} seviyesinde peltek ama kolay okunur, Çakırkeyif {roman(chatAt(3) - 1)} seviyesinde zor
+\*hic\* kaçar, Çakırkeyif {roman(chatAt(2) - 1)} seviyesinde peltek ama kolay okunur, Çakırkeyif {roman(chatAt(3) - 1)} seviyesinde zor
 okunur ve Çakırkeyif {roman(chatAt(4) - 1)} seviyesinde laf salatasına döner. Bağlantılar, @etiketler ve komutlar her zaman
 yazdığın gibi gider.
 
 ## Kavgacı
 
 Çakırkeyif {roman(rowdyLevel - 1)} seviyesinden itibaren kavgacı olursun. Ara sıra {Math.round(t.rowdyItchTicks / 20)} saniyeye kadar
-kavga için kaşınırsın ve önüne ilk çıkan nasibini alır, ona yalnızca göz ucuyla baksan bile. Kolun bir an geriye
-çekilir, böylece herkes geleceği görür, sonra gerçek bir yumruk atarsın: elinde ne tutuyorsan tut,
+kavgaya kaşınırsın ve önüne ilk çıkan nasibini alır, ona yalnızca göz ucuyla baksan bile. Kolun bir an geriye
+çekilir, böylece herkes yumruğun geldiğini görür, sonra gerçek bir yumruk atarsın: elinde ne tutuyorsan tut,
 {punchHearts === 0.5 ? 'yarım kalp' : `${punchHearts} kalp`} hasar ve bir itiş. Savuruş seni bir adım öne taşır; karşındaki
-kenara çekildiyse ıskalar ve tökezlersin. Evcil hayvanlara, demir golemlere ve zırh askılarına asla vurmaz; diğer
+zamanında kenara çekilirse ıskalar ve tökezlersin. Yumruğun evcil hayvanlara, demir golemlere ve zırh askılarına asla vurmaz; diğer
 oyunculara da yalnızca PvP açıksa vurur. Köylüler ve yoldan geçenler ise hedef olabilir ve bunu unutmazlar.
 
 Bir de **Servis Yok** durumu var: Çakırkeyif {roman(t.cutOffLevel - 1)} seviyesinden itibaren köylüler ve seyyar tüccarlar başlarını sallar
@@ -95,7 +95,7 @@ doğrulursun. Nerede? O gecenin gidişine bağlı ve uyanmanın düşündüğün
 fazla yolu var…
 
 Ayık ama [akşamdan kalma](#ertesi-sabah) uyanırsın ve cebinde aldığını hatırlamadığın bir şey olabilir. Elindeki hiçbir
-şey kaybolmaz. O seni yakalamadan önce ayılırsan (bir kova süt, bir gece uykusu) kurtulursun; bir kadeh daha içmek onu
+şey kaybolmaz. Kadeh seni yakalamadan önce ayılırsan (bir kova süt, bir gece uykusu) kurtulursun; bir kadeh daha içmek bunu
 asla ertelemez.
 
 ## Ertesi sabah
@@ -104,7 +104,7 @@ Bir film kopmasından ya da Çakırkeyif {roman(h.sleepLevel - 1)} veya daha üs
 uyanırsın, ama üzerinde <EffectBadge id="vineandbarrel:hangover" name="Akşamdan Kalma" /> etkisi olur. Üstelik açsın: en fazla
 {h.hungryFood / 2} açlık kemiği, doygunluk da sıfır.
 
-- **Gün ışığı göz alır.** Açık gökyüzü altında parlak gün gözünü acıtır ve gözlerini kısarsın. Uyandıktan hemen sonra
+- **Gün ışığı fazla parlak.** Açık gökyüzü altında parlak gün gözünü acıtır ve gözlerini kısarsın. Uyandıktan hemen sonra
   kapalı yerde bile seni bulur, sonra yaklaşık {Math.round(h.freshGlareTicks / 20)} saniyede hafifler. Eğilip gözlerini kısmak işe
   yarar.
 - **Yakındaki yüksek sesler** seni irkiltir.

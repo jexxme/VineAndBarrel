@@ -20,8 +20,8 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 Todo vinho, cerveja, sidra e hidromel dá o bônus dele **e um nível de <EffectBadge id="vineandbarrel:tipsy" name="Alegrinho" />**.
 A bebedeira aparece no seu corpo, não na sua tela: suas pernas ganham vontade própria, seus olhos veem em dobro, o mundo
 fica abafado. No começo é divertido: pernas bambas, soluços, um pouco de coragem líquida, e no Alegrinho {roman(t.slurLevel - 1)} você
-está no seu melhor (e seu chat não). Continue e a conta chega: nada mais de bônus, arrumar briga, cochilar em pé e, no topo,
-pernas que mal te levam para casa. O máximo é o nível {t.maxLevel}.
+está no seu melhor (seu chat, nem tanto). Continue e a conta chega: acabam os bônus, você arruma briga, cochila em pé e, no topo,
+as pernas mal te levam para casa. O máximo é o nível {t.maxLevel}.
 
 ## Níveis
 
@@ -37,7 +37,7 @@ Seu corpo balança de um pé para o outro e os passos saem desiguais. Sua própr
 os outros jogadores veem o cambaleio inteiro, e o caminho que você realmente faz.
 
 A partir do Alegrinho {roman(t.stumbleLevel - 1)} você **tropeça**: um passo em falso para o lado, braços abertos para se equilibrar.
-De vez em quando um deles não se segura e você **leva um tombo**, de cara no chão, e se levanta logo depois. Suas pernas
+De vez em quando um deles não fica só nisso e você **leva um tombo**, de cara no chão, e se levanta logo depois. Suas pernas
 ficam pesadas também: você fica {pct(slower(t.slowerLevel))} mais lento no Alegrinho {roman(t.slowerLevel - 1)} e {pct(slower(t.maxLevel))} mais lento no Alegrinho {roman(t.maxLevel - 1)}.
 Você ainda consegue correr.
 
@@ -47,7 +47,7 @@ cavalgar, voar e escalar continuam sóbrios.
 ## Olhos e ouvidos
 
 A partir do Alegrinho {roman(t.softEdgesLevel - 1)}, as bordas da tela ficam suaves e um pouco quentes. A partir do Alegrinho {roman(t.doubleVisionLevel - 1)}
-você **vê em dobro**: uma segunda imagem se afasta e volta, mais a cada nível. **Segure agachar para apertar os olhos** e as
+você **vê em dobro**: uma segunda imagem se afasta e volta, mais a cada nível. **Fique agachado para apertar os olhos** e as
 duas se aproximam, mas isso ajuda menos quanto mais bêbado você está. O texto das placas vai sumindo na madeira a partir do
 Alegrinho {roman(t.signBlurLevel - 1)}, até que no Alegrinho {roman(t.maxLevel - 1)} você mal consegue ler; apertar os olhos ajuda aí também.
 
@@ -69,14 +69,14 @@ balbucio sem sentido. Links, @menções e comandos sempre saem do jeito que voc�
 ## Arruaceiro
 
 A partir do Alegrinho {roman(rowdyLevel - 1)}, você fica arruaceiro. De vez em quando você fica doido para arrumar briga, por até
-{Math.round(t.rowdyItchTicks / 20)} segundos, e o primeiro que estiver na sua frente leva, mesmo que você só olhe de passagem para ele.
-Seu braço vai para trás por um instante, então todo mundo vê o que vem, e aí você solta um soco de verdade:
+{Math.round(t.rowdyItchTicks / 20)} segundos, e o primeiro que estiver na sua frente apanha, mesmo que você só olhe de passagem para ele.
+Seu braço vai para trás por um instante, então todo mundo vê o soco chegando, e aí você solta um soco de verdade:
 {punchHearts === 0.5 ? 'meio coração' : `${punchHearts} corações`} de dano e um empurrão, não importa o que você esteja segurando.
-O golpe te leva um passo para a frente; se a pessoa saiu do caminho, você erra e tropeça. Ele nunca acerta pets
+O golpe te leva um passo para a frente; se o alvo sair da frente a tempo, você erra e tropeça. Ele nunca acerta animais
 domesticados, golens de ferro nem suportes de armadura, e só acerta outros jogadores onde o PvP está ligado. Aldeões e
 passantes, porém, estão na mira, e eles não esquecem.
 
-Você também fica **sem mais doses**: a partir do Alegrinho {roman(t.cutOffLevel - 1)}, aldeões e mercadores andarilhos balançam a cabeça e não
+Você também fica **sem mais doses**: a partir do Alegrinho {roman(t.cutOffLevel - 1)}, aldeões e mercadores ambulantes balançam a cabeça e não
 negociam com você até você ficar sóbrio. Faça suas trocas antes da {t.cutOffLevel === 4 ? 'quarta' : `${t.cutOffLevel}ª`} bebida.
 
 ## Uma bebida a mais
@@ -84,7 +84,7 @@ negociam com você até você ficar sóbrio. Faça suas trocas antes da {t.cutOf
 Já no Alegrinho {roman(t.maxLevel - 1)} e ainda bebendo? Essa bebida não te derruba na hora. Ela **te pega**
 {Math.round(under.soonestTicks / 20)} a {Math.round(under.latestTicks / 20)} segundos depois, não importa o que você esteja fazendo
 nessa hora. Nos últimos {Math.round(under.ticks / 20)} segundos você sente que está apagando: as pálpebras pesam, a cabeça cai,
-o mundo fica abafado e distante, as pernas cedem e você balança forte. Seus amigos também veem o que vem.
+o mundo fica abafado e distante, as pernas cedem e você balança forte. Seus amigos também percebem o que está por vir.
 
 Aí você **apaga**. Seus olhos se fecham e você cai de cara no chão como uma árvore derrubada, com estrelinhas girando
 em volta da cabeça para todo mundo ver. Nesses poucos segundos ninguém pode te machucar, nem mob nem jogador, e a queda
@@ -92,7 +92,7 @@ também não; o resto do mundo continua valendo, então não apague na lava. Dep
 braços. Onde? Isso depende da noite, e há mais jeitos de acordar do que você
 imagina…
 
-Você acorda sóbrio, mas [de ressaca](#a-manhã-seguinte), e talvez tenha nos bolsos algo de que não lembra de ter pegado.
+Você acorda sóbrio, mas [de ressaca](#a-manhã-seguinte), e talvez tenha nos bolsos algo que não lembra de ter pegado.
 Você nunca perde nada do que tinha. Ficar sóbrio antes que ela te pegue (um balde de leite, uma noite de sono) te livra
 dela; outra bebida nunca a adia.
 
@@ -100,10 +100,10 @@ dela; outra bebida nunca a adia.
 
 Depois de um apagão, ou de uma noite de sono no Alegrinho {roman(h.sleepLevel - 1)} ou acima, você acorda sóbrio, mas com
 <EffectBadge id="vineandbarrel:hangover" name="Ressaca" />. E com fome também: no máximo {h.hungryFood / 2} coxinhas de
-fome, e nada na sua saturação.
+fome, e nada de saturação.
 
 - **A luz do dia é forte demais.** Sob o céu aberto o dia claro dói e você aperta os olhos. Logo depois de acordar isso
-  te pega até dentro de casa, e vai passando em cerca de {Math.round(h.freshGlareTicks / 20)} segundos. Segurar agachar para
+  te pega até dentro de casa, e vai passando em cerca de {Math.round(h.freshGlareTicks / 20)} segundos. Ficar agachado para
   apertar os olhos ajuda.
 - **Barulhos altos** por perto fazem você se encolher.
 - Nada mexe na sua visão e nada te deixa enjoado.
@@ -141,8 +141,8 @@ tira {pct(1 - h.drinkLeaves)} do que resta.
 ## Configurações
 
 Donos de servidor podem desligar o Alegrinho por completo (o modo sem álcool) ou desligar um a um a fala enrolada, as pernas
-alegrinhas (com os tropeços e os tombos), o cochilo em pé, a ressaca, os apagões, os socos de arruaceiro e o corte de doses.
+alegrinhas (com os tropeços e os tombos), o cochilo em pé, a ressaca, os apagões, os socos de arruaceiro e o "sem mais doses".
 O Alegrinho nunca mexe na sua tela sozinho; cada jogador pode reduzir o quanto um soluço, um tropeço ou um tombo mexe nela,
-até nada, e o controle Efeitos de Distorção do Minecraft também vale. Cada jogador também pode desligar os olhos alegrinhos
+até nada, e o controle Efeitos de distorção do Minecraft também vale. Cada jogador também pode desligar os olhos alegrinhos
 (bordas suaves, visão dupla, placas que somem e o brilho ofuscante da ressaca) e o som abafado. Todas as opções e padrões
 estão em [Configuração](/reference/config/).

@@ -39,7 +39,7 @@ vacillement, et le chemin que tu prends vraiment.
 Dès Pompette {roman(t.stumbleLevel - 1)}, tu **titubes** : un faux pas de côté, les bras écartés pour garder l'équilibre. De temps en temps,
 tu ne te rattrapes pas et tu **trébuches**, face contre terre, puis tu te relèves un instant plus tard. Tes jambes s'alourdissent aussi : tu
 es {pct(slower(t.slowerLevel))} plus lent à Pompette {roman(t.slowerLevel - 1)} et {pct(slower(t.maxLevel))} plus lent à Pompette {roman(t.maxLevel - 1)}.
-Tu peux toujours sprinter.
+Tu peux quand même sprinter.
 
 La démarche pompette ne te fait jamais passer par-dessus un rebord ni entrer dans quoi que ce soit qui fait mal. **Accroupis-toi** et tu
 marches droit. Nager, chevaucher, voler et grimper restent sobres.
@@ -48,7 +48,7 @@ marches droit. Nager, chevaucher, voler et grimper restent sobres.
 
 Dès Pompette {roman(t.softEdgesLevel - 1)}, les bords de ton écran deviennent flous et un peu chauds. Dès Pompette {roman(t.doubleVisionLevel - 1)},
 tu **vois double** : une deuxième image s'écarte puis revient, un peu plus loin à chaque niveau. **Reste accroupi pour plisser les yeux** et
-les deux se rapprochent, même si ça aide de moins en moins à mesure que tu es soûl. L'écriture sur les panneaux s'efface dans le bois dès
+les deux se rapprochent, même si ça aide d'autant moins que tu es soûl. L'écriture sur les panneaux s'efface dans le bois dès
 Pompette {roman(t.signBlurLevel - 1)}, jusqu'à ce qu'à Pompette {roman(t.maxLevel - 1)} tu puisses à peine la lire ; plisser les yeux aide
 là aussi.
 
@@ -63,7 +63,7 @@ un coup d'œil autour de toi, utiliser quelque chose. Tout le monde autour de to
 
 ## Tchat pompette
 
-Ton tchat sort comme tu le dirais. À Pompette {roman(t.hicChatLevel - 1)}, un \*hips\* s'y glisse de temps en temps, à
+Ton tchat sort comme tu le dirais. À Pompette {roman(t.hicChatLevel - 1)}, un \*hic\* s'y glisse de temps en temps, à
 Pompette {roman(chatAt(2) - 1)} il est pâteux mais facile à lire, à Pompette {roman(chatAt(3) - 1)} il devient difficile à lire, et à
 Pompette {roman(chatAt(4) - 1)} c'est du charabia. Les liens, les @mentions et les commandes partent toujours comme tu les as tapés.
 
@@ -74,8 +74,8 @@ Dès Pompette {roman(rowdyLevel - 1)}, tu deviens tapageur. De temps en temps, t
 vers lui. Ton bras recule un instant, si bien que tout le monde le voit venir, puis tu envoies un vrai coup de poing :
 {punchHearts === 0.5 ? 'un demi-cœur' : `${String(punchHearts).replace('.', ',')} cœurs`} de dégâts et une poussée, quoi que tu tiennes en
 main. L'élan te porte d'un pas en avant ; s'il s'est écarté, tu le rates et tu titubes. Il ne touche jamais les animaux apprivoisés, les
-golems de fer ni les supports d'armure, et il ne touche les autres joueurs que si le PvP est activé. Les villageois et les passants, en
-revanche, sont des cibles, et ils s'en souviennent.
+golems de fer ni les porte-armures, et il ne touche les autres joueurs que si le PvP est activé. Les villageois et les passants, en
+revanche, sont des cibles toutes trouvées, et ils s'en souviennent.
 
 Et tu n’es **plus servi** : dès Pompette {roman(t.cutOffLevel - 1)}, les villageois et les marchands ambulants secouent la tête et ne
 commercent plus avec toi tant que tu n'as pas dessaoulé. Fais tes échanges avant le {t.cutOffLevel === 4 ? 'quatrième' : `${t.cutOffLevel}e`} verre.
@@ -87,9 +87,9 @@ Déjà à Pompette {roman(t.maxLevel - 1)} et tu bois encore ? Ce verre ne t'ass
 les {Math.round(under.ticks / 20)} dernières secondes, tu te sens sombrer : tes paupières s'alourdissent, ta tête tombe, le monde devient
 étouffé et lointain, tes jambes lâchent et tu tangues fort. Tes amis le voient venir, eux aussi.
 
-Puis tu fais un **trou noir**. Tes yeux se ferment et tu tombes face contre terre comme un arbre abattu, des étoiles tournant autour
-de ta tête, pour que tout le monde les voie.
-Pendant ces quelques secondes, personne ne peut te blesser, ni mob ni joueur, et tomber non plus ; le reste du monde compte toujours, alors
+Puis tu fais un **trou noir**. Tes yeux se ferment et tu tombes face contre terre comme un arbre abattu, et des étoiles tournent autour
+de ta tête, à la vue de tous.
+Pendant ces quelques secondes, personne ne peut te blesser, ni mob ni joueur, ni ta chute ; le reste du monde compte toujours, alors
 ne t'évanouis pas dans la lave. Puis tu te réveilles et tu te redresses. Où ? Ça dépend de la soirée, et il y a plus de façons de se réveiller que tu ne le
 crois…
 
@@ -103,7 +103,7 @@ Après un trou noir, ou une nuit de sommeil à Pompette {roman(h.sleepLevel - 1)
 <EffectBadge id="vineandbarrel:hangover" name="Gueule de bois" />. Tu as faim, aussi : pas plus de {h.hungryFood / 2} cuisses de viande,
 et rien dans ta saturation.
 
-- **La lumière du jour éblouit.** Sous le ciel ouvert, le grand jour fait mal et tu plisses les yeux. Juste après le réveil, ça te prend
+- **La lumière du jour éblouit.** À ciel ouvert, le grand jour fait mal et tu plisses les yeux. Juste après le réveil, ça te prend
   même à l'intérieur, puis ça s'atténue en environ {Math.round(h.freshGlareTicks / 20)} secondes. Rester accroupi pour plisser les yeux aide.
 - **Les bruits forts** tout près te font grimacer.
 - Rien ne bouge ta vue et rien ne te donne la nausée.
@@ -119,9 +119,9 @@ n'importe quel jus** retire {pct(1 - h.drinkLeaves)} de ce qui reste.
   sans une goutte de plus.
 - **Le lait** l'efface complètement, comme n'importe quel effet. Il efface aussi les bonus de tes boissons.
 - **Une fiole d'eau ou n'importe quel jus** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
-  <Item id="apple_juice" />) la baisse d'un niveau tout de suite. Seule une simple fiole d'eau marche, aucune autre potion.
+  <Item id="apple_juice" />) te fait descendre d'un niveau tout de suite. Seule une simple fiole d'eau marche, aucune autre potion.
 - **Avec Farmer's Delight**, ses <Item id="farmersdelight:milk_bottle" />, <Item id="farmersdelight:melon_juice" /> et
-  <Item id="farmersdelight:apple_cider" /> la baissent aussi d'un niveau. Une bouteille de lait retire un niveau ; un seau de lait
+  <Item id="farmersdelight:apple_cider" /> te font aussi descendre d'un niveau. Une bouteille de lait retire un niveau ; un seau de lait
   l'efface complètement.
 - **Cuver :** va te coucher et dors toute la nuit. Tu te réveilles sobre, mais dès Pompette {roman(h.sleepLevel - 1)} avec la
   [gueule de bois](#le-lendemain-matin). Il faut que la nuit soit vraiment passée : si tu te lèves tôt, ou si tu restes éveillé pendant que
@@ -142,7 +142,7 @@ n'importe quel jus** retire {pct(1 - h.drinkLeaves)} de ce qui reste.
 
 Les propriétaires de serveur peuvent désactiver Pompette entièrement (le mode sans alcool) ou couper un par un le tchat pâteux, les jambes
 pompettes (avec les titubements et les chutes), le fait de piquer du nez, la gueule de bois, les trous noirs, les coups de poing de Tapageur
-et le refus de servir. Pompette ne bouge jamais ton écran de lui-même ; chaque joueur peut réduire à quel point un hoquet, un titubement ou
-une chute le bouge, jusqu'à zéro, et le curseur Effets de distorsion de Minecraft compte aussi. Chaque joueur peut aussi couper les yeux
+et le refus de servir. Pompette ne fait jamais bouger ton écran tout seul ; chaque joueur peut réduire, jusqu'à zéro, ce qu'un hoquet, un titubement ou
+une chute lui font faire, et le curseur Effets de distorsion de Minecraft compte aussi. Chaque joueur peut aussi couper les yeux
 pompettes (bords flous, vision double, panneaux qui s'effacent et l'éblouissement de la gueule de bois) et les oreilles cotonneuses. Toutes
 les options et leurs valeurs par défaut sont sur [Configuration](/reference/config/).

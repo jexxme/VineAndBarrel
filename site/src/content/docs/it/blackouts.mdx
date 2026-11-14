@@ -19,14 +19,14 @@ Questa pagina rivela tutti i modi in cui può finire una serata. Se preferisci s
 </Aside>
 
 Sei già a Brillo {roman(t.maxLevel - 1)} e continui a bere? Un altro e, poco dopo, hai un **vuoto di memoria**. È innocuo: non perdi mai niente
-di ciò che avevi, non ti svegli mai in un posto pericoloso, non passa tempo e nessun altro ne è toccato. I proprietari del server
+di ciò che avevi, non ti svegli mai in un posto pericoloso, non passa tempo e nessun altro ne risente. I proprietari del server
 possono disattivarlo con l'opzione `blackout` (vedi [Configurazione](/reference/config/)).
 
 ## Cosa succede
 
 <Steps>
 
-1. **Ti raggiunge.** Il bicchiere di troppo ci mette da {Math.round(under.soonestTicks / 20)} a {Math.round(under.latestTicks / 20)}
+1. **Ti presenta il conto.** Il bicchiere di troppo ci mette da {Math.round(under.soonestTicks / 20)} a {Math.round(under.latestTicks / 20)}
    secondi a colpire, qualunque cosa tu stia facendo in quel momento. Negli ultimi {Math.round(under.ticks / 20)} secondi ti senti andare
    giù: palpebre pesanti, la testa che cala, il mondo ovattato e lontano, le gambe che cedono, il corpo che ondeggia forte. I tuoi amici lo
    vedono arrivare. Se torni sobrio prima che colpisca (un secchio di latte, una notte di sonno), te la scampi; un altro bicchiere non lo
@@ -34,12 +34,12 @@ possono disattivarlo con l'opzione `blackout` (vedi [Configurazione](/reference/
 2. **Crolli a terra.** Gli occhi si chiudono e cadi a faccia in giù come un albero abbattuto. Tutti quelli intorno ti vedono
    lì steso, con le stelline che ti girano attorno alla testa.
 3. **Buio.** Per qualche secondo non puoi muoverti, e Brillo ti lascia in pace: niente gambe malferme, niente singhiozzo. Nessuno può
-   farti del male, né mob né giocatori, e nemmeno cadere. Conta solo ciò che farebbe male a chiunque fosse steso lì,
-   come la lava o il vuoto, quindi dove hai il vuoto di memoria è importante; dove ti *svegli* è sempre sicuro.
+   farti del male, né mob né giocatori, e nemmeno la caduta. Conta solo ciò che farebbe male a chiunque fosse steso lì,
+   come la lava o il vuoto, quindi conta dove crolli; dove ti *svegli* è sempre sicuro.
 4. **Ti svegli da qualche parte.** Mentre lo schermo è ancora nero, il gioco sceglie dove è finita la tua serata (vedi sotto) e
    ti ci porta: steso a terra, in un letto o seduto in una barca. Gli occhi si aprono piano, poi ti alzi; se sei steso a
    terra, ti tiri su facendo leva sulle braccia.
-5. **Una riga sullo schermo** dice com'è andata, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* o una tra tante altre.
+5. **Una riga sullo schermo** racconta com'è andata, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* o una tra tante altre.
 
 </Steps>
 

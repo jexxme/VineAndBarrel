@@ -19,7 +19,7 @@ export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.le
 
 Każde wino, piwo, cydr i miód pitny daje swój bonus **i jeden poziom efektu <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**.
 Rausz widać po twoim ciele, nie na ekranie: nogi żyją własnym życiem, oczy widzą podwójnie, świat brzmi jak przez watę. Na
-początku jest zabawnie: chwiejne nogi, czkawka, odrobina pijackiej odwagi, a przy Rauszyk {roman(t.slurLevel - 1)} jesteś w
+początku jest zabawnie: chwiejne nogi, czkawka, odrobina pijackiej odwagi, a przy Rauszyku {roman(t.slurLevel - 1)} jesteś w
 najlepszej formie (czat już nie). Pij dalej, a zacznie cię to kosztować: koniec z bonusami, szukanie zaczepki, przysypianie
 na stojąco, a na samym szczycie nogi, które ledwo niosą cię do domu. Maksymalny poziom to {t.maxLevel}.
 
@@ -31,14 +31,14 @@ Najedź na efekt Rauszyk w ekwipunku, żeby zobaczyć, co robi twój obecny pozi
 
 ## Pijane nogi
 
-Od Rauszyk {roman(t.drunkWalkLevel - 1)} nogi żyją własnym życiem. To, czym sterujesz, dociera do nich z lekkim opóźnieniem, więc
+Od Rauszyka {roman(t.drunkWalkLevel - 1)} nogi żyją własnym życiem. To, czym sterujesz, dociera do nich z lekkim opóźnieniem, więc
 ruszasz za późno i nie zatrzymujesz się w miejscu. Chód zbacza z kursu i wraca, a ty ciągle się poprawiasz. Ciało
 przechyla się z nogi na nogę, a kroki wychodzą nierówne. Twój własny widok przechyla się z ciałem tylko trochę; inni gracze
 widzą całe chwianie się i drogę, którą naprawdę idziesz.
 
-Od Rauszyk {roman(t.stumbleLevel - 1)} **zataczasz się**: krok w bok, ręce na boki, żeby złapać równowagę. Raz na jakiś czas nie
+Od Rauszyka {roman(t.stumbleLevel - 1)} **zataczasz się**: krok w bok, ręce na boki, żeby złapać równowagę. Raz na jakiś czas nie
 łapiesz jej i się **potykasz**, lądujesz twarzą na ziemi i chwilę później wstajesz. Nogi robią się też ciężkie: chodzisz
-o {pct(slower(t.slowerLevel))} wolniej przy Rauszyk {roman(t.slowerLevel - 1)} i o {pct(slower(t.maxLevel))} wolniej przy Rauszyk {roman(t.maxLevel - 1)}.
+o {pct(slower(t.slowerLevel))} wolniej przy Rauszyku {roman(t.slowerLevel - 1)} i o {pct(slower(t.maxLevel))} wolniej przy Rauszyku {roman(t.maxLevel - 1)}.
 Sprintować nadal możesz.
 
 Pijany chód nigdy nie zaprowadzi cię za krawędź ani w nic, co boli. **Skradaj się**, a idziesz prosto. Pływanie, jazda
@@ -46,37 +46,37 @@ wierzchem, latanie i wspinanie zostają trzeźwe.
 
 ## Oczy i uszy
 
-Od Rauszyk {roman(t.softEdgesLevel - 1)} krawędzie ekranu robią się miękkie i lekko ciepłe. Od Rauszyk {roman(t.doubleVisionLevel - 1)}
+Od Rauszyka {roman(t.softEdgesLevel - 1)} krawędzie ekranu robią się miękkie i lekko ciepłe. Od Rauszyka {roman(t.doubleVisionLevel - 1)}
 **widzisz podwójnie**: drugi obraz rozjeżdża się i wraca, z każdym poziomem dalej. **Przytrzymaj skradanie, żeby zmrużyć
 oczy**, a oba obrazy się zbliżają, choć im bardziej jesteś pijany, tym mniej to pomaga. Napisy na tabliczkach od
-Rauszyk {roman(t.signBlurLevel - 1)} wtapiają się w drewno, aż przy Rauszyk {roman(t.maxLevel - 1)} ledwo da się je przeczytać; tu też pomaga mrużenie oczu.
+Rauszyka {roman(t.signBlurLevel - 1)} wtapiają się w drewno, aż przy Rauszyku {roman(t.maxLevel - 1)} ledwo da się je przeczytać; tu też pomaga mrużenie oczu.
 
-Od Rauszyk {roman(t.woollyLevel - 1)} świat brzmi **jak przez watę**, stłumiony jak spod koca, z każdym poziomem bardziej.
-Muzyka i menu zostają wyraźne. Przy Rauszyk {roman(t.heartbeatLevel - 1)} słyszysz bicie własnego serca, i słyszysz je tylko ty.
+Od Rauszyka {roman(t.woollyLevel - 1)} świat brzmi **jak przez watę**, stłumiony jak spod koca, z każdym poziomem bardziej.
+Muzyka i menu zostają wyraźne. Przy Rauszyku {roman(t.heartbeatLevel - 1)} słyszysz bicie własnego serca, i słyszysz je tylko ty.
 
 ## Przysypianie
 
-Od Rauszyk {roman(t.nodLevel - 1)} nie stój za długo w miejscu. Postój chwilę bez ruchu, a powieki ci opadają, głowa leci w dół,
-a potem budzisz się z prychnięciem. Stój dalej, a to wróci. Budzi cię wszystko, co robisz: krok, rozejrzenie się, użycie
-czegoś. Wszyscy wokół widzą, jak opada ci broda, i słyszą prychnięcie.
+Od Rauszyka {roman(t.nodLevel - 1)} nie stój za długo w miejscu. Postój chwilę bez ruchu, a powieki ci opadają, głowa leci w dół,
+a potem budzisz się gwałtownie z chrapnięciem. Stój dalej, a to wróci. Budzi cię wszystko, co robisz: krok, rozejrzenie się, użycie
+czegoś. Wszyscy wokół widzą, jak opada ci broda, i słyszą chrapnięcie.
 
 ## Pijany czat
 
-Twój czat wychodzi tak, jak byś to powiedział. Przy Rauszyk {roman(t.hicChatLevel - 1)} wkrada się czasem \*hik\*, przy Rauszyk {roman(chatAt(2) - 1)}
-to bełkot, ale łatwy do odczytania, przy Rauszyk {roman(chatAt(3) - 1)} trudno go odczytać, a przy Rauszyk {roman(chatAt(4) - 1)} to już
-niezrozumiałe dźwięki. Linki, @wzmianki i komendy zawsze wychodzą tak, jak je wpisałeś.
+Twój czat wychodzi tak, jak byś to powiedział. Przy Rauszyku {roman(t.hicChatLevel - 1)} wkrada się czasem \*hic\*, przy Rauszyku {roman(chatAt(2) - 1)}
+to bełkot, ale łatwy do odczytania, przy Rauszyku {roman(chatAt(3) - 1)} trudno go odczytać, a przy Rauszyku {roman(chatAt(4) - 1)} to już
+kompletny bełkot. Linki, @wzmianki i komendy zawsze wychodzą tak, jak je wpisałeś.
 
 ## Awanturnik
 
-Gdy masz Rauszyk {roman(rowdyLevel - 1)}, robisz się awanturniczy. Co jakiś czas szukasz zaczepki, przez maksymalnie
+Od Rauszyka {roman(rowdyLevel - 1)} robi się z ciebie awanturnik. Co jakiś czas aż się rwiesz do bitki, przez maksymalnie
 {Math.round(t.rowdyItchTicks / 20)} sekund, i obrywa pierwszy, kto stanie przed tobą, nawet jeśli tylko na niego zerkniesz.
-Ręka na chwilę się cofa, więc wszyscy widzą, co się szykuje, a potem wymierzasz prawdziwy cios:
+Na chwilę bierzesz zamach, więc wszyscy widzą, co się szykuje, a potem wymierzasz prawdziwy cios:
 {punchHearts === 0.5 ? 'pół serca' : punchHearts === 1 ? '1 serce' : Number.isInteger(punchHearts) && punchHearts >= 5 ? `${punchHearts} serc` : `${String(punchHearts).replace('.', ',')} serca`} obrażeń
 i odepchnięcie, bez względu na to, co trzymasz w ręce. Zamach niesie cię krok do przodu; jeśli ktoś zdążył uskoczyć,
 pudłujesz i się zataczasz. Nigdy nie trafia oswojonych zwierząt, żelaznych golemów ani stojaków na zbroję, a innych graczy
-tylko tam, gdzie włączone jest PvP. Osadnicy i przechodnie są jednak do wzięcia, i to zapamiętają.
+tylko tam, gdzie włączone jest PvP. Osadnicy i przechodnie nie mają jednak taryfy ulgowej i dobrze to zapamiętają.
 
-Dodatkowo **nie nalewają ci**: od Rauszyk {roman(t.cutOffLevel - 1)} osadnicy i wędrowni handlarze kręcą głową i nie
+Dodatkowo **nie nalewają ci**: od Rauszyka {roman(t.cutOffLevel - 1)} osadnicy i wędrowni handlarze kręcą głową i nie
 handlują z tobą, dopóki nie wytrzeźwiejesz. Handluj przed {t.cutOffLevel === 4 ? 'czwartym' : `${t.cutOffLevel}.`} drinkiem.
 
 ## O jeden drink za dużo
@@ -96,17 +96,17 @@ nigdy go nie odsuwa.
 
 ## Poranek po
 
-Po urwanym filmie albo po nocy przespanej z Rauszyk {roman(h.sleepLevel - 1)} lub wyżej budzisz się trzeźwy, ale z efektem
+Po urwanym filmie albo po nocy przespanej z Rauszykiem {roman(h.sleepLevel - 1)} lub wyżej budzisz się trzeźwy, ale z efektem
 <EffectBadge id="vineandbarrel:hangover" name="Hangover" />. Do tego jesteś głodny: ikony głodu najwyżej {h.hungryFood / 2},
 a nasycenie puste.
 
 - **Światło dnia razi.** Pod gołym niebem jasny dzień boli i mrużysz oczy. Zaraz po przebudzeniu dopada cię nawet pod
-  dachem i słabnie przez mniej więcej {Math.round(h.freshGlareTicks / 20)} sekund. Pomaga przytrzymanie skradania, żeby zmrużyć oczy.
+  dachem i słabnie przez mniej więcej {Math.round(h.freshGlareTicks / 20)} sekund. Pomaga mrużenie oczu (przytrzymaj skradanie).
 - **Głośne dźwięki** w pobliżu sprawiają, że się krzywisz.
 - Nic nie rusza twoim widokiem i nic nie przyprawia cię o mdłości.
 
 Trwa {duration(h.afterBlackoutTicks)} po urwanym filmie, {duration(h.afterSleepTicks[h.sleepLevel])} po przespaniu nocy z
-Rauszyk {roman(h.sleepLevel - 1)} i {duration(h.afterSleepTicks[t.maxLevel])} z Rauszyk {roman(t.maxLevel - 1)}. **Butelka wody albo dowolny sok**
+Rauszykiem {roman(h.sleepLevel - 1)} i {duration(h.afterSleepTicks[t.maxLevel])} z Rauszykiem {roman(t.maxLevel - 1)}. **Butelka wody albo dowolny sok**
 zabiera {pct(1 - h.drinkLeaves)} tego, co zostało.
 
 ## Trzeźwienie
@@ -120,7 +120,7 @@ zabiera {pct(1 - h.drinkLeaves)} tego, co zostało.
 - **Z Farmer's Delight** jego <Item id="farmersdelight:milk_bottle" />, <Item id="farmersdelight:melon_juice" /> i
   <Item id="farmersdelight:apple_cider" /> też obniżają go o jeden poziom. Butelka mleka zabiera jeden poziom; wiadro mleka
   czyści go całkowicie.
-- **Odśpij to:** połóż się do łóżka i prześpij noc. Budzisz się trzeźwy, choć od Rauszyk {roman(h.sleepLevel - 1)}
+- **Odśpij to:** połóż się do łóżka i prześpij noc. Budzisz się trzeźwy, choć od Rauszyka {roman(h.sleepLevel - 1)}
   [na kacu](#poranek-po). Noc musi zostać naprawdę przeskoczona: wstań wcześnie albo leż bezsennie, gdy reszta serwera nie
   śpi, a pobudka zastanie cię w takim samym rauszu, w jakim poszedłeś spać.
 

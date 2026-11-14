@@ -31,7 +31,7 @@ und <Item id="honey_bottle" plural /> für Met.
 
 ## Trauben- und Hopfensträucher
 
-Pflanz <Item id="red_grapes" plural />, <Item id="white_grapes" plural /> oder <Item id="hops" /> auf Gras, Erde oder Ackerland,
+Pflanz <Item id="red_grapes" plural />, <Item id="white_grapes" plural /> oder <Item id="hops" /> auf Gras, Erde oder Ackerboden,
 genau wie Süßbeeren. Der Strauch wächst in {c.bushMaxAge + 1} Stufen im Tempo des Süßbeerenstrauchs. Rote und weiße Trauben
 wachsen gleich; nur die reife Frucht unterscheidet sie.
 
@@ -69,17 +69,17 @@ Ein Seil von Farmer's Delight über einem Strauch wirkt genau wie ein Rankgitter
 
 <Render name="scenes/supports" float="right" size={256} alt="Trauben- und Hopfenreben, die in eine Eichenzaunreihe und eine bemooste Mauer gewachsen sind" />
 
-Kein Rankgitter zur Hand? Trauben und Hopfen ranken auch an **Zäunen, Mauern, Ketten und Eisengittern** hoch, in beide Richtungen, wie bei einem Rankgitter: Rechtsklick mit Trauben oder Hopfen auf einen, der auf Gras, Erde oder Ackerland steht, oder Rechtsklick mit einem dieser Blöcke auf einen Strauch. Die Pflanze rankt dann an allem darüber hoch, bis zu {c.climbMaxHeight} Blöcke.
+Kein Rankgitter zur Hand? Trauben und Hopfen ranken auch an **Zäunen, Mauern, Ketten und Eisengittern** hoch, in beide Richtungen, wie bei einem Rankgitter: Rechtsklick mit Trauben oder Hopfen auf einen solchen Block, der auf Gras, Erde oder Ackerboden steht, oder Rechtsklick mit einem dieser Blöcke auf einen Strauch. Die Pflanze rankt dann an allem darüber hoch, bis zu {c.climbMaxHeight} Blöcke.
 
 - Jede Ernte bringt eine Frucht weniger als am Rankgitter: {h.grapes_on_support.count[0]} bis {h.grapes_on_support.count[1]} bei Reife, {h.grapes_on_support.halfRipe[0]} bei Halbreife. Das Rankgitter bleibt die beste Stütze.
 - Der Block bleibt genau, wie er war: Ein Fichtenzaun bleibt ein Fichtenzaun, Zäune und Mauern verbinden sich weiter, eine Leine bleibt gebunden. Baust du die Pflanze ab, bleibt er stehen.
-- Ketten zählen nur aufrecht stehend. Leitern, Glasscheiben und Zauntore halten nichts.
+- Ketten zählen nur, wenn sie senkrecht stehen. Leitern, Glasscheiben und Zauntore halten nichts.
 - Zäune und Mauern müssen in der Pflanze stehen: Ein Strauch mit einem Zaun oder einer Mauer obendrauf bleibt ein Strauch. An Ketten und Eisengittern über einem Strauch rankt er hoch wie an einem Rankgitter.
-- Auch Zäune und Mauern anderer Mods gehen, und Packs können dem Tag `#vineandbarrel:makeshift_vine_supports` Blöcke hinzufügen.
+- Auch Zäune und Mauern anderer Mods funktionieren, und Packs können dem Tag `#vineandbarrel:makeshift_vine_supports` Blöcke hinzufügen.
 
 ## Gerste
 
-Sä <Item id="barley_seeds" /> auf Ackerland. Gerste wächst genau wie Weizen, in {barleyStages} Stufen, und
+Sä <Item id="barley_seeds" /> auf Ackerboden. Gerste wächst genau wie Weizen, in {barleyStages} Stufen, und
 gibt dasselbe: <Item id="barley" />, wenn sie reif ist, dazu zusätzliche Körner.
 
 <Stages prefix="barley" title="Gerste" only={['0', '2', '4', '6', '7']} labels={['0', '2', '4', '6', 'reif']} />
@@ -133,7 +133,7 @@ schickt seinen Rauch hoch hinauf, und Lamas und Pferde fressen ihn.
 - **Trauben sind ein Snack,** wie Süßbeeren.
 - **Mehr Wildpflanzen:** Knochenmehl auf einer Wildpflanze setzt oft eine weitere in die Nähe, ein einfacher Weg zu deinem ersten Saatgut.
   Wilde Gerste gibt eine Gerste und ein Saatgut.
-- **Ackerland unter Gerste** wird nie wieder zu Erde, wie bei jeder Pflanze.
+- **Ackerboden unter Gerste** wird nie wieder zu Erde, wie bei jeder Pflanze.
 - **Reben** brauchen ebenfalls Licht: Im Dunkeln brechen sie, und das Rankgitter oder Seil bleibt stehen. Knochenmehl auf einer
   ausgewachsenen Pflanze reicht bis zur Rebe darüber weiter. Eine Rebe an einem Seil kannst du wie das Seil hochklettern.
 - **Bienen** lassen nie einen Strauch hochranken; das kannst nur du anstoßen.

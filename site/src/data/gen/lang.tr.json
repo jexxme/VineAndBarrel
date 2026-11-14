@@ -2516,7 +2516,7 @@
 	"vineandbarrel.configuration.enabled": "İçecekler Çakırkeyif Eder",
 	"vineandbarrel.configuration.enabled.tooltip": "Kapalı: içecekler bonuslarını korur ama seni asla çakırkeyif etmez.",
 	"vineandbarrel.configuration.hangover": "Akşamdan kalma",
-	"vineandbarrel.configuration.hangover.tooltip": "Bir hafıza kaybından ya da Çakırkeyif IV veya V'te geçen bir gece uykusundan sonra akşamdan kalma uyanırsın.",
+	"vineandbarrel.configuration.hangover.tooltip": "Bir film kopmasından ya da Çakırkeyif IV veya V'te geçen bir gece uykusundan sonra akşamdan kalma uyanırsın.",
 	"vineandbarrel.configuration.heartbeatVolume": "Kalp Atışı Sesi",
 	"vineandbarrel.configuration.heartbeatVolume.tooltip": "Çakırkeyif V'te kendi kalbini duyarsın. 0 kapatır.",
 	"vineandbarrel.configuration.maxLevel": "En Yüksek Çakırkeyif Seviyesi",

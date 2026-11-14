@@ -33,12 +33,12 @@ propriétaires de serveur peuvent le désactiver avec l'option `blackout` (voir 
 2. **Tu t'écroules.** Tes yeux se ferment et tu tombes face contre terre comme un arbre abattu. Tous ceux qui sont autour
    te voient allongé là, des étoiles tournant autour de ta tête.
 3. **Noir.** Pendant quelques secondes, tu ne peux pas bouger, et Pompette te laisse tranquille : pas de jambes flageolantes, pas de hoquets. Personne ne peut
-   te blesser non plus, ni mob ni joueur, et tomber non plus. Seul ce qui blesserait n'importe qui allongé là compte encore,
-   comme la lave ou le vide, alors l'endroit où tu fais ton trou noir compte ; l'endroit où tu *te réveilles* est toujours sûr.
+   te blesser non plus, ni mob ni joueur, ni ta chute. Seul ce qui blesserait n'importe qui allongé là compte encore,
+   comme la lave ou le vide, alors l'endroit où tu t'écroules a son importance ; l'endroit où tu *te réveilles* est toujours sûr.
 4. **Tu te réveilles quelque part.** Pendant que l'écran est encore noir, le jeu choisit où ta soirée s'est terminée (voir plus bas) et
    t'y installe : allongé par terre, dans un lit, ou assis dans un bateau. Tes yeux s'ouvrent lentement, puis tu te lèves ; allongé
    par terre, tu te redresses en poussant sur tes bras.
-5. **Une ligne à l'écran** dit comment ça s'est passé, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* ou l'une de beaucoup d'autres.
+5. **Une ligne à l'écran** dit comment ça s'est passé, *{gameText(b.endings.find((e) => e.id === 'in_the_hay')?.lineKeys[0], b.endings.find((e) => e.id === 'in_the_hay')?.lines[0])}* ou une parmi tant d'autres.
 
 </Steps>
 
@@ -54,7 +54,7 @@ Si l'option `hangover` du serveur est désactivée, tu te réveilles plutôt à 
 
 ## Où tu te réveilles
 
-Une soirée peut finir à {count} endroits, plus un pour quand aucun ne marche. Chacun a sa propre probabilité, mais seuls
+Une soirée peut finir à {count} endroits, plus un pour le cas où aucun ne convient. Chacun a sa propre probabilité, mais seuls
 ceux qui sont possibles là où tu as fait ton trou noir entrent dans le tirage : pas d'eau à proximité, pas de bateau ; pas de village, pas de taverne.
 
 - **Les nouveaux d'abord :** une fin que tu n'as pas encore vécue est {b.unseenBonus} fois plus probable qu'une que tu as déjà vécue.

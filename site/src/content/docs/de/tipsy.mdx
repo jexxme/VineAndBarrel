@@ -18,7 +18,7 @@ export const slower = (level) => t.levels[level - 1].legs.slower;
 export const chatAt = (stage) => t.levels.find((l) => l.chat.stage >= stage)?.level ?? t.maxLevel;
 
 Jeder Wein, jedes Bier, jeder Cidre und jeder Met gibt dir seinen Bonus **und eine Stufe <EffectBadge id="vineandbarrel:tipsy" name="Tipsy" />**.
-Betrunken sein zeigt sich an deinem Körper, nicht auf deinem Bildschirm: Deine Beine machen, was sie wollen, deine Augen sehen doppelt,
+Wie betrunken du bist, zeigt dein Körper, nicht dein Bildschirm: Deine Beine machen, was sie wollen, deine Augen sehen doppelt,
 die Welt klingt wie in Watte. Am Anfang macht das Spaß: wacklige Beine, Schluckauf, ein bisschen Mut aus der Flasche, und bei
 Schwips {roman(t.slurLevel - 1)} bist du in Hochform (dein Chat nicht). Trink weiter, und es kostet dich: keine Boni mehr, Streit suchen,
 im Stehen einnicken und ganz oben Beine, die dich kaum noch nach Hause tragen. Bei Stufe {t.maxLevel} ist Schluss.
@@ -33,7 +33,7 @@ Fahr im Inventar über den Schwips-Effekt, um zu sehen, was deine aktuelle Stufe
 
 Ab Schwips {roman(t.drunkWalkLevel - 1)} machen deine Beine, was sie wollen. Was du steuerst, kommt einen Moment zu spät an: Du läufst
 verspätet los und kannst nicht auf der Stelle anhalten. Dein Gang schlingert vom Kurs ab und wieder zurück, und du korrigierst ständig.
-Dein Körper wiegt sich auf jeden Fuß, und die Schritte kommen ungleichmäßig. Deine eigene Sicht neigt sich nur ein wenig mit; andere
+Dein Körper schaukelt von einem Fuß auf den anderen, und die Schritte werden ungleichmäßig. Deine eigene Sicht neigt sich nur ein wenig mit; andere
 Spieler sehen das ganze Wanken und den Weg, den du wirklich gehst.
 
 Ab Schwips {roman(t.stumbleLevel - 1)} **torkelst** du: ein Fehltritt zur Seite, die Arme ausgestreckt, um das Gleichgewicht zu halten.
@@ -63,20 +63,20 @@ ein Schritt, ein Blick in die Runde, etwas benutzen. Alle um dich herum sehen de
 
 ## Betrunkener Chat
 
-Dein Chat kommt so heraus, wie du es sagen würdest. Bei Schwips {roman(t.hicChatLevel - 1)} rutscht ab und zu ein \*hicks\* hinein, bei
+Dein Chat kommt so heraus, wie du es sagen würdest. Bei Schwips {roman(t.hicChatLevel - 1)} rutscht ab und zu ein \*hic\* hinein, bei
 Schwips {roman(chatAt(2) - 1)} ist er gelallt, aber gut lesbar, bei Schwips {roman(chatAt(3) - 1)} wird er schwer lesbar, und bei
 Schwips {roman(chatAt(4) - 1)} ist er Kauderwelsch. Links, @Erwähnungen und Befehle gehen immer so raus, wie du sie getippt hast.
 
 ## Rüpelhaft
 
-Ab Schwips {roman(rowdyLevel - 1)} wirst du rüpelhaft. Hin und wieder suchst du Streit, bis zu {Math.round(t.rowdyItchTicks / 20)} Sekunden
-lang, und der Erste, der vor dir steht, kriegt es ab, auch wenn du nur in seine Richtung schaust. Dein Arm holt einen Moment lang aus, sodass
+Ab Schwips {roman(rowdyLevel - 1)} wirst du rüpelhaft. Hin und wieder juckt es dich bis zu {Math.round(t.rowdyItchTicks / 20)} Sekunden
+lang in den Fäusten, und der Erste, der vor dir steht, kriegt es ab, auch wenn du nur in seine Richtung schaust. Dein Arm holt einen Moment lang aus, sodass
 alle es kommen sehen, dann schlägst du richtig zu: {punchHearts === 0.5 ? 'ein halbes Herz' : punchHearts === 1 ? 'ein Herz' : `${String(punchHearts).replace('.', ',')} Herzen`} Schaden
 und ein Stoß, egal was du in der Hand hältst. Der Schwung trägt dich einen Schritt nach vorn; ist er ausgewichen, schlägst du ins Leere und
 torkelst. Gezähmte Haustiere, Eisengolems und Rüstungsständer triffst du nie, und andere Spieler nur, wo PvP an ist. Dorfbewohner und
 Passanten sind aber Freiwild, und sie merken sich das.
 
-Außerdem gibt es für dich **Kein Ausschank**: Ab Schwips {roman(t.cutOffLevel - 1)} schütteln Dorfbewohner und Fahrende Händler den Kopf
+Außerdem heißt es für dich **Kein Ausschank**: Ab Schwips {roman(t.cutOffLevel - 1)} schütteln Dorfbewohner und Fahrende Händler den Kopf
 und handeln nicht mehr mit dir, bis du wieder nüchtern bist. Erledige deine Geschäfte vor dem {t.cutOffLevel === 4 ? 'vierten' : `${t.cutOffLevel}.`} Drink.
 
 ## Ein Drink zu viel
@@ -86,7 +86,7 @@ Schon auf Schwips {roman(t.maxLevel - 1)} und trinkst trotzdem weiter? Dieser Dr
 letzten {Math.round(under.ticks / 20)} Sekunden spürst du, wie du wegdämmerst: Deine Lider werden schwer, dein Kopf sinkt, die Welt klingt
 gedämpft und weit weg, deine Beine geben nach und du schwankst heftig. Deine Freunde sehen es auch kommen.
 
-Dann hast du einen **Filmriss**. Deine Augen fallen zu, du fällst vornüber wie ein gefällter Baum, und Sterne kreisen für alle
+Dann hast du einen **Filmriss**. Deine Augen fallen zu, du kippst vornüber wie ein gefällter Baum, und Sterne kreisen für alle
 sichtbar um deinen Kopf. In diesen paar
 Sekunden kann dir niemand etwas tun, kein Mob und kein Spieler, und das Umkippen auch nicht; der Rest der Welt zählt aber weiter, kipp also
 nicht in Lava um. Dann wachst du auf und stemmst dich wieder hoch. Wo? Das hängt von der Nacht ab, und es gibt mehr Möglichkeiten aufzuwachen, als du denkst…
@@ -102,8 +102,8 @@ Nach einem Filmriss oder einer Nacht Schlaf ab Schwips {roman(h.sleepLevel - 1)}
 in deiner Sättigung.
 
 - **Tageslicht blendet.** Unter freiem Himmel tut der helle Tag weh, und du kneifst die Augen zusammen. Direkt nach dem Aufwachen erwischt
-  es dich sogar drinnen und lässt über etwa {Math.round(h.freshGlareTicks / 20)} Sekunden nach. Schleichen gedrückt halten, um die Augen
-  zusammenzukneifen, hilft.
+  es dich sogar drinnen und lässt über etwa {Math.round(h.freshGlareTicks / 20)} Sekunden nach. Augen zusammenkneifen
+  (Schleichen gedrückt halten) hilft.
 - **Laute Geräusche** in der Nähe lassen dich zusammenzucken.
 - Nichts bewegt deine Sicht, und nichts macht dir übel.
 
@@ -113,8 +113,8 @@ oder jeder Saft** nimmt {pct(1 - h.drinkLeaves)} der restlichen Zeit weg.
 
 ## Nüchtern werden
 
-- **Abwarten:** Jede Stufe klingt nach **{cfg.secondsPerLevel} Sekunden** ab, eine Stufe nach der anderen. Ein neuer Drink gibt jeder Stufe
-  eine frische Uhr, also bist du bei Schwips {roman(t.maxLevel - 1)} nach etwa {String(Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10).replace('.', ',')} Minuten
+- **Abwarten:** Jede Stufe klingt nach **{cfg.secondsPerLevel} Sekunden** ab, eine Stufe nach der anderen. Ein neuer Drink startet die Uhr
+  jeder Stufe neu, also bist du bei Schwips {roman(t.maxLevel - 1)} nach etwa {String(Math.round((t.maxLevel * cfg.secondsPerLevel) / 6) / 10).replace('.', ',')} Minuten
   ohne einen weiteren Tropfen wieder nüchtern.
 - **Milch** löscht ihn komplett, wie jeden Effekt. Auch die Boni deiner Getränke verschwinden damit.
 - **Eine Wasserflasche oder jeder Saft** (<Item id="grape_juice" />, <Item id="white_grape_juice" />, <Item id="sweet_berry_juice" />,
@@ -128,8 +128,8 @@ oder jeder Saft** nimmt {pct(1 - h.drinkLeaves)} der restlichen Zeit weg.
 
 ## Gut zu wissen
 
-- **Ein Stolpern tut nie weh** und bringt dich nie irgendwohin, wo du nicht gegangen bist. Du gehst nur auf ebenem, offenem Boden zu
-  Boden, wenn kein Monster in der Nähe ist, und nicht zweimal innerhalb von {Math.round(t.tripCooldownTicks / 20)} Sekunden; überall sonst bleibt es beim Torkeln.
+- **Ein Stolpern tut nie weh** und bringt dich nie irgendwohin, wo du nicht gegangen bist. Hinfallen kannst du nur auf ebenem, freiem
+  Gelände ohne Monster in der Nähe, und nicht zweimal innerhalb von {Math.round(t.tripCooldownTicks / 20)} Sekunden; überall sonst bleibt es beim Torkeln.
 - **Wasser holt dich schnell aus den schlimmen Stufen,** aber die Stufen darunter behalten ihre eigene Zeit, du wirst also insgesamt
   nicht früher nüchtern.
 - Andere Spieler sehen dich wanken, torkeln, stolpern und einnicken, sehen deine rüpelhaften Schläge kommen und hören deinen Schluckauf.
@@ -139,7 +139,7 @@ oder jeder Saft** nimmt {pct(1 - h.drinkLeaves)} der restlichen Zeit weg.
 ## Einstellungen
 
 Serverbetreiber können Schwips ganz abschalten (der alkoholfreie Modus) oder gelallten Chat, betrunkene Beine (mit Torkeln und Stolpern),
-Einnicken, den Kater, Filmrisse, rüpelhafte Schläge und Kein Ausschank einzeln ausschalten. Schwips bewegt deinen Bildschirm nie von selbst;
+Einnicken, den Kater, Filmrisse, die wilden Schläge und Kein Ausschank einzeln ausschalten. Schwips bewegt deinen Bildschirm nie von selbst;
 jeder Spieler kann einstellen, wie stark ein Schluckauf, ein Torkeln oder ein Stolpern ihn bewegt, bis hin zu gar nicht, und auch der
 Vanilla-Regler Verzerrungseffekte zählt. Jeder Spieler kann außerdem die betrunkenen Augen (weiche Ränder, Doppeltsehen, verblassende
 Schilder und das grelle Licht beim Kater) und die Watteohren abschalten. Alle Optionen und Standardwerte stehen unter

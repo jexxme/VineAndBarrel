@@ -2516,7 +2516,7 @@
 	"vineandbarrel.configuration.enabled": "Le bevande ti rendono brillo",
 	"vineandbarrel.configuration.enabled.tooltip": "No: le bevande mantengono i loro bonus ma non ti rendono mai brillo.",
 	"vineandbarrel.configuration.hangover": "Postumi",
-	"vineandbarrel.configuration.hangover.tooltip": "Dopo un blackout, o una notte di sonno con Brillo IV o V, ti svegli con i postumi della sbornia.",
+	"vineandbarrel.configuration.hangover.tooltip": "Dopo un vuoto di memoria, o una notte di sonno con Brillo IV o V, ti svegli con i postumi della sbornia.",
 	"vineandbarrel.configuration.heartbeatVolume": "Volume del battito",
 	"vineandbarrel.configuration.heartbeatVolume.tooltip": "Con Brillo V senti il tuo cuore. 0 lo disattiva.",
 	"vineandbarrel.configuration.maxLevel": "Livello massimo di Brillo",
