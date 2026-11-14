@@ -3,6 +3,7 @@ package jexxme.vineandbarrel.fabric;
 import jexxme.vineandbarrel.VineAndBarrel;
 import jexxme.vineandbarrel.platform.ConfigValue;
 import jexxme.vineandbarrel.tipsy.TipsyConfig;
+import jexxme.vineandbarrel.world.WorldgenConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
@@ -59,6 +60,7 @@ public final class FabricConfig
 
 	static void load() {
 		TipsyConfig.load();
+		WorldgenConfig.load();
 		for (ConfigValue.Side side : ConfigValue.Side.values()) {
 			load(side, globalFile(side), true);
 		}
@@ -131,20 +133,21 @@ public final class FabricConfig
 		write(side, file);
 	}
 
-	/** The file complete, with every setting's comment, range and current value. */
+	/** The file complete, section by section (each with its comment), with every setting's comment, range and current value. */
 	private static void write(ConfigValue.Side side, Path file) {
-		StringBuilder out = new StringBuilder("# Vine & Barrel: ")
-			.append(side == ConfigValue.Side.SERVER ? TipsyConfig.SERVER_COMMENT : TipsyConfig.CLIENT_COMMENT).append('\n');
-		for (ConfigValue<?> value : ConfigValue.all()) {
-			if (value.side() != side) {
-				continue;
+		StringBuilder out = new StringBuilder();
+		for (String section : ConfigValue.sections(side)) {
+			out.append(out.isEmpty() ? "" : "\n").append("# Vine & Barrel: ").append(ConfigValue.sectionComment(side, section)).append('\n');
+			for (ConfigValue<?> value : ConfigValue.all()) {
+				if (value.side() != side || !value.section().equals(section)) {
+					continue;
+				}
+				out.append('\n').append("# ").append(value.comment()).append('\n');
+				if (value.min() != null) {
+					out.append("# Range: ").append(value.min()).append(" ~ ").append(value.max()).append('\n');
+				}
+				out.append(key(value)).append('=').append(value.get()).append('\n');
 			}
-			String key = key(value);
-			out.append('\n').append("# ").append(value.comment()).append('\n');
-			if (value.min() != null) {
-				out.append("# Range: ").append(value.min()).append(" ~ ").append(value.max()).append('\n');
-			}
-			out.append(key).append('=').append(value.get()).append('\n');
 		}
 		try {
 			Files.createDirectories(file.getParent());

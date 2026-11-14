@@ -2,6 +2,10 @@
   "feature": "vineandbarrel:wild_barley",
   "placement": [
     {
+      "type": "vineandbarrel:setting",
+      "setting": "worldgen.wildBarley"
+    },
+    {
       "type": "minecraft:rarity_filter",
       "chance": 80
     },
