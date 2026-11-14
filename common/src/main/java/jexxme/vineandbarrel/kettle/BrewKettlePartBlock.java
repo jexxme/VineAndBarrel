@@ -56,6 +56,9 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 	public static final BooleanProperty TRAY = BooleanProperty.create("tray");
 
 	private static final VoxelShape[][] SHAPES = new VoxelShape[KettlePart.count()][4];
+	/** The tray under a bottom block over a fire, as a single kettle's: solid, so nobody steps up onto the fire's rim. */
+	private static final VoxelShape TRAY_PLATE = Block.box(0.0D, -1.0D, 0.0D, 16.0D, 0.0D, 16.0D);
+	private static final VoxelShape[][] SHAPES_WITH_TRAY = new VoxelShape[KettlePart.count()][4];
 
 	private final WeatherState weatherState;
 
@@ -199,6 +202,25 @@ public class BrewKettlePartBlock extends Block implements EntityBlock
 		VoxelShape shape = SHAPES[id][facing];
 		if (shape == null) {
 			shape = SHAPES[id][facing] = computeShape(KettlePart.byId(id), state.getValue(FACING));
+		}
+		return shape;
+	}
+
+	/**
+	 * A bottom block over a campfire, fire or lava stands on its tray, solid as a single kettle's: the kettle's body is
+	 * 2 px in from its edges, and over the fire's rim beside it a villager pushed into the kettle (or a player walking
+	 * into it) stepped up onto the lit campfire and burned.
+	 */
+	@Override
+	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+		if (!state.getValue(TRAY)) {
+			return getShape(state, level, pos, context);
+		}
+		int id = state.getValue(PART);
+		int facing = state.getValue(FACING).get2DDataValue();
+		VoxelShape shape = SHAPES_WITH_TRAY[id][facing];
+		if (shape == null) {
+			shape = SHAPES_WITH_TRAY[id][facing] = Shapes.or(getShape(state, level, pos, context), TRAY_PLATE);
 		}
 		return shape;
 	}
