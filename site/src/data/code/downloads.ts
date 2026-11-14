@@ -83,9 +83,9 @@ if (top.build !== metaJson.minecraft || top.neoforge !== metaJson.modVersion || 
 // mod on NeoForge for 1.21.1 and on Forge, and Farmer's Delight Refabricated on Fabric (each branch's release.yml);
 // releases.json (without) says which version has which. Serene Seasons and Biomes O' Plenty work through tags on all.
 export const optional: Record<Loader, string[]> = {
-	neoforge: ["Farmer's Delight Neoforged", "Farmer's Delight", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Nutritional Balance', 'Spice of Life Onion', 'Kaleidoscope Tavern'],
-	forge: ["Farmer's Delight", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Spice of Life Onion', 'Kaleidoscope Tavern'],
-	fabric: ["Farmer's Delight Refabricated", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Spice of Life Onion', 'Kaleidoscope Tavern Refabricated'],
+	neoforge: ["Farmer's Delight Neoforged", "Farmer's Delight", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Nutritional Balance', 'Spice of Life Onion', 'Kaleidoscope Tavern', 'Towns & Towers'],
+	forge: ["Farmer's Delight", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Spice of Life Onion', 'Kaleidoscope Tavern', 'Towns & Towers'],
+	fabric: ["Farmer's Delight Refabricated", 'JEI', 'Jade', 'AppleSkin', 'Tough As Nails', 'Homeostatic', 'Thirst Was Taken 2', 'Spice of Life Onion', 'Kaleidoscope Tavern Refabricated', 'Towns & Towers'],
 };
 // The optional mods that have no build for some Minecraft versions (releases.json: without), with the loaders each
 // version's file works with them on: "NeoForge, Fabric", "Forge", "Fabric" or "–". NeoForge and Forge count as the
