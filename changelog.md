@@ -1,3 +1,22 @@
+## 1.2.0
+
+- **Being drunk is in your body now, not on your screen.** Tipsy never moves your view on its own any more, and the Nausea spells, dark edges, blinks, Slowness, Mining Fatigue and Weakness are gone. Instead:
+  - drunk legs: what you steer arrives late, the walk curves off course, and from IV you stumble and now and then trip onto your face, but never over an edge or into anything that hurts;
+  - drunk eyes: soft edges from I, double vision from III (hold sneak to squint), and the writing on signs fades into the wood;
+  - woolly ears from III, and at IV and V you nod off on your feet when you stand still;
+  - drunk chat that gets worse with every level, from the odd *hic* to gibberish;
+  - Rowdy from IV: now and then you pick a fight with whoever is in front of you.
+- **The blackout catches up with you.** One drink too many no longer knocks you out on the spot: 10 to 40 seconds later you feel yourself going under, and you fall face down like a felled tree and push yourself back up.
+- **The morning after:** after a blackout, or a night's sleep at IV or V, you wake up sober but hungry and with a Hangover. Daylight glares and loud noises make you wince. Water or a juice takes a good part of it away.
+- **Every tavern has a keeper.** He stands behind the bar with the Brew Kettle (or a Big Kettle) as his job site. He buys barley, hops and grapes, sells mugs, glasses and his region's drinks, and a master sells a sealed cask of his best. Finish a drink in front of him and he clinks with you, and regulars pay a little less.
+- **Every tavern has a cellar:** a beer, wine, press, ice or root cellar, each by its biome, with its own bar, finds and a hidden chest.
+- **Grapes and hops climb fences, walls, bars and chains.** Plant them into one standing on grass, or put one into a bush. One fewer fruit per pick than on a trellis. Picked grapes and hops land on your side of the plant.
+- **The chimney goes through a roof and leaves it whole:** the pipe passes up to two roof blocks (stairs, slabs, planks, stone, bricks or deepslate), and the next piece sits on top.
+- **Watch it knows what you're holding:** G over a bucket of wort, a bottle of must, a mug or a barrel shows the Aging Barrel for that drink. Watch it also shows more of the way (wild plants and barley, more brews, the aged drink at the end) and is calmer to step through.
+- **The Brewer's path links the wiki:** a Wiki button next to Watch all, and a "Wiki page ›" line on each station's card, in your language.
+- **Kaleidoscope Tavern:** its grapes brew our juices, and its pressing tub presses ours into its juices.
+- Settings: Drunk screen, Double vision and Woolly sound for your client; switches for nodding off, the hangover and stumbling for the server. Your old Tipsy settings carry over.
+
 ## 1.1.1
 
 - The first Vine & Barrel for Minecraft 1.20.1, on Forge and Fabric, with everything from 1.1.1: Watch it, the Big Brew Kettle, framed trellis rows, taverns in villages. Farmer's Delight (1.3.4 or newer) is supported on Forge, Farmer's Delight Refabricated on Fabric.
