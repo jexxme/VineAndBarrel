@@ -4,36 +4,36 @@
 		{
 			"minecraft": ["26.3"],
 			"build": "26.3",
-			"neoforge": "1.1.1+neoforged.1",
-			"fabric": "1.1.1+fabric.1",
-			"curseforge": { "neoforge": 9549467, "fabric": 9549472 },
-			"needs": { "neoforge": "26.3.0.101", "fabricLoader": "0.20.1", "fabricApi": "0.165.2" },
+			"neoforge": "1.2.0+neoforged.1",
+			"fabric": "1.2.0+fabric.1",
+			"curseforge": { "neoforge": 9602578, "fabric": 9602580 },
+			"needs": { "neoforge": "26.3.0.101", "fabricLoader": "0.20.1", "fabricApi": "0.166.2" },
 			"without": { "neoforge": ["Farmer's Delight"], "fabric": [] }
 		},
 		{
 			"minecraft": ["26.2"],
 			"build": "26.2",
-			"neoforge": "1.1.1+neoforged.1",
-			"fabric": "1.1.1+fabric.1",
-			"curseforge": { "neoforge": 9549512, "fabric": 9549513 },
+			"neoforge": "1.2.0+neoforged.1",
+			"fabric": "1.2.0+fabric.1",
+			"curseforge": { "neoforge": 9602595, "fabric": 9602596 },
 			"needs": { "neoforge": "26.2.0.93", "fabricLoader": "0.20.1", "fabricApi": "0.161.0" },
 			"without": { "neoforge": ["Farmer's Delight"], "fabric": ["Spice of Life Onion"] }
 		},
 		{
 			"minecraft": ["26.1.2"],
 			"build": "26.1.2",
-			"neoforge": "1.1.1+neoforged.1",
-			"fabric": "1.1.1+fabric.1",
-			"curseforge": { "neoforge": 9549509, "fabric": 9549511 },
+			"neoforge": "1.2.0+neoforged.1",
+			"fabric": "1.2.0+fabric.1",
+			"curseforge": { "neoforge": 9602606, "fabric": 9602609 },
 			"needs": { "neoforge": "26.1.2.126", "fabricLoader": "0.20.1", "fabricApi": "0.155.3" },
 			"without": { "neoforge": ["Farmer's Delight"], "fabric": ["Spice of Life Onion"] }
 		},
 		{
 			"minecraft": ["26.1", "26.1.1"],
 			"build": "26.1.1",
-			"neoforge": "1.1.1+neoforged.1",
-			"fabric": "1.1.1+fabric.1",
-			"curseforge": { "neoforge": 9549501, "fabric": 9549502 },
+			"neoforge": "1.2.0+neoforged.1",
+			"fabric": "1.2.0+fabric.1",
+			"curseforge": { "neoforge": 9602616, "fabric": 9602617 },
 			"needs": { "neoforge": "26.1.0.19-beta", "fabricLoader": "0.20.1", "fabricApi": "0.145.4" },
 			"without": {
 				"neoforge": ["Farmer's Delight", "Tough As Nails", "Thirst Was Taken 2", "Spice of Life Onion"],
@@ -43,18 +43,16 @@
 		{
 			"minecraft": ["1.21.1"],
 			"build": "1.21.1",
-			"neoforge": "1.1.1+neoforged.1",
-			"fabric": "1.1.1+fabric.1",
-			"curseforge": { "neoforge": 9557495, "fabric": 9557497 },
+			"neoforge": "1.2.0+neoforged.1",
+			"fabric": "1.2.0+fabric.1",
 			"needs": { "neoforge": "21.1.205", "fabricLoader": "0.16.10", "fabricApi": "0.116.18" },
 			"without": { "neoforge": ["Farmer's Delight Neoforged"], "fabric": ["Spice of Life Onion"] }
 		},
 		{
 			"minecraft": ["1.20.1"],
 			"build": "1.20.1",
-			"forge": "1.1.1+forge.1",
-			"fabric": "1.1.1+fabric.1",
-			"curseforge": { "forge": 9557655, "fabric": 9557656 },
+			"forge": "1.2.0+forge.1",
+			"fabric": "1.2.0+fabric.1",
 			"needs": { "forge": "47.3", "fabricLoader": "0.16.10", "fabricApi": "0.92.12" },
 			"without": { "forge": [], "fabric": ["Spice of Life Onion"] }
 		}
