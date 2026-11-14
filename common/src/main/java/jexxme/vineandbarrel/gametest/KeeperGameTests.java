@@ -68,6 +68,7 @@ final class KeeperGameTests
 		test("keeper_works_at_a_kettle_on_a_campfire_unburnt", VBGameTests.LARGE, 1800, helper -> worksUnburnt(helper, false));
 		test("keeper_works_at_a_big_kettle_on_four_fires_unburnt", VBGameTests.LARGE, 1800, helper -> worksUnburnt(helper, true));
 		test("keeper_walks_round_no_fire_corner", KeeperGameTests::roundsNoFireCorner);
+		test("keeper_kettle_trays_are_solid", KeeperGameTests::traysAreSolid);
 	}
 
 	/**
@@ -329,7 +330,9 @@ final class KeeperGameTests
 			for (int z = 0; z < size; z++) {
 				helper.setBlock(at.offset(x, -1, z), fire);
 				for (int y = 0; y < size; y++) {
-					helper.setBlock(at.offset(x, y, z), KettleRegistry.kettle());
+					// as the game places it: on its tray over the fire
+					helper.setBlock(at.offset(x, y, z), KettleRegistry.kettle().defaultBlockState().setValue(jexxme.vineandbarrel.kettle.BrewKettleBlock.SUPPORT,
+						jexxme.vineandbarrel.kettle.BrewKettleBlock.trayState(level, helper.absolutePos(at.offset(x, y, z)))));
 				}
 			}
 		}
@@ -411,6 +414,40 @@ final class KeeperGameTests
 		helper.assertFalse(TavernKeeper.roundsAHurtingCorner(level, way.apply(new int[][] {{3, 0}, {3, 1}, {3, 2}, {3, 3}, {3, 4}})), "straight past the fire");
 		helper.assertFalse(TavernKeeper.roundsAHurtingCorner(level, way.apply(new int[][] {{4, 3}, {3, 3}, {3, 4}})), "a turn with the fire outside it");
 		helper.assertFalse(TavernKeeper.roundsAHurtingCorner(level, way.apply(new int[][] {{4, 2}, {3, 3}, {3, 4}})), "a diagonal step a block off the fire");
+		helper.succeed();
+	}
+
+	/**
+	 * A kettle on a campfire stands on its tray, and the tray is solid all over the fire, a Big Kettle's under each of its
+	 * four bottom blocks as a single kettle's: the kettle's body is 2 px in from its edges, and over the fire's rim
+	 * beside it a villager pushed into a Big Kettle (by the others crowding round it) stepped up onto the lit campfire and
+	 * burned.
+	 */
+	private static void traysAreSolid(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		BlockState fire = Blocks.CAMPFIRE.defaultBlockState().setValue(net.minecraft.world.level.block.CampfireBlock.LIT, true);
+		helper.setBlock(new BlockPos(0, 1, 0), fire);
+		helper.setBlock(new BlockPos(0, 2, 0), KettleRegistry.kettle().defaultBlockState().setValue(jexxme.vineandbarrel.kettle.BrewKettleBlock.SUPPORT,
+			jexxme.vineandbarrel.kettle.BrewKettleBlock.trayState(level, helper.absolutePos(new BlockPos(0, 2, 0)))));
+		List<BlockPos> bottoms = new java.util.ArrayList<>(List.of(new BlockPos(0, 2, 0)));
+		for (int x = 2; x < 4; x++) {
+			for (int z = 2; z < 4; z++) {
+				helper.setBlock(new BlockPos(x, 1, z), fire);
+				helper.setBlock(new BlockPos(x, 2, z), KettleRegistry.kettle());
+				helper.setBlock(new BlockPos(x, 3, z), KettleRegistry.kettle());
+				bottoms.add(new BlockPos(x, 2, z));
+			}
+		}
+		jexxme.vineandbarrel.kettle.KettleMultiblock.tryJoin(level, helper.absolutePos(new BlockPos(2, 2, 2)));
+		var big = jexxme.vineandbarrel.kettle.KettleMultiblock.kettleAt(level, helper.absolutePos(new BlockPos(2, 2, 2)));
+		helper.assertTrue(big != null && big.isBig(), "the Big Kettle: " + big);
+		for (BlockPos bottom : bottoms) {
+			BlockPos pos = helper.absolutePos(bottom);
+			BlockState state = level.getBlockState(pos);
+			var box = state.getCollisionShape(level, pos, net.minecraft.world.phys.shapes.CollisionContext.empty()).bounds();
+			helper.assertTrue(box.minX <= 0.0 && box.maxX >= 1.0 && box.minZ <= 0.0 && box.maxZ >= 1.0 && box.minY < 0.0,
+				"the tray under " + state + " covers the fire: " + box);
+		}
 		helper.succeed();
 	}
 
