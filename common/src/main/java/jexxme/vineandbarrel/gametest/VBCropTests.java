@@ -10,7 +10,9 @@ import jexxme.vineandbarrel.mixin.BeeAccessor;
 import jexxme.vineandbarrel.registry.VBBlocks;
 import jexxme.vineandbarrel.registry.VBItems;
 import jexxme.vineandbarrel.tag.VBTags;
+import jexxme.vineandbarrel.world.SettingFilter;
 import jexxme.vineandbarrel.world.WildCropFilter;
+import jexxme.vineandbarrel.world.WorldgenConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -116,6 +118,7 @@ final class VBCropTests
 		test("crops_vine_broken_by_a_player_once", VBCropTests::vineBrokenOnce);
 		test("crops_worldgen_wild_crops", LARGE, 100, true, VBCropTests::worldgenWildCrops);
 		test("crops_worldgen_wild_white_grapes", LARGE, 100, true, VBCropTests::worldgenWildWhiteGrapes);
+		test("crops_worldgen_wild_crop_switches", LARGE, 100, true, VBCropTests::worldgenWildCropSwitches);
 		test("farm_c2_c3_c4_tags", VBCropTests::farmTags);
 		test("farm_c2_bees_grow_bushes_and_vines", VBCropTests::beesGrowBushesAndVines);
 		test("crops_burn_like_vanilla", VBCropTests::burnLikeVanilla);
@@ -686,6 +689,73 @@ final class VBCropTests
 			}
 		}
 		helper.assertTrue(placed >= 5, "The wild white grape patch should place several plants on grass, placed " + placed);
+		helper.succeed();
+	}
+
+	/**
+	 * The server's wild crop switches ({@link WorldgenConfig}): every wild crop's placed feature checks its own switch
+	 * first, and with one switched off its patch places nothing on a grass field while the other three still place
+	 * theirs. All on, as they ship, all four place. Each switch is on by default.
+	 */
+	private static void worldgenWildCropSwitches(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		record Crop(String name, Block wild, jexxme.vineandbarrel.platform.ConfigValue<Boolean> setting) {
+		}
+		List<Crop> crops = List.of(new Crop("grapes", VBBlocks.WILD_GRAPES.get(), WorldgenConfig.WILD_GRAPES),
+				new Crop("white_grapes", VBBlocks.WILD_WHITE_GRAPES.get(), WorldgenConfig.WILD_WHITE_GRAPES),
+				new Crop("hops", VBBlocks.WILD_HOPS.get(), WorldgenConfig.WILD_HOPS),
+				new Crop("barley", VBBlocks.WILD_BARLEY.get(), WorldgenConfig.WILD_BARLEY));
+		helper.assertValueEqual(WorldgenConfig.WILD_CROPS, crops.stream().map(Crop::setting).toList(), "one switch per wild crop");
+		java.util.Map<Crop, PlacedFeature> patches = new java.util.HashMap<>();
+		for (Crop crop : crops) {
+			helper.assertTrue(crop.setting().getDefault(), crop.setting().name() + " is on by default");
+			helper.assertValueEqual(crop.setting().section(), WorldgenConfig.SECTION, crop.setting().name() + "'s section");
+			helper.assertTrue(crop.setting().side() == jexxme.vineandbarrel.platform.ConfigValue.Side.SERVER, crop.setting().name() + " is a server setting");
+			PlacedFeature patch = level.registryAccess().registryOrThrow(Registries.PLACED_FEATURE).get(VineAndBarrel.id("patch_wild_" + crop.name()));
+			helper.assertTrue(patch != null, "patch_wild_" + crop.name() + " should load");
+			helper.assertTrue(patch.placement().getFirst() instanceof SettingFilter filter && filter.setting() == crop.setting(),
+					"patch_wild_" + crop.name() + " checks " + crop.setting() + " first: " + patch.placement());
+			patches.put(crop, new PlacedFeature(patch.feature(), patch.placement().stream()
+					.filter(modifier -> !(modifier instanceof RarityFilter) && !(modifier instanceof BiomeFilter)).toList()));
+		}
+		for (int x = 0; x < 32; x++) {
+			for (int z = 0; z < 32; z++) {
+				helper.setBlock(new BlockPos(x, 0, z), Blocks.GRASS_BLOCK);
+			}
+		}
+		List<Crop> rounds = new ArrayList<>();
+		rounds.add(null);
+		rounds.addAll(crops);
+		for (Crop off : rounds) {
+			try {
+				if (off != null) {
+					off.setting().setForTest(false);
+				}
+				for (Crop crop : crops) {
+					patches.get(crop).place(level, level.getChunkSource().getGenerator(), level.getRandom(), helper.absolutePos(new BlockPos(8, 0, 8)));
+					int placed = 0;
+					for (int x = 0; x < 32; x++) {
+						for (int z = 0; z < 32; z++) {
+							BlockPos pos = new BlockPos(x, 1, z);
+							if (!state(helper, pos).isAir()) {
+								placed += state(helper, pos).is(crop.wild()) ? 1 : 0;
+								helper.setBlock(pos, Blocks.AIR);
+							}
+						}
+					}
+					String with = off == null ? "every switch on" : off.setting().name() + " off";
+					if (crop == off) {
+						helper.assertValueEqual(placed, 0, "wild " + crop.name() + " placed with " + with);
+					} else {
+						helper.assertTrue(placed >= 5, "the wild " + crop.name() + " patch should place several plants with " + with + ", placed " + placed);
+					}
+				}
+			} finally {
+				if (off != null) {
+					off.setting().setForTest(null);
+				}
+			}
+		}
 		helper.succeed();
 	}
 

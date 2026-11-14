@@ -74,8 +74,7 @@ public final class NeoForgeGameTests
 			// The whole carry-over, as the client does it once the file is loaded: a client spec of its own, loaded by
 			// NeoForge's own config loading from the old file (in a tracker of its own, not the game's), the carried values
 			// set and saved, and the file then has the new keys with the old values
-			var detached = jexxme.vineandbarrel.neoforge.NeoForgeConfig.detached(jexxme.vineandbarrel.platform.ConfigValue.Side.CLIENT,
-				jexxme.vineandbarrel.tipsy.TipsyConfig.CLIENT_COMMENT);
+			var detached = jexxme.vineandbarrel.neoforge.NeoForgeConfig.detached(jexxme.vineandbarrel.platform.ConfigValue.Side.CLIENT);
 			net.neoforged.fml.config.ConfigTracker tracker = new net.neoforged.fml.config.ConfigTracker();
 			tracker.registerConfig(net.neoforged.fml.config.ModConfig.Type.CLIENT, detached.spec(),
 				net.neoforged.fml.ModList.get().getModContainerById(jexxme.vineandbarrel.VineAndBarrel.MODID).orElseThrow(), "old.toml");

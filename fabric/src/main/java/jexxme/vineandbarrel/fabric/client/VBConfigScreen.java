@@ -52,13 +52,16 @@ public class VBConfigScreen extends OptionsSubScreen
 		}
 	}
 
+	/** One side's settings, a header over each of its sections ({@code <modid>.configuration.header.<section>.<side>}). */
 	private void section(ConfigValue.Side side) {
-		// A header row: the section's name across the row, centred (this Minecraft's options list has no header rows of its own)
-		Component header = Component.translatable(PREFIX + "section." + VineAndBarrel.MODID + ".tipsy." + side.name().toLowerCase(Locale.ROOT) + ".toml");
-		this.list.addSmall(List.of(new StringWidget(HEADER_WIDTH, Button.DEFAULT_HEIGHT, header, this.font)));
-		for (ConfigValue<?> value : ConfigValue.all()) {
-			if (value.side() == side) {
-				this.list.addBig(option(value));
+		for (String section : ConfigValue.sections(side)) {
+			// A header row: the section's name across the row, centred (this Minecraft's options list has no header rows of its own)
+			Component header = Component.translatable(PREFIX + "header." + section + "." + side.name().toLowerCase(Locale.ROOT));
+			this.list.addSmall(List.of(new StringWidget(HEADER_WIDTH, Button.DEFAULT_HEIGHT, header, this.font)));
+			for (ConfigValue<?> value : ConfigValue.all()) {
+				if (value.side() == side && value.section().equals(section)) {
+					this.list.addBig(option(value));
+				}
 			}
 		}
 	}

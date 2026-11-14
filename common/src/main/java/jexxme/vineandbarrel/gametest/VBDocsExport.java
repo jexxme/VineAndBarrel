@@ -248,6 +248,10 @@ public final class VBDocsExport
 		crops.addProperty("bushPickedAge", ClimbingCropBlock.PICKED_AGE);
 		crops.addProperty("bushHalfRipeAge", ClimbingCropBlock.HALF_RIPE_AGE);
 		crops.addProperty("climbMaxHeight", VineClimbing.MAX_HEIGHT);
+		// The wild crop switches' defaults (section worldgen of the server file)
+		JsonObject wildConfig = new JsonObject();
+		jexxme.vineandbarrel.world.WorldgenConfig.WILD_CROPS.forEach(setting -> wildConfig.addProperty(setting.name(), setting.getDefault()));
+		crops.add("config", wildConfig);
 		root.add("crops", crops);
 		JsonObject villages = new JsonObject();
 		JsonObject weights = new JsonObject();
