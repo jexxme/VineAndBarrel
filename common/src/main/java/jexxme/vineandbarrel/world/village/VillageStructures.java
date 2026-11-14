@@ -30,8 +30,9 @@ import java.util.function.Supplier;
 
 /**
  * Villages (DESIGN 3 and 8), done exactly like Farmer's Delight's {@code VillageStructures}: on every server start the
- * taverns join the village house pools and the village farm processor lists (a living village's and an abandoned one's)
- * get one more rule processor that turns some of their wheat into our crops. Both are code, not data, because a data pack can only replace a vanilla pool or
+ * taverns join the village house pools (and those of other mods' villages, {@link #OTHER_VILLAGES}) and the village farm
+ * processor lists (a living village's and an abandoned one's) get one more rule processor that turns some of their wheat
+ * into our crops. Both are code, not data, because a data pack can only replace a vanilla pool or
  * processor list as a whole, which would fight every other mod that adds to them.
  */
 public final class VillageStructures
@@ -93,6 +94,70 @@ public final class VillageStructures
 
 	/** Every village type has its taverns, built in its own style. */
 	public static final List<VillageType> TAVERN_TYPES = List.of(VillageType.values());
+
+	/**
+	 * Another mod's village whose houses get our taverns too: its house pool, the village type whose taverns suit it, how
+	 * much the taverns weigh there all together, in percent of the pool's own houses' weight (so it follows the pool as
+	 * that mod changes it; the split between the layouts is the vanilla one, {@link #TAVERNS}), and in what percent of
+	 * its villages a tavern may go up at all. That last one is what sets how often they have one: a tavern only takes a
+	 * plot it fits, and in a village whose plots most of its own houses don't fill, it takes one of them whatever its
+	 * weight, so the weight alone can't make them rarer there.
+	 */
+	public record OtherVillage(ResourceLocation housesPool, VillageType style, int percent, int villagePercent) {
+		/** The weight of one tavern layout in this pool, whose own houses weigh {@code houses} together. */
+		public int weight(TavernLayout layout, int houses) {
+			return Math.max(1, Math.round(houses * percent / 100.0F * layout.weight() / TAVERN_WEIGHTS.get(style)));
+		}
+	}
+
+	/**
+	 * The villages of Towns & Towers (by Kaisyn; pools under {@code kaisyn:village/<village>/houses}), each with the
+	 * tavern of the vanilla village closest to it in climate and build. Towns & Towers keeps the vanilla villages (and our
+	 * taverns in them) in plains, desert, savanna, snowy plains and taiga and puts its own villages into the other
+	 * biomes, meadows (where vanilla built plains villages) among them. Applied only to the pools a server has, so only
+	 * with Towns & Towers (mod or data pack) installed. None go to its villages without a house pool of their own
+	 * (beach, grove, snowy slopes, savanna plateau, sunflower plains), the mushroom fields' mushroom houses, the swamp's
+	 * houses on stilts (no plot is deep enough for a tavern), nor its villages for other mods' biomes whose houses join
+	 * their streets in other ways (nilotic, mediterranean), whose plots no tavern fits (tudor) or that are no village of
+	 * houses (piglin, wandering trader camp). The shares of villages that may have one are tuned so about one village
+	 * in three has a tavern, as in vanilla villages, counted over a few thousand villages of real worlds (with and
+	 * without Terralith); those of the villages for other mods' biomes follow the nearest kind.
+	 */
+	public static final List<OtherVillage> OTHER_VILLAGES = List.of(
+		townsAndTowers("meadow_swiss", VillageType.PLAINS, 103, 38),
+		townsAndTowers("birch_forest_romanian", VillageType.PLAINS, 103, 75),
+		townsAndTowers("flower_forest_japanese", VillageType.PLAINS, 103, 70),
+		townsAndTowers("forest_ruins", VillageType.PLAINS, 103, 83),
+		townsAndTowers("old_growth_taiga_polish", VillageType.TAIGA, 99, 36),
+		townsAndTowers("snowy_taiga_viking", VillageType.SNOWY, 111, 83),
+		townsAndTowers("badlands_pueblo", VillageType.DESERT, 72, 35),
+		townsAndTowers("wooded_badlands_tipi", VillageType.DESERT, 72, 30),
+		townsAndTowers("jungle_tribal", VillageType.SAVANNA, 235, 100),
+		townsAndTowers("sparse_jungle_polynesian", VillageType.SAVANNA, 235, 38),
+		// only in other mods' biomes (Terralith, Biomes O' Plenty, ...)
+		townsAndTowers("exclusives/classic", VillageType.PLAINS, 103, 75),
+		townsAndTowers("exclusives/rustic", VillageType.PLAINS, 103, 75),
+		townsAndTowers("exclusives/swedish", VillageType.TAIGA, 99, 36),
+		townsAndTowers("exclusives/iberian", VillageType.DESERT, 72, 35));
+
+	private static OtherVillage townsAndTowers(String village, VillageType style, int percent, int villagePercent) {
+		return new OtherVillage(ResourceLocation.fromNamespaceAndPath("kaisyn", "village/" + village + "/houses"), style, percent, villagePercent);
+	}
+
+	/** The taverns added to other mods' pools, each with its village (read as villages are laid out, on worldgen threads). */
+	private static final Map<StructurePoolElement, OtherVillage> OTHER_TAVERNS = new java.util.concurrent.ConcurrentHashMap<>();
+
+	/**
+	 * Whether a village of this kind laid out from this start piece may have a tavern: the same answer for every plot of
+	 * the village, from where it starts, in {@link OtherVillage#villagePercent} of them.
+	 */
+	public static boolean mayHaveTavern(OtherVillage village, net.minecraft.world.level.levelgen.structure.StructurePiece start) {
+		var box = start.getBoundingBox();
+		long h = box.minX() * 0x9E3779B97F4A7C15L ^ box.minZ() * 0xC2B2AE3D27D4EB4FL ^ box.minY() * 0x165667B19E3779F9L;
+		h = (h ^ (h >>> 31)) * 0xBF58476D1CE4E5B9L;
+		h ^= h >>> 29;
+		return Math.floorMod(h, 100) < village.villagePercent();
+	}
 
 	/** The processor list each tavern is placed with: the one most vanilla houses of that type use (then the dressing). */
 	private static final Map<VillageType, ResourceLocation> TAVERN_PROCESSORS = Map.of(
@@ -185,12 +250,37 @@ public final class VillageStructures
 			addBuildingToPool(pools, processorLists, layout.type().housesPool(), layout.id(), TAVERN_PROCESSORS.get(layout.type()), layout.weight(),
 				dressing(layout.type()).withCellar(layout.cellarId(), TAVERN_FLOORS.get(layout.type()).defaultBlockState()));
 		}
+		for (OtherVillage village : OTHER_VILLAGES) {
+			// only there with the mod (or its data pack) installed
+			StructureTemplatePool pool = pools.get(village.housesPool());
+			if (pool != null) {
+				addTaverns(pool, processorLists, village);
+			}
+		}
 		for (VillageType type : VillageType.values()) {
 			// abandoned (zombie) villages too: their farms are placed with the zombie list, which carries the same farm rules
 			for (ResourceLocation list : type.farmProcessorLists()) {
 				addProcessorToList(processorLists, list, farmCropProcessor(FARM_CROPS.get(type)));
 			}
 		}
+	}
+
+	/**
+	 * Another mod's village pool gets the taverns of its {@link OtherVillage#style}, weighted by its own houses' weight
+	 * (taverns already in it not counted, so a second server start adds nothing).
+	 */
+	public static void addTaverns(StructureTemplatePool pool, Registry<StructureProcessorList> processorLists, OtherVillage village) {
+		int houses = pool.rawTemplates.stream().filter(entry -> !isTavern(entry.getFirst())).mapToInt(Pair::getSecond).sum();
+		for (TavernLayout layout : taverns(village.style())) {
+			addBuildingToPool(pool, processorLists, layout.id(), TAVERN_PROCESSORS.get(layout.type()), village.weight(layout, houses),
+				dressing(layout.type()).withCellar(layout.cellarId(), TAVERN_FLOORS.get(layout.type()).defaultBlockState()));
+		}
+		pool.rawTemplates.stream().filter(entry -> isTavern(entry.getFirst())).forEach(entry -> OTHER_TAVERNS.put(entry.getFirst(), village));
+	}
+
+	/** {@return the other mod's village whose pool this tavern element was added to, or null} */
+	public static @org.jspecify.annotations.Nullable OtherVillage otherVillageOf(StructurePoolElement element) {
+		return OTHER_TAVERNS.get(element);
 	}
 
 	/**
@@ -204,6 +294,12 @@ public final class VillageStructures
 			VineAndBarrel.LOGGER.warn("Village pool {} is missing, so {} is not added", poolId, template);
 			return;
 		}
+		addBuildingToPool(pool, processorLists, template, processors, weight, extra);
+	}
+
+	/** {@link #addBuildingToPool(Registry, Registry, ResourceLocation, ResourceLocation, ResourceLocation, int, StructureProcessor...)} into this pool. */
+	public static void addBuildingToPool(StructureTemplatePool pool, Registry<StructureProcessorList> processorLists, ResourceLocation template, ResourceLocation processors,
+		int weight, StructureProcessor... extra) {
 		if (pool.rawTemplates.stream().anyMatch(entry -> isTemplate(entry.getFirst(), template))) {
 			return;
 		}
@@ -253,18 +349,24 @@ public final class VillageStructures
 
 	/**
 	 * The houses a village plot chooses from, without the taverns once the village has one: one tavern per village,
-	 * however many of its plots one would fit. {@code pieces} is what the village has laid out so far.
+	 * however many of its plots one would fit. In another mod's village, also without them if this village may have
+	 * none ({@link #mayHaveTavern}). {@code pieces} is what the village has laid out so far, its start piece first.
 	 */
 	public static List<StructurePoolElement> oneTavernPerVillage(List<StructurePoolElement> houses, List<?> pieces) {
-		if (houses.stream().noneMatch(VillageStructures::isTavern)) {
+		StructurePoolElement tavern = houses.stream().filter(VillageStructures::isTavern).findFirst().orElse(null);
+		if (tavern == null) {
 			return houses;
 		}
+		OtherVillage other = OTHER_TAVERNS.get(tavern);
+		boolean none = other != null && !pieces.isEmpty() && pieces.getFirst() instanceof net.minecraft.world.level.levelgen.structure.StructurePiece start
+			&& !mayHaveTavern(other, start);
 		for (Object piece : pieces) {
-			if (piece instanceof net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece placed && isTavern(placed.getElement())) {
-				List<StructurePoolElement> rest = new ArrayList<>(houses);
-				rest.removeIf(VillageStructures::isTavern);
-				return rest;
-			}
+			none |= piece instanceof net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece placed && isTavern(placed.getElement());
+		}
+		if (none) {
+			List<StructurePoolElement> rest = new ArrayList<>(houses);
+			rest.removeIf(VillageStructures::isTavern);
+			return rest;
 		}
 		return houses;
 	}
