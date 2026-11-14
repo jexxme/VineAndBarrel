@@ -27,6 +27,7 @@
     "IronBarsBlockMixin",
     "JigsawPlacerMixin",
     "LeadItemMixin",
+    "LithostitchedJigsawMixin",
     "LeashFenceKnotEntityMixin",
     "MoveToTargetSinkMixin",
     "PlayerKnownMovementMixin",
