@@ -138,6 +138,7 @@ public final class WorldGameTests
 		register("world_tavern_chest_loot", LARGE, 100, WorldGameTests::tavernLoot);
 		register("world_taverns_in_village_pools", LARGE, 100, WorldGameTests::tavernsInPools);
 		register("world_taverns_one_village_in_three", LARGE, 200, WorldGameTests::taverns_oneVillageInThree);
+		register("world_taverns_in_other_mods_villages", LARGE, 100, WorldGameTests::tavernsInOtherVillages);
 		register("world_tavern_cellar_casks_are_the_taverns", TALL, 100, WorldGameTests::cellarCasksAreTheTaverns);
 		register("world_tavern_keeper_restocks_his_own_casks", TALL, 100, WorldGameTests::keeperRestocks);
 		register("world_village_apply_is_idempotent", LARGE, 100, WorldGameTests::applyIsIdempotent);
@@ -516,6 +517,88 @@ public final class WorldGameTests
 				layout.name() + " cellar " + cellar.getSize() + " under the whole house " + template.getSize());
 		}
 		helper.succeed();
+	}
+
+	/**
+	 * Another mod's villages ({@link VillageStructures#OTHER_VILLAGES}, Towns & Towers): a house pool like theirs gets each
+	 * tavern layout of its village type once, weighted by the pool's own houses, rigid and dressed like the vanilla ones,
+	 * and a second server start adds nothing. On this server, every such pool that exists (only with that mod installed)
+	 * holds its taverns that way, and no other pool than these and the five vanilla house pools holds a tavern.
+	 */
+	private static void tavernsInOtherVillages(GameTestHelper helper) {
+		var access = helper.getLevel().registryAccess();
+		var pools = access.lookupOrThrow(Registries.TEMPLATE_POOL);
+		var lists = access.lookupOrThrow(Registries.PROCESSOR_LIST);
+		helper.assertValueEqual(VillageStructures.OTHER_VILLAGES.stream().map(VillageStructures.OtherVillage::housesPool).distinct().count(),
+			(long) VillageStructures.OTHER_VILLAGES.size(), "each pool once");
+		// A pool like Towns & Towers' meadow village's: 223 weight of houses
+		VillageStructures.OtherVillage meadow = VillageStructures.OTHER_VILLAGES.getFirst();
+		StructureTemplatePool pool = new StructureTemplatePool(pools.getOrThrow(net.minecraft.data.worldgen.Pools.EMPTY),
+			List.of(com.mojang.datafixers.util.Pair.of(net.minecraft.world.level.levelgen.structure.pools.EmptyPoolElement.INSTANCE, 223)));
+		VillageStructures.addTaverns(pool, lists, meadow);
+		assertTavernsIn(helper, pool, meadow, 223, "a pool like " + meadow.housesPool());
+		List<Object> once = List.of(List.copyOf(pool.rawTemplates), pool.templates.size());
+		VillageStructures.addTaverns(pool, lists, meadow);
+		helper.assertValueEqual(List.of(List.copyOf(pool.rawTemplates), pool.templates.size()), once, "the pool after adding again");
+		int total = VillageStructures.taverns(meadow.style()).stream().mapToInt(layout -> meadow.weight(layout, 223)).sum();
+		helper.assertTrue(Math.abs(total - 223 * meadow.percent() / 100.0) <= VillageStructures.taverns(meadow.style()).size(),
+			"the taverns weigh " + meadow.percent() + "% of the houses: " + total);
+		// Only its share of the villages may have one: decided by where the village starts, the same for all its plots
+		List<net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement> shuffled = pool.getShuffledTemplates(RandomSource.create(3L));
+		var tavern = shuffled.stream().filter(VillageStructures::isTavern).findFirst().orElseThrow();
+		helper.assertTrue(VillageStructures.otherVillageOf(tavern) == meadow, "the tavern knows its village");
+		int mayHave = 0;
+		int starts = 2000;
+		for (int i = 0; i < starts; i++) {
+			BlockPos at = new BlockPos(i * 37 - 30000, 64, i * 91 % 4000 - 2000);
+			var start = new PoolElementStructurePiece(helper.getLevel().getStructureTemplateManager(), net.minecraft.world.level.levelgen.structure.pools.EmptyPoolElement.INSTANCE,
+				at, 0, Rotation.NONE, new BoundingBox(at), LiquidSettings.IGNORE_WATERLOGGING);
+			boolean may = VillageStructures.mayHaveTavern(meadow, start);
+			mayHave += may ? 1 : 0;
+			var offered = VillageStructures.oneTavernPerVillage(shuffled, List.of(start));
+			helper.assertValueEqual(offered.stream().anyMatch(VillageStructures::isTavern), may, "taverns offered to a village that may have one or not, at " + at);
+			helper.assertValueEqual(offered.size(), may ? shuffled.size() : (int) shuffled.stream().filter(e -> !VillageStructures.isTavern(e)).count(), "houses offered at " + at);
+		}
+		helper.assertTrue(Math.abs(mayHave * 100.0 / starts - meadow.villagePercent()) <= 4,
+			"villages that may have a tavern: " + mayHave + " of " + starts + ", should be " + meadow.villagePercent() + "%");
+		// This server's pools
+		java.util.Set<Identifier> allowed = new HashSet<>();
+		for (VillageType type : VillageType.values()) {
+			allowed.add(type.housesPool());
+		}
+		for (VillageStructures.OtherVillage village : VillageStructures.OTHER_VILLAGES) {
+			StructureTemplatePool theirs = pools.getValue(village.housesPool());
+			if (theirs != null) {
+				allowed.add(village.housesPool());
+				int houses = theirs.rawTemplates.stream().filter(e -> !VillageStructures.isTavern(e.getFirst())).mapToInt(e -> e.getSecond()).sum();
+				assertTavernsIn(helper, theirs, village, houses, village.housesPool().toString());
+			}
+		}
+		for (var entry : pools.entrySet()) {
+			boolean taverns = entry.getValue().rawTemplates.stream().anyMatch(e -> VillageStructures.isTavern(e.getFirst()));
+			helper.assertTrue(!taverns || allowed.contains(entry.getKey().identifier()), "a tavern in " + entry.getKey().identifier());
+		}
+		helper.succeed();
+	}
+
+	private static void assertTavernsIn(GameTestHelper helper, StructureTemplatePool pool, VillageStructures.OtherVillage village, int houses, String name) {
+		for (VillageStructures.TavernLayout layout : VillageStructures.TAVERNS) {
+			var entries = pool.rawTemplates.stream().filter(e -> VillageStructures.isTemplate(e.getFirst(), layout.id())).toList();
+			if (layout.type() != village.style()) {
+				helper.assertTrue(entries.isEmpty(), layout.name() + " in " + name + ", whose taverns are " + village.style().id());
+				continue;
+			}
+			helper.assertValueEqual(entries.size(), 1, layout.name() + " entries in " + name);
+			helper.assertValueEqual((int) entries.getFirst().getSecond(), village.weight(layout, houses), layout.name() + " weight in " + name);
+			helper.assertValueEqual((int) pool.templates.stream().filter(e -> VillageStructures.isTemplate(e, layout.id())).count(), village.weight(layout, houses),
+				layout.name() + " picks in " + name);
+			SinglePoolElement element = (SinglePoolElement) entries.getFirst().getFirst();
+			helper.assertTrue(element.getProjection() == StructureTemplatePool.Projection.RIGID, layout.name() + " rigid in " + name);
+			String encoded = net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement.CODEC.encodeStart(
+				net.minecraft.resources.RegistryOps.create(com.mojang.serialization.JsonOps.INSTANCE, helper.getLevel().registryAccess()), element).getOrThrow().toString();
+			helper.assertTrue(encoded.contains(VineAndBarrel.id("tavern_dressing").toString()) && encoded.contains(layout.cellarId().toString()),
+				layout.name() + " in " + name + " is dressed and lays its cellar: " + encoded);
+		}
 	}
 
 	/**
