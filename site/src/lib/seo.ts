@@ -64,7 +64,7 @@ export const PAGES: Record<string, Page> = {
 	'aging-barrel': {
 		title: 'Aging Barrel: ferment and age beer and wine',
 		description: 'Fill, ferment, age and tap. How the Aging Barrel works, how long it takes, and how to build a cellar of them.',
-		picture: { shot: 'taverns/cellar', alt: "A village tavern's cellar with barrels ready to tap." },
+		picture: { shot: 'taverns/cellar-plains', alt: "A village tavern's beer cellar with barrels ready to tap." },
 	},
 	drinks: {
 		title: 'All drinks: Minecraft beer, wine, cider and mead',
