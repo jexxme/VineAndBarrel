@@ -30,6 +30,7 @@
     "ClientAdvancementsAccessor",
     "CameraMixin",
     "ChannelMixin",
+    "SoundPhysicsMixin",
     "EntityRendererMixin",
     "GameRendererMixin",
     "HumanoidModelMixin",
