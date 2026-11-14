@@ -15,7 +15,8 @@ import org.lwjgl.openal.EXTEfx;
  * as if through cotton. Each world sound (one that fades with distance) gets a low-pass filter as it starts
  * ({@code jexxme.vineandbarrel.mixin.ChannelMixin}); music, the menus and your own heartbeat stay clear. Needs OpenAL's
  * EFX extension (OpenAL Soft, which Minecraft ships, has it); without it the ears stay clear. Off with the player's own
- * "Woolly sound" setting.
+ * "Woolly sound" setting. With Sound Physics Remastered, which sets a filter of its own on each world sound as it plays
+ * (and again as it moves), the muffle goes into that filter ({@code jexxme.vineandbarrel.mixin.SoundPhysicsMixin}).
  */
 public final class DrunkEars
 {
@@ -28,6 +29,8 @@ public final class DrunkEars
 	private static volatile float muffle;
 	/** -1 not tried yet, 0 no EFX, 1 EFX there. Sound thread only. */
 	private static int efx = -1;
+	/** The OpenAL sources playing a world sound (the last sound each started faded with distance). */
+	private static final java.util.Set<Integer> WORLD_SOURCES = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
 	private DrunkEars() {
 	}
@@ -53,6 +56,7 @@ public final class DrunkEars
 
 	/** A world sound starts on this OpenAL source: muffled as the ears are now (sound thread). */
 	public static void onWorldSound(int source) {
+		WORLD_SOURCES.add(source);
 		float m = muffle;
 		if (m <= 0.001F || !efx()) {
 			clear(source);
@@ -61,8 +65,8 @@ public final class DrunkEars
 		try {
 			int filter = EXTEfx.alGenFilters();
 			EXTEfx.alFilteri(filter, EXTEfx.AL_FILTER_TYPE, EXTEfx.AL_FILTER_LOWPASS);
-			EXTEfx.alFilterf(filter, EXTEfx.AL_LOWPASS_GAIN, Mth.lerp(m, 1.0F, GAIN_AT_FULL) * (m > 0.9F ? 1.0F - (m - 0.9F) * 5.0F : 1.0F));
-			EXTEfx.alFilterf(filter, EXTEfx.AL_LOWPASS_GAINHF, Mth.lerp(m, 1.0F, HIGHS_AT_FULL));
+			EXTEfx.alFilterf(filter, EXTEfx.AL_LOWPASS_GAIN, gain(m));
+			EXTEfx.alFilterf(filter, EXTEfx.AL_LOWPASS_GAINHF, highs(m));
 			// the source copies the filter's settings: the filter itself can go at once
 			AL10.alSourcei(source, EXTEfx.AL_DIRECT_FILTER, filter);
 			EXTEfx.alDeleteFilters(filter);
@@ -74,7 +78,33 @@ public final class DrunkEars
 
 	/** A sound that doesn't fade with distance (music, menus, the heartbeat) starts on this source: clear. */
 	public static void onFlatSound(int source) {
+		WORLD_SOURCES.remove(source);
 		clear(source);
+	}
+
+	/**
+	 * Sound Physics Remastered sets {@code param} of one of its filters to {@code value} for the sound on {@code source}
+	 * (sound thread): for a world sound, muffled as the ears are now, on top of its own.
+	 */
+	public static float intoSoundPhysicsFilter(int source, int param, float value) {
+		float m = muffle;
+		if (m <= 0.001F || !WORLD_SOURCES.contains(source)) {
+			return value;
+		}
+		if (param == EXTEfx.AL_LOWPASS_GAIN) {
+			return value * gain(m);
+		}
+		return param == EXTEfx.AL_LOWPASS_GAINHF ? value * highs(m) : value;
+	}
+
+	/** The whole sound's share at this muffle (fading out at the very end, as the world goes away). */
+	private static float gain(float m) {
+		return Mth.lerp(m, 1.0F, GAIN_AT_FULL) * (m > 0.9F ? 1.0F - (m - 0.9F) * 5.0F : 1.0F);
+	}
+
+	/** The highs' share at this muffle. */
+	private static float highs(float m) {
+		return Mth.lerp(m, 1.0F, HIGHS_AT_FULL);
 	}
 
 	private static void clear(int source) {
