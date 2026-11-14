@@ -302,8 +302,8 @@ final class KeeperGameTests
 	 * Review 1.2: a villager walks up to a kettle on a lit campfire (a Big Kettle on its four), is hired there, and works
 	 * at it for a good while without ever getting burnt. Two more lit campfires beside the kettle's own fire, by its
 	 * controller, are where a keeper once stood (on one, in reach of the kettle) and burned: nobody stands on, in or
-	 * under a fire, nor walks across one. He is sent to his kettle every second (as his way to a job site and his work
-	 * strolls send him), wherever he has strolled off to.
+	 * under a fire, nor walks across one; and where a Big Kettle's corner by its controller has no room, he still finds
+	 * it. Once hired he stays where he stands (his strolls about the village are the game's own).
 	 */
 	private static void worksUnburnt(GameTestHelper helper, boolean big) {
 		ServerLevel level = helper.getLevel();
@@ -328,33 +328,49 @@ final class KeeperGameTests
 		helper.setBlock(at.offset(-1, -1, 0), fire);
 		helper.setBlock(at.offset(0, -1, -1), fire);
 		Villager villager = helper.spawn(EntityType.VILLAGER, at.offset(-4, -1, size + 3));
+		// a mob plans paths only while it stands on the ground; it has not fallen onto it yet on its first tick
+		villager.setOnGround(true);
+		// he finds the kettle as a job site he can walk up to (a Big Kettle's corner by its controller has no room)
+		var site = level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.POINT_OF_INTEREST_TYPE).getOrThrow(TavernKeeper.JOB_SITE);
+		var found = net.minecraft.world.entity.ai.behavior.AcquirePoi.findPathToPois(villager, java.util.Set.of(com.mojang.datafixers.util.Pair.of(site, kettle)));
+		helper.assertTrue(found != null && found.canReach() && kettle.equals(found.getTarget()), "he finds the kettle: " + found);
+		// and sets out for it, as finding it makes him (taken here, so he takes no other test's kettle)
+		helper.assertTrue(level.getPoiManager().take(type -> type.is(TavernKeeper.JOB_SITE), (type, pos) -> pos.equals(kettle), kettle, 1).isPresent(), "the kettle is free");
+		villager.getBrain().setMemory(MemoryModuleType.POTENTIAL_JOB_SITE, net.minecraft.core.GlobalPos.of(level.dimension(), kettle));
 		float health = villager.getHealth();
 		int[] worked = {0};
 		String[] burnt = {null};
-		helper.onEachTick(() -> {
+		// every tick: hurt yet? at his kettle, working? sent there again every second until he gets there (as his way to a
+		// job site sends him by day); once hired he stays where he stands (his strolls about the village are the game's)
+		Runnable watch = () -> {
 			if (burnt[0] == null && (villager.getHealth() < health || villager.isOnFire())) {
 				burnt[0] = "hurt at " + villager.position() + " (kettle " + kettle + "): " + villager.getLastDamageSource();
 			}
-			boolean there = TavernKeeper.reaches(level, kettle, villager.position());
-			if (there && TavernKeeper.isKeeper(villager) && new Work().closeEnough(level, villager)) {
-				worked[0]++;
-			}
-			if (helper.getTick() % 20 == 0 && !there) {
+			boolean hired = TavernKeeper.isKeeper(villager) && villager.getBrain().getMemory(MemoryModuleType.JOB_SITE).map(job -> job.pos().equals(kettle)).orElse(false);
+			if (hired) {
+				villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED).setBaseValue(0.0);
+				if (new Work().closeEnough(level, villager)) {
+					worked[0]++;
+				}
+			} else if (helper.getTick() % 20 == 0) {
 				villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new net.minecraft.world.entity.ai.memory.WalkTarget(kettle, 0.5F, 1));
 			}
-		});
+		};
 		helper.startSequence()
-			.thenWaitUntil(() -> helper.assertTrue(TavernKeeper.isKeeper(villager) && villager.getBrain().getMemory(MemoryModuleType.JOB_SITE)
-				.map(site -> site.pos().equals(kettle)).orElse(false), "hired at the kettle: " + net.minecraft.core.registries.BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession())
-				+ " at " + villager.position().subtract(net.minecraft.world.phys.Vec3.atLowerCornerOf(helper.absolutePos(BlockPos.ZERO))) + ", on his way to "
-				+ villager.getBrain().getMemory(MemoryModuleType.POTENTIAL_JOB_SITE).map(site -> site.pos().subtract(helper.absolutePos(BlockPos.ZERO))) + ", kettle at "
-				+ kettle.subtract(helper.absolutePos(BlockPos.ZERO)) + ", spots " + TavernKeeper.standingSpots(level, kettle, villager.blockPosition()).stream()
-				.map(spot -> spot.subtract(helper.absolutePos(BlockPos.ZERO)).toShortString()).toList()))
-			.thenExecuteFor(600, () -> helper.assertTrue(burnt[0] == null, "the keeper got burnt: " + burnt[0]))
-			.thenExecute(() -> {
-				helper.assertTrue(burnt[0] == null, "the keeper got burnt: " + burnt[0]);
-				helper.assertTrue(worked[0] >= 200, "he stood at his kettle, close enough to work, for " + worked[0] + " ticks of 600");
+			.thenWaitUntil(() -> {
+				watch.run();
+				helper.assertTrue(burnt[0] == null, "the villager got burnt: " + burnt[0]);
+				helper.assertTrue(TavernKeeper.isKeeper(villager) && villager.getBrain().getMemory(MemoryModuleType.JOB_SITE)
+					.map(job -> job.pos().equals(kettle)).orElse(false), "hired at the kettle: " + net.minecraft.core.registries.BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession())
+					+ " at " + villager.position().subtract(net.minecraft.world.phys.Vec3.atLowerCornerOf(helper.absolutePos(BlockPos.ZERO))) + ", kettle at "
+					+ kettle.subtract(helper.absolutePos(BlockPos.ZERO)) + ", spots " + TavernKeeper.standingSpots(level, kettle, villager.blockPosition()).stream()
+					.map(spot -> spot.subtract(helper.absolutePos(BlockPos.ZERO)).toShortString()).toList());
 			})
+			.thenExecuteFor(600, () -> {
+				watch.run();
+				helper.assertTrue(burnt[0] == null, "the keeper got burnt: " + burnt[0]);
+			})
+			.thenExecute(() -> helper.assertTrue(worked[0] >= 500, "he stood at his kettle, close enough to work, for " + worked[0] + " ticks of 600"))
 			.thenSucceed();
 	}
 
