@@ -46,11 +46,14 @@ public class VBConfigScreen extends OptionsSubScreen
 		}
 	}
 
+	/** One side's settings, a header over each of its sections ({@code <modid>.configuration.header.<section>.<side>}). */
 	private void section(ConfigValue.Side side) {
-		this.list.addHeader(Component.translatable(PREFIX + "section." + VineAndBarrel.MODID + ".tipsy." + side.name().toLowerCase(Locale.ROOT) + ".toml"));
-		for (ConfigValue<?> value : ConfigValue.all()) {
-			if (value.side() == side) {
-				this.list.addBig(option(value));
+		for (String section : ConfigValue.sections(side)) {
+			this.list.addHeader(Component.translatable(PREFIX + "header." + section + "." + side.name().toLowerCase(Locale.ROOT)));
+			for (ConfigValue<?> value : ConfigValue.all()) {
+				if (value.side() == side && value.section().equals(section)) {
+					this.list.addBig(option(value));
+				}
 			}
 		}
 	}

@@ -2,6 +2,10 @@
   "feature": "vineandbarrel:wild_white_grapes",
   "placement": [
     {
+      "type": "vineandbarrel:setting",
+      "setting": "worldgen.wildWhiteGrapes"
+    },
+    {
       "type": "minecraft:rarity_filter",
       "chance": 100
     },
