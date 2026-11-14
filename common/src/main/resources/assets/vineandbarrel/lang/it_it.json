@@ -296,7 +296,7 @@
   "vineandbarrel.configuration.noddingOff": "Colpi di sonno",
   "vineandbarrel.configuration.noddingOff.tooltip": "Con Brillo IV e V, se stai fermo troppo a lungo, ti appisoli in piedi.",
   "vineandbarrel.configuration.hangover": "Postumi",
-  "vineandbarrel.configuration.hangover.tooltip": "Dopo un blackout, o una notte di sonno con Brillo IV o V, ti svegli con i postumi della sbornia.",
+  "vineandbarrel.configuration.hangover.tooltip": "Dopo un vuoto di memoria, o una notte di sonno con Brillo IV o V, ti svegli con i postumi della sbornia.",
   "vineandbarrel.configuration.drunkScreen": "Vista brilla (%)",
   "vineandbarrel.configuration.drunkScreen.tooltip": "Quanto l'essere Brillo muove la tua vista: un singhiozzo, un inciampo, un capitombolo. 0 la tiene ferma.",
   "vineandbarrel.configuration.doubleVision": "Vista doppia",

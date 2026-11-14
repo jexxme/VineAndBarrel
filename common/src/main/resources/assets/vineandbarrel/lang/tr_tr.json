@@ -296,7 +296,7 @@
   "vineandbarrel.configuration.noddingOff": "Uyuklama",
   "vineandbarrel.configuration.noddingOff.tooltip": "Çakırkeyif IV ve V'te çok uzun süre hareketsiz durursan ayakta uyuklarsın.",
   "vineandbarrel.configuration.hangover": "Akşamdan kalma",
-  "vineandbarrel.configuration.hangover.tooltip": "Bir hafıza kaybından ya da Çakırkeyif IV veya V'te geçen bir gece uykusundan sonra akşamdan kalma uyanırsın.",
+  "vineandbarrel.configuration.hangover.tooltip": "Bir film kopmasından ya da Çakırkeyif IV veya V'te geçen bir gece uykusundan sonra akşamdan kalma uyanırsın.",
   "vineandbarrel.configuration.drunkScreen": "Sarhoş ekran (%)",
   "vineandbarrel.configuration.drunkScreen.tooltip": "Çakırkeyif olmanın kendi görüşünü ne kadar oynattığı: bir hıçkırık, bir tökezleme, bir düşüş. 0 onu sabit tutar.",
   "vineandbarrel.configuration.doubleVision": "Çift görme",
