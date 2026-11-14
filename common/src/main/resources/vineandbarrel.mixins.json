@@ -3,6 +3,7 @@
   "package": "jexxme.vineandbarrel.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AcquirePoiMixin",
     "StructureEntityTileMixin",
     "VillagerWantsBarleyMixin",
     "BeeAccessor",
