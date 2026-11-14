@@ -56,6 +56,7 @@ final class KeeperGameTests
 		test("keeper_an_old_kettle_becomes_a_job_site", KeeperGameTests::oldKettle);
 		test("keeper_works_at_a_kettle_on_a_campfire_unburnt", VBGameTests.LARGE, 1800, helper -> worksUnburnt(helper, false));
 		test("keeper_works_at_a_big_kettle_on_four_fires_unburnt", VBGameTests.LARGE, 1800, helper -> worksUnburnt(helper, true));
+		test("keeper_walks_round_no_fire_corner", KeeperGameTests::roundsNoFireCorner);
 	}
 
 	/**
@@ -378,6 +379,31 @@ final class KeeperGameTests
 			})
 			.thenExecute(() -> helper.assertTrue(worked[0] >= 500, "he stood at his kettle, close enough to work, for " + worked[0] + " ticks of 600"))
 			.thenSucceed();
+	}
+
+	/**
+	 * A way to a kettle that rounds the corner of a lit campfire comes last: a diagonal step past the fire, or a turn
+	 * with the fire on its inside, where a villager cuts the corner and clips the fire though no step is on it. Straight
+	 * past it, or turning with the fire on the outside, is fine.
+	 */
+	private static void roundsNoFireCorner(GameTestHelper helper) {
+		helper.setBlock(new BlockPos(2, 1, 2), Blocks.CAMPFIRE.defaultBlockState().setValue(net.minecraft.world.level.block.CampfireBlock.LIT, true));
+		java.util.function.Function<int[][], net.minecraft.world.level.pathfinder.Path> way = steps -> {
+			List<net.minecraft.world.level.pathfinder.Node> nodes = new java.util.ArrayList<>();
+			for (int[] step : steps) {
+				BlockPos pos = helper.absolutePos(new BlockPos(step[0], 1, step[1]));
+				nodes.add(new net.minecraft.world.level.pathfinder.Node(pos.getX(), pos.getY(), pos.getZ()));
+			}
+			return new net.minecraft.world.level.pathfinder.Path(nodes, nodes.get(nodes.size() - 1).asBlockPos(), true);
+		};
+		ServerLevel level = helper.getLevel();
+		helper.assertTrue(TavernKeeper.roundsAHurtingCorner(level, way.apply(new int[][] {{3, 2}, {2, 3}})), "a diagonal step past the fire rounds it");
+		helper.assertTrue(TavernKeeper.roundsAHurtingCorner(level, way.apply(new int[][] {{3, 1}, {3, 2}, {3, 3}, {2, 3}})), "a turn round the fire rounds it");
+		helper.assertTrue(TavernKeeper.roundsAHurtingCorner(level, way.apply(new int[][] {{1, 1}, {1, 2}, {1, 3}, {2, 3}, {3, 3}, {3, 2}})), "a way round it");
+		helper.assertFalse(TavernKeeper.roundsAHurtingCorner(level, way.apply(new int[][] {{3, 0}, {3, 1}, {3, 2}, {3, 3}, {3, 4}})), "straight past the fire");
+		helper.assertFalse(TavernKeeper.roundsAHurtingCorner(level, way.apply(new int[][] {{4, 3}, {3, 3}, {3, 4}})), "a turn with the fire outside it");
+		helper.assertFalse(TavernKeeper.roundsAHurtingCorner(level, way.apply(new int[][] {{4, 2}, {3, 3}, {3, 4}})), "a diagonal step a block off the fire");
+		helper.succeed();
 	}
 
 	private static Villager keeper(GameTestHelper helper, VillagerType type, BlockPos at) {

@@ -304,17 +304,63 @@ public final class TavernKeeper
 
 	/**
 	 * A villager's way to where he stands at the kettle at {@code kettle} ({@link #standingSpots}), clear of everything
-	 * that hurts, or null when no spot has one.
+	 * that hurts, or null when no spot has one. A way that rounds the corner of a fire ({@link #roundsAHurtingCorner})
+	 * is taken only when every spot tried at the same height (beside the fire, else beside the kettle) needs one.
 	 */
 	public static net.minecraft.world.level.pathfinder.@Nullable Path wayToKettle(net.minecraft.world.entity.Mob body, BlockPos kettle) {
 		List<BlockPos> spots = standingSpots(body.level(), kettle, body.blockPosition());
+		net.minecraft.world.level.pathfinder.Path rounding = null;
 		for (BlockPos spot : spots.subList(0, Math.min(SPOTS_TRIED, spots.size()))) {
+			if (rounding != null && spot.getY() != rounding.getTarget().getY()) {
+				break; // never the counter beside the kettle for a way round a fire beside it
+			}
 			var path = body.getNavigation().createPath(spot, 0);
 			if (path != null && path.canReach() && isSafeWalk(body.level(), path)) {
-				return path;
+				if (!roundsAHurtingCorner(body.level(), path)) {
+					return path;
+				}
+				if (rounding == null) {
+					rounding = path;
+				}
 			}
 		}
-		return null;
+		return rounding;
+	}
+
+	/**
+	 * Whether a walk rounds the corner of something that hurts: a diagonal step past it, or a turn with it on the inside.
+	 * No step is on it, but walking that way a villager cuts the corner (he turns for the next step a little before he
+	 * is on this one) and clips its block.
+	 */
+	public static boolean roundsAHurtingCorner(net.minecraft.world.level.BlockGetter level, net.minecraft.world.level.pathfinder.Path path) {
+		for (int i = 0; i + 1 < path.getNodeCount(); i++) {
+			BlockPos at = path.getNode(i).asBlockPos();
+			BlockPos next = path.getNode(i + 1).asBlockPos();
+			if (at.getX() != next.getX() && at.getZ() != next.getZ()) {
+				for (int y = Math.min(at.getY(), next.getY()); y <= Math.max(at.getY(), next.getY()); y++) {
+					if (hurtsAround(level, new BlockPos(at.getX(), y, next.getZ())) || hurtsAround(level, new BlockPos(next.getX(), y, at.getZ()))) {
+						return true;
+					}
+				}
+			}
+			if (i > 0) {
+				// a turn here: the blocks beside this step that lie toward both the step before and the next one
+				BlockPos before = path.getNode(i - 1).asBlockPos();
+				int inX = before.getX() - at.getX(), inZ = before.getZ() - at.getZ(), outX = next.getX() - at.getX(), outZ = next.getZ() - at.getZ();
+				for (int dx = -1; dx <= 1; dx++) {
+					for (int dz = -1; dz <= 1; dz++) {
+						if (dx * inX + dz * inZ > 0 && dx * outX + dz * outZ > 0 && hurtsAround(level, at.offset(dx, 0, dz))) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean hurtsAround(net.minecraft.world.level.BlockGetter level, BlockPos pos) {
+		return hurts(level, pos) || hurts(level, pos.above()) || hurts(level, pos.below());
 	}
 
 	/** Whether a walk keeps clear of everything that hurts: no step in, on or under it. */
