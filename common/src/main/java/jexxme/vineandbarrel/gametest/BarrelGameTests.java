@@ -156,6 +156,7 @@ public final class BarrelGameTests
 		test("drinks_placed_shape_per_state", 100, BarrelGameTests::placedShapes);
 		test("drinks_sound_like_their_vessel", 100, BarrelGameTests::soundLikeTheirVessel);
 		test("drinks_pick_up_and_drops", 100, BarrelGameTests::pickUpAndDrops);
+		test("drinks_place_and_take_back_no_mug", 100, BarrelGameTests::placeAndTakeBackNoMug);
 		test("barrel_ages_with_sleep_and_time", 100, BarrelGameTests::agesWithSleepAndTime);
 		test("barrel_ages_with_daylight_cycle_off", 100, BarrelGameTests::agesWithDaylightCycleOff);
 		test("barrel_creative_break_drops_no_barrel", 100, BarrelGameTests::creativeBreak);
@@ -1692,6 +1693,44 @@ public final class BarrelGameTests
 		Player walker = helper.makeMockPlayer(GameType.SURVIVAL);
 		walker.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.BARLEY_ALE.get()));
 		helper.assertTrue(walker.getMainHandItem().useOn(sneakUse(helper, walker, new BlockPos(0, 1, 0), new Vec3(0.5, 1, 0.5))) == InteractionResult.PASS, "no placing without sneaking");
+		helper.succeed();
+	}
+
+	/**
+	 * Putting a drink down and taking it back, the way a survival player's right-clicks do it (the server's own
+	 * interaction code, which gives a used item's use remainder back): no empty mug comes out of it, neither for one of
+	 * several drinks in hand nor for the last one, and the drinks taken back are the ones put down.
+	 */
+	private static void placeAndTakeBackNoMug(GameTestHelper helper) {
+		BlockPos table = new BlockPos(2, 1, 2);
+		BlockPos spot = table.above();
+		helper.setBlock(table, Blocks.OAK_PLANKS);
+		TestPlayer player = drinker(helper, new Vec3(0.5, 2.0, 0.5));
+		player.setShiftKeyDown(true);
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(DrinkItems.HARD_CIDER.get(), 2));
+		BlockPos tableAt = helper.absolutePos(table);
+		BlockPos spotAt = helper.absolutePos(spot);
+		player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND,
+			new BlockHitResult(Vec3.atLowerCornerOf(tableAt).add(0.25, 1.0, 0.25), Direction.UP, tableAt, false));
+		helper.assertValueEqual(helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class).count(), 1, "one cider on the table");
+		helper.assertValueEqual(count(player, DrinkItems.HARD_CIDER.get()), 1, "one cider left in hand");
+		helper.assertValueEqual(count(player, DrinkItems.MUG.get()), 0, "no empty mug for the one put down");
+		player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND,
+			new BlockHitResult(Vec3.atLowerCornerOf(spotAt).add(0.75, 0.1, 0.75), Direction.UP, spotAt, false));
+		helper.assertValueEqual(helper.getBlockEntity(spot, PlacedDrinksBlockEntity.class).count(), 2, "both ciders on the table");
+		helper.assertTrue(player.getMainHandItem().isEmpty(), "the hand is empty after the last one, not holding a mug: " + player.getMainHandItem());
+		helper.assertValueEqual(count(player, DrinkItems.MUG.get()), 0, "no empty mug for the last one");
+		player.setShiftKeyDown(false);
+		for (int i = 0; i < 2; i++) {
+			// what was picked up lands in the empty hand: put it away, so the next one is taken with an empty hand too
+			player.getInventory().setItem(20 + i, player.getMainHandItem());
+			player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+			player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND,
+				new BlockHitResult(Vec3.atLowerCornerOf(spotAt).add(0.25, 0.2, 0.25), Direction.UP, spotAt, false));
+		}
+		helper.assertTrue(helper.getBlockState(spot).isAir(), "both taken back");
+		helper.assertValueEqual(count(player, DrinkItems.HARD_CIDER.get()), 2, "the two ciders are back");
+		helper.assertValueEqual(count(player, DrinkItems.MUG.get()), 0, "and no mug came with them");
 		helper.succeed();
 	}
 
