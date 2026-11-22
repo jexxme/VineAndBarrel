@@ -136,6 +136,7 @@ public final class WorldGameTests
 		register("world_tavern_chest_loot", LARGE, 100, WorldGameTests::tavernLoot);
 		register("world_taverns_in_village_pools", LARGE, 100, WorldGameTests::tavernsInPools);
 		register("world_taverns_one_village_in_three", LARGE, 200, WorldGameTests::taverns_oneVillageInThree);
+		register("world_taverns_one_per_generated_village", LARGE, 200, WorldGameTests::taverns_onePerGeneratedVillage);
 		register("world_taverns_in_other_mods_villages", LARGE, 100, WorldGameTests::tavernsInOtherVillages);
 		register("world_tavern_cellar_casks_are_the_taverns", TALL, 100, WorldGameTests::cellarCasksAreTheTaverns);
 		register("world_tavern_keeper_restocks_his_own_casks", TALL, 100, WorldGameTests::keeperRestocks);
@@ -635,6 +636,48 @@ public final class WorldGameTests
 			}
 		}
 		VineAndBarrel.LOGGER.info("Villages with a tavern:{}", report);
+		helper.succeed();
+	}
+
+	/**
+	 * No village has two taverns as the world generates it: each vanilla village structure (minecraft:village_plains and
+	 * the others) laid out through the structure itself, on deep flat ground, so whatever another mod puts between the
+	 * structure and its layout (its own placer, a hook on the game's) lays these villages out as it does in a world.
+	 */
+	private static void taverns_onePerGeneratedVillage(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		var structures = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
+		var generator = deepFlatGenerator(level);
+		var randomState = level.getChunkSource().randomState();
+		int villages = 60;
+		StringBuilder report = new StringBuilder();
+		for (VillageType type : VillageType.values()) {
+			Structure village = structures.getValue(Identifier.withDefaultNamespace("village_" + type.id()));
+			helper.assertTrue(village != null, "structure village_" + type.id());
+			int with = 0;
+			int laidOut = 0;
+			for (int v = 0; v < villages; v++) {
+				var context = new Structure.GenerationContext(level.registryAccess(), generator, generator.getBiomeSource(),
+					randomState, level.getStructureManager(), 6007L * v + type.ordinal(),
+					new ChunkPos(256 + v * 19, 256), level, biome -> true);
+				var stub = village.findValidGenerationPoint(context);
+				if (stub.isEmpty()) {
+					continue;
+				}
+				laidOut++;
+				int taverns = 0;
+				for (var piece : stub.get().getPiecesBuilder().build().pieces()) {
+					if (piece instanceof PoolElementStructurePiece poolPiece && VillageStructures.isTavern(poolPiece.getElement())) {
+						taverns++;
+					}
+				}
+				helper.assertTrue(taverns <= 1, "a generated " + type.id() + " village with " + taverns + " taverns (village " + v + ")");
+				with += taverns;
+			}
+			helper.assertTrue(laidOut >= villages / 2, "only " + laidOut + " of " + villages + " " + type.id() + " villages laid out");
+			report.append(' ').append(type.id()).append(' ').append(with).append('/').append(laidOut);
+		}
+		VineAndBarrel.LOGGER.info("Generated villages with a tavern:{}", report);
 		helper.succeed();
 	}
 
