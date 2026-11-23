@@ -1,3 +1,14 @@
+## 1.2.1
+
+- Putting a drink down no longer hands out an extra empty mug or glass (Fabric).
+- A village has one tavern at most with Terralith, Better Villages and other mods that bring Lithostitched too. Before, a village could get a dozen.
+- **Towns & Towers villages get taverns:** its meadow, forest, taiga, badlands and jungle villages, and those it builds for other mods' biomes, get the tavern of the nearest vanilla village, keeper included, in about one village in three.
+- **Wild crops can be switched off:** wildGrapes, wildWhiteGrapes, wildHops and wildBarley in the server settings, for packs where another mod already grows them. Only land still to be generated changes.
+- The Big Kettle stands on a solid tray: nobody pushed against it steps onto the fire under it any more.
+- The tavern keeper walks round the fire at his kettle instead of brushing it.
+- Tipsy's woolly sound works with Sound Physics Remastered.
+- Small translation fixes.
+
 ## 1.2.0
 
 - **Being drunk is in your body now, not on your screen.** Tipsy never moves your view on its own any more, and the Nausea spells, dark edges, blinks, Slowness, Mining Fatigue and Weakness are gone. Instead:
